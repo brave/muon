@@ -29,6 +29,7 @@
       'type': 'executable',
       'dependencies': [
         'compile_coffee',
+        'compile_resources',
         '<(project_name)_lib',
       ],
       'sources': [
@@ -260,6 +261,9 @@
         '<(libchromiumcontent_src_dir)/third_party/libyuv/include',
         # The 'third_party/webrtc/modules/desktop_capture/desktop_frame.h' is using 'webrtc/base/scoped_ptr.h'.
         '<(libchromiumcontent_src_dir)/third_party/',
+        'node_modules/abp-filter-parser-cpp',
+        'node_modules/abp-filter-parser-cpp/node_modules/bloom-filter-cpp',
+        'node_modules/abp-filter-parser-cpp/node_modules/hashset-cpp',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
@@ -378,6 +382,36 @@
         }
       ],
     },  # target compile_coffee
+    {
+      'target_name': 'compile_resources',
+      'type': 'none',
+      'actions': [
+        {
+          'action_name': 'compile_resources',
+          'variables': {
+            'conditions': [
+              ['OS=="mac"', {
+                'resources_path': '<(PRODUCT_DIR)/<(product_name).app/Contents/Resources',
+              },{
+                'resources_path': '<(PRODUCT_DIR)/resources',
+              }],
+            ],
+          },
+          'inputs': [
+            '<@(extra_resource_files)',
+          ],
+          'outputs': [
+            '<(resources_path)/data.asar',
+          ],
+          'action': [
+            'python',
+            'tools/resources2asar.py',
+            '<@(_outputs)',
+            '<@(_inputs)',
+          ],
+        }
+      ],
+    },  # target compile_resources
     {
       'target_name': 'atom_coffee2c',
       'type': 'none',

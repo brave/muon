@@ -7,6 +7,9 @@
     'bundle_sources': [
       'atom/browser/resources/mac/atom.icns',
     ],
+    'extra_resource_files': [
+      'node_modules/abp-filter-parser-cpp/ABPFilterParserData.dat',
+    ],
     'coffee_sources': [
       'atom/browser/api/lib/app.coffee',
       'atom/browser/api/lib/auto-updater.coffee',
@@ -484,6 +487,10 @@
       'chromium_src/net/test/embedded_test_server/stream_listen_socket.h',
       'chromium_src/net/test/embedded_test_server/tcp_listen_socket.cc',
       'chromium_src/net/test/embedded_test_server/tcp_listen_socket.h',
+      'node_modules/abp-filter-parser-cpp/ABPFilterParser.cpp',
+      'node_modules/abp-filter-parser-cpp/cosmeticFilter.cpp',
+      'node_modules/abp-filter-parser-cpp/filter.cpp',
+      'node_modules/abp-filter-parser-cpp/node_modules/bloom-filter-cpp/BloomFilter.cpp',
       '<@(native_mate_files)',
       '<(SHARED_INTERMEDIATE_DIR)/atom_natives.h',
     ],

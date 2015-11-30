@@ -14,5 +14,8 @@
   "scripts": {
     "preinstall": "node -e 'process.exit(0)'",
     "test": "python ./script/test.py"
+  },
+  "dependencies": {
+    "abp-filter-parser-cpp": "^0.2.11"
   }
 }
