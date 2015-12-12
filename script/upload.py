@@ -14,8 +14,8 @@ from lib.util import electron_gyp, execute, get_electron_version, \
 from lib.github import GitHub
 
 
-ELECTRON_REPO = 'electron/electron'
-ELECTRON_VERSION = get_electron_version()
+ELECTRON_REPO = 'brave/electron'
+ELECTRON_VERSION = get_atom_shell_version()
 
 PROJECT_NAME = electron_gyp()['project_name%']
 PRODUCT_NAME = electron_gyp()['product_name%']
