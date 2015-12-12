@@ -1,10 +1,10 @@
 {
   'variables': {
-    'project_name%': 'electron',
-    'product_name%': 'Electron',
-    'company_name%': 'GitHub, Inc',
-    'company_abbr%': 'github',
-    'version%': '1.2.2',
+    'project_name%': 'brave',
+    'product_name%': 'Brave',
+    'company_name%': 'Brave Software',
+    'company_abbr%': 'brave',
+    'version%': '1.2.0',
   },
   'includes': [
     'filenames.gypi',
