@@ -13,6 +13,7 @@
 #include "base/path_service.h"
 #include "atom/common/asar/asar_util.h"
 
+// #include <iostream>
 
 #include "ABPFilterParser.h"
 ABPFilterParser parser;
@@ -55,11 +56,36 @@ net::URLRequestJob* HttpProtocolHandler::MaybeCreateJob(
     net::URLRequest* request,
     net::NetworkDelegate* network_delegate) const {
 
-  if (parser.matches(request->url().spec().c_str(),
-        FONoFilterOption,
+  FilterOption filterOption = FONoFilterOption;
+  std::string accept;
+  if (request->extra_request_headers().GetHeader("Accept", &accept)) {
+    if (accept.find("/css") != std::string::npos) {
+      // cout << "stylesheet!" << endl;
+      filterOption = FOStylesheet;
+    } else if (accept.find("image/") != std::string::npos) {
+      filterOption = FOImage;
+      // std::cout << "image!" << std::endl;
+    } else if (accept.find("javascript") != std::string::npos) {
+      filterOption = FOScript;
+      // std::cout << "javascript!" << std::endl;
+    }
+  }
+
+  // std::cout << "1. third party: "
+  // << request->first_party_for_cookies().host() << std::endl;
+  // std::cout << "2. url: " << request->url().host() << std::endl;
+  // std::cout << "3. accept: " << accept.c_str() << std::endl;
+
+  if (filterOption != FOStylesheet &&
+      parser.matches(request->url().spec().c_str(),
+        filterOption,
         request->first_party_for_cookies().host().c_str())) {
+    // std::cout << "BLOCK: " << request->url().spec().c_str() << std::endl;
     return new net::URLRequestErrorJob(request,
       network_delegate, net::ERR_FAILED);
+  } else {
+    // std::cout << "NotMatch: ABPFilterParser: "
+    //   << request->url().spec().c_str() << std::endl;
   }
 
   return net::URLRequestHttpJob::Factory(request,
