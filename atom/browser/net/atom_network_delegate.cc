@@ -74,6 +74,8 @@ void ToDictionary(base::DictionaryValue* details, net::URLRequest* request) {
   details->SetString("url", request->url().spec());
   details->SetString("method", request->method());
   details->SetDouble("timestamp", base::Time::Now().ToDoubleT() * 1000);
+  details->SetString("firstPartyUrl",
+    request->first_party_for_cookies().spec());
   auto info = content::ResourceRequestInfo::ForRequest(request);
   details->SetString("resourceType",
                      info ? ResourceTypeToString(info->GetResourceType())
