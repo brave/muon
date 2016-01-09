@@ -25,6 +25,7 @@ mergeBrowserWindowOptions = (embedder, options) ->
 
 # Create a new guest created by |embedder| with |options|.
 createGuest = (embedder, url, frameName, options) ->
+  # TODO - figure out how to use either webcontents or guestInstanceId here
   guest = frameToGuest[frameName]
   if frameName and guest?
     guest.loadURL url
@@ -34,6 +35,7 @@ createGuest = (embedder, url, frameName, options) ->
   options.webPreferences ?= {}
   options.webPreferences.openerId = BrowserWindow.fromWebContents(embedder)?.id
 
+  # send webContents as an option??
   guest = new BrowserWindow(options)
   guest.loadURL url
 
@@ -59,7 +61,7 @@ createGuest = (embedder, url, frameName, options) ->
   guest.id
 
 # Routed window.open messages.
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_OPEN', (event, args...) ->
+process.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_OPEN', (event, args...) ->
   [url, frameName, options] = args
   options = mergeBrowserWindowOptions event.sender, options
   event.sender.emit 'new-window', event, url, frameName, 'new-window', options
@@ -67,20 +69,3 @@ ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_OPEN', (event, args...) ->
     event.returnValue = null
   else
     event.returnValue = createGuest event.sender, url, frameName, options
-
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_CLOSE', (event, guestId) ->
-  BrowserWindow.fromId(guestId)?.destroy()
-
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_METHOD', (event, guestId, method, args...) ->
-  BrowserWindow.fromId(guestId)?[method] args...
-
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_POSTMESSAGE', (event, guestId, message, targetOrigin, sourceOrigin) ->
-  sourceId = BrowserWindow.fromWebContents(event.sender)?.id
-  return unless sourceId?
-
-  guestContents = BrowserWindow.fromId(guestId)?.webContents
-  if guestContents?.getURL().indexOf(targetOrigin) is 0 or targetOrigin is '*'
-    guestContents?.send 'ATOM_SHELL_GUEST_WINDOW_POSTMESSAGE', sourceId, message, sourceOrigin
-
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WEB_CONTENTS_METHOD', (event, guestId, method, args...) ->
-  BrowserWindow.fromId(guestId)?.webContents?[method] args...

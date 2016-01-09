@@ -90,8 +90,7 @@ class WebViewImpl
       # Track when the element resizes using the element resize callback.
       webFrame.registerElementResizeCallback @internalInstanceId, @onElementResize.bind(this)
 
-      return unless @guestInstanceId
-
+      return unless @webContents
       guestViewInternal.attachGuest @internalInstanceId, @guestInstanceId, @buildParams()
 
   onSizeChanged: (webViewEvent) ->
@@ -133,6 +132,10 @@ class WebViewImpl
 
     if @guestInstanceId
       guestViewInternal.setSize @guestInstanceId, normal: newSize
+
+  addGuest: (guestInstanceId) ->
+    guestViewInternal.addGuest @guestInstanceId, (event, guestInstanceId) =>
+      @attachWindow guestInstanceId
 
   createGuest: ->
     guestViewInternal.createGuest @buildParams(), (event, guestInstanceId) =>

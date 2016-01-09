@@ -16,6 +16,7 @@ module.exports =
   ATTRIBUTE_ALLOWPOPUPS: 'allowpopups'
   ATTRIBUTE_PRELOAD: 'preload'
   ATTRIBUTE_USERAGENT: 'useragent'
+  ATTRIBUTE_GUEST_INSTANCE_ID: 'data-guest-instance-id'
 
   # Internal attribute.
   ATTRIBUTE_INTERNALINSTANCEID: 'internalinstanceid'
