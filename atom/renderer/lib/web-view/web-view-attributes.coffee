@@ -114,6 +114,9 @@ class SrcAttribute extends WebViewAttribute
     super webViewConstants.ATTRIBUTE_SRC, webViewImpl
     @setupMutationObserver()
 
+  setValue: (value) ->
+    @webViewImpl.webviewNode.setAttribute(@name, value || '')
+
   getValue: ->
     if @webViewImpl.webviewNode.hasAttribute @name
       resolveURL @webViewImpl.webviewNode.getAttribute(@name)
@@ -166,7 +169,11 @@ class SrcAttribute extends WebViewAttribute
     unless @webViewImpl.guestInstanceId?
       if @webViewImpl.beforeFirstNavigation
         @webViewImpl.beforeFirstNavigation = false
-        @webViewImpl.createGuest()
+        if @webViewImpl.webviewNode.getAttribute(webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID)
+          @webViewImpl.guestInstanceId = parseInt(@webViewImpl.webviewNode.getAttribute(webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID))
+          @webViewImpl.addGuest(@webViewImpl.guestInstanceId)
+        else
+          @webViewImpl.createGuest()
       return
 
     # Navigate to |this.src|.
@@ -204,6 +211,10 @@ class PreloadAttribute extends WebViewAttribute
       preload = ''
     preload
 
+class GuestInstanceIdAttribute extends WebViewAttribute
+  constructor: (webViewImpl) ->
+    super webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID, webViewImpl
+
 # Sets up all of the webview attributes.
 WebViewImpl::setupWebViewAttributes = ->
   @attributes = {}
@@ -211,7 +222,7 @@ WebViewImpl::setupWebViewAttributes = ->
   @attributes[webViewConstants.ATTRIBUTE_ALLOWTRANSPARENCY] = new AllowTransparencyAttribute(this)
   @attributes[webViewConstants.ATTRIBUTE_AUTOSIZE] = new AutosizeAttribute(this)
   @attributes[webViewConstants.ATTRIBUTE_PARTITION] = new PartitionAttribute(this)
-  @attributes[webViewConstants.ATTRIBUTE_SRC] = new SrcAttribute(this)
+  @attributes[webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID] = new GuestInstanceIdAttribute(this)
   @attributes[webViewConstants.ATTRIBUTE_HTTPREFERRER] = new HttpReferrerAttribute(this)
   @attributes[webViewConstants.ATTRIBUTE_USERAGENT] = new UserAgentAttribute(this)
   @attributes[webViewConstants.ATTRIBUTE_NODEINTEGRATION] = new BooleanAttribute(webViewConstants.ATTRIBUTE_NODEINTEGRATION, this)
@@ -219,6 +230,7 @@ WebViewImpl::setupWebViewAttributes = ->
   @attributes[webViewConstants.ATTRIBUTE_DISABLEWEBSECURITY] = new BooleanAttribute(webViewConstants.ATTRIBUTE_DISABLEWEBSECURITY, this)
   @attributes[webViewConstants.ATTRIBUTE_ALLOWPOPUPS] = new BooleanAttribute(webViewConstants.ATTRIBUTE_ALLOWPOPUPS, this)
   @attributes[webViewConstants.ATTRIBUTE_PRELOAD] = new PreloadAttribute(this)
+  @attributes[webViewConstants.ATTRIBUTE_SRC] = new SrcAttribute(this)
 
   autosizeAttributes = [
     webViewConstants.ATTRIBUTE_MAXHEIGHT

@@ -1,4 +1,4 @@
-{ipcMain, webContents} = require 'electron'
+{ipcMain, webContents, BrowserWindow} = require 'electron'
 
 webViewManager = null  # Doesn't exist in early initialization.
 
@@ -48,12 +48,15 @@ moveLastToFirst = (list) ->
 getNextInstanceId = (webContents) ->
   ++nextInstanceId
 
+createWebContents = (embedder, params) ->
+  webContents.create {isGuest: true, partition: params.partition, embedder}
+
 # Create a new guest instance.
-createGuest = (embedder, params) ->
+addGuest = (embedder, webContents, guestInstanceId) ->
   webViewManager ?= process.atomBinding 'web_view_manager'
 
-  id = getNextInstanceId embedder
-  guest = webContents.create {isGuest: true, partition: params.partition, embedder}
+  id = guestInstanceId or getNextInstanceId(embedder)
+  guest = webContents
   guestInstances[id] = {guest, embedder}
 
   # Destroy guest when the embedder is gone or navigated.
@@ -130,11 +133,13 @@ attachGuest = (embedder, elementInstanceId, guestInstanceId, params) ->
   webPreferences =
     guestInstanceId: guestInstanceId
     nodeIntegration: params.nodeintegration ? false
+    openerId: params.openerId
     plugins: params.plugins
     webSecurity: !params.disablewebsecurity
   webPreferences.preloadURL = params.preload if params.preload
-  webViewManager.addGuest guestInstanceId, elementInstanceId, embedder, guest, webPreferences
 
+  webViewManager.addGuest guestInstanceId, elementInstanceId, embedder, guest, webPreferences
+  params.guestInstanceId = guestInstanceId
   guest.attachParams = params
   embedderElementsMap[key] = guestInstanceId
   reverseEmbedderElementsMap[guestInstanceId] = key
@@ -142,7 +147,11 @@ attachGuest = (embedder, elementInstanceId, guestInstanceId, params) ->
 # Destroy an existing guest instance.
 destroyGuest = (embedder, id) ->
   webViewManager.removeGuest embedder, id
-  guestInstances[id].guest.destroy()
+
+  guest = guestInstances[id]?.guest
+  return unless guest
+
+  guest.destroy()
   delete guestInstances[id]
 
   key = reverseEmbedderElementsMap[id]
@@ -150,11 +159,28 @@ destroyGuest = (embedder, id) ->
     delete reverseEmbedderElementsMap[id]
     delete embedderElementsMap[key]
 
-ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_CREATE_GUEST', (event, params, requestId) ->
-  event.sender.send "ATOM_SHELL_RESPONSE_#{requestId}", createGuest(event.sender, params)
+process.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_TAB_OPEN', (event, args...) ->
+  [url, frameName, disposition, options] = args
+  event.sender.emit 'new-window', event, url, frameName, disposition, options
+  if (event.sender.isGuest() and not event.sender.allowPopups) or event.defaultPrevented
+    event.returnValue = null
+  else
+    event.returnValue = addGuest(event.sender, createWebContents(event.sender, options))
 
-ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_ATTACH_GUEST', (event, elementInstanceId, guestInstanceId, params) ->
-  attachGuest event.sender, elementInstanceId, guestInstanceId, params
+process.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_NEXT_INSTANCE_ID', (event) ->
+  event.returnValue = getNextInstanceId event.sender
+
+process.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_REGISTER_GUEST', (event, webContents, id) ->
+  guestInstances[id] = guest: webContents
+
+ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_ADD_GUEST', (event, id, requestId) ->
+  event.sender.send "ATOM_SHELL_RESPONSE_#{requestId}", addGuest(event.sender, guestInstances[id].guest, id)
+
+ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_CREATE_GUEST', (event, params, requestId) ->
+  event.sender.send "ATOM_SHELL_RESPONSE_#{requestId}", addGuest(event.sender, createWebContents(event.sender, params))
+
+ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_ATTACH_GUEST', (event, elementInstanceId, id, params) ->
+  attachGuest event.sender, elementInstanceId, id, params
 
 ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_DESTROY_GUEST', (event, id) ->
   destroyGuest event.sender, id
@@ -164,6 +190,23 @@ ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_SET_SIZE', (event, id, params) ->
 
 ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_SET_ALLOW_TRANSPARENCY', (event, id, allowtransparency) ->
   guestInstances[id]?.guest.setAllowTransparency allowtransparency
+
+ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_METHOD', (event, guestId, method) ->
+  embedder = guestInstances[guestId]?.embedder
+  return unless embedder?
+  BrowserWindow.fromWebContents(embedder)?[method]()
+
+ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_POSTMESSAGE', (event, guestId, message, targetOrigin, sourceOrigin) ->
+  sourceId = guestId
+  return unless guestInstances[guestId]?
+
+  guestContents = guestInstances[guestId]?.guest
+  if guestContents?.getURL().indexOf(targetOrigin) is 0 or targetOrigin is '*'
+    guestContents?.send 'ATOM_SHELL_GUEST_WINDOW_POSTMESSAGE', sourceId, message, sourceOrigin
+
+ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_CLOSE', (event, guestId) ->
+  destroyGuest guestInstances[guestId]?.embedder, guestId
+  event.sender.send "ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_CLOSED_#{guestId}"
 
 # Returns WebContents from its guest id.
 exports.getGuest = (id) ->
