@@ -134,6 +134,8 @@ attachGuest = (embedder, elementInstanceId, guestInstanceId, params) ->
     guestInstanceId: guestInstanceId
     nodeIntegration: params.nodeintegration ? false
     plugins: params.plugins
+    allowDisplayingInsecureContent: params.allowDisplayingInsecureContent ? false
+    allowRunningInsecureContent: params.allowRunningInsecureContent ? false
     webSecurity: !params.disablewebsecurity
   webPreferences.preloadURL = params.preload if params.preload
 
