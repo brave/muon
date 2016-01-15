@@ -749,7 +749,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   if (delayed_load_url_) {
     if (delayed_load_url_params_.get()) {
         GetWebContents()->GetController().LoadURLWithParams(
-                                                *delayed_load_url_params_.get());
+          *delayed_load_url_params_.get());
       delayed_load_url_params_.reset(nullptr);
     }
     delayed_load_url_ = false;

@@ -33,7 +33,6 @@ createGuest = (embedder, url, frameName, options) ->
 
   # Remember the embedder window's id.
   options.webPreferences ?= {}
-  options.webPreferences.openerId = BrowserWindow.fromWebContents(embedder)?.id
 
   # send webContents as an option??
   guest = new BrowserWindow(options)

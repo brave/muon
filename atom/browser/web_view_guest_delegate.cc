@@ -75,13 +75,6 @@ content::WebContents* WebViewGuestDelegate::CreateNewGuestWindow(
     options.Set("session", api_web_contents_->Session(isolate));
   }
 
-  base::DictionaryValue* web_preferences =
-                    WebContentsPreferences::FromWebContents(
-                      api_web_contents_->GetWebContents())->web_preferences();
-  int openerId = 0;
-  web_preferences->GetInteger(options::kGuestInstanceID, &openerId);
-  options.Set("openerId", openerId);
-
   // get the underlying contents::WebContents object
   mate::Handle<api::WebContents> new_api_web_contents =
           api::WebContents::CreateWithParams(isolate, options, params);
