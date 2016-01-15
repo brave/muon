@@ -82,12 +82,9 @@ content::WebContents* WebViewGuestDelegate::CreateNewGuestWindow(
   web_preferences->GetInteger(options::kGuestInstanceID, &openerId);
   options.Set("openerId", openerId);
 
-  content::WebContents::CreateParams create_params(params);
-  create_params.created_with_opener = true;
-
   // get the underlying contents::WebContents object
   mate::Handle<api::WebContents> new_api_web_contents =
-          api::WebContents::CreateWithParams(isolate, options, create_params);
+          api::WebContents::CreateWithParams(isolate, options, params);
   content::WebContents* web_contents = new_api_web_contents->GetWebContents();
 
   // register the guest so we can find it in the new window
@@ -199,7 +196,6 @@ void WebViewGuestDelegate::DidCommitProvisionalLoadForFrame(
 
 void WebViewGuestDelegate::DidAttach(int guest_proxy_routing_id) {
   api_web_contents_->Emit("did-attach", guest_proxy_routing_id);
-  api_web_contents_->ResumeLoadingCreatedWebContents();
 }
 
 content::WebContents* WebViewGuestDelegate::GetOwnerWebContents() const {
