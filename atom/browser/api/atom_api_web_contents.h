@@ -117,7 +117,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void SetAudioMuted(bool muted);
   bool IsAudioMuted();
   void Print(mate::Arguments* args);
-  void ResumeLoadingCreatedWebContents();
 
   // Print current page as PDF.
   void PrintToPDF(const base::DictionaryValue& setting,
@@ -318,6 +317,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // needed to continue loading the page once the tab is ready.
   scoped_ptr<content::NavigationController::LoadURLParams>
     delayed_load_url_params_;
+  bool delayed_load_url_;
 
   scoped_ptr<WebViewGuestDelegate> guest_delegate_;
 

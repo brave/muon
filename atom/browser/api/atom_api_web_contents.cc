@@ -218,7 +218,8 @@ WebContents::WebContents(content::WebContents* web_contents)
 WebContents::WebContents(v8::Isolate* isolate,
                          const mate::Dictionary& options,
                          const content::WebContents::CreateParams* params)
-                          : request_id_(0) {
+                          : delayed_load_url_(false),
+                            request_id_(0) {
   // Whether it is a guest WebContents.
   bool is_guest = false;
   options.Get("isGuest", &is_guest);
@@ -327,10 +328,12 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
                                 const std::string& frame_name,
                                 const GURL& target_url,
                                 content::WebContents* new_contents) {
-  if (IsGuest()) {
-    v8::Locker locker(isolate());
-    v8::HandleScope handle_scope(isolate());
+  v8::Locker locker(isolate());
+  v8::HandleScope handle_scope(isolate());
 
+  CreateFrom(isolate(), new_contents)->delayed_load_url_ = true;
+
+  if (IsGuest() && opener_render_frame_id == MSG_ROUTING_NONE) {
     content::NavigationController::LoadURLParams load_url_params(target_url);
     // http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-95229140
     load_url_params.referrer = content::Referrer(GetURL(),
@@ -414,18 +417,6 @@ bool WebContents::ShouldResumeRequestsForCreatedWindow() {
   // window until after we have attached a new delegate to the new webcontents
   // (which happens asynchronously).
   return false;
-}
-
-void WebContents::ResumeLoadingCreatedWebContents() {
-  if (delayed_load_url_params_.get()) {
-    GetWebContents()->GetController().LoadURLWithParams(
-                                              *delayed_load_url_params_.get());
-    delayed_load_url_params_.reset(nullptr);
-  }
-  // we will need this when adding guest view
-  // GetRenderViewHost()->GetProcess()->ResumeRequestsForView(route_id);
-  // GetRenderViewHost()->GetProcess()->ResumeRequestsForView(
-  //                                                       main_frame_route_id);
 }
 
 content::WebContents* WebContents::OpenURLFromTab(
@@ -755,6 +746,16 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 }
 
 void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
+  if (delayed_load_url_) {
+    if (delayed_load_url_params_.get()) {
+        GetWebContents()->GetController().LoadURLWithParams(
+                                                *delayed_load_url_params_.get());
+      delayed_load_url_params_.reset(nullptr);
+    }
+    delayed_load_url_ = false;
+    return;
+  }
+
   content::NavigationController::LoadURLParams params(url);
 
   GURL http_referrer;
