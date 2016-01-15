@@ -1,4 +1,4 @@
-{ipcMain, webContents, BrowserWindow} = require 'electron'
+{ipcMain, webContents} = require 'electron'
 
 webViewManager = null  # Doesn't exist in early initialization.
 
@@ -133,7 +133,6 @@ attachGuest = (embedder, elementInstanceId, guestInstanceId, params) ->
   webPreferences =
     guestInstanceId: guestInstanceId
     nodeIntegration: params.nodeintegration ? false
-    openerId: params.openerId
     plugins: params.plugins
     webSecurity: !params.disablewebsecurity
   webPreferences.preloadURL = params.preload if params.preload
@@ -190,23 +189,6 @@ ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_SET_SIZE', (event, id, params) ->
 
 ipcMain.on 'ATOM_SHELL_GUEST_VIEW_MANAGER_SET_ALLOW_TRANSPARENCY', (event, id, allowtransparency) ->
   guestInstances[id]?.guest.setAllowTransparency allowtransparency
-
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_METHOD', (event, guestId, method) ->
-  embedder = guestInstances[guestId]?.embedder
-  return unless embedder?
-  BrowserWindow.fromWebContents(embedder)?[method]()
-
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_POSTMESSAGE', (event, guestId, message, targetOrigin, sourceOrigin) ->
-  sourceId = guestId
-  return unless guestInstances[guestId]?
-
-  guestContents = guestInstances[guestId]?.guest
-  if guestContents?.getURL().indexOf(targetOrigin) is 0 or targetOrigin is '*'
-    guestContents?.send 'ATOM_SHELL_GUEST_WINDOW_POSTMESSAGE', sourceId, message, sourceOrigin
-
-ipcMain.on 'ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_CLOSE', (event, guestId) ->
-  destroyGuest guestInstances[guestId]?.embedder, guestId
-  event.sender.send "ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_CLOSED_#{guestId}"
 
 # Returns WebContents from its guest id.
 exports.getGuest = (id) ->

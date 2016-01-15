@@ -111,12 +111,6 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
       command_line->AppendSwitchASCII(switches::kGuestInstanceID,
                                       base::IntToString(guest_instance_id));
 
-  // Pass the opener's window id.
-  int opener_id;
-  if (web_preferences.GetInteger(options::kOpenerID, &opener_id))
-      command_line->AppendSwitchASCII(switches::kOpenerID,
-                                      base::IntToString(opener_id));
-
   // Enable blink features.
   std::string blink_features;
   if (web_preferences.GetString(options::kBlinkFeatures, &blink_features))
