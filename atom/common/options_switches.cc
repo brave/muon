@@ -93,6 +93,9 @@ const char kDirectWrite[] = "directWrite";
 const char kExperimentalFeatures[]       = "experimentalFeatures";
 const char kExperimentalCanvasFeatures[] = "experimentalCanvasFeatures";
 
+// Opener window's ID.
+const char kOpenerID[] = "openerId";
+
 // Enable blink features.
 const char kBlinkFeatures[] = "blinkFeatures";
 
@@ -137,6 +140,7 @@ const char kPreloadScript[]              = "preload";
 const char kPreloadURL[]                 = "preload-url";
 const char kNodeIntegration[]            = "node-integration";
 const char kGuestInstanceID[]            = "guest-instance-id";
+const char kOpenerID[]                   = "opener-id";
 
 // Widevine options
 // Path to Widevine CDM binaries.

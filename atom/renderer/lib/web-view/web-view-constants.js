@@ -11,12 +11,15 @@ module.exports = {
   ATTRIBUTE_SRC: 'src',
   ATTRIBUTE_HTTPREFERRER: 'httpreferrer',
   ATTRIBUTE_NODEINTEGRATION: 'nodeintegration',
+  ATTRIBUTE_ALLOWDISPLAYINGINSECURECONTENT: 'allowDisplayingInsecureContent',
+  ATTRIBUTE_ALLOWRUNNINGINSECURECONTENT: 'allowRunningInsecureContent',
   ATTRIBUTE_PLUGINS: 'plugins',
   ATTRIBUTE_DISABLEWEBSECURITY: 'disablewebsecurity',
   ATTRIBUTE_ALLOWPOPUPS: 'allowpopups',
   ATTRIBUTE_PRELOAD: 'preload',
   ATTRIBUTE_USERAGENT: 'useragent',
   ATTRIBUTE_BLINKFEATURES: 'blinkfeatures',
+  ATTRIBUTE_GUEST_INSTANCE_ID: 'data-guest-instance-id',
 
   // Internal attribute.
   ATTRIBUTE_INTERNALINSTANCEID: 'internalinstanceid',

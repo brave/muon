@@ -233,7 +233,13 @@ class SrcAttribute extends WebViewAttribute {
     if (this.webViewImpl.guestInstanceId == null) {
       if (this.webViewImpl.beforeFirstNavigation) {
         this.webViewImpl.beforeFirstNavigation = false;
-        this.webViewImpl.createGuest();
+
+        if (this.webViewImpl.webviewNode.getAttribute(webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID)) {
+          this.webViewImpl.guestInstanceId = parseInt(this.webViewImpl.webviewNode.getAttribute(webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID));
+          this.webViewImpl.addGuest(this.webViewImpl.guestInstanceId);
+        } else {
+          this.webViewImpl.createGuest();
+        }
       }
       return;
     }
@@ -295,6 +301,13 @@ class BlinkFeaturesAttribute extends WebViewAttribute {
   }
 }
 
+// Attribute specifies guest instance id
+class GuestInstanceIdAttribute extends WebViewAttribute {
+  constructor(webViewImpl) {
+    super(webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID, webViewImpl);
+  }
+}
+
 // Sets up all of the webview attributes.
 WebViewImpl.prototype.setupWebViewAttributes = function() {
   var attribute, autosizeAttributes, i, len, results;
@@ -302,10 +315,13 @@ WebViewImpl.prototype.setupWebViewAttributes = function() {
   this.attributes[webViewConstants.ATTRIBUTE_ALLOWTRANSPARENCY] = new AllowTransparencyAttribute(this);
   this.attributes[webViewConstants.ATTRIBUTE_AUTOSIZE] = new AutosizeAttribute(this);
   this.attributes[webViewConstants.ATTRIBUTE_PARTITION] = new PartitionAttribute(this);
+  this.attributes[webViewConstants.ATTRIBUTE_GUEST_INSTANCE_ID] = new GuestInstanceIdAttribute(this);
   this.attributes[webViewConstants.ATTRIBUTE_SRC] = new SrcAttribute(this);
   this.attributes[webViewConstants.ATTRIBUTE_HTTPREFERRER] = new HttpReferrerAttribute(this);
   this.attributes[webViewConstants.ATTRIBUTE_USERAGENT] = new UserAgentAttribute(this);
   this.attributes[webViewConstants.ATTRIBUTE_NODEINTEGRATION] = new BooleanAttribute(webViewConstants.ATTRIBUTE_NODEINTEGRATION, this);
+  this.attributes[webViewConstants.ATTRIBUTE_ALLOWDISPLAYINGINSECURECONTENT] = new BooleanAttribute(webViewConstants.ATTRIBUTE_ALLOWDISPLAYINGINSECURECONTENT, this);
+  this.attributes[webViewConstants.ATTRIBUTE_ALLOWRUNNINGINSECURECONTENT] = new BooleanAttribute(webViewConstants.ATTRIBUTE_ALLOWRUNNINGINSECURECONTENT, this);
   this.attributes[webViewConstants.ATTRIBUTE_PLUGINS] = new BooleanAttribute(webViewConstants.ATTRIBUTE_PLUGINS, this);
   this.attributes[webViewConstants.ATTRIBUTE_DISABLEWEBSECURITY] = new BooleanAttribute(webViewConstants.ATTRIBUTE_DISABLEWEBSECURITY, this);
   this.attributes[webViewConstants.ATTRIBUTE_ALLOWPOPUPS] = new BooleanAttribute(webViewConstants.ATTRIBUTE_ALLOWPOPUPS, this);
