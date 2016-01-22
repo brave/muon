@@ -19,11 +19,11 @@ var win = new BrowserWindow({ width: 800, height: 600, frame: false });
 
 OS X 10.10 Yosemite 이후의 최신 버전부터는 테두리가 없는 창을 만들 때 새로운 방법을
 사용할 수 있습니다. `frame` 옵션을 `false`로 지정하여 제목과 창 구성 요소를 모두
-비활성화하는 대신 새로운 `title-bar-style` 옵션을 통해 제목만 숨기고 창 구성 요소
+비활성화하는 대신 새로운 `titleBarStyle` 옵션을 통해 제목만 숨기고 창 구성 요소
 ("흔히 신호등으로 알고 있는")의 기능과 창 크기를 그대로 유지할 수 있습니다:
 
 ```javascript
-var win = new BrowserWindow({ 'title-bar-style': 'hidden' });
+var win = new BrowserWindow({ 'titleBarStyle': 'hidden' });
 ```
 
 ## 투명한 창 만들기
@@ -38,8 +38,8 @@ var win = new BrowserWindow({ transparent: true, frame: false });
 ### API의 한계
 
 * 투명한 영역을 통과하여 클릭할 수 없습니다. 우리는 이 문제를 해결하기 위해 API를
-  제공할 예정이었지만 현재로써는 [upstream 버그](https://code.google.com/p/chromium/issues/detail?id=387234)로
-  인해 중단된 상태입니다.
+  제공할 예정이며 자세한 내용은
+  [이슈](https://github.com/atom/electron/issues/1335)를 참고하세요.
 * 투명한 창은 크기를 조절할 수 없습니다. `resizable` 속성을 `true`로 할 경우 몇몇
   플랫폼에선 크래시가 일어납니다.
 * `blur` 필터는 웹 페이지에서만 적용됩니다. 윈도우 아래 컨텐츠에는 블러 효과를 적용할

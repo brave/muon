@@ -95,11 +95,11 @@ class Window : public mate::TrackableObject<Window>,
   bool IsMinimized();
   void SetFullScreen(bool fullscreen);
   bool IsFullscreen();
-  void SetBounds(const gfx::Rect& bounds);
+  void SetBounds(const gfx::Rect& bounds, mate::Arguments* args);
   gfx::Rect GetBounds();
-  void SetSize(int width, int height);
+  void SetSize(int width, int height, mate::Arguments* args);
   std::vector<int> GetSize();
-  void SetContentSize(int width, int height);
+  void SetContentSize(int width, int height, mate::Arguments* args);
   std::vector<int> GetContentSize();
   void SetMinimumSize(int width, int height);
   std::vector<int> GetMinimumSize();
@@ -110,7 +110,7 @@ class Window : public mate::TrackableObject<Window>,
   void SetAlwaysOnTop(bool top);
   bool IsAlwaysOnTop();
   void Center();
-  void SetPosition(int x, int y);
+  void SetPosition(int x, int y, mate::Arguments* args);
   std::vector<int> GetPosition();
   void SetTitle(const std::string& title);
   std::string GetTitle();
@@ -138,6 +138,7 @@ class Window : public mate::TrackableObject<Window>,
   void SetMenuBarVisibility(bool visible);
   bool IsMenuBarVisible();
   void SetAspectRatio(double aspect_ratio, mate::Arguments* args);
+  v8::Local<v8::Value> GetNativeWindowHandle();
 
 #if defined(OS_WIN)
   typedef base::Callback<void(v8::Local<v8::Value>,

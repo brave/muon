@@ -101,8 +101,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool SavePage(const base::FilePath& full_file_path,
                 const content::SavePageType& save_type,
                 const SavePageHandler::SavePageCallback& callback);
-  void ExecuteJavaScript(const base::string16& code,
-                         bool has_user_gesture);
   void OpenDevTools(mate::Arguments* args);
   void CloseDevTools();
   bool IsDevToolsOpened();
@@ -305,10 +303,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void OnRendererMessageSync(const base::string16& channel,
                              const base::ListValue& args,
                              IPC::Message* message);
-
-  // Called when guests need to be notified of
-  // embedders' zoom level change.
-  void OnZoomLevelChanged(double level);
 
   v8::Global<v8::Value> session_;
   v8::Global<v8::Value> devtools_web_contents_;

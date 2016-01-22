@@ -20,10 +20,10 @@ a chromeless window. Instead of setting `frame` to `false` which disables
 both the titlebar and window controls, you may want to have the title bar
 hidden and your content extend to the full window size, yet still preserve
 the window controls ("traffic lights") for standard window actions.
-You can do so by specifying the new `title-bar-style` option:
+You can do so by specifying the new `titleBarStyle` option:
 
 ```javascript
-var win = new BrowserWindow({ 'title-bar-style': 'hidden' });
+var win = new BrowserWindow({ 'titleBarStyle': 'hidden' });
 ```
 
 ## Transparent window
@@ -38,8 +38,7 @@ var win = new BrowserWindow({ transparent: true, frame: false });
 ### Limitations
 
 * You can not click through the transparent area. We are going to introduce an
-  API to set window shape to solve this, but currently blocked at an
-  [upstream bug](https://code.google.com/p/chromium/issues/detail?id=387234).
+  API to set window shape to solve this, see [our issue](https://github.com/atom/electron/issues/1335) for details.
 * Transparent windows are not resizable. Setting `resizable` to `true` may make
   a transparent window stop working on some platforms.
 * The `blur` filter only applies to the web page, so there is no way to apply
