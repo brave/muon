@@ -286,6 +286,10 @@ void Window::Focus() {
   window_->Focus(true);
 }
 
+void Window::Blur() {
+  window_->Focus(false);
+}
+
 bool Window::IsFocused() {
   return window_->IsFocused();
 }
@@ -632,6 +636,7 @@ void Window::BuildPrototype(v8::Isolate* isolate,
       .MakeDestroyable()
       .SetMethod("close", &Window::Close)
       .SetMethod("focus", &Window::Focus)
+      .SetMethod("blur", &Window::Blur)
       .SetMethod("isFocused", &Window::IsFocused)
       .SetMethod("show", &Window::Show)
       .SetMethod("showInactive", &Window::ShowInactive)
