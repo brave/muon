@@ -6,7 +6,38 @@ var slice = [].slice;
 // Doesn't exist in early initialization.
 var webViewManager = null;
 
-var supportedWebViewEvents = ['load-commit', 'did-finish-load', 'did-fail-load', 'did-frame-finish-load', 'did-start-loading', 'did-stop-loading', 'did-get-response-details', 'did-get-redirect-request', 'dom-ready', 'console-message', 'devtools-opened', 'devtools-closed', 'devtools-focused', 'new-window', 'will-navigate', 'did-navigate', 'did-navigate-in-page', 'close', 'crashed', 'gpu-crashed', 'plugin-crashed', 'destroyed', 'page-title-updated', 'page-favicon-updated', 'enter-html-full-screen', 'leave-html-full-screen', 'media-started-playing', 'media-paused', 'found-in-page', 'did-change-theme-color'];
+var supportedWebViewEvents = [
+  'load-commit',
+  'did-finish-load',
+  'did-fail-load',
+  'did-frame-finish-load',
+  'did-start-loading',
+  'did-stop-loading',
+  'did-get-response-details',
+  'did-get-redirect-request',
+  'dom-ready',
+  'console-message',
+  'devtools-opened',
+  'devtools-closed',
+  'devtools-focused',
+  'new-window',
+  'will-navigate',
+  'did-navigate',
+  'did-navigate-in-page',
+  'close',
+  'crashed',
+  'gpu-crashed',
+  'plugin-crashed',
+  'destroyed',
+  'page-title-updated',
+  'page-favicon-updated',
+  'enter-html-full-screen',
+  'leave-html-full-screen',
+  'media-started-playing',
+  'media-paused',
+  'found-in-page',
+  'did-change-theme-color'
+];
 
 var nextInstanceId = 0;
 var guestInstances = {};
@@ -23,21 +54,25 @@ var getNextInstanceId = function() {
   return ++nextInstanceId;
 };
 
-// Create a new guest instance.
-var createGuest = function(embedder, params) {
-  var destroy, destroyEvents, event, fn, guest, i, id, j, len, len1, listeners;
-  if (webViewManager == null) {
-    webViewManager = process.atomBinding('web_view_manager');
-  }
-  id = getNextInstanceId(embedder);
-  guest = webContents.create({
+var createWebContents = function(embedder, params) {
+  return webContents.create({
     isGuest: true,
     partition: params.partition,
     embedder: embedder
   });
+};
+
+// Create a new guest instance.
+var addGuest = function(embedder, webContents, guestInstanceId) {
+  var destroy, destroyEvents, event, fn, guest, i, id, j, len, len1, listeners;
+  if (webViewManager == null) {
+    webViewManager = process.atomBinding('web_view_manager');
+  }
+  id = guestInstanceId || getNextInstanceId(embedder);
+  guest = webContents;
   guestInstances[id] = {
-    guest: guest,
-    embedder: embedder
+    guest,
+    embedder
   };
 
   // Destroy guest when the embedder is gone or navigated.
@@ -71,7 +106,7 @@ var createGuest = function(embedder, params) {
 
   // Init guest web view after attached.
   guest.once('did-attach', function() {
-    var opts;
+    var opts, params;
     params = this.attachParams;
     delete this.attachParams;
     this.viewInstanceId = params.instanceId;
@@ -170,9 +205,13 @@ var attachGuest = function(embedder, elementInstanceId, guestInstanceId, params)
 
 // Destroy an existing guest instance.
 var destroyGuest = function(embedder, id) {
-  var key;
+  var guest, key;
   webViewManager.removeGuest(embedder, id);
-  guestInstances[id].guest.destroy();
+  guest = guestInstances[id].guest;
+  if (guest == null) {
+    return;
+  }
+  guest.destroy();
   delete guestInstances[id];
   key = reverseEmbedderElementsMap[id];
   if (key != null) {
@@ -181,8 +220,32 @@ var destroyGuest = function(embedder, id) {
   }
 };
 
+process.on('ATOM_SHELL_GUEST_VIEW_MANAGER_TAB_OPEN', function() {
+  var args, event, frameName, options, url, disposition;
+  event = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+  url = args[0], frameName = args[1], disposition = args[2], options = args[3];
+  event.sender.emit('new-window', event, url, frameName, disposition, options);
+  if ((event.sender.isGuest() && !event.sender.allowPopups) || event.defaultPrevented) {
+    return event.returnValue = null;
+  } else {
+    return event.returnValue = addGuest(event.sender, createWebContents(event.sender, options));
+  }
+});
+
+process.on('ATOM_SHELL_GUEST_VIEW_MANAGER_NEXT_INSTANCE_ID', function(event) {
+  return event.returnValue = getNextInstanceId(event.sender);
+});
+
+process.on('ATOM_SHELL_GUEST_VIEW_MANAGER_REGISTER_GUEST', function(event, webContents, id) {
+  guestInstances[id] = { guest: webContents };
+});
+
+ipcMain.on('ATOM_SHELL_GUEST_VIEW_MANAGER_ADD_GUEST', function(event, id, requestId) {
+  return event.sender.send("ATOM_SHELL_RESPONSE_" + requestId, addGuest(event.sender, guestInstances[id].guest, id));
+});
+
 ipcMain.on('ATOM_SHELL_GUEST_VIEW_MANAGER_CREATE_GUEST', function(event, params, requestId) {
-  return event.sender.send("ATOM_SHELL_RESPONSE_" + requestId, createGuest(event.sender, params));
+  return event.sender.send("ATOM_SHELL_RESPONSE_" + requestId, addGuest(event.sender, createWebContents(event.sender, params)));
 });
 
 ipcMain.on('ATOM_SHELL_GUEST_VIEW_MANAGER_ATTACH_GUEST', function(event, elementInstanceId, guestInstanceId, params) {
