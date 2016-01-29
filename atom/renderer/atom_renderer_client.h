@@ -22,6 +22,8 @@ class AtomRendererClient : public content::ContentRendererClient,
   AtomRendererClient();
   virtual ~AtomRendererClient();
 
+  void WillReleaseScriptContext(blink::WebFrame* frame,
+                              v8::Handle<v8::Context> context);
   void DidCreateScriptContext(blink::WebFrame* frame,
                               v8::Handle<v8::Context> context);
 
