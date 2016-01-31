@@ -334,7 +334,7 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
 
   CreateFrom(isolate(), new_contents)->delayed_load_url_ = true;
 
-  if (IsGuest() && opener_render_frame_id == MSG_ROUTING_NONE) {
+  if (IsGuest()) {
     content::NavigationController::LoadURLParams load_url_params(target_url);
     // http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-95229140
     load_url_params.referrer = content::Referrer(GetURL(),
@@ -346,9 +346,6 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
     load_url_params.frame_name = frame_name;
     CreateFrom(isolate(), new_contents)->delayed_load_url_params_.reset(
       new content::NavigationController::LoadURLParams(load_url_params));
-  } else {
-    // we will never end up here, but someone else
-    // using normal electron windows would I think
   }
 }
 
@@ -360,6 +357,15 @@ void WebContents::AddNewContents(content::WebContents* source,
                     bool* was_blocked) {
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
+
+  // was_blocked is null unless the opener is suppressed
+  if (was_blocked) {
+    *was_blocked = true;
+  } else {
+    // we won't need these because the opener will handle it
+    CreateFrom(isolate(), new_contents)->
+      delayed_load_url_params_.reset(nullptr);
+  }
 
   // set webPreferences
   base::DictionaryValue* web_preferences =
@@ -380,8 +386,7 @@ void WebContents::AddNewContents(content::WebContents* source,
                   "ATOM_SHELL_GUEST_VIEW_MANAGER_TAB_OPEN",
                   new_tab_event,
                   "about:blank",
-                  delayed_load_url_params_.get()
-                    ? new_contents->GetMainFrame()->GetFrameName() : "",
+                  "",
                   disposition,
                   *options);
     return;
@@ -409,8 +414,7 @@ void WebContents::AddNewContents(content::WebContents* source,
                   "ATOM_SHELL_GUEST_WINDOW_MANAGER_WINDOW_OPEN",
                   window_open_event,
                   "about:blank",
-                  delayed_load_url_params_.get()
-                    ? new_contents->GetMainFrame()->GetFrameName() : "",
+                  "",
                   *options);
     return;
   }
