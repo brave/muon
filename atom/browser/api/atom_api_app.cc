@@ -31,10 +31,14 @@
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "brightray/browser/brightray_paths.h"
+#include "chrome/browser/chrome_notification_types.h"
 #include "chrome/common/chrome_paths.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/client_certificate_delegate.h"
 #include "content/public/browser/gpu_data_manager.h"
+#include "content/public/browser/navigation_details.h"
+#include "content/public/browser/notification_service.h"
+#include "content/public/browser/notification_types.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/common/content_switches.h"
 #include "native_mate/dictionary.h"
@@ -45,6 +49,10 @@
 
 #if defined(OS_WIN)
 #include "base/strings/utf_string_conversions.h"
+#endif
+
+#if defined(ENABLE_EXTENSIONS)
+#include "atom/browser/api/atom_api_extension.h"
 #endif
 
 using atom::Browser;
@@ -202,6 +210,34 @@ App::App(v8::Isolate* isolate) {
   Browser::Get()->AddObserver(this);
   content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
+  registrar_.Add(this,
+                 content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED,
+                 content::NotificationService::AllBrowserContextsAndSources());
+}
+
+// TOOD(bridiver) - move this to api_extension?
+void App::Observe(
+    int type, const content::NotificationSource& source,
+    const content::NotificationDetails& details) {
+  switch (type) {
+    case content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED: {
+#if defined(ENABLE_EXTENSIONS)
+      content::WebContents* web_contents =
+          content::Source<content::WebContents>(source).ptr();
+      auto browser_context = web_contents->GetBrowserContext();
+      auto url = web_contents->GetURL();
+
+      // make sure background pages get a webcontents
+      // api wrapper so they can communicate via IPC
+      if (Extension::IsBackgroundPageUrl(url, browser_context)) {
+        v8::Locker locker(isolate());
+        v8::HandleScope handle_scope(isolate());
+        WebContents::CreateFrom(isolate(), web_contents);
+      }
+#endif
+      break;
+    }
+  }
 }
 
 App::~App() {
@@ -281,6 +317,7 @@ bool App::CanCreateWindow(const GURL& opener_url,
                      const GURL& opener_top_level_frame_url,
                      const GURL& source_origin,
                      WindowContainerType container_type,
+                     const std::string& frame_name,
                      const GURL& target_url,
                      const content::Referrer& referrer,
                      WindowOpenDisposition disposition,

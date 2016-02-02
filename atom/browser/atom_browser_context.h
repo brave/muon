@@ -7,7 +7,16 @@
 
 #include <string>
 
+#include "base/memory/weak_ptr.h"
 #include "brightray/browser/browser_context.h"
+
+namespace syncable_prefs {
+class PrefServiceSyncable;
+}
+
+namespace user_prefs {
+class PrefRegistrySyncable;
+}
 
 namespace atom {
 
@@ -22,6 +31,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
  public:
   AtomBrowserContext(const std::string& partition, bool in_memory);
   ~AtomBrowserContext() override;
+
+  using brightray::BrowserContext::GetPath;
 
   // brightray::URLRequestContextGetter::Delegate:
   net::NetworkDelegate* CreateNetworkDelegate() override;
@@ -48,7 +59,16 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
   AtomNetworkDelegate* network_delegate() const { return network_delegate_; }
 
+  AtomBrowserContext* original_context() const { return static_cast<AtomBrowserContext*>(original_context_.get()); }
+
  private:
+#if defined(ENABLE_EXTENSIONS)
+  void RegisterUserPrefs();
+  void OnPrefsLoaded(bool success);
+  scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
+  std::unique_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
+#endif
+
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;
   std::unique_ptr<WebViewManager> guest_manager_;
   std::unique_ptr<AtomPermissionManager> permission_manager_;
@@ -57,6 +77,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomCertVerifier* cert_verifier_;
   AtomURLRequestJobFactory* job_factory_;
   AtomNetworkDelegate* network_delegate_;
+
+  scoped_refptr<brightray::BrowserContext> original_context_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserContext);
 };

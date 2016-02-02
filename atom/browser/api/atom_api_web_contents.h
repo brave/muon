@@ -354,7 +354,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   // When a new tab is created asynchronously, stores the LoadURLParams
   // needed to continue loading the page once the tab is ready.
-  scoped_ptr<content::NavigationController::LoadURLParams>
+  std::unique_ptr<content::NavigationController::LoadURLParams>
     delayed_load_url_params_;
   bool delayed_load_url_;
 

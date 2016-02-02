@@ -70,6 +70,10 @@
 
 #include "atom/common/node_includes.h"
 
+#if defined(ENABLE_EXTENSIONS)
+#include "atom/browser/extensions/tab_helper.h"
+#endif
+
 namespace {
 
 struct PrintSettings {
@@ -400,7 +404,7 @@ void WebContents::AddNewContents(content::WebContents* source,
   // set webPreferences
   base::DictionaryValue* web_preferences =
     WebContentsPreferences::FromWebContents(new_contents)->web_preferences();
-  scoped_ptr<base::DictionaryValue> options(new base::DictionaryValue);
+  std::unique_ptr<base::DictionaryValue> options(new base::DictionaryValue);
   options->Set(options::kWebPreferences, web_preferences->CreateDeepCopy());
   if (target_url != "")
     options->SetString("delayedLoadUrl", target_url);
@@ -410,7 +414,7 @@ void WebContents::AddNewContents(content::WebContents* source,
     auto new_tab_event = v8::Local<v8::Object>::Cast(
                                         mate::Event::Create(isolate()).ToV8());
     mate::Dictionary(isolate(), new_tab_event).Set("sender",
-                                                        GetWrapper(isolate()));
+                                                        GetWrapper());
     node::Environment* env = node::Environment::GetCurrent(isolate());
     // the url will be set in ResumeLoadingCreatedWebContents
     mate::EmitEvent(isolate(),
@@ -423,7 +427,7 @@ void WebContents::AddNewContents(content::WebContents* source,
                   *options);
   } else if (disposition == NEW_POPUP || disposition == NEW_WINDOW) {
     // Set windowOptions
-    scoped_ptr<base::DictionaryValue> browser_options(
+    std::unique_ptr<base::DictionaryValue> browser_options(
                                                     new base::DictionaryValue);
     browser_options->SetInteger("height", initial_rect.height());
     browser_options->SetInteger("width", initial_rect.width());
@@ -435,7 +439,7 @@ void WebContents::AddNewContents(content::WebContents* source,
     auto window_open_event = v8::Local<v8::Object>::Cast(
                                         mate::Event::Create(isolate()).ToV8());
     mate::Dictionary(isolate(), window_open_event).Set(
-                                              "sender", GetWrapper(isolate()));
+                                              "sender", GetWrapper());
     node::Environment* env = node::Environment::GetCurrent(isolate());
     // the url will be set in ResumeLoadingCreatedWebContents
     mate::EmitEvent(isolate(),
@@ -853,7 +857,11 @@ void WebContents::NavigationEntryCommitted(
 }
 
 int WebContents::GetID() const {
+#if defined(ENABLE_EXTENSIONS)
+  return extensions::TabHelper::IdForTab(web_contents());
+#else
   return web_contents()->GetRenderProcessHost()->GetID();
+#endif
 }
 
 bool WebContents::Equal(const WebContents* web_contents) const {
@@ -862,7 +870,7 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 
 void WebContents::Reload(bool ignore_cache) {
   if (ignore_cache)
-    web_contents()->GetController().ReloadIgnoringCache(true);
+    web_contents()->GetController().ReloadBypassingCache(true);
   else
     web_contents()->GetController().Reload(true);
 }
@@ -1142,6 +1150,13 @@ void WebContents::PrintToPDF(const base::DictionaryValue& setting,
       PrintToPDF(setting, callback);
 }
 
+int WebContents::GetContentWindowId() {
+  if (guest_delegate_)
+    return guest_delegate_->proxy_routing_id();
+  else
+    return MSG_ROUTING_NONE;
+}
+
 void WebContents::AddWorkSpace(mate::Arguments* args,
                                const base::FilePath& path) {
   if (path.empty()) {
@@ -1225,6 +1240,22 @@ void WebContents::StopFindInPage(content::StopFindAction action) {
 
 void WebContents::Focus() {
   web_contents()->Focus();
+}
+
+void WebContents::SetActive(bool active) {
+  if (Emit("set-active", active))
+    return;
+
+#if defined(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetActive(active);
+#endif
+
+  if (active)
+    web_contents()->WasShown();
+  else
+    web_contents()->WasHidden();
 }
 
 void WebContents::TabTraverse(bool reverse) {
@@ -1420,6 +1451,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("addWorkSpace", &WebContents::AddWorkSpace)
       .SetMethod("removeWorkSpace", &WebContents::RemoveWorkSpace)
       .SetProperty("id", &WebContents::ID)
+      .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
+      .SetMethod("setActive", &WebContents::SetActive)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)
