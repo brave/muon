@@ -1055,6 +1055,12 @@ void WebContents::PrintToPDF(const base::DictionaryValue& setting,
       PrintToPDF(setting, callback);
 }
 
+int WebContents::GetContentWindowId() {
+  if (guest_delegate_)
+    return guest_delegate_->proxy_routing_id();
+  else return MSG_ROUTING_NONE;
+}
+
 void WebContents::AddWorkSpace(mate::Arguments* args,
                                const base::FilePath& path) {
   if (path.empty()) {
@@ -1326,6 +1332,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("_printToPDF", &WebContents::PrintToPDF)
       .SetMethod("addWorkSpace", &WebContents::AddWorkSpace)
       .SetMethod("removeWorkSpace", &WebContents::RemoveWorkSpace)
+      .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)
       .SetProperty("debugger", &WebContents::Debugger);
