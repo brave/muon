@@ -13,12 +13,15 @@
 #include "atom/common/native_mate_converters/callback.h"
 #include "chrome/browser/process_singleton.h"
 #include "content/public/browser/gpu_data_manager_observer.h"
+#include "content/public/browser/notification_observer.h"
+#include "content/public/browser/notification_registrar.h"
 #include "native_mate/handle.h"
 #include "net/base/completion_callback.h"
 
 #if defined(USE_NSS_CERTS)
 #include "chrome/browser/certificate_manager_model.h"
 #endif
+
 
 namespace base {
 class FilePath;
@@ -35,7 +38,8 @@ namespace api {
 class App : public AtomBrowserClient::Delegate,
             public mate::EventEmitter,
             public BrowserObserver,
-            public content::GpuDataManagerObserver {
+            public content::GpuDataManagerObserver,
+            public content::NotificationObserver {
  public:
   static mate::Handle<App> Create(v8::Isolate* isolate);
 
@@ -67,6 +71,7 @@ class App : public AtomBrowserClient::Delegate,
                        const GURL& opener_top_level_frame_url,
                        const GURL& source_origin,
                        WindowContainerType container_type,
+                       const std::string& frame_name,
                        const GURL& target_url,
                        const content::Referrer& referrer,
                        WindowOpenDisposition disposition,
@@ -105,6 +110,10 @@ class App : public AtomBrowserClient::Delegate,
   mate::ObjectTemplateBuilder GetObjectTemplateBuilder(
       v8::Isolate* isolate) override;
 
+  void Observe(
+    int type, const content::NotificationSource& source,
+    const content::NotificationDetails& details) override;
+
  private:
   // Get/Set the pre-defined path in PathService.
   base::FilePath GetPath(mate::Arguments* args, const std::string& name);
@@ -126,6 +135,8 @@ class App : public AtomBrowserClient::Delegate,
 #if defined(OS_WIN)
   bool IsAeroGlassEnabled();
 #endif
+
+  content::NotificationRegistrar registrar_;
 
   scoped_ptr<ProcessSingleton> process_singleton_;
 
