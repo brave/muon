@@ -9,6 +9,7 @@
   'includes': [
     'filenames.gypi',
     'vendor/native_mate/native_mate_files.gypi',
+    'extensions.gypi',
   ],
   'target_defaults': {
     'defines': [
@@ -256,6 +257,23 @@
         'vendor/brightray/brightray.gyp:brightray',
       ],
       'conditions': [
+        ['enable_extensions==1', {
+          'dependencies': [ 'extensions.gyp:atom_resources' ],
+          'sources': [ '<@(extension_sources)' ],
+          'conditions': [
+            ['OS=="linux"', {
+              'dependencies': [
+                'extensions.gyp:xscrnsaver',
+              ],
+            }],
+          ]
+        }],
+        ['enable_extensions==1 and libchromiumcontent_component==1', {
+          'link_settings': {
+            # Following libraries are always linked statically.
+            'libraries': [ '<@(extension_libraries)' ],
+          },
+        }],
         ['libchromiumcontent_component', {
           'link_settings': {
             'libraries': [ '<@(libchromiumcontent_v8_libraries)' ],
@@ -430,6 +448,7 @@
           'type': 'shared_library',
           'dependencies': [
             '<(project_name)_lib',
+            'extensions.gyp:atom_resources',
           ],
           'sources': [
             '<@(framework_sources)',
