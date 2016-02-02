@@ -69,6 +69,10 @@
 
 #include "atom/common/node_includes.h"
 
+#if defined(ENABLE_EXTENSIONS)
+#include "atom/browser/extensions/tab_helper.h"
+#endif
+
 namespace {
 
 struct PrintSettings {
@@ -834,7 +838,11 @@ void WebContents::NavigationEntryCommitted(
 }
 
 int WebContents::GetID() const {
+#if defined(ENABLE_EXTENSIONS)
+  return extensions::TabHelper::IdForTab(web_contents());
+#else
   return web_contents()->GetRenderProcessHost()->GetID();
+#endif
 }
 
 bool WebContents::Equal(const WebContents* web_contents) const {
@@ -1123,6 +1131,13 @@ void WebContents::PrintToPDF(const base::DictionaryValue& setting,
       PrintToPDF(setting, callback);
 }
 
+int WebContents::GetContentWindowId() {
+  if (guest_delegate_)
+    return guest_delegate_->proxy_routing_id();
+  else
+    return MSG_ROUTING_NONE;
+}
+
 void WebContents::AddWorkSpace(mate::Arguments* args,
                                const base::FilePath& path) {
   if (path.empty()) {
@@ -1206,6 +1221,16 @@ void WebContents::StopFindInPage(content::StopFindAction action) {
 
 void WebContents::Focus() {
   web_contents()->Focus();
+}
+
+void WebContents::SetActive(bool active) {
+  if (Emit("set-active", active))
+    return;
+
+  if (active)
+    web_contents()->WasShown();
+  else
+    web_contents()->WasHidden();
 }
 
 void WebContents::TabTraverse(bool reverse) {
@@ -1400,6 +1425,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("addWorkSpace", &WebContents::AddWorkSpace)
       .SetMethod("removeWorkSpace", &WebContents::RemoveWorkSpace)
       .SetProperty("id", &WebContents::ID)
+      .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
+      .SetMethod("setActive", &WebContents::SetActive)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)

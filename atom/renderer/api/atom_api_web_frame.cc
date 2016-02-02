@@ -12,7 +12,6 @@
 #include "atom/renderer/api/atom_api_spell_check_client.h"
 #include "base/memory/memory_pressure_listener.h"
 #include "content/public/renderer/render_frame.h"
-#include "content/public/renderer/render_view.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "third_party/WebKit/public/web/WebCache.h"
@@ -92,6 +91,21 @@ double WebFrame::GetZoomFactor() const {
 
 void WebFrame::SetZoomLevelLimits(double min_level, double max_level) {
   web_frame_->view()->setDefaultPageScaleLimits(min_level, max_level);
+}
+
+v8::Local<v8::Value> WebFrame::GetContentWindow(int content_window_id) {
+  content::RenderView* view =
+    content::RenderView::FromRoutingID(content_window_id);
+  blink::WebFrame* frame = view->GetWebView()->mainFrame();
+
+  v8::Local<v8::Value> window;
+  if (frame->isWebLocalFrame()) {
+    window = frame->mainWorldScriptContext()->Global();
+  } else {
+    window =
+        frame->toWebRemoteFrame()->deprecatedMainWorldScriptContext()->Global();
+  }
+  return window;
 }
 
 v8::Local<v8::Value> WebFrame::RegisterEmbedderCustomElement(
@@ -228,7 +242,8 @@ void WebFrame::BuildPrototype(
       .SetMethod("insertText", &WebFrame::InsertText)
       .SetMethod("executeJavaScript", &WebFrame::ExecuteJavaScript)
       .SetMethod("getResourceUsage", &WebFrame::GetResourceUsage)
-      .SetMethod("clearCache", &WebFrame::ClearCache);
+      .SetMethod("clearCache", &WebFrame::ClearCache)
+      .SetMethod("getContentWindow", &WebFrame::GetContentWindow);
 }
 
 }  // namespace api
