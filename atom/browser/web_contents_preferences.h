@@ -7,8 +7,15 @@
 
 #include <vector>
 
+#include "atom/common/options_switches.h"
+#include "base/command_line.h"
 #include "base/values.h"
 #include "content/public/browser/web_contents_user_data.h"
+#include "content/public/common/content_switches.h"
+
+#if defined(ENABLE_EXTENSIONS)
+#include "extensions/common/switches.h"
+#endif
 
 namespace base {
 class CommandLine;
@@ -34,6 +41,29 @@ class WebContentsPreferences
   // Append command paramters according to |web_contents|'s preferences.
   static void AppendExtraCommandLineSwitches(
       content::WebContents* web_contents, base::CommandLine* command_line);
+
+  static bool run_node(const base::CommandLine* cmd_line) {
+    // don't run node if
+#if defined(ENABLE_EXTENSIONS)
+    if (cmd_line->
+        HasSwitch(::extensions::switches::kExtensionProcess))
+      return false;
+#endif
+    return !(
+      // node integration is disabled
+      cmd_line->GetSwitchValueASCII(switches::kNodeIntegration) == "false" &&
+      // and there is no preload script
+      !cmd_line->HasSwitch(switches::kPreloadScript) &&
+      !cmd_line->HasSwitch(switches::kPreloadURL) &&
+      // and this is a guest renderer process
+      (cmd_line->GetSwitchValueASCII(::switches::kProcessType) ==
+                                                ::switches::kRendererProcess &&
+        cmd_line->HasSwitch(switches::kGuestInstanceID)));
+  }
+
+  static bool run_node() {
+    return run_node(base::CommandLine::ForCurrentProcess());
+  }
 
   // Modify the WebPreferences according to |web_contents|'s preferences.
   static void OverrideWebkitPrefs(
