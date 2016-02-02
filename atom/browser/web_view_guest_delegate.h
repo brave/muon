@@ -129,6 +129,8 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
 
   api::WebContents* api_web_contents_;
 
+  int guest_proxy_routing_id_;
+
   DISALLOW_COPY_AND_ASSIGN(WebViewGuestDelegate);
 };
 

@@ -26,10 +26,14 @@
 #include "base/files/file_path.h"
 #include "base/path_service.h"
 #include "brightray/browser/brightray_paths.h"
+#include "chrome/browser/chrome_notification_types.h"
 #include "chrome/common/chrome_paths.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/client_certificate_delegate.h"
 #include "content/public/browser/gpu_data_manager.h"
+#include "content/public/browser/navigation_details.h"
+#include "content/public/browser/notification_service.h"
+#include "content/public/browser/notification_types.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/common/content_switches.h"
 #include "native_mate/dictionary.h"
@@ -41,6 +45,14 @@
 #if defined(OS_WIN)
 #include "base/strings/utf_string_conversions.h"
 #include "ui/base/win/shell.h"
+#endif
+
+#if defined(ENABLE_EXTENSIONS)
+#include "extensions/browser/extension_registry.h"
+#include "extensions/browser/extension_system.h"
+#include "extensions/common/extension.h"
+#include "extensions/common/manifest_handlers/background_info.h"
+#include "extensions/common/one_shot_event.h"
 #endif
 
 using atom::Browser;
@@ -164,6 +176,40 @@ App::App() {
   static_cast<AtomBrowserClient*>(AtomBrowserClient::Get())->set_delegate(this);
   Browser::Get()->AddObserver(this);
   content::GpuDataManager::GetInstance()->AddObserver(this);
+  registrar_.Add(this,
+                 content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED,
+                 content::NotificationService::AllBrowserContextsAndSources());
+}
+
+void App::Observe(
+    int type, const content::NotificationSource& source,
+    const content::NotificationDetails& details) {
+  switch (type) {
+    case content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED: {
+#if defined(ENABLE_EXTENSIONS)
+      content::WebContents* web_contents =
+          content::Source<content::WebContents>(source).ptr();
+      auto browser_context = web_contents->GetBrowserContext();
+      auto url = web_contents->GetURL();
+
+      // make sure background pages get a webcontents
+      // api wrapper so they can communicate via IPC
+      if (extensions::ExtensionSystem::Get(browser_context)
+          ->ready().is_signaled()) {
+        const extensions::Extension* extension =
+            extensions::ExtensionRegistry::Get(browser_context)->
+                enabled_extensions().GetExtensionOrAppByURL(url);
+        if (extension &&
+            url == extensions::BackgroundInfo::GetBackgroundURL(extension)) {
+          v8::Locker locker(isolate());
+          v8::HandleScope handle_scope(isolate());
+          WebContents::CreateFrom(isolate(), web_contents);
+        }
+      }
+#endif
+      break;
+    }
+  }
 }
 
 App::~App() {
@@ -234,6 +280,7 @@ bool App::CanCreateWindow(const GURL& opener_url,
                      const GURL& opener_top_level_frame_url,
                      const GURL& source_origin,
                      WindowContainerType container_type,
+                     const std::string& frame_name,
                      const GURL& target_url,
                      const content::Referrer& referrer,
                      WindowOpenDisposition disposition,
