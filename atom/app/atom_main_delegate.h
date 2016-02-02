@@ -12,6 +12,8 @@
 
 namespace atom {
 
+base::FilePath GetResourcesPakFilePathByName(const std::string resource_name);
+
 class AtomMainDelegate : public brightray::MainDelegate {
  public:
   AtomMainDelegate();
@@ -37,6 +39,8 @@ class AtomMainDelegate : public brightray::MainDelegate {
 #if defined(OS_MACOSX)
   void OverrideChildProcessPath() override;
   void OverrideFrameworkBundlePath() override;
+#elif defined(OS_LINUX)
+  void ZygoteForked() override;
 #endif
 
  private:
