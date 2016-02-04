@@ -50,6 +50,7 @@
       'atom/renderer/lib/chrome-api.js',
       'atom/renderer/lib/init.js',
       'atom/renderer/lib/inspector.js',
+      'atom/renderer/lib/init-without-node.js',
       'atom/renderer/lib/override.js',
       'atom/renderer/lib/web-view/guest-view-internal.js',
       'atom/renderer/lib/web-view/web-view.js',
