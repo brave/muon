@@ -34,6 +34,7 @@
 #include "content/public/browser/resource_dispatcher_host.h"
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/common/content_switches.h"
 #include "content/public/common/web_preferences.h"
 #include "net/cert/x509_certificate.h"
 #include "net/ssl/ssl_cert_request_info.h"
@@ -251,6 +252,11 @@ void AtomBrowserClient::AppendExtraCommandLineSwitches(
 
   WebContentsPreferences::AppendExtraCommandLineSwitches(
       web_contents, command_line);
+
+  if (WebContentsPreferences::run_node(command_line)) {
+    // Disable renderer sandbox for most of node's functions.
+    command_line->AppendSwitch(::switches::kNoSandbox);
+  }
 }
 
 void AtomBrowserClient::DidCreatePpapiPlugin(

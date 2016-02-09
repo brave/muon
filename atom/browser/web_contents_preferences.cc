@@ -7,8 +7,6 @@
 #include <string>
 
 #include "atom/common/native_mate_converters/value_converter.h"
-#include "atom/common/options_switches.h"
-#include "base/command_line.h"
 #include "base/strings/string_number_conversions.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/web_preferences.h"
