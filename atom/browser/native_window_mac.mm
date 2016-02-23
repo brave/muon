@@ -990,7 +990,9 @@ void NativeWindowMac::InstallView() {
   [[window_ contentView] setWantsLayer:YES];
 
   NSView* view = inspectable_web_contents()->GetView()->GetNativeView();
-  if (has_frame()) {
+
+  if (has_frame() &&
+      !(window_.get().styleMask & NSTexturedBackgroundWindowMask)) {
     [view setFrame:[[window_ contentView] bounds]];
     [[window_ contentView] addSubview:view];
   } else {
