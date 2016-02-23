@@ -445,8 +445,7 @@ NativeWindowMac::NativeWindowMac(
     styleMask |= NSResizableWindowMask;
   }
   if ((titleBarStyle == "hidden") || (titleBarStyle == "hidden-inset")) {
-    styleMask |= NSFullSizeContentViewWindowMask;
-    styleMask |= NSUnifiedTitleAndToolbarWindowMask;
+    styleMask |= NSTexturedBackgroundWindowMask;
   }
   // We capture this because we need to access the option later when
   // entering/exiting fullscreen and since the options dict is only passed to
@@ -996,7 +995,9 @@ void NativeWindowMac::InstallView() {
   [[window_ contentView] setWantsLayer:YES];
 
   NSView* view = inspectable_web_contents()->GetView()->GetNativeView();
-  if (has_frame()) {
+
+  if (has_frame() &&
+      !(window_.get().styleMask & NSTexturedBackgroundWindowMask)) {
     [view setFrame:[[window_ contentView] bounds]];
     [[window_ contentView] addSubview:view];
   } else {
@@ -1013,14 +1014,16 @@ void NativeWindowMac::InstallView() {
     [view setFrame:[content_view_ bounds]];
     [content_view_ addSubview:view];
 
-    [[window_ standardWindowButton:NSWindowZoomButton] setHidden:YES];
-    [[window_ standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
-    [[window_ standardWindowButton:NSWindowCloseButton] setHidden:YES];
+    if (!has_frame()) {
+      [[window_ standardWindowButton:NSWindowZoomButton] setHidden:NO];
+      [[window_ standardWindowButton:NSWindowMiniaturizeButton] setHidden:NO];
+      [[window_ standardWindowButton:NSWindowCloseButton] setHidden:NO];
 
-    // Some third-party OS X utilities check the zoom button's enabled state to
-    // determine whether to show custom UI on hover, so we disable it here to
-    // prevent them from doing so in a frameless app window.
-    [[window_ standardWindowButton:NSWindowZoomButton] setEnabled:NO];
+      // Some third-party OS X utilities check the zoom button's enabled state to
+      // determine whether to show custom UI on hover, so we disable it here to
+      // prevent them from doing so in a frameless app window.
+      [[window_ standardWindowButton:NSWindowZoomButton] setEnabled:NO];
+    }
   }
 }
 
