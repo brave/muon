@@ -125,6 +125,15 @@ void AtomMainDelegate::PreSandboxStartup() {
 #endif
 }
 
+#if defined(OS_LINUX)
+// renderer is started by the zygote process on linux
+// this may or may not work correctly when the with
+// the linux sandbox enabled
+void AtomMainDelegate::ZygoteForked() {
+  AtomRendererClient::PreSandboxStartup();
+}
+#endif
+
 content::ContentBrowserClient* AtomMainDelegate::CreateContentBrowserClient() {
   browser_client_.reset(new AtomBrowserClient);
   return browser_client_.get();
