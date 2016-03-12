@@ -178,7 +178,6 @@ void JavascriptBindings::PreSandboxStartup() {
   base::FilePath script_path =
           resources_path.Append(FILE_PATH_LITERAL("atom.asar"))
                         .Append(FILE_PATH_LITERAL("renderer"))
-                        .Append(FILE_PATH_LITERAL("lib"))
                         .Append(FILE_PATH_LITERAL("init-without-node.js"));
 
   std::string script_source;
