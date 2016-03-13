@@ -3,7 +3,7 @@
 	url = https://github.com/brave/brightray.git
 [submodule "vendor/node"]
 	path = vendor/node
-	url = https://github.com/atom/node.git
+	url = https://github.com/brave/node.git
 [submodule "vendor/depot_tools"]
 	path = vendor/depot_tools
 	url = https://chromium.googlesource.com/chromium/tools/depot_tools.git
