@@ -99,10 +99,12 @@ void AtomBindings::OnCallNextTick(uv_async_t* handle) {
        it != self->pending_next_ticks_.end(); ++it) {
     node::Environment* env = *it;
     node::Environment::TickInfo* tick_info = env->tick_info();
+    node::Environment::AsyncCallbackScope callback_scope(env);
 
     v8::Context::Scope context_scope(env->context());
-    if (tick_info->in_tick())
+    if (callback_scope.in_makecallback()) {
       continue;
+    }
 
     if (tick_info->length() == 0) {
       env->isolate()->RunMicrotasks();
@@ -113,9 +115,7 @@ void AtomBindings::OnCallNextTick(uv_async_t* handle) {
       continue;
     }
 
-    tick_info->set_in_tick(true);
     env->tick_callback_function()->Call(env->process_object(), 0, NULL);
-    tick_info->set_in_tick(false);
   }
 
   self->pending_next_ticks_.clear();
