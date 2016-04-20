@@ -7,10 +7,15 @@
 #include <string>
 #include <vector>
 
+#include "atom/browser/web_contents_preferences.h"
 #include "atom/common/api/api_messages.h"
 #include "atom/common/api/atom_bindings.h"
 #include "atom/common/api/event_emitter_caller.h"
 #include "atom/common/color_util.h"
+#include "atom/common/asar/asar_util.h"
+#include "atom/common/javascript_bindings.h"
+#include "atom/common/native_mate_converters/string16_converter.h"
+#include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/node_bindings.h"
 #include "atom/common/node_includes.h"
 #include "atom/common/options_switches.h"
@@ -23,18 +28,30 @@
 #include "chrome/renderer/printing/print_web_view_helper.h"
 #include "chrome/renderer/tts_dispatcher.h"
 #include "content/public/common/content_constants.h"
+#include "content/public/common/isolated_world_ids.h"
+#include "content/public/common/url_constants.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_frame_observer.h"
 #include "content/public/renderer/render_thread.h"
 #include "content/public/renderer/render_view.h"
 #include "ipc/ipc_message_macros.h"
+#include "native_mate/dictionary.h"
+#include "net/base/filename_util.h"
 #include "third_party/WebKit/public/web/WebCustomElement.h"
+#include "third_party/WebKit/public/web/WebDocument.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebPluginParams.h"
 #include "third_party/WebKit/public/web/WebKit.h"
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
 #include "third_party/WebKit/public/web/WebRuntimeFeatures.h"
 #include "third_party/WebKit/public/web/WebView.h"
+
+#if defined(ENABLE_EXTENSIONS)
+#include "atom/renderer/extensions/atom_extensions_renderer_client.h"
+#include "atom/common/extensions/atom_extensions_client.h"
+#include "atom/renderer/extensions/atom_extensions_render_view_observer.h"
+#include "extensions/renderer/dispatcher.h"
+#endif
 
 #if defined(OS_WIN)
 #include <shlobj.h>
@@ -81,12 +98,21 @@ class AtomRenderFrameObserver : public content::RenderFrameObserver {
 AtomRendererClient::AtomRendererClient()
     : node_bindings_(NodeBindings::Create(false)),
       atom_bindings_(new AtomBindings) {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::ExtensionsClient::Set(
+      extensions::AtomExtensionsClient::GetInstance());
+  extensions::ExtensionsRendererClient::Set(
+      extensions::AtomExtensionsRendererClient::GetInstance());
+#endif
 }
 
 AtomRendererClient::~AtomRendererClient() {
 }
 
 void AtomRendererClient::WebKitInitialized() {
+  if (!WebContentsPreferences::run_node())
+    return;
+
   blink::WebCustomElement::addEmbedderCustomElementName("webview");
   blink::WebCustomElement::addEmbedderCustomElementName("browserplugin");
 
@@ -94,7 +120,13 @@ void AtomRendererClient::WebKitInitialized() {
 }
 
 void AtomRendererClient::RenderThreadStarted() {
-  content::RenderThread::Get()->AddObserver(this);
+  content::RenderThread* thread = content::RenderThread::Get();
+  thread->AddObserver(this);
+
+#if defined(ENABLE_EXTENSIONS)
+  extensions::AtomExtensionsRendererClient::GetInstance()->
+      RenderThreadStarted();
+#endif
 
 #if defined(OS_WIN)
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
@@ -108,16 +140,21 @@ void AtomRendererClient::RenderThreadStarted() {
 
 void AtomRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::AtomExtensionsRendererClient::GetInstance()->RenderFrameCreated(
+    render_frame);
+#endif
+
   new PepperHelper(render_frame);
 
   // Allow file scheme to handle service worker by default.
   blink::WebSecurityPolicy::registerURLSchemeAsAllowingServiceWorkers("file");
 
-  // Only insert node integration for the main frame.
   if (!render_frame->IsMainFrame())
     return;
 
-  new AtomRenderFrameObserver(render_frame, this);
+  if (WebContentsPreferences::run_node())
+    new AtomRenderFrameObserver(render_frame, this);
 }
 
 void AtomRendererClient::RenderViewCreated(content::RenderView* render_view) {
@@ -135,6 +172,11 @@ void AtomRendererClient::RenderViewCreated(content::RenderView* render_view) {
 
   new printing::PrintWebViewHelper(render_view);
   new AtomRenderViewObserver(render_view, this);
+#if defined(ENABLE_EXTENSIONS)
+  extensions::AtomExtensionsRendererClient::GetInstance()->
+      RenderViewCreated(render_view);
+  new extensions::AtomExtensionsRenderViewObserver(render_view);
+#endif
 }
 
 blink::WebSpeechSynthesizer* AtomRendererClient::OverrideSpeechSynthesizer(
@@ -191,18 +233,30 @@ void AtomRendererClient::WillReleaseScriptContext(
   mate::EmitEvent(env->isolate(), env->process_object(), "exit");
 }
 
+bool AtomRendererClient::AllowPopup() {
+  if (WebContentsPreferences::run_node()) {
+    return false;  // TODO(bridiver) - should return setting for allow popups
+  }
+
+#if defined(ENABLE_EXTENSIONS)
+  return extensions::AtomExtensionsRendererClient::GetInstance()->AllowPopup();
+#else
+  return false;
+#endif
+}
+
 bool AtomRendererClient::ShouldFork(blink::WebLocalFrame* frame,
                                     const GURL& url,
                                     const std::string& http_method,
                                     bool is_initial_navigation,
                                     bool is_server_redirect,
                                     bool* send_referrer) {
-  // Handle all the navigations and reloads in browser.
-  // FIXME We only support GET here because http method will be ignored when
-  // the OpenURLFromTab is triggered, which means form posting would not work,
-  // we should solve this by patching Chromium in future.
-  *send_referrer = true;
-  return http_method == "GET";
+  if (WebContentsPreferences::run_node()) {
+    *send_referrer = true;
+    return http_method == "GET" && !is_server_redirect;
+  }
+
+  return false;
 }
 
 content::BrowserPluginDelegate* AtomRendererClient::CreateBrowserPluginDelegate(
@@ -220,5 +274,41 @@ void AtomRendererClient::AddKeySystems(
     std::vector<media::KeySystemInfo>* key_systems) {
   AddChromeKeySystems(key_systems);
 }
+
+bool AtomRendererClient::WillSendRequest(
+    blink::WebFrame* frame,
+    ui::PageTransition transition_type,
+    const GURL& url,
+    const GURL& first_party_for_cookies,
+    GURL* new_url) {
+  // Check whether the request should be allowed. If not allowed, we reset the
+  // URL to something invalid to prevent the request and cause an error.
+#if defined(ENABLE_EXTENSIONS)
+  if (extensions::AtomExtensionsRendererClient::GetInstance()->WillSendRequest(
+          frame, transition_type, url, new_url))
+    return true;
+#endif
+
+  return false;
+}
+
+void AtomRendererClient::DidInitializeServiceWorkerContextOnWorkerThread(
+    v8::Local<v8::Context> context,
+    const GURL& url) {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::Dispatcher::DidInitializeServiceWorkerContextOnWorkerThread(
+      context, url);
+#endif
+}
+
+void AtomRendererClient::WillDestroyServiceWorkerContextOnWorkerThread(
+    v8::Local<v8::Context> context,
+    const GURL& url) {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::Dispatcher::WillDestroyServiceWorkerContextOnWorkerThread(context,
+                                                                        url);
+#endif
+}
+
 
 }  // namespace atom
