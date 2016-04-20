@@ -27,6 +27,7 @@
 #include "base/path_service.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/common/chrome_paths.h"
+#include "content/public/browser/browser_thread.h"
 #include "content/public/browser/client_certificate_delegate.h"
 #include "content/public/browser/gpu_data_manager.h"
 #include "content/public/browser/render_frame_host.h"
@@ -229,21 +230,38 @@ void App::OnLogin(LoginHandler* login_handler) {
     login_handler->CancelAuth();
 }
 
-void App::OnCreateWindow(const GURL& target_url,
-                         const std::string& frame_name,
-                         WindowOpenDisposition disposition,
-                         int render_process_id,
-                         int render_frame_id) {
-  v8::Locker locker(isolate());
-  v8::HandleScope handle_scope(isolate());
-  content::RenderFrameHost* rfh =
-      content::RenderFrameHost::FromID(render_process_id, render_frame_id);
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(rfh);
-  if (web_contents) {
-    auto api_web_contents = WebContents::CreateFrom(isolate(), web_contents);
-    api_web_contents->OnCreateWindow(target_url, frame_name, disposition);
+bool App::CanCreateWindow(const GURL& opener_url,
+                     const GURL& opener_top_level_frame_url,
+                     const GURL& source_origin,
+                     WindowContainerType container_type,
+                     const GURL& target_url,
+                     const content::Referrer& referrer,
+                     WindowOpenDisposition disposition,
+                     const blink::WebWindowFeatures& features,
+                     bool user_gesture,
+                     bool opener_suppressed,
+                     content::ResourceContext* context,
+                     int render_process_id,
+                     int opener_render_view_id,
+                     int opener_render_frame_id,
+                     bool* no_javascript_access) {
+  // just a reminder that we are on the IO thread
+  // and need to be careful about v8 isolate usage
+  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
+
+  *no_javascript_access = false;
+
+  if (container_type == WINDOW_CONTAINER_TYPE_BACKGROUND) {
+    return true;
   }
+
+  // this will override allowpopups we need some way to integerate
+  // it so we can turn popup blocking off if desired
+  if (!user_gesture) {
+    return false;
+  }
+
+  return true;
 }
 
 void App::AllowCertificateError(

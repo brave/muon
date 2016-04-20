@@ -8,13 +8,20 @@
 #include <string>
 #include <vector>
 
+#include "atom/common/options_switches.h"
+#include "base/command_line.h"
 #include "content/public/renderer/content_renderer_client.h"
 #include "content/public/renderer/render_process_observer.h"
+
+namespace extensions {
+class Dispatcher;
+}
 
 namespace atom {
 
 class AtomBindings;
 class NodeBindings;
+class JavascriptBindings;
 
 class AtomRendererClient : public content::ContentRendererClient,
                            public content::RenderProcessObserver {
@@ -24,7 +31,6 @@ class AtomRendererClient : public content::ContentRendererClient,
 
   void DidCreateScriptContext(v8::Handle<v8::Context> context);
   void WillReleaseScriptContext(v8::Handle<v8::Context> context);
-
  private:
   enum NodeIntegration {
     ALL,
@@ -46,6 +52,7 @@ class AtomRendererClient : public content::ContentRendererClient,
                             blink::WebLocalFrame* frame,
                             const blink::WebPluginParams& params,
                             blink::WebPlugin** plugin) override;
+  bool AllowPopup() override;
   bool ShouldFork(blink::WebLocalFrame* frame,
                   const GURL& url,
                   const std::string& http_method,
@@ -57,6 +64,19 @@ class AtomRendererClient : public content::ContentRendererClient,
       const std::string& mime_type,
       const GURL& original_url) override;
   void AddKeySystems(std::vector<media::KeySystemInfo>* key_systems) override;
+  void DidInitializeServiceWorkerContextOnWorkerThread(
+      v8::Local<v8::Context> context,
+      const GURL& url) override;
+  void WillDestroyServiceWorkerContextOnWorkerThread(
+      v8::Local<v8::Context> context,
+      const GURL& url) override;
+
+  bool WillSendRequest(
+    blink::WebFrame* frame,
+    ui::PageTransition transition_type,
+    const GURL& url,
+    const GURL& first_party_for_cookies,
+    GURL* new_url) override;
 
   scoped_ptr<NodeBindings> node_bindings_;
   scoped_ptr<AtomBindings> atom_bindings_;
