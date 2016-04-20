@@ -19,6 +19,8 @@
 #include "third_party/WebKit/public/web/WebScriptSource.h"
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
 #include "third_party/WebKit/public/web/WebView.h"
+#include "content/renderer/browser_plugin/browser_plugin_manager.h"
+#include "content/renderer/browser_plugin/browser_plugin.h"
 
 #include "atom/common/node_includes.h"
 
@@ -104,7 +106,23 @@ void WebFrame::RegisterElementResizeCallback(
 }
 
 void WebFrame::AttachGuest(int id) {
+  // This is a workaround for a strange issue on windows with background tabs
+  // libchromiumcontent doesn't appear to be making the check for
+  // params.disposition == NEW_BACKGROUND_TAB in WebContentsImpl
+  // This results in the BrowserPluginGuest trying to access the native
+  // window before it's actually ready.
+  //
+  // It's also possible that the guest is being treated as
+  // visible because the "embedder", which is the same for all tabs
+  // in the window, is always visible.
+  //
+  // This hack works around the issue by always
+  // marking it as hidden while attaching
+  content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
+    updateVisibility(false);
   content::RenderFrame::FromWebFrame(web_frame_)->AttachGuest(id);
+  content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
+    updateVisibility(true);
 }
 
 void WebFrame::SetSpellCheckProvider(mate::Arguments* args,

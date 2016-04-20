@@ -39,16 +39,6 @@ class App : public AtomBrowserClient::Delegate,
  public:
   static mate::Handle<App> Create(v8::Isolate* isolate);
 
-  static void BuildPrototype(v8::Isolate* isolate,
-                             v8::Local<v8::ObjectTemplate> prototype);
-
-  // Called when window with disposition needs to be created.
-  void OnCreateWindow(const GURL& target_url,
-                      const std::string& frame_name,
-                      WindowOpenDisposition disposition,
-                      int render_process_id,
-                      int render_frame_id);
-
 #if defined(USE_NSS_CERTS)
   void OnCertificateManagerModelCreated(
       scoped_ptr<base::DictionaryValue> options,
@@ -73,6 +63,21 @@ class App : public AtomBrowserClient::Delegate,
   void OnLogin(LoginHandler* login_handler) override;
 
   // content::ContentBrowserClient:
+  bool CanCreateWindow(const GURL& opener_url,
+                       const GURL& opener_top_level_frame_url,
+                       const GURL& source_origin,
+                       WindowContainerType container_type,
+                       const GURL& target_url,
+                       const content::Referrer& referrer,
+                       WindowOpenDisposition disposition,
+                       const blink::WebWindowFeatures& features,
+                       bool user_gesture,
+                       bool opener_suppressed,
+                       content::ResourceContext* context,
+                       int render_process_id,
+                       int opener_render_view_id,
+                       int opener_render_frame_id,
+                       bool* no_javascript_access) override;
   void AllowCertificateError(
       content::WebContents* web_contents,
       int cert_error,

@@ -5,8 +5,10 @@
 #ifndef ATOM_BROWSER_WEB_VIEW_GUEST_DELEGATE_H_
 #define ATOM_BROWSER_WEB_VIEW_GUEST_DELEGATE_H_
 
+#include "content/public/browser/web_contents.h"
 #include "content/public/browser/browser_plugin_guest_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
+
 
 namespace content {
 struct NativeWebKeyboardEvent;
@@ -40,6 +42,9 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   WebViewGuestDelegate();
   ~WebViewGuestDelegate() override;
 
+  content::WebContents* CreateNewGuestWindow(
+      const content::WebContents::CreateParams& create_params) override;
+
   void Initialize(api::WebContents* api_web_contents);
 
   // Called when the WebContents is going to be destroyed.
@@ -53,6 +58,10 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   void HandleKeyboardEvent(content::WebContents* source,
                            const content::NativeWebKeyboardEvent& event);
 
+  // Returns the routing ID of the guest proxy in the owner's renderer process.
+  // This value is only valid after attachment or first navigation.
+  int proxy_routing_id() const { return guest_proxy_routing_id_; }
+
  protected:
   // content::WebContentsObserver:
   void DidStartProvisionalLoadForFrame(
@@ -63,6 +72,8 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   void DidCommitProvisionalLoadForFrame(
       content::RenderFrameHost* render_frame_host,
       const GURL& url, ui::PageTransition transition_type) override;
+  void RenderFrameHostChanged(content::RenderFrameHost* old_host,
+                                  content::RenderFrameHost* new_host) override;
 
   // content::BrowserPluginGuestDelegate:
   void DidAttach(int guest_proxy_routing_id) final;
@@ -73,6 +84,8 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
                   int element_instance_id,
                   bool is_full_page_plugin,
                   const base::Closure& completion_callback) final;
+
+
 
  private:
   // This method is invoked when the contents auto-resized to give the container
