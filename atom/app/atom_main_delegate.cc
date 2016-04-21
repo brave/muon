@@ -168,20 +168,6 @@ void AtomMainDelegate::PreSandboxStartup() {
 #endif
 }
 
-#if defined(OS_LINUX)
-// Some processes are started by the zygote process on linux
-// This will probably not work with the linux sandbox enabled
-void AtomMainDelegate::ZygoteForked() {
-  auto command_line = base::CommandLine::ForCurrentProcess();
-  std::string process_type = command_line->GetSwitchValueASCII(
-      ::switches::kProcessType);
-
-  if (process_type == ::switches::kUtilityProcess) {
-    AtomContentUtilityClient::PreSandboxStartup();
-  }
-}
-#endif
-
 content::ContentBrowserClient* AtomMainDelegate::CreateContentBrowserClient() {
   browser_client_.reset(new AtomBrowserClient);
   return browser_client_.get();
