@@ -121,7 +121,6 @@ void LoadExtensionResources() {
     pak_dir.Append(FILE_PATH_LITERAL("atom_resources.pak")));
   pak_resource_paths.push_back(
     pak_dir.Append(FILE_PATH_LITERAL("extensions_api_resources.pak")));
-
 #endif
 
   ui::ResourceBundle& bundle = ui::ResourceBundle::GetSharedInstance();
@@ -154,9 +153,9 @@ void AtomMainDelegate::PreSandboxStartup() {
     return;
 
 #if defined(OS_LINUX)
-    // always disable the sandbox on linux for now
-    // https://github.com/brave/browser-laptop/issues/715
-    command_line->AppendSwitch(::switches::kNoSandbox);
+  // always disable the sandbox on linux for now
+  // https://github.com/brave/browser-laptop/issues/715
+  command_line->AppendSwitch(::switches::kNoSandbox);
 #endif
 
   // Allow file:// URIs to read other file:// URIs by default.

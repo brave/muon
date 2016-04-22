@@ -45,6 +45,9 @@ class TabHelper : public content::WebContentsObserver,
   void SetWindowId(const int32_t& id);
   const int32_t& window_id() const { return window_id_; }
 
+  // Set this tab as the active tab in its window
+  void SetActive(bool active);
+
   // If the specified WebContents has a TabHelper (probably because it
   // was used as the contents of a tab), returns a tab id. This value is
   // immutable for a given tab. It will be unique across Chrome within the

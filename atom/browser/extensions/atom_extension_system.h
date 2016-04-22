@@ -15,12 +15,21 @@
 
 class ExtensionService {
  public:
+  virtual bool IsExtensionEnabled(const std::string& extension_id) const = 0;
+  virtual const extensions::Extension*
+                        GetInstalledExtension(const std::string& id) const = 0;
+  virtual void EnableExtension(const std::string& extension_id) = 0;
+  virtual void DisableExtension(const std::string& extension_id,
+                        int disable_reasons) = 0;
+  virtual void NotifyExtensionLoaded(
+                                  const extensions::Extension* extension) = 0;
+  virtual void NotifyExtensionUnloaded(const extensions::Extension* extension,
+                         extensions::UnloadedExtensionInfo::Reason reason) = 0;
   virtual const extensions::Extension* AddExtension(
                                   const extensions::Extension* extension) = 0;
   virtual const extensions::Extension* GetExtensionById(
       const std::string& id,
       bool include_disabled) const = 0;
-  virtual void ReloadExtension(const std::string& extension_id) = 0;
   virtual bool is_ready() = 0;
 };
 
@@ -29,7 +38,9 @@ namespace extensions {
 class AtomExtensionSystemSharedFactory;
 class AppSorting;
 class StateStore;
+class ExtensionPrefs;
 class ExtensionRegistry;
+
 
 class AtomExtensionSystem : public ExtensionSystem,
                             public ExtensionService,
@@ -44,6 +55,7 @@ class AtomExtensionSystem : public ExtensionSystem,
 
   void InitForRegularProfile(bool extensions_enabled) override;
 
+  // ExtensionSystem implementation;
   ExtensionService* extension_service() override;  // shared
   RuntimeData* runtime_data() override;            // shared
   ManagementPolicy* management_policy() override;  // shared
@@ -67,12 +79,19 @@ class AtomExtensionSystem : public ExtensionSystem,
   void InstallUpdate(const std::string& extension_id,
                       const base::FilePath& temp_dir) override;
 
-  // ExtensionSystem implementation;
-  void ReloadExtension(const std::string& extension_id) override;
+  // ExtensionService implementation
+  bool IsExtensionEnabled(const std::string& extension_id) const override;
+  const Extension* GetInstalledExtension(const std::string& id) const override;
+  void EnableExtension(const std::string& extension_id) override;
+  void DisableExtension(const std::string& extension_id,
+                        int disable_reasons) override;
+  void NotifyExtensionLoaded(const Extension* extension) override;
+  void NotifyExtensionUnloaded(const Extension* extension,
+                               UnloadedExtensionInfo::Reason reason) override;
+  const Extension* AddExtension(const Extension* extension) override;
   const Extension* GetExtensionById(
       const std::string& id,
       bool include_disabled) const override;
-  const Extension* AddExtension(const Extension* extension) override;
   bool is_ready() override;
  private:
   void OnExtensionRegisteredWithRequestContexts(
@@ -81,10 +100,6 @@ class AtomExtensionSystem : public ExtensionSystem,
   void Observe(int type,
                const content::NotificationSource& source,
                const content::NotificationDetails& details) override;
-
-  content::NotificationRegistrar registrar_;
-
-  ExtensionRegistry* registry_;  // Not owned.
 
   friend class AtomExtensionSystemSharedFactory;
 
@@ -137,7 +152,13 @@ class AtomExtensionSystem : public ExtensionSystem,
     OneShotEvent ready_;
   };
 
+  content::NotificationRegistrar registrar_;
+
+  ExtensionRegistry* registry_;  // Not owned.
+
   content::BrowserContext* browser_context_;
+
+  extensions::ExtensionPrefs* extension_prefs_;
 
   Shared* shared_;
 
