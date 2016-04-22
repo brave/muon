@@ -76,7 +76,8 @@ static base::LazyInstance<AtomExtensionsClient> g_client =
 }  // namespace
 
 AtomExtensionsClient::AtomExtensionsClient()
-    : extensions_api_permissions_(ExtensionsAPIPermissions()) {
+    : chrome_api_permissions_(ChromeAPIPermissions()),
+      extensions_api_permissions_(ExtensionsAPIPermissions()) {
 }
 
 AtomExtensionsClient::~AtomExtensionsClient() {
@@ -86,8 +87,8 @@ void AtomExtensionsClient::Initialize() {
   (new ContentScriptsHandler)->Register();
   RegisterCommonManifestHandlers();
   ManifestHandler::FinalizeRegistration();
-  // TODO(jamescook): Do we need to whitelist any extensions?
 
+  PermissionsInfo::GetInstance()->AddProvider(chrome_api_permissions_);
   PermissionsInfo::GetInstance()->AddProvider(extensions_api_permissions_);
 }
 
@@ -136,7 +137,7 @@ AtomExtensionsClient::CreateFeatureProviderSource(
     source->LoadJSON(IDR_EXTENSION_MANIFEST_FEATURES);
   } else if (name == "permission") {
     source->LoadJSON(IDR_EXTENSION_PERMISSION_FEATURES);
-    source->LoadJSON(IDR_CHROME_EXTENSION_PERMISSION_FEATURES);
+    source->LoadJSON(IDR_ATOM_PERMISSION_FEATURES);
   } else if (name == "behavior") {
     source->LoadJSON(IDR_EXTENSION_BEHAVIOR_FEATURES);
   } else {
@@ -166,7 +167,6 @@ AtomExtensionsClient::GetScriptingWhitelist() const {
 URLPatternSet AtomExtensionsClient::GetPermittedChromeSchemeHosts(
       const Extension* extension,
       const APIPermissionSet& api_permissions) const {
-  NOTIMPLEMENTED();
   return URLPatternSet();
 }
 

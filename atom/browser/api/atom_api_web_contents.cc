@@ -1225,6 +1225,12 @@ void WebContents::SetActive(bool active) {
   if (Emit("set-active", active))
     return;
 
+#if defined(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetActive(active);
+#endif
+
   if (active)
     web_contents()->WasShown();
   else

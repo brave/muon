@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "atom/common/extensions/permissions/chrome_api_permissions.h"
 #include "base/compiler_specific.h"
 #include "base/macros.h"
 #include "extensions/common/extensions_client.h"
@@ -50,6 +51,7 @@ class AtomExtensionsClient : public ExtensionsClient {
   static AtomExtensionsClient* GetInstance();
 
  private:
+  const ChromeAPIPermissions chrome_api_permissions_;
   const ExtensionsAPIPermissions extensions_api_permissions_;
 
   ScriptingWhitelist scripting_whitelist_;

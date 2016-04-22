@@ -49,11 +49,7 @@
 #endif
 
 #if defined(ENABLE_EXTENSIONS)
-#include "extensions/browser/extension_registry.h"
-#include "extensions/browser/extension_system.h"
-#include "extensions/common/extension.h"
-#include "extensions/common/manifest_handlers/background_info.h"
-#include "extensions/common/one_shot_event.h"
+#include "atom/browser/api/atom_api_extension.h"
 #endif
 
 using atom::Browser;
@@ -216,6 +212,7 @@ App::App(v8::Isolate* isolate) {
                  content::NotificationService::AllBrowserContextsAndSources());
 }
 
+// TOOD(bridiver) - move this to api_extension?
 void App::Observe(
     int type, const content::NotificationSource& source,
     const content::NotificationDetails& details) {
@@ -229,17 +226,10 @@ void App::Observe(
 
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC
-      if (extensions::ExtensionSystem::Get(browser_context)
-          ->ready().is_signaled()) {
-        const extensions::Extension* extension =
-            extensions::ExtensionRegistry::Get(browser_context)->
-                enabled_extensions().GetExtensionOrAppByURL(url);
-        if (extension &&
-            url == extensions::BackgroundInfo::GetBackgroundURL(extension)) {
-          v8::Locker locker(isolate());
-          v8::HandleScope handle_scope(isolate());
-          WebContents::CreateFrom(isolate(), web_contents);
-        }
+      if (Extension::IsBackgroundPageUrl(url, browser_context)) {
+        v8::Locker locker(isolate());
+        v8::HandleScope handle_scope(isolate());
+        WebContents::CreateFrom(isolate(), web_contents);
       }
 #endif
       break;
