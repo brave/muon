@@ -42,6 +42,7 @@
 #include "native_mate/dictionary.h"
 #include "net/base/filename_util.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
+#include "third_party/WebKit/public/web/WebFrameWidget.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebPluginParams.h"
 #include "third_party/WebKit/public/web/WebKit.h"
@@ -58,7 +59,6 @@
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/renderer/extensions/atom_extensions_renderer_client.h"
 #include "atom/common/extensions/atom_extensions_client.h"
-#include "atom/renderer/extensions/atom_extensions_render_view_observer.h"
 #include "extensions/renderer/dispatcher.h"
 #endif
 
@@ -185,6 +185,7 @@ void AtomRendererClient::RenderViewCreated(content::RenderView* render_view) {
     return;
 
   base::CommandLine* cmd = base::CommandLine::ForCurrentProcess();
+  blink::WebFrameWidget* web_frame_widget = render_view->GetWebFrameWidget();
   if (cmd->HasSwitch(switches::kGuestInstanceID)) {  // webview.
     web_frame_widget->setBaseBackgroundColor(SK_ColorTRANSPARENT);
   } else {  // normal window.
@@ -204,7 +205,6 @@ void AtomRendererClient::RunScriptsAtDocumentStart(
 #if defined(ENABLE_EXTENSIONS)
   extensions::AtomExtensionsRendererClient::GetInstance()->
       RenderViewCreated(render_view);
-  new extensions::AtomExtensionsRenderViewObserver(render_view);
 #endif
 }
 
@@ -331,6 +331,24 @@ bool AtomRendererClient::WillSendRequest(
 #endif
 
   return false;
+}
+
+void AtomRendererClient::RunScriptsAtDocumentStart(
+    content::RenderFrame* render_frame) {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::AtomExtensionsRendererClient::GetInstance()->
+      RunScriptsAtDocumentStart(render_frame);
+  // |render_frame| might be dead by now.
+#endif
+}
+
+void AtomRendererClient::RunScriptsAtDocumentEnd(
+    content::RenderFrame* render_frame) {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::AtomExtensionsRendererClient::GetInstance()->
+      RunScriptsAtDocumentEnd(render_frame);
+  // |render_frame| might be dead by now.
+#endif
 }
 
 void AtomRendererClient::DidInitializeServiceWorkerContextOnWorkerThread(

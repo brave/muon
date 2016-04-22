@@ -10,6 +10,8 @@
     <includes>
       <include name="IDR_ATOM_API_FEATURES" file="common\api\resources\_api_features.json" type="BINDATA" />
 
+      <include name="IDR_ATOM_PERMISSION_FEATURES" file="common\api\resources\_permission_features.json" type="BINDATA" />
+
       <include name="IDR_ATOM_BROWSER_ACTION_BINDINGS_JS" file="common\api\resources\browser_action_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_CONTEXT_MENUS_BINDINGS_JS" file="common\api\resources\context_menus_bindings.js" type="BINDATA" />
@@ -20,6 +22,8 @@
       <include name="IDR_ATOM_EXTENSION_API_JSON_IPC" file="common\api\resources\ipc.json" type="BINDATA" />
 
       <include name="IDR_ATOM_IPC_BINDINGS_JS" file="common\api\resources\ipc_bindings.js" type="BINDATA" />
+
+      <include name="IDR_ATOM_PRIVACY_BINDINGS_JS" file="common\api\resources\privacy_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_TABS_BINDINGS_JS" file="common\api\resources\tabs_bindings.js" type="BINDATA" />
 

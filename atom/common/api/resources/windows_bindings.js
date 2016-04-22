@@ -1,16 +1,9 @@
-
-// var atom = requireNative('atom').GetBinding();
-
-// var ipc = atom.v8_util.getHiddenValue(atom, 'ipcRenderer');
-
-// chrome.windows.getCurrent({}
-// create
 var ipc = require('ipc_utils')
 
 var id = 1;
 
 var binding = {
-  getCurrent: function() {
+  getCurrent: function () {
     var cb, getInfo;
     if (arguments.length == 1) {
       cb = arguments[0]
@@ -19,19 +12,22 @@ var binding = {
       cb = arguments[1]
     }
 
-    var responseId = ++id;
+    var responseId = ++id
     ipc.once('chrome-windows-get-current-response-' + responseId, function(evt, win) {
-      cb(win);
+      cb(win)
     })
-    ipc.send('chrome-windows-get-current', responseId, getInfo);
+    ipc.send('chrome-windows-get-current', responseId, getInfo)
   },
-  create: function(createData, cb) {
-    var responseId = ++id;
-    ipc.once('chrome-windows-create-response-' + responseId, function(evt, win) {
-      cb && cb(win);
-    })
-    ipc.send('chrome-windows-create', responseId, tabId, updateProperties);
+
+  create: function (createData, cb) {
+    console.warning('chrome.windows.create is not supported yet')
   },
+
+  update: function (windowId, updateInfo, cb) {
+    console.warning('chrome.windows.update is not supported yet')
+  },
+
+  WINDOW_ID_NONE: -1,
   WINDOW_ID_CURRENT: -2
 };
 

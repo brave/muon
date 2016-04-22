@@ -9,6 +9,7 @@
 #include <vector>
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
+#include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/shared_user_script_master.h"
 #include "base/memory/weak_ptr.h"
 #include "content/public/browser/browser_context.h"
@@ -121,7 +122,8 @@ ContentVerifier* AtomExtensionSystem::Shared::content_verifier() {
 AtomExtensionSystem::AtomExtensionSystem(
     atom::AtomBrowserContext* browser_context)
     : registry_(ExtensionRegistry::Get(browser_context)),
-      browser_context_(browser_context) {
+      browser_context_(browser_context),
+      extension_prefs_(ExtensionPrefs::Get(browser_context_)) {
   shared_ =
       AtomExtensionSystemSharedFactory::GetForBrowserContext(browser_context_);
 }
@@ -144,6 +146,10 @@ void AtomExtensionSystem::InitForRegularProfile(bool extensions_enabled) {
   registrar_.Add(this, content::NOTIFICATION_RENDERER_PROCESS_TERMINATED,
                  content::NotificationService::AllBrowserContextsAndSources());
   registrar_.Add(this, extensions::NOTIFICATION_CRX_INSTALLER_DONE,
+                 content::NotificationService::AllSources());
+  registrar_.Add(this, atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST,
+                 content::NotificationService::AllSources());
+  registrar_.Add(this, atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
                  content::NotificationService::AllSources());
 }
 
@@ -215,7 +221,7 @@ void AtomExtensionSystem::RegisterExtensionWithRequestContexts(
 
 void AtomExtensionSystem::UnregisterExtensionWithRequestContexts(
     const std::string& extension_id,
-    const UnloadedExtensionInfo::Reason reason) {
+    const extensions::UnloadedExtensionInfo::Reason reason) {
   BrowserThread::PostTask(
       BrowserThread::IO,
       FROM_HERE,
@@ -229,19 +235,128 @@ void AtomExtensionSystem::OnExtensionRegisteredWithRequestContexts(
     registry_->TriggerOnReady(extension.get());
 }
 
-const Extension* AtomExtensionSystem::AddExtension(
-                                        const Extension* extension) {
-  if (registry_->GenerateInstalledExtensionsSet()->Contains(extension->id()))
-    return extension;
+bool AtomExtensionSystem::IsExtensionEnabled(
+    const std::string& extension_id) const {
+  if (registry_->enabled_extensions().Contains(extension_id) ||
+      registry_->terminated_extensions().Contains(extension_id)) {
+    return true;
+  }
 
-  ExtensionPrefs::Get(browser_context_)
-      ->AddGrantedPermissions(
-          extension->id(), extension->permissions_data()->active_permissions());
-  ExtensionPrefs::Get(browser_context_)->SetExtensionEnabled(extension->id());
+  return false;
+}
 
-  registry_->AddEnabled(extension);
+const Extension* AtomExtensionSystem::GetInstalledExtension(
+    const std::string& id) const {
+  return registry_->GetExtensionById(id, ExtensionRegistry::EVERYTHING);
+}
+
+void AtomExtensionSystem::EnableExtension(const std::string& extension_id) {
+  CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
+
+  if (IsExtensionEnabled(extension_id))
+    return;
+  const Extension* extension = GetInstalledExtension(extension_id);
+
+  extension_prefs_->SetExtensionEnabled(extension_id);
+
+  // Move it over to the enabled list.
+  registry_->AddEnabled(make_scoped_refptr(extension));
   registry_->RemoveDisabled(extension->id());
 
+  NotifyExtensionLoaded(extension);
+
+  // Notify listeners that the extension was enabled.
+  content::NotificationService::current()->Notify(
+      extensions::NOTIFICATION_EXTENSION_ENABLED,
+      content::Source<content::BrowserContext>(browser_context_),
+      content::Details<const Extension>(extension));
+}
+
+void AtomExtensionSystem::DisableExtension(const std::string& extension_id,
+                                        int disable_reasons) {
+  CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
+
+  // The extension may have been disabled already. Just add the disable reasons.
+  if (!IsExtensionEnabled(extension_id)) {
+    extension_prefs_->AddDisableReasons(extension_id, disable_reasons);
+    return;
+  }
+
+  const Extension* extension = GetInstalledExtension(extension_id);
+
+  if (extension &&
+      !(disable_reasons & Extension::DISABLE_RELOAD) &&
+      !(disable_reasons & Extension::DISABLE_UPDATE_REQUIRED_BY_POLICY) &&
+      extension->location() != Manifest::EXTERNAL_COMPONENT) {
+    return;
+  }
+
+  extension_prefs_->SetExtensionDisabled(extension_id, disable_reasons);
+
+  int include_mask =
+      ExtensionRegistry::EVERYTHING & ~ExtensionRegistry::DISABLED;
+  extension = registry_->GetExtensionById(extension_id, include_mask);
+  if (!extension)
+    return;
+
+  // The extension is either enabled or terminated.
+  DCHECK(registry_->enabled_extensions().Contains(extension->id()) ||
+         registry_->terminated_extensions().Contains(extension->id()));
+
+  // Move it over to the disabled list. Don't send a second unload notification
+  // for terminated extensions being disabled.
+  registry_->AddDisabled(make_scoped_refptr(extension));
+  if (registry_->enabled_extensions().Contains(extension->id())) {
+    registry_->RemoveEnabled(extension->id());
+    NotifyExtensionUnloaded(extension,
+        extensions::UnloadedExtensionInfo::REASON_DISABLE);
+  } else {
+    registry_->RemoveTerminated(extension->id());
+  }
+}
+
+void AtomExtensionSystem::NotifyExtensionUnloaded(
+    const Extension* extension,
+    extensions::UnloadedExtensionInfo::Reason reason) {
+  extensions::UnloadedExtensionInfo details(extension, reason);
+
+  registry_->TriggerOnUnloaded(extension, reason);
+
+  content::NotificationService::current()->Notify(
+      extensions::NOTIFICATION_EXTENSION_UNLOADED_DEPRECATED,
+      content::Source<content::BrowserContext>(browser_context_),
+      content::Details<extensions::UnloadedExtensionInfo>(&details));
+
+  for (content::RenderProcessHost::iterator i(
+          content::RenderProcessHost::AllHostsIterator());
+       !i.IsAtEnd(); i.Advance()) {
+    content::RenderProcessHost* host = i.GetCurrentValue();
+    if (extensions::ExtensionsBrowserClient::Get()->
+        IsSameContext(browser_context_, host->GetBrowserContext()))
+      host->Send(new ExtensionMsg_Unloaded(extension->id()));
+  }
+
+  UnregisterExtensionWithRequestContexts(extension->id(), reason);
+}
+
+const Extension* AtomExtensionSystem::AddExtension(
+                                        const Extension* extension) {
+  if (registry_->GetExtensionById(extension->id(),
+                                  ExtensionRegistry::IncludeFlag::EVERYTHING))
+    return extension;
+
+  extension_prefs_->AddGrantedPermissions(
+          extension->id(), extension->permissions_data()->active_permissions());
+  extension_prefs_->SetExtensionEnabled(extension->id());
+
+  registry_->AddEnabled(make_scoped_refptr(extension));
+
+  NotifyExtensionLoaded(extension);
+
+  return extension;
+}
+
+void AtomExtensionSystem::NotifyExtensionLoaded(const Extension* extension) {
   RegisterExtensionWithRequestContexts(
       extension,
       base::Bind(
@@ -278,8 +393,6 @@ const Extension* AtomExtensionSystem::AddExtension(
       content::Details<const Extension>(extension));
 
   registry_->TriggerOnInstalled(extension, false);
-
-  return extension;
 }
 
 const Extension* AtomExtensionSystem::GetExtensionById(
@@ -287,10 +400,6 @@ const Extension* AtomExtensionSystem::GetExtensionById(
     bool include_disabled) const {
   return ExtensionRegistry::Get(browser_context_)->
       GetExtensionById(id, include_disabled);
-}
-
-void AtomExtensionSystem::ReloadExtension(const std::string& extension_id) {
-  // TODO(bridiver) - implement this
 }
 
 bool AtomExtensionSystem::is_ready() {
@@ -315,6 +424,30 @@ void AtomExtensionSystem::Observe(int type,
 
       if (extension)
         AddExtension(extension);
+
+      break;
+    }
+    case atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST: {
+      if (!shared_user_script_master())
+        return;
+
+      const Extension* extension =
+        content::Details<const Extension>(details).ptr();
+
+      if (extension)
+        EnableExtension(extension->id());
+
+      break;
+    }
+    case atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST: {
+      if (!shared_user_script_master())
+        return;
+
+      const Extension* extension =
+        content::Details<const Extension>(details).ptr();
+
+      if (extension)
+        DisableExtension(extension->id(), Extension::DISABLE_USER_ACTION);
 
       break;
     }

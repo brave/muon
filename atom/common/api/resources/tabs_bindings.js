@@ -1,5 +1,7 @@
 var binding = require('binding').Binding.create('tabs');
 
+var atom = requireNative('atom').GetBinding();
+var webFrame = atom.web_frame.webFrame;
 var messaging = require('messaging');
 var tabsNatives = requireNative('tabs');
 var OpenChannelToTab = tabsNatives.OpenChannelToTab;
@@ -49,7 +51,7 @@ var bindings = {
   },
 
   onUpdated: {
-    addListener: function(cb) {
+    addListener: function (cb) {
       ipc.send('register-chrome-tabs-updated', extensionId);
       ipc.on('chrome-tabs-updated', function(evt, tabId, changeInfo, tab) {
         cb(tabId, changeInfo, tab);
@@ -57,20 +59,119 @@ var bindings = {
     }
   },
 
-  query: function(queryInfo, cb) {
-    var responseId = ++id;
-    ipc.once('chrome-tabs-query-response-' + responseId, function(evt, tab) {
-      cb(tab);
-    });
-    ipc.send('chrome-tabs-query', responseId, queryInfo);
+  onCreated: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-created', extensionId);
+      ipc.on('chrome-tabs-created', function(evt, tab) {
+        cb(tab);
+      });
+    }
   },
 
-  update: function(tabId, updateProperties, cb) {
-    var responseId = ++id;
-    ipc.once('chrome-tabs-update-response-' + responseId, function(evt, tab) {
-      cb && cb(tab);
+  onRemoved: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-removed', extensionId);
+      ipc.on('chrome-tabs-removed', function (evt, tabId, removeInfo) {
+        cb(tabId, removeInfo);
+      });
+    }
+  },
+
+  onActivated: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-activated', extensionId)
+      ipc.on('chrome-tabs-activated', function (evt, tabId, selectInfo) {
+        cb(tabId, selectInfo)
+      })
+    }
+  },
+
+  onSelectionChanged: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-activated', extensionId)
+      ipc.on('chrome-tabs-activated', function (evt, tabId, selectInfo) {
+        cb(tabId, selectInfo)
+      })
+    }
+  },
+
+  onActiveChanged: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-activated', extensionId)
+      ipc.on('chrome-tabs-activated', function (evt, tabId, selectInfo) {
+        cb(tabId, selectInfo)
+      })
+    }
+  },
+
+  captureVisibleTab: function (windowId, options, cb) {
+    if (typeof windowId === 'function')
+      cb = windowId;
+    if (typeof windowId === 'object')
+      options = windowId
+    if (typeof options === 'function')
+      cb = options
+
+    // return an empty image url
+    cb('data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==')
+  },
+
+  getSelected: function (windowId, cb) {
+    if (typeof windowId === 'function') {
+      cb = windowId
+      windowId = -2
+    } else if (!windowId) {
+      windowId = -2
+    }
+
+    var wrapper = function(tabs) {
+      cb(tabs[0])
+    }
+
+    bindings.query({windowId: windowId, active: true}, wrapper)
+  },
+
+  query: function(queryInfo, cb) {
+    var responseId = ++id
+    ipc.once('chrome-tabs-query-response-' + responseId, function (evt, tab) {
+      cb(tab)
     })
-    ipc.send('chrome-tabs-update', responseId, tabId, updateProperties);
+    ipc.send('chrome-tabs-query', responseId, queryInfo)
+  },
+
+  update: function (tabId, updateProperties, cb) {
+    var responseId = ++id
+    cb && ipc.once('chrome-tabs-update-response-' + responseId, function (evt, tab) {
+      cb(tab)
+    })
+    ipc.send('chrome-tabs-update', responseId, tabId, updateProperties)
+  },
+
+  remove: function (tabIds, cb) {
+    var responseId = ++id
+    cb && ipc.once('chrome-tabs-remove-response-' + responseId, function (evt) {
+      cb()
+    })
+    ipc.send('chrome-tabs-remove', responseId, tabIds)
+  },
+
+  create: function (createProperties, cb) {
+    var responseId = ++id
+    cb && ipc.once('chrome-tabs-create-response-' + responseId, function (evt, tab) {
+      cb(tab)
+    })
+    ipc.send('chrome-tabs-create', responseId, createProperties)
+  },
+
+  executeScript: function (tabId, details, cb) {
+    if (details.file || details.allFrames || details.frameId || details.matchAboutBlank || details.runAt) {
+      // TODO(bridiver) implement the rest of these
+      console.warn('Only `code` is supported for executeScript', details)
+    }
+    if (details.code) {
+      webFrame.executeJavaScript(details.code)
+      cb && cb()
+    }
   }
 }
 

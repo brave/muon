@@ -4,13 +4,11 @@ var extensionId = process.GetExtensionId();
 
 var binding = {
   removeAll: function () {
-    ipc.send('chrome-context-menu-remove-all', extensionId)
+    console.warn('chrome.contentMenus.removeAll is not supported yet')
   },
   create: function (properties, cb) {
-    //TODO(bridver) finish this
-    ipc.send('chrome-context-menu-create', extensionId, properties)
-    if (cb)
-      cb();
+    console.warn('chrome.contentMenus.create is not supported yet')
+    cb && cb()
   }
 }
 

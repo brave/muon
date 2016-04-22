@@ -45,23 +45,13 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
   source_map->RegisterSource("ipc", IDR_ATOM_IPC_BINDINGS_JS);
   source_map->RegisterSource("browserAction",
                              IDR_ATOM_BROWSER_ACTION_BINDINGS_JS);
-  // source_map->RegisterSource("tabs", IDR_TABS_CUSTOM_BINDINGS_JS);
+  source_map->RegisterSource("privacy", IDR_ATOM_PRIVACY_BINDINGS_JS);
   source_map->RegisterSource("tabs",
                              IDR_ATOM_TABS_BINDINGS_JS);
   source_map->RegisterSource("contextMenus",
                              IDR_ATOM_CONTEXT_MENUS_BINDINGS_JS);
   source_map->RegisterSource("windows",
                              IDR_ATOM_WINDOWS_BINDINGS_JS);
-
-  source_map->RegisterSource("declarativeContent",
-                             IDR_DECLARATIVE_CONTENT_CUSTOM_BINDINGS_JS);
-  source_map->RegisterSource("input.ime", IDR_INPUT_IME_CUSTOM_BINDINGS_JS);
-  source_map->RegisterSource("pageAction", IDR_PAGE_ACTION_CUSTOM_BINDINGS_JS);
-  source_map->RegisterSource("tts", IDR_TTS_CUSTOM_BINDINGS_JS);
-  source_map->RegisterSource("ttsEngine", IDR_TTS_ENGINE_CUSTOM_BINDINGS_JS);
-
-  // Custom types sources.
-  source_map->RegisterSource("ContentSetting", IDR_CONTENT_SETTING_JS);
 }
 
 void AtomExtensionsDispatcherDelegate::RequireAdditionalModules(
