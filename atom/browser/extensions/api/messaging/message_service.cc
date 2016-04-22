@@ -10,6 +10,7 @@
 
 #include "atom/browser/extensions/api/messaging/extension_message_port.h"
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
+#include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "base/atomic_sequence_num.h"
 #include "base/bind.h"
@@ -80,6 +81,8 @@ namespace extensions {
 
 const char kReceivingEndDoesntExistError[] =
     "Could not establish connection. Receiving end does not exist.";
+const char kMissingPermissionError[] =
+    "Access to native messaging requires nativeMessaging permission.";
 const char kProhibitedByPoliciesError[] =
     "Access to the native messaging host was disabled by the system "
     "administrator.";
@@ -358,6 +361,22 @@ void MessageService::OpenChannelToNativeApp(
       content::RenderFrameHost::FromID(source_process_id, source_routing_id);
   if (!source)
     return;
+
+  ExtensionService* extension_service =
+      ExtensionSystem::Get(source->GetProcess()->GetBrowserContext())->extension_service();
+  bool has_permission = false;
+  if (extension_service) {
+    const Extension* extension =
+        extension_service->GetExtensionById(source_extension_id, false);
+    has_permission = extension &&
+                     extension->permissions_data()->HasAPIPermission(
+                         APIPermission::kNativeMessaging);
+  }
+
+  if (!has_permission) {
+    DispatchOnDisconnect(source, receiver_port_id, kMissingPermissionError);
+    return;
+  }
 
   DispatchOnDisconnect(source, receiver_port_id, kProhibitedByPoliciesError);
 }

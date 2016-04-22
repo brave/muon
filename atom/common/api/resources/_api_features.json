@@ -22,8 +22,37 @@
     "channel": "stable",
     "contexts": ["blessed_extension"]
   },
+  "privacy": {
+    "channel": "stable",
+    "contexts": ["blessed_extension"]
+  },
   "windows": {
     "channel": "stable",
     "contexts": ["blessed_extension"]
+  },
+  "extension": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app"],
+    "contexts": ["blessed_extension"]
+  },
+  "extension.getURL": {
+    "contexts": ["blessed_extension", "unblessed_extension", "content_script"]
+  },
+  "extension.getViews": {
+    "channel": "stable",
+    "contexts": ["blessed_extension"],
+    "extension_types": ["extension", "legacy_packaged_app"]
+  },
+  "extension.inIncognitoContext": {
+    "contexts": ["blessed_extension", "unblessed_extension", "content_script"]
+  },
+  "extension.lastError": {
+    "contexts": ["blessed_extension", "unblessed_extension", "content_script"]
+  },
+  "extension.onRequest": {
+    "contexts": ["blessed_extension", "unblessed_extension", "content_script"]
+  },
+  "extension.sendRequest": {
+    "contexts": ["blessed_extension", "unblessed_extension", "content_script"]
   }
 }

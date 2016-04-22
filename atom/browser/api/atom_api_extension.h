@@ -24,6 +24,8 @@ namespace atom {
 
 namespace api {
 
+class WebContents;
+
 class Extension {
  public:
   static Extension* GetInstance();
@@ -37,6 +39,12 @@ class Extension {
                                 content::BrowserContext* browser_context);
   static bool HandleURLOverrideReverse(GURL* url,
                                     content::BrowserContext* browser_context);
+  static bool IsBackgroundPageUrl(GURL url,
+                                    content::BrowserContext* browser_context);
+  static bool IsBackgroundPage(v8::Isolate* isolate,
+                                WebContents* web_contents);
+  static v8::Local<v8::Value> TabValue(v8::Isolate* isolate,
+                                         WebContents* web_contents);
   const extensions::ExtensionSet& extensions() const { return extensions_; }
  private:
   friend struct base::DefaultSingletonTraits<Extension>;

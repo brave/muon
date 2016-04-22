@@ -49,7 +49,7 @@ var bindings = {
   },
 
   onUpdated: {
-    addListener: function(cb) {
+    addListener: function (cb) {
       ipc.send('register-chrome-tabs-updated', extensionId);
       ipc.on('chrome-tabs-updated', function(evt, tabId, changeInfo, tab) {
         cb(tabId, changeInfo, tab);
@@ -57,20 +57,80 @@ var bindings = {
     }
   },
 
-  query: function(queryInfo, cb) {
-    var responseId = ++id;
-    ipc.once('chrome-tabs-query-response-' + responseId, function(evt, tab) {
-      cb(tab);
-    });
-    ipc.send('chrome-tabs-query', responseId, queryInfo);
+  onCreated: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-created', extensionId);
+      ipc.on('chrome-tabs-created', function(evt, tab) {
+        cb(tab);
+      });
+    }
   },
 
-  update: function(tabId, updateProperties, cb) {
-    var responseId = ++id;
-    ipc.once('chrome-tabs-update-response-' + responseId, function(evt, tab) {
-      cb && cb(tab);
+  onRemoved: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-removed', extensionId);
+      ipc.on('chrome-tabs-removed', function (evt, tabId, removeInfo) {
+        cb(tabId, removeInfo);
+      });
+    }
+  },
+
+  onActivated: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-activated', extensionId)
+      ipc.on('chrome-tabs-activated', function (evt, tabId, selectInfo) {
+        cb(tabId, selectInfo)
+      })
+    }
+  },
+
+  onSelectionChanged: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-activated', extensionId)
+      ipc.on('chrome-tabs-activated', function (evt, tabId, selectInfo) {
+        cb(tabId, selectInfo)
+      })
+    }
+  },
+
+  onActiveChanged: {
+    addListener: function (cb) {
+      ipc.send('register-chrome-tabs-activated', extensionId)
+      ipc.on('chrome-tabs-activated', function (evt, tabId, selectInfo) {
+        cb(tabId, selectInfo)
+      })
+    }
+  },
+
+  getSelected: function (windowId, cb) {
+    if (typeof windowId === 'function' || windowId === null)
+      bindings.query({currentWindow: true}, cb)
+    else
+      bindings.query({windowId: windowId}, cb)
+  },
+
+  query: function(queryInfo, cb) {
+    var responseId = ++id
+    ipc.once('chrome-tabs-query-response-' + responseId, function (evt, tab) {
+      cb(tab)
     })
-    ipc.send('chrome-tabs-update', responseId, tabId, updateProperties);
+    ipc.send('chrome-tabs-query', responseId, queryInfo)
+  },
+
+  update: function (tabId, updateProperties, cb) {
+    var responseId = ++id
+    ipc.once('chrome-tabs-update-response-' + responseId, function (evt, tab) {
+      cb && cb(tab)
+    })
+    ipc.send('chrome-tabs-update', responseId, tabId, updateProperties)
+  },
+
+  create: function (createProperties, cb) {
+    var responseId = ++id;
+    ipc.once('chrome-tabs-create-response-' + responseId, function (evt, tab) {
+      cb && cb(tab)
+    })
+    ipc.send('chrome-tabs-create', responseId, createProperties)
   }
 }
 

@@ -5,6 +5,8 @@
 #include "atom/browser/api/atom_api_extension.h"
 
 #include <string>
+#include "atom/browser/api/atom_api_web_contents.h"
+#include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
@@ -16,10 +18,15 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
+#include "content/public/browser/web_contents.h"
 #include "content/public/common/url_constants.h"
 #include "extensions/browser/extension_registry.h"
+#include "extensions/browser/extension_system.h"
 #include "extensions/browser/notification_types.h"
+#include "extensions/common/extension.h"
 #include "extensions/common/file_util.h"
+#include "extensions/common/manifest_handlers/background_info.h"
+#include "extensions/common/one_shot_event.h"
 #include "native_mate/converter.h"
 #include "native_mate/dictionary.h"
 
@@ -111,6 +118,49 @@ void Extension::Install(
 }
 
 // static
+bool Extension::IsBackgroundPageUrl(GURL url,
+                    content::BrowserContext* browser_context) {
+  if (extensions::ExtensionSystem::Get(browser_context)
+      ->ready().is_signaled()) {
+    const extensions::Extension* extension =
+        extensions::ExtensionRegistry::Get(browser_context)->
+            enabled_extensions().GetExtensionOrAppByURL(url);
+    if (extension &&
+        url == extensions::BackgroundInfo::GetBackgroundURL(extension))
+      return true;
+  }
+
+  return false;
+}
+
+// static
+bool Extension::IsBackgroundPage(v8::Isolate* isolate,
+                          WebContents* web_contents) {
+  auto browser_context = web_contents->web_contents()->GetBrowserContext();
+  auto url = web_contents->GetURL();
+
+  if (extensions::ExtensionSystem::Get(browser_context)
+      ->ready().is_signaled()) {
+    const extensions::Extension* extension =
+        extensions::ExtensionRegistry::Get(browser_context)->
+            enabled_extensions().GetExtensionOrAppByURL(url);
+    if (extension &&
+        url == extensions::BackgroundInfo::GetBackgroundURL(extension))
+      return true;
+  }
+
+  return false;
+}
+
+// static
+v8::Local<v8::Value> Extension::TabValue(v8::Isolate* isolate,
+                    WebContents* web_contents) {
+  base::DictionaryValue* value = extensions::TabHelper::CreateTabValue(web_contents->web_contents());
+  // TODO(bridiver) - memory management for the dictionary value?? scoped_ptr??
+  return mate::ConvertToV8(isolate, *value);
+}
+
+// static
 bool Extension::HandleURLOverride(GURL* url,
         content::BrowserContext* browser_context) {
   return false;
@@ -132,6 +182,8 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   v8::Isolate* isolate = context->GetIsolate();
   mate::Dictionary dict(isolate, exports);
   dict.SetMethod("load", &atom::api::Extension::Load);
+  dict.SetMethod("isBackgroundPage", &atom::api::Extension::IsBackgroundPage);
+  dict.SetMethod("tabValue", &atom::api::Extension::TabValue);
 }
 
 }  // namespace

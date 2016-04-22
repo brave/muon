@@ -1,10 +1,3 @@
-
-// var atom = requireNative('atom').GetBinding();
-
-// var ipc = atom.v8_util.getHiddenValue(atom, 'ipcRenderer');
-
-// chrome.windows.getCurrent({}
-// create
 var ipc = require('ipc_utils')
 
 var id = 1;
@@ -32,6 +25,7 @@ var binding = {
     })
     ipc.send('chrome-windows-create', responseId, tabId, updateProperties);
   },
+  WINDOW_ID_NONE: -1,
   WINDOW_ID_CURRENT: -2
 };
 
