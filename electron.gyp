@@ -316,6 +316,9 @@
               '$(SDKROOT)/System/Library/Frameworks/QTKit.framework',
             ],
           },
+          'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++11', '-stdlib=libc++' ],
+          'OTHER_LDFLAGS': [ '-stdlib=libc++' ],
+          'MACOSX_DEPLOYMENT_TARGET': '10.9',
         }],  # OS=="mac" and mas_build==0
         ['OS=="mac" and mas_build==1', {
           'defines': [
