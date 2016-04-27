@@ -13,7 +13,7 @@
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
-#include "base/prefs/pref_service.h"
+#include "components/prefs/pref_service.h"
 #include "base/strings/string_util.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"

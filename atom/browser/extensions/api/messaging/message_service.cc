@@ -19,7 +19,7 @@
 #include "base/lazy_instance.h"
 #include "base/macros.h"
 #include "base/metrics/histogram.h"
-#include "base/prefs/pref_service.h"
+#include "components/prefs/pref_service.h"
 #include "base/stl_util.h"
 #include "build/build_config.h"
 #include "content/public/browser/browser_context.h"
