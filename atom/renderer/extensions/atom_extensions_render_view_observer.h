@@ -23,7 +23,6 @@ class AtomExtensionsRenderViewObserver : public content::RenderViewObserver {
 
  private:
   // content::RenderViewObserver implementation.
-  void DidCreateDocumentElement(blink::WebLocalFrame* frame) override;
   bool OnMessageReceived(const IPC::Message& message) override;
   void OnBrowserMessage(const base::string16& channel,
                         const base::ListValue& args);

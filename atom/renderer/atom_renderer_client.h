@@ -64,6 +64,8 @@ class AtomRendererClient : public content::ContentRendererClient,
       const std::string& mime_type,
       const GURL& original_url) override;
   void AddKeySystems(std::vector<media::KeySystemInfo>* key_systems) override;
+  void RunScriptsAtDocumentStart(content::RenderFrame* render_frame) override;
+  void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame) override;
   void DidInitializeServiceWorkerContextOnWorkerThread(
       v8::Local<v8::Context> context,
       const GURL& url) override;
