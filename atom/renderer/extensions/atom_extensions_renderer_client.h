@@ -48,6 +48,9 @@ class AtomExtensionsRendererClient : public ExtensionsRendererClient {
                         const GURL& url,
                         GURL* new_url);
 
+  void RunScriptsAtDocumentStart(content::RenderFrame* render_frame);
+  void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame);
+
  private:
   scoped_ptr<AtomExtensionsDispatcherDelegate> extension_dispatcher_delegate_;
   scoped_ptr<Dispatcher> extension_dispatcher_;

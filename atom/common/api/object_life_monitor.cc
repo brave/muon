@@ -31,25 +31,31 @@ ObjectLifeMonitor::ObjectLifeMonitor(v8::Isolate* isolate,
 // static
 void ObjectLifeMonitor::OnObjectGC(
     const v8::WeakCallbackInfo<ObjectLifeMonitor>& data) {
+  // Usually FirstWeakCallback should do nothing other than reset |object_|
+  // and then set a second weak callback to run later. We can sidestep that,
+  // because posting a task to the current message loop is all but free - but
+  // DO NOT add any more work to this method. The only acceptable place to add
+  // code is RunCallback.
   ObjectLifeMonitor* self = data.GetParameter();
   self->target_.Reset();
-  self->RunCallback();
-  data.SetSecondPassCallback(Free);
-}
-
-// static
-void ObjectLifeMonitor::Free(
-    const v8::WeakCallbackInfo<ObjectLifeMonitor>& data) {
-  delete data.GetParameter();
+  base::MessageLoop::current()->PostTask(
+      FROM_HERE, base::Bind(&ObjectLifeMonitor::RunCallback,
+                            self->weak_ptr_factory_.GetWeakPtr()));
 }
 
 void ObjectLifeMonitor::RunCallback() {
   v8::HandleScope handle_scope(isolate_);
-  v8::Local<v8::Context> context = v8::Local<v8::Context>::New(
-      isolate_, context_);
+  v8::Local<v8::Function> callback = v8::Local<v8::Function>::New(
+      isolate_, destructor_);
+  v8::Local<v8::Context> context = callback->CreationContext();
+  if (context.IsEmpty())
+    return;
+
   v8::Context::Scope context_scope(context);
-  v8::Local<v8::Function>::New(isolate_, destructor_)->Call(
-      context->Global(), 0, nullptr);
+
+  callback->Call(context->Global(), 0 /* argc */, nullptr);
+
+  delete this;
 }
 
 }  // namespace atom
