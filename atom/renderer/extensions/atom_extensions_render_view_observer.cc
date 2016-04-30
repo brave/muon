@@ -36,22 +36,6 @@ AtomExtensionsRenderViewObserver::AtomExtensionsRenderViewObserver(
 
 AtomExtensionsRenderViewObserver::~AtomExtensionsRenderViewObserver() {}
 
-// content::RenderViewObserver implementation.
-void AtomExtensionsRenderViewObserver::DidCreateDocumentElement(
-                                                blink::WebLocalFrame* frame) {
-  v8::Isolate* isolate = blink::mainThreadIsolate();
-  v8::HandleScope handle_scope(isolate);
-
-  v8::Local<v8::Context> context = frame->mainWorldScriptContext();
-  v8::Context::Scope context_scope(context);
-
-  auto script_context = ScriptContextSet::GetContextByV8Context(context);
-
-  if (script_context->context_type() == Feature::Context::WEB_PAGE_CONTEXT)
-    script_context->module_system()
-        ->CallModuleMethod("ipc", "didCreateDocumentElement");
-}
-
 bool AtomExtensionsRenderViewObserver::OnMessageReceived(
                                                 const IPC::Message& message) {
   bool handled = true;

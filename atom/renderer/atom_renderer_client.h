@@ -65,6 +65,8 @@ class AtomRendererClient : public content::ContentRendererClient {
                                  const blink::WebURLError& error,
                                  std::string* error_html,
                                  base::string16* error_description) override;
+  void RunScriptsAtDocumentStart(content::RenderFrame* render_frame) override;
+  void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame) override;
   void DidInitializeServiceWorkerContextOnWorkerThread(
       v8::Local<v8::Context> context,
       const GURL& url) override;
