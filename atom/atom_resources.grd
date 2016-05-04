@@ -21,11 +21,15 @@
 
       <include name="IDR_ATOM_EXTENSION_API_JSON_IPC" file="common\api\resources\ipc.json" type="BINDATA" />
 
+      <include name="IDR_ATOM_EXTENSION_API_JSON_WEB_FRAME" file="common\api\resources\web_frame.json" type="BINDATA" />
+
       <include name="IDR_ATOM_IPC_BINDINGS_JS" file="common\api\resources\ipc_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_PRIVACY_BINDINGS_JS" file="common\api\resources\privacy_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_TABS_BINDINGS_JS" file="common\api\resources\tabs_bindings.js" type="BINDATA" />
+
+      <include name="IDR_ATOM_WEB_FRAME_BINDINGS_JS" file="common\api\resources\web_frame_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_WINDOWS_BINDINGS_JS" file="common\api\resources\windows_bindings.js" type="BINDATA" />
     </includes>

@@ -8,25 +8,25 @@ if (!atom.v8_util.getHiddenValue(atom, 'ipcRenderer')) {
 
   var ipcRenderer = new EventEmitter;
 
-  ipcRenderer.send = function() {
+  ipcRenderer.send = function () {
     var args;
     args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
     return ipc.send('ipc-message', slice.call(args));
   };
 
-  ipcRenderer.sendSync = function() {
+  ipcRenderer.sendSync = function () {
     var args;
     args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
     return JSON.parse(ipc.sendSync('ipc-message-sync', slice.call(args)));
   };
 
-  ipcRenderer.sendToHost = function() {
+  ipcRenderer.sendToHost = function () {
     var args;
     args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
     return ipc.send('ipc-message-host', slice.call(args));
   };
 
-  ipcRenderer.emit = function() {
+  ipcRenderer.emit = function () {
     arguments[1].sender = ipcRenderer;
     return EventEmitter.prototype.emit.apply(ipcRenderer, arguments);
   };
