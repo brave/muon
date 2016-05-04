@@ -9,6 +9,16 @@
       "unblessed_extension"
     ]
   },
+  "webFrame": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app"],
+    "contexts": [
+      "blessed_web_page",
+      "content_script",
+      "blessed_extension",
+      "unblessed_extension"
+    ]
+  },
   "tabs": {
     "channel": "stable",
     "extension_types": ["extension", "legacy_packaged_app"],
