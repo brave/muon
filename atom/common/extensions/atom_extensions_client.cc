@@ -193,6 +193,8 @@ base::StringPiece AtomExtensionsClient::GetAPISchema(
 void AtomExtensionsClient::RegisterAPISchemaResources(
     ExtensionAPI* api) const {
   api->RegisterSchemaResource("ipc", IDR_ATOM_EXTENSION_API_JSON_IPC);
+  api->RegisterSchemaResource("webFrame",
+                              IDR_ATOM_EXTENSION_API_JSON_WEB_FRAME);
   api->RegisterSchemaResource("commands", IDR_EXTENSION_API_JSON_COMMANDS);
   api->RegisterSchemaResource("declarativeContent",
                               IDR_EXTENSION_API_JSON_DECLARATIVE_CONTENT);

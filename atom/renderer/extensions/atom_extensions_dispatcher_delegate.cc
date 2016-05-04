@@ -43,6 +43,8 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
   source_map->RegisterSource("event_emitter", IDR_ATOM_EVENT_EMITTER_JS);
   source_map->RegisterSource("ipc_utils", IDR_ATOM_IPC_INTERNAL_JS);
   source_map->RegisterSource("ipc", IDR_ATOM_IPC_BINDINGS_JS);
+  source_map->RegisterSource("webFrame",
+                             IDR_ATOM_WEB_FRAME_BINDINGS_JS);
   source_map->RegisterSource("browserAction",
                              IDR_ATOM_BROWSER_ACTION_BINDINGS_JS);
   source_map->RegisterSource("privacy", IDR_ATOM_PRIVACY_BINDINGS_JS);

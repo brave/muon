@@ -45,6 +45,8 @@
         'atom/common/api/resources/ipc_utils.js',
         'atom/common/api/resources/privacy_bindings.js',
         'atom/common/api/resources/tabs_bindings.js',
+        'atom/common/api/resources/web_frame.json',
+        'atom/common/api/resources/web_frame_bindings.js',
         'atom/common/api/resources/windows_bindings.js',
       ],
       'actions': [
@@ -63,6 +65,8 @@
             'atom/common/api/resources/ipc_utils.js',
             'atom/common/api/resources/privacy_bindings.js',
             'atom/common/api/resources/tabs_bindings.js',
+            'atom/common/api/resources/web_frame.json',
+            'atom/common/api/resources/web_frame_bindings.js',
             'atom/common/api/resources/windows_bindings.js',
           ],
           'outputs': [
