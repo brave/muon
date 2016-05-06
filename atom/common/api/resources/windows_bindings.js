@@ -19,6 +19,21 @@ var binding = {
     ipc.send('chrome-windows-get-current', responseId, getInfo)
   },
 
+  getAll: function (getInfo, cb) {
+    if (arguments.length == 1) {
+      cb = arguments[0]
+    } else {
+      getInfo = arguments[0]
+      cb = arguments[1]
+    }
+
+    var responseId = ++id
+    ipc.once('chrome-windows-get-all-response-' + responseId, function(evt, win) {
+      cb(win)
+    })
+    ipc.send('chrome-windows-get-all', responseId, getInfo)
+  },
+
   create: function (createData, cb) {
     console.warning('chrome.windows.create is not supported yet')
   },
