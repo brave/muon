@@ -38,6 +38,7 @@ class Extension : public content::NotificationObserver {
 
   static mate::Dictionary Load(v8::Isolate* isolate,
                     const base::FilePath& path,
+                    const base::DictionaryValue& manifest,
                     const extensions::Manifest::Location& manifest_location,
                     int flags);
   static void Install(
