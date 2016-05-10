@@ -90,9 +90,6 @@ void AtomRenderViewObserver::DidCreateDocumentElement(
     blink::WebLocalFrame* frame) {
   document_created_ = true;
 
-  // Make sure every page will get a script context created.
-  frame->executeScript(blink::WebScriptSource("void 0"));
-
   // Read --zoom-factor from command line.
   std::string zoom_factor_str = base::CommandLine::ForCurrentProcess()->
       GetSwitchValueASCII(switches::kZoomFactor);
