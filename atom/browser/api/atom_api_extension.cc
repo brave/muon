@@ -5,6 +5,7 @@
 #include "atom/browser/api/atom_api_extension.h"
 
 #include <string>
+#include <vector>
 #include "atom/browser/api/atom_api_web_contents.h"
 #include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/tab_helper.h"
@@ -69,6 +70,30 @@ struct Converter<extensions::Manifest::Location> {
 
 }  // namespace mate
 
+namespace {
+
+scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
+    const base::DictionaryValue& manifest,
+    const extensions::Manifest::Location& manifest_location,
+    int flags,
+    std::string* error) {
+  scoped_refptr<extensions::Extension> extension(extensions::Extension::Create(
+      path, manifest_location, manifest, flags, error));
+  if (!extension.get())
+    return NULL;
+
+  std::vector<extensions::InstallWarning> warnings;
+  if (!extensions::file_util::ValidateExtension(extension.get(),
+                                                error,
+                                                &warnings))
+    return NULL;
+  extension->AddInstallWarnings(warnings);
+
+  return extension;
+}
+
+}  // namespace
+
 namespace atom {
 
 namespace api {
@@ -100,17 +125,26 @@ Extension* Extension::GetInstance() {
 
 // static
 mate::Dictionary Extension::Load(
-    v8::Isolate* isolate,
-    const base::FilePath& path,
-    const extensions::Manifest::Location& manifest_location,
-    int flags) {
-
+  v8::Isolate* isolate,
+  const base::FilePath& path,
+  const base::DictionaryValue& manifest,
+  const extensions::Manifest::Location& manifest_location,
+  int flags) {
   std::string error;
-  scoped_refptr<extensions::Extension> extension =
-    extensions::file_util::LoadExtension(path,
-                                      manifest_location,
-                                      flags,
-                                      &error);
+  scoped_refptr<extensions::Extension> extension;
+
+  if (manifest.empty()) {
+    extension = extensions::file_util::LoadExtension(path,
+                                                    manifest_location,
+                                                    flags,
+                                                    &error);
+  } else {
+    extension = LoadExtension(path,
+                              manifest,
+                              manifest_location,
+                              flags,
+                              &error);
+  }
 
   mate::Dictionary install_info = mate::Dictionary::CreateEmpty(isolate);
   if (error.empty()) {
