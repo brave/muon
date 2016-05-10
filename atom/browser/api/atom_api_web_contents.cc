@@ -412,7 +412,7 @@ void WebContents::AddNewContents(content::WebContents* source,
     auto new_tab_event = v8::Local<v8::Object>::Cast(
                                         mate::Event::Create(isolate()).ToV8());
     mate::Dictionary(isolate(), new_tab_event).Set("sender",
-                                                        GetWrapper(isolate()));
+                                                        GetWrapper());
     node::Environment* env = node::Environment::GetCurrent(isolate());
     // the url will be set in ResumeLoadingCreatedWebContents
     mate::EmitEvent(isolate(),
@@ -437,7 +437,7 @@ void WebContents::AddNewContents(content::WebContents* source,
     auto window_open_event = v8::Local<v8::Object>::Cast(
                                         mate::Event::Create(isolate()).ToV8());
     mate::Dictionary(isolate(), window_open_event).Set(
-                                              "sender", GetWrapper(isolate()));
+                                              "sender", GetWrapper());
     node::Environment* env = node::Environment::GetCurrent(isolate());
     // the url will be set in ResumeLoadingCreatedWebContents
     mate::EmitEvent(isolate(),

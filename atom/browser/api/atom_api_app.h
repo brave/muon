@@ -43,6 +43,9 @@ class App : public AtomBrowserClient::Delegate,
  public:
   static mate::Handle<App> Create(v8::Isolate* isolate);
 
+  static void BuildPrototype(v8::Isolate* isolate,
+                             v8::Local<v8::ObjectTemplate> prototype);
+
 #if defined(USE_NSS_CERTS)
   void OnCertificateManagerModelCreated(
       scoped_ptr<base::DictionaryValue> options,
