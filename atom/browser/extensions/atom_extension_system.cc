@@ -287,7 +287,8 @@ void AtomExtensionSystem::DisableExtension(const std::string& extension_id,
   if (extension &&
       !(disable_reasons & Extension::DISABLE_RELOAD) &&
       !(disable_reasons & Extension::DISABLE_UPDATE_REQUIRED_BY_POLICY) &&
-      extension->location() != Manifest::EXTERNAL_COMPONENT) {
+      extension->location() != Manifest::EXTERNAL_COMPONENT &&
+      extension->location() != Manifest::UNPACKED) {
     return;
   }
 
