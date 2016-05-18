@@ -29,11 +29,12 @@
 
 namespace {
 
-void DidCreateDocumentElement(blink::WebLocalFrame* frame) {
+void DidCreateDocumentElement(content::RenderFrame* render_frame) {
   v8::Isolate* isolate = blink::mainThreadIsolate();
   v8::HandleScope handle_scope(isolate);
 
-  v8::Local<v8::Context> context = frame->mainWorldScriptContext();
+  v8::Local<v8::Context> context =
+    render_frame->GetWebFrame()->mainWorldScriptContext();
   v8::Context::Scope context_scope(context);
 
   auto script_context =
@@ -43,6 +44,12 @@ void DidCreateDocumentElement(blink::WebLocalFrame* frame) {
         extensions::Feature::Context::WEB_PAGE_CONTEXT)
     script_context->module_system()
         ->CallModuleMethod("ipc", "didCreateDocumentElement");
+
+  // reschedule the callback because a new render frame
+  // is not always created when navigating
+  extensions::ExtensionFrameHelper::Get(render_frame)
+      ->ScheduleAtDocumentStart(base::Bind(DidCreateDocumentElement,
+                                           render_frame));
 }
 
 }  // namespace
@@ -107,7 +114,7 @@ void AtomExtensionsRendererClient::RenderFrameCreated(
   extension_dispatcher_->OnRenderFrameCreated(render_frame);
   ExtensionFrameHelper::Get(render_frame)
       ->ScheduleAtDocumentStart(base::Bind(DidCreateDocumentElement,
-                                           render_frame->GetWebFrame()));
+                                           render_frame));
 }
 
 void AtomExtensionsRendererClient::RenderViewCreated(
