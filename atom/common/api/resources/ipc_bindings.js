@@ -1,6 +1,10 @@
 var ipc = require('ipc_utils')
 
 exports.didCreateDocumentElement = function() {
+  // don't try to run if there is no window object
+  if (!window)
+    return
+
   var slice = [].slice;
 
   window.alert = function(message, title) {
