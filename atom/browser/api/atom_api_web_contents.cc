@@ -404,11 +404,9 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
     content::NavigationController::LoadURLParams load_url_params(target_url);
     // http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-95229140
     load_url_params.referrer = content::Referrer(GetURL(),
-                                              blink::WebReferrerPolicyAlways);
+                                              blink::WebReferrerPolicyDefault);
     load_url_params.transition_type = ui::PAGE_TRANSITION_LINK;
-    load_url_params.should_replace_current_entry = true;
     load_url_params.is_renderer_initiated = false;
-    load_url_params.should_clear_history_list = true;
     load_url_params.frame_name = frame_name;
     CreateFrom(isolate(), new_contents)->delayed_load_url_params_.reset(
       new content::NavigationController::LoadURLParams(load_url_params));
@@ -437,7 +435,7 @@ void WebContents::AddNewContents(content::WebContents* source,
   } else {
     // we won't need these because the opener will handle it
     CreateFrom(isolate(), new_contents)->
-      delayed_load_url_params_.reset(nullptr);
+      delayed_load_url_ = false;
   }
 
   // set webPreferences
@@ -502,6 +500,24 @@ bool WebContents::ShouldResumeRequestsForCreatedWindow() {
 content::WebContents* WebContents::OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) {
+  if (!delayed_load_url_ && delayed_load_url_params_.get()) {
+    content::NavigationController::LoadURLParams load_url_params(params.url);
+    load_url_params.referrer = delayed_load_url_params_.get()->referrer;
+    load_url_params.frame_name = delayed_load_url_params_.get()->frame_name;
+    load_url_params.redirect_chain = params.redirect_chain;
+    load_url_params.transition_type =
+      delayed_load_url_params_.get()->transition_type;
+    load_url_params.extra_headers = params.extra_headers;
+    load_url_params.should_replace_current_entry =
+      params.should_replace_current_entry;
+    load_url_params.is_renderer_initiated = params.is_renderer_initiated;
+
+    delayed_load_url_ = true;
+    delayed_load_url_params_.reset(
+      new content::NavigationController::LoadURLParams(load_url_params));
+    return nullptr;
+  }
+
   if (params.disposition == SUPPRESS_OPEN)
     return nullptr;
 
@@ -919,13 +935,13 @@ void WebContents::Reload(bool ignore_cache) {
 }
 
 void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
-  if (delayed_load_url_) {
-    if (delayed_load_url_params_.get()) {
-        GetWebContents()->GetController().LoadURLWithParams(
+  if (delayed_load_url_params_.get()) {
+    if (delayed_load_url_) {
+      GetWebContents()->GetController().LoadURLWithParams(
           *delayed_load_url_params_.get());
-      delayed_load_url_params_.reset(nullptr);
+      delayed_load_url_ = false;
     }
-    delayed_load_url_ = false;
+    delayed_load_url_params_.reset(nullptr);
     return;
   }
 
@@ -954,7 +970,6 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
     params.extra_headers = extra_headers;
 
   params.transition_type = ui::PAGE_TRANSITION_TYPED;
-  params.should_clear_history_list = true;
   params.override_user_agent = content::NavigationController::UA_OVERRIDE_TRUE;
   web_contents()->GetController().LoadURLWithParams(params);
 
