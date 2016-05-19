@@ -256,10 +256,19 @@ void AtomRendererClient::DidCreateScriptContext(
   }
 }
 
+void AtomRendererClient::OnReleaseContext(node::Environment* env) {
+  mate::EmitEvent(env->isolate(), env->process_object(), "exit");
+}
+
 void AtomRendererClient::WillReleaseScriptContext(
     v8::Handle<v8::Context> context) {
-  node::Environment* env = node::Environment::GetCurrent(context);
-  mate::EmitEvent(env->isolate(), env->process_object(), "exit");
+  if (WebContentsPreferences::run_node()) {
+    node::Environment* env = node::Environment::GetCurrent(context);
+    if (env)
+      base::MessageLoop::current()->PostTask(
+        FROM_HERE, base::Bind(&AtomRendererClient::OnReleaseContext,
+          base::Unretained(this), env));
+  }
 }
 
 bool AtomRendererClient::AllowPopup() {
