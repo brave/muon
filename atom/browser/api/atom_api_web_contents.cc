@@ -678,6 +678,23 @@ void WebContents::DocumentLoadedInFrame(
     Emit("dom-ready");
 }
 
+void WebContents::DidStartProvisionalLoadForFrame(
+    content::RenderFrameHost* render_frame_host,
+    const GURL& validated_url,
+    bool is_error_page,
+    bool is_iframe_srcdoc) {
+  bool is_main_frame = !render_frame_host->GetParent();
+  Emit("did-start-provisional-load", validated_url, is_error_page, is_iframe_srcdoc, is_main_frame);
+}
+
+void WebContents::DidCommitProvisionalLoadForFrame(
+    content::RenderFrameHost* render_frame_host,
+    const GURL& url,
+    ui::PageTransition transition_type) {
+  bool is_main_frame = !render_frame_host->GetParent();
+  Emit("did-commit-provisional-load", url, (int)transition_type, is_main_frame);
+}
+
 void WebContents::DidFinishLoad(content::RenderFrameHost* render_frame_host,
                                 const GURL& validated_url) {
   bool is_main_frame = !render_frame_host->GetParent();
@@ -694,7 +711,7 @@ void WebContents::DidFailProvisionalLoad(
     const base::string16& description,
     bool was_ignored_by_handler) {
   bool is_main_frame = !render_frame_host->GetParent();
-  Emit("did-fail-provisional-load", code, description, url, is_main_frame);
+  Emit("did-fail-provisional-load", code, description, url, is_main_frame, was_ignored_by_handler);
 }
 
 void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
@@ -703,7 +720,7 @@ void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
                               const base::string16& error_description,
                               bool was_ignored_by_handler) {
   bool is_main_frame = !render_frame_host->GetParent();
-  Emit("did-fail-load", error_code, error_description, url, is_main_frame);
+  Emit("did-fail-load", error_code, error_description, url, is_main_frame, was_ignored_by_handler);
 }
 
 void WebContents::DidStartLoading() {
@@ -1246,10 +1263,14 @@ void WebContents::SetActive(bool active) {
     tab_helper->SetActive(active);
 #endif
 
-  if (active)
-    web_contents()->WasShown();
-  else
+  SetHidden(!active);
+}
+
+void WebContents::SetHidden(bool hidden) {
+  if (hidden)
     web_contents()->WasHidden();
+  else
+    web_contents()->WasShown();
 }
 
 void WebContents::TabTraverse(bool reverse) {
@@ -1441,6 +1462,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("removeWorkSpace", &WebContents::RemoveWorkSpace)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
+      .SetMethod("setHidden", &WebContents::SetHidden)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)
