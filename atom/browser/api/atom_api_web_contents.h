@@ -158,6 +158,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void Focus();
   void TabTraverse(bool reverse);
   void SetActive(bool active);
+  // calls WasShown/WasHidden
+  void SetHidden(bool hidden);
 
   // Send messages to browser.
   bool SendIPCMessage(bool all_frames,
@@ -278,6 +280,15 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void RenderProcessGone(base::TerminationStatus status) override;
   void DocumentLoadedInFrame(
       content::RenderFrameHost* render_frame_host) override;
+  void DidStartProvisionalLoadForFrame(
+      content::RenderFrameHost* render_frame_host,
+      const GURL& validated_url,
+      bool is_error_page,
+      bool is_iframe_srcdoc) override;
+  void DidCommitProvisionalLoadForFrame(
+      content::RenderFrameHost* render_frame_host,
+      const GURL& url,
+      ui::PageTransition transition_type) override;
   void DidFinishLoad(content::RenderFrameHost* render_frame_host,
                      const GURL& validated_url) override;
   void DidFailLoad(content::RenderFrameHost* render_frame_host,
