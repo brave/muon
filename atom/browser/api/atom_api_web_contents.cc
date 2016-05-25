@@ -695,7 +695,6 @@ void WebContents::DidFailProvisionalLoad(
     bool was_ignored_by_handler) {
   bool is_main_frame = !render_frame_host->GetParent();
   Emit("did-fail-provisional-load", code, description, url, is_main_frame);
-  Emit("did-fail-load", code, description, url, is_main_frame);
 }
 
 void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
