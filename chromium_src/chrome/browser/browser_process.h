@@ -37,12 +37,13 @@ class BrowserProcess {
   printing::PrintJobManager* print_job_manager();
 
   bool IsShuttingDown();
-
+  void StartTearDown();
  private:
   scoped_ptr<printing::PrintJobManager> print_job_manager_;
 #if defined(ENABLE_EXTENSIONS)
   scoped_ptr<extensions::ExtensionsBrowserClient> extensions_browser_client_;
 #endif
+  bool tearing_down_;
   DISALLOW_COPY_AND_ASSIGN(BrowserProcess);
 };
 

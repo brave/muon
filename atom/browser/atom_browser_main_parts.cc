@@ -186,6 +186,8 @@ void AtomBrowserMainParts::PostMainMessageLoopRun() {
     ++iter;
     callback.Run();
   }
+
+  fake_browser_process_->StartTearDown();
 }
 
 }  // namespace atom

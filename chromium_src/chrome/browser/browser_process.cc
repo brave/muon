@@ -6,6 +6,7 @@
 
 #include "chrome/browser/printing/print_job_manager.h"
 #include "content/public/browser/child_process_security_policy.h"
+#include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
 
 #if defined(ENABLE_EXTENSIONS)
@@ -19,10 +20,15 @@
 
 BrowserProcess* g_browser_process = NULL;
 
-BrowserProcess::BrowserProcess() {
+BrowserProcess::BrowserProcess()
+    : tearing_down_(false) {
   g_browser_process = this;
 
   print_job_manager_.reset(new printing::PrintJobManager);
+
+#if defined(OS_MACOSX)
+  ui::InitIdleMonitor();
+#endif
 
 #if defined(ENABLE_EXTENSIONS)
   content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
@@ -44,10 +50,17 @@ BrowserProcess::BrowserProcess() {
 }
 
 BrowserProcess::~BrowserProcess() {
-  #if defined(ENABLE_EXTENSIONS)
-    ExtensionRendererState::GetInstance()->Shutdown();
-  #endif
   g_browser_process = NULL;
+}
+
+void BrowserProcess::StartTearDown() {
+  tearing_down_ = true;
+
+#if defined(ENABLE_EXTENSIONS)
+  ExtensionRendererState::GetInstance()->Shutdown();
+#endif
+
+  print_job_manager_->Shutdown();
 }
 
 std::string BrowserProcess::GetApplicationLocale() {
@@ -59,5 +72,5 @@ printing::PrintJobManager* BrowserProcess::print_job_manager() {
 }
 
 bool BrowserProcess::IsShuttingDown() {
-  return false;
+  return tearing_down_;
 }
