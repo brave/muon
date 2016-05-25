@@ -83,7 +83,7 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
       content::BrowserContext* context,
       std::vector<ExtensionPrefsObserver*>* observers) const override;
   ProcessManagerDelegate* GetProcessManagerDelegate() const override;
-  scoped_ptr<ExtensionHostDelegate> CreateExtensionHostDelegate() override;
+  std::unique_ptr<ExtensionHostDelegate> CreateExtensionHostDelegate() override;
   bool DidVersionUpdate(content::BrowserContext* context) override;
   void PermitExternalProtocolHandler() override;
   bool IsRunningInForcedAppMode() override;
@@ -95,13 +95,14 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
       ExtensionFunctionRegistry* registry) const override;
   void RegisterMojoServices(content::RenderFrameHost* render_frame_host,
                             const Extension* extension) const override;
-  scoped_ptr<RuntimeAPIDelegate> CreateRuntimeAPIDelegate(
+  std::unique_ptr<RuntimeAPIDelegate> CreateRuntimeAPIDelegate(
       content::BrowserContext* context) const override;
   const ComponentExtensionResourceManager*
   GetComponentExtensionResourceManager() override;
   void BroadcastEventToRenderers(events::HistogramValue histogram_value,
                                  const std::string& event_name,
-                                 scoped_ptr<base::ListValue> args) override;
+                                 std::unique_ptr<base::ListValue>
+                                     args) override;
   net::NetLog* GetNetLog() override;
   ExtensionCache* GetExtensionCache() override;
   bool IsBackgroundUpdateAllowed() override;
@@ -121,14 +122,14 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
   content::BrowserContext* browser_context_;
 
     // Support for ProcessManager.
-  scoped_ptr<AtomProcessManagerDelegate> process_manager_delegate_;
+  std::unique_ptr<AtomProcessManagerDelegate> process_manager_delegate_;
 
   // Client for API implementations.
-  scoped_ptr<ExtensionsAPIClient> api_client_;
+  std::unique_ptr<ExtensionsAPIClient> api_client_;
 
-  scoped_ptr<AtomComponentExtensionResourceManager> resource_manager_;
+  std::unique_ptr<AtomComponentExtensionResourceManager> resource_manager_;
 
-  scoped_ptr<ExtensionCache> extension_cache_;
+  std::unique_ptr<ExtensionCache> extension_cache_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionsBrowserClient);
 };

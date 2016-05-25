@@ -4,6 +4,7 @@
 
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 
+#include "extensions/browser/api/web_request/web_request_api.h"
 #include "atom/browser/api/atom_api_extension.h"
 #include "base/command_line.h"
 #include "chrome/browser/renderer_host/chrome_extension_message_filter.h"
@@ -11,7 +12,6 @@
 #include "content/public/browser/browser_url_handler.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/site_instance.h"
-#include "extensions/browser/api/web_request/web_request_api.h"
 #include "extensions/browser/extension_message_filter.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"

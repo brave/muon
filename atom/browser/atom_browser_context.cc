@@ -258,7 +258,7 @@ void AtomBrowserContext::RegisterUserPrefs() {
       JsonPrefStore::GetTaskRunnerForFile(
           filepath, BrowserThread::GetBlockingPool());
   scoped_refptr<JsonPrefStore> pref_store =
-      new JsonPrefStore(filepath, task_runner, scoped_ptr<PrefFilter>());
+      new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
 
   factory.set_async(true);
   factory.set_user_prefs(pref_store);

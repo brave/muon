@@ -102,10 +102,10 @@ const std::string AtomExtensionsClient::GetProductName() {
   return ATOM_PRODUCT_NAME;
 }
 
-scoped_ptr<FeatureProvider> AtomExtensionsClient::CreateFeatureProvider(
+std::unique_ptr<FeatureProvider> AtomExtensionsClient::CreateFeatureProvider(
     const std::string& name) const {
-  scoped_ptr<FeatureProvider> provider;
-  scoped_ptr<JSONFeatureProviderSource> source(
+  std::unique_ptr<FeatureProvider> provider;
+  std::unique_ptr<JSONFeatureProviderSource> source(
       CreateFeatureProviderSource(name));
   if (name == "api") {
     provider.reset(new BaseFeatureProvider(source->dictionary(),
@@ -125,10 +125,10 @@ scoped_ptr<FeatureProvider> AtomExtensionsClient::CreateFeatureProvider(
   return provider;
 }
 
-scoped_ptr<JSONFeatureProviderSource>
+std::unique_ptr<JSONFeatureProviderSource>
 AtomExtensionsClient::CreateFeatureProviderSource(
     const std::string& name) const {
-  scoped_ptr<JSONFeatureProviderSource> source(
+  std::unique_ptr<JSONFeatureProviderSource> source(
       new JSONFeatureProviderSource(name));
   if (name == "api") {
     source->LoadJSON(IDR_EXTENSION_API_FEATURES);

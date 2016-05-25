@@ -135,7 +135,7 @@ class AtomBrowserClient : public brightray::BrowserClient,
   Delegate* delegate_;
 
 #if defined(ENABLE_EXTENSIONS)
-  scoped_ptr<extensions::AtomBrowserClientExtensionsPart> extensions_part_;
+  std::unique_ptr<extensions::AtomBrowserClientExtensionsPart> extensions_part_;
 #endif
 
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserClient);

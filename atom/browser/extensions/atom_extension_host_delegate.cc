@@ -22,9 +22,9 @@ namespace {
 struct QueueWrapper {
   QueueWrapper() {
     queue.reset(new LoadMonitoringExtensionHostQueue(
-        scoped_ptr<ExtensionHostQueue>(new SerialExtensionHostQueue())));
+        std::unique_ptr<ExtensionHostQueue>(new SerialExtensionHostQueue())));
   }
-  scoped_ptr<ExtensionHostQueue> queue;
+  std::unique_ptr<ExtensionHostQueue> queue;
 };
 base::LazyInstance<QueueWrapper> g_queue = LAZY_INSTANCE_INITIALIZER;
 

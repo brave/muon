@@ -122,9 +122,6 @@ void AtomRendererClient::RenderThreadStarted() {
   blink::WebCustomElement::addEmbedderCustomElementName("browserplugin");
   OverrideNodeArrayBuffer();
 
-  content::RenderThread* thread = content::RenderThread::Get();
-  thread->AddObserver(this);
-
 #if defined(ENABLE_EXTENSIONS)
   extensions::AtomExtensionsRendererClient::GetInstance()->
       RenderThreadStarted();
@@ -182,7 +179,6 @@ void AtomRendererClient::RenderViewCreated(content::RenderView* render_view) {
     return;
 
   base::CommandLine* cmd = base::CommandLine::ForCurrentProcess();
-  blink::WebFrameWidget* web_frame_widget = render_view->GetWebFrameWidget();
   if (cmd->HasSwitch(switches::kGuestInstanceID)) {  // webview.
     web_frame_widget->setBaseBackgroundColor(SK_ColorTRANSPARENT);
   } else {  // normal window.
@@ -192,6 +188,11 @@ void AtomRendererClient::RenderViewCreated(content::RenderView* render_view) {
     SkColor color = name.empty() ? SK_ColorWHITE : ParseHexColor(name);
     web_frame_widget->setBaseBackgroundColor(color);
   }
+
+#if defined(ENABLE_EXTENSIONS)
+  extensions::AtomExtensionsRendererClient::GetInstance()->
+      RenderViewCreated(render_view);
+#endif
 }
 
 void AtomRendererClient::RunScriptsAtDocumentStart(
@@ -201,7 +202,8 @@ void AtomRendererClient::RunScriptsAtDocumentStart(
       blink::WebScriptSource("void 0"));
 #if defined(ENABLE_EXTENSIONS)
   extensions::AtomExtensionsRendererClient::GetInstance()->
-      RenderViewCreated(render_view);
+      RunScriptsAtDocumentStart(render_frame);
+  // |render_frame| might be dead by now.
 #endif
 }
 
@@ -337,15 +339,6 @@ bool AtomRendererClient::WillSendRequest(
 #endif
 
   return false;
-}
-
-void AtomRendererClient::RunScriptsAtDocumentStart(
-    content::RenderFrame* render_frame) {
-#if defined(ENABLE_EXTENSIONS)
-  extensions::AtomExtensionsRendererClient::GetInstance()->
-      RunScriptsAtDocumentStart(render_frame);
-  // |render_frame| might be dead by now.
-#endif
 }
 
 void AtomRendererClient::RunScriptsAtDocumentEnd(

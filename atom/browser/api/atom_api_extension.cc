@@ -250,7 +250,7 @@ bool Extension::IsBackgroundPage(WebContents* web_contents) {
 // static
 v8::Local<v8::Value> Extension::TabValue(v8::Isolate* isolate,
                     WebContents* web_contents) {
-  scoped_ptr<base::DictionaryValue> value(
+  std::unique_ptr<base::DictionaryValue> value(
       extensions::TabHelper::CreateTabValue(web_contents->web_contents()));
   return mate::ConvertToV8(isolate, *value);
 }

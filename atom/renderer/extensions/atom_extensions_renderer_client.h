@@ -52,9 +52,10 @@ class AtomExtensionsRendererClient : public ExtensionsRendererClient {
   void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame);
 
  private:
-  scoped_ptr<AtomExtensionsDispatcherDelegate> extension_dispatcher_delegate_;
-  scoped_ptr<Dispatcher> extension_dispatcher_;
-  scoped_ptr<RendererPermissionsPolicyDelegate>
+  std::unique_ptr<AtomExtensionsDispatcherDelegate>
+      extension_dispatcher_delegate_;
+  std::unique_ptr<Dispatcher> extension_dispatcher_;
+  std::unique_ptr<RendererPermissionsPolicyDelegate>
       permissions_policy_delegate_;
 
 

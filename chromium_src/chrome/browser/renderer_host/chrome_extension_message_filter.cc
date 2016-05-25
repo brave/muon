@@ -263,7 +263,7 @@ void ChromeExtensionMessageFilter::OnGetExtMessageBundleOnBlockingPool(
   const extensions::ExtensionSet& extension_set =
       extension_info_map_->extensions();
 
-  scoped_ptr<extensions::MessageBundle::SubstitutionMap> dictionary_map(
+  std::unique_ptr<extensions::MessageBundle::SubstitutionMap> dictionary_map(
       extensions::file_util::LoadMessageBundleSubstitutionMapWithImports(
           extension_id, extension_set));
 

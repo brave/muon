@@ -48,7 +48,7 @@ class ExtensionMessagePort : public MessageService::MessagePort {
   bool HasFrame(content::RenderFrameHost* rfh) const override;
   bool IsValidPort() override;
   void DispatchOnConnect(const std::string& channel_name,
-                         scoped_ptr<base::DictionaryValue> source_tab,
+                         std::unique_ptr<base::DictionaryValue> source_tab,
                          int source_frame_id,
                          int guest_process_id,
                          int guest_render_frame_routing_id,
@@ -77,7 +77,7 @@ class ExtensionMessagePort : public MessageService::MessagePort {
   void CloseChannel();
 
   // Send a IPC message to the renderer for all registered frames.
-  void SendToPort(scoped_ptr<IPC::Message> msg);
+  void SendToPort(std::unique_ptr<IPC::Message> msg);
 
   base::WeakPtr<MessageService> weak_message_service_;
 
@@ -100,7 +100,7 @@ class ExtensionMessagePort : public MessageService::MessagePort {
   bool did_create_port_;
 
   ExtensionHost* background_host_ptr_;  // used in IncrementLazyKeepaliveCount
-  scoped_ptr<FrameTracker> frame_tracker_;
+  std::unique_ptr<FrameTracker> frame_tracker_;
 
   DISALLOW_COPY_AND_ASSIGN(ExtensionMessagePort);
 };

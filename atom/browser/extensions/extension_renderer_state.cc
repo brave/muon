@@ -188,12 +188,7 @@ void ExtensionRendererState::ClearTabAndWindowId(
 bool ExtensionRendererState::GetTabAndWindowId(
     const  content::ResourceRequestInfo* info, int* tab_id, int* window_id) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
-  int render_process_id;
-  if (info->GetProcessType() == content::PROCESS_TYPE_PLUGIN) {
-    render_process_id = info->GetOriginPID();
-  } else {
-    render_process_id = info->GetChildID();
-  }
+  int render_process_id = info->GetChildID();
   int render_view_id = info->GetRouteID();
   RenderId render_id(render_process_id, render_view_id);
   TabAndWindowIdMap::iterator iter = map_.find(render_id);

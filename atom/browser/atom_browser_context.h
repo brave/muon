@@ -32,6 +32,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomBrowserContext(const std::string& partition, bool in_memory);
   ~AtomBrowserContext() override;
 
+  base::FilePath GetPath() const override;
+
   // brightray::URLRequestContextGetter::Delegate:
   net::NetworkDelegate* CreateNetworkDelegate() override;
   std::string GetUserAgent() override;
@@ -62,7 +64,7 @@ class AtomBrowserContext : public brightray::BrowserContext {
   void RegisterUserPrefs();
   void OnPrefsLoaded(bool success);
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
-  scoped_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
+  std::unique_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
 #endif
 
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;

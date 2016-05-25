@@ -389,7 +389,7 @@ const std::vector<std::string> ContentScriptsHandler::Keys() const {
 }
 
 bool ContentScriptsHandler::Parse(Extension* extension, base::string16* error) {
-  scoped_ptr<ContentScriptsInfo> content_scripts_info(new ContentScriptsInfo);
+  std::unique_ptr<ContentScriptsInfo> content_scripts_info(new ContentScriptsInfo);
   const base::ListValue* scripts_list = NULL;
   if (!extension->manifest()->GetList(keys::kContentScripts, &scripts_list)) {
     *error = base::ASCIIToUTF16(errors::kInvalidContentScriptsList);

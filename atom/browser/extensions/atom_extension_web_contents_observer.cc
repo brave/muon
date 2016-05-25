@@ -55,7 +55,7 @@ void AtomExtensionWebContentsObserver::OnDetailedConsoleMessageAdded(
   if (extension_id.empty())
     extension_id = GURL(source).host();
 
-  scoped_ptr<ExtensionError> runtime_error(new RuntimeError(
+  std::unique_ptr<ExtensionError> runtime_error(new RuntimeError(
           extension_id, browser_context()->IsOffTheRecord(), source, message,
           stack_trace, web_contents()->GetLastCommittedURL(),
           static_cast<logging::LogSeverity>(severity_level),

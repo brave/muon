@@ -172,7 +172,7 @@ bool AtomExtensionsRendererClient::WillSendRequest(
     // The page_origin may be GURL("null") for unique origins like data URLs,
     // but this is ok for the checks below.  We only care if it matches the
     // current extension or has a devtools scheme.
-    base::string16 str = frame->top()->securityOrigin().toString();
+    base::string16 str = frame->top()->getSecurityOrigin().toString();
     GURL page_origin = GURL(str);
 
     // allow access to background pages and scripts

@@ -401,7 +401,7 @@ void WebContents::AddNewContents(content::WebContents* source,
   // set webPreferences
   base::DictionaryValue* web_preferences =
     WebContentsPreferences::FromWebContents(new_contents)->web_preferences();
-  scoped_ptr<base::DictionaryValue> options(new base::DictionaryValue);
+  std::unique_ptr<base::DictionaryValue> options(new base::DictionaryValue);
   options->Set(options::kWebPreferences, web_preferences->CreateDeepCopy());
   if (target_url != "")
     options->SetString("delayedLoadUrl", target_url);
@@ -424,7 +424,7 @@ void WebContents::AddNewContents(content::WebContents* source,
                   *options);
   } else if (disposition == NEW_POPUP || disposition == NEW_WINDOW) {
     // Set windowOptions
-    scoped_ptr<base::DictionaryValue> browser_options(
+    std::unique_ptr<base::DictionaryValue> browser_options(
                                                     new base::DictionaryValue);
     browser_options->SetInteger("height", initial_rect.height());
     browser_options->SetInteger("width", initial_rect.width());
@@ -866,7 +866,7 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 
 void WebContents::Reload(bool ignore_cache) {
   if (ignore_cache)
-    web_contents()->GetController().ReloadIgnoringCache(true);
+    web_contents()->GetController().ReloadBypassingCache(true);
   else
     web_contents()->GetController().Reload(true);
 }

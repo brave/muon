@@ -29,6 +29,8 @@
 #include "extensions/common/extension_messages.h"
 #include "extensions/common/manifest_handlers/shared_module_info.h"
 #include "extensions/common/permissions/permissions_data.h"
+#include "extensions/browser/value_store/value_store_factory_impl.h"
+
 
 using content::BrowserThread;
 
@@ -123,7 +125,8 @@ AtomExtensionSystem::AtomExtensionSystem(
     atom::AtomBrowserContext* browser_context)
     : registry_(ExtensionRegistry::Get(browser_context)),
       browser_context_(browser_context),
-      extension_prefs_(ExtensionPrefs::Get(browser_context_)) {
+      extension_prefs_(ExtensionPrefs::Get(browser_context_)),
+      store_factory_(new ValueStoreFactoryImpl(browser_context->GetPath())) {
   shared_ =
       AtomExtensionSystemSharedFactory::GetForBrowserContext(browser_context_);
 }
@@ -181,6 +184,10 @@ StateStore* AtomExtensionSystem::rules_store() {
   return shared_->rules_store();
 }
 
+scoped_refptr<ValueStoreFactory> AtomExtensionSystem::store_factory() {
+  return store_factory_;
+}
+
 InfoMap* AtomExtensionSystem::info_map() { return shared_->info_map(); }
 
 const OneShotEvent& AtomExtensionSystem::ready() const {
@@ -199,7 +206,7 @@ ContentVerifier* AtomExtensionSystem::content_verifier() {
   return shared_->content_verifier();
 }
 
-scoped_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
+std::unique_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
     const Extension* extension) {
   return make_scoped_ptr(new ExtensionSet());
 }

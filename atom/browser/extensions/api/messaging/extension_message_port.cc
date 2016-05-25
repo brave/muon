@@ -178,7 +178,7 @@ bool ExtensionMessagePort::IsValidPort() {
 
 void ExtensionMessagePort::DispatchOnConnect(
     const std::string& channel_name,
-    scoped_ptr<base::DictionaryValue> source_tab,
+    std::unique_ptr<base::DictionaryValue> source_tab,
     int source_frame_id,
     int guest_process_id,
     int guest_render_frame_routing_id,
@@ -274,7 +274,7 @@ void ExtensionMessagePort::UnregisterFrame(content::RenderFrameHost* rfh) {
     CloseChannel();
 }
 
-void ExtensionMessagePort::SendToPort(scoped_ptr<IPC::Message> msg) {
+void ExtensionMessagePort::SendToPort(std::unique_ptr<IPC::Message> msg) {
   DCHECK_GT(frames_.size(), 0UL);
   if (extension_process_) {
     // All extension frames reside in the same process, so we can just send a

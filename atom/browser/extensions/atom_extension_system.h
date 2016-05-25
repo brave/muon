@@ -40,6 +40,7 @@ class AppSorting;
 class StateStore;
 class ExtensionPrefs;
 class ExtensionRegistry;
+class ValueStoreFactory;
 
 
 class AtomExtensionSystem : public ExtensionSystem,
@@ -63,6 +64,7 @@ class AtomExtensionSystem : public ExtensionSystem,
   SharedUserScriptMaster* shared_user_script_master() override;  // shared
   StateStore* state_store() override;                              // shared
   StateStore* rules_store() override;                              // shared
+  scoped_refptr<ValueStoreFactory> store_factory() override;
   InfoMap* info_map() override;                                    // shared
   QuotaService* quota_service() override;  // shared
   AppSorting* app_sorting() override;  // shared
@@ -74,7 +76,7 @@ class AtomExtensionSystem : public ExtensionSystem,
       const UnloadedExtensionInfo::Reason reason) override;
   const OneShotEvent& ready() const override;
   ContentVerifier* content_verifier() override;  // shared
-  scoped_ptr<ExtensionSet> GetDependentExtensions(
+  std::unique_ptr<ExtensionSet> GetDependentExtensions(
       const Extension* extension) override;
   void InstallUpdate(const std::string& extension_id,
                       const base::FilePath& temp_dir) override;
@@ -134,18 +136,19 @@ class AtomExtensionSystem : public ExtensionSystem,
     content::BrowserContext* browser_context_;  // Not owned.
     ExtensionService* extension_service_;  // Not owned.
 
-    scoped_ptr<RuntimeData> runtime_data_;
-    scoped_ptr<QuotaService> quota_service_;
-    scoped_ptr<AppSorting> app_sorting_;
-    scoped_ptr<ServiceWorkerManager> service_worker_manager_;
+    std::unique_ptr<RuntimeData> runtime_data_;
+    std::unique_ptr<QuotaService> quota_service_;
+    std::unique_ptr<AppSorting> app_sorting_;
+
+    std::unique_ptr<ServiceWorkerManager> service_worker_manager_;
     // Shared memory region manager for scripts statically declared in extension
     // manifests. This region is shared between all extensions.
-    scoped_ptr<SharedUserScriptMaster> shared_user_script_master_;
+    std::unique_ptr<SharedUserScriptMaster> shared_user_script_master_;
     // extension_info_map_ needs to outlive process_manager_.
     scoped_refptr<InfoMap> extension_info_map_;
 
 #if defined(OS_CHROMEOS)
-    scoped_ptr<chromeos::DeviceLocalAccountManagementPolicyProvider>
+    std::unique_ptr<chromeos::DeviceLocalAccountManagementPolicyProvider>
         device_local_account_management_policy_provider_;
 #endif
 
@@ -159,6 +162,8 @@ class AtomExtensionSystem : public ExtensionSystem,
   content::BrowserContext* browser_context_;
 
   extensions::ExtensionPrefs* extension_prefs_;
+
+  scoped_refptr<ValueStoreFactory> store_factory_;
 
   Shared* shared_;
 

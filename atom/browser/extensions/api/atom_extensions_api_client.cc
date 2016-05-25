@@ -11,22 +11,6 @@
 #include "extensions/browser/api/web_request/web_request_event_details.h"
 #include "extensions/browser/api/web_request/web_request_event_router_delegate.h"
 
-namespace {
-
-void ExtractExtraRequestDetailsInternal(const net::URLRequest* request,
-                                        int* tab_id,
-                                        int* window_id) {
-  const content::ResourceRequestInfo* info =
-      content::ResourceRequestInfo::ForRequest(request);
-  if (!info)
-    return;
-
-  ExtensionRendererState::GetInstance()->GetTabAndWindowId(info, tab_id,
-                                                           window_id);
-}
-
-}  // namespace
-
 namespace extensions {
 
 class AtomExtensionWebRequestEventRouterDelegate :
@@ -34,30 +18,6 @@ class AtomExtensionWebRequestEventRouterDelegate :
  public:
   AtomExtensionWebRequestEventRouterDelegate() {}
   ~AtomExtensionWebRequestEventRouterDelegate() {}
-
-  // Looks up the tab and window ID for a given request.
-  // Called on the IO thread.
-  void ExtractExtraRequestDetails(const net::URLRequest* request,
-                                  WebRequestEventDetails* out) override {
-    int tab_id = -1;
-    int window_id = -1;
-    ExtractExtraRequestDetailsInternal(request, &tab_id, &window_id);
-    out->SetInteger(keys::kTabIdKey, tab_id);
-  };
-
-  // Called to check extra parameters (e.g., tab_id, windown_id) when filtering
-  // event listeners.
-  bool OnGetMatchingListenersImplCheck(
-      int filter_tab_id,
-      int filter_window_id,
-      const net::URLRequest* request) override {
-    int tab_id = -1;
-    int window_id = -1;
-    ExtractExtraRequestDetailsInternal(request, &tab_id, &window_id);
-    if (filter_tab_id != -1 && tab_id != filter_tab_id)
-      return true;
-    return (filter_window_id != -1 && window_id != filter_window_id);
-  }
 
  private:
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionWebRequestEventRouterDelegate);

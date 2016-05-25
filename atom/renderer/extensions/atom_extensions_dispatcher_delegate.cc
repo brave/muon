@@ -31,11 +31,12 @@ void AtomExtensionsDispatcherDelegate::RegisterNativeHandlers(
     extensions::ScriptContext* context) {
   module_system->RegisterNativeHandler(
       "atom",
-      scoped_ptr<NativeHandler>(
+      std::unique_ptr<NativeHandler>(
           new atom::JavascriptBindings(context)));
   module_system->RegisterNativeHandler(
       "tabs",
-      scoped_ptr<NativeHandler>(new extensions::TabsCustomBindings(context)));
+      std::unique_ptr<NativeHandler>(
+          new extensions::TabsCustomBindings(context)));
 }
 
 void AtomExtensionsDispatcherDelegate::PopulateSourceMap(

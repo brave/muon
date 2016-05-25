@@ -366,9 +366,9 @@ AtomExtensionsBrowserClient::GetProcessManagerDelegate() const {
   return process_manager_delegate_.get();
 }
 
-scoped_ptr<ExtensionHostDelegate>
+std::unique_ptr<ExtensionHostDelegate>
 AtomExtensionsBrowserClient::CreateExtensionHostDelegate() {
-  return scoped_ptr<ExtensionHostDelegate>(new AtomExtensionHostDelegate);
+  return std::unique_ptr<ExtensionHostDelegate>(new AtomExtensionHostDelegate);
 }
 
 PrefService* AtomExtensionsBrowserClient::GetPrefServiceForContext(
@@ -491,10 +491,10 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
   registry->RegisterFunction<WebRequestInternalEventHandledFunction>();
 }
 
-scoped_ptr<RuntimeAPIDelegate>
+std::unique_ptr<RuntimeAPIDelegate>
 AtomExtensionsBrowserClient::CreateRuntimeAPIDelegate(
     content::BrowserContext* context) const {
-  return scoped_ptr<RuntimeAPIDelegate>(new AtomRuntimeAPIDelegate());
+  return std::unique_ptr<RuntimeAPIDelegate>(new AtomRuntimeAPIDelegate());
 }
 
 const ComponentExtensionResourceManager*
@@ -510,7 +510,7 @@ void AtomExtensionsBrowserClient::RegisterMojoServices(
 void AtomExtensionsBrowserClient::BroadcastEventToRenderers(
     events::HistogramValue histogram_value,
     const std::string& event_name,
-    scoped_ptr<base::ListValue> args) {
+    std::unique_ptr<base::ListValue> args) {
   if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
     content::BrowserThread::PostTask(
         content::BrowserThread::UI, FROM_HERE,
@@ -520,7 +520,7 @@ void AtomExtensionsBrowserClient::BroadcastEventToRenderers(
     return;
   }
 
-  scoped_ptr<Event> event(
+  std::unique_ptr<Event> event(
       new Event(histogram_value, event_name, std::move(args)));
   EventRouter::Get(browser_context_)->BroadcastEvent(std::move(event));
 }
