@@ -42,7 +42,6 @@
 #include "native_mate/dictionary.h"
 #include "net/base/filename_util.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
-#include "third_party/WebKit/public/web/WebFrameWidget.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebPluginParams.h"
 #include "third_party/WebKit/public/web/WebKit.h"
@@ -116,8 +115,6 @@ AtomRendererClient::AtomRendererClient()
 }
 
 AtomRendererClient::~AtomRendererClient() {
-}
-
 }
 
 void AtomRendererClient::RenderThreadStarted() {

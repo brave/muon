@@ -33,6 +33,7 @@ class AtomRendererClient : public content::ContentRendererClient {
 
   void DidCreateScriptContext(v8::Handle<v8::Context> context);
   void WillReleaseScriptContext(v8::Handle<v8::Context> context);
+
  private:
   enum NodeIntegration {
     ALL,
