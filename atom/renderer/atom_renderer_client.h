@@ -17,10 +17,6 @@ namespace extensions {
 class Dispatcher;
 }
 
-namespace node {
-class Environment;
-}
-
 namespace atom {
 
 class AtomBindings;
@@ -83,8 +79,6 @@ class AtomRendererClient : public content::ContentRendererClient,
     const GURL& url,
     const GURL& first_party_for_cookies,
     GURL* new_url) override;
-
-  void OnReleaseContext(node::Environment* env);
 
   scoped_ptr<NodeBindings> node_bindings_;
   scoped_ptr<AtomBindings> atom_bindings_;
