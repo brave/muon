@@ -32,7 +32,7 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomBrowserContext(const std::string& partition, bool in_memory);
   ~AtomBrowserContext() override;
 
-  base::FilePath GetPath() const override;
+  using brightray::BrowserContext::GetPath;
 
   // brightray::URLRequestContextGetter::Delegate:
   net::NetworkDelegate* CreateNetworkDelegate() override;
