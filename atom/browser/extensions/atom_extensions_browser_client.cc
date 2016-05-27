@@ -484,7 +484,8 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
   registry->RegisterFunction<ManagementGetFunction>();
   registry->RegisterFunction<ManagementGetSelfFunction>();
   registry->RegisterFunction<ManagementGetPermissionWarningsByIdFunction>();
-  registry->RegisterFunction<ManagementGetPermissionWarningsByManifestFunction>();
+  registry->RegisterFunction<
+      ManagementGetPermissionWarningsByManifestFunction>();
   registry->RegisterFunction<ManagementSetEnabledFunction>();
   registry->RegisterFunction<ManagementUninstallFunction>();
   registry->RegisterFunction<ManagementUninstallSelfFunction>();
