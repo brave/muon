@@ -27,6 +27,7 @@
 #include "extensions/browser/api/declarative/declarative_api.h"
 #include "extensions/browser/api/extensions_api_client.h"
 #include "extensions/browser/api/idle/idle_api.h"
+#include "extensions/browser/api/management/management_api.h"
 #include "extensions/browser/api/runtime/runtime_api.h"
 #include "extensions/browser/api/runtime/runtime_api_delegate.h"
 #include "extensions/browser/api/socket/socket_api.h"
@@ -479,6 +480,18 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
   registry->RegisterFunction<AlarmsGetAllFunction>();
   registry->RegisterFunction<AlarmsClearFunction>();
   registry->RegisterFunction<AlarmsClearAllFunction>();
+  registry->RegisterFunction<ManagementGetAllFunction>();
+  registry->RegisterFunction<ManagementGetFunction>();
+  registry->RegisterFunction<ManagementGetSelfFunction>();
+  registry->RegisterFunction<ManagementGetPermissionWarningsByIdFunction>();
+  registry->RegisterFunction<ManagementGetPermissionWarningsByManifestFunction>();
+  registry->RegisterFunction<ManagementSetEnabledFunction>();
+  registry->RegisterFunction<ManagementUninstallFunction>();
+  registry->RegisterFunction<ManagementUninstallSelfFunction>();
+  registry->RegisterFunction<ManagementLaunchAppFunction>();
+  registry->RegisterFunction<ManagementCreateAppShortcutFunction>();
+  registry->RegisterFunction<ManagementSetLaunchTypeFunction>();
+  registry->RegisterFunction<ManagementGenerateAppForLinkFunction>();
   registry->RegisterFunction<RuntimeGetBackgroundPageFunction>();
   registry->RegisterFunction<RuntimeOpenOptionsPageFunction>();
   registry->RegisterFunction<RuntimeSetUninstallURLFunction>();
