@@ -12,6 +12,9 @@
     'extensions.gypi',
   ],
   'target_defaults': {
+    'msvs_disabled_warnings': [
+      4456,
+    ],
     'defines': [
       'ATOM_PRODUCT_NAME="<(product_name)"',
       'ATOM_PROJECT_NAME="<(project_name)"',
