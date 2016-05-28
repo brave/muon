@@ -259,11 +259,11 @@ WebContents::WebContents(v8::Isolate* isolate,
     scoped_refptr<content::SiteInstance> site_instance =
         content::SiteInstance::CreateForURL(
             session->browser_context(), GURL("chrome-guest://fake-host"));
-    content::WebContents::CreateParams create_params(
+    content::WebContents::CreateParams create_params2(
         session->browser_context(), site_instance);
     guest_delegate_.reset(new WebViewGuestDelegate);
-    create_params.guest_delegate = guest_delegate_.get();
-    web_contents = content::WebContents::Create(create_params);
+    create_params2.guest_delegate = guest_delegate_.get();
+    web_contents = content::WebContents::Create(create_params2);
   } else {
     web_contents = content::WebContents::Create(create_params);
   }
