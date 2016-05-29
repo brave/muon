@@ -10,6 +10,7 @@
 #include "atom/grit/atom_resources.h"  // NOLINT: This file is generated
 #include "chrome/grit/renderer_resources.h"  // NOLINT: This file is generated
 #include "chrome/renderer/extensions/tabs_custom_bindings.h"
+#include "content/public/renderer/render_frame.h"
 #include "extensions/renderer/resource_bundle_source_map.h"
 
 namespace extensions {
@@ -32,7 +33,8 @@ void AtomExtensionsDispatcherDelegate::RegisterNativeHandlers(
   module_system->RegisterNativeHandler(
       "atom",
       std::unique_ptr<NativeHandler>(
-          new atom::JavascriptBindings(context)));
+          new atom::JavascriptBindings(
+              context->GetRenderFrame()->GetRenderView(), context)));
   module_system->RegisterNativeHandler(
       "tabs",
       std::unique_ptr<NativeHandler>(

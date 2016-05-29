@@ -6,7 +6,6 @@
 
 #include <string>
 #include "atom/renderer/extensions/atom_extensions_dispatcher_delegate.h"
-#include "atom/renderer/extensions/atom_extensions_render_view_observer.h"
 #include "base/command_line.h"
 #include "base/strings/stringprintf.h"
 #include "content/public/renderer/render_frame.h"
@@ -118,7 +117,6 @@ void AtomExtensionsRendererClient::RenderFrameCreated(
 void AtomExtensionsRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
   new extensions::ExtensionHelper(render_view, extension_dispatcher_.get());
-  new extensions::AtomExtensionsRenderViewObserver(render_view);
 }
 
 bool AtomExtensionsRendererClient::OverrideCreatePlugin(

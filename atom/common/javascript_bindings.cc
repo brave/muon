@@ -4,6 +4,7 @@
 
 #include "atom/common/javascript_bindings.h"
 
+#include <vector>
 #include "atom/common/api/api_messages.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
@@ -13,6 +14,7 @@
 #include "extensions/renderer/script_context.h"
 #include "native_mate/dictionary.h"
 #include "third_party/WebKit/public/web/WebKit.h"
+#include "third_party/WebKit/public/web/WebView.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 
 namespace {
@@ -74,12 +76,22 @@ namespace {
 
     return json;
   }
+
+  std::vector<v8::Local<v8::Value>> ListValueToVector(v8::Isolate* isolate,
+                                                  const base::ListValue& list) {
+    v8::Local<v8::Value> array = mate::ConvertToV8(isolate, list);
+    std::vector<v8::Local<v8::Value>> result;
+    mate::ConvertFromV8(isolate, array, &result);
+    return result;
+  }
 }  // namespace
 
 namespace atom {
 
-JavascriptBindings::JavascriptBindings(extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
+JavascriptBindings::JavascriptBindings(content::RenderView* render_view,
+                                       extensions::ScriptContext* context)
+    : content::RenderViewObserver(render_view),
+      extensions::ObjectBackedNativeHandler(context) {
   RouteFunction(
       "GetBinding",
       base::Bind(&JavascriptBindings::GetBinding, base::Unretained(this)));
@@ -124,6 +136,53 @@ void JavascriptBindings::GetBinding(
     global->SetHiddenValue(atom_binding_string, atom_binding);
   }
   args.GetReturnValue().Set(atom_binding);
+}
+
+bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
+  if (!is_valid())
+    return false;
+
+  // only handle ipc messages in the main frame script context
+  v8::Isolate* isolate = context()->isolate();
+  v8::HandleScope handle_scope(isolate);
+  if (render_view()->GetWebView()->mainFrame()->mainWorldScriptContext() !=
+      context()->v8_context())
+    return false;
+
+  bool handled = true;
+  IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
+    IPC_MESSAGE_HANDLER(AtomViewMsg_Message, OnBrowserMessage)
+    IPC_MESSAGE_UNHANDLED(handled = false)
+  IPC_END_MESSAGE_MAP()
+
+  return handled;
+}
+
+void JavascriptBindings::OnBrowserMessage(const base::string16& channel,
+                                          const base::ListValue& args) {
+  if (!is_valid())
+    return;
+
+  v8::Isolate* isolate = context()->isolate();
+  v8::HandleScope handle_scope(isolate);
+  v8::Context::Scope context_scope(context()->v8_context());
+
+  auto args_vector = ListValueToVector(isolate, args);
+
+  // Insert the Event object, event.sender is ipc
+  mate::Dictionary event = mate::Dictionary::CreateEmpty(isolate);
+  args_vector.insert(args_vector.begin(), event.GetHandle());
+
+  std::vector<v8::Local<v8::Value>> concatenated_args =
+        { mate::StringToV8(isolate, channel) };
+      concatenated_args.reserve(1 + args_vector.size());
+      concatenated_args.insert(concatenated_args.end(),
+                                args_vector.begin(), args_vector.end());
+
+  context()->module_system()->CallModuleMethod("ipc_utils",
+                                  "emit",
+                                  concatenated_args.size(),
+                                  &concatenated_args.front());
 }
 
 }  // namespace atom

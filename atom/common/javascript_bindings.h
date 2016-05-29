@@ -5,18 +5,27 @@
 #ifndef ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 #define ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 
+#include "content/public/renderer/render_view_observer.h"
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"
 
 namespace atom {
 
-class JavascriptBindings : public extensions::ObjectBackedNativeHandler {
+class JavascriptBindings : public content::RenderViewObserver,
+                           public extensions::ObjectBackedNativeHandler {
  public:
-  explicit JavascriptBindings(extensions::ScriptContext* context);
+  explicit JavascriptBindings(content::RenderView* render_view,
+                              extensions::ScriptContext* context);
   virtual ~JavascriptBindings();
 
   void GetBinding(const v8::FunctionCallbackInfo<v8::Value>& args);
+
+ private:
+  bool OnMessageReceived(const IPC::Message& message) override;
+  void OnBrowserMessage(const base::string16& channel,
+                        const base::ListValue& args);
+  DISALLOW_COPY_AND_ASSIGN(JavascriptBindings);
 };
 
 }  // namespace atom
