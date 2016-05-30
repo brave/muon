@@ -343,7 +343,7 @@ template<Session::CacheAction action>
 void Session::DoCacheAction(const net::CompletionCallback& callback) {
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&DoCacheActionInIO,
-                 make_scoped_refptr(browser_context_->GetRequestContext()),
+                 base::RetainedRef(browser_context_->GetRequestContext()),
                  action,
                  callback));
 }
@@ -444,14 +444,14 @@ void Session::ClearHostResolverCache(mate::Arguments* args) {
 
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&ClearHostResolverCacheInIO,
-                 make_scoped_refptr(browser_context_->GetRequestContext()),
+                 base::RetainedRef(browser_context_->GetRequestContext()),
                  callback));
 }
 
 void Session::AllowNTLMCredentialsForDomains(const std::string& domains) {
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&AllowNTLMCredentialsForDomainsInIO,
-                 make_scoped_refptr(browser_context_->GetRequestContext()),
+                 base::RetainedRef(browser_context_->GetRequestContext()),
                  domains));
 }
 

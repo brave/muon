@@ -309,7 +309,7 @@ void App::OnLogin(LoginHandler* login_handler,
       WebContents::CreateFrom(isolate(), login_handler->GetWebContents()),
       request_details,
       login_handler->auth_info(),
-      base::Bind(&PassLoginInformation, make_scoped_refptr(login_handler)));
+      base::Bind(&PassLoginInformation, base::RetainedRef(login_handler)));
 
   // Default behavior is to always cancel the auth.
   if (!prevent_default)
