@@ -41,7 +41,7 @@ LoginHandler::LoginHandler(net::AuthChallengeInfo* auth_info,
       BrowserThread::UI, FROM_HERE,
       base::Bind(&Browser::RequestLogin,
                  base::Unretained(Browser::Get()),
-                 base::RetainedRef(make_scoped_refptr(this))));
+                 base::RetainedRef(this)));
 }
 
 LoginHandler::~LoginHandler() {
