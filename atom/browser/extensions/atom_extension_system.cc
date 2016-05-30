@@ -369,7 +369,7 @@ void AtomExtensionSystem::NotifyExtensionLoaded(const Extension* extension) {
       extension,
       base::Bind(
           &AtomExtensionSystem::OnExtensionRegisteredWithRequestContexts,
-          AsWeakPtr(), make_scoped_refptr(extension)));
+          AsWeakPtr(), base::RetainedRef(extension)));
 
   for (content::RenderProcessHost::iterator i(
           content::RenderProcessHost::AllHostsIterator());
