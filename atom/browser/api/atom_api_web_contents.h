@@ -121,6 +121,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool IsAudioMuted();
   void Print(mate::Arguments* args);
   int GetContentWindowId();
+  void ResumeLoadingCreatedWebContents();
 
   // Print current page as PDF.
   void PrintToPDF(const base::DictionaryValue& setting,
@@ -149,8 +150,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void Focus();
   void TabTraverse(bool reverse);
   void SetActive(bool active);
-  // calls WasShown/WasHidden
-  void SetHidden(bool hidden);
 
   // Send messages to browser.
   bool SendIPCMessage(const base::string16& channel,
@@ -362,7 +361,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // needed to continue loading the page once the tab is ready.
   std::unique_ptr<content::NavigationController::LoadURLParams>
     delayed_load_url_params_;
-  bool delayed_load_url_;
 
   // Whether background throttling is disabled.
   bool background_throttling_;
