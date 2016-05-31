@@ -32,7 +32,8 @@ WebViewGuestDelegate::WebViewGuestDelegate()
     : guest_host_(nullptr),
       auto_size_enabled_(false),
       is_full_page_plugin_(false),
-      api_web_contents_(nullptr) {
+      api_web_contents_(nullptr),
+      guest_proxy_routing_id_(-1) {
 }
 
 WebViewGuestDelegate::~WebViewGuestDelegate() {
@@ -72,6 +73,14 @@ content::WebContents* WebViewGuestDelegate::CreateNewGuestWindow(
   int guest_instance_id = next_instance_id_event->Get(
                       mate::StringToV8(isolate, "returnValue"))->NumberValue();
   options.Set(options::kGuestInstanceID, guest_instance_id);
+
+  // TODO(bridiver) should we create a new site instance
+  // from web_contents_impl.cc
+  // scoped_refptr<SiteInstance> site_instance =
+  //     params.opener_suppressed && !is_guest
+  //         ? SiteInstance::CreateForURL(GetBrowserContext(),
+  //             params.target_url)
+  //         : source_site_instance;
 
   if (params.site_instance) {
     auto session = atom::api::Session::CreateFrom(isolate,
@@ -166,9 +175,14 @@ void WebViewGuestDelegate::DidCommitProvisionalLoadForFrame(
   api_web_contents_->Emit("load-commit", url, !render_frame_host->GetParent());
 }
 
+bool WebViewGuestDelegate::ShouldResumeRequestsForCreatedWindow() {
+  return guest_proxy_routing_id_ != -1;
+}
+
 void WebViewGuestDelegate::DidAttach(int guest_proxy_routing_id) {
   guest_proxy_routing_id_ = guest_proxy_routing_id;
   api_web_contents_->Emit("did-attach", guest_proxy_routing_id);
+  api_web_contents_->ResumeLoadingCreatedWebContents();
 }
 
 content::WebContents* WebViewGuestDelegate::GetOwnerWebContents() const {
@@ -194,17 +208,10 @@ void WebViewGuestDelegate::WillAttach(
   embedder_web_contents_ = embedder_web_contents;
   is_full_page_plugin_ = is_full_page_plugin;
   // update the owner window
-  api_web_contents_->SetOwnerWindow(
-                        NativeWindow::FromWebContents(embedder_web_contents_));
+  auto relay = NativeWindowRelay::FromWebContents(embedder_web_contents_);
+  if (relay)
+    api_web_contents_->SetOwnerWindow(relay->window.get());
   completion_callback.Run();
-}
-
-void WebViewGuestDelegate::RenderFrameHostChanged(
-                                      content::RenderFrameHost* old_host,
-                                      content::RenderFrameHost* new_host) {
-  if (GetOwnerWebContents())
-    api_web_contents_->SetOwnerWindow(
-                        NativeWindow::FromWebContents(GetOwnerWebContents()));
 }
 
 void WebViewGuestDelegate::GuestSizeChangedDueToAutoSize(
