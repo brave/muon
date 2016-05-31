@@ -8,6 +8,7 @@
 #include <vector>
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/extensions/api/atom_extensions_api_client.h"
+#include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
 #include "atom/browser/extensions/atom_extension_host_delegate.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
@@ -15,6 +16,7 @@
 #include "atom/browser/web_contents_preferences.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
+#include "base/memory/ptr_util.h"
 #include "base/path_service.h"
 #include "base/version.h"
 #include "chrome/browser/browser_process.h"
@@ -235,6 +237,12 @@ AtomExtensionsBrowserClient::AtomExtensionsBrowserClient()
 }
 
 AtomExtensionsBrowserClient::~AtomExtensionsBrowserClient() {}
+
+std::unique_ptr<ExtensionApiFrameIdMapHelper>
+AtomExtensionsBrowserClient::CreateExtensionApiFrameIdMapHelper(
+    ExtensionApiFrameIdMap* map) {
+  return base::WrapUnique(new AtomExtensionApiFrameIdMapHelper(map));
+}
 
 bool AtomExtensionsBrowserClient::IsShuttingDown() {
   return false;
