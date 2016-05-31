@@ -1338,15 +1338,6 @@ void WebContents::SetActive(bool active) {
   if (tab_helper)
     tab_helper->SetActive(active);
 #endif
-
-  SetHidden(!active);
-}
-
-void WebContents::SetHidden(bool hidden) {
-  if (hidden)
-    web_contents()->WasHidden();
-  else
-    web_contents()->WasShown();
 }
 
 void WebContents::TabTraverse(bool reverse) {
@@ -1547,7 +1538,6 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetProperty("id", &WebContents::ID)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
-      .SetMethod("setHidden", &WebContents::SetHidden)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)
