@@ -53,6 +53,8 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   // This value is only valid after attachment or first navigation.
   int proxy_routing_id() const { return guest_proxy_routing_id_; }
 
+  bool ShouldResumeRequestsForCreatedWindow();
+
  protected:
   // content::WebContentsObserver:
   void DidStartProvisionalLoadForFrame(
@@ -63,8 +65,6 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   void DidCommitProvisionalLoadForFrame(
       content::RenderFrameHost* render_frame_host,
       const GURL& url, ui::PageTransition transition_type) override;
-  void RenderFrameHostChanged(content::RenderFrameHost* old_host,
-                                  content::RenderFrameHost* new_host) override;
 
   // content::BrowserPluginGuestDelegate:
   void DidAttach(int guest_proxy_routing_id) final;
