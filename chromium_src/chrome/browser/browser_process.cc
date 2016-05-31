@@ -11,7 +11,6 @@
 
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
-#include "atom/browser/extensions/extension_renderer_state.h"
 #include "atom/common/extensions/atom_extensions_client.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/features/feature_provider.h"
@@ -36,7 +35,6 @@ BrowserProcess::BrowserProcess()
   content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
       extensions::kExtensionResourceScheme);
 
-  ExtensionRendererState::GetInstance()->Init();
   extensions::ExtensionsClient::Set(new extensions::AtomExtensionsClient());
   extensions_browser_client_.reset(
       new extensions::AtomExtensionsBrowserClient());
@@ -55,11 +53,6 @@ BrowserProcess::~BrowserProcess() {
 
 void BrowserProcess::StartTearDown() {
   tearing_down_ = true;
-
-#if defined(ENABLE_EXTENSIONS)
-  ExtensionRendererState::GetInstance()->Shutdown();
-#endif
-
   print_job_manager_->Shutdown();
 }
 

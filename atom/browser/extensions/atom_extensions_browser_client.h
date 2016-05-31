@@ -5,12 +5,15 @@
 #ifndef ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSIONS_BROWSER_CLIENT_H_
 #define ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSIONS_BROWSER_CLIENT_H_
 
-#include <map>
+#include <memory>
 #include <string>
 #include <vector>
+
 #include "base/compiler_specific.h"
 #include "base/lazy_instance.h"
-#include "base/memory/scoped_ptr.h"
+#include "base/macros.h"
+#include "base/memory/ref_counted.h"
+#include "build/build_config.h"
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/extension_host_delegate.h"
 
@@ -114,6 +117,9 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
                       int view_instance_id) override;
   void AttachExtensionTaskManagerTag(content::WebContents* web_contents,
                                      ViewType view_type) override;
+  std::unique_ptr<ExtensionApiFrameIdMapHelper>
+  CreateExtensionApiFrameIdMapHelper(
+      ExtensionApiFrameIdMap* map) override;
 
  private:
   friend struct base::DefaultLazyInstanceTraits<AtomExtensionsBrowserClient>;
