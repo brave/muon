@@ -77,7 +77,8 @@ content::WebContents* WebViewGuestDelegate::CreateNewGuestWindow(
   // from web_contents_impl.cc
   // scoped_refptr<SiteInstance> site_instance =
   //     params.opener_suppressed && !is_guest
-  //         ? SiteInstance::CreateForURL(GetBrowserContext(), params.target_url)
+  //         ? SiteInstance::CreateForURL(GetBrowserContext(),
+  //             params.target_url)
   //         : source_site_instance;
 
   if (params.site_instance) {
