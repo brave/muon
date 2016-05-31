@@ -224,7 +224,6 @@ WebContents::WebContents(v8::Isolate* isolate,
                          const content::WebContents::CreateParams* params)
     : embedder_(nullptr),
       request_id_(0),
-      delayed_load_url_(false),
       background_throttling_(true) {
   // Read options.
   options.Get("backgroundThrottling", &background_throttling_);
@@ -257,17 +256,10 @@ WebContents::WebContents(v8::Isolate* isolate,
   content::WebContents* web_contents = NULL;
 
   if (is_guest) {
-    scoped_refptr<content::SiteInstance> site_instance =
-        content::SiteInstance::CreateForURL(
-            session->browser_context(), GURL("chrome-guest://fake-host"));
-    content::WebContents::CreateParams create_params2(
-        session->browser_context(), site_instance);
     guest_delegate_.reset(new WebViewGuestDelegate);
-    create_params2.guest_delegate = guest_delegate_.get();
-    web_contents = content::WebContents::Create(create_params2);
-  } else {
-    web_contents = content::WebContents::Create(create_params);
+    create_params.guest_delegate = guest_delegate_.get();
   }
+  web_contents = content::WebContents::Create(create_params);
 
   Observe(web_contents);
   InitWithWebContents(web_contents, session->browser_context());
@@ -359,19 +351,9 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
 
-  CreateFrom(isolate(), new_contents)->delayed_load_url_ = true;
-
-  if (IsGuest()) {
-    content::NavigationController::LoadURLParams load_url_params(target_url);
-    // http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-95229140
-    load_url_params.referrer = content::Referrer(GetURL(),
-                                              blink::WebReferrerPolicyDefault);
-    load_url_params.transition_type = ui::PAGE_TRANSITION_LINK;
-    load_url_params.is_renderer_initiated = false;
-    load_url_params.frame_name = frame_name;
-    CreateFrom(isolate(), new_contents)->delayed_load_url_params_.reset(
-      new content::NavigationController::LoadURLParams(load_url_params));
-  }
+  content::NavigationController::LoadURLParams load_url_params(target_url);
+  CreateFrom(isolate(), new_contents)->delayed_load_url_params_.reset(
+    new content::NavigationController::LoadURLParams(load_url_params));
 }
 
 void WebContents::AddNewContents(content::WebContents* source,
@@ -388,15 +370,8 @@ void WebContents::AddNewContents(content::WebContents* source,
                                                 delayed_load_url_params_.get();
   if (url_params) {
     target_url = url_params->url.spec();
-  }
-
-  // was_blocked is null unless the opener is suppressed
-  if (was_blocked) {
-    *was_blocked = true;
-  } else {
-    // we won't need these because the opener will handle it
     CreateFrom(isolate(), new_contents)->
-      delayed_load_url_ = false;
+        delayed_load_url_params_.reset(nullptr);
   }
 
   // set webPreferences
@@ -452,33 +427,15 @@ void WebContents::AddNewContents(content::WebContents* source,
 }
 
 bool WebContents::ShouldResumeRequestsForCreatedWindow() {
-  // Always return false here since we need to defer loading the created
-  // window until after we have attached a new delegate to the new webcontents
-  // (which happens asynchronously).
-  return false;
+  if (guest_delegate_)
+    return guest_delegate_->ShouldResumeRequestsForCreatedWindow();
+
+  return true;
 }
 
 content::WebContents* WebContents::OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) {
-  if (!delayed_load_url_ && delayed_load_url_params_.get()) {
-    content::NavigationController::LoadURLParams load_url_params(params.url);
-    load_url_params.referrer = delayed_load_url_params_.get()->referrer;
-    load_url_params.frame_name = delayed_load_url_params_.get()->frame_name;
-    load_url_params.redirect_chain = params.redirect_chain;
-    load_url_params.transition_type =
-      delayed_load_url_params_.get()->transition_type;
-    load_url_params.extra_headers = params.extra_headers;
-    load_url_params.should_replace_current_entry =
-      params.should_replace_current_entry;
-    load_url_params.is_renderer_initiated = params.is_renderer_initiated;
-
-    delayed_load_url_ = true;
-    delayed_load_url_params_.reset(
-      new content::NavigationController::LoadURLParams(load_url_params));
-    return nullptr;
-  }
-
   if (params.disposition == SUPPRESS_OPEN)
     return nullptr;
 
@@ -494,7 +451,15 @@ content::WebContents* WebContents::OpenURLFromTab(
   if (Emit("will-navigate", params.url))
     return nullptr;
 
-  return CommonWebContentsDelegate::OpenURLFromTab(source, params);
+  auto api_web_contents = CreateFrom(isolate(), source);
+  if (api_web_contents->ShouldResumeRequestsForCreatedWindow()) {
+    CommonWebContentsDelegate::OpenURLFromTab(source, params);
+  } else {
+    api_web_contents->delayed_open_url_params_.reset(
+        new content::OpenURLParams(params));
+  }
+
+  return source;
 }
 
 void WebContents::BeforeUnloadFired(content::WebContents* tab,
@@ -912,17 +877,16 @@ void WebContents::Reload(bool ignore_cache) {
     web_contents()->GetController().Reload(true);
 }
 
-void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
-  if (delayed_load_url_params_.get()) {
-    if (delayed_load_url_) {
-      GetWebContents()->GetController().LoadURLWithParams(
-          *delayed_load_url_params_.get());
-      delayed_load_url_ = false;
-    }
-    delayed_load_url_params_.reset(nullptr);
+void WebContents::ResumeLoadingCreatedWebContents() {
+  if (delayed_open_url_params_.get()) {
+    OpenURLFromTab(web_contents(), *delayed_open_url_params_.get());
+    delayed_open_url_params_.reset(nullptr);
     return;
   }
+  GetWebContents()->ResumeLoadingCreatedWebContents();
+}
 
+void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   if (!url.is_valid()) {
     Emit("did-fail-load",
          static_cast<int>(net::ERR_INVALID_URL),
