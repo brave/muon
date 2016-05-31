@@ -100,6 +100,10 @@ JavascriptBindings::JavascriptBindings(content::RenderView* render_view,
 JavascriptBindings::~JavascriptBindings() {
 }
 
+void JavascriptBindings::OnDestruct() {
+  // do nothing
+}
+
 void JavascriptBindings::GetBinding(
       const v8::FunctionCallbackInfo<v8::Value>& args) {
   blink::WebLocalFrame* frame = context()->web_frame();

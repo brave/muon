@@ -39,8 +39,9 @@ void DidCreateDocumentElement(content::RenderFrame* render_frame) {
   auto script_context =
       extensions::ScriptContextSet::GetContextByV8Context(context);
 
-  script_context->module_system()
-      ->CallModuleMethod("ipc", "didCreateDocumentElement");
+  if (script_context)
+    script_context->module_system()
+        ->CallModuleMethod("ipc", "didCreateDocumentElement");
 
   // reschedule the callback because a new render frame
   // is not always created when navigating

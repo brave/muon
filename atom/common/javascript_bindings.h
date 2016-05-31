@@ -22,6 +22,7 @@ class JavascriptBindings : public content::RenderViewObserver,
   void GetBinding(const v8::FunctionCallbackInfo<v8::Value>& args);
 
  private:
+  void OnDestruct() override;
   bool OnMessageReceived(const IPC::Message& message) override;
   void OnBrowserMessage(const base::string16& channel,
                         const base::ListValue& args);
