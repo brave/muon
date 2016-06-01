@@ -99,6 +99,15 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void GoBack();
   void GoForward();
   void GoToOffset(int offset);
+  bool CanGoToOffset(int offset) const;
+  bool CanGoBack() const;
+  bool CanGoForward() const;
+  void GoToIndex(int index);
+  const GURL& GetURLAtIndex(int index) const;
+  int GetCurrentEntryIndex() const;
+  int GetLastCommittedEntryIndex() const;
+  int GetEntryCount() const;
+  void ShowRepostFormWarningDialog(content::WebContents* source) override;
   bool IsCrashed() const;
   void SetUserAgent(const std::string& user_agent);
   std::string GetUserAgent();
