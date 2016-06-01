@@ -230,8 +230,8 @@ bool Extension::IsBackgroundPageUrl(GURL url,
 }
 
 // static
-bool Extension::IsBackgroundPage(WebContents* web_contents) {
-  auto browser_context = web_contents->web_contents()->GetBrowserContext();
+bool Extension::IsBackgroundPageWebContents(content::WebContents* web_contents) {
+  auto browser_context = web_contents->GetBrowserContext();
   auto url = web_contents->GetURL();
 
   if (extensions::ExtensionSystem::Get(browser_context)
@@ -245,6 +245,11 @@ bool Extension::IsBackgroundPage(WebContents* web_contents) {
   }
 
   return false;
+}
+
+// static
+bool Extension::IsBackgroundPage(WebContents* web_contents) {
+  return IsBackgroundPageWebContents(web_contents->web_contents());
 }
 
 // static
