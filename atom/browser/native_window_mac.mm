@@ -490,13 +490,11 @@ NativeWindowMac::NativeWindowMac(
   if (titleBarStyle == "hidden-inset") {
     [window_ setTitlebarAppearsTransparent:YES];
     [window_ setTitleVisibility:NSWindowTitleHidden];
-    if (titleBarStyle == "hidden-inset") {
-      base::scoped_nsobject<NSToolbar> toolbar(
-          [[NSToolbar alloc] initWithIdentifier:@"titlebarStylingToolbar"]);
-      [toolbar setShowsBaselineSeparator:NO];
-      [window_ setToolbar:toolbar];
-      should_hide_native_toolbar_in_fullscreen_ = true;
-    }
+    base::scoped_nsobject<NSToolbar> toolbar(
+        [[NSToolbar alloc] initWithIdentifier:@"titlebarStylingToolbar"]);
+    [toolbar setShowsBaselineSeparator:NO];
+    [window_ setToolbar:toolbar];
+    should_hide_native_toolbar_in_fullscreen_ = true;
   }
 
   // On OS X the initial window size doesn't include window frame.
@@ -719,14 +717,11 @@ void NativeWindowMac::SetAspectRatio(double aspect_ratio,
                                      const gfx::Size& extra_size) {
     NativeWindow::SetAspectRatio(aspect_ratio, extra_size);
 
-    // We can't just pass the aspect ratio to Cocoa, since our API receives
-    // it as a float, and Cocoa expects an NSRect with explicit width & height
-    // arguments. Instead we derive those args ourselves from the given aspect
-    // ratio.
-    double width = roundf([window_ frame].size.height * aspect_ratio);
-    double height = roundf(width / aspect_ratio);
-
-    [window_ setAspectRatio:NSMakeSize(width, height)];
+    // Reset the behaviour to default if aspect_ratio is set to 0 or less.
+    if (aspect_ratio > 0.0)
+      [window_ setAspectRatio:NSMakeSize(aspect_ratio, 1.0)];
+    else
+      [window_ setResizeIncrements:NSMakeSize(1.0, 1.0)];
 }
 
 void NativeWindowMac::SetMovable(bool movable) {
@@ -991,9 +986,7 @@ void NativeWindowMac::InstallView() {
   [[window_ contentView] setWantsLayer:YES];
 
   NSView* view = inspectable_web_contents()->GetView()->GetNativeView();
-
-  if (has_frame() &&
-      !(window_.get().styleMask & NSTexturedBackgroundWindowMask)) {
+  if (has_frame()) {
     [view setFrame:[[window_ contentView] bounds]];
     [[window_ contentView] addSubview:view];
   } else {
