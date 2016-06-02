@@ -63,8 +63,6 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   void DidCommitProvisionalLoadForFrame(
       content::RenderFrameHost* render_frame_host,
       const GURL& url, ui::PageTransition transition_type) override;
-  void RenderFrameHostChanged(content::RenderFrameHost* old_host,
-                                  content::RenderFrameHost* new_host) override;
 
   // content::BrowserPluginGuestDelegate:
   void DidAttach(int guest_proxy_routing_id) final;

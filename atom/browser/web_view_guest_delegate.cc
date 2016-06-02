@@ -209,16 +209,6 @@ void WebViewGuestDelegate::WillAttach(
   completion_callback.Run();
 }
 
-void WebViewGuestDelegate::RenderFrameHostChanged(
-                                      content::RenderFrameHost* old_host,
-                                      content::RenderFrameHost* new_host) {
-  if (GetOwnerWebContents()) {
-    auto relay = NativeWindowRelay::FromWebContents(GetOwnerWebContents());
-    if (relay)
-      api_web_contents_->SetOwnerWindow(relay->window.get());
-  }
-}
-
 void WebViewGuestDelegate::GuestSizeChangedDueToAutoSize(
     const gfx::Size& old_size, const gfx::Size& new_size) {
   api_web_contents_->Emit("size-changed",
