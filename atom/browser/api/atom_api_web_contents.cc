@@ -426,10 +426,14 @@ void WebContents::AddNewContents(content::WebContents* source,
 }
 
 bool WebContents::ShouldResumeRequestsForCreatedWindow() {
-  if (guest_delegate_)
-    return guest_delegate_->ShouldResumeRequestsForCreatedWindow();
+  return false;
+}
 
-  return true;
+bool WebContents::IsAttached() {
+  if (guest_delegate_)
+    return guest_delegate_->IsAttached();
+
+  return owner_window() != nullptr;
 }
 
 content::WebContents* WebContents::OpenURLFromTab(
@@ -451,11 +455,12 @@ content::WebContents* WebContents::OpenURLFromTab(
     return nullptr;
 
   auto api_web_contents = CreateFrom(isolate(), source);
-  if (api_web_contents->ShouldResumeRequestsForCreatedWindow()) {
+  if (api_web_contents->IsAttached()) {
     CommonWebContentsDelegate::OpenURLFromTab(source, params);
   } else {
     api_web_contents->delayed_open_url_params_.reset(
         new content::OpenURLParams(params));
+    return nullptr;
   }
 
   return source;

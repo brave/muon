@@ -219,6 +219,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
                       bool user_gesture,
                       bool* was_blocked) override;
   bool ShouldResumeRequestsForCreatedWindow() override;
+  bool IsAttached();
   content::WebContents* OpenURLFromTab(
       content::WebContents* source,
       const content::OpenURLParams& params) override;
