@@ -175,7 +175,7 @@ void WebViewGuestDelegate::DidCommitProvisionalLoadForFrame(
   api_web_contents_->Emit("load-commit", url, !render_frame_host->GetParent());
 }
 
-bool WebViewGuestDelegate::ShouldResumeRequestsForCreatedWindow() {
+bool WebViewGuestDelegate::IsAttached() {
   return guest_proxy_routing_id_ != -1;
 }
 
@@ -198,6 +198,10 @@ void WebViewGuestDelegate::GuestSizeChanged(const gfx::Size& new_size) {
 
 void WebViewGuestDelegate::SetGuestHost(content::GuestHost* guest_host) {
   guest_host_ = guest_host;
+}
+
+void WebViewGuestDelegate::DidDetach() {
+  guest_proxy_routing_id_ = -1;
 }
 
 void WebViewGuestDelegate::WillAttach(
