@@ -426,10 +426,10 @@ void WebContents::AddNewContents(content::WebContents* source,
 }
 
 bool WebContents::ShouldResumeRequestsForCreatedWindow() {
-  // Always return false here since we need to defer loading the created
-  // window until after we have attached a new delegate to the new webcontents
-  // (which happens asynchronously).
-  return false;
+  if (guest_delegate_)
+    return guest_delegate_->ShouldResumeRequestsForCreatedWindow();
+
+  return true;
 }
 
 content::WebContents* WebContents::OpenURLFromTab(
@@ -450,7 +450,15 @@ content::WebContents* WebContents::OpenURLFromTab(
   if (Emit("will-navigate", params.url))
     return nullptr;
 
-  return CommonWebContentsDelegate::OpenURLFromTab(source, params);
+  auto api_web_contents = CreateFrom(isolate(), source);
+  if (api_web_contents->ShouldResumeRequestsForCreatedWindow()) {
+    CommonWebContentsDelegate::OpenURLFromTab(source, params);
+  } else {
+    api_web_contents->delayed_open_url_params_.reset(
+        new content::OpenURLParams(params));
+  }
+
+  return source;
 }
 
 void WebContents::BeforeUnloadFired(content::WebContents* tab,
@@ -851,6 +859,11 @@ void WebContents::Reload(bool ignore_cache) {
 }
 
 void WebContents::ResumeLoadingCreatedWebContents() {
+  if (delayed_open_url_params_.get()) {
+    OpenURLFromTab(web_contents(), *delayed_open_url_params_.get());
+    delayed_open_url_params_.reset(nullptr);
+    return;
+  }
   GetWebContents()->ResumeLoadingCreatedWebContents();
 }
 

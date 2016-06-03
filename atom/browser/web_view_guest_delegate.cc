@@ -32,7 +32,8 @@ WebViewGuestDelegate::WebViewGuestDelegate()
     : guest_host_(nullptr),
       auto_size_enabled_(false),
       is_full_page_plugin_(false),
-      api_web_contents_(nullptr) {
+      api_web_contents_(nullptr),
+      guest_proxy_routing_id_(-1) {
 }
 
 WebViewGuestDelegate::~WebViewGuestDelegate() {
@@ -172,6 +173,10 @@ void WebViewGuestDelegate::DidCommitProvisionalLoadForFrame(
     content::RenderFrameHost* render_frame_host,
     const GURL& url, ui::PageTransition transition_type) {
   api_web_contents_->Emit("load-commit", url, !render_frame_host->GetParent());
+}
+
+bool WebViewGuestDelegate::ShouldResumeRequestsForCreatedWindow() {
+  return guest_proxy_routing_id_ != -1;
 }
 
 void WebViewGuestDelegate::DidAttach(int guest_proxy_routing_id) {

@@ -53,6 +53,8 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   // This value is only valid after attachment or first navigation.
   int proxy_routing_id() const { return guest_proxy_routing_id_; }
 
+  bool ShouldResumeRequestsForCreatedWindow();
+
  protected:
   // content::WebContentsObserver:
   void DidStartProvisionalLoadForFrame(

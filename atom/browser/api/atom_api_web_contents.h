@@ -365,6 +365,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // Whether background throttling is disabled.
   bool background_throttling_;
 
+  // When a new tab is created asynchronously, stores the OpenURLParams needed
+  // to continue loading the page once the tab is ready.
+  scoped_ptr<content::OpenURLParams> delayed_open_url_params_;
+
   DISALLOW_COPY_AND_ASSIGN(WebContents);
 };
 
