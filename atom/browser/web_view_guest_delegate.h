@@ -53,7 +53,7 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
   // This value is only valid after attachment or first navigation.
   int proxy_routing_id() const { return guest_proxy_routing_id_; }
 
-  bool ShouldResumeRequestsForCreatedWindow();
+  bool IsAttached();
 
  protected:
   // content::WebContentsObserver:
@@ -68,6 +68,7 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
 
   // content::BrowserPluginGuestDelegate:
   void DidAttach(int guest_proxy_routing_id) final;
+  void DidDetach() final;
   content::WebContents* GetOwnerWebContents() const final;
   void GuestSizeChanged(const gfx::Size& new_size) final;
   void SetGuestHost(content::GuestHost* guest_host) final;
