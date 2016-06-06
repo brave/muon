@@ -5,6 +5,7 @@
 #include "atom/common/javascript_bindings.h"
 
 #include <vector>
+#include "atom/browser/web_contents_preferences.h"
 #include "atom/common/api/api_messages.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
@@ -143,13 +144,15 @@ void JavascriptBindings::GetBinding(
 }
 
 bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
-  if (!is_valid())
+  if (!is_valid() || WebContentsPreferences::run_node())
     return false;
 
   // only handle ipc messages in the main frame script context
   v8::Isolate* isolate = context()->isolate();
   v8::HandleScope handle_scope(isolate);
-  if (render_view()->GetWebView()->mainFrame()->mainWorldScriptContext() !=
+  if (context()->context_type() != extensions::Feature::BLESSED_EXTENSION_CONTEXT &&
+      context()->context_type() != extensions::Feature::UNBLESSED_EXTENSION_CONTEXT &&
+      render_view()->GetWebView()->mainFrame()->mainWorldScriptContext() !=
       context()->v8_context())
     return false;
 
