@@ -131,6 +131,14 @@ var bindings = {
     bindings.query({windowId: windowId, active: true}, wrapper)
   },
 
+  get: function(tabId, cb) {
+    var responseId = ++id
+    ipc.once('chrome-tabs-get-response-' + responseId, function (evt, tab) {
+      cb(tab)
+    })
+    ipc.send('chrome-tabs-get', responseId, {})
+  },
+
   query: function(queryInfo, cb) {
     var responseId = ++id
     ipc.once('chrome-tabs-query-response-' + responseId, function (evt, tab) {
