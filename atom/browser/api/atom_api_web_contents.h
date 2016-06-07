@@ -232,6 +232,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void CloseContents(content::WebContents* source) override;
   void ActivateContents(content::WebContents* contents) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
+  void LoadProgressChanged(content::WebContents* source,
+                                   double progress) override;
   bool IsPopupOrPanel(const content::WebContents* source) const override;
   void HandleKeyboardEvent(
       content::WebContents* source,
