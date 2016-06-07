@@ -258,6 +258,9 @@ WebContents::WebContents(v8::Isolate* isolate,
   if (is_guest) {
     guest_delegate_.reset(new WebViewGuestDelegate);
     create_params.guest_delegate = guest_delegate_.get();
+    if (!params)
+      create_params.site_instance = content::SiteInstance::CreateForURL(
+        session->browser_context(), GURL("chrome-guest://fake-host"));
   }
   web_contents = content::WebContents::Create(create_params);
 
@@ -974,18 +977,67 @@ void WebContents::Stop() {
 }
 
 void WebContents::GoBack() {
-  atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
-  web_contents()->GetController().GoBack();
+  if (web_contents()->GetController().CanGoBack()) {
+    atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
+    web_contents()->GetController().GoBack();
+  }
 }
 
 void WebContents::GoForward() {
-  atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
-  web_contents()->GetController().GoForward();
+  if (web_contents()->GetController().CanGoForward()) {
+    atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
+    web_contents()->GetController().GoForward();
+  }
 }
 
 void WebContents::GoToOffset(int offset) {
+  if (web_contents()->GetController().CanGoToOffset(offset)) {
+    atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
+    web_contents()->GetController().GoToOffset(offset);
+  }
+}
+
+void WebContents::GoToIndex(int index) {
   atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
-  web_contents()->GetController().GoToOffset(offset);
+  web_contents()->GetController().GoToIndex(index);
+}
+
+bool WebContents::CanGoToOffset(int offset) const {
+  return web_contents()->GetController().CanGoToOffset(offset);
+}
+
+bool WebContents::CanGoBack() const {
+  return web_contents()->GetController().CanGoBack();
+}
+
+bool WebContents::CanGoForward() const {
+  return web_contents()->GetController().CanGoForward();
+}
+
+int WebContents::GetCurrentEntryIndex() const {
+  return web_contents()->GetController().GetCurrentEntryIndex();
+}
+
+int WebContents::GetLastCommittedEntryIndex() const {
+  return web_contents()->GetController().GetLastCommittedEntryIndex();
+}
+
+int WebContents::GetEntryCount() const {
+  return web_contents()->GetController().GetEntryCount();
+}
+
+const GURL& WebContents::GetURLAtIndex(int index) const {
+  auto entry = web_contents()->GetController().GetEntryAtIndex(index);
+  if (entry)
+    return entry->GetURL();
+  else return GURL::EmptyGURL();
+}
+
+void WebContents::ShowRepostFormWarningDialog(content::WebContents* source) {
+  if (Emit("repost-form-warning"))
+    source->GetController().CancelPendingReload();
+  else
+    source->GetController().ContinuePendingReload();
 }
 
 bool WebContents::IsCrashed() const {
@@ -1387,15 +1439,24 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("_loadURL", &WebContents::LoadURL)
       .SetMethod("_reload", &WebContents::Reload)
       .SetMethod("downloadURL", &WebContents::DownloadURL)
-      .SetMethod("_getURL", &WebContents::GetURL)
+      .SetMethod("getURL", &WebContents::GetURL)
       .SetMethod("getTitle", &WebContents::GetTitle)
       .SetMethod("isLoading", &WebContents::IsLoading)
       .SetMethod("isLoadingMainFrame", &WebContents::IsLoadingMainFrame)
       .SetMethod("isWaitingForResponse", &WebContents::IsWaitingForResponse)
-      .SetMethod("_stop", &WebContents::Stop)
-      .SetMethod("_goBack", &WebContents::GoBack)
-      .SetMethod("_goForward", &WebContents::GoForward)
-      .SetMethod("_goToOffset", &WebContents::GoToOffset)
+      .SetMethod("stop", &WebContents::Stop)
+      .SetMethod("goBack", &WebContents::GoBack)
+      .SetMethod("goForward", &WebContents::GoForward)
+      .SetMethod("goToOffset", &WebContents::GoToOffset)
+      .SetMethod("goToIndex", &WebContents::GoToIndex)
+      .SetMethod("canGoBack", &WebContents::CanGoBack)
+      .SetMethod("canGoForward", &WebContents::CanGoForward)
+      .SetMethod("canGoToOffset", &WebContents::CanGoToOffset)
+      .SetMethod("getURLAtIndex", &WebContents::GetURLAtIndex)
+      .SetMethod("getEntryCount", &WebContents::GetEntryCount)
+      .SetMethod("getCurrentEntryIndex", &WebContents::GetCurrentEntryIndex)
+      .SetMethod("getLastCommittedEntryIndex",
+                 &WebContents::GetLastCommittedEntryIndex)
       .SetMethod("isCrashed", &WebContents::IsCrashed)
       .SetMethod("setUserAgent", &WebContents::SetUserAgent)
       .SetMethod("getUserAgent", &WebContents::GetUserAgent)

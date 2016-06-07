@@ -96,6 +96,9 @@ AtomBrowserContext::AtomBrowserContext(const std::string& partition,
 #else
       network_delegate_(new AtomNetworkDelegate) {
 #endif
+  if (in_memory) {
+    original_context_ = AtomBrowserContext::From(partition, false);
+  }
 }
 
 AtomBrowserContext::~AtomBrowserContext() {
