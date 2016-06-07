@@ -67,6 +67,7 @@
 #include "third_party/WebKit/public/web/WebInputEvent.h"
 #include "third_party/WebKit/public/web/WebFindOptions.h"
 #include "ui/base/l10n/l10n_util.h"
+#include "ui/gfx/screen.h"
 
 #include "atom/common/node_includes.h"
 
@@ -534,7 +535,16 @@ void WebContents::ActivateContents(content::WebContents* source) {
 
 void WebContents::UpdateTargetURL(content::WebContents* source,
                                   const GURL& url) {
-  Emit("update-target-url", url);
+  const gfx::Point& location = gfx::Screen::GetScreen()->GetCursorScreenPoint();
+  const gfx::Rect& bounds = web_contents()->GetContainerBounds();
+  int x = location.x() - bounds.x();
+  int y = location.y() - bounds.y();
+  Emit("update-target-url", url, x, y);
+}
+
+void WebContents::LoadProgressChanged(content::WebContents* source,
+                                   double progress) {
+  Emit("load-progress-changed", progress);
 }
 
 bool WebContents::IsPopupOrPanel(const content::WebContents* source) const {
