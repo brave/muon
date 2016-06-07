@@ -59,6 +59,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
   AtomNetworkDelegate* network_delegate() const { return network_delegate_; }
 
+  AtomBrowserContext* original_context() const { return static_cast<AtomBrowserContext*>(original_context_.get()); }
+
  private:
 #if defined(ENABLE_EXTENSIONS)
   void RegisterUserPrefs();
@@ -75,6 +77,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomCertVerifier* cert_verifier_;
   AtomURLRequestJobFactory* job_factory_;
   AtomNetworkDelegate* network_delegate_;
+
+  scoped_refptr<brightray::BrowserContext> original_context_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserContext);
 };

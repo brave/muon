@@ -216,6 +216,9 @@ void Extension::Enable(const std::string& extension_id) {
 // static
 bool Extension::IsBackgroundPageUrl(GURL url,
                     content::BrowserContext* browser_context) {
+  if (url.scheme() != "chrome-extension")
+    return false;
+
   if (extensions::ExtensionSystem::Get(browser_context)
       ->ready().is_signaled()) {
     const extensions::Extension* extension =
@@ -234,17 +237,7 @@ bool Extension::IsBackgroundPageWebContents(content::WebContents* web_contents) 
   auto browser_context = web_contents->GetBrowserContext();
   auto url = web_contents->GetURL();
 
-  if (extensions::ExtensionSystem::Get(browser_context)
-      ->ready().is_signaled()) {
-    const extensions::Extension* extension =
-        extensions::ExtensionRegistry::Get(browser_context)->
-            enabled_extensions().GetExtensionOrAppByURL(url);
-    if (extension &&
-        url == extensions::BackgroundInfo::GetBackgroundURL(extension))
-      return true;
-  }
-
-  return false;
+  return IsBackgroundPageUrl(url, browser_context);
 }
 
 // static

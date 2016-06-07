@@ -262,11 +262,7 @@ bool AtomExtensionsBrowserClient::IsValidContext(
 bool AtomExtensionsBrowserClient::IsSameContext(
     content::BrowserContext* first,
     content::BrowserContext* second) {
-  if (first == second)
-    return true;
-
-  if (HasOffTheRecordContext(first) &&
-      GetOffTheRecordContext(first) == second)
+  if (GetOriginalContext(first) == GetOriginalContext(second))
     return true;
 
   return false;
@@ -284,7 +280,11 @@ content::BrowserContext* AtomExtensionsBrowserClient::GetOffTheRecordContext(
 
 content::BrowserContext* AtomExtensionsBrowserClient::GetOriginalContext(
     content::BrowserContext* context) {
-  return context;
+  if (context->IsOffTheRecord()) {
+    return static_cast<atom::AtomBrowserContext*>(context)->original_context();
+  } else {
+    return context;
+  }
 }
 
 bool AtomExtensionsBrowserClient::IsGuestSession(
