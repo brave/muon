@@ -54,7 +54,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomCertVerifier* cert_verifier() const { return cert_verifier_; }
   AtomNetworkDelegate* network_delegate() const { return network_delegate_; }
 
-  AtomBrowserContext* original_context() const { return static_cast<AtomBrowserContext*>(original_context_.get()); }
+  AtomBrowserContext* original_context() const {
+    return static_cast<AtomBrowserContext*>(original_context_.get()); }
 
  private:
 #if defined(ENABLE_EXTENSIONS)

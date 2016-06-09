@@ -1089,7 +1089,8 @@ const GURL& WebContents::GetURLAtIndex(int index) const {
   auto entry = web_contents()->GetController().GetEntryAtIndex(index);
   if (entry)
     return entry->GetURL();
-  else return GURL::EmptyGURL();
+  else
+    return GURL::EmptyGURL();
 }
 
 // TODO(bridiver) there should be a more generic way
