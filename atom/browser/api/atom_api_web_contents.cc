@@ -1047,6 +1047,29 @@ const GURL& WebContents::GetURLAtIndex(int index) const {
   else return GURL::EmptyGURL();
 }
 
+// TODO(bridiver) there should be a more generic way
+// to set renderer preferences in general
+const std::string& WebContents::GetWebRTCIPHandlingPolicy() const {
+  return web_contents()->
+    GetMutableRendererPrefs()->webrtc_ip_handling_policy;
+}
+
+void WebContents::SetWebRTCIPHandlingPolicy(
+    const std::string webrtc_ip_handling_policy) {
+  if (GetWebRTCIPHandlingPolicy() == webrtc_ip_handling_policy)
+    return;
+
+  // valid values from privacy.json are: "default",
+  // "default_public_and_private_interfaces",
+  // "default_public_interface_only", "disable_non_proxied_udp"
+  web_contents()->GetMutableRendererPrefs()->webrtc_ip_handling_policy =
+    webrtc_ip_handling_policy;
+
+  content::RenderViewHost* host = web_contents()->GetRenderViewHost();
+  if (host)
+    host->SyncRendererPrefs();
+}
+
 void WebContents::ShowRepostFormWarningDialog(content::WebContents* source) {
   if (Emit("repost-form-warning"))
     source->GetController().CancelPendingReload();
@@ -1524,6 +1547,10 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetProperty("id", &WebContents::ID)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
+      .SetMethod("setWebRTCIPHandlingPolicy",
+                  &WebContents::SetWebRTCIPHandlingPolicy)
+      .SetMethod("getWebRTCIPHandlingPolicy",
+                  &WebContents::GetWebRTCIPHandlingPolicy)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)

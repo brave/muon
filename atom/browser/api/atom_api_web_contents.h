@@ -107,6 +107,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   int GetCurrentEntryIndex() const;
   int GetLastCommittedEntryIndex() const;
   int GetEntryCount() const;
+  const std::string& GetWebRTCIPHandlingPolicy() const;
+  void SetWebRTCIPHandlingPolicy(const std::string webrtc_ip_handling_policy);
   void ShowRepostFormWarningDialog(content::WebContents* source) override;
   bool IsCrashed() const;
   void SetUserAgent(const std::string& user_agent);
