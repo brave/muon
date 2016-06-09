@@ -150,8 +150,10 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
   // only handle ipc messages in the main frame script context
   v8::Isolate* isolate = context()->isolate();
   v8::HandleScope handle_scope(isolate);
-  if (context()->context_type() != extensions::Feature::BLESSED_EXTENSION_CONTEXT &&
-      context()->context_type() != extensions::Feature::UNBLESSED_EXTENSION_CONTEXT &&
+  if (context()->context_type() !=
+        extensions::Feature::BLESSED_EXTENSION_CONTEXT &&
+      context()->context_type() !=
+        extensions::Feature::UNBLESSED_EXTENSION_CONTEXT &&
       render_view()->GetWebView()->mainFrame()->mainWorldScriptContext() !=
       context()->v8_context())
     return false;

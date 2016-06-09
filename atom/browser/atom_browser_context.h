@@ -59,7 +59,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
   AtomNetworkDelegate* network_delegate() const { return network_delegate_; }
 
-  AtomBrowserContext* original_context() const { return static_cast<AtomBrowserContext*>(original_context_.get()); }
+  AtomBrowserContext* original_context() const {
+    return static_cast<AtomBrowserContext*>(original_context_.get()); }
 
  private:
 #if defined(ENABLE_EXTENSIONS)
