@@ -15,7 +15,7 @@
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/atom_security_state_model_client.h"
-#include "atom/browser/lib/bluetooth_chooser.h"
+// #include "atom/browser/lib/bluetooth_chooser.h"
 #include "atom/browser/native_window.h"
 #include "atom/browser/net/atom_network_delegate.h"
 #include "atom/browser/web_contents_permission_helper.h"
@@ -666,13 +666,13 @@ void WebContents::RequestToLockMouse(
   permission_helper->RequestPointerLockPermission(user_gesture);
 }
 
-std::unique_ptr<content::BluetoothChooser> WebContents::RunBluetoothChooser(
-    content::RenderFrameHost* frame,
-    const content::BluetoothChooser::EventHandler& event_handler) {
-  std::unique_ptr<BluetoothChooser> bluetooth_chooser(
-      new BluetoothChooser(this, event_handler));
-  return std::move(bluetooth_chooser);
-}
+// std::unique_ptr<content::BluetoothChooser> WebContents::RunBluetoothChooser(
+//     content::RenderFrameHost* frame,
+//     const content::BluetoothChooser::EventHandler& event_handler) {
+//   std::unique_ptr<BluetoothChooser> bluetooth_chooser(
+//       new BluetoothChooser(this, event_handler));
+//   return std::move(bluetooth_chooser);
+// }
 
 void WebContents::BeforeUnloadFired(const base::TimeTicks& proceed_time) {
   // Do nothing, we override this method just to avoid compilation error since
