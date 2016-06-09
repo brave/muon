@@ -233,7 +233,8 @@ bool Extension::IsBackgroundPageUrl(GURL url,
 }
 
 // static
-bool Extension::IsBackgroundPageWebContents(content::WebContents* web_contents) {
+bool Extension::IsBackgroundPageWebContents(
+    content::WebContents* web_contents) {
   auto browser_context = web_contents->GetBrowserContext();
   auto url = web_contents->GetURL();
 
