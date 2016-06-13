@@ -20,6 +20,7 @@
 #include "third_party/WebKit/public/web/WebScriptExecutionCallback.h"
 #include "third_party/WebKit/public/web/WebScriptSource.h"
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
+#include "third_party/WebKit/public/web/WebKit.h"
 #include "third_party/WebKit/public/web/WebView.h"
 #include "content/renderer/browser_plugin/browser_plugin_manager.h"
 #include "content/renderer/browser_plugin/browser_plugin.h"
@@ -183,8 +184,36 @@ void WebFrame::InsertText(const std::string& text) {
   web_frame_->insertText(blink::WebString::fromUTF8(text));
 }
 
+//
+void WebFrame::SetGlobal(const std::vector<v8::Local<v8::String>> path,
+                          v8::Local<v8::Object> value) {
+  v8::Isolate* isolate = blink::mainThreadIsolate();
+  v8::Isolate::Scope isolate_scope(isolate);
+  v8::Local<v8::Context> context = web_frame_->mainWorldScriptContext();
+  v8::Context::Scope context_scope(context);
+
+  v8::Handle<v8::Object> obj;
+  for (std::vector<v8::Handle<v8::String>>::const_iterator iter =
+             path.begin();
+         iter != path.end();
+         ++iter) {
+    if (iter == path.begin()) {
+      obj = v8::Handle<v8::Object>::Cast(context->Global()->Get(*iter));
+    } else if (iter == path.end()-1) {
+      obj->Set(*iter, value);
+    } else {
+      obj = v8::Handle<v8::Object>::Cast(obj->Get(*iter));
+    }
+  }
+}
+
 void WebFrame::ExecuteJavaScript(const base::string16& code,
                                  mate::Arguments* args) {
+  v8::Isolate* isolate = blink::mainThreadIsolate();
+  v8::Isolate::Scope isolate_scope(isolate);
+  v8::Local<v8::Context> context = web_frame_->mainWorldScriptContext();
+  v8::Context::Scope context_scope(context);
+
   bool has_user_gesture = false;
   args->GetNext(&has_user_gesture);
   ScriptExecutionCallback::CompletionCallback completion_callback;
@@ -240,6 +269,7 @@ void WebFrame::BuildPrototype(
                  &WebFrame::RegisterURLSchemeAsPrivileged)
       .SetMethod("insertText", &WebFrame::InsertText)
       .SetMethod("executeJavaScript", &WebFrame::ExecuteJavaScript)
+      .SetMethod("setGlobal", &WebFrame::SetGlobal)
       .SetMethod("getResourceUsage", &WebFrame::GetResourceUsage)
       .SetMethod("clearCache", &WebFrame::ClearCache)
       .SetMethod("getContentWindow", &WebFrame::GetContentWindow);
