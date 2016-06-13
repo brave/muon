@@ -8,6 +8,9 @@
 #include "base/macros.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
+#include "extensions/browser/extension_function_dispatcher.h"
+#include "extensions/browser/script_execution_observer.h"
+#include "extensions/browser/script_executor.h"
 
 namespace base {
 class DictionaryValue;
@@ -17,6 +20,10 @@ namespace content {
 class BrowserContext;
 class RenderFrameHost;
 class RenderViewHost;
+}
+
+namespace mate {
+class Dictionary;
 }
 
 namespace keys {
@@ -48,6 +55,15 @@ class TabHelper : public content::WebContentsObserver,
   // Set this tab as the active tab in its window
   void SetActive(bool active);
 
+  bool ExecuteScriptInTab(
+    const std::string extension_id,
+    const std::string code_string,
+    const mate::Dictionary& options);
+
+  ScriptExecutor* script_executor() {
+    return script_executor_.get();
+  }
+
   // If the specified WebContents has a TabHelper (probably because it
   // was used as the contents of a tab), returns a tab id. This value is
   // immutable for a given tab. It will be unique across Chrome within the
@@ -76,6 +92,9 @@ class TabHelper : public content::WebContentsObserver,
       content::WebContents* old_web_contents,
       content::WebContents* new_web_contents) override;
 
+  // Our content script observers. Declare at top so that it will outlive all
+  // other members, since they might add themselves as observers.
+  base::ObserverList<ScriptExecutionObserver> script_execution_observers_;
 
   // Unique identifier of the tab for session restore. This id is only unique
   // within the current session, and is not guaranteed to be unique across
@@ -84,6 +103,8 @@ class TabHelper : public content::WebContentsObserver,
 
   // Unique identifier of the window the tab is in.
   int32_t window_id_ = -1;
+
+  std::unique_ptr<ScriptExecutor> script_executor_;
 
   DISALLOW_COPY_AND_ASSIGN(TabHelper);
 };

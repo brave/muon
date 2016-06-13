@@ -162,6 +162,12 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void TabTraverse(bool reverse);
   void SetActive(bool active);
 
+#if defined(ENABLE_EXTENSIONS)
+  bool ExecuteScriptInTab(const std::string code_string,
+      const std::string extension_id,
+      const mate::Dictionary& options);
+#endif
+
   // Send messages to browser.
   bool SendIPCMessage(bool all_frames,
                       const base::string16& channel,

@@ -1344,6 +1344,19 @@ void WebContents::SetActive(bool active) {
 #endif
 }
 
+#if defined(ENABLE_EXTENSIONS)
+bool WebContents::ExecuteScriptInTab(
+    const std::string extension_id,
+    const std::string code_string,
+    const mate::Dictionary& options) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (!tab_helper)
+    return false;
+
+  return tab_helper->ExecuteScriptInTab(extension_id, code_string, options);
+}
+#endif
+
 void WebContents::TabTraverse(bool reverse) {
   web_contents()->FocusThroughTabTraversal(reverse);
 }
@@ -1552,6 +1565,9 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
                   &WebContents::SetWebRTCIPHandlingPolicy)
       .SetMethod("getWebRTCIPHandlingPolicy",
                   &WebContents::GetWebRTCIPHandlingPolicy)
+#if defined(ENABLE_EXTENSIONS)
+      .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
+#endif
       .SetProperty("session", &WebContents::Session)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)
