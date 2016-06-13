@@ -6,6 +6,7 @@
 
 #include <map>
 #include <utility>
+#include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_view_host.h"
@@ -13,6 +14,7 @@
 #include "content/public/browser/web_contents.h"
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/common/extension_messages.h"
+#include "native_mate/dictionary.h"
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
 
@@ -34,7 +36,9 @@ static int32_t next_id = 1;
 namespace extensions {
 
 TabHelper::TabHelper(content::WebContents* contents)
-    : content::WebContentsObserver(contents) {
+    : content::WebContentsObserver(contents),
+      script_executor_(
+          new ScriptExecutor(contents, &script_execution_observers_)) {
   session_id_ = next_id++;
   RenderViewCreated(contents->GetRenderViewHost());
   contents->ForEachFrame(
@@ -85,6 +89,62 @@ void TabHelper::DidCloneToNewWebContents(
   // When the WebContents that this is attached to is cloned,
   // give the new clone a TabHelper and copy state over.
   CreateForWebContents(new_web_contents);
+}
+
+bool TabHelper::ExecuteScriptInTab(
+    const std::string extension_id,
+    const std::string code_string,
+    const mate::Dictionary& options) {
+  extensions::ScriptExecutor* executor = script_executor();
+  if (!executor)
+    return false;
+
+  bool all_frames = false;
+  options.Get("allFrames", &all_frames);
+  extensions::ScriptExecutor::FrameScope frame_scope =
+      all_frames
+          ? extensions::ScriptExecutor::INCLUDE_SUB_FRAMES
+          : extensions::ScriptExecutor::SINGLE_FRAME;
+
+  int frame_id = extensions::ExtensionApiFrameIdMap::kTopFrameId;
+  options.Get("frameId", &frame_id);
+
+  bool match_about_blank = false;
+  options.Get("matchAboutBlank", &match_about_blank);
+
+  extensions::UserScript::RunLocation run_at =
+    extensions::UserScript::UNDEFINED;
+  std::string run_at_string = "undefined";
+  options.Get("runAt", &run_at_string);
+  if (run_at_string == "document_start") {
+    run_at = extensions::UserScript::DOCUMENT_START;
+  } else if (run_at_string == "document_end") {
+    run_at = extensions::UserScript::DOCUMENT_END;
+  } else if (run_at_string == "document_idle") {
+    run_at = extensions::UserScript::DOCUMENT_IDLE;
+  }
+
+  bool isolated_world = false;
+  options.Get("isolatedWorld", &isolated_world);
+
+  executor->ExecuteScript(
+      HostID(HostID::EXTENSIONS, extension_id),
+      extensions::ScriptExecutor::JAVASCRIPT,
+      code_string,
+      frame_scope,
+      frame_id,
+      match_about_blank ? extensions::ScriptExecutor::MATCH_ABOUT_BLANK
+                        : extensions::ScriptExecutor::DONT_MATCH_ABOUT_BLANK,
+      run_at,
+      isolated_world ? extensions::ScriptExecutor::ISOLATED_WORLD
+                     : extensions::ScriptExecutor::MAIN_WORLD,
+      extensions::ScriptExecutor::DEFAULT_PROCESS,
+      GURL(), // No webview src.
+      GURL(), // No file url.
+      false, // user gesture
+      extensions::ScriptExecutor::NO_RESULT,
+      extensions::ScriptExecutor::ExecuteScriptCallback());
+  return true;
 }
 
 // static

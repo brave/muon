@@ -172,14 +172,12 @@ var bindings = {
   },
 
   executeScript: function (tabId, details, cb) {
-    if (details.file || details.allFrames || details.frameId || details.matchAboutBlank || details.runAt) {
-      // TODO(bridiver) implement the rest of these
-      console.warn('Only `code` is supported for executeScript', details)
+    if (cb) {
+      // TODO(bridiver) implement callback
+      console.warn('executeScript: `callback` is not supported', details)
+      return
     }
-    if (details.code) {
-      webFrame.executeJavaScript(details.code)
-      cb && cb()
-    }
+    ipc.send('chrome-tabs-execute-script', extensionId, tabId, details)
   }
 }
 
