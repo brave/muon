@@ -795,11 +795,11 @@ void NativeWindowMac::Center() {
 void NativeWindowMac::SetTitle(const std::string& title) {
   title_ = title;
 
-  // We don't want the title to show in transparent or frameless window.
-  if (transparent() || !has_frame())
-    return;
-
-  [window_ setTitle:base::SysUTF8ToNSString(title)];
+  // We don't want the title to show in transparent or frameless window
+  if (!transparent() && (has_frame() ||
+      // exception for hidden and hidden-inset
+      force_show_buttons_))
+    [window_ setTitle:base::SysUTF8ToNSString(title)];
 }
 
 std::string NativeWindowMac::GetTitle() {
