@@ -51,6 +51,10 @@ class AtomExtensionsRendererClient : public ExtensionsRendererClient {
   void RunScriptsAtDocumentStart(content::RenderFrame* render_frame);
   void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame);
 
+  extensions::Dispatcher* extension_dispatcher() {
+    return extension_dispatcher_.get();
+  }
+
  private:
   std::unique_ptr<AtomExtensionsDispatcherDelegate>
       extension_dispatcher_delegate_;

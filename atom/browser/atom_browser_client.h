@@ -51,6 +51,8 @@ class AtomBrowserClient : public brightray::BrowserClient,
   static void SetCustomServiceWorkerSchemes(
       const std::vector<std::string>& schemes);
 
+  std::string GetApplicationLocale() override;
+  void SetApplicationLocale(std::string locale);
  protected:
   // content::ContentBrowserClient:
   void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
@@ -59,7 +61,6 @@ class AtomBrowserClient : public brightray::BrowserClient,
   content::AccessTokenStore* CreateAccessTokenStore() override;
   void OverrideWebkitPrefs(content::RenderViewHost* render_view_host,
                            content::WebPreferences* prefs) override;
-  std::string GetApplicationLocale() override;
   void OverrideSiteInstanceForNavigation(
       content::BrowserContext* browser_context,
       content::SiteInstance* current_instance,

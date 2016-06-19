@@ -436,7 +436,13 @@ void App::SetDesktopName(const std::string& desktop_name) {
 }
 
 std::string App::GetLocale() {
-  return l10n_util::GetApplicationLocale("");
+  return static_cast<AtomBrowserClient*>(
+      AtomBrowserClient::Get())->GetApplicationLocale();
+}
+
+void App::SetLocale(std::string locale) {
+  static_cast<AtomBrowserClient*>(
+      AtomBrowserClient::Get())->SetApplicationLocale(locale);
 }
 
 bool App::MakeSingleInstance(
@@ -590,6 +596,7 @@ void App::BuildPrototype(
       .SetMethod("getPath", &App::GetPath)
       .SetMethod("setDesktopName", &App::SetDesktopName)
       .SetMethod("getLocale", &App::GetLocale)
+      .SetMethod("setLocale", &App::SetLocale)
 #if defined(USE_NSS_CERTS)
       .SetMethod("importCertificate", &App::ImportCertificate)
 #endif

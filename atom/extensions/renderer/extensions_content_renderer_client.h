@@ -7,6 +7,10 @@
 
 #include "atom/renderer/atom_renderer_client.h"
 
+namespace atom {
+class ContentSettingsManager;
+}
+
 namespace extensions {
 
 class ExtensionsContentRendererClient : public atom::AtomRendererClient {
@@ -41,6 +45,8 @@ class ExtensionsContentRendererClient : public atom::AtomRendererClient {
     GURL* new_url) override;
 
  private:
+  std::unique_ptr<atom::ContentSettingsManager> content_settings_manager_;
+
   DISALLOW_COPY_AND_ASSIGN(ExtensionsContentRendererClient);
 };
 
