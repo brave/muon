@@ -304,7 +304,8 @@ WebContents::WebContents(v8::Isolate* isolate,
       create_params.site_instance = content::SiteInstance::CreateForURL(
         session->browser_context(), GURL("chrome-guest://fake-host"));
   }
-  content::WebContents* web_contents = content::WebContents::Create(create_params);
+  content::WebContents* web_contents =
+      content::WebContents::Create(create_params);
 
   Observe(web_contents);
   InitWithWebContents(web_contents, session->browser_context());

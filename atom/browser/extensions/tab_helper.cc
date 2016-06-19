@@ -139,9 +139,9 @@ bool TabHelper::ExecuteScriptInTab(
       isolated_world ? extensions::ScriptExecutor::ISOLATED_WORLD
                      : extensions::ScriptExecutor::MAIN_WORLD,
       extensions::ScriptExecutor::DEFAULT_PROCESS,
-      GURL(), // No webview src.
-      GURL(), // No file url.
-      false, // user gesture
+      GURL(),  // No webview src.
+      GURL(),  // No file url.
+      false,  // user gesture
       extensions::ScriptExecutor::NO_RESULT,
       extensions::ScriptExecutor::ExecuteScriptCallback());
   return true;
