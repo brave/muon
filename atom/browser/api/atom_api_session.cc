@@ -9,6 +9,7 @@
 
 #include "atom/browser/api/atom_api_cookies.h"
 #include "atom/browser/api/atom_api_download_item.h"
+#include "atom/browser/api/atom_api_user_prefs.h"
 #include "atom/browser/api/atom_api_web_request.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
@@ -470,6 +471,14 @@ v8::Local<v8::Value> Session::WebRequest(v8::Isolate* isolate) {
   return v8::Local<v8::Value>::New(isolate, web_request_);
 }
 
+v8::Local<v8::Value> Session::UserPrefs(v8::Isolate* isolate) {
+  if (user_prefs_.IsEmpty()) {
+    auto handle = atom::api::UserPrefs::Create(isolate, browser_context());
+    user_prefs_.Reset(isolate, handle.ToV8());
+  }
+  return v8::Local<v8::Value>::New(isolate, user_prefs_);
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, AtomBrowserContext* browser_context) {
@@ -511,6 +520,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("clearHostResolverCache", &Session::ClearHostResolverCache)
       .SetMethod("allowNTLMCredentialsForDomains",
                  &Session::AllowNTLMCredentialsForDomains)
+      .SetProperty("userPrefs", &Session::UserPrefs)
       .SetProperty("cookies", &Session::Cookies)
       .SetProperty("webRequest", &Session::WebRequest);
 }

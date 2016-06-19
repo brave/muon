@@ -6,9 +6,11 @@
 #define ATOM_BROWSER_ATOM_BROWSER_CONTEXT_H_
 
 #include <string>
-
+#include <vector>
 #include "base/memory/weak_ptr.h"
 #include "brightray/browser/browser_context.h"
+
+class PrefChangeRegistrar;
 
 namespace syncable_prefs {
 class PrefServiceSyncable;
@@ -62,12 +64,28 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomBrowserContext* original_context() const {
     return static_cast<AtomBrowserContext*>(original_context_.get()); }
 
+#if defined(ENABLE_EXTENSIONS)
+  user_prefs::PrefRegistrySyncable* pref_registry() const {
+    return pref_registry_.get(); }
+
+  syncable_prefs::PrefServiceSyncable* user_prefs() const {
+    return user_prefs_.get(); }
+
+  PrefChangeRegistrar* user_prefs_change_registrar() const {
+    return user_prefs_registrar_.get(); }
+
+  void AddOverlayPref(const std::string name) {
+    overlay_pref_names_.push_back(name.c_str()); }
+#endif
+
  private:
 #if defined(ENABLE_EXTENSIONS)
   void RegisterUserPrefs();
   void OnPrefsLoaded(bool success);
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
+  std::unique_ptr<PrefChangeRegistrar> user_prefs_registrar_;
+  std::vector<const char*> overlay_pref_names_;
 #endif
 
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;
