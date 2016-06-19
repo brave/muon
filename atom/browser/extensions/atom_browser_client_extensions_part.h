@@ -11,6 +11,8 @@
 #include "base/macros.h"
 
 class GURL;
+class PrefRegistrySimple;
+class PrefService;
 
 namespace base {
 class CommandLine;
@@ -47,6 +49,10 @@ class AtomBrowserClientExtensionsPart {
                                  const GURL& to_url,
                                  bool* result);
 
+  static void RegisteryProfilePrefs(PrefRegistrySimple* registry);
+
+  static void SetApplicationLocale(std::string);
+
   // // Helper function to call InfoMap::SetSigninProcess().
   // static void SetSigninProcess(content::SiteInstance* site_instance);
   void RenderProcessWillLaunch(content::RenderProcessHost* host);
@@ -59,8 +65,13 @@ class AtomBrowserClientExtensionsPart {
       base::CommandLine* command_line,
       content::RenderProcessHost* process,
       content::BrowserContext* browser_context);
+  std::string GetApplicationLocale();
 
  private:
+  void UpdateContentSettings();
+  void UpdateContentSettingsForHost(int render_process_id);
+
+
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserClientExtensionsPart);
 };
 

@@ -32,6 +32,7 @@ std::vector<APIPermissionInfo*> ChromeAPIPermissions::GetAllPermissions()
     {APIPermission::kNativeMessaging, "nativeMessaging"},
     {APIPermission::kPrivacy, "privacy"},
     {APIPermission::kTab, "tabs"},
+    {APIPermission::kContentSettings, "contentSettings"},
 
     // Full url access permissions.
     {APIPermission::kDebugger, "debugger",

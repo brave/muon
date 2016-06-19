@@ -10,6 +10,7 @@
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/renderer/api/atom_api_web_frame.h"
+#include "atom/renderer/content_settings_manager.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_view.h"
 #include "extensions/renderer/script_context.h"
@@ -17,6 +18,7 @@
 #include "third_party/WebKit/public/web/WebKit.h"
 #include "third_party/WebKit/public/web/WebView.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
+#include "third_party/WebKit/public/web/WebDocument.h"
 
 namespace {
   // TODO(bridiver) This is copied from atom_api_renderer_ipc.cc
@@ -137,6 +139,21 @@ void JavascriptBindings::GetBinding(
     mate::Dictionary web_frame(isolate, v8::Object::New(isolate));
     web_frame.Set("webFrame", atom::api::WebFrame::Create(isolate));
     binding.Set("web_frame", web_frame);
+
+    mate::Dictionary content_settings(isolate, v8::Object::New(isolate));
+    content_settings.SetMethod("get",
+        base::Bind(&ContentSettingsManager::GetSetting,
+          base::Unretained(ContentSettingsManager::GetInstance())));
+    content_settings.SetMethod("getContentTypes",
+        base::Bind(&ContentSettingsManager::GetContentTypes,
+          base::Unretained(ContentSettingsManager::GetInstance())));
+    content_settings.SetMethod("getCurrent",
+        base::Bind(&ContentSettingsManager::GetSetting,
+          base::Unretained(ContentSettingsManager::GetInstance()),
+          render_view()->GetWebView()->mainFrame()->document().url(),
+          frame->document().url()));
+    binding.Set("content_settings", content_settings);
+
     atom_binding = binding.GetHandle();
     global->SetHiddenValue(atom_binding_string, atom_binding);
   }
