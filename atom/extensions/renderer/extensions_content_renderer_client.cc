@@ -5,8 +5,10 @@
 #include "atom/extensions/renderer/extensions_content_renderer_client.h"
 
 #include "atom/browser/web_contents_preferences.h"
+#include "atom/renderer/content_settings_client.h"
+#include "atom/renderer/content_settings_manager.h"
 #include "chrome/renderer/pepper/pepper_helper.h"
-
+#include "content/public/renderer/render_thread.h"
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/renderer/extensions/atom_extensions_renderer_client.h"
 #include "atom/common/extensions/atom_extensions_client.h"
@@ -17,25 +19,34 @@ namespace extensions {
 
 ExtensionsContentRendererClient::ExtensionsContentRendererClient() {
 #if defined(ENABLE_EXTENSIONS)
-  extensions::ExtensionsClient::Set(
-      extensions::AtomExtensionsClient::GetInstance());
-  extensions::ExtensionsRendererClient::Set(
-      extensions::AtomExtensionsRendererClient::GetInstance());
+  ExtensionsClient::Set(
+      AtomExtensionsClient::GetInstance());
+  ExtensionsRendererClient::Set(
+      AtomExtensionsRendererClient::GetInstance());
 #endif
 }
 
 void ExtensionsContentRendererClient::RenderThreadStarted() {
+  content_settings_manager_.reset(atom::ContentSettingsManager::GetInstance());
   AtomRendererClient::RenderThreadStarted();
 #if defined(ENABLE_EXTENSIONS)
-  extensions::AtomExtensionsRendererClient::GetInstance()->
+  AtomExtensionsRendererClient::GetInstance()->
       RenderThreadStarted();
 #endif
 }
 
 void ExtensionsContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
+  Dispatcher* ext_dispatcher = NULL;
 #if defined(ENABLE_EXTENSIONS)
-  extensions::AtomExtensionsRendererClient::GetInstance()->RenderFrameCreated(
+  ext_dispatcher =
+      AtomExtensionsRendererClient::GetInstance()->extension_dispatcher();
+#endif
+  new atom::ContentSettingsClient(render_frame,
+                                  ext_dispatcher,
+                                  content_settings_manager_.get());
+#if defined(ENABLE_EXTENSIONS)
+  AtomExtensionsRendererClient::GetInstance()->RenderFrameCreated(
     render_frame);
 #endif
   if (atom::WebContentsPreferences::run_node()) {
@@ -48,7 +59,7 @@ void ExtensionsContentRendererClient::RenderFrameCreated(
 void ExtensionsContentRendererClient::RenderViewCreated(content::RenderView* render_view) {
   AtomRendererClient::RenderViewCreated(render_view);
 #if defined(ENABLE_EXTENSIONS)
-  extensions::AtomExtensionsRendererClient::GetInstance()->
+  AtomExtensionsRendererClient::GetInstance()->
       RenderViewCreated(render_view);
 #endif
 }
@@ -56,7 +67,7 @@ void ExtensionsContentRendererClient::RenderViewCreated(content::RenderView* ren
 void ExtensionsContentRendererClient::RunScriptsAtDocumentStart(
     content::RenderFrame* render_frame) {
 #if defined(ENABLE_EXTENSIONS)
-  extensions::AtomExtensionsRendererClient::GetInstance()->
+  AtomExtensionsRendererClient::GetInstance()->
       RunScriptsAtDocumentStart(render_frame);
 #endif
   if (atom::WebContentsPreferences::run_node())
@@ -66,7 +77,7 @@ void ExtensionsContentRendererClient::RunScriptsAtDocumentStart(
 void ExtensionsContentRendererClient::RunScriptsAtDocumentEnd(
     content::RenderFrame* render_frame) {
 #if defined(ENABLE_EXTENSIONS)
-  extensions::AtomExtensionsRendererClient::GetInstance()->
+  AtomExtensionsRendererClient::GetInstance()->
       RunScriptsAtDocumentEnd(render_frame);
 #endif
   if (atom::WebContentsPreferences::run_node())
@@ -79,7 +90,7 @@ bool ExtensionsContentRendererClient::AllowPopup() {
   }
 
 #if defined(ENABLE_EXTENSIONS)
-  return extensions::AtomExtensionsRendererClient::GetInstance()->AllowPopup();
+  return AtomExtensionsRendererClient::GetInstance()->AllowPopup();
 #else
   return false;
 #endif
@@ -108,7 +119,7 @@ bool ExtensionsContentRendererClient::WillSendRequest(
   // Check whether the request should be allowed. If not allowed, we reset the
   // URL to something invalid to prevent the request and cause an error.
 #if defined(ENABLE_EXTENSIONS)
-  if (extensions::AtomExtensionsRendererClient::GetInstance()->WillSendRequest(
+  if (AtomExtensionsRendererClient::GetInstance()->WillSendRequest(
           frame, transition_type, url, new_url))
     return true;
 #endif
@@ -120,7 +131,7 @@ void ExtensionsContentRendererClient::DidInitializeServiceWorkerContextOnWorkerT
     v8::Local<v8::Context> context,
     const GURL& url) {
 #if defined(ENABLE_EXTENSIONS)
-  extensions::Dispatcher::DidInitializeServiceWorkerContextOnWorkerThread(
+  Dispatcher::DidInitializeServiceWorkerContextOnWorkerThread(
       context, url);
 #endif
 }
@@ -129,7 +140,7 @@ void ExtensionsContentRendererClient::WillDestroyServiceWorkerContextOnWorkerThr
     v8::Local<v8::Context> context,
     const GURL& url) {
 #if defined(ENABLE_EXTENSIONS)
-  extensions::Dispatcher::WillDestroyServiceWorkerContextOnWorkerThread(context,
+  Dispatcher::WillDestroyServiceWorkerContextOnWorkerThread(context,
                                                                         url);
 #endif
 }

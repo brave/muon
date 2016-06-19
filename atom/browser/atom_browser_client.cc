@@ -157,9 +157,18 @@ void AtomBrowserClient::BrowserURLHandlerCreated(
 #endif
 }
 
-
 std::string AtomBrowserClient::GetApplicationLocale() {
-  return l10n_util::GetApplicationLocale("");
+  std::string locale;
+#if defined(ENABLE_EXTENSIONS)
+  locale = extensions_part_->GetApplicationLocale();
+#endif
+  return locale.empty() ? l10n_util::GetApplicationLocale(locale) : locale;
+}
+
+void AtomBrowserClient::SetApplicationLocale(std::string locale) {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::AtomBrowserClientExtensionsPart::SetApplicationLocale(locale);
+#endif
 }
 
 void AtomBrowserClient::OverrideSiteInstanceForNavigation(
