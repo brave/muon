@@ -6,7 +6,6 @@
 #define ATOM_BROWSER_EXTENSIONS_TAB_HELPER_H_
 
 #include <string>
-
 #include "base/macros.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"

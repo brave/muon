@@ -46,8 +46,8 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
   source_map->RegisterSource("event_emitter", IDR_ATOM_EVENT_EMITTER_JS);
   source_map->RegisterSource("ipc_utils", IDR_ATOM_IPC_INTERNAL_JS);
   source_map->RegisterSource("ipc", IDR_ATOM_IPC_BINDINGS_JS);
-  // TODO(bridiver) - add a permission for this so only
-  // component extensions can use
+  // TODO(bridiver) - add a permission for this
+  // so only component extensions can use
   source_map->RegisterSource("webFrame",
                              IDR_ATOM_WEB_FRAME_BINDINGS_JS);
   source_map->RegisterSource("browserAction",
@@ -57,6 +57,8 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
                              IDR_ATOM_TABS_BINDINGS_JS);
   source_map->RegisterSource("contextMenus",
                              IDR_ATOM_CONTEXT_MENUS_BINDINGS_JS);
+  source_map->RegisterSource("contentSettings",
+                             IDR_ATOM_CONTENT_SETTINGS_BINDINGS_JS);
   source_map->RegisterSource("windows",
                              IDR_ATOM_WINDOWS_BINDINGS_JS);
 }

@@ -1133,7 +1133,8 @@ void WebContents::SetUserAgent(const std::string& user_agent) {
   scoped_refptr<net::URLRequestContextGetter> getter =
       web_contents()->GetBrowserContext()->GetRequestContext();
 
-  auto accept_lang = l10n_util::GetApplicationLocale("");
+  auto accept_lang = static_cast<AtomBrowserClient*>(
+      AtomBrowserClient::Get())->GetApplicationLocale();
   getter->GetNetworkTaskRunner()->PostTask(FROM_HERE,
       base::Bind(&SetUserAgentInIO, getter, accept_lang, user_agent));
 }
