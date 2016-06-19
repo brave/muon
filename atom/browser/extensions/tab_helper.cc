@@ -5,6 +5,7 @@
 #include "atom/browser/extensions/tab_helper.h"
 
 #include <map>
+#include <string>
 #include <utility>
 #include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
 #include "content/public/browser/browser_context.h"
@@ -139,9 +140,9 @@ bool TabHelper::ExecuteScriptInTab(
       isolated_world ? extensions::ScriptExecutor::ISOLATED_WORLD
                      : extensions::ScriptExecutor::MAIN_WORLD,
       extensions::ScriptExecutor::DEFAULT_PROCESS,
-      GURL(), // No webview src.
-      GURL(), // No file url.
-      false, // user gesture
+      GURL(),  // No webview src.
+      GURL(),  // No file url.
+      false,  // user gesture
       extensions::ScriptExecutor::NO_RESULT,
       extensions::ScriptExecutor::ExecuteScriptCallback());
   return true;
