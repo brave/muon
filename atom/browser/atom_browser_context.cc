@@ -39,9 +39,11 @@
 #include "url/url_constants.h"
 
 #if defined(ENABLE_EXTENSIONS)
+#include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extensions_network_delegate.h"
 #include "components/prefs/json_pref_store.h"
+#include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
@@ -103,14 +105,27 @@ AtomBrowserContext::AtomBrowserContext(const std::string& partition,
 
 AtomBrowserContext::~AtomBrowserContext() {
 #if defined(ENABLE_EXTENSIONS)
+  bool prefs_loaded = user_prefs_->GetInitializationStatus() !=
+      PrefService::INITIALIZATION_STATUS_WAITING;
+
+  if (prefs_loaded) {
+    user_prefs_->CommitPendingWrite();
+  }
+
   NotifyWillBeDestroyed(this);
   content::NotificationService::current()->Notify(
       chrome::NOTIFICATION_PROFILE_DESTROYED,
       content::Source<AtomBrowserContext>(this),
       content::NotificationService::NoDetails());
+
+  if (user_prefs_registrar_.get())
+    user_prefs_registrar_->RemoveAll();
+
   BrowserContextDependencyManager::GetInstance()->
       DestroyBrowserContextServices(this);
+
 #endif
+
 }
 
 net::NetworkDelegate* AtomBrowserContext::CreateNetworkDelegate() {
@@ -248,13 +263,16 @@ void AtomBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
 
 #if defined(ENABLE_EXTENSIONS)
 void AtomBrowserContext::RegisterUserPrefs() {
-  auto registry = make_scoped_refptr(new user_prefs::PrefRegistrySyncable);
-  extensions::ExtensionPrefs::RegisterProfilePrefs(registry.get());
+  extensions::ExtensionPrefs::RegisterProfilePrefs(pref_registry_.get());
 
   BrowserContextDependencyManager::GetInstance()->
-      RegisterProfilePrefsForServices(this, registry.get());
+      RegisterProfilePrefsForServices(this, pref_registry_.get());
 
-  base::FilePath filepath = GetPath().AppendASCII("user_prefs.json");
+  extensions::AtomBrowserClientExtensionsPart::RegisteryProfilePrefs(
+      pref_registry_.get());
+
+  base::FilePath filepath = GetPath().Append(
+      FILE_PATH_LITERAL("UserPrefs"));
 
   syncable_prefs::PrefServiceSyncableFactory factory;
   scoped_refptr<base::SequencedTaskRunner> task_runner =
@@ -263,32 +281,50 @@ void AtomBrowserContext::RegisterUserPrefs() {
   scoped_refptr<JsonPrefStore> pref_store =
       new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
 
-  factory.set_async(true);
+  bool async = false;
+  factory.set_async(async);
   factory.set_user_prefs(pref_store);
 
   if (extensions::ExtensionsBrowserClient::Get()) {
     scoped_refptr<PrefStore> extension_prefs = new ExtensionPrefStore(
         ExtensionPrefValueMapFactory::GetForBrowserContext(this),
-        IsOffTheRecord());
+        false);
     factory.set_extension_prefs(extension_prefs);
   }
+  user_prefs_ = factory.CreateSyncable(pref_registry_.get());
 
-  user_prefs_ = factory.CreateSyncable(registry.get());
-  user_prefs_->AddPrefInitObserver(base::Bind(
+  user_prefs_registrar_.reset(new PrefChangeRegistrar());
+  if (IsOffTheRecord()) {
+    PrefStore* otr_extension_prefs = new ExtensionPrefStore(
+        ExtensionPrefValueMapFactory::GetForBrowserContext(this),
+        true);
+    auto otr_user_prefs = user_prefs_->CreateIncognitoPrefService(
+                              otr_extension_prefs, overlay_pref_names_);
+    user_prefs_registrar_->Init(otr_user_prefs);
+    user_prefs::UserPrefs::Set(this, otr_user_prefs);
+  } else {
+    user_prefs_registrar_->Init(user_prefs_.get());
+    user_prefs::UserPrefs::Set(this, user_prefs_.get());
+  }
+
+  if (async) {
+    user_prefs_->AddPrefInitObserver(base::Bind(
         &AtomBrowserContext::OnPrefsLoaded, base::Unretained(this)));
-  user_prefs::UserPrefs::Set(this, user_prefs_.get());
+  } else {
+    OnPrefsLoaded(true);
+  }
 }
 
 void AtomBrowserContext::OnPrefsLoaded(bool success) {
   if (!success)
     return;
 
+  BrowserContextDependencyManager::GetInstance()->
+      CreateBrowserContextServices(this);
+
   if (extensions::ExtensionsBrowserClient::Get()) {
     extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
   }
-
-  BrowserContextDependencyManager::GetInstance()->
-      CreateBrowserContextServices(this);
 
   content::NotificationService::current()->Notify(
       chrome::NOTIFICATION_PROFILE_CREATED,

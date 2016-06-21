@@ -4,10 +4,15 @@
 
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 
-#include "extensions/browser/api/web_request/web_request_api.h"
 #include "atom/browser/api/atom_api_extension.h"
+#include "atom/common/api/api_messages.h"
 #include "base/command_line.h"
 #include "chrome/browser/renderer_host/chrome_extension_message_filter.h"
+#include "chrome/common/pref_names.h"
+#include "components/prefs/pref_change_registrar.h"
+#include "components/prefs/pref_registry_simple.h"
+#include "components/prefs/pref_service.h"
+#include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/browser_url_handler.h"
 #include "content/public/browser/render_process_host.h"
@@ -17,7 +22,9 @@
 #include "extensions/browser/extension_system.h"
 #include "extensions/browser/info_map.h"
 #include "extensions/browser/io_thread_extension_message_filter.h"
+#include "extensions/browser/api/web_request/web_request_api.h"
 #include "extensions/common/constants.h"
+#include "extensions/common/extension_l10n_util.h"
 #include "extensions/common/manifest_handlers/web_accessible_resources_info.h"
 #include "extensions/common/switches.h"
 
@@ -25,6 +32,19 @@ using content::BrowserContext;
 using content::BrowserThread;
 using content::BrowserURLHandler;
 using content::SiteInstance;
+
+namespace {
+
+// Cached version of the locale so we can return the locale on the I/O
+// thread.
+base::LazyInstance<std::string> io_thread_application_locale;
+
+void SetApplicationLocaleOnIOThread(const std::string& locale) {
+  DCHECK_CURRENTLY_ON(BrowserThread::IO);
+  io_thread_application_locale.Get() = locale;
+}
+
+}  // namespace
 
 namespace extensions {
 
@@ -135,15 +155,84 @@ bool AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
   return false;
 }
 
+std::string AtomBrowserClientExtensionsPart::GetApplicationLocale() {
+  if (BrowserThread::CurrentlyOn(BrowserThread::IO)) {
+    return io_thread_application_locale.Get();
+  } else {
+    return extension_l10n_util::CurrentLocaleOrDefault();
+  }
+}
+
+// static
+void AtomBrowserClientExtensionsPart::SetApplicationLocale(std::string locale) {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+
+  // This object is guaranteed to outlive all threads so we don't have to
+  // worry about the lack of refcounting and can just post as Unretained.
+  //
+  // The common case is that this function is called early in Chrome startup
+  // before any threads are created (it will also be called later if the user
+  // changes the pref). In this case, there will be no threads created and
+  // posting will fail. When there are no threads, we can just set the string
+  // without worrying about threadsafety.
+  if (!BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+          base::Bind(&SetApplicationLocaleOnIOThread, locale))) {
+    io_thread_application_locale.Get() = locale;
+  }
+  extension_l10n_util::SetProcessLocale(locale);
+}
+
+// static
+void AtomBrowserClientExtensionsPart::RegisteryProfilePrefs(
+    PrefRegistrySimple* registry) {
+  registry->RegisterDictionaryPref("content_settings");
+  registry->RegisterStringPref(prefs::kApplicationLocale,
+      extension_l10n_util::CurrentLocaleOrDefault());
+}
+
 void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
     content::RenderProcessHost* host) {
   int id = host->GetID();
-  BrowserContext* context = host->GetBrowserContext();
+  auto context =
+      static_cast<atom::AtomBrowserContext*>(host->GetBrowserContext());
 
   host->AddFilter(new ChromeExtensionMessageFilter(id, context));
   host->AddFilter(new ExtensionMessageFilter(id, context));
   host->AddFilter(new IOThreadExtensionMessageFilter(id, context));
   extension_web_request_api_helpers::SendExtensionWebRequestStatusToHost(host);
+
+  auto user_prefs_registrar = context->user_prefs_change_registrar();
+  auto user_prefs = user_prefs::UserPrefs::Get(context);
+
+  user_prefs_registrar->Add(
+      "content_settings",
+      base::Bind(&AtomBrowserClientExtensionsPart::UpdateContentSettings,
+                 base::Unretained(this), base::Unretained(host), user_prefs));
+  UpdateContentSettings(host, user_prefs);
+
+  user_prefs_registrar->Add(
+      prefs::kApplicationLocale,
+      base::Bind(&AtomBrowserClientExtensionsPart::UpdateLocale,
+              base::Unretained(this), user_prefs, context->IsOffTheRecord()));
+  UpdateLocale(user_prefs, context->IsOffTheRecord());
+}
+
+void AtomBrowserClientExtensionsPart::UpdateLocale(PrefService* user_prefs, bool incognito) {
+  if (!incognito) {
+    std::string locale = user_prefs->GetString(prefs::kApplicationLocale);
+    extensions::AtomBrowserClientExtensionsPart::SetApplicationLocale(locale);
+  }
+}
+
+void AtomBrowserClientExtensionsPart::UpdateContentSettings(
+    content::RenderProcessHost* host,
+    PrefService* user_prefs) {
+  const base::DictionaryValue* content_settings =
+    user_prefs->GetDictionary("content_settings");
+
+  if (content_settings) {
+    host->Send(new AtomMsg_UpdateContentSettings(*content_settings));
+  }
 }
 
 void AtomBrowserClientExtensionsPart::SiteInstanceGotProcess(
