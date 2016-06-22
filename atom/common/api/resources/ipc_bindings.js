@@ -9,11 +9,15 @@ exports.didCreateDocumentElement = function() {
 
   window.alert = function(message, title) {
     return ipc.send('window-alert', message, title);
-  };
+  }
 
   window.confirm = function(message, title) {
     return ipc.sendSync('window-confirm', message, title);
-  };
-};
+  }
+
+  window.prompt = function(text, defaultText) {
+    return ipc.sendSync('window-prompt', text, defaultText);
+  }
+}
 
 exports.binding = ipc;
