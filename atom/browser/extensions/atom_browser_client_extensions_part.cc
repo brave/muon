@@ -244,13 +244,14 @@ void AtomBrowserClientExtensionsPart::SiteInstanceGotProcess(
   if (!registry)
     return;
 
+  render_process_hosts_[site_instance->GetProcess()->GetID()] = nullptr;
+
   const Extension* extension =
       registry->enabled_extensions().GetExtensionOrAppByURL(
           site_instance->GetSiteURL());
   if (!extension)
     return;
 
-  render_process_hosts_[site_instance->GetProcess()->GetID()] = nullptr;
   ProcessMap::Get(context)->Insert(extension->id(),
                                    site_instance->GetProcess()->GetID(),
                                    site_instance->GetId());
@@ -269,13 +270,14 @@ void AtomBrowserClientExtensionsPart::SiteInstanceDeleting(
   if (!registry)
     return;
 
+  render_process_hosts_.erase(site_instance->GetProcess()->GetID());
+
   const Extension* extension =
       registry->enabled_extensions().GetExtensionOrAppByURL(
           site_instance->GetSiteURL());
   if (!extension)
     return;
 
-  render_process_hosts_.erase(site_instance->GetProcess()->GetID());
   ProcessMap::Get(context)->Remove(extension->id(),
                                    site_instance->GetProcess()->GetID(),
                                    site_instance->GetId());

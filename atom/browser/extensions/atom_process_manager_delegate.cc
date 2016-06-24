@@ -5,6 +5,8 @@
 #include "atom/browser/extensions/atom_process_manager_delegate.h"
 
 #include "atom/browser/atom_browser_context.h"
+#include "atom/browser/atom_browser_main_parts.h"
+#include "atom/browser/browser.h"
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "build/build_config.h"
@@ -38,7 +40,7 @@ bool AtomProcessManagerDelegate::IsBackgroundPageAllowed(
 
 bool AtomProcessManagerDelegate::DeferCreatingStartupBackgroundHosts(
     content::BrowserContext* context) const {
-  return !ExtensionSystem::Get(context)->ready().is_signaled();
+  return !atom::Browser::Get()->is_ready();
 }
 
 void AtomProcessManagerDelegate::Observe(
@@ -65,13 +67,12 @@ void AtomProcessManagerDelegate::Observe(
 
 void AtomProcessManagerDelegate::OnProfileCreated(
                                         AtomBrowserContext* browser_context) {
-  // TODO(bridiver) - link regular and incognito contexts
   // Incognito browser_contexts are handled by their original browser_context.
-  // if (browser_context->IsOffTheRecord())
-  //   return;
+  if (browser_context->IsOffTheRecord())
+    return;
 
   // The browser_context can be created before the extension system is ready.
-  if (DeferCreatingStartupBackgroundHosts(browser_context))
+  if (!ExtensionSystem::Get(browser_context)->ready().is_signaled())
     return;
 
   // The browser_context might have been initialized asynchronously (in

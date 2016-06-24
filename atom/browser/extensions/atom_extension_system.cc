@@ -9,6 +9,7 @@
 #include <vector>
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
+#include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/shared_user_script_master.h"
 #include "base/memory/weak_ptr.h"
@@ -31,7 +32,6 @@
 #include "extensions/common/permissions/permissions_data.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
 
-
 using content::BrowserThread;
 
 namespace extensions {
@@ -41,10 +41,16 @@ namespace extensions {
 //
 
 AtomExtensionSystem::Shared::Shared(atom::AtomBrowserContext* browser_context)
-    : browser_context_(browser_context) {
+    : registry_(ExtensionRegistry::Get(browser_context)),
+      browser_context_(browser_context),
+      extension_prefs_(ExtensionPrefs::Get(browser_context_)) {
 }
 
 AtomExtensionSystem::Shared::~Shared() {
+}
+
+void AtomExtensionSystem::Shared::InitPrefs() {
+  store_factory_ = new ValueStoreFactoryImpl(browser_context_->GetPath());
 }
 
 void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
@@ -55,27 +61,46 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
   shared_user_script_master_.reset(
                                 new SharedUserScriptMaster(browser_context_));
 
-  // load all extensions
-  const ExtensionSet& extensions =
+  registrar_.Add(this, content::NOTIFICATION_RENDERER_PROCESS_TERMINATED,
+                 content::NotificationService::AllBrowserContextsAndSources());
+  registrar_.Add(this, extensions::NOTIFICATION_CRX_INSTALLER_DONE,
+                 content::NotificationService::AllSources());
+  registrar_.Add(this, atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST,
+                 content::NotificationService::AllSources());
+  registrar_.Add(this, atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
+                 content::NotificationService::AllSources());
+
+  if (extensions_enabled) {
+    // load all extensions
+    const ExtensionSet& extensions =
                             atom::api::Extension::GetInstance()->extensions();
 
-  for (ExtensionSet::const_iterator iter = extensions.begin();
-       iter != extensions.end(); ++iter) {
-    extension_service()->AddExtension(iter->get());
-  }
+    for (ExtensionSet::const_iterator iter = extensions.begin();
+         iter != extensions.end(); ++iter) {
+      AddExtension(iter->get());
+    }
 
-  ready_.Signal();
-  content::NotificationService::current()->Notify(
-      extensions::NOTIFICATION_EXTENSIONS_READY_DEPRECATED,
-      content::Source<content::BrowserContext>(browser_context_),
-      content::NotificationService::NoDetails());
+    ready_.Signal();
+    content::NotificationService::current()->Notify(
+        extensions::NOTIFICATION_EXTENSIONS_READY_DEPRECATED,
+        content::Source<content::BrowserContext>(browser_context_),
+        content::NotificationService::NoDetails());
+  }
 }
 
 void AtomExtensionSystem::Shared::Shutdown() {
 }
 
+ExtensionService* AtomExtensionSystem::Shared::extension_service() {
+  return is_ready() ? this : nullptr;
+}
+
 ServiceWorkerManager* AtomExtensionSystem::Shared::service_worker_manager() {
   return service_worker_manager_.get();
+}
+
+scoped_refptr<ValueStoreFactory> AtomExtensionSystem::Shared::store_factory() {
+  return store_factory_;
 }
 
 StateStore* AtomExtensionSystem::Shared::state_store() {
@@ -118,131 +143,14 @@ ContentVerifier* AtomExtensionSystem::Shared::content_verifier() {
   return nullptr;
 }
 
-//
-// AtomExtensionSystem
-//
-AtomExtensionSystem::AtomExtensionSystem(
-    atom::AtomBrowserContext* browser_context)
-    : registry_(ExtensionRegistry::Get(browser_context)),
-      browser_context_(browser_context),
-      extension_prefs_(ExtensionPrefs::Get(browser_context_)),
-      store_factory_(new ValueStoreFactoryImpl(browser_context->GetPath())) {
-  shared_ =
-      AtomExtensionSystemSharedFactory::GetForBrowserContext(browser_context_);
-}
-
-AtomExtensionSystem::~AtomExtensionSystem() {
-}
-
-void AtomExtensionSystem::Shutdown() {
-}
-
-void AtomExtensionSystem::InitForRegularProfile(bool extensions_enabled) {
-  CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-
-  if (shared_user_script_master())
-    return;  // Already initialized.
-
-  shared_->set_extension_service(this);
-  shared_->info_map();
-  shared_->Init(extensions_enabled);
-  registrar_.Add(this, content::NOTIFICATION_RENDERER_PROCESS_TERMINATED,
-                 content::NotificationService::AllBrowserContextsAndSources());
-  registrar_.Add(this, extensions::NOTIFICATION_CRX_INSTALLER_DONE,
-                 content::NotificationService::AllSources());
-  registrar_.Add(this, atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST,
-                 content::NotificationService::AllSources());
-  registrar_.Add(this, atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
-                 content::NotificationService::AllSources());
-}
-
-ExtensionService* AtomExtensionSystem::extension_service() {
-  return shared_->extension_service();
-}
-
-RuntimeData* AtomExtensionSystem::runtime_data() {
-  return shared_->runtime_data();
-}
-
-ManagementPolicy* AtomExtensionSystem::management_policy() {
-  return shared_->management_policy();
-}
-
-ServiceWorkerManager* AtomExtensionSystem::service_worker_manager() {
-  return shared_->service_worker_manager();
-}
-
-SharedUserScriptMaster* AtomExtensionSystem::shared_user_script_master() {
-  return shared_->shared_user_script_master();
-}
-
-StateStore* AtomExtensionSystem::state_store() {
-  return shared_->state_store();
-}
-
-StateStore* AtomExtensionSystem::rules_store() {
-  return shared_->rules_store();
-}
-
-scoped_refptr<ValueStoreFactory> AtomExtensionSystem::store_factory() {
-  return store_factory_;
-}
-
-InfoMap* AtomExtensionSystem::info_map() { return shared_->info_map(); }
-
-const OneShotEvent& AtomExtensionSystem::ready() const {
-  return shared_->ready();
-}
-
-QuotaService* AtomExtensionSystem::quota_service() {
-  return shared_->quota_service();
-}
-
-AppSorting* AtomExtensionSystem::app_sorting() {
-  return shared_->app_sorting();
-}
-
-ContentVerifier* AtomExtensionSystem::content_verifier() {
-  return shared_->content_verifier();
-}
-
-std::unique_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
-    const Extension* extension) {
-  return make_scoped_ptr(new ExtensionSet());
-}
-
-void AtomExtensionSystem::RegisterExtensionWithRequestContexts(
-    const Extension* extension,
-    const base::Closure& callback) {
-  base::Time install_time;
-  bool incognito_enabled = false;
-  bool notifications_disabled = false;
-
-  BrowserThread::PostTaskAndReply(
-      BrowserThread::IO, FROM_HERE,
-      base::Bind(&InfoMap::AddExtension, info_map(),
-                 extension, install_time, incognito_enabled,
-                 notifications_disabled),
-      callback);
-}
-
-void AtomExtensionSystem::UnregisterExtensionWithRequestContexts(
-    const std::string& extension_id,
-    const extensions::UnloadedExtensionInfo::Reason reason) {
-  BrowserThread::PostTask(
-      BrowserThread::IO,
-      FROM_HERE,
-      base::Bind(&InfoMap::RemoveExtension, info_map(), extension_id, reason));
-}
-
-void AtomExtensionSystem::OnExtensionRegisteredWithRequestContexts(
+void AtomExtensionSystem::Shared::OnExtensionRegisteredWithRequestContexts(
     scoped_refptr<const Extension> extension) {
   registry_->AddReady(extension);
   if (registry_->enabled_extensions().Contains(extension->id()))
     registry_->TriggerOnReady(extension.get());
 }
 
-bool AtomExtensionSystem::IsExtensionEnabled(
+bool AtomExtensionSystem::Shared::IsExtensionEnabled(
     const std::string& extension_id) const {
   if (registry_->enabled_extensions().Contains(extension_id) ||
       registry_->terminated_extensions().Contains(extension_id)) {
@@ -252,12 +160,13 @@ bool AtomExtensionSystem::IsExtensionEnabled(
   return false;
 }
 
-const Extension* AtomExtensionSystem::GetInstalledExtension(
+const Extension* AtomExtensionSystem::Shared::GetInstalledExtension(
     const std::string& id) const {
   return registry_->GetExtensionById(id, ExtensionRegistry::EVERYTHING);
 }
 
-void AtomExtensionSystem::EnableExtension(const std::string& extension_id) {
+void AtomExtensionSystem::Shared::EnableExtension(
+    const std::string& extension_id) {
   CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
 
   if (IsExtensionEnabled(extension_id))
@@ -279,8 +188,8 @@ void AtomExtensionSystem::EnableExtension(const std::string& extension_id) {
       content::Details<const Extension>(extension));
 }
 
-void AtomExtensionSystem::DisableExtension(const std::string& extension_id,
-                                        int disable_reasons) {
+void AtomExtensionSystem::Shared::DisableExtension(
+      const std::string& extension_id, int disable_reasons) {
   CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
 
   // The extension may have been disabled already. Just add the disable reasons.
@@ -323,7 +232,7 @@ void AtomExtensionSystem::DisableExtension(const std::string& extension_id,
   }
 }
 
-void AtomExtensionSystem::NotifyExtensionUnloaded(
+void AtomExtensionSystem::Shared::NotifyExtensionUnloaded(
     const Extension* extension,
     extensions::UnloadedExtensionInfo::Reason reason) {
   extensions::UnloadedExtensionInfo details(extension, reason);
@@ -344,10 +253,12 @@ void AtomExtensionSystem::NotifyExtensionUnloaded(
       host->Send(new ExtensionMsg_Unloaded(extension->id()));
   }
 
-  UnregisterExtensionWithRequestContexts(extension->id(), reason);
+  AtomExtensionSystemFactory::GetInstance()->
+      GetForBrowserContext(browser_context_)->
+        UnregisterExtensionWithRequestContexts(extension->id(), reason);
 }
 
-const Extension* AtomExtensionSystem::AddExtension(
+const Extension* AtomExtensionSystem::Shared::AddExtension(
                                         const Extension* extension) {
   if (registry_->GetExtensionById(extension->id(),
                                   ExtensionRegistry::IncludeFlag::EVERYTHING))
@@ -364,12 +275,15 @@ const Extension* AtomExtensionSystem::AddExtension(
   return extension;
 }
 
-void AtomExtensionSystem::NotifyExtensionLoaded(const Extension* extension) {
-  RegisterExtensionWithRequestContexts(
-      extension,
-      base::Bind(
-          &AtomExtensionSystem::OnExtensionRegisteredWithRequestContexts,
-          AsWeakPtr(), base::RetainedRef(extension)));
+void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
+      const Extension* extension) {
+  AtomExtensionSystemFactory::GetInstance()->
+      GetForBrowserContext(browser_context_)->
+        RegisterExtensionWithRequestContexts(
+          extension,
+          base::Bind(
+        &AtomExtensionSystem::Shared::OnExtensionRegisteredWithRequestContexts,
+            AsWeakPtr(), base::RetainedRef(extension)));
 
   for (content::RenderProcessHost::iterator i(
           content::RenderProcessHost::AllHostsIterator());
@@ -403,23 +317,18 @@ void AtomExtensionSystem::NotifyExtensionLoaded(const Extension* extension) {
   registry_->TriggerOnInstalled(extension, false);
 }
 
-const Extension* AtomExtensionSystem::GetExtensionById(
+const Extension* AtomExtensionSystem::Shared::GetExtensionById(
     const std::string& id,
     bool include_disabled) const {
   return ExtensionRegistry::Get(browser_context_)->
       GetExtensionById(id, include_disabled);
 }
 
-bool AtomExtensionSystem::is_ready() {
+bool AtomExtensionSystem::Shared::is_ready() {
   return ready().is_signaled();
 }
 
-void AtomExtensionSystem::InstallUpdate(const std::string& extension_id,
-                                         const base::FilePath& temp_dir) {
-  NOTREACHED();
-}
-
-void AtomExtensionSystem::Observe(int type,
+void AtomExtensionSystem::Shared::Observe(int type,
                                const content::NotificationSource& source,
                                const content::NotificationDetails& details) {
   switch (type) {
@@ -509,4 +418,122 @@ void AtomExtensionSystem::Observe(int type,
       NOTREACHED() << "Unexpected notification type.";
   }
 }
+
+
+//
+// AtomExtensionSystem
+//
+AtomExtensionSystem::AtomExtensionSystem(
+    atom::AtomBrowserContext* browser_context)
+    : browser_context_(browser_context) {
+  shared_ =
+      AtomExtensionSystemSharedFactory::GetForBrowserContext(browser_context_);
+
+  if (!browser_context_->IsOffTheRecord()) {
+    shared_->InitPrefs();
+  }
+}
+
+AtomExtensionSystem::~AtomExtensionSystem() {
+}
+
+void AtomExtensionSystem::Shutdown() {
+}
+
+void AtomExtensionSystem::InitForRegularProfile(bool extensions_enabled) {
+  CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
+
+  if (shared_user_script_master() || extension_service())
+    return;  // Already initialized.
+
+  shared_->info_map();
+  shared_->Init(extensions_enabled);
+}
+
+ExtensionService* AtomExtensionSystem::extension_service() {
+  return shared_->extension_service();
+}
+
+RuntimeData* AtomExtensionSystem::runtime_data() {
+  return shared_->runtime_data();
+}
+
+ManagementPolicy* AtomExtensionSystem::management_policy() {
+  return shared_->management_policy();
+}
+
+ServiceWorkerManager* AtomExtensionSystem::service_worker_manager() {
+  return shared_->service_worker_manager();
+}
+
+SharedUserScriptMaster* AtomExtensionSystem::shared_user_script_master() {
+  return shared_->shared_user_script_master();
+}
+
+StateStore* AtomExtensionSystem::state_store() {
+  return shared_->state_store();
+}
+
+StateStore* AtomExtensionSystem::rules_store() {
+  return shared_->rules_store();
+}
+
+scoped_refptr<ValueStoreFactory> AtomExtensionSystem::store_factory() {
+  return shared_->store_factory();
+}
+
+InfoMap* AtomExtensionSystem::info_map() { return shared_->info_map(); }
+
+const OneShotEvent& AtomExtensionSystem::ready() const {
+  return shared_->ready();
+}
+
+QuotaService* AtomExtensionSystem::quota_service() {
+  return shared_->quota_service();
+}
+
+AppSorting* AtomExtensionSystem::app_sorting() {
+  return shared_->app_sorting();
+}
+
+ContentVerifier* AtomExtensionSystem::content_verifier() {
+  return shared_->content_verifier();
+}
+
+std::unique_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
+    const Extension* extension) {
+  return make_scoped_ptr(new ExtensionSet());
+}
+
+void AtomExtensionSystem::InstallUpdate(const std::string& extension_id,
+                                         const base::FilePath& temp_dir) {
+  NOTREACHED();
+}
+
+void AtomExtensionSystem::RegisterExtensionWithRequestContexts(
+    const Extension* extension,
+    const base::Closure& callback) {
+  base::Time install_time;
+  bool notifications_disabled = true;
+  bool incognito_enabled =
+      AtomExtensionsBrowserClient::IsIncognitoEnabled(
+        extension->id(), browser_context_);
+
+  BrowserThread::PostTaskAndReply(
+      BrowserThread::IO, FROM_HERE,
+      base::Bind(&InfoMap::AddExtension, info_map(),
+                 extension, install_time, incognito_enabled,
+                 notifications_disabled),
+      callback);
+}
+
+void AtomExtensionSystem::UnregisterExtensionWithRequestContexts(
+    const std::string& extension_id,
+    const extensions::UnloadedExtensionInfo::Reason reason) {
+  BrowserThread::PostTask(
+      BrowserThread::IO,
+      FROM_HERE,
+      base::Bind(&InfoMap::RemoveExtension, info_map(), extension_id, reason));
+}
+
 }  // namespace extensions

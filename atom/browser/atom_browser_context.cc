@@ -94,12 +94,14 @@ AtomBrowserContext::AtomBrowserContext(const std::string& partition,
 #endif
       cert_verifier_(new AtomCertVerifier),
 #if defined(ENABLE_EXTENSIONS)
-      network_delegate_(new extensions::AtomExtensionsNetworkDelegate(this)) {
+      network_delegate_(new extensions::AtomExtensionsNetworkDelegate(this)),
 #else
-      network_delegate_(new AtomNetworkDelegate) {
+      network_delegate_(new AtomNetworkDelegate),
 #endif
+      partition_(partition) {
   if (in_memory) {
     original_context_ = AtomBrowserContext::From(partition, false);
+    original_context()->otr_context_ = this;
   }
 }
 
@@ -121,14 +123,41 @@ AtomBrowserContext::~AtomBrowserContext() {
   if (user_prefs_registrar_.get())
     user_prefs_registrar_->RemoveAll();
 
+  if (otr_context_.get()) {
+    // destroy the otr profile
+    otr_context()->user_prefs()->ClearMutableValues();
+    otr_context_.swap(nullptr);
+  } else {
+    ExtensionPrefValueMapFactory::GetForBrowserContext(this)->
+        ClearAllIncognitoSessionOnlyPreferences();
+  }
+
   BrowserContextDependencyManager::GetInstance()->
       DestroyBrowserContextServices(this);
-
 #endif
 }
 
 net::NetworkDelegate* AtomBrowserContext::CreateNetworkDelegate() {
   return network_delegate_;
+}
+
+AtomBrowserContext* AtomBrowserContext::original_context() {
+  if (!IsOffTheRecord()) {
+    return this;
+  }
+  return static_cast<AtomBrowserContext*>(original_context_.get());
+}
+
+AtomBrowserContext* AtomBrowserContext::otr_context() {
+  if (IsOffTheRecord()) {
+    return this;
+  }
+
+  if (otr_context_.get()) {
+    return static_cast<AtomBrowserContext*>(otr_context_.get());
+  }
+
+  return nullptr;
 }
 
 std::string AtomBrowserContext::GetUserAgent() {
@@ -253,49 +282,46 @@ void AtomBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
 
 #if defined(ENABLE_EXTENSIONS)
 void AtomBrowserContext::RegisterUserPrefs() {
+  scoped_refptr<PrefStore> extension_prefs = new ExtensionPrefStore(
+      ExtensionPrefValueMapFactory::GetForBrowserContext(original_context()),
+      IsOffTheRecord());
+  user_prefs_registrar_.reset(new PrefChangeRegistrar());
+
+  if (IsOffTheRecord()) {
+    user_prefs_.reset(
+        original_context()->user_prefs()->CreateIncognitoPrefService(
+          extension_prefs.get(), overlay_pref_names_));
+    user_prefs::UserPrefs::Set(this, user_prefs_.get());
+    user_prefs_registrar_->Init(user_prefs_.get());
+    OnPrefsLoaded(true);
+    return;
+  }
+
+  extensions::AtomBrowserClientExtensionsPart::RegisteryProfilePrefs(
+      pref_registry_.get());
   extensions::ExtensionPrefs::RegisterProfilePrefs(pref_registry_.get());
 
   BrowserContextDependencyManager::GetInstance()->
       RegisterProfilePrefsForServices(this, pref_registry_.get());
 
-  extensions::AtomBrowserClientExtensionsPart::RegisteryProfilePrefs(
-      pref_registry_.get());
-
+  // create profile prefs
   base::FilePath filepath = GetPath().Append(
       FILE_PATH_LITERAL("UserPrefs"));
-
-  syncable_prefs::PrefServiceSyncableFactory factory;
   scoped_refptr<base::SequencedTaskRunner> task_runner =
       JsonPrefStore::GetTaskRunnerForFile(
           filepath, BrowserThread::GetBlockingPool());
   scoped_refptr<JsonPrefStore> pref_store =
       new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
 
+  // prepare factory
   bool async = false;
+  syncable_prefs::PrefServiceSyncableFactory factory;
   factory.set_async(async);
+  factory.set_extension_prefs(extension_prefs);
   factory.set_user_prefs(pref_store);
-
-  if (extensions::ExtensionsBrowserClient::Get()) {
-    scoped_refptr<PrefStore> extension_prefs = new ExtensionPrefStore(
-        ExtensionPrefValueMapFactory::GetForBrowserContext(this),
-        false);
-    factory.set_extension_prefs(extension_prefs);
-  }
   user_prefs_ = factory.CreateSyncable(pref_registry_.get());
-
-  user_prefs_registrar_.reset(new PrefChangeRegistrar());
-  if (IsOffTheRecord()) {
-    PrefStore* otr_extension_prefs = new ExtensionPrefStore(
-        ExtensionPrefValueMapFactory::GetForBrowserContext(this),
-        true);
-    auto otr_user_prefs = user_prefs_->CreateIncognitoPrefService(
-                              otr_extension_prefs, overlay_pref_names_);
-    user_prefs_registrar_->Init(otr_user_prefs);
-    user_prefs::UserPrefs::Set(this, otr_user_prefs);
-  } else {
-    user_prefs_registrar_->Init(user_prefs_.get());
-    user_prefs::UserPrefs::Set(this, user_prefs_.get());
-  }
+  user_prefs::UserPrefs::Set(this, user_prefs_.get());
+  user_prefs_registrar_->Init(user_prefs_.get());
 
   if (async) {
     user_prefs_->AddPrefInitObserver(base::Bind(
@@ -312,7 +338,7 @@ void AtomBrowserContext::OnPrefsLoaded(bool success) {
   BrowserContextDependencyManager::GetInstance()->
       CreateBrowserContextServices(this);
 
-  if (extensions::ExtensionsBrowserClient::Get()) {
+  if (extensions::ExtensionsBrowserClient::Get() && !IsOffTheRecord()) {
     extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
   }
 

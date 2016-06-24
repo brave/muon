@@ -56,8 +56,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomCertVerifier* cert_verifier() const { return cert_verifier_; }
   AtomNetworkDelegate* network_delegate() const { return network_delegate_; }
 
-  AtomBrowserContext* original_context() const {
-    return static_cast<AtomBrowserContext*>(original_context_.get()); }
+  AtomBrowserContext* original_context();
+  AtomBrowserContext* otr_context();
 
 #if defined(ENABLE_EXTENSIONS)
   user_prefs::PrefRegistrySyncable* pref_registry() const {
@@ -68,6 +68,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
   PrefChangeRegistrar* user_prefs_change_registrar() const {
     return user_prefs_registrar_.get(); }
+
+  const std::string& partition() const { return partition_; }
 
   void AddOverlayPref(const std::string name) {
     overlay_pref_names_.push_back(name.c_str()); }
@@ -92,6 +94,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomNetworkDelegate* network_delegate_;
 
   scoped_refptr<brightray::BrowserContext> original_context_;
+  scoped_refptr<brightray::BrowserContext> otr_context_;
+  const std::string partition_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserContext);
 };

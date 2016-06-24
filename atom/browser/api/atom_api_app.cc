@@ -232,8 +232,6 @@ void App::Observe(
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC
       if (Extension::IsBackgroundPageUrl(url, browser_context)) {
-        v8::Locker locker(isolate());
-        v8::HandleScope handle_scope(isolate());
         WebContents::CreateFrom(isolate(), web_contents);
       }
 #endif

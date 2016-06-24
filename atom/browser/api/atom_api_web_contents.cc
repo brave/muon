@@ -931,7 +931,7 @@ WebContents::Type WebContents::GetType() const {
 }
 
 bool WebContents::Equal(const WebContents* web_contents) const {
-  return GetID() == web_contents->GetID();
+  return ID() == web_contents->ID();
 }
 
 void WebContents::Reload(bool ignore_cache) {

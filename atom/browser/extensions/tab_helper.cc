@@ -12,9 +12,13 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
+#include "extensions/browser/component_extension_resource_manager.h"
+#include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extensions_browser_client.h"
+#include "extensions/browser/file_reader.h"
 #include "extensions/common/extension_messages.h"
 #include "native_mate/dictionary.h"
+#include "ui/base/resource/resource_bundle.h"
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
 
@@ -99,6 +103,60 @@ bool TabHelper::ExecuteScriptInTab(
   if (!executor)
     return false;
 
+  std::string file;
+  options.Get("file", &file);
+
+  if (!file.empty()) {
+    ExtensionRegistry* registry =
+        ExtensionRegistry::Get(web_contents()->GetBrowserContext());
+    if (!registry)
+      return false;
+
+    const Extension* extension =
+        registry->enabled_extensions().GetByID(extension_id);
+    if (!extension)
+      return false;
+
+    ExtensionResource resource = extension->GetResource(file);
+
+    if (resource.extension_root().empty() || resource.relative_path().empty()) {
+      return false;
+    }
+
+    int resource_id;
+    const ComponentExtensionResourceManager*
+        component_extension_resource_manager =
+            ExtensionsBrowserClient::Get()
+                ->GetComponentExtensionResourceManager();
+
+    if (component_extension_resource_manager &&
+        component_extension_resource_manager->IsComponentExtensionResource(
+            resource.extension_root(),
+            resource.relative_path(),
+            &resource_id)) {
+      const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+      file = rb.GetRawDataResource(resource_id).as_string();
+    } else {
+      scoped_refptr<FileReader> file_reader(new FileReader(
+          resource,
+          base::Bind(&TabHelper::ExecuteScript, base::Unretained(this),
+            extension_id, options)));
+      file_reader->Start();
+      return true;
+    }
+  }
+
+  ExecuteScript(extension_id, options, true, file.empty() ? code_string : file);
+  return true;
+}
+
+void TabHelper::ExecuteScript(
+    const std::string extension_id,
+    const mate::Dictionary& options,
+    bool success,
+    const std::string& code_string) {
+  extensions::ScriptExecutor* executor = script_executor();
+
   bool all_frames = false;
   options.Get("allFrames", &all_frames);
   extensions::ScriptExecutor::FrameScope frame_scope =
@@ -144,7 +202,6 @@ bool TabHelper::ExecuteScriptInTab(
       false,  // user gesture
       extensions::ScriptExecutor::NO_RESULT,
       extensions::ScriptExecutor::ExecuteScriptCallback());
-  return true;
 }
 
 // static
@@ -171,7 +228,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   auto tab_id = IdForTab(contents);
   auto window_id = IdForWindowContainingTab(contents);
 
-  base::DictionaryValue* result = new base::DictionaryValue();
+  std::unique_ptr<base::DictionaryValue> result(new base::DictionaryValue);
 
   result->SetInteger(keys::kIdKey, tab_id);
   result->SetInteger(keys::kTabIdKey, tab_id);
@@ -183,7 +240,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetString(keys::kTitleKey, contents->GetTitle());
   result->SetString(keys::kStatusKey, contents->IsLoading()
       ? "loading" : "complete");
-  return result;
+  return result.release();
 }
 
 // static

@@ -13,6 +13,7 @@
 
 namespace atom {
 class AtomBrowserContext;
+class Browser;
 }
 
 namespace extensions {
@@ -20,7 +21,7 @@ namespace extensions {
 // Support for ProcessManager. Controls cases where Chrome wishes to disallow
 // extension background pages or defer their creation.
 class AtomProcessManagerDelegate : public ProcessManagerDelegate,
-                                     public content::NotificationObserver {
+                                   public content::NotificationObserver {
  public:
   AtomProcessManagerDelegate();
   ~AtomProcessManagerDelegate() override;
@@ -37,6 +38,7 @@ class AtomProcessManagerDelegate : public ProcessManagerDelegate,
 
  private:
   // Notification handlers.
+  void OnBrowserWindowReady(atom::Browser* browser);
   void OnProfileCreated(atom::AtomBrowserContext* profile);
   void OnProfileDestroyed(atom::AtomBrowserContext* profile);
 
