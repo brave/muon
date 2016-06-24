@@ -43,10 +43,7 @@ class ExtensionRegistry;
 class ValueStoreFactory;
 
 
-class AtomExtensionSystem : public ExtensionSystem,
-                            public ExtensionService,
-                            public base::SupportsWeakPtr<AtomExtensionSystem>,
-                            public content::NotificationObserver {
+class AtomExtensionSystem : public ExtensionSystem {
  public:
   explicit AtomExtensionSystem(atom::AtomBrowserContext* browser_context);
   ~AtomExtensionSystem() override;
@@ -81,35 +78,18 @@ class AtomExtensionSystem : public ExtensionSystem,
   void InstallUpdate(const std::string& extension_id,
                       const base::FilePath& temp_dir) override;
 
-  // ExtensionService implementation
-  bool IsExtensionEnabled(const std::string& extension_id) const override;
-  const Extension* GetInstalledExtension(const std::string& id) const override;
-  void EnableExtension(const std::string& extension_id) override;
-  void DisableExtension(const std::string& extension_id,
-                        int disable_reasons) override;
-  void NotifyExtensionLoaded(const Extension* extension) override;
-  void NotifyExtensionUnloaded(const Extension* extension,
-                               UnloadedExtensionInfo::Reason reason) override;
-  const Extension* AddExtension(const Extension* extension) override;
-  const Extension* GetExtensionById(
-      const std::string& id,
-      bool include_disabled) const override;
-  bool is_ready() override;
  private:
-  void OnExtensionRegisteredWithRequestContexts(
-      scoped_refptr<const Extension> extension);
-  // content::NotificationObserver implementation:
-  void Observe(int type,
-               const content::NotificationSource& source,
-               const content::NotificationDetails& details) override;
-
   friend class AtomExtensionSystemSharedFactory;
 
-  class Shared : public KeyedService {
+  class Shared : public KeyedService,
+                 public ExtensionService,
+                 public content::NotificationObserver,
+                 public base::SupportsWeakPtr<Shared> {
    public:
     explicit Shared(atom::AtomBrowserContext* browser_context);
     ~Shared() override;
 
+    void InitPrefs();
     // This must not be called until all the providers have been created.
     void RegisterManagementPolicyProviders();
     void Init(bool extensions_enabled);
@@ -117,11 +97,10 @@ class AtomExtensionSystem : public ExtensionSystem,
     // KeyedService implementation.
     void Shutdown() override;
 
+    scoped_refptr<ValueStoreFactory> store_factory();
     StateStore* state_store();
     StateStore* rules_store();
-    ExtensionService* extension_service() { return extension_service_; }
-    void set_extension_service(ExtensionService* extension_service)
-                                  { extension_service_ = extension_service; }
+    ExtensionService* extension_service();
     RuntimeData* runtime_data();
     ManagementPolicy* management_policy();
     ServiceWorkerManager* service_worker_manager();
@@ -132,9 +111,40 @@ class AtomExtensionSystem : public ExtensionSystem,
     const OneShotEvent& ready() const { return ready_; }
     ContentVerifier* content_verifier();
 
+    // ExtensionService implementation
+    bool IsExtensionEnabled(const std::string& extension_id) const override;
+    const Extension* GetInstalledExtension(
+                                        const std::string& id) const override;
+    void EnableExtension(const std::string& extension_id) override;
+    void DisableExtension(const std::string& extension_id,
+                          int disable_reasons) override;
+    void NotifyExtensionLoaded(const Extension* extension) override;
+    void NotifyExtensionUnloaded(const Extension* extension,
+                                UnloadedExtensionInfo::Reason reason) override;
+    const Extension* AddExtension(const Extension* extension) override;
+    const Extension* GetExtensionById(
+        const std::string& id,
+        bool include_disabled) const override;
+    bool is_ready() override;
+
    private:
-    content::BrowserContext* browser_context_;  // Not owned.
-    ExtensionService* extension_service_;  // Not owned.
+    // content::NotificationObserver implementation:
+    void Observe(int type,
+                 const content::NotificationSource& source,
+                 const content::NotificationDetails& details) override;
+
+    void OnExtensionRegisteredWithRequestContexts(
+        scoped_refptr<const Extension> extension);
+
+    content::NotificationRegistrar registrar_;
+
+    ExtensionRegistry* registry_;  // Not owned.
+
+    content::BrowserContext* browser_context_;
+
+    extensions::ExtensionPrefs* extension_prefs_;
+
+    scoped_refptr<ValueStoreFactory> store_factory_;
 
     std::unique_ptr<RuntimeData> runtime_data_;
     std::unique_ptr<QuotaService> quota_service_;
@@ -155,15 +165,7 @@ class AtomExtensionSystem : public ExtensionSystem,
     OneShotEvent ready_;
   };
 
-  content::NotificationRegistrar registrar_;
-
-  ExtensionRegistry* registry_;  // Not owned.
-
   content::BrowserContext* browser_context_;
-
-  extensions::ExtensionPrefs* extension_prefs_;
-
-  scoped_refptr<ValueStoreFactory> store_factory_;
 
   Shared* shared_;
 

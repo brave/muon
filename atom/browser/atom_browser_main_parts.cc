@@ -18,6 +18,9 @@
 #include "base/command_line.h"
 #include "base/thread_task_runner_handle.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/chrome_notification_types.h"
+#include "content/public/browser/navigation_details.h"
+#include "content/public/browser/notification_service.h"
 #include "v8/include/v8-debug.h"
 
 #if defined(USE_X11)
@@ -155,6 +158,11 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   Browser::Get()->WillFinishLaunching();
   Browser::Get()->DidFinishLaunching();
 #endif
+
+  content::NotificationService::current()->Notify(
+      chrome::NOTIFICATION_BROWSER_WINDOW_READY,
+      content::Source<Browser>(Browser::Get()),
+      content::NotificationService::NoDetails());
 }
 
 bool AtomBrowserMainParts::MainMessageLoopRun(int* result_code) {

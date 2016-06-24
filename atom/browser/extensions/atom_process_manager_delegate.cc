@@ -5,6 +5,8 @@
 #include "atom/browser/extensions/atom_process_manager_delegate.h"
 
 #include "atom/browser/atom_browser_context.h"
+#include "atom/browser/atom_browser_main_parts.h"
+#include "atom/browser/browser.h"
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "build/build_config.h"
@@ -26,6 +28,9 @@ AtomProcessManagerDelegate::AtomProcessManagerDelegate() {
   registrar_.Add(this,
                  chrome::NOTIFICATION_PROFILE_DESTROYED,
                  content::NotificationService::AllSources());
+  registrar_.Add(this,
+                 chrome::NOTIFICATION_BROWSER_WINDOW_READY,
+                 content::NotificationService::AllSources());
 }
 
 AtomProcessManagerDelegate::~AtomProcessManagerDelegate() {
@@ -38,7 +43,7 @@ bool AtomProcessManagerDelegate::IsBackgroundPageAllowed(
 
 bool AtomProcessManagerDelegate::DeferCreatingStartupBackgroundHosts(
     content::BrowserContext* context) const {
-  return !ExtensionSystem::Get(context)->ready().is_signaled();
+  return !atom::Browser::Get()->is_ready();
 }
 
 void AtomProcessManagerDelegate::Observe(
@@ -46,6 +51,11 @@ void AtomProcessManagerDelegate::Observe(
     const content::NotificationSource& source,
     const content::NotificationDetails& details) {
   switch (type) {
+    case chrome::NOTIFICATION_BROWSER_WINDOW_READY: {
+      atom::Browser* browser = content::Source<atom::Browser>(source).ptr();
+      OnBrowserWindowReady(browser);
+      break;
+    }
     case chrome::NOTIFICATION_PROFILE_CREATED: {
       AtomBrowserContext* browser_context =
         content::Source<AtomBrowserContext>(source).ptr();
@@ -63,15 +73,31 @@ void AtomProcessManagerDelegate::Observe(
   }
 }
 
+void AtomProcessManagerDelegate::OnBrowserWindowReady(atom::Browser* browser) {
+  auto browser_context = atom::AtomBrowserMainParts::Get()->browser_context();
+
+  ExtensionSystem* system = ExtensionSystem::Get(browser_context);
+
+  if (!system)
+    return;
+
+  if (!system->ready().is_signaled())
+    return;
+
+  ProcessManager* manager = ProcessManager::Get(browser_context);
+  DCHECK(manager);
+  DCHECK_EQ(browser_context, manager->browser_context());
+  manager->MaybeCreateStartupBackgroundHosts();
+}
+
 void AtomProcessManagerDelegate::OnProfileCreated(
                                         AtomBrowserContext* browser_context) {
-  // TODO(bridiver) - link regular and incognito contexts
   // Incognito browser_contexts are handled by their original browser_context.
-  // if (browser_context->IsOffTheRecord())
-  //   return;
+  if (browser_context->IsOffTheRecord())
+    return;
 
   // The browser_context can be created before the extension system is ready.
-  if (DeferCreatingStartupBackgroundHosts(browser_context))
+  if (!ExtensionSystem::Get(browser_context)->ready().is_signaled())
     return;
 
   // The browser_context might have been initialized asynchronously (in

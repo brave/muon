@@ -172,10 +172,12 @@ var bindings = {
   },
 
   executeScript: function (tabId, details, cb) {
+    if (typeof tabId !== 'number') {
+      throw 'executeScript: must specify tab id'
+    }
     if (cb) {
       // TODO(bridiver) implement callback
-      console.warn('executeScript: `callback` is not supported', details)
-      return
+      throw 'executeScript: `callback` is not supported'
     }
     ipc.send('chrome-tabs-execute-script', extensionId, tabId, details)
   }

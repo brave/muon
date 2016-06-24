@@ -85,6 +85,12 @@ class TabHelper : public content::WebContentsObserver,
   explicit TabHelper(content::WebContents* contents);
   friend class content::WebContentsUserData<TabHelper>;
 
+  void ExecuteScript(
+      std::string extension_id,
+      const mate::Dictionary& options,
+      bool success,
+      const std::string& code_string);
+
   // content::WebContentsObserver overrides.
   void RenderViewCreated(content::RenderViewHost* render_view_host) override;
   void RenderFrameCreated(content::RenderFrameHost* host) override;

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "atom/browser/atom_browser_context.h"
+#include "atom/browser/browser.h"
 #include "atom/browser/extensions/api/atom_extensions_api_client.h"
 #include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
 #include "atom/browser/extensions/atom_extension_host_delegate.h"
@@ -222,6 +223,7 @@ class AtomComponentExtensionResourceManager
       const base::FilePath& extension_path,
       const base::FilePath& resource_path,
       int* resource_id) const override {
+    // TODO(bridiver) - bundle extension resources
     return false;
   };
 
@@ -245,7 +247,7 @@ AtomExtensionsBrowserClient::CreateExtensionApiFrameIdMapHelper(
 }
 
 bool AtomExtensionsBrowserClient::IsShuttingDown() {
-  return false;
+  return atom::Browser::Get()->is_shutting_down();
 }
 
 bool AtomExtensionsBrowserClient::AreExtensionsDisabled(
@@ -270,21 +272,17 @@ bool AtomExtensionsBrowserClient::IsSameContext(
 
 bool AtomExtensionsBrowserClient::HasOffTheRecordContext(
     content::BrowserContext* context) {
-  return false;
+  return true;
 }
 
 content::BrowserContext* AtomExtensionsBrowserClient::GetOffTheRecordContext(
     content::BrowserContext* context) {
-  return nullptr;
+  return static_cast<atom::AtomBrowserContext*>(context)->otr_context();
 }
 
 content::BrowserContext* AtomExtensionsBrowserClient::GetOriginalContext(
     content::BrowserContext* context) {
-  if (context->IsOffTheRecord()) {
-    return static_cast<atom::AtomBrowserContext*>(context)->original_context();
-  } else {
-    return context;
-  }
+  return static_cast<atom::AtomBrowserContext*>(context)->original_context();
 }
 
 bool AtomExtensionsBrowserClient::IsGuestSession(
@@ -296,7 +294,14 @@ bool AtomExtensionsBrowserClient::IsGuestSession(
 bool AtomExtensionsBrowserClient::IsIncognitoEnabled(
       const std::string& extension_id,
       content::BrowserContext* context) {
-  const Extension* extension = ExtensionRegistry::Get(context)->
+  auto original_context =
+      static_cast<atom::AtomBrowserContext*>(context)->original_context();
+
+  auto registry = ExtensionRegistry::Get(original_context);
+  if (!registry)
+    return false;
+
+  const Extension* extension = registry->
       GetExtensionById(extension_id, ExtensionRegistry::ENABLED);
   if (extension) {
     if (!util::CanBeIncognitoEnabled(extension))
@@ -304,7 +309,8 @@ bool AtomExtensionsBrowserClient::IsIncognitoEnabled(
     if (extension->location() == Manifest::COMPONENT)
       return true;
   }
-  return ExtensionPrefs::Get(context)->IsIncognitoEnabled(extension_id);
+
+  return true;
 }
 
 bool AtomExtensionsBrowserClient::CanExtensionCrossIncognito(

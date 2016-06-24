@@ -504,7 +504,8 @@ mate::Handle<Session> Session::CreateFrom(
 // static
 mate::Handle<Session> Session::FromPartition(
     v8::Isolate* isolate, const std::string& partition, bool in_memory) {
-  auto browser_context = atom::AtomBrowserContext::From(partition, in_memory);
+  auto browser_context = atom::AtomBrowserContext::From(
+      partition == "default" ? "" : partition, in_memory);
   return CreateFrom(isolate,
                     static_cast<AtomBrowserContext*>(browser_context.get()));
 }
