@@ -62,7 +62,7 @@ var bindings = {
   onCreated: {
     addListener: function (cb) {
       ipc.send('register-chrome-tabs-created', extensionId);
-      ipc.on('chrome-tabs-created', function(evt, tab) {
+      ipc.on('chrome-tabs-created', function(evt, tabId, tab) {
         cb(tab);
       });
     }

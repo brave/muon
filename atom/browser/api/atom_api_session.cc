@@ -45,6 +45,10 @@
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 
+#if defined(ENABLE_EXTENSIONS)
+#include "extensions/browser/extensions_browser_client.h"
+#endif
+
 using content::BrowserThread;
 using content::StoragePartition;
 
@@ -488,6 +492,16 @@ v8::Local<v8::Value> Session::UserPrefs(v8::Isolate* isolate) {
   return v8::Local<v8::Value>::New(isolate, user_prefs_);
 }
 
+bool Session::Equal(Session* session) const {
+#if defined(ENABLE_EXTENSIONS)
+  return extensions::ExtensionsBrowserClient::Get()->IsSameContext(
+                                        browser_context(),
+                                        session->browser_context());
+#else
+  return browser_context() == session->browser_context();
+#endif
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, AtomBrowserContext* browser_context) {
@@ -530,9 +544,9 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("clearHostResolverCache", &Session::ClearHostResolverCache)
       .SetMethod("allowNTLMCredentialsForDomains",
                  &Session::AllowNTLMCredentialsForDomains)
+      .SetMethod("equal", &Session::Equal)
       .SetProperty("userPrefs", &Session::UserPrefs)
       .SetProperty("cookies", &Session::Cookies)
-      .SetProperty("protocol", &Session::Protocol)
       .SetProperty("webRequest", &Session::WebRequest);
 }
 

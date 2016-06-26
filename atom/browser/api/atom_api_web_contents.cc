@@ -1512,6 +1512,12 @@ int32_t WebContents::ID() const {
 }
 
 v8::Local<v8::Value> WebContents::Session(v8::Isolate* isolate) {
+  if (session_.IsEmpty()) {
+    auto context =
+        static_cast<AtomBrowserContext*>(web_contents()->GetBrowserContext());
+    auto session = Session::CreateFrom(isolate, context);
+    session_.Reset(isolate, session.ToV8());
+  }
   return v8::Local<v8::Value>::New(isolate, session_);
 }
 

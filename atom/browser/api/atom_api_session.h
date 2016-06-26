@@ -84,6 +84,7 @@ class Session: public mate::TrackableObject<Session>,
   v8::Local<v8::Value> Protocol(v8::Isolate* isolate);
   v8::Local<v8::Value> WebRequest(v8::Isolate* isolate);
   v8::Local<v8::Value> UserPrefs(v8::Isolate* isolate);
+  bool Equal(Session* session) const;
 
   // Cached object.
   v8::Global<v8::Value> cookies_;
