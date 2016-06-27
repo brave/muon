@@ -154,6 +154,9 @@ class AtomExtensionSystem : public ExtensionSystem {
     // Shared memory region manager for scripts statically declared in extension
     // manifests. This region is shared between all extensions.
     std::unique_ptr<SharedUserScriptMaster> shared_user_script_master_;
+
+    std::unique_ptr<ManagementPolicy> management_policy_;
+
     // extension_info_map_ needs to outlive process_manager_.
     scoped_refptr<InfoMap> extension_info_map_;
 

@@ -22,6 +22,7 @@
 #include "extensions/browser/extension_prefs.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/info_map.h"
+#include "extensions/browser/management_policy.h"
 #include "extensions/browser/notification_types.h"
 #include "extensions/browser/null_app_sorting.h"
 #include "extensions/browser/quota_service.h"
@@ -60,6 +61,7 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
   quota_service_.reset(new QuotaService);
   shared_user_script_master_.reset(
                                 new SharedUserScriptMaster(browser_context_));
+  management_policy_.reset(new ManagementPolicy);
 
   registrar_.Add(this, content::NOTIFICATION_RENDERER_PROCESS_TERMINATED,
                  content::NotificationService::AllBrowserContextsAndSources());
@@ -116,7 +118,7 @@ RuntimeData* AtomExtensionSystem::Shared::runtime_data() {
 }
 
 ManagementPolicy* AtomExtensionSystem::Shared::management_policy() {
-  return nullptr;
+  return management_policy_.get();
 }
 
 SharedUserScriptMaster*

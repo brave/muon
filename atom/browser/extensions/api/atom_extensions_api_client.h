@@ -9,6 +9,8 @@
 
 namespace extensions {
 
+class ManagementAPIDelegate;
+
 class AtomExtensionsAPIClient : public ExtensionsAPIClient {
  public:
   AtomExtensionsAPIClient();
@@ -20,6 +22,7 @@ class AtomExtensionsAPIClient : public ExtensionsAPIClient {
       WebViewGuest* web_view_guest) const override;
   WebRequestEventRouterDelegate* CreateWebRequestEventRouterDelegate()
       const override;
+  ManagementAPIDelegate* CreateManagementAPIDelegate() const override;
 };
 
 }  // namespace extensions

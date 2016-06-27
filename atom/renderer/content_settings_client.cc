@@ -121,9 +121,6 @@ void ContentSettingsClient::DidCommitProvisionalLoad(
 bool ContentSettingsClient::allowDatabase(const WebString& name,
                                           const WebString& display_name,
                                           unsigned long estimated_size) {  // NOLINT
-  if (IsWhitelistedForContentSettings())
-    return true;
-
   WebFrame* frame = render_frame()->GetWebFrame();
   if (frame->getSecurityOrigin().isUnique() ||
       frame->top()->getSecurityOrigin().isUnique())
@@ -169,9 +166,6 @@ bool ContentSettingsClient::allowImage(bool enabled_per_settings,
 
 bool ContentSettingsClient::allowIndexedDB(const WebString& name,
                                              const WebSecurityOrigin& origin) {
-  if (IsWhitelistedForContentSettings())
-    return true;
-
   WebFrame* frame = render_frame()->GetWebFrame();
   if (frame->getSecurityOrigin().isUnique() ||
       frame->top()->getSecurityOrigin().isUnique())
