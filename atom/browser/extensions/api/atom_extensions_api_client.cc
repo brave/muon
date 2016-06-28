@@ -4,6 +4,7 @@
 
 #include "atom/browser/extensions/api/atom_extensions_api_client.h"
 
+#include <string>
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "base/memory/ptr_util.h"
@@ -133,8 +134,8 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
       bool grayscale,
       bool* exists) const override {
     if (exists) {
-      *exists =
-          IconsInfo::GetIconURL(extension, icon_size, match) != GURL::EmptyGURL();
+      *exists = IconsInfo::GetIconURL(extension, icon_size, match)
+          != GURL::EmptyGURL();
     }
 
     GURL icon_url(base::StringPrintf("%s%s/%d/%d%s",

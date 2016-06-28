@@ -272,7 +272,8 @@ bool AtomExtensionsBrowserClient::IsSameContext(
 
 bool AtomExtensionsBrowserClient::HasOffTheRecordContext(
     content::BrowserContext* context) {
-  return static_cast<atom::AtomBrowserContext*>(context)->otr_context() != nullptr;
+  return static_cast<atom::AtomBrowserContext*>(context)->otr_context()
+      != nullptr;
 }
 
 content::BrowserContext* AtomExtensionsBrowserClient::GetOffTheRecordContext(
