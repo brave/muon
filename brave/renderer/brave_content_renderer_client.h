@@ -2,8 +2,8 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#ifndef EXTENSIONS_RENDERER_EXTENSIONS_CONTENT_RENDERER_CLIENT_H_
-#define EXTENSIONS_RENDERER_EXTENSIONS_CONTENT_RENDERER_CLIENT_H_
+#ifndef BRAVE_RENDERER_BRAVE_CONTENT_RENDERER_CLIENT_H_
+#define BRAVE_RENDERER_BRAVE_CONTENT_RENDERER_CLIENT_H_
 
 #include "atom/renderer/atom_renderer_client.h"
 
@@ -11,11 +11,11 @@ namespace atom {
 class ContentSettingsManager;
 }
 
-namespace extensions {
+namespace brave {
 
-class ExtensionsContentRendererClient : public atom::AtomRendererClient {
+class BraveContentRendererClient : public atom::AtomRendererClient {
  public:
-  ExtensionsContentRendererClient();
+  BraveContentRendererClient();
 
   // content::ContentRendererClient:
   void RenderThreadStarted() override;
@@ -47,9 +47,9 @@ class ExtensionsContentRendererClient : public atom::AtomRendererClient {
  private:
   std::unique_ptr<atom::ContentSettingsManager> content_settings_manager_;
 
-  DISALLOW_COPY_AND_ASSIGN(ExtensionsContentRendererClient);
+  DISALLOW_COPY_AND_ASSIGN(BraveContentRendererClient);
 };
 
 }  // namespace atom
 
-#endif  // EXTENSIONS_RENDERER_EXTENSIONS_CONTENT_RENDERER_CLIENT_H_
+#endif  // BRAVE_RENDERER_BRAVE_CONTENT_RENDERER_CLIENT_H_

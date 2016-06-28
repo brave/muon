@@ -9,6 +9,7 @@
 
 #include "atom/browser/api/trackable_object.h"
 #include "base/callback.h"
+#include "brave/browser/brave_browser_context.h"
 #include "native_mate/handle.h"
 
 namespace base {
@@ -16,23 +17,25 @@ class DictionaryValue;
 class ListValue;
 }
 
-namespace atom {
+namespace brave {
+class BraveBrowserContext;
+}
 
-class AtomBrowserContext;
+namespace atom {
 
 namespace api {
 
 class UserPrefs : public mate::TrackableObject<UserPrefs> {
  public:
   static mate::Handle<UserPrefs> Create(v8::Isolate* isolate,
-                                      AtomBrowserContext* browser_context);
+                                  content::BrowserContext* browser_context);
 
   // mate::TrackableObject:
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::ObjectTemplate> prototype);
 
  protected:
-  UserPrefs(v8::Isolate* isolate, AtomBrowserContext* browser_context);
+  UserPrefs(v8::Isolate* isolate, content::BrowserContext* browser_context);
   ~UserPrefs() override;
 
   void RegisterStringPref(const std::string& path,
@@ -67,10 +70,12 @@ class UserPrefs : public mate::TrackableObject<UserPrefs> {
   void SetDefaultBooleanPref(const std::string& path, bool value);
   void SetDefaultIntegerPref(const std::string& path, int value);
 
-  AtomBrowserContext* browser_context() { return browser_context_; }
+  brave::BraveBrowserContext* browser_context() {
+    return static_cast<brave::BraveBrowserContext*>(browser_context_);
+  }
 
  private:
-  AtomBrowserContext* browser_context_;  // not owned
+  content::BrowserContext* browser_context_;  // not owned
 
   DISALLOW_COPY_AND_ASSIGN(UserPrefs);
 };

@@ -30,6 +30,7 @@
 #include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
+#include "brave/browser/brave_content_browser_client.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/common/chrome_paths.h"
@@ -208,7 +209,8 @@ int ImportIntoCertStore(
 }  // namespace
 
 App::App(v8::Isolate* isolate) {
-  static_cast<AtomBrowserClient*>(AtomBrowserClient::Get())->set_delegate(this);
+  static_cast<brave::BraveContentBrowserClient*>(
+    brave::BraveContentBrowserClient::Get())->set_delegate(this);
   Browser::Get()->AddObserver(this);
   content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
@@ -241,8 +243,8 @@ void App::Observe(
 }
 
 App::~App() {
-  static_cast<AtomBrowserClient*>(AtomBrowserClient::Get())->set_delegate(
-      nullptr);
+  static_cast<brave::BraveContentBrowserClient*>(
+    brave::BraveContentBrowserClient::Get())->set_delegate(nullptr);
   Browser::Get()->RemoveObserver(this);
   content::GpuDataManager::GetInstance()->RemoveObserver(this);
 }
@@ -349,6 +351,23 @@ bool App::CanCreateWindow(const GURL& opener_url,
   return true;
 }
 
+void App::OnCreateWindow(const GURL& target_url,
+                         const std::string& frame_name,
+                         WindowOpenDisposition disposition,
+                         int render_process_id,
+                         int render_frame_id) {
+  v8::Locker locker(isolate());
+  v8::HandleScope handle_scope(isolate());
+  content::RenderFrameHost* rfh =
+      content::RenderFrameHost::FromID(render_process_id, render_frame_id);
+  content::WebContents* web_contents =
+      content::WebContents::FromRenderFrameHost(rfh);
+  if (web_contents) {
+    auto api_web_contents = WebContents::CreateFrom(isolate(), web_contents);
+    api_web_contents->OnCreateWindow(target_url, frame_name, disposition);
+  }
+}
+
 void App::AllowCertificateError(
     content::WebContents* web_contents,
     int cert_error,
@@ -434,13 +453,13 @@ void App::SetDesktopName(const std::string& desktop_name) {
 }
 
 std::string App::GetLocale() {
-  return static_cast<AtomBrowserClient*>(
-      AtomBrowserClient::Get())->GetApplicationLocale();
+  return static_cast<brave::BraveContentBrowserClient*>(
+      brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
 }
 
 void App::SetLocale(std::string locale) {
-  static_cast<AtomBrowserClient*>(
-      AtomBrowserClient::Get())->SetApplicationLocale(locale);
+  static_cast<brave::BraveContentBrowserClient*>(
+      brave::BraveContentBrowserClient::Get())->SetApplicationLocale(locale);
 }
 
 bool App::MakeSingleInstance(

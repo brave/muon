@@ -14,7 +14,6 @@
 #include "atom/browser/api/atom_api_web_request.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
-#include "atom/browser/atom_permission_manager.h"
 #include "atom/browser/net/atom_cert_verifier.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/content_converter.h"
@@ -24,6 +23,7 @@
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
 #include "base/guid.h"
+#include "brave/browser/brave_permission_manager.h"
 #include "components/prefs/pref_service.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
@@ -433,12 +433,12 @@ void Session::SetCertVerifyProc(v8::Local<v8::Value> val,
 
 void Session::SetPermissionRequestHandler(v8::Local<v8::Value> val,
                                           mate::Arguments* args) {
-  AtomPermissionManager::RequestHandler handler;
+  brave::BravePermissionManager::RequestHandler handler;
   if (!(val->IsNull() || mate::ConvertFromV8(args->isolate(), val, &handler))) {
     args->ThrowError("Must pass null or function");
     return;
   }
-  auto permission_manager = static_cast<AtomPermissionManager*>(
+  auto permission_manager = static_cast<brave::BravePermissionManager*>(
       browser_context()->GetPermissionManager());
   permission_manager->SetPermissionRequestHandler(handler);
 }

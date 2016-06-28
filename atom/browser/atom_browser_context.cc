@@ -39,32 +39,6 @@
 #include "net/url_request/url_request_context.h"
 #include "url/url_constants.h"
 
-#if defined(ENABLE_EXTENSIONS)
-#include "atom/browser/extensions/atom_browser_client_extensions_part.h"
-#include "atom/browser/extensions/atom_extension_system_factory.h"
-#include "atom/browser/extensions/atom_extensions_network_delegate.h"
-#include "components/prefs/json_pref_store.h"
-#include "components/prefs/pref_filter.h"
-#include "chrome/browser/chrome_notification_types.h"
-#include "components/keyed_service/content/browser_context_dependency_manager.h"
-#include "components/pref_registry/pref_registry_syncable.h"
-#include "components/prefs/pref_change_registrar.h"
-#include "components/syncable_prefs/pref_service_syncable.h"
-#include "components/syncable_prefs/pref_service_syncable_factory.h"
-#include "components/user_prefs/user_prefs.h"
-#include "content/public/browser/dom_storage_context.h"
-#include "content/public/browser/notification_service.h"
-#include "content/public/browser/notification_source.h"
-#include "content/public/browser/storage_partition.h"
-#include "extensions/browser/extension_pref_store.h"
-#include "extensions/browser/extension_pref_value_map_factory.h"
-#include "extensions/browser/extension_prefs.h"
-#include "extensions/browser/extension_protocols.h"
-#include "extensions/browser/extension_system.h"
-#include "extensions/browser/extensions_browser_client.h"
-#include "net/cookies/cookie_store.h"
-#endif
-
 using content::BrowserThread;
 
 namespace atom {
@@ -92,85 +66,15 @@ std::string RemoveWhitespace(const std::string& str) {
 AtomBrowserContext::AtomBrowserContext(const std::string& partition,
                                        bool in_memory)
     : brightray::BrowserContext(partition, in_memory),
-#if defined(ENABLE_EXTENSIONS)
-      pref_registry_(new user_prefs::PrefRegistrySyncable),
-#endif
       cert_verifier_(new AtomCertVerifier),
-#if defined(ENABLE_EXTENSIONS)
-      network_delegate_(new extensions::AtomExtensionsNetworkDelegate(this)),
-#else
-      network_delegate_(new AtomNetworkDelegate),
-#endif
-      partition_(partition) {
-  if (in_memory) {
-    original_context_ = static_cast<AtomBrowserContext*>(
-          AtomBrowserContext::From(partition, false).get());
-    original_context()->otr_context_ = this;
-  }
+      network_delegate_(new AtomNetworkDelegate) {
 }
 
 AtomBrowserContext::~AtomBrowserContext() {
-#if defined(ENABLE_EXTENSIONS)
-  NotifyWillBeDestroyed(this);
-  content::NotificationService::current()->Notify(
-      chrome::NOTIFICATION_PROFILE_DESTROYED,
-      content::Source<AtomBrowserContext>(this),
-      content::NotificationService::NoDetails());
-
-  if (user_prefs_registrar_.get())
-    user_prefs_registrar_->RemoveAll();
-
-  if (!IsOffTheRecord()) {
-    // temporary fix for https://github.com/brave/browser-laptop/issues/2335
-    // TODO(brivdiver) - it seems like something is holding onto a reference to
-    // url_request_context_getter or the url_request_context and is preventing
-    // it from being destroyed
-    url_request_context_getter()->GetURLRequestContext()->cookie_store()->
-        FlushStore(base::Closure());
-
-    bool prefs_loaded = user_prefs_->GetInitializationStatus() !=
-        PrefService::INITIALIZATION_STATUS_WAITING;
-
-    if (prefs_loaded) {
-      user_prefs_->CommitPendingWrite();
-    }
-  }
-
-  if (otr_context_.get()) {
-    auto user_prefs = user_prefs::UserPrefs::Get(otr_context_.get());
-    if (user_prefs)
-      user_prefs->ClearMutableValues();
-    otr_context_ = NULL;
-    ExtensionPrefValueMapFactory::GetForBrowserContext(this)->
-        ClearAllIncognitoSessionOnlyPreferences();
-  }
-
-  BrowserContextDependencyManager::GetInstance()->
-      DestroyBrowserContextServices(this);
-#endif
 }
 
 net::NetworkDelegate* AtomBrowserContext::CreateNetworkDelegate() {
   return network_delegate_;
-}
-
-AtomBrowserContext* AtomBrowserContext::original_context() {
-  if (!IsOffTheRecord()) {
-    return this;
-  }
-  return original_context_;
-}
-
-AtomBrowserContext* AtomBrowserContext::otr_context() {
-  if (IsOffTheRecord()) {
-    return this;
-  }
-
-  if (!otr_context_.get()) {
-    return otr_context_.get();
-  }
-
-  return nullptr;
 }
 
 std::string AtomBrowserContext::GetUserAgent() {
@@ -220,15 +124,6 @@ AtomBrowserContext::CreateURLRequestJobFactory(
   job_factory->SetProtocolHandler(
       url::kWssScheme,
       make_scoped_ptr(new HttpProtocolHandler(url::kWssScheme)));
-#if defined(ENABLE_EXTENSIONS)
-  extensions::InfoMap* extension_info_map =
-      extensions::AtomExtensionSystemFactory::GetInstance()->
-        GetForBrowserContext(this)->info_map();
-  job_factory->SetProtocolHandler(
-      extensions::kExtensionScheme,
-      extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),
-                                                 extension_info_map));
-#endif
 
   auto host_resolver =
       url_request_context_getter()->GetURLRequestContext()->host_resolver();
@@ -288,97 +183,6 @@ void AtomBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
   pref_registry->RegisterFilePathPref(prefs::kDownloadDefaultDirectory,
                                       download_dir);
   pref_registry->RegisterDictionaryPref(prefs::kDevToolsFileSystemPaths);
-#if defined(ENABLE_EXTENSIONS)
-  RegisterUserPrefs();
-#endif
-}
-
-#if defined(ENABLE_EXTENSIONS)
-void AtomBrowserContext::RegisterUserPrefs() {
-  PrefStore* extension_prefs = new ExtensionPrefStore(
-      ExtensionPrefValueMapFactory::GetForBrowserContext(original_context()),
-      IsOffTheRecord());
-  user_prefs_registrar_.reset(new PrefChangeRegistrar());
-
-  bool async = false;
-
-  if (IsOffTheRecord()) {
-    user_prefs_.reset(
-        original_context()->user_prefs()->CreateIncognitoPrefService(
-          extension_prefs, overlay_pref_names_));
-    user_prefs::UserPrefs::Set(this, user_prefs_.get());
-  } else {
-    extensions::AtomBrowserClientExtensionsPart::RegisteryProfilePrefs(
-        pref_registry_.get());
-    extensions::ExtensionPrefs::RegisterProfilePrefs(pref_registry_.get());
-
-    BrowserContextDependencyManager::GetInstance()->
-        RegisterProfilePrefsForServices(this, pref_registry_.get());
-
-    // create profile prefs
-    base::FilePath filepath = GetPath().Append(
-        FILE_PATH_LITERAL("UserPrefs"));
-    scoped_refptr<base::SequencedTaskRunner> task_runner =
-        JsonPrefStore::GetTaskRunnerForFile(
-            filepath, BrowserThread::GetBlockingPool());
-    scoped_refptr<JsonPrefStore> pref_store =
-        new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
-
-    // prepare factory
-    syncable_prefs::PrefServiceSyncableFactory factory;
-    factory.set_async(async);
-    factory.set_extension_prefs(extension_prefs);
-    factory.set_user_prefs(pref_store);
-    user_prefs_ = factory.CreateSyncable(pref_registry_.get());
-    user_prefs::UserPrefs::Set(this, user_prefs_.get());
-  }
-
-  if (async) {
-    user_prefs_->AddPrefInitObserver(base::Bind(
-        &AtomBrowserContext::OnPrefsLoaded, base::Unretained(this)));
-  } else {
-    OnPrefsLoaded(true);
-  }
-}
-
-void AtomBrowserContext::OnPrefsLoaded(bool success) {
-  if (!success)
-    return;
-
-  BrowserContextDependencyManager::GetInstance()->
-      CreateBrowserContextServices(this);
-
-  if (!IsOffTheRecord()) {
-    if (extensions::ExtensionsBrowserClient::Get()) {
-      extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
-    }
-
-    content::BrowserContext::GetDefaultStoragePartition(this)->
-        GetDOMStorageContext()->SetSaveSessionStorageOnDisk();
-  }
-
-  user_prefs_registrar_->Init(user_prefs_.get());
-
-  content::NotificationService::current()->Notify(
-      chrome::NOTIFICATION_PROFILE_CREATED,
-      content::Source<AtomBrowserContext>(this),
-      content::NotificationService::NoDetails());
-}
-#endif
-
-content::ResourceContext* AtomBrowserContext::GetResourceContext() {
-  content::BrowserContext::EnsureResourceContextInitialized(this);
-  return brightray::BrowserContext::GetResourceContext();
 }
 
 }  // namespace atom
-
-namespace brightray {
-
-// static
-scoped_refptr<BrowserContext> BrowserContext::Create(
-    const std::string& partition, bool in_memory) {
-  return make_scoped_refptr(new atom::AtomBrowserContext(partition, in_memory));
-}
-
-}  // namespace brightray

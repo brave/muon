@@ -26,7 +26,8 @@
 #include "ui/base/ui_base_switches.h"
 
 #if defined(ENABLE_EXTENSIONS)
-#include "atom/extensions/renderer/extensions_content_renderer_client.h"
+#include "brave/browser/brave_content_browser_client.h"
+#include "brave/renderer/brave_content_renderer_client.h"
 #endif
 
 namespace atom {
@@ -191,14 +192,18 @@ void AtomMainDelegate::PreSandboxStartup() {
 }
 
 content::ContentBrowserClient* AtomMainDelegate::CreateContentBrowserClient() {
-  browser_client_.reset(new AtomBrowserClient);
+#if defined(ENABLE_EXTENSIONS)
+  browser_client_.reset(new brave::BraveContentBrowserClient);
+#else
+  renderer_client_.reset(new AtomBrowserClient);
+#endif
   return browser_client_.get();
 }
 
 content::ContentRendererClient*
     AtomMainDelegate::CreateContentRendererClient() {
 #if defined(ENABLE_EXTENSIONS)
-  renderer_client_.reset(new extensions::ExtensionsContentRendererClient);
+  renderer_client_.reset(new brave::BraveContentRendererClient);
 #else
   renderer_client_.reset(new AtomRendererClient);
 #endif

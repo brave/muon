@@ -10,8 +10,8 @@
 
 #include "content/public/renderer/content_renderer_client.h"
 
-namespace extensions {
-class ExtensionsContentRendererClient;
+namespace brave {
+class BraveContentRendererClient;
 }
 
 namespace atom {
@@ -72,7 +72,7 @@ class AtomRendererClient : public content::ContentRendererClient {
   std::unique_ptr<AtomBindings> atom_bindings_;
   std::unique_ptr<PreferencesManager> preferences_manager_;
 
-  friend class extensions::ExtensionsContentRendererClient;
+  friend class brave::BraveContentRendererClient;
 
   DISALLOW_COPY_AND_ASSIGN(AtomRendererClient);
 };

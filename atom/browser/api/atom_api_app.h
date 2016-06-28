@@ -46,6 +46,13 @@ class App : public AtomBrowserClient::Delegate,
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::ObjectTemplate> prototype);
 
+  // Called when window with disposition needs to be created.
+  void OnCreateWindow(const GURL& target_url,
+                      const std::string& frame_name,
+                      WindowOpenDisposition disposition,
+                      int render_process_id,
+                      int render_frame_id);
+
 #if defined(USE_NSS_CERTS)
   void OnCertificateManagerModelCreated(
       std::unique_ptr<base::DictionaryValue> options,

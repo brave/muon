@@ -4,7 +4,6 @@
 
 #include "atom/browser/api/atom_api_user_prefs.h"
 
-#include "atom/browser/atom_browser_context.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/values.h"
 #include "content/public/browser/browser_thread.h"
@@ -47,7 +46,7 @@ namespace atom {
 namespace api {
 
 UserPrefs::UserPrefs(v8::Isolate* isolate,
-                 AtomBrowserContext* browser_context)
+                 content::BrowserContext* browser_context)
       : browser_context_(browser_context) {
   Init(isolate);
 }
@@ -145,7 +144,7 @@ void UserPrefs::SetIntegerPref(const std::string& path,
 // static
 mate::Handle<UserPrefs> UserPrefs::Create(
     v8::Isolate* isolate,
-    AtomBrowserContext* browser_context) {
+    content::BrowserContext* browser_context) {
   return mate::CreateHandle(isolate, new UserPrefs(isolate, browser_context));
 }
 

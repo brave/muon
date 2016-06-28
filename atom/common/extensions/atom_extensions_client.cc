@@ -195,17 +195,6 @@ void AtomExtensionsClient::RegisterAPISchemaResources(
   api->RegisterSchemaResource("ipc", IDR_ATOM_EXTENSION_API_JSON_IPC);
   api->RegisterSchemaResource("webFrame",
                               IDR_ATOM_EXTENSION_API_JSON_WEB_FRAME);
-  api->RegisterSchemaResource("commands", IDR_EXTENSION_API_JSON_COMMANDS);
-  api->RegisterSchemaResource("declarativeContent",
-                              IDR_EXTENSION_API_JSON_DECLARATIVE_CONTENT);
-  api->RegisterSchemaResource("pageAction", IDR_EXTENSION_API_JSON_PAGEACTION);
-  api->RegisterSchemaResource("privacy", IDR_EXTENSION_API_JSON_PRIVACY);
-  api->RegisterSchemaResource("proxy", IDR_EXTENSION_API_JSON_PROXY);
-  api->RegisterSchemaResource("ttsEngine", IDR_EXTENSION_API_JSON_TTSENGINE);
-  api->RegisterSchemaResource("tts", IDR_EXTENSION_API_JSON_TTS);
-  api->RegisterSchemaResource("types", IDR_EXTENSION_API_JSON_TYPES);
-  api->RegisterSchemaResource("types.private",
-                              IDR_EXTENSION_API_JSON_TYPES_PRIVATE);
 }
 
 bool AtomExtensionsClient::ShouldSuppressFatalErrors() const {

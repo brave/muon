@@ -37,6 +37,7 @@
 #include "atom/common/options_switches.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_content_browser_client.h"
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
@@ -491,6 +492,15 @@ bool WebContents::IsAttached() {
     return guest_delegate_->IsAttached();
 
   return owner_window() != nullptr;
+}
+
+void WebContents::OnCreateWindow(const GURL& target_url,
+                                 const std::string& frame_name,
+                                 WindowOpenDisposition disposition) {
+  if (type_ == BROWSER_WINDOW)
+    Emit("-new-window", target_url, frame_name, disposition);
+  else
+    Emit("new-window", target_url, frame_name, disposition);
 }
 
 content::WebContents* WebContents::OpenURLFromTab(
@@ -1143,8 +1153,8 @@ void WebContents::SetUserAgent(const std::string& user_agent) {
   scoped_refptr<net::URLRequestContextGetter> getter =
       web_contents()->GetBrowserContext()->GetRequestContext();
 
-  auto accept_lang = static_cast<AtomBrowserClient*>(
-      AtomBrowserClient::Get())->GetApplicationLocale();
+  auto accept_lang = static_cast<brave::BraveContentBrowserClient*>(
+      brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
   getter->GetNetworkTaskRunner()->PostTask(FROM_HERE,
       base::Bind(&SetUserAgentInIO, getter, accept_lang, user_agent));
 }

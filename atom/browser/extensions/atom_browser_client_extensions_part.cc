@@ -8,6 +8,7 @@
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/common/api/api_messages.h"
 #include "base/command_line.h"
+#include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/renderer_host/chrome_extension_message_filter.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_change_registrar.h"
@@ -29,6 +30,7 @@
 #include "extensions/common/manifest_handlers/web_accessible_resources_info.h"
 #include "extensions/common/switches.h"
 
+using brave::BraveBrowserContext;
 using content::BrowserContext;
 using content::BrowserThread;
 using content::BrowserURLHandler;
@@ -197,7 +199,7 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
     content::RenderProcessHost* host) {
   int id = host->GetID();
   auto context =
-      static_cast<atom::AtomBrowserContext*>(host->GetBrowserContext());
+      BraveBrowserContext::FromBrowserContext(host->GetBrowserContext());
 
   host->AddFilter(new ChromeExtensionMessageFilter(id, context));
   host->AddFilter(new ExtensionMessageFilter(id, context));

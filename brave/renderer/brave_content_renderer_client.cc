@@ -2,7 +2,7 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#include "atom/extensions/renderer/extensions_content_renderer_client.h"
+#include "brave/renderer/brave_content_renderer_client.h"
 
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/renderer/content_settings_client.h"
@@ -15,38 +15,38 @@
 #include "extensions/renderer/dispatcher.h"
 #endif
 
-namespace extensions {
+namespace brave {
 
-ExtensionsContentRendererClient::ExtensionsContentRendererClient() {
+BraveContentRendererClient::BraveContentRendererClient() {
 #if defined(ENABLE_EXTENSIONS)
-  ExtensionsClient::Set(
-      AtomExtensionsClient::GetInstance());
-  ExtensionsRendererClient::Set(
-      AtomExtensionsRendererClient::GetInstance());
+  extensions::ExtensionsClient::Set(
+      extensions::AtomExtensionsClient::GetInstance());
+  extensions::ExtensionsRendererClient::Set(
+      extensions::AtomExtensionsRendererClient::GetInstance());
 #endif
 }
 
-void ExtensionsContentRendererClient::RenderThreadStarted() {
+void BraveContentRendererClient::RenderThreadStarted() {
   content_settings_manager_.reset(atom::ContentSettingsManager::GetInstance());
   AtomRendererClient::RenderThreadStarted();
 #if defined(ENABLE_EXTENSIONS)
-  AtomExtensionsRendererClient::GetInstance()->
+  extensions::AtomExtensionsRendererClient::GetInstance()->
       RenderThreadStarted();
 #endif
 }
 
-void ExtensionsContentRendererClient::RenderFrameCreated(
+void BraveContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
-  Dispatcher* ext_dispatcher = NULL;
+  extensions::Dispatcher* ext_dispatcher = NULL;
 #if defined(ENABLE_EXTENSIONS)
   ext_dispatcher =
-      AtomExtensionsRendererClient::GetInstance()->extension_dispatcher();
+      extensions::AtomExtensionsRendererClient::GetInstance()->extension_dispatcher();
 #endif
   new atom::ContentSettingsClient(render_frame,
                                   ext_dispatcher,
                                   content_settings_manager_.get());
 #if defined(ENABLE_EXTENSIONS)
-  AtomExtensionsRendererClient::GetInstance()->RenderFrameCreated(
+  extensions::AtomExtensionsRendererClient::GetInstance()->RenderFrameCreated(
     render_frame);
 #endif
   if (atom::WebContentsPreferences::run_node()) {
@@ -56,47 +56,47 @@ void ExtensionsContentRendererClient::RenderFrameCreated(
   }
 }
 
-void ExtensionsContentRendererClient::RenderViewCreated(content::RenderView* render_view) {
+void BraveContentRendererClient::RenderViewCreated(content::RenderView* render_view) {
   AtomRendererClient::RenderViewCreated(render_view);
 #if defined(ENABLE_EXTENSIONS)
-  AtomExtensionsRendererClient::GetInstance()->
+  extensions::AtomExtensionsRendererClient::GetInstance()->
       RenderViewCreated(render_view);
 #endif
 }
 
-void ExtensionsContentRendererClient::RunScriptsAtDocumentStart(
+void BraveContentRendererClient::RunScriptsAtDocumentStart(
     content::RenderFrame* render_frame) {
 #if defined(ENABLE_EXTENSIONS)
-  AtomExtensionsRendererClient::GetInstance()->
+  extensions::AtomExtensionsRendererClient::GetInstance()->
       RunScriptsAtDocumentStart(render_frame);
 #endif
   if (atom::WebContentsPreferences::run_node())
     AtomRendererClient::RunScriptsAtDocumentStart(render_frame);
 }
 
-void ExtensionsContentRendererClient::RunScriptsAtDocumentEnd(
+void BraveContentRendererClient::RunScriptsAtDocumentEnd(
     content::RenderFrame* render_frame) {
 #if defined(ENABLE_EXTENSIONS)
-  AtomExtensionsRendererClient::GetInstance()->
+  extensions::AtomExtensionsRendererClient::GetInstance()->
       RunScriptsAtDocumentEnd(render_frame);
 #endif
   if (atom::WebContentsPreferences::run_node())
     AtomRendererClient::RunScriptsAtDocumentEnd(render_frame);
 }
 
-bool ExtensionsContentRendererClient::AllowPopup() {
+bool BraveContentRendererClient::AllowPopup() {
   if (atom::WebContentsPreferences::run_node()) {
     return false;  // TODO(bridiver) - should return setting for allow popups
   }
 
 #if defined(ENABLE_EXTENSIONS)
-  return AtomExtensionsRendererClient::GetInstance()->AllowPopup();
+  return extensions::AtomExtensionsRendererClient::GetInstance()->AllowPopup();
 #else
   return false;
 #endif
 }
 
-bool ExtensionsContentRendererClient::ShouldFork(blink::WebLocalFrame* frame,
+bool BraveContentRendererClient::ShouldFork(blink::WebLocalFrame* frame,
                                     const GURL& url,
                                     const std::string& http_method,
                                     bool is_initial_navigation,
@@ -110,7 +110,7 @@ bool ExtensionsContentRendererClient::ShouldFork(blink::WebLocalFrame* frame,
   return false;
 }
 
-bool ExtensionsContentRendererClient::WillSendRequest(
+bool BraveContentRendererClient::WillSendRequest(
     blink::WebFrame* frame,
     ui::PageTransition transition_type,
     const GURL& url,
@@ -119,7 +119,7 @@ bool ExtensionsContentRendererClient::WillSendRequest(
   // Check whether the request should be allowed. If not allowed, we reset the
   // URL to something invalid to prevent the request and cause an error.
 #if defined(ENABLE_EXTENSIONS)
-  if (AtomExtensionsRendererClient::GetInstance()->WillSendRequest(
+  if (extensions::AtomExtensionsRendererClient::GetInstance()->WillSendRequest(
           frame, transition_type, url, new_url))
     return true;
 #endif
@@ -127,22 +127,22 @@ bool ExtensionsContentRendererClient::WillSendRequest(
   return false;
 }
 
-void ExtensionsContentRendererClient::DidInitializeServiceWorkerContextOnWorkerThread(
+void BraveContentRendererClient::DidInitializeServiceWorkerContextOnWorkerThread(
     v8::Local<v8::Context> context,
     const GURL& url) {
 #if defined(ENABLE_EXTENSIONS)
-  Dispatcher::DidInitializeServiceWorkerContextOnWorkerThread(
+  extensions::Dispatcher::DidInitializeServiceWorkerContextOnWorkerThread(
       context, url);
 #endif
 }
 
-void ExtensionsContentRendererClient::WillDestroyServiceWorkerContextOnWorkerThread(
+void BraveContentRendererClient::WillDestroyServiceWorkerContextOnWorkerThread(
     v8::Local<v8::Context> context,
     const GURL& url) {
 #if defined(ENABLE_EXTENSIONS)
-  Dispatcher::WillDestroyServiceWorkerContextOnWorkerThread(context,
+  extensions::Dispatcher::WillDestroyServiceWorkerContextOnWorkerThread(context,
                                                                         url);
 #endif
 }
 
-}  // namespace atom
+}  // namespace brave

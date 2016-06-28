@@ -6,7 +6,6 @@
 
 #include <string>
 #include <vector>
-#include "atom/browser/atom_browser_context.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/extensions/api/atom_extensions_api_client.h"
 #include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
@@ -20,6 +19,7 @@
 #include "base/memory/ptr_util.h"
 #include "base/path_service.h"
 #include "base/version.h"
+#include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/user_prefs/user_prefs.h"
@@ -272,18 +272,18 @@ bool AtomExtensionsBrowserClient::IsSameContext(
 
 bool AtomExtensionsBrowserClient::HasOffTheRecordContext(
     content::BrowserContext* context) {
-  return static_cast<atom::AtomBrowserContext*>(context)->otr_context()
+  return static_cast<brave::BraveBrowserContext*>(context)->otr_context()
       != nullptr;
 }
 
 content::BrowserContext* AtomExtensionsBrowserClient::GetOffTheRecordContext(
     content::BrowserContext* context) {
-  return static_cast<atom::AtomBrowserContext*>(context)->otr_context();
+  return static_cast<brave::BraveBrowserContext*>(context)->otr_context();
 }
 
 content::BrowserContext* AtomExtensionsBrowserClient::GetOriginalContext(
     content::BrowserContext* context) {
-  return static_cast<atom::AtomBrowserContext*>(context)->original_context();
+  return static_cast<brave::BraveBrowserContext*>(context)->original_context();
 }
 
 bool AtomExtensionsBrowserClient::IsGuestSession(
@@ -296,7 +296,7 @@ bool AtomExtensionsBrowserClient::IsIncognitoEnabled(
       const std::string& extension_id,
       content::BrowserContext* context) {
   auto original_context =
-      static_cast<atom::AtomBrowserContext*>(context)->original_context();
+      static_cast<brave::BraveBrowserContext*>(context)->original_context();
 
   auto registry = ExtensionRegistry::Get(original_context);
   if (!registry)
