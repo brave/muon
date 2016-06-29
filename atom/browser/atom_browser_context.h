@@ -93,7 +93,7 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomCertVerifier* cert_verifier_;
   AtomNetworkDelegate* network_delegate_;
 
-  scoped_refptr<brightray::BrowserContext> original_context_;
+  brightray::BrowserContext* original_context_;
   scoped_refptr<brightray::BrowserContext> otr_context_;
   const std::string partition_;
 

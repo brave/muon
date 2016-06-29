@@ -100,7 +100,7 @@ AtomBrowserContext::AtomBrowserContext(const std::string& partition,
 #endif
       partition_(partition) {
   if (in_memory) {
-    original_context_ = AtomBrowserContext::From(partition, false);
+    original_context_ = AtomBrowserContext::From(partition, false).get();
     original_context()->otr_context_ = this;
   }
 }
@@ -125,8 +125,10 @@ AtomBrowserContext::~AtomBrowserContext() {
 
   if (otr_context_.get()) {
     // destroy the otr profile
-    otr_context()->user_prefs()->ClearMutableValues();
-    otr_context_.swap(nullptr);
+    auto user_prefs = user_prefs::UserPrefs::Get(otr_context_.get());
+    if (user_prefs)
+      user_prefs->ClearMutableValues();
+    otr_context_ = NULL;
   } else {
     ExtensionPrefValueMapFactory::GetForBrowserContext(this)->
         ClearAllIncognitoSessionOnlyPreferences();
@@ -145,7 +147,7 @@ AtomBrowserContext* AtomBrowserContext::original_context() {
   if (!IsOffTheRecord()) {
     return this;
   }
-  return static_cast<AtomBrowserContext*>(original_context_.get());
+  return static_cast<AtomBrowserContext*>(original_context_);
 }
 
 AtomBrowserContext* AtomBrowserContext::otr_context() {
@@ -314,7 +316,7 @@ void AtomBrowserContext::RegisterUserPrefs() {
       new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
 
   // prepare factory
-  bool async = false;
+  bool async = true;
   syncable_prefs::PrefServiceSyncableFactory factory;
   factory.set_async(async);
   factory.set_extension_prefs(extension_prefs);
