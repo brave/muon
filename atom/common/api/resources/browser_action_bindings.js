@@ -9,7 +9,7 @@ var binding = {
     addListener: function (cb) {
       ipc.send('register-chrome-browser-action', extensionId,
                                     manifest.browser_action.default_title)
-      ipc.on('chrome-browser-action-clicked', function(evt, tabId, tab) {
+      ipc.on('chrome-browser-action-clicked', function(evt, tab) {
         cb(tab)
       })
     }

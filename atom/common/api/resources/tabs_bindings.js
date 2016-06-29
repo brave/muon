@@ -62,7 +62,7 @@ var bindings = {
   onCreated: {
     addListener: function (cb) {
       ipc.send('register-chrome-tabs-created', extensionId);
-      ipc.on('chrome-tabs-created', function(evt, tabId, tab) {
+      ipc.on('chrome-tabs-created', function(evt, tab) {
         cb(tab);
       });
     }
@@ -80,8 +80,8 @@ var bindings = {
   onActivated: {
     addListener: function (cb) {
       ipc.send('register-chrome-tabs-activated', extensionId)
-      ipc.on('chrome-tabs-activated', function (evt, tabId, selectInfo) {
-        cb(tabId, selectInfo)
+      ipc.on('chrome-tabs-activated', function (evt, tabId, activeInfo) {
+        cb(activeInfo)
       })
     }
   },
