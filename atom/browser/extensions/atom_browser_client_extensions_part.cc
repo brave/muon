@@ -204,13 +204,9 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
   host->AddFilter(new IOThreadExtensionMessageFilter(id, context));
   extension_web_request_api_helpers::SendExtensionWebRequestStatusToHost(host);
 
-  auto user_prefs_registrar = context->user_prefs_change_registrar();
-  if (!user_prefs_registrar->IsObserved("content_settings")) {
-    user_prefs_registrar->Add(
-        "content_settings",
-        base::Bind(&AtomBrowserClientExtensionsPart::UpdateContentSettings,
-                   base::Unretained(this)));
-  }
+  context->RegisterPrefChangeCallback("content_settings",
+      base::Bind(&AtomBrowserClientExtensionsPart::UpdateContentSettings,
+                   base::Unretained(this)), false);
   UpdateContentSettingsForHost(host->GetID());
 }
 
@@ -270,7 +266,8 @@ void AtomBrowserClientExtensionsPart::SiteInstanceDeleting(
   if (!registry)
     return;
 
-  render_process_hosts_.erase(site_instance->GetProcess()->GetID());
+  if (render_process_hosts_[site_instance->GetProcess()->GetID()])
+    render_process_hosts_.erase(site_instance->GetProcess()->GetID());
 
   const Extension* extension =
       registry->enabled_extensions().GetExtensionOrAppByURL(

@@ -10,7 +10,9 @@
 #include "base/memory/weak_ptr.h"
 #include "brightray/browser/browser_context.h"
 
-class PrefChangeRegistrar;
+#if defined(ENABLE_EXTENSIONS)
+#include "components/prefs/pref_change_registrar.h"
+#endif
 
 namespace syncable_prefs {
 class PrefServiceSyncable;
@@ -49,6 +51,7 @@ class AtomBrowserContext : public brightray::BrowserContext {
   content::DownloadManagerDelegate* GetDownloadManagerDelegate() override;
   content::BrowserPluginGuestManager* GetGuestManager() override;
   content::PermissionManager* GetPermissionManager() override;
+  content::ResourceContext* GetResourceContext() override;
 
   // brightray::BrowserContext:
   void RegisterPrefs(PrefRegistrySimple* pref_registry) override;
@@ -66,8 +69,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   syncable_prefs::PrefServiceSyncable* user_prefs() const {
     return user_prefs_.get(); }
 
-  PrefChangeRegistrar* user_prefs_change_registrar() const {
-    return user_prefs_registrar_.get(); }
+  bool RegisterPrefChangeCallback(
+    const std::string path, const base::Closure& obs, bool overwrite);
 
   const std::string& partition() const { return partition_; }
 
@@ -81,7 +84,7 @@ class AtomBrowserContext : public brightray::BrowserContext {
   void OnPrefsLoaded(bool success);
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
-  std::unique_ptr<PrefChangeRegistrar> user_prefs_registrar_;
+  PrefChangeRegistrar user_prefs_registrar_;
   std::vector<const char*> overlay_pref_names_;
 #endif
 
@@ -93,8 +96,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   AtomCertVerifier* cert_verifier_;
   AtomNetworkDelegate* network_delegate_;
 
-  brightray::BrowserContext* original_context_;
-  scoped_refptr<brightray::BrowserContext> otr_context_;
+  AtomBrowserContext* original_context_;
+  scoped_refptr<AtomBrowserContext> otr_context_;
   const std::string partition_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserContext);
