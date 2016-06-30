@@ -10,9 +10,7 @@
 #include "base/memory/weak_ptr.h"
 #include "brightray/browser/browser_context.h"
 
-#if defined(ENABLE_EXTENSIONS)
-#include "components/prefs/pref_change_registrar.h"
-#endif
+class PrefChangeRegistrar;
 
 namespace syncable_prefs {
 class PrefServiceSyncable;
@@ -69,8 +67,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
   syncable_prefs::PrefServiceSyncable* user_prefs() const {
     return user_prefs_.get(); }
 
-  bool RegisterPrefChangeCallback(
-    const std::string path, const base::Closure& obs, bool overwrite);
+  PrefChangeRegistrar* user_prefs_change_registrar() const {
+    return user_prefs_registrar_.get(); }
 
   const std::string& partition() const { return partition_; }
 
@@ -84,7 +82,7 @@ class AtomBrowserContext : public brightray::BrowserContext {
   void OnPrefsLoaded(bool success);
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
-  PrefChangeRegistrar user_prefs_registrar_;
+  std::unique_ptr<PrefChangeRegistrar> user_prefs_registrar_;
   std::vector<const char*> overlay_pref_names_;
 #endif
 

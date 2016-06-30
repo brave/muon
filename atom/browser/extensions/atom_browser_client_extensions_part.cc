@@ -204,9 +204,13 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
   host->AddFilter(new IOThreadExtensionMessageFilter(id, context));
   extension_web_request_api_helpers::SendExtensionWebRequestStatusToHost(host);
 
-  context->RegisterPrefChangeCallback("content_settings",
-      base::Bind(&AtomBrowserClientExtensionsPart::UpdateContentSettings,
-                   base::Unretained(this)), false);
+  auto user_prefs_registrar = context->user_prefs_change_registrar();
+  if (!user_prefs_registrar->IsObserved("content_settings")) {
+    user_prefs_registrar->Add(
+        "content_settings",
+        base::Bind(&AtomBrowserClientExtensionsPart::UpdateContentSettings,
+                   base::Unretained(this)));
+  }
   UpdateContentSettingsForHost(host->GetID());
 }
 

@@ -48,6 +48,7 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/pref_registry/pref_registry_syncable.h"
+#include "components/prefs/pref_change_registrar.h"
 #include "components/syncable_prefs/pref_service_syncable.h"
 #include "components/syncable_prefs/pref_service_syncable_factory.h"
 #include "components/user_prefs/user_prefs.h"
@@ -116,6 +117,9 @@ AtomBrowserContext::~AtomBrowserContext() {
       content::Source<AtomBrowserContext>(this),
       content::NotificationService::NoDetails());
 
+  if (user_prefs_registrar_.get())
+    user_prefs_registrar_->RemoveAll();
+
   if (!IsOffTheRecord()) {
     // temporary fix for https://github.com/brave/browser-laptop/issues/2335
     // TODO(brivdiver) - it seems like something is holding onto a reference to
@@ -130,8 +134,6 @@ AtomBrowserContext::~AtomBrowserContext() {
     if (prefs_loaded) {
       user_prefs_->CommitPendingWrite();
     }
-
-    user_prefs_registrar_.RemoveAll();
   }
 
   if (otr_context_.get()) {
@@ -169,19 +171,6 @@ AtomBrowserContext* AtomBrowserContext::otr_context() {
   }
 
   return nullptr;
-}
-
-bool AtomBrowserContext::RegisterPrefChangeCallback(
-    const std::string path, const base::Closure& obs, bool overwrite) {
-  if (IsOffTheRecord()) {
-    return original_context()->RegisterPrefChangeCallback(path, obs, overwrite);
-  } else {
-    if (overwrite || !user_prefs_registrar_.IsObserved(path)) {
-      user_prefs_registrar_.Add(path, obs);
-      return true;
-    }
-    return false;
-  }
 }
 
 std::string AtomBrowserContext::GetUserAgent() {
@@ -309,6 +298,7 @@ void AtomBrowserContext::RegisterUserPrefs() {
   PrefStore* extension_prefs = new ExtensionPrefStore(
       ExtensionPrefValueMapFactory::GetForBrowserContext(original_context()),
       IsOffTheRecord());
+  user_prefs_registrar_.reset(new PrefChangeRegistrar());
 
   bool async = false;
 
@@ -363,11 +353,11 @@ void AtomBrowserContext::OnPrefsLoaded(bool success) {
       extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
     }
 
-    user_prefs_registrar_.Init(user_prefs_.get());
-
     content::BrowserContext::GetDefaultStoragePartition(this)->
         GetDOMStorageContext()->SetSaveSessionStorageOnDisk();
   }
+
+  user_prefs_registrar_->Init(user_prefs_.get());
 
   content::NotificationService::current()->Notify(
       chrome::NOTIFICATION_PROFILE_CREATED,
