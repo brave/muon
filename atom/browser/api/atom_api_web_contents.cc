@@ -313,7 +313,8 @@ WebContents::WebContents(v8::Isolate* isolate,
 
     delayed_open_url_params_.reset(
         new content::OpenURLParams(
-          url, content::Referrer(), CURRENT_TAB, ui::PAGE_TRANSITION_LINK, false));
+          url, content::Referrer(), CURRENT_TAB,
+          ui::PAGE_TRANSITION_LINK, false));
   }
 
   Observe(web_contents);
