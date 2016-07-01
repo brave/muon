@@ -307,6 +307,15 @@ WebContents::WebContents(v8::Isolate* isolate,
   content::WebContents* web_contents =
       content::WebContents::Create(create_params);
 
+  std::string delayed_load_url;
+  if (options.Get("delayedLoadUrl", &delayed_load_url)) {
+    const GURL url(delayed_load_url);
+
+    delayed_open_url_params_.reset(
+        new content::OpenURLParams(
+          url, content::Referrer(), CURRENT_TAB, ui::PAGE_TRANSITION_LINK, false));
+  }
+
   Observe(web_contents);
   InitWithWebContents(web_contents, session->browser_context());
 

@@ -35,11 +35,11 @@ var binding = {
   },
 
   create: function (createData, cb) {
-    console.warning('chrome.windows.create is not supported yet')
+    console.warn('chrome.windows.create is not supported yet')
   },
 
   update: function (windowId, updateInfo, cb) {
-    console.warning('chrome.windows.update is not supported yet')
+    console.warn('chrome.windows.update is not supported yet')
   },
 
   WINDOW_ID_NONE: -1,
