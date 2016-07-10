@@ -26,6 +26,8 @@
 #include "base/strings/stringprintf.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "base/threading/worker_pool.h"
+#include "chrome/browser/custom_handlers/protocol_handler_registry.h"
+#include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -237,7 +239,13 @@ AtomBrowserContext::CreateURLRequestJobFactory(
       make_scoped_ptr(new net::FtpProtocolHandler(
           new net::FtpNetworkLayer(host_resolver))));
 
-  return std::move(job_factory);
+  scoped_ptr<ProtocolHandlerRegistry::JobInterceptorFactory>
+    protocol_handler_interceptor =
+        ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
+          ->CreateJobInterceptorFactory();
+
+  protocol_handler_interceptor->Chain(std::move(job_factory));
+  return std::move(protocol_handler_interceptor);
 }
 
 net::HttpCache::BackendFactory*
@@ -331,6 +339,8 @@ void AtomBrowserContext::RegisterUserPrefs() {
     factory.set_user_prefs(pref_store);
     user_prefs_ = factory.CreateSyncable(pref_registry_.get());
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
+
+    ProtocolHandlerRegistry::RegisterProfilePrefs(pref_registry_.get());
   }
 
   if (async) {
