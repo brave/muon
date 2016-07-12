@@ -10,10 +10,10 @@
 #include "atom/browser/api/atom_api_cookies.h"
 #include "atom/browser/api/atom_api_download_item.h"
 #include "atom/browser/api/atom_api_protocol.h"
+#include "atom/browser/api/atom_api_user_prefs.h"
 #include "atom/browser/api/atom_api_web_request.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
-#include "atom/browser/atom_permission_manager.h"
 #include "atom/browser/net/atom_cert_verifier.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/content_converter.h"
@@ -23,6 +23,8 @@
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
 #include "base/guid.h"
+#include "brave/browser/brave_content_browser_client.h"
+#include "brave/browser/brave_permission_manager.h"
 #include "components/prefs/pref_service.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
@@ -45,6 +47,10 @@
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "ui/base/l10n/l10n_util.h"
+
+#if defined(ENABLE_EXTENSIONS)
+#include "extensions/browser/extensions_browser_client.h"
+#endif
 
 using content::BrowserThread;
 using content::StoragePartition;
@@ -354,7 +360,7 @@ template<Session::CacheAction action>
 void Session::DoCacheAction(const net::CompletionCallback& callback) {
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&DoCacheActionInIO,
-                 make_scoped_refptr(browser_context_->GetRequestContext()),
+                 base::RetainedRef(browser_context_->GetRequestContext()),
                  action,
                  callback));
 }
@@ -439,12 +445,12 @@ void Session::SetCertVerifyProc(v8::Local<v8::Value> val,
 
 void Session::SetPermissionRequestHandler(v8::Local<v8::Value> val,
                                           mate::Arguments* args) {
-  AtomPermissionManager::RequestHandler handler;
+  brave::BravePermissionManager::RequestHandler handler;
   if (!(val->IsNull() || mate::ConvertFromV8(args->isolate(), val, &handler))) {
     args->ThrowError("Must pass null or function");
     return;
   }
-  auto permission_manager = static_cast<AtomPermissionManager*>(
+  auto permission_manager = static_cast<brave::BravePermissionManager*>(
       browser_context()->GetPermissionManager());
   permission_manager->SetPermissionRequestHandler(handler);
 }
@@ -455,14 +461,14 @@ void Session::ClearHostResolverCache(mate::Arguments* args) {
 
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&ClearHostResolverCacheInIO,
-                 make_scoped_refptr(browser_context_->GetRequestContext()),
+                 base::RetainedRef(browser_context_->GetRequestContext()),
                  callback));
 }
 
 void Session::AllowNTLMCredentialsForDomains(const std::string& domains) {
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&AllowNTLMCredentialsForDomainsInIO,
-                 make_scoped_refptr(browser_context_->GetRequestContext()),
+                 base::RetainedRef(browser_context_->GetRequestContext()),
                  domains));
 }
 
@@ -470,7 +476,8 @@ void Session::SetUserAgent(const std::string& user_agent,
                            mate::Arguments* args) {
   browser_context_->SetUserAgent(user_agent);
 
-  std::string accept_lang = l10n_util::GetApplicationLocale("");
+  std::string accept_lang = static_cast<brave::BraveContentBrowserClient*>(
+      brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
   args->GetNext(&accept_lang);
 
   auto getter = browser_context_->GetRequestContext();
@@ -507,6 +514,24 @@ v8::Local<v8::Value> Session::WebRequest(v8::Isolate* isolate) {
   return v8::Local<v8::Value>::New(isolate, web_request_);
 }
 
+v8::Local<v8::Value> Session::UserPrefs(v8::Isolate* isolate) {
+  if (user_prefs_.IsEmpty()) {
+    auto handle = atom::api::UserPrefs::Create(isolate, browser_context());
+    user_prefs_.Reset(isolate, handle.ToV8());
+  }
+  return v8::Local<v8::Value>::New(isolate, user_prefs_);
+}
+
+bool Session::Equal(Session* session) const {
+#if defined(ENABLE_EXTENSIONS)
+  return extensions::ExtensionsBrowserClient::Get()->IsSameContext(
+                                        browser_context(),
+                                        session->browser_context());
+#else
+  return browser_context() == session->browser_context();
+#endif
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, AtomBrowserContext* browser_context) {
@@ -523,7 +548,8 @@ mate::Handle<Session> Session::CreateFrom(
 // static
 mate::Handle<Session> Session::FromPartition(
     v8::Isolate* isolate, const std::string& partition, bool in_memory) {
-  auto browser_context = brightray::BrowserContext::From(partition, in_memory);
+  auto browser_context = atom::AtomBrowserContext::From(
+      partition == "default" ? "" : partition, in_memory);
   return CreateFrom(isolate,
                     static_cast<AtomBrowserContext*>(browser_context.get()));
 }
@@ -550,6 +576,8 @@ void Session::BuildPrototype(v8::Isolate* isolate,
                  &Session::AllowNTLMCredentialsForDomains)
       .SetMethod("setUserAgent", &Session::SetUserAgent)
       .SetMethod("getUserAgent", &Session::GetUserAgent)
+      .SetMethod("equal", &Session::Equal)
+      .SetProperty("userPrefs", &Session::UserPrefs)
       .SetProperty("cookies", &Session::Cookies)
       .SetProperty("protocol", &Session::Protocol)
       .SetProperty("webRequest", &Session::WebRequest);
