@@ -9,6 +9,7 @@
 
 #include "atom/browser/api/atom_api_debugger.h"
 #include "atom/browser/api/atom_api_session.h"
+#include "atom/browser/api/atom_api_web_request.h"
 #include "atom/browser/api/atom_api_window.h"
 #include "atom/browser/api/event.h"
 #include "atom/browser/atom_browser_client.h"
@@ -127,32 +128,6 @@ struct Converter<PrintSettings> {
     dict.Get("silent", &(out->silent));
     dict.Get("printBackground", &(out->print_background));
     return true;
-  }
-};
-
-template<>
-struct Converter<net::HttpResponseHeaders*> {
-  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   net::HttpResponseHeaders* headers) {
-    base::DictionaryValue response_headers;
-    if (headers) {
-      size_t iter = 0;
-      std::string key;
-      std::string value;
-      while (headers->EnumerateHeaderLines(&iter, &key, &value)) {
-        key = base::ToLowerASCII(key);
-        if (response_headers.HasKey(key)) {
-          base::ListValue* values = nullptr;
-          if (response_headers.GetList(key, &values))
-            values->AppendString(value);
-        } else {
-          std::unique_ptr<base::ListValue> values(new base::ListValue());
-          values->AppendString(value);
-          response_headers.Set(key, std::move(values));
-        }
-      }
-    }
-    return ConvertToV8(isolate, response_headers);
   }
 };
 
