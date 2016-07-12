@@ -41,7 +41,10 @@ class AtomBrowserContext : public brightray::BrowserContext {
   // brightray::BrowserContext:
   void RegisterPrefs(PrefRegistrySimple* pref_registry) override;
 
-  AtomNetworkDelegate* network_delegate() const { return network_delegate_; }
+  virtual AtomCertVerifier* cert_verifier() const {
+      return cert_verifier_; }
+  virtual AtomNetworkDelegate* network_delegate() const {
+      return network_delegate_; }
 
  private:
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;
