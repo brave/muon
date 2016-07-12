@@ -191,13 +191,3 @@ void AtomBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
 }
 
 }  // namespace atom
-
-namespace brightray {
-
-// static
-scoped_refptr<BrowserContext> BrowserContext::Create(
-    const std::string& partition, bool in_memory) {
-  return make_scoped_refptr(new atom::AtomBrowserContext(partition, in_memory));
-}
-
-}  // namespace brightray
