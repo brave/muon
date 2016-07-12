@@ -9,8 +9,12 @@
   'includes': [
     'filenames.gypi',
     'vendor/native_mate/native_mate_files.gypi',
+    'extensions.gypi',
   ],
   'target_defaults': {
+    'msvs_disabled_warnings': [
+      4456,
+    ],
     'defines': [
       'ATOM_PRODUCT_NAME="<(product_name)"',
       'ATOM_PROJECT_NAME="<(project_name)"',
@@ -216,6 +220,7 @@
         'ENABLE_PLUGINS',
         'ENABLE_PEPPER_CDMS',
         'USE_PROPRIETARY_CODECS',
+        '__STDC_FORMAT_MACROS',
       ],
       'sources': [
         '<@(lib_sources)',
@@ -253,6 +258,36 @@
         'vendor/brightray/brightray.gyp:brightray',
       ],
       'conditions': [
+        ['enable_extensions==1', {
+          'dependencies': [ 'extensions.gyp:atom_resources' ],
+          'sources': [ '<@(extension_sources)' ],
+          'include_dirs': [
+            '<(libchromiumcontent_dir)/gen/extensions',
+          ],
+          'conditions': [
+            ['OS=="linux"', {
+              'dependencies': [
+                'extensions.gyp:xscrnsaver',
+              ],
+            }],
+          ]
+        }],
+        ['OS!="linux" and enable_extensions==1 and libchromiumcontent_component', {
+          'link_settings': {
+            # Following libraries are always linked statically.
+            'libraries': [ '<@(extension_libraries)' ],
+          },
+        }],
+        ['OS=="linux" and enable_extensions==1 and libchromiumcontent_component', {
+          'link_settings': {
+            'libraries': [
+              # hack to handle cyclic dependencies
+              '-Wl,--start-group',
+              '<@(extension_libraries)',
+              '-Wl,--end-group',
+            ],
+          }
+        }],
         ['libchromiumcontent_component', {
           'link_settings': {
             'libraries': [ '<@(libchromiumcontent_v8_libraries)' ],
@@ -355,6 +390,7 @@
           },
           'inputs': [
             '<@(js_sources)',
+            '<@(extension_js_sources)'
           ],
           'outputs': [
             '<(resources_path)/electron.asar',
@@ -431,6 +467,7 @@
           'type': 'shared_library',
           'dependencies': [
             '<(project_name)_lib',
+            'extensions.gyp:atom_resources',
           ],
           'sources': [
             '<@(framework_sources)',
