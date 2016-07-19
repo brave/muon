@@ -166,6 +166,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   uint32_t FindInPage(mate::Arguments* args);
   void StopFindInPage(content::StopFindAction action);
   void ShowDefinitionForSelection();
+  mate::Handle<WebContents> Clone(const mate::Dictionary& options);
 
   // Focus.
   void Focus();
