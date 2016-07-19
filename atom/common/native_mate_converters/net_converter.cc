@@ -6,7 +6,6 @@
 
 #include <string>
 #include <vector>
-#include <iomanip>
 
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
@@ -18,7 +17,6 @@
 #include "net/base/upload_element_reader.h"
 #include "net/base/upload_file_element_reader.h"
 #include "net/cert/x509_certificate.h"
-#include "net/der/parse_values.h"
 #include "net/http/http_response_headers.h"
 #include "net/url_request/url_request.h"
 
