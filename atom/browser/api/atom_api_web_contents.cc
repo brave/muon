@@ -1146,6 +1146,14 @@ const GURL& WebContents::GetURLAtIndex(int index) const {
     return GURL::EmptyGURL();
 }
 
+const base::string16 WebContents::GetTitleAtIndex(int index) const {
+  auto entry = web_contents()->GetController().GetEntryAtIndex(index);
+  if (entry)
+    return entry->GetTitle();
+  else
+    return base::string16();
+}
+
 // TODO(bridiver) there should be a more generic way
 // to set renderer preferences in general
 const std::string& WebContents::GetWebRTCIPHandlingPolicy() const {
@@ -1828,6 +1836,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("canGoForward", &WebContents::CanGoForward)
       .SetMethod("canGoToOffset", &WebContents::CanGoToOffset)
       .SetMethod("getURLAtIndex", &WebContents::GetURLAtIndex)
+      .SetMethod("getTitleAtIndex", &WebContents::GetTitleAtIndex)
       .SetMethod("getEntryCount", &WebContents::GetEntryCount)
       .SetMethod("getCurrentEntryIndex", &WebContents::GetCurrentEntryIndex)
       .SetMethod("getLastCommittedEntryIndex",
