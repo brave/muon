@@ -971,6 +971,10 @@ int WebContents::GetID() const {
 }
 
 WebContents::Type WebContents::GetType() const {
+#if defined(ENABLE_EXTENSIONS)
+  if (Extension::IsBackgroundPage(this))
+    return BACKGROUND_PAGE;
+#endif
   return type_;
 }
 
