@@ -939,6 +939,7 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 }
 
 void WebContents::Reload(bool ignore_cache) {
+  atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
   web_contents()->UserGestureDone();
   if (ignore_cache)
     web_contents()->GetController().ReloadBypassingCache(true);
