@@ -122,6 +122,12 @@ bool SystemPreferences::IsDarkMode() {
   return [mode isEqualToString:@"Dark"];
 }
 
+bool SystemPreferences::IsSwipeTrackingFromScrollEventsEnabled() {
+  SEL selector = @selector(isSwipeTrackingFromScrollEventsEnabled);
+  return [NSEvent respondsToSelector:selector] &&
+         [NSEvent performSelector:selector];
+}
+
 }  // namespace api
 
 }  // namespace atom
