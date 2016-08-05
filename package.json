@@ -4,7 +4,8 @@
   "devDependencies": {
     "asar": "^0.11.0",
     "request": "*",
-    "standard": "^7.1.2"
+    "standard": "^7.1.2",
+    "watch": "^0.19.1"
   },
   "optionalDependencies": {
     "runas": "^3.0.0"
@@ -32,6 +33,9 @@
     "cibuild-windows": "rm -Rf node_mdules && python ./script/cibuild --target_arch=x64",
     "cibuild-windows-ia32": "rm -Rf node_mdules && python ./script/cibuild --target_arch=ia32",
     "test": "python ./script/test.py",
-    "browser-build": "npm run build && rsync -avz --delete out/D/Brave.app ../browser-laptop/node_modules/electron-prebuilt/dist/"
+    "browser-build": "npm run build && rsync -avz --delete out/D/Brave.app ../browser-laptop/node_modules/electron-prebuilt/dist/",
+    "browser-build-linux": "npm run build && rsync -avz --delete out/D/ ../browser-laptop/node_modules/electron-prebuilt/dist/",
+    "watch": "watch 'npm run browser-build' .",
+    "watch-linux": "watch 'npm run browser-build-linux' ."
   }
 }
