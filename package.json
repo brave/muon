@@ -1,6 +1,6 @@
 {
   "name": "electron",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "devDependencies": {
     "asar": "^0.11.0",
     "request": "*",
@@ -36,6 +36,8 @@
     "browser-build": "npm run build && rsync -avz --delete out/D/Brave.app ../browser-laptop/node_modules/electron-prebuilt/dist/",
     "browser-build-linux": "npm run build && rsync -avz --delete out/D/ ../browser-laptop/node_modules/electron-prebuilt/dist/",
     "watch": "watch 'npm run browser-build' .",
-    "watch-linux": "watch 'npm run browser-build-linux' ."
+    "watch-linux": "watch 'npm run browser-build-linux' .",
+    "libchromium-build": "../libchromiumcontent/script/bootstrap && ../libchromiumcontent/script/update && ../libchromiumcontent/script/build && ../libchromiumcontent/script/create-dist",
+    "libchromium-bootstrap": "./script/bootstrap.py -v --libcc_source_path ../libchromiumcontent/dist/main/src --libcc_shared_library_path ../libchromiumcontent/dist/main/shared_library --libcc_static_library_path ../libchromiumcontent/dist/main/static_library"
   }
 }
