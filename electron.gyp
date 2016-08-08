@@ -233,6 +233,8 @@
       'include_dirs': [
         '.',
         'chromium_src',
+        '<(libchromiumcontent_dir)/gen/protoc_out',
+        '<(libchromiumcontent_src_dir)/third_party/protobuf/src',
         'vendor/brightray',
         'vendor/native_mate',
         # Include atom_natives.h.

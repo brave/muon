@@ -84,6 +84,12 @@
       'variables': {
         'extension_libraries': [
           '<(libchromiumcontent_dir)/libapi_gen_util.a',
+          '<(libchromiumcontent_dir)/libautofill_content_browser.a',
+          '<(libchromiumcontent_dir)/libautofill_content_common.a',
+          '<(libchromiumcontent_dir)/libautofill_content_mojo_bindings.a',
+          '<(libchromiumcontent_dir)/libautofill_content_renderer.a',
+          '<(libchromiumcontent_dir)/libautofill_core_browser.a',
+          '<(libchromiumcontent_dir)/libautofill_core_common.a',
           '<(libchromiumcontent_dir)/libbrowsing_data.a',
           '<(libchromiumcontent_dir)/libchrome_api.a',
           '<(libchromiumcontent_dir)/libchrome_zlib.a',
@@ -98,6 +104,7 @@
           '<(libchromiumcontent_dir)/libextensions_common_constants.a',
           '<(libchromiumcontent_dir)/libextensions_renderer.a',
           '<(libchromiumcontent_dir)/libextensions_utility.a',
+          '<(libchromiumcontent_dir)/libgoogle_apis.a',
           '<(libchromiumcontent_dir)/libguest_view_browser.a',
           '<(libchromiumcontent_dir)/libguest_view_common.a',
           '<(libchromiumcontent_dir)/libguest_view_renderer.a',
@@ -159,6 +166,9 @@
     }],
   ],
   'target_defaults': {
+    'defines': [
+      'GOOGLE_PROTOBUF_NO_RTTI'
+    ],
     'conditions': [
       ['enable_extensions==1', {
         'defines': [
