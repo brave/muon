@@ -156,6 +156,7 @@
       'atom/browser/atom_access_token_store.h',
 #'atom/browser/autofill/atom_autofill_client.cc',
 #'atom/browser/autofill/atom_autofill_client.h',
+      'atom/browser/autofill/create_card_unmask_prompt_view.h',
       'atom/browser/autofill/personal_data_manager_factory.cc',
       'atom/browser/autofill/personal_data_manager_factory.h',
       'atom/browser/autofill/risk_util.cc',
