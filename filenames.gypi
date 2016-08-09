@@ -158,6 +158,8 @@
 #'atom/browser/autofill/atom_autofill_client.h',
       'atom/browser/autofill/personal_data_manager_factory.cc',
       'atom/browser/autofill/personal_data_manager_factory.h',
+      'atom/browser/autofill/risk_util.cc',
+      'atom/browser/autofill/risk_util.h',
       'atom/browser/atom_browser_client.cc',
       'atom/browser/atom_browser_client.h',
       'atom/browser/atom_browser_context.cc',
