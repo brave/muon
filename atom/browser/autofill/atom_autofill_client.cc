@@ -20,6 +20,23 @@
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(autofill::AtomAutofillClient);
 
+// stubs TODO - move to separate files
+#include "net/http/http_request_headers.h"
+namespace variations {
+void AppendVariationHeaders(const GURL& url,
+                            bool incognito,
+                            bool uma_enabled,
+                            net::HttpRequestHeaders* headers) {
+}
+}
+
+namespace rappor {
+void SampleDomainAndRegistryFromGURL(RapporService* rappor_service,
+                                     const std::string& metric,
+                                     const GURL& gurl) {}
+}  // namespace rappor
+// end stubs
+
 namespace autofill {
 
 AtomAutofillClient::AtomAutofillClient(content::WebContents* web_contents)

@@ -48,8 +48,8 @@
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
-// #include "components/autofill/content/browser/content_autofill_driver_factory.h"
-// #include "components/autofill/core/browser/autofill_manager.h"
+#include "components/autofill/content/browser/content_autofill_driver_factory.h"
+#include "components/autofill/core/browser/autofill_manager.h"
 #include "components/ui/zoom/page_zoom.h"
 #include "components/ui/zoom/zoom_controller.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
@@ -311,7 +311,13 @@ WebContents::WebContents(v8::Isolate* isolate,
   ui_zoom::ZoomController::CreateForWebContents(web_contents);
   // Initialize autofill client
   autofill::AtomAutofillClient::CreateForWebContents(web_contents);
-
+  std::string locale = static_cast<brave::BraveContentBrowserClient*>(
+      brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
+  autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
+      web_contents,
+      autofill::AtomAutofillClient::FromWebContents(web_contents),
+      locale,
+      autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
   web_contents->SetUserAgentOverride(GetBrowserContext()->GetUserAgent());
 
   if (IsGuest()) {

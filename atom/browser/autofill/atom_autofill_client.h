@@ -18,13 +18,6 @@
 #include "content/public/browser/web_contents_user_data.h"
 
 
-// namespace rappor {
-// void SampleDomainAndRegistryFromGURL(RapporService* rappor_service,
-//                                      const std::string& metric,
-//                                      const GURL& gurl) {}
-// }  // namespace rappor
-
-
 namespace content {
 class WebContents;
 }
