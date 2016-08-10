@@ -25,6 +25,7 @@ Menu::Menu(v8::Isolate* isolate)
 }
 
 Menu::~Menu() {
+  MenuDestroyed();
 }
 
 void Menu::AfterInit(v8::Isolate* isolate) {
@@ -101,6 +102,7 @@ void Menu::InsertSubMenuAt(int index,
                            const base::string16& label,
                            Menu* menu) {
   menu->parent_ = this;
+  AddObserver(menu);
   model_->InsertSubMenuAt(index, command_id, label, menu->model_.get());
 }
 
@@ -150,6 +152,11 @@ bool Menu::IsEnabledAt(int index) const {
 
 bool Menu::IsVisibleAt(int index) const {
   return model_->IsVisibleAt(index);
+}
+
+void Menu::MenuDestroyed() {
+  FOR_EACH_OBSERVER(MenuObserver, observers_, MenuDestroyed());
+  base::MessageLoop::current()->PostTask(FROM_HERE, GetDestroyClosure());
 }
 
 // static
