@@ -2,8 +2,8 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#ifndef ATOM_BROWSER_ATOM_AUTOFILL_CLIENT_H_
-#define ATOM_BROWSER_ATOM_AUTOFILL_CLIENT_H_
+#ifndef ATOM_BROWSER_AUTOFILL_ATOM_AUTOFILL_CLIENT_H_
+#define ATOM_BROWSER_AUTOFILL_ATOM_AUTOFILL_CLIENT_H_
 
 #include <memory>
 #include <vector>
@@ -14,28 +14,29 @@
 #include "base/macros.h"
 #include "base/memory/weak_ptr.h"
 #include "components/autofill/core/browser/autofill_client.h"
-#include "components/autofill/core/browser/ui/card_unmask_prompt_controller_impl.h"
-#include "components/ui/zoom/zoom_observer.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 
+
+// namespace rappor {
+// void SampleDomainAndRegistryFromGURL(RapporService* rappor_service,
+//                                      const std::string& metric,
+//                                      const GURL& gurl) {}
+// }  // namespace rappor
+
+
 namespace content {
-struct FrameNavigateParams;
-struct LoadCommittedDetails;
 class WebContents;
 }
 
 namespace autofill {
 
-class AutofillPopupControllerImpl;
-class CreditCardScannerController;
-struct FormData;
+class FormStructure;
 
 class AtomAutofillClient
     : public AutofillClient,
     public content::WebContentsUserData<AtomAutofillClient>,
-    public content::WebContentsObserver,
-    public ui_zoom::ZoomObserver {
+    public content::WebContentsObserver {
 public:
   ~AtomAutofillClient() override;
   // AutofillClient:
@@ -78,24 +79,14 @@ public:
   void OnFirstUserGestureObserved() override;
   bool IsContextSecure(const GURL& form_origin) override;
 
-  // content::WebContentsObserver implementation.
-  void MainFrameWasResized(bool width_changed) override;
-  void WebContentsDestroyed() override;
-
-  // ZoomObserver implementation.
-  void OnZoomChanged(
-      const ui_zoom::ZoomController::ZoomChangedEventData& data) override;
-
  private:
   explicit AtomAutofillClient(content::WebContents* web_contents);
   friend class content::WebContentsUserData<AtomAutofillClient>;
 
-  base::WeakPtr<AutofillPopupDelegate> delegate_;
-  CardUnmaskPromptControllerImpl unmask_controller_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomAutofillClient);
 };
 
 }  // namespace autofill
 
-#endif  // ATOM_BROWSER_ATOM_AUTOFILL_CLIENT_H_
+#endif  // ATOM_BROWSER_AUTOFILL_ATOM_AUTOFILL_CLIENT_H_
