@@ -11,9 +11,12 @@
 #include "base/logging.h"
 #include "base/memory/ptr_util.h"
 #include "build/build_config.h"
+#include "chrome/browser/profiles/incognito_helpers.h"
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
 #include "components/autofill/core/common/autofill_pref_names.h"
 #include "components/prefs/pref_service.h"
+#include "components/user_prefs/user_prefs.h"
+#include "content/public/browser/browser_context.h"
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(autofill::AtomAutofillClient);
 
@@ -30,7 +33,7 @@ AtomAutofillClient::~AtomAutofillClient() {
 PersonalDataManager* AtomAutofillClient::GetPersonalDataManager() {
   // content::BrowserContext* browser_context = web_contents()->GetBrowserContext());
   // return PersonalDataManagerFactory::GetForBrowserContext(
-  //     browser_context->GetOriginalProfile());
+  //     return chrome::GetBrowserContextRedirectedInIncognito(context));
   return nullptr;
 }
 
@@ -44,8 +47,7 @@ scoped_refptr<AutofillWebDataService> AtomAutofillClient::GetDatabase() {
 }
 
 PrefService* AtomAutofillClient::GetPrefs() {
-  // return user_prefs::UserPrefs::Get(web_contents()->GetBrowserContext());
-  return nullptr;
+  return user_prefs::UserPrefs::Get(web_contents()->GetBrowserContext());
 }
 
 sync_driver::SyncService* AtomAutofillClient::GetSyncService() {
