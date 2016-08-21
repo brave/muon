@@ -32,6 +32,7 @@
 #include "extensions/common/manifest_handlers/shared_module_info.h"
 #include "extensions/common/permissions/permissions_data.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
+#include "brave/browser/brave_extensions.h"
 
 using content::BrowserThread;
 
@@ -75,7 +76,7 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
   if (extensions_enabled) {
     // load all extensions
     const ExtensionSet& extensions =
-                            atom::api::Extension::GetInstance()->extensions();
+                            brave::BraveExtensions::Get()->extensions();
 
     for (ExtensionSet::const_iterator iter = extensions.begin();
          iter != extensions.end(); ++iter) {

@@ -54,7 +54,7 @@
 #endif
 
 #if defined(ENABLE_EXTENSIONS)
-#include "atom/browser/api/atom_api_extension.h"
+#include "brave/browser/brave_extensions.h"
 #endif
 
 using atom::Browser;
@@ -244,27 +244,9 @@ App::App(v8::Isolate* isolate) {
                  content::NotificationService::AllBrowserContextsAndSources());
 }
 
-// TOOD(bridiver) - move this to api_extension?
 void App::Observe(
     int type, const content::NotificationSource& source,
     const content::NotificationDetails& details) {
-  switch (type) {
-    case content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED: {
-#if defined(ENABLE_EXTENSIONS)
-      content::WebContents* web_contents =
-          content::Source<content::WebContents>(source).ptr();
-      auto browser_context = web_contents->GetBrowserContext();
-      auto url = web_contents->GetURL();
-
-      // make sure background pages get a webcontents
-      // api wrapper so they can communicate via IPC
-      if (Extension::IsBackgroundPageUrl(url, browser_context)) {
-        WebContents::CreateFrom(isolate(), web_contents);
-      }
-#endif
-      break;
-    }
-  }
 }
 
 App::~App() {

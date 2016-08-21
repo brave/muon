@@ -6,6 +6,12 @@
     'extension_js_sources': [
       'lib/browser/api/extensions.js',
     ],
+    'extensions_utility_sources': [
+      'utility/unpacker.cc',
+      'utility/unpacker.h',
+      'utility/utility_handler.cc',
+      'utility/utility_handler.h',
+    ],
     'extension_sources': [
       'atom/browser/api/atom_api_extension.cc',
       'atom/browser/api/atom_api_extension.h',
@@ -75,8 +81,12 @@
       'brave/browser/brave_browser_context.cc',
       'brave/browser/brave_content_browser_client.h',
       'brave/browser/brave_content_browser_client.cc',
+      'brave/browser/brave_extensions.h',
+      'brave/browser/brave_extensions.cc',
       'brave/browser/brave_permission_manager.h',
       'brave/browser/brave_permission_manager.cc',
+      'brave/browser/crx_installer.h',
+      'brave/browser/crx_installer.cc',
       'brave/browser/renderer_preferences_helper.h',
       'brave/browser/renderer_preferences_helper.cc',
       'brave/renderer/brave_content_renderer_client.cc',
@@ -106,6 +116,7 @@
           '<(libchromiumcontent_dir)/libguest_view_common.a',
           '<(libchromiumcontent_dir)/libguest_view_renderer.a',
           '<(libchromiumcontent_dir)/libleveldatabase.a',
+          '<(libchromiumcontent_dir)/libminizip.a',
           '<(libchromiumcontent_dir)/libmojo_cpp_bindings.a',
           '<(libchromiumcontent_dir)/libmojo_cpp_system.a',
           '<(libchromiumcontent_dir)/libmojo_js_bindings.a',
@@ -119,6 +130,7 @@
           '<(libchromiumcontent_dir)/libweb_cache_mojo_bindings.a',
           '<(libchromiumcontent_dir)/libweb_modal.a',
           '<(libchromiumcontent_dir)/libxml2.a',
+          '<(libchromiumcontent_dir)/libzip.a',
           '<(libchromiumcontent_dir)/libzlib_x86_simd.a',
         ]
       }

@@ -198,8 +198,25 @@ void AtomBrowserClient::AppendExtraCommandLineSwitches(
     base::CommandLine* command_line,
     int process_id) {
   std::string process_type = command_line->GetSwitchValueASCII("type");
-  if (process_type != "renderer")
+
+  if (process_type == "utility") {
+#if defined(ENABLE_EXTENSIONS)
+    static const char* const kSwitchNames[] = {
+      extensions::switches::kAllowHTTPBackgroundPage,
+      extensions::switches::kEnableExperimentalExtensionApis,
+      extensions::switches::kExtensionsOnChromeURLs,
+      extensions::switches::kWhitelistedExtensionID,
+      "test123456"
+    };
+
+    command_line->CopySwitchesFrom(
+      *base::CommandLine::ForCurrentProcess(),
+      kSwitchNames, node::arraysize(kSwitchNames));
+#endif
+
+  } else if (process_type != "renderer") {
     return;
+  }
 
   // Copy following switches to child process.
   static const char* const kCommonSwitchNames[] = {

@@ -20,6 +20,10 @@ namespace brightray {
 class BrowserContext;
 }
 
+namespace brave {
+class BraveExtensions;
+}
+
 namespace atom {
 
 class AtomBindings;
@@ -48,6 +52,8 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   base::Closure RegisterDestructionCallback(const base::Closure& callback);
 
   Browser* browser() { return browser_.get(); }
+
+  brave::BraveExtensions* brave_extensions() { return brave_extensions_.get(); }
 
  protected:
   // content::BrowserMainParts:
@@ -93,6 +99,7 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   std::unique_ptr<NodeBindings> node_bindings_;
   std::unique_ptr<AtomBindings> atom_bindings_;
   std::unique_ptr<NodeDebugger> node_debugger_;
+  std::unique_ptr<brave::BraveExtensions> brave_extensions_;
 
   base::Timer gc_timer_;
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;

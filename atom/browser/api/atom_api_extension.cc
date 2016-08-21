@@ -1,35 +1,18 @@
-// Copyright (c) 2015 GitHub, Inc.
+// Copyright (c) 2016 Brave.
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
 #include "atom/browser/api/atom_api_extension.h"
 
 #include <string>
-#include <vector>
 #include "atom/browser/api/atom_api_web_contents.h"
-#include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
-#include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
-#include "atom/common/node_includes.h"
-#include "base/files/file_path.h"
-#include "components/prefs/pref_service.h"
-#include "base/strings/string_util.h"
-#include "components/user_prefs/user_prefs.h"
-#include "content/public/browser/browser_thread.h"
+#include "atom/common/native_mate_converters/v8_value_converter.h"
+#include "brave/browser/brave_extensions.h"
 #include "content/public/browser/notification_service.h"
-#include "content/public/browser/notification_source.h"
-#include "content/public/browser/web_contents.h"
-#include "content/public/common/url_constants.h"
-#include "extensions/browser/extension_registry.h"
-#include "extensions/browser/extension_system.h"
 #include "extensions/browser/notification_types.h"
-#include "extensions/common/extension.h"
-#include "extensions/common/file_util.h"
-#include "extensions/common/manifest_handlers/background_info.h"
-#include "extensions/common/one_shot_event.h"
-#include "native_mate/converter.h"
 #include "native_mate/dictionary.h"
 
 namespace mate {
@@ -68,40 +51,38 @@ struct Converter<extensions::Manifest::Location> {
   }
 };
 
+template<>
+struct Converter<const base::ListValue*> {
+  static v8::Local<v8::Value> ToV8(
+      v8::Isolate* isolate,
+      const base::ListValue* val) {
+    std::unique_ptr<atom::V8ValueConverter>
+        converter(new atom::V8ValueConverter);
+    return converter->ToV8Value(val, isolate->GetCurrentContext());
+  }
+};
+
 }  // namespace mate
 
-namespace {
-
-scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
-    const base::DictionaryValue& manifest,
-    const extensions::Manifest::Location& manifest_location,
-    int flags,
-    std::string* error) {
-  scoped_refptr<extensions::Extension> extension(extensions::Extension::Create(
-      path, manifest_location, manifest, flags, error));
-  if (!extension.get())
-    return NULL;
-
-  std::vector<extensions::InstallWarning> warnings;
-  if (!extensions::file_util::ValidateExtension(extension.get(),
-                                                error,
-                                                &warnings))
-    return NULL;
-  extension->AddInstallWarnings(warnings);
-
-  return extension;
-}
-
-}  // namespace
 
 namespace atom {
 
 namespace api {
 
-Extension::Extension() {
+Extension::Extension(v8::Isolate* isolate) {
   registrar_.Add(this,
                  extensions::NOTIFICATION_EXTENSION_LOADED_DEPRECATED,
                  content::NotificationService::AllBrowserContextsAndSources());
+  registrar_.Add(this,
+                 extensions::NOTIFICATION_CRX_INSTALLER_DONE,
+                 content::NotificationService::AllBrowserContextsAndSources());
+  registrar_.Add(this,
+                 extensions::NOTIFICATION_EXTENSION_ENABLED,
+                 content::NotificationService::AllBrowserContextsAndSources());
+  registrar_.Add(this,
+                 content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED,
+                 content::NotificationService::AllBrowserContextsAndSources());
+  Init(isolate);
 }
 
 Extension::~Extension() {}
@@ -113,145 +94,31 @@ void Extension::Observe(
     case extensions::NOTIFICATION_EXTENSION_LOADED_DEPRECATED: {
       extensions::Extension* extension =
           content::Details<extensions::Extension>(details).ptr();
-      extensions_.Insert(extension);
+      brave::BraveExtensions::Get()->Insert(extension);
+      break;
+    }
+    case content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED: {
+      content::WebContents* web_contents =
+          content::Source<content::WebContents>(source).ptr();
+      auto browser_context = web_contents->GetBrowserContext();
+      auto url = web_contents->GetURL();
+
+      // Make sure background pages get a webcontents api wrapper so they can
+      // communicate via IPC.
+      if (brave::BraveExtensions::IsBackgroundPageUrl(url, browser_context)) {
+        WebContents::CreateFrom(isolate(), web_contents);
+      }
+      break;
+    }
+    case extensions::NOTIFICATION_CRX_INSTALLER_DONE: {
+      Emit("crx-installer-done");
+      break;
+    }
+    case extensions::NOTIFICATION_EXTENSION_ENABLED: {
+      Emit("extension-enabled");
+      break;
     }
   }
-}
-
-// static
-Extension* Extension::GetInstance() {
-  return base::Singleton<Extension>::get();
-}
-
-// static
-mate::Dictionary Extension::Load(
-  v8::Isolate* isolate,
-  const base::FilePath& path,
-  const base::DictionaryValue& manifest,
-  const extensions::Manifest::Location& manifest_location,
-  int flags) {
-  std::string error;
-  scoped_refptr<extensions::Extension> extension;
-
-  if (manifest.empty()) {
-    extension = extensions::file_util::LoadExtension(path,
-                                                    manifest_location,
-                                                    flags,
-                                                    &error);
-  } else {
-    extension = LoadExtension(path,
-                              manifest,
-                              manifest_location,
-                              flags,
-                              &error);
-  }
-
-  mate::Dictionary install_info = mate::Dictionary::CreateEmpty(isolate);
-  if (error.empty()) {
-    Install(extension);
-    install_info.Set("name", extension->non_localized_name());
-    install_info.Set("id", extension->id());
-    install_info.Set("url", extension->url().spec());
-    install_info.Set("path", extension->path());
-    install_info.Set("version", extension->VersionString());
-    install_info.Set("description", extension->description());
-  } else {
-    install_info.Set("error", error);
-  }
-  return install_info;
-}
-
-// static
-void Extension::Install(
-    const scoped_refptr<const extensions::Extension>& extension) {
-  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
-    content::BrowserThread::PostTask(
-      content::BrowserThread::UI, FROM_HERE,
-        base::Bind(Install, extension));
-
-  content::NotificationService::current()->Notify(
-        extensions::NOTIFICATION_CRX_INSTALLER_DONE,
-        content::Source<Extension>(GetInstance()),
-        content::Details<const extensions::Extension>(extension.get()));
-}
-
-// static
-void Extension::Disable(const std::string& extension_id) {
-  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
-    content::BrowserThread::PostTask(
-      content::BrowserThread::UI, FROM_HERE,
-        base::Bind(Disable, extension_id));
-
-  const extensions::Extension* extension =
-    GetInstance()->extensions_.GetByID(extension_id);
-
-  if (!extension)
-    return;
-
-  content::NotificationService::current()->Notify(
-        atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
-        content::Source<Extension>(GetInstance()),
-        content::Details<const extensions::Extension>(extension));
-}
-
-// static
-void Extension::Enable(const std::string& extension_id) {
-  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
-    content::BrowserThread::PostTask(
-      content::BrowserThread::UI, FROM_HERE,
-        base::Bind(Enable, extension_id));
-
-  const extensions::Extension* extension =
-    GetInstance()->extensions_.GetByID(extension_id);
-
-  if (!extension)
-    return;
-
-  content::NotificationService::current()->Notify(
-        atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST,
-        content::Source<Extension>(GetInstance()),
-        content::Details<const extensions::Extension>(extension));
-}
-
-// static
-bool Extension::IsBackgroundPageUrl(GURL url,
-                    content::BrowserContext* browser_context) {
-  if (url.scheme() != "chrome-extension")
-    return false;
-
-  if (extensions::ExtensionSystem::Get(browser_context)
-      ->ready().is_signaled()) {
-    const extensions::Extension* extension =
-        extensions::ExtensionRegistry::Get(browser_context)->
-            enabled_extensions().GetExtensionOrAppByURL(url);
-    if (extension &&
-        url == extensions::BackgroundInfo::GetBackgroundURL(extension))
-      return true;
-  }
-
-  return false;
-}
-
-// static
-bool Extension::IsBackgroundPageWebContents(
-    content::WebContents* web_contents) {
-  auto browser_context = web_contents->GetBrowserContext();
-  auto url = web_contents->GetURL();
-
-  return IsBackgroundPageUrl(url, browser_context);
-}
-
-// static
-bool Extension::IsBackgroundPage(const WebContents* web_contents) {
-  return IsBackgroundPageWebContents(web_contents->web_contents());
-}
-
-// static
-v8::Local<v8::Value> Extension::TabValue(v8::Isolate* isolate,
-                    WebContents* web_contents) {
-  std::unique_ptr<base::DictionaryValue> value(
-      extensions::TabHelper::CreateTabValue(web_contents->web_contents()));
-  return mate::ConvertToV8(isolate, *value);
 }
 
 // static
@@ -265,6 +132,52 @@ bool Extension::HandleURLOverrideReverse(GURL* url,
   return false;
 }
 
+// static
+mate::Handle<Extension> Extension::Create(v8::Isolate* isolate) {
+  return mate::CreateHandle(isolate, new Extension(isolate));
+}
+// static
+bool Extension::IsBackgroundPage(const WebContents* web_contents) {
+  return brave::BraveExtensions::Get()->
+    IsBackgroundPageWebContents(web_contents->web_contents());
+}
+
+// static
+v8::Local<v8::Value> Extension::TabValue(v8::Isolate* isolate,
+                    WebContents* web_contents) {
+  std::unique_ptr<base::DictionaryValue> value(
+      extensions::TabHelper::CreateTabValue(web_contents->web_contents()));
+  return mate::ConvertToV8(isolate, *value);
+}
+
+// static
+const base::ListValue*
+Extension::GetExtensions(const WebContents* web_contents) {
+  return brave::BraveExtensions::Get()->
+    GetExtensionsWebContents(web_contents->web_contents());
+}
+
+// static
+void Extension::BuildPrototype(
+    v8::Isolate* isolate, v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(mate::StringToV8(isolate, "Extension"));
+  auto brave_extensions = base::Unretained(brave::BraveExtensions::Get());
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
+      .SetMethod("enable",
+          base::Bind(&brave::BraveExtensions::Enable, brave_extensions))
+      .SetMethod("disable",
+          base::Bind(&brave::BraveExtensions::Disable, brave_extensions))
+      .SetMethod("load",
+          base::Bind(&brave::BraveExtensions::Load, brave_extensions))
+      .SetMethod("tabValue", &atom::api::Extension::TabValue)
+      .SetMethod("getExtensions", &atom::api::Extension::GetExtensions)
+      .SetMethod("installCrx",
+          base::Bind(&brave::BraveExtensions::InstallCrx, brave_extensions))
+      .SetMethod("updateFromCrx",
+          base::Bind(&brave::BraveExtensions::UpdateFromCrx, brave_extensions))
+      .SetMethod("isBackgroundPage", &atom::api::Extension::IsBackgroundPage);
+}
+
 }  // namespace api
 
 }  // namespace atom
@@ -275,11 +188,9 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
                 v8::Local<v8::Context> context, void* priv) {
   v8::Isolate* isolate = context->GetIsolate();
   mate::Dictionary dict(isolate, exports);
-  dict.SetMethod("load", &atom::api::Extension::Load);
-  dict.SetMethod("disable", &atom::api::Extension::Disable);
-  dict.SetMethod("enable", &atom::api::Extension::Enable);
-  dict.SetMethod("tabValue", &atom::api::Extension::TabValue);
-  dict.SetMethod("isBackgroundPage", &atom::api::Extension::IsBackgroundPage);
+  dict.Set("Extension",
+      atom::api::Extension::GetConstructor(isolate)->GetFunction());
+  dict.Set("extension", atom::api::Extension::Create(isolate));
 }
 
 }  // namespace

@@ -22,6 +22,8 @@
 
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/common/extensions/atom_extensions_client.h"
+#include "extensions/utility/utility_handler.h"
+#include "chrome/utility/extensions/extensions_handler.h"
 #endif
 
 namespace {
@@ -34,6 +36,14 @@ bool Send(IPC::Message* message) {
 
 namespace atom {
 
+// static
+void AtomContentUtilityClient::PreSandboxStartup() {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::ExtensionsHandler::PreSandboxStartup();
+#endif
+}
+
+
 int64_t AtomContentUtilityClient::max_ipc_message_size_ =
     IPC::Channel::kMaximumMessageSize;
 
@@ -43,6 +53,7 @@ AtomContentUtilityClient::AtomContentUtilityClient()
   handlers_.push_back(new printing::PrintingHandlerWin());
 #endif
 #if defined(ENABLE_EXTENSIONS)
+  handlers_.push_back(new extensions::ExtensionsHandler(this));
   extensions::ExtensionsClient::Set(
       extensions::AtomExtensionsClient::GetInstance());
 #endif
@@ -52,6 +63,9 @@ AtomContentUtilityClient::~AtomContentUtilityClient() {
 }
 
 void AtomContentUtilityClient::UtilityThreadStarted() {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::UtilityHandler::UtilityThreadStarted();
+#endif
 }
 
 bool AtomContentUtilityClient::OnMessageReceived(

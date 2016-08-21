@@ -159,6 +159,7 @@ void LoadExtensionResources() {
 
 void AtomMainDelegate::PreSandboxStartup() {
   brightray::MainDelegate::PreSandboxStartup();
+  AtomContentUtilityClient::PreSandboxStartup();
 
 #if defined(ENABLE_EXTENSIONS)
   LoadExtensionResources();

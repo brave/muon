@@ -459,6 +459,8 @@
       'chromium_src/chrome/browser/media/desktop_media_list_observer.h',
       'chromium_src/chrome/browser/media/native_desktop_media_list.cc',
       'chromium_src/chrome/browser/media/native_desktop_media_list.h',
+      'chromium_src/chrome/utility/extensions/extensions_handler.cc',
+      'chromium_src/chrome/utility/extensions/extensions_handler.h',
       'chromium_src/chrome/browser/printing/print_job.cc',
       'chromium_src/chrome/browser/printing/print_job.h',
       'chromium_src/chrome/browser/printing/print_job_manager.cc',

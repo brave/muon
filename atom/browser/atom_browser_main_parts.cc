@@ -16,6 +16,7 @@
 #include "atom/common/node_bindings.h"
 #include "atom/common/node_includes.h"
 #include "base/allocator/allocator_extension.h"
+#include "brave/browser/brave_extensions.h"
 #include "base/command_line.h"
 #include "base/files/file_util.h"
 #include "base/path_service.h"
@@ -47,6 +48,7 @@ AtomBrowserMainParts::AtomBrowserMainParts()
       browser_(new Browser),
       node_bindings_(NodeBindings::Create(true)),
       atom_bindings_(new AtomBindings),
+      brave_extensions_(new brave::BraveExtensions),
       gc_timer_(true, true) {
   DCHECK(!self_) << "Cannot have two AtomBrowserMainParts";
   self_ = this;
