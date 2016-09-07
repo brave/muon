@@ -27,6 +27,7 @@
 
 #if defined(ENABLE_EXTENSIONS)
 #include "brave/browser/brave_content_browser_client.h"
+#include "brave/common/brave_content_client.h"
 #include "brave/renderer/brave_content_renderer_client.h"
 #endif
 
@@ -237,7 +238,12 @@ bool AtomMainDelegate::DelaySandboxInitialization(
 
 std::unique_ptr<brightray::ContentClient>
 AtomMainDelegate::CreateContentClient() {
+#if defined(ENABLE_EXTENSIONS)
+  return std::unique_ptr<brightray::ContentClient>(
+      new brave::BraveContentClient);
+#else
   return std::unique_ptr<brightray::ContentClient>(new AtomContentClient);
+#endif
 }
 
 }  // namespace atom

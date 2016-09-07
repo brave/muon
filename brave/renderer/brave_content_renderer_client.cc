@@ -7,10 +7,15 @@
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/renderer/content_settings_client.h"
 #include "atom/renderer/content_settings_manager.h"
+#include "base/strings/string_number_conversions.h"
+#include "brave/common/crash_keys.h"
 #include "chrome/renderer/pepper/pepper_helper.h"
+#include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_thread.h"
+#include "content/public/renderer/render_view.h"
 #include "components/autofill/content/renderer/autofill_agent.h"
 #include "components/autofill/content/renderer/password_autofill_agent.h"
+#include "third_party/WebKit/public/web/WebLocalFrame.h"
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/renderer/extensions/atom_extensions_renderer_client.h"
 #include "atom/common/extensions/atom_extensions_client.h"
@@ -18,6 +23,35 @@
 #endif
 
 namespace brave {
+
+namespace {
+
+// Helper class to forward the messages to the client.
+class BraveRenderFrameObserver : public content::RenderFrameObserver {
+ public:
+  BraveRenderFrameObserver(content::RenderFrame* frame,
+                            atom::AtomRendererClient* renderer_client)
+      : content::RenderFrameObserver(frame) {}
+
+  void DidCommitProvisionalLoad(
+      bool is_new_navigation,
+      bool is_same_page_navigation) {
+    blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
+
+    // Don't do anything for subframes.
+    if (frame->parent())
+      return;
+
+    base::debug::SetCrashKeyValue(
+        crash_keys::kViewCount,
+        base::SizeTToString(content::RenderView::GetRenderViewCount()));
+  }
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(BraveRenderFrameObserver);
+};
+
+}  // namespace
 
 BraveContentRendererClient::BraveContentRendererClient() {
 #if defined(ENABLE_EXTENSIONS)
@@ -60,6 +94,11 @@ void BraveContentRendererClient::RenderFrameCreated(
     new autofill::PasswordAutofillAgent(render_frame);
   new autofill::AutofillAgent(render_frame, password_autofill_agent,
                     NULL);
+
+
+  base::debug::SetCrashKeyValue(
+      crash_keys::kViewCount,
+      base::SizeTToString(content::RenderView::GetRenderViewCount()));
 }
 
 void BraveContentRendererClient::RenderViewCreated(content::RenderView* render_view) {
