@@ -508,8 +508,11 @@ std::unique_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
 }
 
 void AtomExtensionSystem::InstallUpdate(const std::string& extension_id,
-                                         const base::FilePath& temp_dir) {
-  NOTREACHED();
+                                        const base::FilePath& temp_dir) {
+  LOG(INFO) << "------------------"
+    << "Found an update for extension ID: "
+    << extension_id.c_str()
+    << "Temp dir: " << temp_dir.value();
 }
 
 void AtomExtensionSystem::RegisterExtensionWithRequestContexts(

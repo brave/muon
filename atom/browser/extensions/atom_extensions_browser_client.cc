@@ -13,6 +13,7 @@
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "atom/browser/extensions/atom_process_manager_delegate.h"
+#include "atom/browser/extensions/atom_update_client_config.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
@@ -23,6 +24,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/user_prefs/user_prefs.h"
+#include "components/update_client/update_client.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_process_host.h"
 #include "extensions/browser/api/alarms/alarms_api.h"
@@ -249,6 +251,14 @@ AtomExtensionsBrowserClient::AtomExtensionsBrowserClient()
 }
 
 AtomExtensionsBrowserClient::~AtomExtensionsBrowserClient() {}
+
+scoped_refptr<update_client::UpdateClient>
+AtomExtensionsBrowserClient::CreateUpdateClient(content::BrowserContext* context) {
+  // TODO: Pass in config here
+  //return scoped_refptr<update_client::UpdateClient>(nullptr);
+  return update_client::UpdateClientFactory(
+      make_scoped_refptr(new AtomUpdateClientConfig(context)));
+}
 
 std::unique_ptr<ExtensionApiFrameIdMapHelper>
 AtomExtensionsBrowserClient::CreateExtensionApiFrameIdMapHelper(

@@ -117,6 +117,8 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
                       int view_instance_id) override;
   void AttachExtensionTaskManagerTag(content::WebContents* web_contents,
                                      ViewType view_type) override;
+  scoped_refptr<update_client::UpdateClient> CreateUpdateClient(
+      content::BrowserContext* context);
   std::unique_ptr<ExtensionApiFrameIdMapHelper>
   CreateExtensionApiFrameIdMapHelper(
       ExtensionApiFrameIdMap* map) override;
