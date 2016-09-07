@@ -30,6 +30,6 @@ class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
   DISALLOW_COPY_AND_ASSIGN(WebFrameBindings);
 };
 
-}  // namespace atom
+}  // namespace brave
 
 #endif  // BRAVE_RENDERER_EXTENSIONS_WEB_FRAME_BINDINGS_H_
