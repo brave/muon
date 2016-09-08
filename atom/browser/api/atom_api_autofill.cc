@@ -252,7 +252,7 @@ std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
   return personal_data->SaveImportedProfile(autofill_profile);
 }
 
-autofill::AutofillProfile* Autofill::GetProfile(std::string guid) {
+autofill::AutofillProfile* Autofill::GetProfile(const std::string& guid) {
   autofill::PersonalDataManager* personal_data =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
@@ -264,7 +264,7 @@ autofill::AutofillProfile* Autofill::GetProfile(std::string guid) {
   return personal_data->GetProfileByGUID(guid);
 }
 
-bool Autofill::RemoveProfile(const std::string guid) {
+bool Autofill::RemoveProfile(const std::string& guid) {
   autofill::PersonalDataManager* personal_data =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
@@ -318,7 +318,7 @@ std::string Autofill::AddCreditCard(const base::DictionaryValue& card) {
   return personal_data->SaveImportedCreditCard(credit_card);
 }
 
-autofill::CreditCard* Autofill::GetCreditCard(std::string guid) {
+autofill::CreditCard* Autofill::GetCreditCard(const std::string& guid) {
   autofill::PersonalDataManager* personal_data =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
@@ -329,7 +329,7 @@ autofill::CreditCard* Autofill::GetCreditCard(std::string guid) {
   return personal_data->GetCreditCardByGUID(guid);
 }
 
-bool Autofill::RemoveCreditCard(const std::string guid) {
+bool Autofill::RemoveCreditCard(const std::string& guid) {
   autofill::PersonalDataManager* personal_data =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
