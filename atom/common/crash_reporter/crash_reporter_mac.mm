@@ -19,8 +19,44 @@
 #include "vendor/crashpad/client/crashpad_info.h"
 #include "vendor/crashpad/client/settings.h"
 
+#include "brave/common/crash_keys.h"
+
 namespace crash_reporter {
 
+namespace {
+
+void SetCrashKeyValue(const base::StringPiece& key,
+                      const base::StringPiece& value) {
+  if (CrashReporterMac::GetInstance() == NULL) {
+    return;
+  }
+
+  CrashReporterMac::GetInstance()->SetCrashKeyValue(key, value);
+}
+
+void ClearCrashKeyValue(const base::StringPiece& key) {
+  if (CrashReporterMac::GetInstance() == NULL) {
+    return;
+  }
+
+  CrashReporterMac::GetInstance()->ClearCrashKeyValue(key);
+}
+
+void SetCrashKeyValueImpl(const base::StringPiece& key,
+                          const base::StringPiece& value) {
+  @autoreleasepool {
+    SetCrashKeyValue(key, value);
+  }
+}
+
+void ClearCrashKeyValueImpl(const base::StringPiece& key) {
+  @autoreleasepool {
+    ClearCrashKeyValue(key);
+  }
+}
+
+
+}
 CrashReporterMac::CrashReporterMac() {
 }
 
@@ -55,6 +91,10 @@ void CrashReporterMac::InitBreakpad(const std::string& product_name,
         crashpad_client.UseHandler();
       }
     }  // @autoreleasepool
+    base::debug::SetCrashKeyReportingFunctions(
+              &SetCrashKeyValueImpl,
+              &ClearCrashKeyValueImpl);
+    crash_keys::RegisterCrashKeys();
   }
 
   crashpad::CrashpadInfo* crashpad_info =
@@ -90,6 +130,10 @@ void CrashReporterMac::SetUploadParameters() {
 void CrashReporterMac::SetCrashKeyValue(const base::StringPiece& key,
                                         const base::StringPiece& value) {
   simple_string_dictionary_->SetKeyValue(key.data(), value.data());
+}
+
+void CrashReporterMac::ClearCrashKeyValue(const base::StringPiece& key) {
+  simple_string_dictionary_->RemoveKey(key.data());
 }
 
 std::vector<CrashReporter::UploadReportResult>

@@ -30,6 +30,9 @@ class CrashReporterMac : public CrashReporter {
                     bool auto_submit,
                     bool skip_system_crash_handler) override;
   void SetUploadParameters() override;
+  void SetCrashKeyValue(const base::StringPiece& key,
+                        const base::StringPiece& value);
+  void ClearCrashKeyValue(const base::StringPiece& value);
 
  private:
   friend struct base::DefaultSingletonTraits<CrashReporterMac>;
@@ -38,8 +41,6 @@ class CrashReporterMac : public CrashReporter {
   virtual ~CrashReporterMac();
 
   void SetUploadsEnabled(bool enable_uploads);
-  void SetCrashKeyValue(const base::StringPiece& key,
-                        const base::StringPiece& value);
 
   std::vector<UploadReportResult> GetUploadedReports(
       const std::string& path) override;

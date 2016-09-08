@@ -7,7 +7,6 @@
 
 #include "atom/common/crash_reporter/crash_reporter.h"
 #include "base/bind.h"
-#include "brave/common/crash_keys.h"
 #include "native_mate/dictionary.h"
 
 #include "atom/common/node_includes.h"
@@ -36,7 +35,6 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
                 v8::Local<v8::Context> context, void* priv) {
   mate::Dictionary dict(context->GetIsolate(), exports);
   auto report = base::Unretained(CrashReporter::GetInstance());
-  crash_keys::RegisterCrashKeys();
   dict.SetMethod("start",
                  base::Bind(&CrashReporter::Start, report));
   dict.SetMethod("_getUploadedReports",

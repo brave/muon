@@ -35,6 +35,8 @@ namespace crash_reporter {
 
 namespace {
 
+const size_t kMaxDynamicEntries = 256;
+
 // Minidump with stacks, PEB, TEB, and unloaded module list.
 const MINIDUMP_TYPE kSmallDumpType = static_cast<MINIDUMP_TYPE>(
     MiniDumpWithProcessThreadData |  // Get PEB and TEB.
@@ -205,6 +207,9 @@ void CrashReporterWin::InitBreakpad(const std::string& product_name,
     }
   }
 #endif
+  base::debug::SetCrashKeyReportingFunctions(&CrashReporterWin::SetCrashKeyValue,
+                                             &CrashReporterWin::ClearCrashKeyValue);
+  crash_keys::RegisterCrashKeys();
 }
 
 void CrashReporterWin::SetUploadParameters() {
@@ -271,6 +276,46 @@ google_breakpad::CustomClientInfo* CrashReporterWin::GetCustomInfo(
   custom_info_.entries = &custom_info_entries_.front();
   custom_info_.count = custom_info_entries_.size();
   return &custom_info_;
+}
+
+void CrashReporterWin::SetCrashKeyValue(
+    const std::wstring& key, const std::wstring& value) {
+  // CustomInfoEntry limits the length of key and value. If they exceed
+  // their maximum length the underlying string handling functions raise
+  // an exception and prematurely trigger a crash. Truncate here.
+  std::wstring safe_key(std::wstring(key).substr(
+      0, google_breakpad::CustomInfoEntry::kNameMaxLength  - 1));
+  std::wstring safe_value(std::wstring(value).substr(
+      0, google_breakpad::CustomInfoEntry::kValueMaxLength - 1));
+
+  // If we already have a value for this key, update it; otherwise, insert
+  // the new value if we have not exhausted the pre-allocated slots for dynamic
+  // entries.
+  base::AutoLock lock(lock_);
+
+  DynamicEntriesMap::iterator it = dynamic_entries_.find(safe_key);
+  google_breakpad::CustomInfoEntry* entry = NULL;
+  if (it == dynamic_entries_.end()) {
+    if (dynamic_entries_.size() >= kMaxDynamicEntries)
+      return;
+    entry = &(*custom_entries_)[dynamic_keys_offset_++];
+    dynamic_entries_.insert(std::make_pair(safe_key, entry));
+  } else {
+    entry = it->second;
+  }
+
+  entry->set(safe_key.data(), safe_value.data());
+}
+
+void CrashReporterWin::ClearCrashKeyValue(const std::wstring& key) {
+  base::AutoLock lock(lock_);
+
+  std::wstring key_string(key);
+  DynamicEntriesMap::iterator it = dynamic_entries_.find(key_string);
+  if (it == dynamic_entries_.end())
+    return;
+
+  it->second->set_value(NULL);
 }
 
 // static

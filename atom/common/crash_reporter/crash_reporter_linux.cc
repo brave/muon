@@ -56,6 +56,15 @@ CrashReporterLinux::CrashReporterLinux()
 CrashReporterLinux::~CrashReporterLinux() {
 }
 
+void CrashReporterLinux::SetCrashKeyValue(const base::StringPiece& key,
+                      const base::StringPiece& value) {
+  crash_keys_->SetKeyValue(key.data(), value.data());
+}
+
+void CrashReporterLinux::ClearCrashKey(const base::StringPiece& key) {
+  crash_keys_->RemoveKey(key.data());
+}
+
 void CrashReporterLinux::InitBreakpad(const std::string& product_name,
                                       const std::string& version,
                                       const std::string& company_name,
@@ -71,6 +80,9 @@ void CrashReporterLinux::InitBreakpad(const std::string& product_name,
   for (StringMap::const_iterator iter = upload_parameters_.begin();
        iter != upload_parameters_.end(); ++iter)
     crash_keys_.SetKeyValue(iter->first.c_str(), iter->second.c_str());
+
+  GetCrashReporterClient()->RegisterCrashKeys();
+  base::debug::SetCrashKeyReportingFunctions(&SetCrashKeyValue, &ClearCrashKey);
 }
 
 void CrashReporterLinux::SetUploadParameters() {
