@@ -21,7 +21,7 @@ namespace {
 // if we use the standard {url: key} format Chromium would override our key with
 // the predefined one in common.gypi of libchromiumcontent, which is empty.
 const char* kGeolocationProviderURL =
-    "https://www.googleapis.com/geolocation/v1/geolocate?key="
+    GOOGLEAPIS_ENDPOINT
     GOOGLEAPIS_API_KEY;
 
 // Loads access tokens and other necessary data on the UI thread, and
