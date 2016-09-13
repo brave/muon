@@ -6,7 +6,8 @@
     "electabul": "~0.0.4",
     "request": "*",
     "standard": "^7.1.2",
-    "standard-markdown": "^1.1.1"
+    "standard-markdown": "^1.1.1",
+    "watch": "^0.19.1"
   },
   "optionalDependencies": {
     "runas": "^3.0.0"
@@ -40,6 +41,9 @@
     "browser-build": "npm run build && rsync -avz --delete out/D/Brave.app ../browser-laptop/node_modules/electron-prebuilt/dist/",
     "browser-build-windows": "python ./script/build.py && xcopy .\\out\\R\\* ..\\browser-laptop\\node_modules\\electron-prebuilt\\dist\\ /Y /S /I /F /R",
     "libchromium-build": "../libchromiumcontent/script/bootstrap && ../libchromiumcontent/script/update && ../libchromiumcontent/script/build && ../libchromiumcontent/script/create-dist --no_zip",
-    "libchromium-bootstrap": "./script/bootstrap.py -v --libcc_source_path ../libchromiumcontent/dist/main/src --libcc_shared_library_path ../libchromiumcontent/dist/main/shared_library --libcc_static_library_path ../libchromiumcontent/dist/main/static_library"
+    "libchromium-bootstrap": "./script/bootstrap.py -v --libcc_source_path ../libchromiumcontent/dist/main/src --libcc_shared_library_path ../libchromiumcontent/dist/main/shared_library --libcc_static_library_path ../libchromiumcontent/dist/main/static_library",
+    "browser-build-linux": "npm run build && rsync -avz --delete out/D/ ../browser-laptop/node_modules/electron-prebuilt/dist/",
+    "watch": "watch 'npm run browser-build' .",
+    "watch-linux": "watch 'npm run browser-build-linux' ."
   }
 }
