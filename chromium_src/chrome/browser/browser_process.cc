@@ -4,7 +4,11 @@
 
 #include "chrome/browser/browser_process.h"
 
+#include "atom/browser/atom_browser_context.h"
+#include "base/command_line.h"
+#include "brave/browser/component_updater/brave_component_updater_configurator.h"
 #include "chrome/browser/printing/print_job_manager.h"
+#include "components/component_updater/component_updater_service.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -49,6 +53,22 @@ BrowserProcess::BrowserProcess()
 
 BrowserProcess::~BrowserProcess() {
   g_browser_process = NULL;
+}
+
+component_updater::ComponentUpdateService*
+BrowserProcess::component_updater() {
+  if (!component_updater_.get()) {
+    auto browser_context = atom::AtomBrowserContext::From("", false);
+    scoped_refptr<update_client::Configurator> configurator =
+        component_updater::MakeBraveComponentUpdaterConfigurator(
+            base::CommandLine::ForCurrentProcess(),
+            browser_context->GetRequestContext());
+    // Creating the component updater does not do anything, components
+    // need to be registered and Start() needs to be called.
+    component_updater_.reset(component_updater::ComponentUpdateServiceFactory(
+                                 configurator).release());
+  }
+  return component_updater_.get();
 }
 
 void BrowserProcess::StartTearDown() {

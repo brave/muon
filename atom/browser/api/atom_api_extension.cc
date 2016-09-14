@@ -220,6 +220,26 @@ void Extension::Enable(const std::string& extension_id) {
 }
 
 // static
+void Extension::Remove(const std::string& extension_id) {
+  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
+    content::BrowserThread::PostTask(
+      content::BrowserThread::UI, FROM_HERE,
+        base::Bind(Remove, extension_id));
+
+  const extensions::Extension* extension =
+    GetInstance()->extensions_.GetByID(extension_id);
+
+  if (!extension)
+    return;
+
+  content::NotificationService::current()->Notify(
+    atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST,
+    content::Source<Extension>(GetInstance()),
+    content::Details<const extensions::Extension>(extension));
+    GetInstance()->extensions_.Remove(extension_id);
+}
+
+// static
 bool Extension::IsBackgroundPageUrl(GURL url,
                     content::BrowserContext* browser_context) {
   if (url.scheme() != "chrome-extension")

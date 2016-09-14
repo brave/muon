@@ -12,6 +12,7 @@
     'extensions.gypi',
     'autofill.gypi',
     'importer.gypi',
+    'component_updater.gypi',
   ],
   'target_defaults': {
     'msvs_disabled_warnings': [
@@ -237,6 +238,7 @@
         '<@(lib_sources)',
         '<@(autofill_sources)',
         '<@(importer_sources)',
+        '<@(component_updater_sources)',
       ],
       'include_dirs': [
         '.',
@@ -295,6 +297,7 @@
             # Following libraries are always linked statically.
             'libraries': [ '<@(autofill_libraries)',
                            '<@(importer_libraries)',
+                           '<@(component_updater_libraries)',
             ],
           },
         }],
@@ -305,6 +308,7 @@
               '-Wl,--start-group',
               '<@(autofill_libraries)',
               '<@(importer_libraries)',
+              '<@(component_updater_libraries)',
               '-Wl,--end-group',
             ],
           }
@@ -431,6 +435,7 @@
             '<@(js_sources)',
             '<@(extension_js_sources)',
             '<@(importer_js_sources)',
+            '<@(component_updater_js_sources)',
           ],
           'outputs': [
             '<(resources_path)/electron.asar',

@@ -12,7 +12,12 @@
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/shared_user_script_master.h"
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "base/memory/weak_ptr.h"
+#include "base/path_service.h"
+#include "base/version.h"
+#include "components/component_updater/component_updater_paths.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/notification_service.h"
@@ -30,6 +35,7 @@
 #include "extensions/browser/service_worker_manager.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
 #include "extensions/common/extension_messages.h"
+#include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/shared_module_info.h"
 #include "extensions/common/permissions/permissions_data.h"
 
@@ -71,6 +77,8 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
                  content::NotificationService::AllSources());
   registrar_.Add(this, atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
                  content::NotificationService::AllSources());
+  registrar_.Add(this, atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST,
+                 content::NotificationService::AllSources());
 
   if (extensions_enabled) {
     // load all extensions
@@ -91,6 +99,113 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
 }
 
 void AtomExtensionSystem::Shared::Shutdown() {
+}
+
+bool AtomExtensionSystem::Shared::UninstallExtension(
+    // "transient" because the process of uninstalling may cause the reference
+    // to become invalid. Instead, use |extenson->id()|.
+    const std::string& transient_extension_id,
+    extensions::UninstallReason reason,
+    const base::Closure& deletion_done_callback,
+    base::string16* error) {
+  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
+
+  scoped_refptr<const Extension> extension =
+      GetInstalledExtension(transient_extension_id);
+
+  // Callers should not send us nonexistent extensions.
+  DCHECK(extension.get());
+
+  // Unload before doing more cleanup to ensure that nothing is hanging on to
+  // any of these resources.
+  UnloadExtension(extension->id(), UnloadedExtensionInfo::REASON_UNINSTALL);
+  if (registry_->blacklisted_extensions().Contains(extension->id()))
+    registry_->RemoveBlacklisted(extension->id());
+
+  base::FilePath install_directory;
+  PathService::Get(component_updater::DIR_COMPONENT_USER,
+      &install_directory);
+
+  // Tell the backend to start deleting installed extensions on the file thread.
+  BrowserThread::PostTask(
+      BrowserThread::IO,
+      FROM_HERE,
+      base::Bind(&AtomExtensionSystem::Shared::UninstallExtensionOnFileThread,
+                 extension->id(),
+                 install_directory,
+                 extension->path()));
+
+  UntrackTerminatedExtension(extension->id());
+
+  // Notify interested parties that we've uninstalled this extension.
+  ExtensionRegistry::Get(browser_context_)
+      ->TriggerOnUninstalled(extension.get(), reason);
+
+  return true;
+}
+
+void
+AtomExtensionSystem::Shared::UntrackTerminatedExtension(const std::string& id) {
+  std::string lowercase_id = base::ToLowerASCII(id);
+  const Extension* extension =
+      registry_->terminated_extensions().GetByID(lowercase_id);
+  registry_->RemoveTerminated(lowercase_id);
+  if (extension) {
+    content::NotificationService::current()->Notify(
+        extensions::NOTIFICATION_EXTENSION_REMOVED,
+        content::Source<content::BrowserContext>(browser_context_),
+        content::Details<const Extension>(extension));
+  }
+}
+
+// static
+void AtomExtensionSystem::Shared::UninstallExtensionOnFileThread(
+    const std::string& id,
+    const base::FilePath& install_dir,
+    const base::FilePath& extension_path) {
+  file_util::UninstallExtension(install_dir, id);
+}
+
+void AtomExtensionSystem::Shared::UnloadExtension(
+    const std::string& extension_id,
+    UnloadedExtensionInfo::Reason reason) {
+  // Make sure the extension gets deleted after we return from this function.
+  int include_mask =
+      ExtensionRegistry::EVERYTHING & ~ExtensionRegistry::TERMINATED;
+  scoped_refptr<const Extension> extension(
+      registry_->GetExtensionById(extension_id, include_mask));
+
+  // This method can be called via PostTask, so the extension may have been
+  // unloaded by the time this runs.
+  if (!extension.get()) {
+    // In case the extension may have crashed/uninstalled. Allow the profile to
+    // clean up its RequestContexts.
+    AtomExtensionSystemFactory::GetInstance()->
+      GetForBrowserContext(browser_context_)->
+        UnregisterExtensionWithRequestContexts(extension_id, reason);
+    return;
+  }
+
+  if (registry_->disabled_extensions().Contains(extension->id())) {
+    registry_->RemoveDisabled(extension->id());
+    // Make sure the profile cleans up its RequestContexts when an already
+    // disabled extension is unloaded (since they are also tracking the disabled
+    // extensions).
+    AtomExtensionSystemFactory::GetInstance()->
+      GetForBrowserContext(browser_context_)->
+        UnregisterExtensionWithRequestContexts(extension_id, reason);
+    // Don't send the unloaded notification. It was sent when the extension
+    // was disabled.
+  } else {
+    // Remove the extension from the enabled list.
+    registry_->RemoveEnabled(extension->id());
+    NotifyExtensionUnloaded(extension.get(), reason);
+  }
+
+  content::NotificationService::current()->Notify(
+      extensions::NOTIFICATION_EXTENSION_REMOVED,
+      content::Source<content::BrowserContext>(browser_context_),
+      content::Details<const Extension>(extension.get()));
 }
 
 ExtensionService* AtomExtensionSystem::Shared::extension_service() {
@@ -262,18 +377,61 @@ void AtomExtensionSystem::Shared::NotifyExtensionUnloaded(
 
 const Extension* AtomExtensionSystem::Shared::AddExtension(
                                         const Extension* extension) {
-  if (registry_->GetExtensionById(extension->id(),
-                                  ExtensionRegistry::IncludeFlag::EVERYTHING))
-    return extension;
+  bool is_extension_upgrade = false;
+  bool is_extension_loaded = false;
+  const Extension* old = GetInstalledExtension(extension->id());
+  if (old) {
+    is_extension_loaded = true;
+    int version_compare_result =
+        extension->version()->CompareTo(*(old->version()));
+    is_extension_upgrade = version_compare_result > 0;
+    // Other than for unpacked extensions, CrxInstaller should have guaranteed
+    // that we aren't downgrading.
+    if (!Manifest::IsUnpackedLocation(extension->location())) {
+      DCHECK_GE(version_compare_result, 0);
+    }
+  }
 
-  extension_prefs_->AddGrantedPermissions(
-          extension->id(), extension->permissions_data()->active_permissions());
-  extension_prefs_->SetExtensionEnabled(extension->id());
+  // Set the upgraded bit; we consider reloads upgrades.
+  runtime_data()->SetBeingUpgraded(extension->id(),
+                                   is_extension_upgrade);
 
-  registry_->AddEnabled(make_scoped_refptr(extension));
+  // If a terminated extension is loaded, remove it from the terminated list.
+  UntrackTerminatedExtension(extension->id());
 
-  NotifyExtensionLoaded(extension);
+  if (is_extension_loaded) {
+    // To upgrade an extension in place, unload the old one and then load the
+    // new one.  ReloadExtension disables the extension, which is sufficient.
+    UnloadExtension(extension->id(), UnloadedExtensionInfo::REASON_UPDATE);
+  }
 
+  if (extension_prefs_->IsExtensionBlacklisted(extension->id())) {
+    // Only prefs is checked for the blacklist. We rely on callers to check the
+    // blacklist before calling into here, e.g. CrxInstaller checks before
+    // installation then threads through the install and pending install flow
+    // of this class, and we check when loading installed extensions.
+    registry_->AddBlacklisted(extension);
+  } else if (extension_prefs_->IsExtensionDisabled(extension->id())) {
+    registry_->AddDisabled(extension);
+    content::NotificationService::current()->Notify(
+        extensions::NOTIFICATION_EXTENSION_UPDATE_DISABLED,
+        content::Source<content::BrowserContext>(browser_context_),
+        content::Details<const Extension>(extension));
+  } else {
+    // All apps that are displayed in the launcher are ordered by their ordinals
+    // so we must ensure they have valid ordinals.
+    if (extension->RequiresSortOrdinal()) {
+      app_sorting()->SetExtensionVisible(
+          extension->id(),
+          extension->ShouldDisplayInNewTabPage());
+      app_sorting()->EnsureValidOrdinals(extension->id(),
+                                       syncer::StringOrdinal());
+    }
+
+    registry_->AddEnabled(extension);
+    NotifyExtensionLoaded(extension);
+  }
+  runtime_data()->SetBeingUpgraded(extension->id(), false);
   return extension;
 }
 
@@ -367,6 +525,23 @@ void AtomExtensionSystem::Shared::Observe(int type,
 
       if (extension)
         DisableExtension(extension->id(), Extension::DISABLE_USER_ACTION);
+
+      break;
+    }
+    case atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST: {
+      if (!shared_user_script_master())
+        return;
+
+      const Extension* extension =
+        content::Details<const Extension>(details).ptr();
+
+      if (extension) {
+        base::string16 error;
+        UninstallExtension(extension->id(),
+            extensions::UNINSTALL_REASON_INTERNAL_MANAGEMENT,
+            base::Bind(&base::DoNothing),
+            &error);
+      }
 
       break;
     }
