@@ -13,6 +13,7 @@
 #include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/shared_user_script_master.h"
 #include "base/memory/weak_ptr.h"
+#include "base/path_service.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/notification_service.h"
@@ -29,9 +30,12 @@
 #include "extensions/browser/runtime_data.h"
 #include "extensions/browser/service_worker_manager.h"
 #include "extensions/common/extension_messages.h"
+#include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/shared_module_info.h"
 #include "extensions/common/permissions/permissions_data.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
+#include "brightray/browser/brightray_paths.h"
+#include "components/component_updater/component_updater_paths.h"
 
 using content::BrowserThread;
 
@@ -70,6 +74,8 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
   registrar_.Add(this, atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST,
                  content::NotificationService::AllSources());
   registrar_.Add(this, atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
+                 content::NotificationService::AllSources());
+  registrar_.Add(this, atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST,
                  content::NotificationService::AllSources());
 
   if (extensions_enabled) {
@@ -262,6 +268,7 @@ void AtomExtensionSystem::Shared::NotifyExtensionUnloaded(
 
 const Extension* AtomExtensionSystem::Shared::AddExtension(
                                         const Extension* extension) {
+  LOG(INFO) << "--------AtomExtensionSystem::AddExtension!";
   if (registry_->GetExtensionById(extension->id(),
                                   ExtensionRegistry::IncludeFlag::EVERYTHING))
     return extension;
@@ -279,6 +286,7 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
 
 void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
       const Extension* extension) {
+  LOG(INFO) << "--------AtomExtensionSystem::NotifyExtensionLoaded!";
   AtomExtensionSystemFactory::GetInstance()->
       GetForBrowserContext(browser_context_)->
         RegisterExtensionWithRequestContexts(
@@ -335,6 +343,7 @@ void AtomExtensionSystem::Shared::Observe(int type,
                                const content::NotificationDetails& details) {
   switch (type) {
     case extensions::NOTIFICATION_CRX_INSTALLER_DONE: {
+      LOG(INFO) << "--------AtomExtensionSystem::NOTIFICATION_CRX_INSTALLER_DONE!";
       if (!shared_user_script_master())
         return;
 
@@ -347,14 +356,19 @@ void AtomExtensionSystem::Shared::Observe(int type,
       break;
     }
     case atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST: {
+      LOG(INFO) << "--------AtomExtensionSystem::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST!";
       if (!shared_user_script_master())
         return;
 
       const Extension* extension =
         content::Details<const Extension>(details).ptr();
 
-      if (extension)
+      if (extension) {
+        LOG(INFO) << "--------AtomExtensionSystem::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST! id:" << extension->id().c_str();
         EnableExtension(extension->id());
+      } else {
+        LOG(INFO) << "--------AtomExtensionSystem::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST! nO iD!";
+      }
 
       break;
     }
@@ -368,6 +382,23 @@ void AtomExtensionSystem::Shared::Observe(int type,
       if (extension)
         DisableExtension(extension->id(), Extension::DISABLE_USER_ACTION);
 
+      break;
+    }
+    case atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST: {
+      auto extension =
+        content::Details<const Extension>(details).ptr();
+      base::FilePath install_directory;
+      PathService::Get(component_updater::DIR_COMPONENT_USER,
+          &install_directory);
+      std::string extension_id = extension->id();
+      extensions::file_util::UninstallExtension(install_directory,
+          extension->id());
+      auto registry = ExtensionRegistry::Get(browser_context_);
+      registry->RemoveEnabled(extension_id);
+      registry->RemoveDisabled(extension_id);
+      registry->RemoveTerminated(extension_id);
+      registry->RemoveReady(extension_id);
+      base::CreateDirectory(install_directory.Append(extension_id));
       break;
     }
     case content::NOTIFICATION_RENDERER_PROCESS_TERMINATED: {
@@ -507,8 +538,74 @@ std::unique_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
 }
 
 void AtomExtensionSystem::InstallUpdate(const std::string& extension_id,
-                                         const base::FilePath& temp_dir) {
-  NOTREACHED();
+                                        const base::FilePath& temp_dir) {
+
+  int creation_flags = Extension::ALLOW_FILE_ACCESS;
+
+  LOG(INFO) << "------------------"
+    << "Found an update for extension ID: "
+    << extension_id.c_str()
+    << "Temp dir: " << temp_dir.value();
+
+
+
+  std::string error;
+  scoped_refptr<Extension> extension(extensions::file_util::LoadExtension(
+    temp_dir,
+    Manifest::INTERNAL,
+    creation_flags,
+    &error));
+
+  //const extensions::Extension* old_extension =
+  // brave::BraveExtensions::Get()->GetByID(extension_id);
+//  if (old_extension) {
+    LOG(INFO) << "--------Uninstalling old ID:" << extension_id.c_str();
+
+    // This will unload the extension as well
+    shared_->DisableExtension(extension_id, Extension::DISABLE_USER_ACTION);
+
+    auto registry = ExtensionRegistry::Get(browser_context_);
+    registry->RemoveEnabled(extension_id);
+    registry->RemoveDisabled(extension_id);
+    registry->RemoveTerminated(extension_id);
+    registry->RemoveReady(extension_id);
+
+    UnregisterExtensionWithRequestContexts(extension_id,
+      UnloadedExtensionInfo::REASON_UNINSTALL);
+
+    /*
+    auto brave_extensions = brave::BraveExtensions::Get();
+    brave_extensions->Remove(extension_id);
+    */
+
+    content::NotificationService::current()->Notify(
+      extensions::NOTIFICATION_EXTENSION_REMOVED,
+      content::Source<content::BrowserContext>(browser_context_),
+      content::Details<const Extension>(extension.get()));
+ // }
+
+  base::FilePath install_directory;
+  PathService::Get(brightray::DIR_USER_DATA, &install_directory);
+  install_directory =
+    install_directory.Append(FILE_PATH_LITERAL("Extensions"));
+
+
+  extensions::file_util::UninstallExtension(install_directory, extension_id);
+  base::FilePath version_dir = extensions::file_util::InstallExtension(
+    temp_dir,
+    extension_id,
+    extension->VersionString(),
+    install_directory);
+  base::DeleteFile(temp_dir, true /* recursive */);
+
+  scoped_refptr<Extension> new_extension(extensions::file_util::LoadExtension(
+    version_dir,
+    Manifest::INTERNAL,
+    creation_flags,
+    &error));
+
+  shared_->AddExtension(new_extension.get());
+  LOG(INFO) << "------InstallUpdate of CRX success" << version_dir.value();
 }
 
 void AtomExtensionSystem::RegisterExtensionWithRequestContexts(

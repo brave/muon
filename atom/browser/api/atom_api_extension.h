@@ -59,6 +59,7 @@ class Extension : public content::NotificationObserver {
   static v8::Local<v8::Value> TabValue(v8::Isolate* isolate,
                                          WebContents* web_contents);
   const extensions::ExtensionSet& extensions() const { return extensions_; }
+  void Remove(const std::string& extension_id);
 
  private:
   friend struct base::DefaultSingletonTraits<Extension>;

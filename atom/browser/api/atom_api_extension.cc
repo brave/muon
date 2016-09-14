@@ -124,6 +124,20 @@ Extension* Extension::GetInstance() {
   return base::Singleton<Extension>::get();
 }
 
+void Extension::Remove(const std::string& extension_id) {
+  const extensions::Extension* extension =
+    GetInstance()->extensions_.GetByID(extension_id);
+  content::NotificationService::current()->Notify(
+    atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
+    content::Source<Extension>(this),
+    content::Details<const extensions::Extension>(extension));
+  content::NotificationService::current()->Notify(
+    atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST,
+    content::Source<Extension>(this),
+    content::Details<const extensions::Extension>(extension));
+  extensions_.Remove(extension_id);
+}
+
 // static
 v8::Local<v8::Value> Extension::Load(
   v8::Isolate* isolate,
