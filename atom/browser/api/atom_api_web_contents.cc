@@ -744,6 +744,10 @@ std::unique_ptr<content::BluetoothChooser> WebContents::RunBluetoothChooser(
   return std::move(bluetooth_chooser);
 }
 
+void WebContents::EnablePreferredSizeMode(bool enable) {
+  web_contents()->GetRenderViewHost()->EnablePreferredSizeMode();
+}
+
 void WebContents::UpdatePreferredSize(content::WebContents* web_contents,
                                  const gfx::Size& pref_size) {
   Emit("preferred-size-changed", pref_size);
@@ -2029,6 +2033,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
                   &WebContents::ZoomReset)
       .SetMethod("getZoomPercent",
                   &WebContents::GetZoomPercent)
+      .SetMethod("enablePreferredSizeMode",
+                  &WebContents::EnablePreferredSizeMode)
 #if defined(ENABLE_EXTENSIONS)
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
 #endif
