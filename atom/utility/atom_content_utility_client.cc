@@ -9,6 +9,7 @@
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
 #include "chrome/common/chrome_utility_messages.h"
+#include "chrome/utility/profile_import_handler.h"
 #include "chrome/utility/utility_message_handler.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/utility/utility_thread.h"
@@ -39,6 +40,7 @@ int64_t AtomContentUtilityClient::max_ipc_message_size_ =
 
 AtomContentUtilityClient::AtomContentUtilityClient()
     : filter_messages_(false) {
+  handlers_.push_back(new ProfileImportHandler());
 #if defined(OS_WIN)
   handlers_.push_back(new printing::PrintingHandlerWin());
 #endif
