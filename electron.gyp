@@ -11,6 +11,7 @@
     'vendor/native_mate/native_mate_files.gypi',
     'extensions.gypi',
     'autofill.gypi',
+    'importer.gypi',
   ],
   'target_defaults': {
     'msvs_disabled_warnings': [
@@ -235,6 +236,7 @@
       'sources': [
         '<@(lib_sources)',
         '<@(autofill_sources)',
+        '<@(importer_sources)',
       ],
       'include_dirs': [
         '.',
@@ -243,6 +245,7 @@
         '<(libchromiumcontent_dir)/gen/protoc_out',
         '<(libchromiumcontent_src_dir)/third_party/protobuf/src',
         # end autofill
+        '<@(importer_include_dir)',
         'vendor/brightray',
         'vendor/native_mate',
         # Include atom_natives.h.
@@ -290,7 +293,9 @@
         ['OS!="linux" and libchromiumcontent_component', {
           'link_settings': {
             # Following libraries are always linked statically.
-            'libraries': [ '<@(autofill_libraries)' ],
+            'libraries': [ '<@(autofill_libraries)',
+                           '<@(importer_libraries)',
+            ],
           },
         }],
         ['OS=="linux" and libchromiumcontent_component', {
@@ -299,6 +304,7 @@
               # hack to handle cyclic dependencies
               '-Wl,--start-group',
               '<@(autofill_libraries)',
+              '<@(importer_libraries)',
               '-Wl,--end-group',
             ],
           }
@@ -336,6 +342,8 @@
               '-lcomdlg32.lib',
               '-lwininet.lib',
               '-lwinmm.lib',
+              # TODO(Anthony): doesn't work in importer.gypi for release build
+              '-lesent.lib',
             ],
           },
           'dependencies': [
