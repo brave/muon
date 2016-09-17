@@ -18,8 +18,6 @@
 #include "atom/browser/web_dialog_helper.h"
 #include "atom/common/atom_constants.h"
 #include "base/files/file_util.h"
-#include "components/pref_registry/pref_registry_syncable.h"
-#include "components/user_prefs/user_prefs.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
@@ -27,8 +25,10 @@
 #include "chrome/browser/ui/browser_dialogs.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "chrome/common/pref_names.h"
+#include "components/pref_registry/pref_registry_syncable.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/scoped_user_pref_update.h"
+#include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
@@ -214,9 +214,12 @@ void OnRegisterProtocol(AtomBrowserContext* browser_context,
   ProtocolHandlerRegistry* registry =
     ProtocolHandlerRegistryFactory::GetForBrowserContext(browser_context);
   if (allowed) {
+    std::unique_ptr<mate::Arguments> args(new mate::Arguments);
     // Ensure the app is invoked in the first place
-    if (!Browser::Get()->IsDefaultProtocolClient(handler.protocol())) {
-      Browser::Get()->SetAsDefaultProtocolClient(handler.protocol());
+    if (!Browser::Get()->
+        IsDefaultProtocolClient(handler.protocol(), args.get())) {
+      Browser::Get()->SetAsDefaultProtocolClient(
+          handler.protocol(), args.get());
     }
     registry->OnAcceptRegisterProtocolHandler(handler);
   } else {
@@ -262,11 +265,12 @@ void CommonWebContentsDelegate::RegisterProtocolHandler(
 // gesture.
 void CommonWebContentsDelegate::UnregisterProtocolHandler(
     content::WebContents* web_contents,
-  const std::string& protocol,
-  const GURL& url,
-  bool user_gesture) {
-  if (Browser::Get()->IsDefaultProtocolClient(protocol)) {
-    Browser::Get()->RemoveAsDefaultProtocolClient(protocol);
+    const std::string& protocol,
+    const GURL& url,
+    bool user_gesture) {
+  std::unique_ptr<mate::Arguments> args(new mate::Arguments);
+  if (Browser::Get()->IsDefaultProtocolClient(protocol, args.get())) {
+    Browser::Get()->RemoveAsDefaultProtocolClient(protocol, args.get());
   }
   ProtocolHandler handler =
       ProtocolHandler::CreateProtocolHandler(protocol, url);
@@ -334,12 +338,11 @@ content::WebContents* CommonWebContentsDelegate::OpenURLFromTab(
     params.should_replace_current_entry;
   load_url_params.is_renderer_initiated = params.is_renderer_initiated;
 
-  // Only allows the browser-initiated navigation to use POST.
-  if (params.uses_post && !params.is_renderer_initiated) {
+  if (params.uses_post) {
     load_url_params.load_type =
-      content::NavigationController::LOAD_TYPE_BROWSER_INITIATED_HTTP_POST;
-    load_url_params.browser_initiated_post_data =
-      params.browser_initiated_post_data;
+      content::NavigationController::LOAD_TYPE_HTTP_POST;
+    load_url_params.post_data =
+      params.post_data;
   }
 
   source->GetController().LoadURLWithParams(load_url_params);

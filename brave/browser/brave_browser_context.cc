@@ -22,7 +22,7 @@
 #include "components/syncable_prefs/pref_service_syncable.h"
 #include "components/syncable_prefs/pref_service_syncable_factory.h"
 #include "components/user_prefs/user_prefs.h"
-#include "components/ui/zoom/zoom_event_manager.h"
+#include "components/zoom/zoom_event_manager.h"
 #include "components/webdata/common/webdata_constants.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
@@ -249,7 +249,7 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
   host_zoom_map->SetDefaultZoomLevel(default_zoom_level);
   // HostZoomMap does not trigger zoom notification events when the default
   // zoom level is set, so we need to do it here.
-  ui_zoom::ZoomEventManager::GetForBrowserContext(this)
+  zoom::ZoomEventManager::GetForBrowserContext(this)
       ->OnDefaultZoomLevelChanged();
 }
 
@@ -409,7 +409,7 @@ BraveBrowserContext::CreateZoomLevelDelegate(
     const base::FilePath& partition_path) {
   return base::WrapUnique(new ChromeZoomLevelPrefs(
       GetPrefs(), GetPath(), partition_path,
-      ui_zoom::ZoomEventManager::GetForBrowserContext(this)->GetWeakPtr()));
+      zoom::ZoomEventManager::GetForBrowserContext(this)->GetWeakPtr()));
 }
 
 scoped_refptr<autofill::AutofillWebDataService>

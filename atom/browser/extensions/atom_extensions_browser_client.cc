@@ -421,12 +421,6 @@ bool AtomExtensionsBrowserClient::IsLoggedInAsPublicAccount() {
   return false;
 }
 
-ApiActivityMonitor* AtomExtensionsBrowserClient::GetApiActivityMonitor(
-    content::BrowserContext* context) {
-  // The ActivityLog monitors and records function calls and events.
-  return nullptr;
-}
-
 ExtensionSystemProvider*
 AtomExtensionsBrowserClient::GetExtensionSystemFactory() {
   return AtomExtensionSystemFactory::GetInstance();

@@ -4,8 +4,8 @@
 
 #include "atom/browser/autofill/atom_autofill_client.h"
 
-#include "atom/browser/autofill/personal_data_manager_factory.h"
 #include "atom/browser/api/atom_api_web_contents.h"
+#include "atom/browser/autofill/personal_data_manager_factory.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_browser_context.h"

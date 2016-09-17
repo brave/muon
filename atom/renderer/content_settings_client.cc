@@ -6,8 +6,8 @@
 
 #include <string>
 
-#include "atom/renderer/content_settings_manager.h"
 #include "atom/common/api/api_messages.h"
+#include "atom/renderer/content_settings_manager.h"
 #include "base/strings/utf_string_conversions.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_pattern.h"
@@ -118,9 +118,13 @@ void ContentSettingsClient::DidCommitProvisionalLoad(
   }
 }
 
+void ContentSettingsClient::OnDestruct() {
+  delete this;
+}
+
 bool ContentSettingsClient::allowDatabase(const WebString& name,
                                           const WebString& display_name,
-                                          unsigned long estimated_size) {  // NOLINT
+                                          unsigned estimated_size) {  // NOLINT
   WebFrame* frame = render_frame()->GetWebFrame();
   if (frame->getSecurityOrigin().isUnique() ||
       frame->top()->getSecurityOrigin().isUnique())

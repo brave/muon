@@ -96,16 +96,16 @@ int AtomExtensionsNetworkDelegate::OnBeforeURLRequest(
   return internal_callback.Run();
 }
 
-int AtomExtensionsNetworkDelegate::OnBeforeSendHeadersInternal(
+int AtomExtensionsNetworkDelegate::OnBeforeStartTransactionInternal(
     net::URLRequest* request,
     net::HttpRequestHeaders* headers) {
-  return atom::AtomNetworkDelegate::OnBeforeSendHeaders(
+  return atom::AtomNetworkDelegate::OnBeforeStartTransaction(
     request,
     callbacks_[request->identifier()],
     headers);
 }
 
-int AtomExtensionsNetworkDelegate::OnBeforeSendHeaders(
+int AtomExtensionsNetworkDelegate::OnBeforeStartTransaction(
     net::URLRequest* request,
     const net::CompletionCallback& callback,
     net::HttpRequestHeaders* headers) {
@@ -113,7 +113,7 @@ int AtomExtensionsNetworkDelegate::OnBeforeSendHeaders(
   callbacks_[request->identifier()] = callback;
 
   base::Callback<int(void)> internal_callback = base::Bind(
-          &AtomExtensionsNetworkDelegate::OnBeforeSendHeadersInternal,
+          &AtomExtensionsNetworkDelegate::OnBeforeStartTransactionInternal,
           base::Unretained(this),
           request,
           headers);
@@ -136,10 +136,10 @@ int AtomExtensionsNetworkDelegate::OnBeforeSendHeaders(
   return internal_callback.Run();
 }
 
-void AtomExtensionsNetworkDelegate::OnSendHeaders(
+void AtomExtensionsNetworkDelegate::OnStartTransaction(
     net::URLRequest* request,
     const net::HttpRequestHeaders& headers) {
-  atom::AtomNetworkDelegate::OnSendHeaders(request, headers);
+  atom::AtomNetworkDelegate::OnStartTransaction(request, headers);
   ExtensionWebRequestEventRouter::GetInstance()->OnSendHeaders(
       browser_context_, extension_info_map_.get(), request, headers);
 }

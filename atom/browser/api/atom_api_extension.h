@@ -11,8 +11,8 @@
 #include "base/memory/singleton.h"
 #include "content/public/browser/notification_observer.h"
 #include "content/public/browser/notification_registrar.h"
-#include "extensions/common/manifest.h"
 #include "extensions/common/extension_set.h"
+#include "extensions/common/manifest.h"
 
 namespace base {
 class FilePath;

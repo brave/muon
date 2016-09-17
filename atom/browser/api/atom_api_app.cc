@@ -14,6 +14,7 @@
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/login_handler.h"
+#include "atom/browser/net/atom_network_delegate.h"
 #include "atom/browser/relauncher.h"
 #include "atom/common/atom_command_line.h"
 #include "atom/common/native_mate_converters/callback.h"
@@ -646,6 +647,10 @@ void App::AllowCertificateError(
                               request_url,
                               net::ErrorToString(cert_error),
                               ssl_info.cert,
+                              ResourceTypeToString(resource_type),
+                              overridable,
+                              strict_enforcement,
+                              expired_previous_decision,
                               callback);
 
   // Deny the certificate by default.

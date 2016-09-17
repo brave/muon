@@ -34,9 +34,11 @@ class BraveContentRendererClient : public atom::AtomRendererClient {
                   bool* send_referrer) override;
   void DidInitializeServiceWorkerContextOnWorkerThread(
       v8::Local<v8::Context> context,
+      int embedded_worker_id,
       const GURL& url) override;
   void WillDestroyServiceWorkerContextOnWorkerThread(
       v8::Local<v8::Context> context,
+      int embedded_worker_id,
       const GURL& url) override;
 
   bool WillSendRequest(

@@ -6,9 +6,9 @@
 #define ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSIONS_NETWORK_DELEGATE_H_
 
 #include <map>
-#include "atom/browser/net/atom_network_delegate.h"
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
+#include "atom/browser/net/atom_network_delegate.h"
 
 namespace content {
 class BrowserContext;
@@ -35,14 +35,14 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
   int OnBeforeURLRequest(net::URLRequest* request,
                          const net::CompletionCallback& callback,
                          GURL* new_url) override;
-  int OnBeforeSendHeadersInternal(
+  int OnBeforeStartTransactionInternal(
     net::URLRequest* request,
     net::HttpRequestHeaders* headers);
-  int OnBeforeSendHeaders(net::URLRequest* request,
-                          const net::CompletionCallback& callback,
-                          net::HttpRequestHeaders* headers) override;
-  void OnSendHeaders(net::URLRequest* request,
-                     const net::HttpRequestHeaders& headers) override;
+  int OnBeforeStartTransaction(net::URLRequest* request,
+                               const net::CompletionCallback& callback,
+                               net::HttpRequestHeaders* headers) override;
+  void OnStartTransaction(net::URLRequest* request,
+                          const net::HttpRequestHeaders& headers) override;
   int OnHeadersReceivedInternal(
     net::URLRequest* request,
     const net::HttpResponseHeaders* original_response_headers,

@@ -20,8 +20,8 @@ class AtomExtensionsAPIClient : public ExtensionsAPIClient {
       override;
   WebViewGuestDelegate* CreateWebViewGuestDelegate(
       WebViewGuest* web_view_guest) const override;
-  WebRequestEventRouterDelegate* CreateWebRequestEventRouterDelegate()
-      const override;
+  std::unique_ptr<WebRequestEventRouterDelegate>
+      CreateWebRequestEventRouterDelegate() const override;
   ManagementAPIDelegate* CreateManagementAPIDelegate() const override;
 };
 

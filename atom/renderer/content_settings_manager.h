@@ -8,14 +8,14 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "atom/common/native_mate_converters/callback.h"
+#include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/renderer/content_settings_observer.h"
 #include "base/values.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "content/public/common/web_preferences.h"
 #include "content/public/renderer/render_thread_observer.h"
 
-#include "atom/common/native_mate_converters/gurl_converter.h"
-#include "atom/common/native_mate_converters/callback.h"
 
 class GURL;
 

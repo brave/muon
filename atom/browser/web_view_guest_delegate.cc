@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 #include "atom/browser/api/atom_api_session.h"
-#include "atom/browser/atom_browser_context.h"
-#include "atom/browser/web_view_guest_delegate.h"
-#include "atom/browser/web_contents_preferences.h"
 #include "atom/browser/api/atom_api_web_contents.h"
 #include "atom/browser/api/event.h"
+#include "atom/browser/atom_browser_context.h"
 #include "atom/browser/native_window.h"
+#include "atom/browser/web_contents_preferences.h"
+#include "atom/browser/web_view_guest_delegate.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/node_includes.h"
 #include "content/public/browser/browser_thread.h"
@@ -173,21 +173,6 @@ void WebViewGuestDelegate::SetSize(const SetSizeParams& params) {
   }
 
   auto_size_enabled_ = enable_auto_size;
-}
-
-void WebViewGuestDelegate::DidStartProvisionalLoadForFrame(
-      content::RenderFrameHost* render_frame_host,
-      const GURL& url,
-      bool is_error_page,
-      bool is_iframe_srcdoc) {
-  api_web_contents_->Emit("load-start", url, !render_frame_host->GetParent(),
-                                              is_error_page, is_iframe_srcdoc);
-}
-
-void WebViewGuestDelegate::DidCommitProvisionalLoadForFrame(
-    content::RenderFrameHost* render_frame_host,
-    const GURL& url, ui::PageTransition transition_type) {
-  api_web_contents_->Emit("load-commit", url, !render_frame_host->GetParent());
 }
 
 bool WebViewGuestDelegate::IsAttached() {

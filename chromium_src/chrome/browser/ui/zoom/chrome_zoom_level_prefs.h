@@ -22,7 +22,7 @@ namespace base {
 class DictionaryValue;
 }
 
-namespace ui_zoom {
+namespace zoom {
 class ZoomEventManager;
 }
 
@@ -45,7 +45,7 @@ class ChromeZoomLevelPrefs : public content::ZoomLevelDelegate {
       PrefService* pref_service,
       const base::FilePath& profile_path,
       const base::FilePath& partition_path,
-      base::WeakPtr<ui_zoom::ZoomEventManager> zoom_event_manager);
+      base::WeakPtr<zoom::ZoomEventManager> zoom_event_manager);
   ~ChromeZoomLevelPrefs() override;
 
   static std::string GetHashForTesting(const base::FilePath& relative_path);
@@ -69,7 +69,7 @@ class ChromeZoomLevelPrefs : public content::ZoomLevelDelegate {
   void OnZoomLevelChanged(const content::HostZoomMap::ZoomLevelChange& change);
 
   PrefService* pref_service_;
-  base::WeakPtr<ui_zoom::ZoomEventManager> zoom_event_manager_;
+  base::WeakPtr<zoom::ZoomEventManager> zoom_event_manager_;
   content::HostZoomMap* host_zoom_map_;
   std::unique_ptr<content::HostZoomMap::Subscription> zoom_subscription_;
   std::string partition_key_;

@@ -14,12 +14,12 @@
 #include "atom/browser/net/atom_url_request_job_factory.h"
 #include "base/callback.h"
 #include "base/memory/weak_ptr.h"
+#include "chrome/common/custom_handlers/protocol_handler.h"
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/arguments.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/handle.h"
 #include "net/url_request/url_request_context.h"
-#include "chrome/common/custom_handlers/protocol_handler.h"
 
 namespace base {
 class DictionaryValue;

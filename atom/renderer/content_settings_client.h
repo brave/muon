@@ -7,8 +7,8 @@
 
 #include <map>
 #include <set>
-#include <utility>
 #include <string>
+#include <utility>
 #include "atom/renderer/content_settings_observer.h"
 #include "base/macros.h"
 #include "content/public/renderer/render_frame_observer.h"
@@ -57,7 +57,7 @@ class ContentSettingsClient
   // blink::WebContentSettingsClient implementation.
   bool allowDatabase(const blink::WebString& name,
                      const blink::WebString& display_name,
-                     unsigned long estimated_size) override;  // NOLINT
+                     unsigned estimated_size) override;  // NOLINT
   void requestFileSystemAccessAsync(
           const blink::WebContentSettingCallbacks& callbacks) override;
   bool allowImage(bool enabled_per_settings,
@@ -87,7 +87,7 @@ class ContentSettingsClient
   // RenderFrameObserver implementation.
   void DidCommitProvisionalLoad(bool is_new_navigation,
                                 bool is_same_page_navigation) override;
-
+  void OnDestruct() override;
   // Resets the |content_blocked_| array.
   void ClearBlockedContentSettings();
 

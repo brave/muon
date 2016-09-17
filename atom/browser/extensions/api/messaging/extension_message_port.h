@@ -7,8 +7,8 @@
 
 #include <set>
 #include <string>
-#include "base/macros.h"
 #include "atom/browser/extensions/api/messaging/message_service.h"
+#include "base/macros.h"
 
 class GURL;
 
@@ -42,6 +42,12 @@ class ExtensionMessagePort : public MessageService::MessagePort {
                        const std::string& extension_id,
                        content::RenderProcessHost* extension_process);
   ~ExtensionMessagePort() override;
+
+  // Checks whether the frames to which this port is tied at its construction
+  // are still aware of this port's existence. Frames that don't know about
+  // the port are removed from the set of frames. This should be used for opener
+  // ports because the frame may be navigated before the port was initialized.
+  void RevalidatePort();
 
   // MessageService::MessagePort:
   void RemoveCommonFrames(const MessagePort& port) override;
@@ -93,6 +99,11 @@ class ExtensionMessagePort : public MessageService::MessagePort {
   // and shrinks over time when the port is rejected by the recipient frame, or
   // when the frame is removed or unloaded.
   std::set<content::RenderFrameHost*> frames_;
+
+  // The ID of the tab where the channel was created. This is saved so that any
+  // onMessage events can be run in the scope of the tab.
+  // Only set on receiver ports (if the opener was a tab). -1 if invalid.
+  int opener_tab_id_;
 
   // Whether the renderer acknowledged creation of the port. This is used to
   // distinguish abnormal port closure (e.g. no receivers) from explicit port
