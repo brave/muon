@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include "atom/browser/atom_browser_context.h"
 #include "base/json/json_writer.h"
 #include "base/logging.h"
 #include "base/strings/string_piece.h"
@@ -22,7 +23,6 @@
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "url/gurl.h"
-#include "atom/browser/atom_browser_context.h"
 
 namespace extensions {
 

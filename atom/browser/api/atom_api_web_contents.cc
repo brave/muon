@@ -49,19 +49,18 @@
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/browser/printing/print_preview_message_handler.h"
-#include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/printing/print_preview_message_handler.h"
+#include "chrome/browser/printing/print_view_manager_basic.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
-#include "components/ui/zoom/page_zoom.h"
-#include "components/ui/zoom/zoom_controller.h"
+#include "components/zoom/page_zoom.h"
+#include "components/zoom/zoom_controller.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/browser_plugin_guest_manager.h"
-#include "content/public/browser/memory_pressure_controller.h"
-#include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/favicon_status.h"
+#include "content/public/browser/memory_pressure_controller.h"
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "content/public/browser/navigation_details.h"
 #include "content/public/browser/navigation_entry.h"
@@ -84,8 +83,8 @@
 #include "net/url_request/url_request_context.h"
 #include "third_party/WebKit/public/web/WebFindOptions.h"
 #include "third_party/WebKit/public/web/WebInputEvent.h"
-#include "ui/display/screen.h"
 #include "ui/base/l10n/l10n_util.h"
+#include "ui/display/screen.h"
 
 #if !defined(OS_MACOSX)
 #include "ui/aura/window.h"
@@ -343,7 +342,7 @@ WebContents::WebContents(v8::Isolate* isolate,
   // Intialize security state client.
   AtomSecurityStateModelClient::CreateForWebContents(web_contents);
   // Initialize zoom state controller
-  ui_zoom::ZoomController::CreateForWebContents(web_contents);
+  zoom::ZoomController::CreateForWebContents(web_contents);
   brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
   // Initialize autofill client
   autofill::AtomAutofillClient::CreateForWebContents(web_contents);
@@ -804,26 +803,6 @@ void WebContents::DocumentLoadedInFrame(
     Emit("dom-ready");
 }
 
-void WebContents::DidStartProvisionalLoadForFrame(
-    content::RenderFrameHost* render_frame_host,
-    const GURL& validated_url,
-    bool is_error_page,
-    bool is_iframe_srcdoc) {
-  bool is_main_frame = !render_frame_host->GetParent();
-  Emit("did-start-provisional-load", validated_url, is_error_page,
-    is_iframe_srcdoc, is_main_frame);
-}
-
-void WebContents::DidCommitProvisionalLoadForFrame(
-    content::RenderFrameHost* render_frame_host,
-    const GURL& url,
-    ui::PageTransition transition_type) {
-  bool is_main_frame = !render_frame_host->GetParent();
-  // TODO(bridiver) convert transition type to a string
-  Emit("did-commit-provisional-load", url,
-    static_cast<int>(transition_type), is_main_frame);
-}
-
 void WebContents::DidFinishLoad(content::RenderFrameHost* render_frame_host,
                                 const GURL& validated_url) {
   bool is_main_frame = !render_frame_host->GetParent();
@@ -831,17 +810,6 @@ void WebContents::DidFinishLoad(content::RenderFrameHost* render_frame_host,
 
   if (is_main_frame)
     Emit("did-finish-load");
-}
-
-void WebContents::DidFailProvisionalLoad(
-    content::RenderFrameHost* render_frame_host,
-    const GURL& url,
-    int code,
-    const base::string16& description,
-    bool was_ignored_by_handler) {
-  bool is_main_frame = !render_frame_host->GetParent();
-  Emit("did-fail-provisional-load", code, description, url,
-    is_main_frame, was_ignored_by_handler);
 }
 
 void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
@@ -888,13 +856,37 @@ void WebContents::DidGetRedirectForResourceRequest(
        details.headers.get());
 }
 
-void WebContents::DidNavigateMainFrame(
-    const content::LoadCommittedDetails& details,
-    const content::FrameNavigateParams& params) {
-  if (details.is_navigation_to_different_page())
-    Emit("did-navigate", params.url);
-  else if (details.is_in_page)
-    Emit("did-navigate-in-page", params.url);
+void WebContents::DidStartNavigation(
+    content::NavigationHandle* navigation_handle) {
+  if (navigation_handle->IsSamePage() || navigation_handle->IsErrorPage())
+    return;
+
+  auto url = navigation_handle->GetURL();
+  bool is_main_frame = navigation_handle->IsInMainFrame();
+  bool is_error_page = navigation_handle->IsErrorPage();
+  bool is_src_doc = navigation_handle->IsSrcdoc();
+  Emit("load-start", url, is_main_frame, is_error_page, is_src_doc);
+}
+
+void WebContents::DidFinishNavigation(
+    content::NavigationHandle* navigation_handle) {
+  bool is_main_frame = navigation_handle->IsInMainFrame();
+  auto url = navigation_handle->GetURL();
+  if (navigation_handle->HasCommitted() && !navigation_handle->IsErrorPage()) {
+    bool is_in_page = navigation_handle->IsSamePage();
+    if (!is_in_page) {
+      Emit("load-commit", url, is_main_frame);
+    }
+    if (is_main_frame && !is_in_page) {
+      Emit("did-navigate", url);
+    } else if (is_in_page) {
+      Emit("did-navigate-in-page", url, is_main_frame);
+    }
+  } else {
+    int code = navigation_handle->GetNetErrorCode();
+    auto description = net::ErrorToShortString(code);
+    Emit("did-fail-provisional-load", code, description, url, is_main_frame);
+  }
 }
 
 void WebContents::TitleWasSet(content::NavigationEntry* entry,
@@ -1836,8 +1828,8 @@ v8::Local<v8::Value> WebContents::GetOwnerBrowserWindow() {
 }
 
 void WebContents::SetZoomLevel(double zoom) {
-  ui_zoom::ZoomController* zoom_controller =
-      ui_zoom::ZoomController::FromWebContents(web_contents());
+  zoom::ZoomController* zoom_controller =
+      zoom::ZoomController::FromWebContents(web_contents());
   if (!zoom_controller)
     return;
 
@@ -1845,23 +1837,23 @@ void WebContents::SetZoomLevel(double zoom) {
 }
 
 void WebContents::ZoomIn() {
-  ui_zoom::PageZoom::Zoom(web_contents(),
+  zoom::PageZoom::Zoom(web_contents(),
                           content::PAGE_ZOOM_IN);
 }
 
 void WebContents::ZoomOut() {
-  ui_zoom::PageZoom::Zoom(web_contents(),
+  zoom::PageZoom::Zoom(web_contents(),
                           content::PAGE_ZOOM_OUT);
 }
 
 void WebContents::ZoomReset() {
-  ui_zoom::PageZoom::Zoom(web_contents(),
+  zoom::PageZoom::Zoom(web_contents(),
                           content::PAGE_ZOOM_RESET);
 }
 
 int WebContents::GetZoomPercent() {
-  ui_zoom::ZoomController* zoom_controller =
-      ui_zoom::ZoomController::FromWebContents(web_contents());
+  zoom::ZoomController* zoom_controller =
+      zoom::ZoomController::FromWebContents(web_contents());
   if (!zoom_controller)
     return 100;
 

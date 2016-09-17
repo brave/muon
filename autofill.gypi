@@ -29,6 +29,7 @@
           '<(libchromiumcontent_dir)/libsignin_core_browser.a',
           '<(libchromiumcontent_dir)/libsignin_core_common.a',
           '<(libchromiumcontent_dir)/libos_crypt.a',
+          '<(libchromiumcontent_dir)/libversion_info.a',
         ]
       }
     }],
@@ -51,6 +52,7 @@
           '<(libchromiumcontent_dir)/signin_core_common.lib',
           '<(libchromiumcontent_dir)/os_crypt.lib',
           '-lcrypt32.lib',
+          '<(libchromiumcontent_dir)/version_info.lib',
         ],
       },
     }],

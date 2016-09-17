@@ -9,9 +9,8 @@
 #include <utility>
 
 #include "atom/browser/extensions/api/messaging/extension_message_port.h"
-#include "extensions/browser/extension_web_contents_observer.h"
-#include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "atom/browser/extensions/atom_extension_system.h"
+#include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "base/atomic_sequence_num.h"
 #include "base/bind.h"
@@ -20,9 +19,9 @@
 #include "base/lazy_instance.h"
 #include "base/macros.h"
 #include "base/metrics/histogram.h"
-#include "components/prefs/pref_service.h"
 #include "base/stl_util.h"
 #include "build/build_config.h"
+#include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
@@ -36,6 +35,7 @@
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
 #include "extensions/browser/extension_util.h"
+#include "extensions/browser/extension_web_contents_observer.h"
 #include "extensions/browser/lazy_background_task_queue.h"
 #include "extensions/browser/process_manager.h"
 #include "extensions/common/extension.h"
@@ -225,7 +225,6 @@ void MessageService::OpenChannelToExtension(
       content::RenderFrameHost::FromID(source_process_id, source_routing_id);
   if (!source)
     return;
-
   BrowserContext* context = source->GetProcess()->GetBrowserContext();
 
   ExtensionRegistry* registry = ExtensionRegistry::Get(context);
@@ -374,8 +373,8 @@ void MessageService::OpenChannelToNativeApp(
           nullptr;
 
   bool has_permission = extension &&
-      extension->permissions_data()->HasAPIPermission(
-          APIPermission::kNativeMessaging);
+                        extension->permissions_data()->HasAPIPermission(
+                            APIPermission::kNativeMessaging);
 
   if (!has_permission) {
     DispatchOnDisconnect(source, receiver_port_id, kMissingPermissionError);
@@ -437,11 +436,10 @@ void MessageService::OpenChannelToTab(int source_process_id,
   }
 
   std::unique_ptr<OpenChannelParams> params(new OpenChannelParams(
-      source_process_id,
-      source_routing_id,
-      // Source tab doesn't make sense
-      std::unique_ptr<base::DictionaryValue>(),
-                                            // for opening to tabs.
+      source_process_id, source_routing_id,
+      std::unique_ptr<base::DictionaryValue>(),  // Source tab doesn't make
+                                                 // sense
+                                                 // for opening to tabs.
       -1,  // If there is no tab, then there is no frame either.
       receiver.release(), receiver_port_id, extension_id, extension_id,
       GURL(),  // Source URL doesn't make sense for opening to tabs.
@@ -471,13 +469,14 @@ void MessageService::OpenChannelImpl(BrowserContext* browser_context,
     return;
   }
 
-  std::unique_ptr<MessagePort> opener(
+  std::unique_ptr<ExtensionMessagePort> opener(
       new ExtensionMessagePort(weak_factory_.GetWeakPtr(),
                                GET_OPPOSITE_PORT_ID(params->receiver_port_id),
                                params->source_extension_id, source, false));
   if (!opener->IsValidPort())
     return;
   opener->OpenPort(params->source_process_id, params->source_routing_id);
+  opener->RevalidatePort();
 
   params->receiver->RemoveCommonFrames(*opener);
   if (!params->receiver->IsValidPort()) {
@@ -716,7 +715,7 @@ bool MessageService::MaybeAddPendingLazyBackgroundPageOpenChannelTask(
     return false;
 
   // If the extension uses spanning incognito mode, make sure we're always
-  // using the original browser_context since that is what the extension process
+  // using the original profile since that is what the extension process
   // will use.
   if (!IncognitoInfo::IsSplitMode(extension))
     context = ExtensionsBrowserClient::Get()->GetOriginalContext(context);
@@ -740,9 +739,9 @@ bool MessageService::MaybeAddPendingLazyBackgroundPageOpenChannelTask(
   return true;
 }
 
-void
-MessageService::OnOpenChannelAllowed(std::unique_ptr<OpenChannelParams>params,
-                                     bool allowed) {
+void MessageService::OnOpenChannelAllowed(
+    std::unique_ptr<OpenChannelParams> params,
+    bool allowed) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
   int channel_id = GET_CHANNEL_ID(params->receiver_port_id);
@@ -773,6 +772,9 @@ MessageService::OnOpenChannelAllowed(std::unique_ptr<OpenChannelParams>params,
 
   BrowserContext* context = source->GetProcess()->GetBrowserContext();
 
+  // Note: we use the source's profile here. If the source is an incognito
+  // process, we will use the incognito EPM to find the right extension process,
+  // which depends on whether the extension uses spanning or split mode.
   if (content::RenderProcessHost* extension_process =
       GetExtensionProcess(context, params->target_extension_id)) {
     params->receiver.reset(

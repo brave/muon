@@ -4,8 +4,8 @@
 
 #include "atom/renderer/extensions/atom_extensions_dispatcher_delegate.h"
 
-#include <string>
 #include <set>
+#include <string>
 #include "atom/common/javascript_bindings.h"
 #include "atom/grit/atom_resources.h"  // NOLINT: This file is generated
 #include "brave/renderer/extensions/content_settings_bindings.h"

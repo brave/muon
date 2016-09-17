@@ -5,8 +5,8 @@
 #ifndef ATOM_BROWSER_EXTENSIONS_ATOM_BROWSER_CLIENT_EXTENSIONS_PART_H_
 #define ATOM_BROWSER_EXTENSIONS_ATOM_BROWSER_CLIENT_EXTENSIONS_PART_H_
 
-#include <vector>
 #include <string>
+#include <vector>
 #include "base/compiler_specific.h"
 #include "base/macros.h"
 

@@ -5,8 +5,8 @@
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 
 #include "brave/browser/brave_browser_context.h"
-#include "content/public/browser/browser_context.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
+#include "content/public/browser/browser_context.h"
 #include "extensions/browser/declarative_user_script_manager_factory.h"
 #include "extensions/browser/event_router_factory.h"
 #include "extensions/browser/extension_prefs_factory.h"

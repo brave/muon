@@ -9,8 +9,8 @@
 #include "content/public/browser/browser_thread.h"
 
 #if defined(ENABLE_EXTENSIONS)
-#include "components/syncable_prefs/pref_service_syncable.h"
 #include "components/pref_registry/pref_registry_syncable.h"
+#include "components/syncable_prefs/pref_service_syncable.h"
 #endif
 
 #include "atom/common/native_mate_converters/v8_value_converter.h"

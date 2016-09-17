@@ -32,6 +32,20 @@ class AtomRequirementsChecker : public RequirementsChecker {
   DISALLOW_COPY_AND_ASSIGN(AtomRequirementsChecker);
 };
 
+class AtomExtensionWebRequestEventRouterDelegate :
+    public WebRequestEventRouterDelegate {
+ public:
+  AtomExtensionWebRequestEventRouterDelegate() {}
+  ~AtomExtensionWebRequestEventRouterDelegate() override {}
+  void NotifyWebRequestWithheld(
+      int render_process_id,
+      int render_frame_id,
+      const std::string& extension_id) {
+    // TODO(bridiver) - will this ever be called?
+  }
+ private:
+  DISALLOW_COPY_AND_ASSIGN(AtomExtensionWebRequestEventRouterDelegate);
+};
 
 class AtomManagementAPIDelegate : public ManagementAPIDelegate {
  public:
@@ -173,9 +187,10 @@ WebViewGuestDelegate* AtomExtensionsAPIClient::CreateWebViewGuestDelegate(
   return ExtensionsAPIClient::CreateWebViewGuestDelegate(web_view_guest);
 }
 
-WebRequestEventRouterDelegate*
+std::unique_ptr<WebRequestEventRouterDelegate>
 AtomExtensionsAPIClient::CreateWebRequestEventRouterDelegate() const {
-  return new extensions::WebRequestEventRouterDelegate();
+  return base::WrapUnique(
+      new extensions::AtomExtensionWebRequestEventRouterDelegate());
 }
 
 ManagementAPIDelegate* AtomExtensionsAPIClient::CreateManagementAPIDelegate()

@@ -6,10 +6,10 @@
 #define ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSION_SYSTEM_H_
 
 #include <string>
-#include "brave/browser/brave_browser_context.h"
 #include "base/memory/weak_ptr.h"
-#include "content/public/browser/notification_registrar.h"
+#include "brave/browser/brave_browser_context.h"
 #include "content/public/browser/notification_observer.h"
+#include "content/public/browser/notification_registrar.h"
 #include "extensions/browser/extension_system.h"
 #include "extensions/common/one_shot_event.h"
 

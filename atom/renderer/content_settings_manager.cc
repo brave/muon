@@ -11,8 +11,8 @@
 #include "components/content_settings/core/common/content_settings_pattern.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/renderer/render_thread.h"
-#include "url/url_constants.h"
 #include "url/gurl.h"
+#include "url/url_constants.h"
 
 namespace atom {
 

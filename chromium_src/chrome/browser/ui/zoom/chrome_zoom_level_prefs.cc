@@ -16,7 +16,7 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service_factory.h"
 #include "components/prefs/scoped_user_pref_update.h"
-#include "components/ui/zoom/zoom_event_manager.h"
+#include "components/zoom/zoom_event_manager.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/host_zoom_map.h"
 #include "content/public/common/page_zoom.h"
@@ -34,7 +34,7 @@ ChromeZoomLevelPrefs::ChromeZoomLevelPrefs(
     PrefService* pref_service,
     const base::FilePath& profile_path,
     const base::FilePath& partition_path,
-    base::WeakPtr<ui_zoom::ZoomEventManager> zoom_event_manager)
+    base::WeakPtr<zoom::ZoomEventManager> zoom_event_manager)
     : pref_service_(pref_service),
       zoom_event_manager_(zoom_event_manager),
       host_zoom_map_(nullptr) {

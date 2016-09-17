@@ -14,8 +14,8 @@
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
 #include "build/build_config.h"
-#include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/extension_host_delegate.h"
+#include "extensions/browser/extensions_browser_client.h"
 
 namespace base {
 class CommandLine;
@@ -91,8 +91,6 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
   void PermitExternalProtocolHandler() override;
   bool IsRunningInForcedAppMode() override;
   bool IsLoggedInAsPublicAccount() override;
-  ApiActivityMonitor* GetApiActivityMonitor(
-      content::BrowserContext* context) override;
   ExtensionSystemProvider* GetExtensionSystemFactory() override;
   void RegisterExtensionFunctions(
       ExtensionFunctionRegistry* registry) const override;
