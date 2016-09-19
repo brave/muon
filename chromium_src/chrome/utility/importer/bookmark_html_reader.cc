@@ -2,6 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/**
+ * This is not a straight copy from chromium src, in particular
+ * some functionality is removed.
+ * This was originally forked with 52.0.2743.116.  Diff against
+ * a version of that file for a full list of changes.
+ */
+
 #include "chrome/utility/importer/bookmark_html_reader.h"
 
 #include <stddef.h>
@@ -276,6 +283,7 @@ void ImportBookmarksFile(
 
 bool CanImportURLAsSearchEngine(const GURL& url,
                                 std::string* search_engine_url) {
+  /*
   std::string url_spec = url.possibly_invalid_spec();
 
   if (url_spec.empty())
@@ -292,6 +300,8 @@ bool CanImportURLAsSearchEngine(const GURL& url,
   data.SetURL(url_spec);
   *search_engine_url = url_spec;
   return TemplateURL(data).SupportsReplacement(SearchTermsData());
+  */
+  return false;
 }
 
 namespace internal {

@@ -18,7 +18,7 @@
           '<(libchromiumcontent_dir)/libhistory_core_browser.a',
           '<(libchromiumcontent_dir)/libquery_parser.a',
           '<(libchromiumcontent_dir)/liburl_formatter.a',
-          '<(libchromiumcontent_dir)/libsearch_engines.a',
+          # '<(libchromiumcontent_dir)/libsearch_engines.a',
         ],
         'importer_include_dir': [
           '<(libchromiumcontent_dir)/gen/components/strings',
@@ -36,7 +36,7 @@
           '<(libchromiumcontent_dir)/libhistory_core_browser.a',
           '<(libchromiumcontent_dir)/libquery_parser.a',
           '<(libchromiumcontent_dir)/liburl_formatter.a',
-          '<(libchromiumcontent_dir)/libsearch_engines.a',
+          # '<(libchromiumcontent_dir)/libsearch_engines.a',
         ],
         'importer_include_dir': [
           '<(libchromiumcontent_dir)/gen/components/strings',
@@ -56,7 +56,7 @@
           '<(libchromiumcontent_dir)/history_core_browser.lib',
           '<(libchromiumcontent_dir)/query_parser.lib',
           '<(libchromiumcontent_dir)/url_formatter.lib',
-          '<(libchromiumcontent_dir)/search_engines.lib',
+          # '<(libchromiumcontent_dir)/search_engines.lib',
           '-lesent.lib',
         ],
         'importer_include_dir': [

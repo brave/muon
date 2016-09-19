@@ -144,7 +144,7 @@ void DetectChromeProfiles(std::vector<importer::SourceProfile>* profiles) {
   DCHECK_CURRENTLY_ON(BrowserThread::FILE);
   base::FilePath user_data_folder = GetChromeUserDataFolder();
   base::ListValue* chrome_profiles = GetChromeSourceProfiles(user_data_folder);
-  for (const base::Value* value : *chrome_profiles) {
+  for (const auto& value : *chrome_profiles) {
     const base::DictionaryValue* dict;
     if (!value->GetAsDictionary(&dict))
       continue;

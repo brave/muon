@@ -106,6 +106,7 @@ class FirefoxURLParameterFilter : public TemplateURLParser::ParameterFilter {
   DISALLOW_COPY_AND_ASSIGN(FirefoxURLParameterFilter);
 };
 
+/*
 // Attempts to create a TemplateURL from the provided data. |title| is optional.
 // If TemplateURL creation fails, returns NULL.
 // This function transfers ownership of the created TemplateURL to the caller.
@@ -129,7 +130,6 @@ void ParseSearchEnginesFromFirefoxXMLData(
     const std::vector<std::string>& xml_data,
     std::vector<TemplateURL*>* search_engines) {
   DCHECK(search_engines);
-/*
   typedef std::map<std::string, TemplateURL*> SearchEnginesMap;
   SearchEnginesMap search_engine_for_url;
   FirefoxURLParameterFilter param_filter;
@@ -168,8 +168,8 @@ void ParseSearchEnginesFromFirefoxXMLData(
     else
       search_engines->push_back(t_iter->second);
   }
-  */
 }
+*/
 
 }  // namespace
 
@@ -234,6 +234,7 @@ void InProcessImporterBridge::SetHistoryItems(
 void InProcessImporterBridge::SetKeywords(
     const std::vector<importer::SearchEngineInfo>& search_engines,
     bool unique_on_host_and_path) {
+  /*
   ScopedVector<TemplateURL> owned_template_urls;
   for (const auto& search_engine : search_engines) {
     TemplateURL* owned_template_url =
@@ -246,10 +247,12 @@ void InProcessImporterBridge::SetKeywords(
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
       base::Bind(&ProfileWriter::AddKeywords, writer_,
                  base::Passed(&owned_template_urls), unique_on_host_and_path));
+  */
 }
 
 void InProcessImporterBridge::SetFirefoxSearchEnginesXMLData(
     const std::vector<std::string>& search_engine_data) {
+  /*
   std::vector<TemplateURL*> search_engines;
   ParseSearchEnginesFromFirefoxXMLData(search_engine_data, &search_engines);
 
@@ -260,6 +263,7 @@ void InProcessImporterBridge::SetFirefoxSearchEnginesXMLData(
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
       base::Bind(&ProfileWriter::AddKeywords, writer_,
                  base::Passed(&owned_template_urls), true));
+  */
 }
 
 void InProcessImporterBridge::SetPasswordForm(

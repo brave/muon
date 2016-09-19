@@ -180,7 +180,7 @@ void ChromeImporter::RecursiveReadBookmarksFolder(
   std::vector<ImportedBookmarkEntry>* bookmarks) {
   const base::ListValue* children;
   if (folder->GetList("children", &children)) {
-    for (const base::Value* value : *children) {
+    for (const auto& value : *children) {
       const base::DictionaryValue* dict;
       if (!value->GetAsDictionary(&dict))
         continue;
