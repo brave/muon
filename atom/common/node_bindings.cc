@@ -38,6 +38,7 @@ REFERENCE_MODULE(atom_browser_dialog);
 REFERENCE_MODULE(atom_browser_debugger);
 REFERENCE_MODULE(atom_browser_desktop_capturer);
 REFERENCE_MODULE(atom_browser_download_item);
+REFERENCE_MODULE(atom_browser_importer);
 REFERENCE_MODULE(atom_browser_menu);
 REFERENCE_MODULE(atom_browser_power_monitor);
 REFERENCE_MODULE(atom_browser_power_save_blocker);
