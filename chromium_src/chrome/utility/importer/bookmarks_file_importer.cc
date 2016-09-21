@@ -15,7 +15,6 @@
 
 #include "base/bind.h"
 #include "base/macros.h"
-#include "base/strings/utf_string_conversions.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
 #include "chrome/common/importer/importer_bridge.h"
 #include "chrome/common/importer/importer_data_types.h"
@@ -116,8 +115,7 @@ void BookmarksFileImporter::StartImport(
 
   if (!bookmarks.empty() && !cancelled()) {
     base::string16 first_folder_name =
-        // bridge->GetLocalizedString(IDS_BOOKMARK_GROUP);
-        base::UTF8ToUTF16("Imported from HTML");
+        bridge->GetLocalizedString(IDS_BOOKMARK_GROUP);
     bridge->AddBookmarks(bookmarks, first_folder_name);
   }
   if (!search_engines.empty())

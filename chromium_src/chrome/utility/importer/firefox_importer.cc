@@ -351,8 +351,7 @@ void FirefoxImporter::ImportBookmarks() {
   // Write into profile.
   if (!bookmarks.empty() && !cancelled()) {
     const base::string16& first_folder_name =
-        // bridge_->GetLocalizedString(IDS_BOOKMARK_GROUP_FROM_FIREFOX);
-        base::UTF8ToUTF16("Imported from Firefox");
+        bridge_->GetLocalizedString(IDS_BOOKMARK_GROUP_FROM_FIREFOX);
     bridge_->AddBookmarks(bookmarks, first_folder_name);
   }
   if (!search_engines.empty() && !cancelled()) {

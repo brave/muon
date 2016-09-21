@@ -13,6 +13,7 @@
 
 #include "base/bind.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/strings/utf_string_conversions.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/importer/external_process_importer_host.h"
@@ -359,25 +360,32 @@ void ExternalProcessImporterClient::StartProcessOnIOThread(
   base::DictionaryValue localized_strings;
   localized_strings.SetString(
       base::IntToString(IDS_BOOKMARK_GROUP),
-      l10n_util::GetStringUTF8(IDS_BOOKMARK_GROUP));
+      // l10n_util::GetStringUTF8(IDS_BOOKMARK_GROUP));
+      base::UTF8ToUTF16("Imported from HTML"));
   localized_strings.SetString(
       base::IntToString(IDS_BOOKMARK_GROUP_FROM_FIREFOX),
-      l10n_util::GetStringUTF8(IDS_BOOKMARK_GROUP_FROM_FIREFOX));
+      // l10n_util::GetStringUTF8(IDS_BOOKMARK_GROUP_FROM_FIREFOX));
+      base::UTF8ToUTF16("Imported from Firefox"));
   localized_strings.SetString(
       base::IntToString(IDS_BOOKMARK_GROUP_FROM_SAFARI),
-      l10n_util::GetStringUTF8(IDS_BOOKMARK_GROUP_FROM_SAFARI));
+      // l10n_util::GetStringUTF8(IDS_BOOKMARK_GROUP_FROM_SAFARI));
+      base::UTF8ToUTF16("Imported from Safari"));
   localized_strings.SetString(
       base::IntToString(IDS_IMPORT_FROM_FIREFOX),
-      l10n_util::GetStringUTF8(IDS_IMPORT_FROM_FIREFOX));
+      // l10n_util::GetStringUTF8(IDS_IMPORT_FROM_FIREFOX));
+      base::UTF8ToUTF16("Mozilla Firefox"));
   localized_strings.SetString(
       base::IntToString(IDS_IMPORT_FROM_ICEWEASEL),
-      l10n_util::GetStringUTF8(IDS_IMPORT_FROM_ICEWEASEL));
+      // l10n_util::GetStringUTF8(IDS_IMPORT_FROM_ICEWEASEL));
+      base::UTF8ToUTF16("Iceweasel"));
   localized_strings.SetString(
       base::IntToString(IDS_IMPORT_FROM_SAFARI),
-      l10n_util::GetStringUTF8(IDS_IMPORT_FROM_SAFARI));
+      // l10n_util::GetStringUTF8(IDS_IMPORT_FROM_SAFARI));
+      base::UTF8ToUTF16("Safari"));
   localized_strings.SetString(
       base::IntToString(IDS_BOOKMARK_BAR_FOLDER_NAME),
-      l10n_util::GetStringUTF8(IDS_BOOKMARK_BAR_FOLDER_NAME));
+      // l10n_util::GetStringUTF8(IDS_BOOKMARK_BAR_FOLDER_NAME));
+      base::UTF8ToUTF16("Bookmark Bar"));
 
   utility_process_host_->Send(new ProfileImportProcessMsg_StartImport(
       source_profile_, items_, localized_strings));

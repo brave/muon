@@ -85,16 +85,14 @@ void SafariImporter::StartImport(const importer::SourceProfile& source_profile,
 
 void SafariImporter::ImportBookmarks() {
   base::string16 toolbar_name =
-      // bridge_->GetLocalizedString(IDS_BOOKMARK_BAR_FOLDER_NAME);
-      base::UTF8ToUTF16("Bookmark Bar");
+      bridge_->GetLocalizedString(IDS_BOOKMARK_BAR_FOLDER_NAME);
   std::vector<ImportedBookmarkEntry> bookmarks;
   ParseBookmarks(toolbar_name, &bookmarks);
 
   // Write bookmarks into profile.
   if (!bookmarks.empty() && !cancelled()) {
     const base::string16& first_folder_name =
-        // bridge_->GetLocalizedString(IDS_BOOKMARK_GROUP_FROM_SAFARI);
-        base::UTF8ToUTF16("Imported from Safari");
+        bridge_->GetLocalizedString(IDS_BOOKMARK_GROUP_FROM_SAFARI);
     bridge_->AddBookmarks(bookmarks, first_folder_name);
   }
 
