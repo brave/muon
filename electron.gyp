@@ -429,7 +429,8 @@
           },
           'inputs': [
             '<@(js_sources)',
-            '<@(extension_js_sources)'
+            '<@(extension_js_sources)',
+            '<@(importer_js_sources)',
           ],
           'outputs': [
             '<(resources_path)/electron.asar',
