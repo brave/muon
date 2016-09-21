@@ -198,7 +198,7 @@ void ChromeImporter::RecursiveReadBookmarksFolder(
         entry.path = parent_path;
         entry.title = name;
         entry.creation_time =
-          base::Time::FromDoubleT(chromeTimeToDouble(std::stol(date_added)));
+          base::Time::FromDoubleT(chromeTimeToDouble(std::stoll(date_added)));
         bookmarks->push_back(entry);
 
         std::vector<base::string16> path = parent_path;
@@ -211,7 +211,7 @@ void ChromeImporter::RecursiveReadBookmarksFolder(
         entry.path = parent_path;
         entry.title = name;
         entry.creation_time =
-          base::Time::FromDoubleT(chromeTimeToDouble(std::stol(date_added)));
+          base::Time::FromDoubleT(chromeTimeToDouble(std::stoll(date_added)));
         bookmarks->push_back(entry);
       }
     }
