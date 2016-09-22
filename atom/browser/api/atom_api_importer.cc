@@ -199,14 +199,9 @@ void Importer::ImportEnded() {
   importer_host_ = NULL;
 
   if (import_did_succeed_) {
-    // web_ui()->CallJavascriptFunction("ImportDataOverlay.confirmSuccess");
+    Emit("import-success");
   } else {
-    /*
-    base::FundamentalValue state(false);
-    web_ui()->CallJavascriptFunction("ImportDataOverlay.setImportingState",
-                                     state);
-    web_ui()->CallJavascriptFunction("ImportDataOverlay.dismiss");
-    */
+    Emit("import-dismiss");
   }
 }
 
