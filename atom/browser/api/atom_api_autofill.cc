@@ -7,12 +7,14 @@
 #include "atom/browser/autofill/personal_data_manager_factory.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "base/guid.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "components/autofill/core/browser/autofill_profile.h"
 #include "components/autofill/core/browser/credit_card.h"
 #include "components/autofill/core/browser/personal_data_manager.h"
+#include "components/autofill/core/common/autofill_constants.h"
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/dictionary.h"
 
@@ -159,7 +161,7 @@ Autofill::~Autofill() {
 
 std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
   std::string full_name, company_name, street_address, city, state, locality,
-    postal_code, sorting_code, country_code, phone, email, language_code;
+    postal_code, sorting_code, country_code, phone, email, language_code, guid;
   profile.GetString("full_name", &full_name);
   profile.GetString("company_name", &company_name);
   profile.GetString("street_address", &street_address);
@@ -172,6 +174,10 @@ std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
   profile.GetString("phone", &phone);
   profile.GetString("email", &email);
   profile.GetString("language_code", &language_code);
+  if (!profile.GetString("guid", &guid)) {
+    NOTREACHED();
+    return std::string();
+  }
   autofill::PersonalDataManager* personal_data =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
@@ -180,7 +186,8 @@ std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
     return std::string();
   }
 
-  autofill::AutofillProfile autofill_profile;
+  autofill::AutofillProfile autofill_profile(guid, autofill::kSettingsOrigin);
+
   if (!full_name.empty()) {
     autofill_profile.SetInfo(autofill::AutofillType(autofill::NAME_FULL),
                     base::UTF8ToUTF16(full_name),
@@ -249,7 +256,13 @@ std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
   if (!language_code.empty())
     autofill_profile.set_language_code(language_code);
 
-  return personal_data->SaveImportedProfile(autofill_profile);
+  if (!base::IsValidGUID(autofill_profile.guid())) {
+    autofill_profile.set_guid(base::GenerateGUID());
+    personal_data->AddProfile(autofill_profile);
+  } else {
+    personal_data->UpdateProfile(autofill_profile);
+  }
+  return autofill_profile.guid();
 }
 
 autofill::AutofillProfile* Autofill::GetProfile(const std::string& guid) {
@@ -278,11 +291,15 @@ bool Autofill::RemoveProfile(const std::string& guid) {
 }
 
 std::string Autofill::AddCreditCard(const base::DictionaryValue& card) {
-  std::string name, card_number, expiration_month, expiration_year;
+  std::string name, card_number, expiration_month, expiration_year, guid;
   card.GetString("name", &name);
   card.GetString("card_number", &card_number);
   card.GetString("expiration_month", &expiration_month);
   card.GetString("expiration_year", &expiration_year);
+  if (!card.GetString("guid", &guid)) {
+    NOTREACHED();
+    return std::string();
+  }
   autofill::PersonalDataManager* personal_data =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
@@ -291,7 +308,7 @@ std::string Autofill::AddCreditCard(const base::DictionaryValue& card) {
     return std::string();
   }
 
-  autofill::CreditCard credit_card;
+  autofill::CreditCard credit_card(guid, autofill::kSettingsOrigin);
   if (!name.empty()) {
     credit_card.SetRawInfo(autofill::CREDIT_CARD_NAME_FULL,
                            base::UTF8ToUTF16(name));
@@ -315,7 +332,13 @@ std::string Autofill::AddCreditCard(const base::DictionaryValue& card) {
         base::UTF8ToUTF16(expiration_year));
   }
 
-  return personal_data->SaveImportedCreditCard(credit_card);
+  if (!base::IsValidGUID(credit_card.guid())) {
+    credit_card.set_guid(base::GenerateGUID());
+    personal_data->AddCreditCard(credit_card);
+  } else {
+    personal_data->UpdateCreditCard(credit_card);
+  }
+  return credit_card.guid();
 }
 
 autofill::CreditCard* Autofill::GetCreditCard(const std::string& guid) {
