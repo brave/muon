@@ -214,12 +214,11 @@ void OnRegisterProtocol(AtomBrowserContext* browser_context,
   ProtocolHandlerRegistry* registry =
     ProtocolHandlerRegistryFactory::GetForBrowserContext(browser_context);
   if (allowed) {
-    std::unique_ptr<mate::Arguments> args(new mate::Arguments);
     // Ensure the app is invoked in the first place
     if (!Browser::Get()->
-        IsDefaultProtocolClient(handler.protocol(), args.get())) {
+        IsDefaultProtocolClient(handler.protocol(), nullptr)) {
       Browser::Get()->SetAsDefaultProtocolClient(
-          handler.protocol(), args.get());
+          handler.protocol(), nullptr);
     }
     registry->OnAcceptRegisterProtocolHandler(handler);
   } else {
@@ -268,9 +267,8 @@ void CommonWebContentsDelegate::UnregisterProtocolHandler(
     const std::string& protocol,
     const GURL& url,
     bool user_gesture) {
-  std::unique_ptr<mate::Arguments> args(new mate::Arguments);
-  if (Browser::Get()->IsDefaultProtocolClient(protocol, args.get())) {
-    Browser::Get()->RemoveAsDefaultProtocolClient(protocol, args.get());
+  if (Browser::Get()->IsDefaultProtocolClient(protocol, nullptr)) {
+    Browser::Get()->RemoveAsDefaultProtocolClient(protocol, nullptr);
   }
   ProtocolHandler handler =
       ProtocolHandler::CreateProtocolHandler(protocol, url);

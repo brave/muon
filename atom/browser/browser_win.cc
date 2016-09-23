@@ -45,13 +45,15 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
 
 bool GetProtocolLaunchPath(mate::Arguments* args, base::string16* exe) {
   // Executable Path
-  if (!args->GetNext(exe)) {
+  if (!args || !args->GetNext(exe)) {
     base::FilePath path;
     if (!PathService::Get(base::FILE_EXE, &path)) {
       LOG(ERROR) << "Error getting app exe path";
       return false;
     }
     *exe = path.value();
+    if (!args)
+      return true;
   }
 
   // Read in optional args arg
