@@ -56,8 +56,7 @@ void DetectIEProfiles(std::vector<importer::SourceProfile>* profiles) {
   ie.importer_name = base::UTF8ToUTF16("Microsoft Internet Explorer");
   ie.importer_type = importer::TYPE_IE;
   ie.services_supported = importer::HISTORY | importer::FAVORITES |
-                          importer::COOKIES | importer::PASSWORDS |
-                          importer::SEARCH_ENGINES;
+                          importer::PASSWORDS | importer::SEARCH_ENGINES;
   profiles->push_back(ie);
 }
 
