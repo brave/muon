@@ -11,7 +11,6 @@
 #include "content/public/browser/notification_observer.h"
 #include "content/public/browser/notification_registrar.h"
 #include "extensions/browser/extension_system.h"
-#include "extensions/browser/uninstall_reason.h"
 #include "extensions/common/one_shot_event.h"
 
 class ExtensionService {
@@ -120,26 +119,10 @@ class AtomExtensionSystem : public ExtensionSystem {
     void DisableExtension(const std::string& extension_id,
                           int disable_reasons) override;
 
-    // Uninstalls the specified extension. Callers should only call this method
-    // with extensions that exist. |reason| lets the caller specify why the
-    // extension is uninstalled.
-    //
-    // If the return value is true, |deletion_done_callback| is invoked when
-    // data deletion is done or at least is scheduled.
-    bool UninstallExtension(const std::string& extension_id,
-                            extensions::UninstallReason reason,
-                            const base::Closure& deletion_done_callback,
-                            base::string16* error);
-
     // Removes the extension with the given id from the list of
     // terminated extensions if it is there.
     void UntrackTerminatedExtension(const std::string& id);
 
-    // Called on file task runner thread to uninstall extension.
-    static void UninstallExtensionOnFileThread(
-      const std::string& id,
-      const base::FilePath& install_dir,
-      const base::FilePath& extension_path);
     void UnloadExtension(
         const std::string& extension_id,
         extensions::UnloadedExtensionInfo::Reason reason);

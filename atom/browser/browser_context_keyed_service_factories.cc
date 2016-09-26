@@ -27,7 +27,6 @@
 #include "extensions/browser/extension_prefs_factory.h"
 #include "extensions/browser/process_manager_factory.h"
 #include "extensions/browser/renderer_startup_helper.h"
-#include "extensions/browser/updater/update_service_factory.h"
 #endif
 
 namespace atom {
@@ -60,7 +59,6 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   extensions::StorageFrontend::GetFactoryInstance();
   extensions::WebRequestAPI::GetFactoryInstance();
   extensions::AtomExtensionSystemFactory::GetInstance();
-  extensions::UpdateServiceFactory::GetInstance();
 #endif
 }
 

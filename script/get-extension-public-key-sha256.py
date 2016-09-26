@@ -6,10 +6,12 @@ import struct
 from hashlib import sha256
 import base64
 import sys
+import os
 
 assert len(sys.argv) == 2, 'Usage: ./script/get-extension-public-key-sha256.py <crx-path>'
 extension_path = sys.argv[1]
 
+file_size = os.path.getsize(extension_path)
 f = open(extension_path, 'rb')
 
 magic_number = f.read(4)
@@ -28,6 +30,10 @@ f.seek(4, 1)
 public_key_info = f.read(public_key_len)
 pk_hash = sha256(public_key_info).hexdigest()
 
+f.seek(0)
+all_crx_data = f.read(file_size)
+all_crx_data_sha256 = sha256(all_crx_data).hexdigest()
+
 def format_hex_data(pk_hash):
   return ' '.join('0x' + pk_hash[i:i+2] + ',' for i in xrange(0,len(pk_hash), 2))[:-1]
 
@@ -40,3 +46,4 @@ print 'public key len: ', public_key_len
 print 'manifest key: ', base64.b64encode(public_key_info)
 print 'public key: ', group_hex(format_hex_data(public_key_info.encode('hex')))
 print 'pk hash sha256: ', group_hex(format_hex_data(pk_hash))
+print 'crx file data sha256 (for update server endpoint)', all_crx_data_sha256

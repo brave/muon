@@ -93,7 +93,13 @@ int BraveConfigurator::UpdateDelay() const {
 }
 
 std::vector<GURL> BraveConfigurator::UpdateUrl() const {
-  return configurator_impl_.UpdateUrl();
+  // For localhost of vault-updater
+  // return std::vector<GURL> {GURL("http://localhost:8192/extensions")};
+
+  // For Chrome's extension store
+  // return configurator_impl_.UpdateUrl();
+  return std::vector<GURL>
+      {GURL("https://laptop-updates.brave.com/extensions")};
 }
 
 std::vector<GURL> BraveConfigurator::PingUrl() const {
@@ -148,7 +154,8 @@ bool BraveConfigurator::UseBackgroundDownloader() const {
 }
 
 bool BraveConfigurator::UseCupSigning() const {
-  return configurator_impl_.UseCupSigning();
+  // return configurator_impl_.UseCupSigning();
+  return false;
 }
 
 // Returns a task runner to run blocking tasks. The task runner continues to run

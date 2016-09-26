@@ -77,8 +77,6 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
                  content::NotificationService::AllSources());
   registrar_.Add(this, atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
                  content::NotificationService::AllSources());
-  registrar_.Add(this, atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST,
-                 content::NotificationService::AllSources());
 
   if (extensions_enabled) {
     // load all extensions
@@ -101,49 +99,6 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
 void AtomExtensionSystem::Shared::Shutdown() {
 }
 
-bool AtomExtensionSystem::Shared::UninstallExtension(
-    // "transient" because the process of uninstalling may cause the reference
-    // to become invalid. Instead, use |extenson->id()|.
-    const std::string& transient_extension_id,
-    extensions::UninstallReason reason,
-    const base::Closure& deletion_done_callback,
-    base::string16* error) {
-  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-
-  scoped_refptr<const Extension> extension =
-      GetInstalledExtension(transient_extension_id);
-
-  // Callers should not send us nonexistent extensions.
-  DCHECK(extension.get());
-
-  // Unload before doing more cleanup to ensure that nothing is hanging on to
-  // any of these resources.
-  UnloadExtension(extension->id(), UnloadedExtensionInfo::REASON_UNINSTALL);
-  if (registry_->blacklisted_extensions().Contains(extension->id()))
-    registry_->RemoveBlacklisted(extension->id());
-
-  base::FilePath install_directory;
-  PathService::Get(component_updater::DIR_COMPONENT_USER,
-      &install_directory);
-
-  // Tell the backend to start deleting installed extensions on the file thread.
-  BrowserThread::PostTask(
-      BrowserThread::IO,
-      FROM_HERE,
-      base::Bind(&AtomExtensionSystem::Shared::UninstallExtensionOnFileThread,
-                 extension->id(),
-                 install_directory,
-                 extension->path()));
-
-  UntrackTerminatedExtension(extension->id());
-
-  // Notify interested parties that we've uninstalled this extension.
-  ExtensionRegistry::Get(browser_context_)
-      ->TriggerOnUninstalled(extension.get(), reason);
-
-  return true;
-}
-
 void
 AtomExtensionSystem::Shared::UntrackTerminatedExtension(const std::string& id) {
   std::string lowercase_id = base::ToLowerASCII(id);
@@ -156,14 +111,6 @@ AtomExtensionSystem::Shared::UntrackTerminatedExtension(const std::string& id) {
         content::Source<content::BrowserContext>(browser_context_),
         content::Details<const Extension>(extension));
   }
-}
-
-// static
-void AtomExtensionSystem::Shared::UninstallExtensionOnFileThread(
-    const std::string& id,
-    const base::FilePath& install_dir,
-    const base::FilePath& extension_path) {
-  file_util::UninstallExtension(install_dir, id);
 }
 
 void AtomExtensionSystem::Shared::UnloadExtension(
@@ -418,16 +365,6 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
         content::Source<content::BrowserContext>(browser_context_),
         content::Details<const Extension>(extension));
   } else {
-    // All apps that are displayed in the launcher are ordered by their ordinals
-    // so we must ensure they have valid ordinals.
-    if (extension->RequiresSortOrdinal()) {
-      app_sorting()->SetExtensionVisible(
-          extension->id(),
-          extension->ShouldDisplayInNewTabPage());
-      app_sorting()->EnsureValidOrdinals(extension->id(),
-                                       syncer::StringOrdinal());
-    }
-
     registry_->AddEnabled(extension);
     NotifyExtensionLoaded(extension);
   }
@@ -525,23 +462,6 @@ void AtomExtensionSystem::Shared::Observe(int type,
 
       if (extension)
         DisableExtension(extension->id(), Extension::DISABLE_USER_ACTION);
-
-      break;
-    }
-    case atom::NOTIFICATION_EXTENSION_UNINSTALL_REQUEST: {
-      if (!shared_user_script_master())
-        return;
-
-      const Extension* extension =
-        content::Details<const Extension>(details).ptr();
-
-      if (extension) {
-        base::string16 error;
-        UninstallExtension(extension->id(),
-            extensions::UNINSTALL_REASON_INTERNAL_MANAGEMENT,
-            base::Bind(&base::DoNothing),
-            &error);
-      }
 
       break;
     }
