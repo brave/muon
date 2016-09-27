@@ -1,13 +1,15 @@
 var services = {
   passwordSavingEnabled: {
     get: function(details, cb) {
-      cb({level_of_control: "not_controllable"});
+      // TODO(bridiver) - should be pref enabled
+      cb({level_of_control: "not_controllable", value: true});
     },
     set: function() {}
   },
   autofillEnabled: {
     get: function(details, cb) {
-      cb({level_of_control: "not_controllable"});
+      // TODO(bridiver) - should be pref enabled
+      cb({level_of_control: "not_controllable", value: true});
     },
     set: function() {}
   }
