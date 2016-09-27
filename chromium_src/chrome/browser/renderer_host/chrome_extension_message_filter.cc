@@ -89,6 +89,7 @@ void ChromeExtensionMessageFilter::OverrideThreadForMessage(
     case ExtensionHostMsg_AddDOMActionToActivityLog::ID:
     case ExtensionHostMsg_AddEventToActivityLog::ID:
       *thread = BrowserThread::UI;
+      break;
     default:
       break;
   }
@@ -228,18 +229,6 @@ void ChromeExtensionMessageFilter::OnPostMessage(
   if (!browser_context_)
     return;
 
-  // this method is called on the UI thread, but there is a race condition
-  // with OnOpenChannelToTab and this ensures that PostMessage runs after
-  // OpenChannelToTab
-  BrowserThread::PostTask(
-      BrowserThread::UI, FROM_HERE,
-      base::Bind(&ChromeExtensionMessageFilter::OnPostMessageOnUIThread,
-                 this, port_id, message));
-}
-
-void ChromeExtensionMessageFilter::OnPostMessageOnUIThread(
-    int port_id,
-    const extensions::Message& message) {
   extensions::MessageService::Get(browser_context_)->PostMessage(port_id, message);
 }
 
