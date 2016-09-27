@@ -118,6 +118,15 @@ class AtomExtensionSystem : public ExtensionSystem {
     void EnableExtension(const std::string& extension_id) override;
     void DisableExtension(const std::string& extension_id,
                           int disable_reasons) override;
+
+    // Removes the extension with the given id from the list of
+    // terminated extensions if it is there.
+    void UntrackTerminatedExtension(const std::string& id);
+
+    void UnloadExtension(
+        const std::string& extension_id,
+        extensions::UnloadedExtensionInfo::Reason reason);
+
     void NotifyExtensionLoaded(const Extension* extension) override;
     void NotifyExtensionUnloaded(const Extension* extension,
                                 UnloadedExtensionInfo::Reason reason) override;

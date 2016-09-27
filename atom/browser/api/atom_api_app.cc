@@ -35,6 +35,7 @@
 #include "brave/browser/brave_content_browser_client.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/common/chrome_paths.h"
+#include "components/component_updater/component_updater_paths.h"
 #include "content/browser/plugin_service_impl.h"
 #include "content/public/browser/browser_accessibility_state.h"
 #include "content/public/browser/browser_thread.h"
@@ -365,6 +366,8 @@ int GetPathConstant(const std::string& name) {
     return chrome::DIR_USER_VIDEOS;
   else if (name == "pepperFlashSystemPlugin")
     return chrome::FILE_PEPPER_FLASH_SYSTEM_PLUGIN;
+  else if (name == "extensionsDir")
+    return component_updater::DIR_COMPONENT_USER;
   else
     return -1;
 }

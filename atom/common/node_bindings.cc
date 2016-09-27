@@ -33,6 +33,7 @@ using content::BrowserThread;
 // Electron's builtin modules.
 REFERENCE_MODULE(atom_browser_app);
 REFERENCE_MODULE(atom_browser_auto_updater);
+REFERENCE_MODULE(atom_browser_component_updater);
 REFERENCE_MODULE(atom_browser_content_tracing);
 REFERENCE_MODULE(atom_browser_dialog);
 REFERENCE_MODULE(atom_browser_debugger);

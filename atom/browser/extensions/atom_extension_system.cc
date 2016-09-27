@@ -12,7 +12,12 @@
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/shared_user_script_master.h"
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "base/memory/weak_ptr.h"
+#include "base/path_service.h"
+#include "base/version.h"
+#include "components/component_updater/component_updater_paths.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/notification_service.h"
@@ -30,6 +35,7 @@
 #include "extensions/browser/service_worker_manager.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
 #include "extensions/common/extension_messages.h"
+#include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/shared_module_info.h"
 #include "extensions/common/permissions/permissions_data.h"
 
@@ -91,6 +97,62 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
 }
 
 void AtomExtensionSystem::Shared::Shutdown() {
+}
+
+void
+AtomExtensionSystem::Shared::UntrackTerminatedExtension(const std::string& id) {
+  std::string lowercase_id = base::ToLowerASCII(id);
+  const Extension* extension =
+      registry_->terminated_extensions().GetByID(lowercase_id);
+  registry_->RemoveTerminated(lowercase_id);
+  if (extension) {
+    content::NotificationService::current()->Notify(
+        extensions::NOTIFICATION_EXTENSION_REMOVED,
+        content::Source<content::BrowserContext>(browser_context_),
+        content::Details<const Extension>(extension));
+  }
+}
+
+void AtomExtensionSystem::Shared::UnloadExtension(
+    const std::string& extension_id,
+    UnloadedExtensionInfo::Reason reason) {
+  // Make sure the extension gets deleted after we return from this function.
+  int include_mask =
+      ExtensionRegistry::EVERYTHING & ~ExtensionRegistry::TERMINATED;
+  scoped_refptr<const Extension> extension(
+      registry_->GetExtensionById(extension_id, include_mask));
+
+  // This method can be called via PostTask, so the extension may have been
+  // unloaded by the time this runs.
+  if (!extension.get()) {
+    // In case the extension may have crashed/uninstalled. Allow the profile to
+    // clean up its RequestContexts.
+    AtomExtensionSystemFactory::GetInstance()->
+      GetForBrowserContext(browser_context_)->
+        UnregisterExtensionWithRequestContexts(extension_id, reason);
+    return;
+  }
+
+  if (registry_->disabled_extensions().Contains(extension->id())) {
+    registry_->RemoveDisabled(extension->id());
+    // Make sure the profile cleans up its RequestContexts when an already
+    // disabled extension is unloaded (since they are also tracking the disabled
+    // extensions).
+    AtomExtensionSystemFactory::GetInstance()->
+      GetForBrowserContext(browser_context_)->
+        UnregisterExtensionWithRequestContexts(extension_id, reason);
+    // Don't send the unloaded notification. It was sent when the extension
+    // was disabled.
+  } else {
+    // Remove the extension from the enabled list.
+    registry_->RemoveEnabled(extension->id());
+    NotifyExtensionUnloaded(extension.get(), reason);
+  }
+
+  content::NotificationService::current()->Notify(
+      extensions::NOTIFICATION_EXTENSION_REMOVED,
+      content::Source<content::BrowserContext>(browser_context_),
+      content::Details<const Extension>(extension.get()));
 }
 
 ExtensionService* AtomExtensionSystem::Shared::extension_service() {
@@ -262,18 +324,51 @@ void AtomExtensionSystem::Shared::NotifyExtensionUnloaded(
 
 const Extension* AtomExtensionSystem::Shared::AddExtension(
                                         const Extension* extension) {
-  if (registry_->GetExtensionById(extension->id(),
-                                  ExtensionRegistry::IncludeFlag::EVERYTHING))
-    return extension;
+  bool is_extension_upgrade = false;
+  bool is_extension_loaded = false;
+  const Extension* old = GetInstalledExtension(extension->id());
+  if (old) {
+    is_extension_loaded = true;
+    int version_compare_result =
+        extension->version()->CompareTo(*(old->version()));
+    is_extension_upgrade = version_compare_result > 0;
+    // Other than for unpacked extensions, CrxInstaller should have guaranteed
+    // that we aren't downgrading.
+    if (!Manifest::IsUnpackedLocation(extension->location())) {
+      DCHECK_GE(version_compare_result, 0);
+    }
+  }
 
-  extension_prefs_->AddGrantedPermissions(
-          extension->id(), extension->permissions_data()->active_permissions());
-  extension_prefs_->SetExtensionEnabled(extension->id());
+  // Set the upgraded bit; we consider reloads upgrades.
+  runtime_data()->SetBeingUpgraded(extension->id(),
+                                   is_extension_upgrade);
 
-  registry_->AddEnabled(make_scoped_refptr(extension));
+  // If a terminated extension is loaded, remove it from the terminated list.
+  UntrackTerminatedExtension(extension->id());
 
-  NotifyExtensionLoaded(extension);
+  if (is_extension_loaded) {
+    // To upgrade an extension in place, unload the old one and then load the
+    // new one.  ReloadExtension disables the extension, which is sufficient.
+    UnloadExtension(extension->id(), UnloadedExtensionInfo::REASON_UPDATE);
+  }
 
+  if (extension_prefs_->IsExtensionBlacklisted(extension->id())) {
+    // Only prefs is checked for the blacklist. We rely on callers to check the
+    // blacklist before calling into here, e.g. CrxInstaller checks before
+    // installation then threads through the install and pending install flow
+    // of this class, and we check when loading installed extensions.
+    registry_->AddBlacklisted(extension);
+  } else if (extension_prefs_->IsExtensionDisabled(extension->id())) {
+    registry_->AddDisabled(extension);
+    content::NotificationService::current()->Notify(
+        extensions::NOTIFICATION_EXTENSION_UPDATE_DISABLED,
+        content::Source<content::BrowserContext>(browser_context_),
+        content::Details<const Extension>(extension));
+  } else {
+    registry_->AddEnabled(extension);
+    NotifyExtensionLoaded(extension);
+  }
+  runtime_data()->SetBeingUpgraded(extension->id(), false);
   return extension;
 }
 
