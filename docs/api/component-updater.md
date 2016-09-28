@@ -11,7 +11,7 @@ const {componentUpdater} = require('electron')
 componentUpdater.registerComponent('aomjjhallfgjeglblehebfpbcfeobpgk')
 
 // Register PDFJS
-componentUpdater.registerComponent('oemmndcbldboiebfnladdacbdfmadadm')
+componentUpdater.registerComponent('jdbefljfgobbmcidnmpjamcbhnbphjnb')
 
 // Check for updates now for 1Password
 componentUpdater.checkNow('aomjjhallfgjeglblehebfpbcfeobpgk')
