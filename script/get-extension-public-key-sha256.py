@@ -37,13 +37,22 @@ all_crx_data_sha256 = sha256(all_crx_data).hexdigest()
 def format_hex_data(pk_hash):
   return ' '.join('0x' + pk_hash[i:i+2] + ',' for i in xrange(0,len(pk_hash), 2))[:-1]
 
+def format_hex_data(pk_hash):
+  return ' '.join('0x' + pk_hash[i:i+2] + ',' for i in xrange(0,len(pk_hash), 2))[:-1]
+
+def get_extension_id(pk_hash):
+  return ''.join([chr(ord('a') + int(a, 16)) for a in pk_hash])[:32]
+
 # In groups of 8 of '0x0e, '
 def group_hex(hex):
   return '\n'.join(hex[i:i+48] for i in xrange(0,len(hex), 48))
 
-
-print 'public key len: ', public_key_len
-print 'manifest key: ', base64.b64encode(public_key_info)
-print 'public key: ', group_hex(format_hex_data(public_key_info.encode('hex')))
-print 'pk hash sha256: ', group_hex(format_hex_data(pk_hash))
+# Used as the manifest key in the browser
+print 'Manifest key: ', base64.b64encode(public_key_info)
+print 'PK len: ', public_key_len
+# Used by brave/electron to get the PK SHA256 and extension ID
+print 'Public key: ', group_hex(format_hex_data(public_key_info.encode('hex')))
+# Sent to the update server
+print 'PK SHA256: ', group_hex(format_hex_data(pk_hash))
+print 'extension ID:', get_extension_id(pk_hash)
 print 'crx file data sha256 (for update server endpoint)', all_crx_data_sha256
