@@ -9,6 +9,8 @@ var sendRequestIsDisabled = process.IsSendRequestDisabled();
 var forEach = require('utils').forEach;
 var extensionId = process.GetExtensionId();
 var ipc = require('ipc_utils')
+var lastError = require('lastError');
+var chrome = requireNative('chrome').GetChrome();
 
 var id = 0;
 
@@ -171,14 +173,23 @@ var bindings = {
   },
 
   executeScript: function (tabId, details, cb) {
-    if (typeof tabId !== 'number') {
+    var responseId = ++id
+    if (typeof tabId === 'object') {
+      // TODO(bridiver) set tab id to current tab -2
+      detail = tabId
+      cb = details
       throw 'executeScript: must specify tab id'
     }
-    if (cb) {
-      // TODO(bridiver) implement callback
-      throw 'executeScript: `callback` is not supported'
-    }
-    ipc.send('chrome-tabs-execute-script', extensionId, tabId, details)
+    cb && ipc.once('chrome-tabs-execute-script-response-' + responseId, function (evt, error, on_url, results) {
+      try {
+        if (error)
+          lastError.set('tabs.executeScript', error, null, chrome);
+        cb(results);
+      } finally {
+        lastError.clear(chrome);
+      }
+    })
+    ipc.send('chrome-tabs-execute-script', responseId, extensionId, tabId, details)
   }
 }
 

@@ -1579,15 +1579,12 @@ void WebContents::SetActive(bool active) {
 }
 
 #if defined(ENABLE_EXTENSIONS)
-bool WebContents::ExecuteScriptInTab(
-    const std::string extension_id,
-    const std::string code_string,
-    const mate::Dictionary& options) {
+bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (!tab_helper)
     return false;
 
-  return tab_helper->ExecuteScriptInTab(extension_id, code_string, options);
+  return tab_helper->ExecuteScriptInTab(args);
 }
 #endif
 

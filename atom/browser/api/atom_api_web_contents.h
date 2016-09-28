@@ -194,9 +194,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   int GetZoomPercent();
 
 #if defined(ENABLE_EXTENSIONS)
-  bool ExecuteScriptInTab(const std::string code_string,
-      const std::string extension_id,
-      const mate::Dictionary& options);
+  bool ExecuteScriptInTab(mate::Arguments* args);
 #endif
 
   // Send messages to browser.

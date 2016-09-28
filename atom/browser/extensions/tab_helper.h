@@ -24,6 +24,7 @@ class RenderViewHost;
 }
 
 namespace mate {
+class Arguments;
 class Dictionary;
 }
 
@@ -56,10 +57,7 @@ class TabHelper : public content::WebContentsObserver,
   // Set this tab as the active tab in its window
   void SetActive(bool active);
 
-  bool ExecuteScriptInTab(
-    const std::string extension_id,
-    const std::string code_string,
-    const mate::Dictionary& options);
+  bool ExecuteScriptInTab(mate::Arguments* args);
 
   ScriptExecutor* script_executor() {
     return script_executor_.get();
@@ -88,6 +86,8 @@ class TabHelper : public content::WebContentsObserver,
   void ExecuteScript(
       std::string extension_id,
       const mate::Dictionary& options,
+      extensions::ScriptExecutor::ResultType result,
+      extensions::ScriptExecutor::ExecuteScriptCallback callback,
       bool success,
       const std::string& code_string);
 

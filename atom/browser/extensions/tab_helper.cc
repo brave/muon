@@ -8,6 +8,9 @@
 #include <utility>
 #include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
+#include "atom/common/native_mate_converters/callback.h"
+#include "atom/common/native_mate_converters/gurl_converter.h"
+#include "atom/common/native_mate_converters/value_converter.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
@@ -18,6 +21,7 @@
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/file_reader.h"
 #include "extensions/common/extension_messages.h"
+#include "native_mate/arguments.h"
 #include "native_mate/dictionary.h"
 #include "ui/base/resource/resource_bundle.h"
 
@@ -98,10 +102,31 @@ void TabHelper::DidCloneToNewWebContents(
   CreateForWebContents(new_web_contents);
 }
 
-bool TabHelper::ExecuteScriptInTab(
-    const std::string extension_id,
-    const std::string code_string,
-    const mate::Dictionary& options) {
+bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
+  std::string extension_id;
+  if (!args->GetNext(&extension_id)) {
+    args->ThrowError("extensionId is a required field");
+  }
+
+  std::string code_string;
+  if (!args->GetNext(&code_string)) {
+    args->ThrowError("codeString is a required field");
+  }
+
+  mate::Dictionary options;
+  if (!args->GetNext(&options)) {
+    args->ThrowError("options is a required field");
+  }
+
+  extensions::ScriptExecutor::ResultType result;
+  extensions::ScriptExecutor::ExecuteScriptCallback callback;
+  if (!args->GetNext(&callback)) {
+    callback = extensions::ScriptExecutor::ExecuteScriptCallback();
+    result = extensions::ScriptExecutor::NO_RESULT;
+  } else {
+    result = extensions::ScriptExecutor::JSON_SERIALIZED_RESULT;
+  }
+
   extensions::ScriptExecutor* executor = script_executor();
   if (!executor)
     return false;
@@ -143,19 +168,22 @@ bool TabHelper::ExecuteScriptInTab(
       scoped_refptr<FileReader> file_reader(new FileReader(
           resource,
           base::Bind(&TabHelper::ExecuteScript, base::Unretained(this),
-            extension_id, options)));
+            extension_id, options, result, callback)));
       file_reader->Start();
       return true;
     }
   }
 
-  ExecuteScript(extension_id, options, true, file.empty() ? code_string : file);
+  ExecuteScript(extension_id, options, result, callback,
+      true, file.empty() ? code_string : file);
   return true;
 }
 
 void TabHelper::ExecuteScript(
     const std::string extension_id,
     const mate::Dictionary& options,
+    extensions::ScriptExecutor::ResultType result,
+    extensions::ScriptExecutor::ExecuteScriptCallback callback,
     bool success,
     const std::string& code_string) {
   extensions::ScriptExecutor* executor = script_executor();
@@ -203,8 +231,8 @@ void TabHelper::ExecuteScript(
       GURL(),  // No webview src.
       GURL(),  // No file url.
       false,  // user gesture
-      extensions::ScriptExecutor::NO_RESULT,
-      extensions::ScriptExecutor::ExecuteScriptCallback());
+      result,
+      callback);
 }
 
 // static
