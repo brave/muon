@@ -44,8 +44,8 @@
     'v8_postmortem_support': 'false',
     'v8_enable_i18n_support': 'false',
     'v8_inspector': 'false',
-    'google_api_key%': '',
-    'google_api_endpoint%': '',
+    'electron_google_api_key%': '',
+    'electron_google_api_endpoint%': '',
   },
   # Settings to compile node under Windows.
   'target_defaults': {
@@ -289,17 +289,17 @@
     ],
   },
   'conditions': [
-    ['google_api_key!=""', {
+    ['electron_google_api_key!=""', {
       'target_defaults': {
         'defines': [
-          'GOOGLEAPIS_API_KEY="<(google_api_key)"',
+          'GOOGLEAPIS_API_KEY="<(electron_google_api_key)"',
         ],
       }
     }],
-    ['google_api_endpoint!=""', {
+    ['electron_google_api_endpoint!=""', {
       'target_defaults': {
         'defines': [
-          'GOOGLEAPIS_ENDPOINT="<(google_api_endpoint)"',
+          'GOOGLEAPIS_ENDPOINT="<(electron_google_api_endpoint)"',
         ],
       }
     }],
