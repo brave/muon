@@ -27,8 +27,8 @@ Menu::Menu(v8::Isolate* isolate, v8::Local<v8::Object> wrapper)
 }
 
 Menu::~Menu() {
-  is_destroyed_ = true;
   MenuDestroyed();
+  is_destroyed_ = true;
 }
 
 void Menu::AfterInit(v8::Isolate* isolate) {
@@ -158,8 +158,8 @@ bool Menu::IsVisibleAt(int index) const {
 }
 
 void Menu::MenuDestroyed() {
-  FOR_EACH_OBSERVER(MenuObserver, observers_, MenuDestroyed());
   if (!is_destroyed_) {
+    FOR_EACH_OBSERVER(MenuObserver, observers_, MenuDestroyed());
     base::MessageLoop::current()->PostTask(FROM_HERE, GetDestroyClosure());
   }
 }
