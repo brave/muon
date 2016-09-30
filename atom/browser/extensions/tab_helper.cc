@@ -106,16 +106,19 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
   std::string extension_id;
   if (!args->GetNext(&extension_id)) {
     args->ThrowError("extensionId is a required field");
+    return false;
   }
 
   std::string code_string;
   if (!args->GetNext(&code_string)) {
     args->ThrowError("codeString is a required field");
+    return false;
   }
 
   mate::Dictionary options;
   if (!args->GetNext(&options)) {
     args->ThrowError("options is a required field");
+    return false;
   }
 
   extensions::ScriptExecutor::ResultType result;
