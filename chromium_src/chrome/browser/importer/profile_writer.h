@@ -102,8 +102,10 @@ class ProfileWriter : public base::RefCountedThreadSafe<ProfileWriter> {
   // If |unique_on_host_and_path| is true, a TemplateURL is only added if there
   // is not an existing TemplateURL that has a replaceable search url with the
   // same host+path combination.
+  /*
   virtual void AddKeywords(ScopedVector<TemplateURL> template_urls,
                            bool unique_on_host_and_path);
+  */
 
   // Adds the imported autofill entries to the autofill database.
   virtual void AddAutofillFormDataEntries(

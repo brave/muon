@@ -395,9 +395,9 @@ static void BuildHostPathMap(TemplateURLService* model,
 }
 */
 
+/*
 void ProfileWriter::AddKeywords(ScopedVector<TemplateURL> template_urls,
                                 bool unique_on_host_and_path) {
-  /*
   TemplateURLService* model =
       TemplateURLServiceFactory::GetForProfile(profile_);
   HostPathMap host_path_map;
@@ -427,7 +427,6 @@ void ProfileWriter::AddKeywords(ScopedVector<TemplateURL> template_urls,
       *i = NULL;  // Prevent the vector from deleting *i later.
     }
   }
-  */
   if (importer_) {
     base::ListValue imported_template_urls;
     for (ScopedVector<TemplateURL>::iterator i = template_urls.begin();
@@ -448,6 +447,7 @@ void ProfileWriter::AddKeywords(ScopedVector<TemplateURL> template_urls,
                     unique_on_host_and_path);
   }
 }
+*/
 
 void ProfileWriter::AddAutofillFormDataEntries(
     const std::vector<autofill::AutofillEntry>& autofill_entries) {
