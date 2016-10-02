@@ -365,8 +365,7 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
         content::Source<content::BrowserContext>(browser_context_),
         content::Details<const Extension>(extension));
   } else {
-    registry_->AddEnabled(extension);
-    NotifyExtensionLoaded(extension);
+    EnableExtension(extension->id());
   }
   runtime_data()->SetBeingUpgraded(extension->id(), false);
   return extension;
@@ -436,10 +435,8 @@ void AtomExtensionSystem::Shared::Observe(int type,
       const Extension* extension =
         content::Details<const Extension>(details).ptr();
 
-      if (extension) {
+      if (extension)
         AddExtension(extension);
-        EnableExtension(extension->id());
-      }
 
       break;
     }
