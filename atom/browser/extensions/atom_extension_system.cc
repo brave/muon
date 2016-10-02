@@ -224,7 +224,7 @@ void AtomExtensionSystem::Shared::EnableExtension(
   if (!extension)
     return;
 
-  extension_prefs_->SetExtensionEnabled(extension_id);
+  // extension_prefs_->SetExtensionEnabled(extension_id);
 
   // Move it over to the enabled list.
   registry_->AddEnabled(make_scoped_refptr(extension));
@@ -245,7 +245,7 @@ void AtomExtensionSystem::Shared::DisableExtension(
 
   // The extension may have been disabled already. Just add the disable reasons.
   if (!IsExtensionEnabled(extension_id)) {
-    extension_prefs_->AddDisableReasons(extension_id, disable_reasons);
+    // extension_prefs_->AddDisableReasons(extension_id, disable_reasons);
     return;
   }
 
@@ -259,7 +259,7 @@ void AtomExtensionSystem::Shared::DisableExtension(
     return;
   }
 
-  extension_prefs_->SetExtensionDisabled(extension_id, disable_reasons);
+  // extension_prefs_->SetExtensionDisabled(extension_id, disable_reasons);
 
   int include_mask =
       ExtensionRegistry::EVERYTHING & ~ExtensionRegistry::DISABLED;
@@ -345,12 +345,12 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
     // installation then threads through the install and pending install flow
     // of this class, and we check when loading installed extensions.
     registry_->AddBlacklisted(extension);
-  } else if (extension_prefs_->IsExtensionDisabled(extension->id())) {
-    registry_->AddDisabled(extension);
-    content::NotificationService::current()->Notify(
-        extensions::NOTIFICATION_EXTENSION_UPDATE_DISABLED,
-        content::Source<content::BrowserContext>(browser_context_),
-        content::Details<const Extension>(extension));
+  // } else if (extension_prefs_->IsExtensionDisabled(extension->id())) {
+    // registry_->AddDisabled(extension);
+    // content::NotificationService::current()->Notify(
+    //     extensions::NOTIFICATION_EXTENSION_UPDATE_DISABLED,
+    //     content::Source<content::BrowserContext>(browser_context_),
+    //     content::Details<const Extension>(extension));
   } else {
     registry_->AddEnabled(extension);
     NotifyExtensionLoaded(extension);
