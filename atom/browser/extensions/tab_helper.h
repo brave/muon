@@ -85,9 +85,10 @@ class TabHelper : public content::WebContentsObserver,
 
   void ExecuteScript(
       std::string extension_id,
-      const mate::Dictionary& options,
+      std::unique_ptr<base::DictionaryValue> options,
       extensions::ScriptExecutor::ResultType result,
       extensions::ScriptExecutor::ExecuteScriptCallback callback,
+      const GURL& file_url,
       bool success,
       const std::string& code_string);
 

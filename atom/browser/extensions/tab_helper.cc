@@ -23,6 +23,7 @@
 #include "extensions/common/extension_messages.h"
 #include "native_mate/arguments.h"
 #include "native_mate/dictionary.h"
+#include "net/base/filename_util.h"
 #include "ui/base/resource/resource_bundle.h"
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
@@ -115,7 +116,7 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
     return false;
   }
 
-  mate::Dictionary options;
+  base::DictionaryValue options;
   if (!args->GetNext(&options)) {
     args->ThrowError("options is a required field");
     return false;
@@ -135,7 +136,10 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
     return false;
 
   std::string file;
-  options.Get("file", &file);
+  GURL file_url;
+  options.GetString("file", &file);
+
+  std::unique_ptr<base::DictionaryValue> copy = options.CreateDeepCopy();
 
   if (!file.empty()) {
     ExtensionRegistry* registry =
@@ -154,6 +158,8 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
       return false;
     }
 
+    file_url = net::FilePathToFileURL(resource.GetFilePath());
+
     int resource_id;
     const ComponentExtensionResourceManager*
         component_extension_resource_manager =
@@ -171,43 +177,44 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
       scoped_refptr<FileReader> file_reader(new FileReader(
           resource,
           base::Bind(&TabHelper::ExecuteScript, base::Unretained(this),
-            extension_id, options, result, callback)));
+            extension_id, base::Passed(&copy), result, callback, file_url)));
       file_reader->Start();
       return true;
     }
   }
 
-  ExecuteScript(extension_id, options, result, callback,
+  ExecuteScript(extension_id, std::move(copy), result, callback, file_url,
       true, file.empty() ? code_string : file);
   return true;
 }
 
 void TabHelper::ExecuteScript(
     const std::string extension_id,
-    const mate::Dictionary& options,
+    std::unique_ptr<base::DictionaryValue> options,
     extensions::ScriptExecutor::ResultType result,
     extensions::ScriptExecutor::ExecuteScriptCallback callback,
+    const GURL& file_url,
     bool success,
     const std::string& code_string) {
   extensions::ScriptExecutor* executor = script_executor();
 
   bool all_frames = false;
-  options.Get("allFrames", &all_frames);
+  options->GetBoolean("allFrames", &all_frames);
   extensions::ScriptExecutor::FrameScope frame_scope =
       all_frames
           ? extensions::ScriptExecutor::INCLUDE_SUB_FRAMES
           : extensions::ScriptExecutor::SINGLE_FRAME;
 
   int frame_id = extensions::ExtensionApiFrameIdMap::kTopFrameId;
-  options.Get("frameId", &frame_id);
+  options->GetInteger("frameId", &frame_id);
 
   bool match_about_blank = false;
-  options.Get("matchAboutBlank", &match_about_blank);
+  options->GetBoolean("matchAboutBlank", &match_about_blank);
 
   extensions::UserScript::RunLocation run_at =
     extensions::UserScript::UNDEFINED;
   std::string run_at_string = "undefined";
-  options.Get("runAt", &run_at_string);
+  options->GetString("runAt", &run_at_string);
   if (run_at_string == "document_start") {
     run_at = extensions::UserScript::DOCUMENT_START;
   } else if (run_at_string == "document_end") {
@@ -215,9 +222,6 @@ void TabHelper::ExecuteScript(
   } else if (run_at_string == "document_idle") {
     run_at = extensions::UserScript::DOCUMENT_IDLE;
   }
-
-  bool isolated_world = false;
-  options.Get("isolatedWorld", &isolated_world);
 
   executor->ExecuteScript(
       HostID(HostID::EXTENSIONS, extension_id),
@@ -228,11 +232,10 @@ void TabHelper::ExecuteScript(
       match_about_blank ? extensions::ScriptExecutor::MATCH_ABOUT_BLANK
                         : extensions::ScriptExecutor::DONT_MATCH_ABOUT_BLANK,
       run_at,
-      isolated_world ? extensions::ScriptExecutor::ISOLATED_WORLD
-                     : extensions::ScriptExecutor::MAIN_WORLD,
+      extensions::ScriptExecutor::ISOLATED_WORLD,
       extensions::ScriptExecutor::DEFAULT_PROCESS,
       GURL(),  // No webview src.
-      GURL(),  // No file url.
+      file_url,  // No file url.
       false,  // user gesture
       result,
       callback);
