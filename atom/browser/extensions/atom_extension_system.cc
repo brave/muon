@@ -436,8 +436,10 @@ void AtomExtensionSystem::Shared::Observe(int type,
       const Extension* extension =
         content::Details<const Extension>(details).ptr();
 
-      if (extension)
+      if (extension) {
         AddExtension(extension);
+        EnableExtension(extension->id());
+      }
 
       break;
     }
