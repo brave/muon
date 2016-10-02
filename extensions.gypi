@@ -34,7 +34,6 @@
       'atom/browser/extensions/atom_extensions_browser_client.h',
       'atom/browser/extensions/atom_extensions_network_delegate.cc',
       'atom/browser/extensions/atom_extensions_network_delegate.h',
-      'atom/browser/extensions/atom_notification_types.h',
       'atom/browser/extensions/atom_process_manager_delegate.cc',
       'atom/browser/extensions/atom_process_manager_delegate.h',
       'atom/browser/extensions/shared_user_script_master.cc',

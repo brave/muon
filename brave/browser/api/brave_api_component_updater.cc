@@ -4,7 +4,7 @@
 
 #include "brave/browser/api/brave_api_component_updater.h"
 
-#include "atom/browser/api/atom_api_extension.h"
+#include "atom/common/node_includes.h"
 #include "brave/browser/component_updater/default_extensions.h"
 #include "brave/browser/component_updater/extension_installer_traits.h"
 #include "chrome/browser/browser_process.h"
@@ -113,6 +113,10 @@ void ComponentUpdater::RegisterComponent(const std::string& extension_id) {
   }
 }
 
+std::vector<std::string> ComponentUpdater::GetComponentIDs() {
+  return g_browser_process->component_updater()->GetComponentIDs();
+}
+
 void ComponentUpdater::CheckNow(const std::string& extension_id) {
   OnDemandUpdate(g_browser_process->component_updater(), extension_id);
 }
@@ -128,6 +132,7 @@ void ComponentUpdater::BuildPrototype(v8::Isolate* isolate,
   prototype->SetClassName(mate::StringToV8(isolate, "ComponentUpdater"));
   mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
     .SetMethod("registerComponent", &ComponentUpdater::RegisterComponent)
+    .SetMethod("registeredComponentIDs", &ComponentUpdater::GetComponentIDs)
     .SetMethod("checkNow", &ComponentUpdater::CheckNow);
 }
 

@@ -6,6 +6,7 @@
 #define BRAVE_BROWSER_API_BRAVE_API_COMPONENT_UPDATER_H_
 
 #include <string>
+#include <vector>
 
 #include "atom/browser/api/trackable_object.h"
 #include "base/callback.h"
@@ -46,6 +47,7 @@ class ComponentUpdater : public mate::TrackableObject<ComponentUpdater>,
   // When a component is registered, the old versions of the component
   // will be removed off the main thread by the DefaultComponentInstaller.
   void RegisterComponent(const std::string& extension_id);
+  std::vector<std::string> GetComponentIDs();
   void CheckNow(const std::string& extension_id);
   void OnComponentRegistered(const std::string& extension_id);
   void OnComponentReady(

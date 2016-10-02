@@ -7,11 +7,10 @@
 #include <string>
 #include <vector>
 #include "atom/browser/api/atom_api_web_contents.h"
-#include "atom/browser/extensions/atom_notification_types.h"
+#include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
-#include "atom/common/native_mate_converters/v8_value_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
@@ -99,124 +98,119 @@ namespace atom {
 
 namespace api {
 
-Extension::Extension() {
-  registrar_.Add(this,
-                 extensions::NOTIFICATION_EXTENSION_LOADED_DEPRECATED,
-                 content::NotificationService::AllBrowserContextsAndSources());
+Extension::Extension(v8::Isolate* isolate,
+                 content::BrowserContext* browser_context)
+    : browser_context_(browser_context) {
+  Init(isolate);
+  extensions::ExtensionRegistry::Get(browser_context_)->AddObserver(this);
 }
 
-Extension::~Extension() {}
-
-void Extension::Observe(
-    int type, const content::NotificationSource& source,
-    const content::NotificationDetails& details) {
-  switch (type) {
-    case extensions::NOTIFICATION_EXTENSION_LOADED_DEPRECATED: {
-      extensions::Extension* extension =
-          content::Details<extensions::Extension>(details).ptr();
-      extensions_.Insert(extension);
-    }
+Extension::~Extension() {
+  if (extensions::ExtensionRegistry::Get(browser_context_)) {
+    extensions::ExtensionRegistry::Get(browser_context_)->RemoveObserver(this);
   }
 }
 
-// static
-Extension* Extension::GetInstance() {
-  return base::Singleton<Extension>::get();
-}
+void Extension::Load(mate::Arguments* args) {
+  base::FilePath path;
+  args->GetNext(&path);
 
-// static
-v8::Local<v8::Value> Extension::Load(
-  v8::Isolate* isolate,
-  const base::FilePath& path,
-  const base::DictionaryValue& manifest,
-  const extensions::Manifest::Location& manifest_location,
-  int flags) {
+  base::DictionaryValue manifest;
+  args->GetNext(&manifest);
+
+  extensions::Manifest::Location manifest_location =
+      extensions::Manifest::Location::UNPACKED;
+  args->GetNext(&manifest_location);
+
+  int flags = 0;
+  args->GetNext(&flags);
+
   std::string error;
-  scoped_refptr<extensions::Extension> extension;
-
   std::unique_ptr<base::DictionaryValue> manifest_copy =
       manifest.CreateDeepCopy();
   if (manifest_copy->empty()) {
     manifest_copy = extensions::file_util::LoadManifest(path, &error);
   }
 
-  if (error.empty()) {
-    extension = LoadExtension(path,
+  if (!error.empty()) {
+    node::Environment* env = node::Environment::GetCurrent(isolate());
+    mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "extension-load-error",
+                  error);
+  } else {
+    scoped_refptr<extensions::Extension> extension = LoadExtension(path,
                               *manifest_copy,
                               manifest_location,
                               flags,
                               &error);
-  }
 
-  std::unique_ptr<base::DictionaryValue>
-      install_info(new base::DictionaryValue);
-  if (error.empty()) {
-    Install(extension);
-    install_info->SetString("name", extension->non_localized_name());
-    install_info->SetString("id", extension->id());
-    install_info->SetString("url", extension->url().spec());
-    install_info->SetString("base_path", extension->path().value());
-    install_info->SetString("version", extension->VersionString());
-    install_info->SetString("description", extension->description());
-    install_info->Set("manifest", std::move(manifest_copy));
-  } else {
-    install_info->SetString("error", error);
+    if (!error.empty()) {
+      node::Environment* env = node::Environment::GetCurrent(isolate());
+      mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "extension-load-error",
+                  error);
+    } else {
+      extensions::ExtensionSystem::Get(browser_context_)->ready().Post(
+            FROM_HERE,
+            base::Bind(&Extension::AddExtension,
+              // GetWeakPtr()
+              base::Unretained(this), base::Passed(&extension)));
+    }
   }
-  std::unique_ptr<atom::V8ValueConverter>
-      converter(new atom::V8ValueConverter);
-  return converter->ToV8Value(install_info.get(), isolate->GetCurrentContext());
 }
 
-// static
-void Extension::Install(
-    const scoped_refptr<const extensions::Extension>& extension) {
-  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
-    content::BrowserThread::PostTask(
-      content::BrowserThread::UI, FROM_HERE,
-        base::Bind(Install, extension));
-
-  content::NotificationService::current()->Notify(
-        extensions::NOTIFICATION_CRX_INSTALLER_DONE,
-        content::Source<Extension>(GetInstance()),
-        content::Details<const extensions::Extension>(extension.get()));
+void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {
+  auto extension_service =
+      extensions::ExtensionSystem::Get(browser_context_)->extension_service();
+  extension_service->AddExtension(extension.get());
 }
 
-// static
+void Extension::OnExtensionReady(content::BrowserContext* browser_context,
+                                const extensions::Extension* extension) {
+  mate::Dictionary install_info = mate::Dictionary::CreateEmpty(isolate());
+  install_info.Set("name", extension->non_localized_name());
+  install_info.Set("id", extension->id());
+  install_info.Set("url", extension->url().spec());
+  install_info.Set("base_path", extension->path().value());
+  install_info.Set("version", extension->VersionString());
+  install_info.Set("description", extension->description());
+  auto manifest = extension->manifest()->value()->CreateDeepCopy();
+  install_info.Set("manifest", mate::ConvertToV8(isolate(), *manifest));
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "EXTENSION_READY_INTERNAL",
+                  install_info);
+}
+
+void Extension::OnExtensionUnloaded(content::BrowserContext* browser_context,
+                            const extensions::Extension* extension,
+                            extensions::UnloadedExtensionInfo::Reason reason) {
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "extension-unloaded",
+                  extension->id());
+}
+
 void Extension::Disable(const std::string& extension_id) {
-  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
-    content::BrowserThread::PostTask(
-      content::BrowserThread::UI, FROM_HERE,
-        base::Bind(Disable, extension_id));
-
-  const extensions::Extension* extension =
-    GetInstance()->extensions_.GetByID(extension_id);
-
-  if (!extension)
-    return;
-
-  content::NotificationService::current()->Notify(
-        atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
-        content::Source<Extension>(GetInstance()),
-        content::Details<const extensions::Extension>(extension));
+  auto extension_service =
+      extensions::ExtensionSystem::Get(browser_context_)->extension_service();
+  if (extension_service) {
+    extension_service->DisableExtension(
+        extension_id, extensions::Extension::DISABLE_USER_ACTION);
+  }
 }
 
-// static
 void Extension::Enable(const std::string& extension_id) {
-  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
-    content::BrowserThread::PostTask(
-      content::BrowserThread::UI, FROM_HERE,
-        base::Bind(Enable, extension_id));
-
-  const extensions::Extension* extension =
-    GetInstance()->extensions_.GetByID(extension_id);
-
-  if (!extension)
-    return;
-
-  content::NotificationService::current()->Notify(
-        atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST,
-        content::Source<Extension>(GetInstance()),
-        content::Details<const extensions::Extension>(extension));
+  auto extension_service =
+      extensions::ExtensionSystem::Get(browser_context_)->extension_service();
+  if (extension_service) {
+    extension_service->EnableExtension(
+        extension_id);
+  }
 }
 
 // static
@@ -271,6 +265,23 @@ bool Extension::HandleURLOverrideReverse(GURL* url,
   return false;
 }
 
+// static
+mate::Handle<Extension> Extension::Create(
+    v8::Isolate* isolate,
+    content::BrowserContext* browser_context) {
+  return mate::CreateHandle(isolate, new Extension(isolate, browser_context));
+}
+
+// static
+void Extension::BuildPrototype(v8::Isolate* isolate,
+                              v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(mate::StringToV8(isolate, "Extension"));
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
+    .SetMethod("load", &Extension::Load)
+    .SetMethod("enable", &Extension::Enable)
+    .SetMethod("disable", &Extension::Disable);
+}
+
 }  // namespace api
 
 }  // namespace atom
@@ -281,9 +292,6 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
                 v8::Local<v8::Context> context, void* priv) {
   v8::Isolate* isolate = context->GetIsolate();
   mate::Dictionary dict(isolate, exports);
-  dict.SetMethod("load", &atom::api::Extension::Load);
-  dict.SetMethod("disable", &atom::api::Extension::Disable);
-  dict.SetMethod("enable", &atom::api::Extension::Enable);
   dict.SetMethod("tabValue", &atom::api::Extension::TabValue);
   dict.SetMethod("isBackgroundPage", &atom::api::Extension::IsBackgroundPage);
 }

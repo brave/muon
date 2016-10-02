@@ -10,7 +10,6 @@
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
-#include "atom/browser/extensions/atom_notification_types.h"
 #include "atom/browser/extensions/shared_user_script_master.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
@@ -71,23 +70,8 @@ void AtomExtensionSystem::Shared::Init(bool extensions_enabled) {
 
   registrar_.Add(this, content::NOTIFICATION_RENDERER_PROCESS_TERMINATED,
                  content::NotificationService::AllBrowserContextsAndSources());
-  registrar_.Add(this, extensions::NOTIFICATION_CRX_INSTALLER_DONE,
-                 content::NotificationService::AllSources());
-  registrar_.Add(this, atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST,
-                 content::NotificationService::AllSources());
-  registrar_.Add(this, atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST,
-                 content::NotificationService::AllSources());
 
   if (extensions_enabled) {
-    // load all extensions
-    const ExtensionSet& extensions =
-                            atom::api::Extension::GetInstance()->extensions();
-
-    for (ExtensionSet::const_iterator iter = extensions.begin();
-         iter != extensions.end(); ++iter) {
-      AddExtension(iter->get());
-    }
-
     ready_.Signal();
     content::NotificationService::current()->Notify(
         extensions::NOTIFICATION_EXTENSIONS_READY_DEPRECATED,
@@ -237,6 +221,9 @@ void AtomExtensionSystem::Shared::EnableExtension(
     return;
   const Extension* extension = GetInstalledExtension(extension_id);
 
+  if (!extension)
+    return;
+
   extension_prefs_->SetExtensionEnabled(extension_id);
 
   // Move it over to the enabled list.
@@ -365,7 +352,8 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
         content::Source<content::BrowserContext>(browser_context_),
         content::Details<const Extension>(extension));
   } else {
-    EnableExtension(extension->id());
+    registry_->AddEnabled(extension);
+    NotifyExtensionLoaded(extension);
   }
   runtime_data()->SetBeingUpgraded(extension->id(), false);
   return extension;
@@ -428,42 +416,6 @@ void AtomExtensionSystem::Shared::Observe(int type,
                                const content::NotificationSource& source,
                                const content::NotificationDetails& details) {
   switch (type) {
-    case extensions::NOTIFICATION_CRX_INSTALLER_DONE: {
-      if (!shared_user_script_master())
-        return;
-
-      const Extension* extension =
-        content::Details<const Extension>(details).ptr();
-
-      if (extension)
-        AddExtension(extension);
-
-      break;
-    }
-    case atom::NOTIFICATION_ENABLE_USER_EXTENSION_REQUEST: {
-      if (!shared_user_script_master())
-        return;
-
-      const Extension* extension =
-        content::Details<const Extension>(details).ptr();
-
-      if (extension)
-        EnableExtension(extension->id());
-
-      break;
-    }
-    case atom::NOTIFICATION_DISABLE_USER_EXTENSION_REQUEST: {
-      if (!shared_user_script_master())
-        return;
-
-      const Extension* extension =
-        content::Details<const Extension>(details).ptr();
-
-      if (extension)
-        DisableExtension(extension->id(), Extension::DISABLE_USER_ACTION);
-
-      break;
-    }
     case content::NOTIFICATION_RENDERER_PROCESS_TERMINATED: {
       content::RenderProcessHost* process =
           content::Source<content::RenderProcessHost>(source).ptr();

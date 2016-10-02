@@ -53,6 +53,7 @@
 #include "ui/base/l10n/l10n_util.h"
 
 #if defined(ENABLE_EXTENSIONS)
+#include "atom/browser/api/atom_api_extension.h"
 #include "extensions/browser/extensions_browser_client.h"
 #endif
 
@@ -565,6 +566,19 @@ v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
   return v8::Local<v8::Value>::New(isolate, autofill_);
 }
 
+v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
+#if defined(ENABLE_EXTENSIONS)
+  if (extensions_.IsEmpty()) {
+    auto original_context = extensions::ExtensionsBrowserClient::Get()->
+        GetOriginalContext(browser_context_.get());
+
+    auto handle = atom::api::Extension::Create(isolate, original_context);
+    extensions_.Reset(isolate, handle.ToV8());
+  }
+#endif
+  return v8::Local<v8::Value>::New(isolate, extensions_);
+}
+
 bool Session::Equal(Session* session) const {
 #if defined(ENABLE_EXTENSIONS)
   return extensions::ExtensionsBrowserClient::Get()->IsSameContext(
@@ -642,6 +656,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetProperty("cookies", &Session::Cookies)
       .SetProperty("protocol", &Session::Protocol)
       .SetProperty("webRequest", &Session::WebRequest)
+      .SetProperty("extensions", &Session::Extensions)
       .SetProperty("autofill", &Session::Autofill);
 }
 
