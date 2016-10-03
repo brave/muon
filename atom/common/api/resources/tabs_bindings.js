@@ -137,7 +137,15 @@ var bindings = {
     ipc.once('chrome-tabs-get-response-' + responseId, function (evt, tab) {
       cb(tab)
     })
-    ipc.send('chrome-tabs-get', responseId, {})
+    ipc.send('chrome-tabs-get', responseId, tabId)
+  },
+
+  getCurrent: function(cb) {
+    var responseId = ++id
+    ipc.once('chrome-tabs-get-current-response-' + responseId, function (evt, tab) {
+      cb(tab)
+    })
+    ipc.send('chrome-tabs-get-current', responseId)
   },
 
   query: function(queryInfo, cb) {

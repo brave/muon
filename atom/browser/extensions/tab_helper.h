@@ -33,6 +33,8 @@ extern const char kIdKey[];
 extern const char kTabIdKey[];
 extern const char kIncognitoKey[];
 extern const char kWindowIdKey[];
+extern const char kAudibleKey[];
+extern const char kMutedKey[];
 }
 
 namespace extensions {
@@ -56,6 +58,11 @@ class TabHelper : public content::WebContentsObserver,
 
   // Set this tab as the active tab in its window
   void SetActive(bool active);
+
+  void SetTabValues(const base::DictionaryValue& values);
+  base::DictionaryValue* getTabValues() {
+    return values_.get();
+  }
 
   bool ExecuteScriptInTab(mate::Arguments* args);
 
@@ -112,6 +119,7 @@ class TabHelper : public content::WebContentsObserver,
   // Unique identifier of the window the tab is in.
   int32_t window_id_ = -1;
 
+  std::unique_ptr<base::DictionaryValue> values_;
   std::unique_ptr<ScriptExecutor> script_executor_;
 
   DISALLOW_COPY_AND_ASSIGN(TabHelper);

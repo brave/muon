@@ -1586,6 +1586,14 @@ bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
 
   return tab_helper->ExecuteScriptInTab(args);
 }
+
+void WebContents::SetTabValues(const base::DictionaryValue& values) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (!tab_helper)
+    return;
+
+  return tab_helper->SetTabValues(values);
+}
 #endif
 
 void WebContents::TabTraverse(bool reverse) {
@@ -2034,6 +2042,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
                   &WebContents::EnablePreferredSizeMode)
 #if defined(ENABLE_EXTENSIONS)
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
+      .SetMethod("setTabValues", &WebContents::SetTabValues)
 #endif
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)

@@ -195,6 +195,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
 #if defined(ENABLE_EXTENSIONS)
   bool ExecuteScriptInTab(mate::Arguments* args);
+  void SetTabValues(const base::DictionaryValue& values);
 #endif
 
   // Send messages to browser.

@@ -37,7 +37,9 @@ const char kWindowIdKey[] = "windowId";
 const char kTitleKey[] = "title";
 const char kUrlKey[] = "url";
 const char kStatusKey[] = "status";
-}
+const char kAudibleKey[] = "audible";
+const char kMutedKey[] = "muted";
+}  // namespace keys
 
 static std::map<int, std::pair<int, int>> render_view_map_;
 static std::map<int, int> active_tab_map_;
@@ -47,6 +49,7 @@ namespace extensions {
 
 TabHelper::TabHelper(content::WebContents* contents)
     : content::WebContentsObserver(contents),
+      values_(new base::DictionaryValue),
       script_executor_(
           new ScriptExecutor(contents, &script_execution_observers_)) {
   session_id_ = next_id++;
@@ -73,6 +76,10 @@ void TabHelper::SetActive(bool active) {
     active_tab_map_[window_id_] = session_id_;
   else if (active_tab_map_[window_id_] == session_id_)
     active_tab_map_[window_id_] = -1;
+}
+
+void TabHelper::SetTabValues(const base::DictionaryValue& values) {
+  values_->MergeDictionary(&values);
 }
 
 void TabHelper::RenderViewCreated(content::RenderViewHost* render_view_host) {
@@ -264,8 +271,10 @@ base::DictionaryValue* TabHelper::CreateTabValue(
                                               content::WebContents* contents) {
   auto tab_id = IdForTab(contents);
   auto window_id = IdForWindowContainingTab(contents);
+  auto tab_helper = TabHelper::FromWebContents(contents);
 
-  std::unique_ptr<base::DictionaryValue> result(new base::DictionaryValue);
+  std::unique_ptr<base::DictionaryValue> result(
+      tab_helper->getTabValues()->CreateDeepCopy());
 
   result->SetInteger(keys::kIdKey, tab_id);
   result->SetInteger(keys::kTabIdKey, tab_id);
@@ -277,6 +286,8 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetString(keys::kTitleKey, contents->GetTitle());
   result->SetString(keys::kStatusKey, contents->IsLoading()
       ? "loading" : "complete");
+  result->SetBoolean(keys::kAudibleKey, contents->WasRecentlyAudible());
+  result->SetBoolean(keys::kMutedKey, contents->IsAudioMuted());
   return result.release();
 }
 
