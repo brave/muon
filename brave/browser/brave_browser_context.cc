@@ -83,6 +83,7 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
 #else
       network_delegate_(new AtomNetworkDelegate),
 #endif
+      sent_destroyed_notification_(false),
       has_parent_(false),
       original_context_(nullptr),
       partition_(partition) {
@@ -100,24 +101,33 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
   }
   InitPrefs();
 
-  if (original_context_) {
+  if (original_context_)
     TrackZoomLevelsFromParent();
 #if defined(ENABLE_EXTENSIONS)
+  if (IsOffTheRecord()) {
     BrowserThread::PostTask(
         BrowserThread::IO, FROM_HERE,
         base::Bind(&NotifyOTRProfileCreatedOnIOThread,
           base::Unretained(original_context_),
           base::Unretained(this)));
+  }
 #endif
+}
+
+void BraveBrowserContext::MaybeSendDestroyedNotification() {
+  if (!sent_destroyed_notification_) {
+    sent_destroyed_notification_ = true;
+
+    NotifyWillBeDestroyed(this);
+    content::NotificationService::current()->Notify(
+        chrome::NOTIFICATION_PROFILE_DESTROYED,
+        content::Source<BraveBrowserContext>(this),
+        content::NotificationService::NoDetails());
   }
 }
 
 BraveBrowserContext::~BraveBrowserContext() {
-  NotifyWillBeDestroyed(this);
-  content::NotificationService::current()->Notify(
-      chrome::NOTIFICATION_PROFILE_DESTROYED,
-      content::Source<BraveBrowserContext>(this),
-      content::NotificationService::NoDetails());
+  MaybeSendDestroyedNotification();
 
   if (user_prefs_registrar_.get())
     user_prefs_registrar_->RemoveAll();
@@ -126,7 +136,7 @@ BraveBrowserContext::~BraveBrowserContext() {
     auto user_prefs = user_prefs::UserPrefs::Get(otr_context_.get());
     if (user_prefs)
       user_prefs->ClearMutableValues();
-    otr_context_ = NULL;
+    otr_context_ = nullptr;
 #if defined(ENABLE_EXTENSIONS)
     ExtensionPrefValueMapFactory::GetForBrowserContext(this)->
         ClearAllIncognitoSessionOnlyPreferences();
@@ -137,20 +147,27 @@ BraveBrowserContext::~BraveBrowserContext() {
     autofill_data_->ShutdownOnUIThread();
     web_database_->ShutdownDatabase();
 
-    // temporary fix for https://github.com/brave/browser-laptop/issues/2335
-    // TODO(brivdiver) - it seems like something is holding onto a reference to
-    // url_request_context_getter or the url_request_context and is preventing
-    // it from being destroyed
-    url_request_context_getter()->GetURLRequestContext()->cookie_store()->
-        FlushStore(base::Closure());
-
     bool prefs_loaded = user_prefs_->GetInitializationStatus() !=
         PrefService::INITIALIZATION_STATUS_WAITING;
 
     if (prefs_loaded) {
       user_prefs_->CommitPendingWrite();
     }
-  } else {
+  }
+
+  if (!IsOffTheRecord()) {
+    // temporary fix for https://github.com/brave/browser-laptop/issues/2335
+    // TODO(brivdiver) - it seems like something is holding onto a reference to
+    // url_request_context_getter or the url_request_context and is preventing
+    // it from being destroyed
+    url_request_context_getter()->GetURLRequestContext()->cookie_store()->
+        FlushStore(base::Closure());
+  }
+
+  BrowserContextDependencyManager::GetInstance()->
+      DestroyBrowserContextServices(this);
+
+  if (IsOffTheRecord()) {
 #if defined(ENABLE_EXTENSIONS)
   BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
@@ -158,9 +175,6 @@ BraveBrowserContext::~BraveBrowserContext() {
           base::Unretained(original_context_), base::Unretained(this)));
 #endif
   }
-
-  BrowserContextDependencyManager::GetInstance()->
-      DestroyBrowserContextServices(this);
 }
 
 // static

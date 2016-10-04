@@ -92,6 +92,8 @@ class BraveBrowserContext : public atom::AtomBrowserContext {
   void OnParentZoomLevelChanged(
       const content::HostZoomMap::ZoomLevelChange& change);
   void UpdateDefaultZoomLevel();
+  void MaybeSendDestroyedNotification();
+
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
   std::unique_ptr<PrefChangeRegistrar> user_prefs_registrar_;
@@ -105,6 +107,7 @@ class BraveBrowserContext : public atom::AtomBrowserContext {
 
   atom::AtomNetworkDelegate* network_delegate_;
 
+  bool sent_destroyed_notification_;
   bool has_parent_;
   BraveBrowserContext* original_context_;
   scoped_refptr<BraveBrowserContext> otr_context_;
