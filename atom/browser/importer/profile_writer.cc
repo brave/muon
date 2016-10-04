@@ -14,6 +14,7 @@
 #include "atom/common/importer/imported_cookie_entry.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "base/base64.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
@@ -315,11 +316,12 @@ void ProfileWriter::AddFavicons(
       base::DictionaryValue* imported_favicon = new base::DictionaryValue();
       imported_favicon->SetString("favicon_url",
                                   favicon.favicon_url.possibly_invalid_spec());
-      /*
-      imported_favicon->SetString("png_data",
-                                  std::string(favicon.png_data.begin(),
-                                              favicon.png_data.end()));
-      */
+      std::string data_url;
+      data_url.insert(data_url.end(), favicon.png_data.begin(),
+                      favicon.png_data.end());
+      base::Base64Encode(data_url, &data_url);
+      data_url.insert(0, "data:image/png;base64,");
+      imported_favicon->SetString("png_data", data_url);
       std::set<GURL>::iterator it;
       base::ListValue* urls = new base::ListValue();
       for (it = favicon.urls.begin(); it != favicon.urls.end(); ++it) {
