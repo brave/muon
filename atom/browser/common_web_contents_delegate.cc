@@ -738,20 +738,22 @@ void CommonWebContentsDelegate::OnDevToolsSearchCompleted(
 }
 
 void CommonWebContentsDelegate::SetHtmlApiFullscreen(bool enter_fullscreen) {
-  // Window is already in fullscreen mode, save the state.
-  if (enter_fullscreen && owner_window_->IsFullscreen()) {
-    native_fullscreen_ = true;
-    html_fullscreen_ = true;
-    return;
-  }
+  if (owner_window_) {
+    // Window is already in fullscreen mode, save the state.
+    if (enter_fullscreen && owner_window_->IsFullscreen()) {
+      native_fullscreen_ = true;
+      html_fullscreen_ = true;
+      return;
+    }
 
-  // Exit html fullscreen state but not window's fullscreen mode.
-  if (!enter_fullscreen && native_fullscreen_) {
-    html_fullscreen_ = false;
-    return;
-  }
+    // Exit html fullscreen state but not window's fullscreen mode.
+    if (!enter_fullscreen && native_fullscreen_) {
+      html_fullscreen_ = false;
+      return;
+    }
 
-  owner_window_->SetFullScreen(enter_fullscreen);
+    owner_window_->SetFullScreen(enter_fullscreen);
+  }
   html_fullscreen_ = enter_fullscreen;
   native_fullscreen_ = false;
 }
