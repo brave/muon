@@ -71,6 +71,8 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
                              IDR_ATOM_CONTENT_SETTINGS_BINDINGS_JS);
   source_map->RegisterSource("windows",
                              IDR_ATOM_WINDOWS_BINDINGS_JS);
+  source_map->RegisterSource("app",
+                             IDR_ATOM_APP_BINDINGS_JS);
 }
 
 void AtomExtensionsDispatcherDelegate::RequireAdditionalModules(

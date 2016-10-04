@@ -16,6 +16,11 @@
       "blessed_extension"
     ]
   },
+  "app": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app"],
+    "contexts": ["blessed_extension"]
+  },
   "tabs": {
     "channel": "stable",
     "extension_types": ["extension", "legacy_packaged_app"],
