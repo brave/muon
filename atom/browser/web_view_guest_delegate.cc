@@ -41,6 +41,7 @@ WebViewGuestDelegate::~WebViewGuestDelegate() {
 }
 
 void WebViewGuestDelegate::Initialize(api::WebContents* api_web_contents) {
+  LOG(ERROR) << "initialize " << api_web_contents->GetURL() << " " << IsAttached();
   api_web_contents_ = api_web_contents;
   Observe(api_web_contents->GetWebContents());
 }
@@ -181,6 +182,7 @@ bool WebViewGuestDelegate::IsAttached() {
 }
 
 void WebViewGuestDelegate::DidAttach(int guest_proxy_routing_id) {
+  LOG(ERROR) << "did attach " << api_web_contents_->GetURL();
   guest_proxy_routing_id_ = guest_proxy_routing_id;
   // update the owner window
   auto relay = NativeWindowRelay::FromWebContents(embedder_web_contents_);
