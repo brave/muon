@@ -85,6 +85,7 @@ content::WebContents* WebViewGuestDelegate::CreateNewGuestWindow(
   mate::Handle<api::WebContents> new_api_web_contents =
           api::WebContents::CreateWithParams(isolate, options, params);
   content::WebContents* web_contents = new_api_web_contents->GetWebContents();
+
   RegisterGuest(new_api_web_contents, guest_instance_id);
 
   return web_contents;
@@ -181,10 +182,15 @@ bool WebViewGuestDelegate::IsAttached() {
 
 void WebViewGuestDelegate::DidAttach(int guest_proxy_routing_id) {
   guest_proxy_routing_id_ = guest_proxy_routing_id;
-  api_web_contents_->Emit("did-attach", guest_proxy_routing_id);
+  // update the owner window
+  auto relay = NativeWindowRelay::FromWebContents(embedder_web_contents_);
+  if (relay)
+    api_web_contents_->SetOwnerWindow(relay->window.get());
   api_web_contents_->ResumeLoadingCreatedWebContents();
+  api_web_contents_->Emit("did-attach", guest_proxy_routing_id);
 }
 
+// DidDropLink
 content::WebContents* WebViewGuestDelegate::GetOwnerWebContents() const {
   return embedder_web_contents_;
 }
@@ -211,17 +217,13 @@ void WebViewGuestDelegate::WillAttach(
     bool is_full_page_plugin,
     const base::Closure& completion_callback) {
   embedder_web_contents_ = embedder_web_contents;
+  LOG(ERROR) << "set embedder for " << api_web_contents_->GetURL();
+  // update the embedder
   auto embedder_api_web_contents_ =
       api::WebContents::CreateFrom(api_web_contents_->isolate(),
                                     embedder_web_contents);
-
-  LOG(ERROR) << "set embedder" << embedder_api_web_contents_.get();
   api_web_contents_->set_embedder(embedder_api_web_contents_.get());
   is_full_page_plugin_ = is_full_page_plugin;
-  // update the owner window
-  auto relay = NativeWindowRelay::FromWebContents(embedder_web_contents_);
-  if (relay)
-    api_web_contents_->SetOwnerWindow(relay->window.get());
   completion_callback.Run();
 }
 

@@ -522,12 +522,9 @@ void WebContents::ContentsMouseEvent(content::WebContents* source,
                                        const gfx::Point& location,
                                        bool motion,
                                        bool exited) {
-  LOG(ERROR) << "contents mouse event " << HostWebContents() << " " << IsAttached();
-  LOG(ERROR) << GetURL();
   if (!HostWebContents() || !IsAttached() || !HostWebContents()->GetDelegate())
     return;
 
-  LOG(ERROR) << "contents mouse event sent to owner";
   HostWebContents()->GetDelegate()->ContentsMouseEvent(
       HostWebContents(), location, motion, exited);
 }
@@ -1930,7 +1927,7 @@ v8::Local<v8::Value> WebContents::Session(v8::Isolate* isolate) {
 content::WebContents* WebContents::HostWebContents() {
   if (!embedder_)
     return nullptr;
-  LOG(ERROR) << "has embedder";
+  LOG(ERROR) << "has embedder " << web_contents()->GetURL();
   return embedder_->web_contents();
 }
 
