@@ -122,6 +122,8 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
   // window's JS wrapper gets initialized.
   if (!parent.IsEmpty())
     parent->child_windows_.Set(isolate, ID(), wrapper);
+
+  Emit("initialized");
 }
 
 Window::~Window() {
