@@ -41,7 +41,8 @@ class BrowserProcess {
 
   bool IsShuttingDown();
   void StartTearDown();
-  component_updater::ComponentUpdateService* component_updater();
+  component_updater::ComponentUpdateService* brave_component_updater();
+  component_updater::ComponentUpdateService* google_component_updater();
 
  private:
   std::unique_ptr<printing::PrintJobManager> print_job_manager_;
@@ -49,7 +50,13 @@ class BrowserProcess {
   std::unique_ptr<extensions::ExtensionsBrowserClient> extensions_browser_client_;
 #endif
   bool tearing_down_;
-  std::unique_ptr<component_updater::ComponentUpdateService> component_updater_;
+  std::unique_ptr<component_updater::ComponentUpdateService>
+      brave_component_updater_;
+  std::unique_ptr<component_updater::ComponentUpdateService>
+      google_component_updater_;
+  component_updater::ComponentUpdateService* component_updater(
+      std::unique_ptr<component_updater::ComponentUpdateService> &,
+      bool use_brave_server);
   DISALLOW_COPY_AND_ASSIGN(BrowserProcess);
 };
 

@@ -10,22 +10,32 @@
 #include "chrome/browser/browser_process.h"
 #include "components/component_updater/component_updater_service.h"
 #include "components/update_client/crx_update_item.h"
+#include "brave/browser/component_updater/widevine_cdm_component_installer.h"
 #include "native_mate/dictionary.h"
-
 
 void ComponentsUI::OnDemandUpdate(
     component_updater::ComponentUpdateService* cus,
     const std::string& component_id) {
-  g_browser_process->component_updater()
-    ->GetOnDemandUpdater().OnDemandUpdate(component_id);
+  cus->GetOnDemandUpdater().OnDemandUpdate(component_id);
 }
 
 bool
-ComponentsUI::GetComponentDetails(const std::string& id,
-                                  update_client::CrxUpdateItem* item) const {
-  return g_browser_process->component_updater()
-    ->GetComponentDetails(id, item);
+ComponentsUI::GetComponentDetails(const std::string& component_id,
+    update_client::CrxUpdateItem* item) const {
+  return GetCUSForID(component_id)
+    ->GetComponentDetails(component_id, item);
 }
+
+// Due to licensing reasons, some components are handled through
+// Google's servers. i.e. Widevine.
+component_updater::ComponentUpdateService* ComponentsUI::GetCUSForID(
+    const std::string& component_id) const {
+  if (component_id == kWidevineId) {
+    return g_browser_process->google_component_updater();
+  }
+  return g_browser_process->brave_component_updater();
+}
+
 
 namespace brave {
 
@@ -38,30 +48,31 @@ ComponentUpdater::ComponentUpdater(v8::Isolate* isolate) {
 ComponentUpdater::~ComponentUpdater() {
 }
 
-void ComponentUpdater::OnEvent(Events event, const std::string& id) {
+void ComponentUpdater::OnEvent(Events event, const std::string& component_id) {
   update_client::CrxUpdateItem item;
-  GetComponentDetails(id, &item);
+  GetComponentDetails(component_id, &item);
   switch (event) {
     case Events::COMPONENT_CHECKING_FOR_UPDATES:
-      Emit("component-checking-for-updates", id);
+      Emit("component-checking-for-updates", component_id);
       break;
     case Events::COMPONENT_WAIT:
-      Emit("component-wait", id);
+      Emit("component-wait", component_id);
       break;
     case Events::COMPONENT_UPDATE_FOUND:
-      Emit("component-update-found", id);
+      Emit("component-update-found", component_id);
       break;
     case Events::COMPONENT_UPDATE_READY:
-      Emit("component-update-ready", id);
+      Emit("component-update-ready", component_id);
       break;
     case Events::COMPONENT_UPDATED:
-      Emit("component-update-updated", id, item.component.version.GetString());
+      Emit("component-update-updated", component_id,
+          item.component.version.GetString());
       break;
     case Events::COMPONENT_NOT_UPDATED:
-      Emit("component-not-updated", id);
+      Emit("component-not-updated", component_id);
       break;
     case Events::COMPONENT_UPDATE_DOWNLOADING:
-      Emit("component-update-downloading", id);
+      Emit("component-update-downloading", component_id);
       break;
   }
 }
@@ -71,54 +82,65 @@ void ComponentUpdater::RegisterComponentForUpdate(
     const base::Closure& registered_callback,
     const ReadyCallback& ready_callback) {
   brave::RegisterExtension(
-      g_browser_process->component_updater(),
+      g_browser_process->brave_component_updater(),
       public_key, registered_callback, ready_callback);
 }
 
-void ComponentUpdater::OnComponentRegistered(const std::string& extension_id) {
-  Emit("component-registered", extension_id);
+void ComponentUpdater::OnComponentRegistered(const std::string& component_id) {
+  Emit("component-registered", component_id);
 }
 
 void ComponentUpdater::OnComponentReady(
-    const std::string& extension_id,
+    const std::string& component_id,
     const base::FilePath& install_dir) {
-  Emit("component-ready", extension_id,
+  Emit("component-ready", component_id,
     std::string(install_dir.value().begin(), install_dir.value().end()));
 }
 
-void ComponentUpdater::RegisterComponent(const std::string& extension_id) {
+void ComponentUpdater::RegisterComponent(const std::string& component_id) {
   static bool registeredObserver = false;
   if (!registeredObserver) {
-    g_browser_process->component_updater()->AddObserver(this);
+    g_browser_process->brave_component_updater()->AddObserver(this);
+    g_browser_process->google_component_updater()->AddObserver(this);
     registeredObserver = true;
   }
   base::Closure registered_callback =
     base::Bind(&ComponentUpdater::OnComponentRegistered,
-               base::Unretained(this), extension_id);
+               base::Unretained(this), component_id);
   ReadyCallback ready_callback =
     base::Bind(&ComponentUpdater::OnComponentReady,
-               base::Unretained(this), extension_id);
-  if (extension_id == kOnePasswordId) {
+               base::Unretained(this), component_id);
+  if (component_id == kOnePasswordId) {
     RegisterComponentForUpdate(
         kOnePasswordPublicKeyStr, registered_callback, ready_callback);
-  } else if (extension_id == kDashlaneId) {
+  } else if (component_id == kDashlaneId) {
     RegisterComponentForUpdate(
         kDashlanePublicKeyStr, registered_callback, ready_callback);
-  } else if (extension_id == kLastPassId) {
+  } else if (component_id == kLastPassId) {
     RegisterComponentForUpdate(
         kLastPassPublicKeyStr, registered_callback, ready_callback);
-  } else if (extension_id == kPDFJSId) {
+  } else if (component_id == kPDFJSId) {
     RegisterComponentForUpdate(
         kPDFJSPublicKeyStr, registered_callback, ready_callback);
+  } else if (component_id == kWidevineId) {
+    brave::RegisterWidevineCdmComponent(
+        g_browser_process->google_component_updater(),
+        registered_callback, ready_callback);
   }
 }
 
 std::vector<std::string> ComponentUpdater::GetComponentIDs() {
-  return g_browser_process->component_updater()->GetComponentIDs();
+  std::vector<std::string> components =
+      g_browser_process->google_component_updater()->GetComponentIDs();
+  std::vector<std::string> brave_components =
+      g_browser_process->google_component_updater()->GetComponentIDs();
+  components.insert(components.end(),
+      brave_components.begin(), brave_components.end());
+  return components;
 }
 
-void ComponentUpdater::CheckNow(const std::string& extension_id) {
-  OnDemandUpdate(g_browser_process->component_updater(), extension_id);
+void ComponentUpdater::CheckNow(const std::string& component_id) {
+  OnDemandUpdate(GetCUSForID(component_id), component_id);
 }
 
 // static

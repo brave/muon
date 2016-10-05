@@ -56,19 +56,32 @@ BrowserProcess::~BrowserProcess() {
 }
 
 component_updater::ComponentUpdateService*
-BrowserProcess::component_updater() {
-  if (!component_updater_.get()) {
+BrowserProcess::component_updater(
+    std::unique_ptr<component_updater::ComponentUpdateService> &component_updater,
+    bool use_brave_server) {
+  if (!component_updater.get()) {
     auto browser_context = atom::AtomBrowserContext::From("", false);
     scoped_refptr<update_client::Configurator> configurator =
         component_updater::MakeBraveComponentUpdaterConfigurator(
             base::CommandLine::ForCurrentProcess(),
-            browser_context->GetRequestContext());
+            browser_context->GetRequestContext(),
+            use_brave_server);
     // Creating the component updater does not do anything, components
     // need to be registered and Start() needs to be called.
-    component_updater_.reset(component_updater::ComponentUpdateServiceFactory(
+    component_updater.reset(component_updater::ComponentUpdateServiceFactory(
                                  configurator).release());
   }
-  return component_updater_.get();
+  return component_updater.get();
+}
+
+component_updater::ComponentUpdateService*
+BrowserProcess::brave_component_updater() {
+  return component_updater(brave_component_updater_, true);
+}
+
+component_updater::ComponentUpdateService*
+BrowserProcess::google_component_updater() {
+  return component_updater(google_component_updater_, false);
 }
 
 void BrowserProcess::StartTearDown() {

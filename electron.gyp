@@ -164,6 +164,8 @@
                 '<(libchromiumcontent_dir)/views_resources_200_percent.pak',
                 '<(libchromiumcontent_dir)/natives_blob.bin',
                 '<(libchromiumcontent_dir)/snapshot_blob.bin',
+                '<(libchromiumcontent_dir)/widevinecdm.dll',
+                '<(libchromiumcontent_dir)/widevinecdmadapter.dll',
                 'external_binaries/d3dcompiler_47.dll',
                 'external_binaries/xinput1_3.dll',
               ],
@@ -205,6 +207,8 @@
                 '<(libchromiumcontent_dir)/views_resources_200_percent.pak',
                 '<(libchromiumcontent_dir)/natives_blob.bin',
                 '<(libchromiumcontent_dir)/snapshot_blob.bin',
+                '<(libchromiumcontent_dir)/libwidevinecdm.so',
+                '<(libchromiumcontent_dir)/libwidevinecdmadapter.so',
               ],
             },
           ],
@@ -569,6 +573,27 @@
                 ],
               },
               'destination': '<(PRODUCT_DIR)/<(product_name) Framework.framework/Versions/A/Libraries',
+              'files': [
+                '<@(copied_libraries)',
+              ],
+            },
+            {
+              'variables': {
+                'conditions': [
+                  ['libchromiumcontent_component', {
+                    'copied_libraries': [
+                      '<(libchromiumcontent_dir)/widevinecdmadapter.plugin',
+                      '<(libchromiumcontent_dir)/libwidevinecdm.dylib',
+                    ]
+                  }, {
+                    'copied_libraries': [
+                      '<(libchromiumcontent_dir)/widevinecdmadapter.plugin',
+                      '<(libchromiumcontent_dir)/libwidevinecdm.dylib',
+                    ],
+                  }],
+                ]
+              },
+              'destination': '<(PRODUCT_DIR)/<(product_name) Framework.framework/Internet Plug-Ins',
               'files': [
                 '<@(copied_libraries)',
               ],
