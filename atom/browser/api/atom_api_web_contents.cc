@@ -535,10 +535,10 @@ void WebContents::ContentsMouseEvent(content::WebContents* source,
 bool WebContents::PreHandleGestureEvent(content::WebContents* source,
                                           const blink::WebGestureEvent& event) {
   LOG(ERROR) << "pre handle gesture " << source->GetURL();
-  return false;
-  // return event.type == blink::WebGestureEvent::GesturePinchBegin ||
-  //     event.type == blink::WebGestureEvent::GesturePinchUpdate ||
-  //     event.type == blink::WebGestureEvent::GesturePinchEnd;
+  // return false;
+  return event.type == blink::WebGestureEvent::GesturePinchBegin ||
+      event.type == blink::WebGestureEvent::GesturePinchUpdate ||
+      event.type == blink::WebGestureEvent::GesturePinchEnd;
 }
 
 bool WebContents::IsAttached() {
