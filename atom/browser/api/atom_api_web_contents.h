@@ -259,6 +259,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   v8::Local<v8::Value> DevToolsWebContents(v8::Isolate* isolate);
   v8::Local<v8::Value> Debugger(v8::Isolate* isolate);
 
+  void set_embedder(WebContents* embedder) {
+    embedder_ = embedder;
+  }
  protected:
   WebContents(v8::Isolate* isolate, content::WebContents* web_contents);
   WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
@@ -266,6 +269,13 @@ class WebContents : public mate::TrackableObject<WebContents>,
   ~WebContents();
 
   // content::WebContentsDelegate:
+  void ContentsMouseEvent(content::WebContents* source,
+                                         const gfx::Point& location,
+                                         bool motion,
+                                         bool exited);
+  bool PreHandleGestureEvent(content::WebContents* source,
+                                  const blink::WebGestureEvent& event);
+
   bool AddMessageToConsole(content::WebContents* source,
                            int32_t level,
                            const base::string16& message,

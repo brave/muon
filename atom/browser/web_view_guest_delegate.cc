@@ -211,6 +211,12 @@ void WebViewGuestDelegate::WillAttach(
     bool is_full_page_plugin,
     const base::Closure& completion_callback) {
   embedder_web_contents_ = embedder_web_contents;
+  auto embedder_api_web_contents_ =
+      api::WebContents::CreateFrom(api_web_contents_->isolate(),
+                                    embedder_web_contents);
+
+  LOG(ERROR) << "set embedder" << embedder_api_web_contents_.get();
+  api_web_contents_->set_embedder(embedder_api_web_contents_.get());
   is_full_page_plugin_ = is_full_page_plugin;
   // update the owner window
   auto relay = NativeWindowRelay::FromWebContents(embedder_web_contents_);

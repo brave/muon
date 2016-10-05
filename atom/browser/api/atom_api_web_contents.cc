@@ -518,6 +518,29 @@ bool WebContents::ShouldResumeRequestsForCreatedWindow() {
   return false;
 }
 
+void WebContents::ContentsMouseEvent(content::WebContents* source,
+                                       const gfx::Point& location,
+                                       bool motion,
+                                       bool exited) {
+  LOG(ERROR) << "contents mouse event " << HostWebContents() << " " << IsAttached();
+  LOG(ERROR) << GetURL();
+  if (!HostWebContents() || !IsAttached() || !HostWebContents()->GetDelegate())
+    return;
+
+  LOG(ERROR) << "contents mouse event sent to owner";
+  HostWebContents()->GetDelegate()->ContentsMouseEvent(
+      HostWebContents(), location, motion, exited);
+}
+
+bool WebContents::PreHandleGestureEvent(content::WebContents* source,
+                                          const blink::WebGestureEvent& event) {
+  LOG(ERROR) << "pre handle gesture " << source->GetURL();
+  return false;
+  // return event.type == blink::WebGestureEvent::GesturePinchBegin ||
+  //     event.type == blink::WebGestureEvent::GesturePinchUpdate ||
+  //     event.type == blink::WebGestureEvent::GesturePinchEnd;
+}
+
 bool WebContents::IsAttached() {
   if (guest_delegate_)
     return guest_delegate_->IsAttached();
@@ -1907,6 +1930,7 @@ v8::Local<v8::Value> WebContents::Session(v8::Isolate* isolate) {
 content::WebContents* WebContents::HostWebContents() {
   if (!embedder_)
     return nullptr;
+  LOG(ERROR) << "has embedder";
   return embedder_->web_contents();
 }
 
