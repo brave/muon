@@ -202,6 +202,7 @@ void WebViewGuestDelegate::SetGuestHost(content::GuestHost* guest_host) {
 
 void WebViewGuestDelegate::DidDetach() {
   guest_proxy_routing_id_ = -1;
+  api_web_contents_->Emit("did-detach");
 }
 
 void WebViewGuestDelegate::WillAttach(
