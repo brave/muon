@@ -29,7 +29,8 @@ namespace {
 class BraveConfigurator : public update_client::Configurator {
  public:
   BraveConfigurator(const base::CommandLine* cmdline,
-                    net::URLRequestContextGetter* url_request_getter);
+                    net::URLRequestContextGetter* url_request_getter,
+                    bool use_brave_server);
 
   // update_client::Configurator overrides.
   int InitialDelay() const override;
@@ -60,6 +61,7 @@ class BraveConfigurator : public update_client::Configurator {
   friend class base::RefCountedThreadSafe<BraveConfigurator>;
 
   ConfiguratorImpl configurator_impl_;
+  bool use_brave_server_;
 
   ~BraveConfigurator() override {}
 };
@@ -69,8 +71,10 @@ class BraveConfigurator : public update_client::Configurator {
 // a custom message signing protocol and it does not depend on using HTTPS.
 BraveConfigurator::BraveConfigurator(
     const base::CommandLine* cmdline,
-    net::URLRequestContextGetter* url_request_getter)
-    : configurator_impl_(cmdline, url_request_getter, false) {}
+    net::URLRequestContextGetter* url_request_getter,
+    bool use_brave_server)
+    : configurator_impl_(cmdline, url_request_getter, false),
+      use_brave_server_(use_brave_server) {}
 
 int BraveConfigurator::InitialDelay() const {
   return configurator_impl_.InitialDelay();
@@ -93,13 +97,15 @@ int BraveConfigurator::UpdateDelay() const {
 }
 
 std::vector<GURL> BraveConfigurator::UpdateUrl() const {
-  // For localhost of vault-updater
-  // return std::vector<GURL> {GURL("http://localhost:8192/extensions")};
+  if (use_brave_server_) {
+    // For localhost of vault-updater
+    // return std::vector<GURL> {GURL("http://localhost:8192/extensions")};
+    return std::vector<GURL>
+        {GURL("https://laptop-updates.brave.com/extensions")};
+  }
 
-  // For Chrome's extension store
-  // return configurator_impl_.UpdateUrl();
-  return std::vector<GURL>
-      {GURL("https://laptop-updates.brave.com/extensions")};
+  // For Chrome's component store
+  return configurator_impl_.UpdateUrl();
 }
 
 std::vector<GURL> BraveConfigurator::PingUrl() const {
@@ -154,8 +160,10 @@ bool BraveConfigurator::UseBackgroundDownloader() const {
 }
 
 bool BraveConfigurator::UseCupSigning() const {
-  // return configurator_impl_.UseCupSigning();
-  return false;
+  if (use_brave_server_) {
+    return false;
+  }
+  return configurator_impl_.UseCupSigning();
 }
 
 // Returns a task runner to run blocking tasks. The task runner continues to run
@@ -179,8 +187,9 @@ PrefService* BraveConfigurator::GetPrefService() const {
 scoped_refptr<update_client::Configurator>
 MakeBraveComponentUpdaterConfigurator(
     const base::CommandLine* cmdline,
-    net::URLRequestContextGetter* context_getter) {
-  return new BraveConfigurator(cmdline, context_getter);
+    net::URLRequestContextGetter* context_getter,
+    bool use_brave_server) {
+  return new BraveConfigurator(cmdline, context_getter, use_brave_server);
 }
 
 }  // namespace component_updater

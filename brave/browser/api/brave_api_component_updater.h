@@ -23,6 +23,10 @@ class ComponentsUI {
       const std::string& component_id);
   bool GetComponentDetails(const std::string& id,
                            update_client::CrxUpdateItem* item) const;
+
+ protected:
+  component_updater::ComponentUpdateService*
+      GetCUSForID(const std::string& component_id) const;
 };
 
 using ReadyCallback = base::Callback<void(const base::FilePath&)>;
@@ -41,17 +45,18 @@ class ComponentUpdater : public mate::TrackableObject<ComponentUpdater>,
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
+
  protected:
   explicit ComponentUpdater(v8::Isolate* isolate);
   ~ComponentUpdater() override;
   // When a component is registered, the old versions of the component
   // will be removed off the main thread by the DefaultComponentInstaller.
-  void RegisterComponent(const std::string& extension_id);
+  void RegisterComponent(const std::string& component_id);
   std::vector<std::string> GetComponentIDs();
-  void CheckNow(const std::string& extension_id);
-  void OnComponentRegistered(const std::string& extension_id);
+  void CheckNow(const std::string& component_id);
+  void OnComponentRegistered(const std::string& component_id);
   void OnComponentReady(
-    const std::string& extension_id,
+    const std::string& component_id,
     const base::FilePath& install_dir);
 
   // Registers a component for auto updates and for the ability to be installed

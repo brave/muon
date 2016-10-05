@@ -21,7 +21,8 @@ namespace component_updater {
 scoped_refptr<update_client::Configurator>
 MakeBraveComponentUpdaterConfigurator(
     const base::CommandLine* cmdline,
-    net::URLRequestContextGetter* context_getter);
+    net::URLRequestContextGetter* context_getter,
+    bool use_brave_server);
 
 }  // namespace component_updater
 
