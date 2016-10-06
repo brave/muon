@@ -529,12 +529,18 @@ void WebContents::ContentsMouseEvent(content::WebContents* source,
   if (!HostWebContents() || !IsAttached())
     return;
 
+  LOG(ERROR) << "sending to host";
   HostWebContents()->GetDelegate()->ContentsMouseEvent(
       HostWebContents(), location, motion, exited);
 }
 
-bool WebContents::CanOverscrollContent() const {
+bool WebContents::EmbedsFullscreenWidget() const {
   return true;
+}
+
+bool WebContents::CanOverscrollContent() const {
+  // return true;
+  return false;
 }
 
 bool WebContents::PreHandleGestureEvent(content::WebContents* source,
