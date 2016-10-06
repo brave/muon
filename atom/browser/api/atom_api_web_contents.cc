@@ -535,10 +535,13 @@ void WebContents::ContentsMouseEvent(content::WebContents* source,
 bool WebContents::PreHandleGestureEvent(content::WebContents* source,
                                           const blink::WebGestureEvent& event) {
   LOG(ERROR) << "pre handle gesture " << IsGuest() << " " << web_contents()->GetURL() << " " << source->GetURL() << " " << event.resendingPluginId;
-  LOG(ERROR) << "embedder " << static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->embedder_web_contents();
+  // LOG(ERROR) << "embedder " << static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->browser_plugin_instance_id();
   // return false;
-  return !IsGuest();
-
+  if (event.type == blink::WebInputEvent::GestureFlingStart) {
+    LOG(ERROR) << "fling!";
+  }
+  // return IsGuest() && static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->browser_plugin_instance_id() == event.resendingPluginId;
+  return event.resendingPluginId != -1;
 
       // auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
       // DCHECK(blink::WebInputEvent::GestureTapDown == event.type ||
