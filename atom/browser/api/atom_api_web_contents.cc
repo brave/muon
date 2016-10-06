@@ -96,6 +96,7 @@
 #include "atom/browser/extensions/tab_helper.h"
 #endif
 
+#include "content/common/site_isolation_policy.h"
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "content/browser/browser_plugin/browser_plugin_guest.h"
 
@@ -525,24 +526,28 @@ void WebContents::ContentsMouseEvent(content::WebContents* source,
                                        const gfx::Point& location,
                                        bool motion,
                                        bool exited) {
-  if (!HostWebContents() || !IsAttached() || !HostWebContents()->GetDelegate())
+  if (!HostWebContents() || !IsAttached())
     return;
 
   HostWebContents()->GetDelegate()->ContentsMouseEvent(
       HostWebContents(), location, motion, exited);
 }
 
+bool WebContents::CanOverscrollContent() const {
+  return true;
+}
+
 bool WebContents::PreHandleGestureEvent(content::WebContents* source,
                                           const blink::WebGestureEvent& event) {
-  LOG(ERROR) << "pre handle gesture " << IsGuest() << " " << web_contents()->GetURL() << " " << source->GetURL() << " " << event.resendingPluginId;
-  // LOG(ERROR) << "embedder " << static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->browser_plugin_instance_id();
-  // return false;
-  if (event.type == blink::WebInputEvent::GestureFlingStart) {
-    LOG(ERROR) << "fling!";
-  }
-  // return IsGuest() && static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->browser_plugin_instance_id() == event.resendingPluginId;
-  return event.resendingPluginId != -1;
-
+  // LOG(ERROR) << "pre handle gesture " << IsGuest() << " " << web_contents()->GetURL() << " " << source->GetURL() << " " << event.resendingPluginId;
+  // // LOG(ERROR) << "embedder " << static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->browser_plugin_instance_id();
+  // // return false;
+  // if (event.type == blink::WebInputEvent::GestureFlingStart) {
+  //   LOG(ERROR) << "fling!";
+  // }
+  // // return IsGuest() && static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->browser_plugin_instance_id() == event.resendingPluginId;
+  // return event.resendingPluginId != -1;
+  return false;
       // auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
       // DCHECK(blink::WebInputEvent::GestureTapDown == event.type ||
       //        gesture_event.resendingPluginId == browser_plugin_instance_id_);

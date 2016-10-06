@@ -273,6 +273,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
                                          const gfx::Point& location,
                                          bool motion,
                                          bool exited);
+  bool CanOverscrollContent() const;
   bool PreHandleGestureEvent(content::WebContents* source,
                                   const blink::WebGestureEvent& event);
 
