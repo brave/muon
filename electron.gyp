@@ -4,7 +4,7 @@
     'product_name%': 'Brave',
     'company_name%': 'Brave Software',
     'company_abbr%': 'brave',
-    'version%': '1.4.10',
+    'version%': '1.4.11',
   },
   'includes': [
     'filenames.gypi',
