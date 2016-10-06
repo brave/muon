@@ -42,6 +42,8 @@ class WebViewGuestDelegate : public content::BrowserPluginGuestDelegate,
 
   void Initialize(api::WebContents* api_web_contents);
 
+  void OnPageScaleFactorChanged(float page_scale_factor) override;
+
   // Called when the WebContents is going to be destroyed.
   void Destroy();
 

@@ -214,6 +214,13 @@ void WebViewGuestDelegate::DidDetach() {
   api_web_contents_->Emit("did-detach");
 }
 
+void WebViewGuestDelegate::OnPageScaleFactorChanged(float page_scale_factor) {
+  if (!guest_host_)
+    return;
+
+  web_contents()->SetPageScale(page_scale_factor);
+}
+
 void WebViewGuestDelegate::WillAttach(
     content::WebContents* embedder_web_contents,
     int element_instance_id,
