@@ -20,8 +20,7 @@
 
 namespace atom {
 
-class NativeWindowMac : public NativeWindow,
-                        public content::RenderWidgetHost::InputEventObserver {
+class NativeWindowMac : public NativeWindow {
  public:
   NativeWindowMac(brightray::InspectableWebContents* inspectable_web_contents,
                   const mate::Dictionary& options,

@@ -91,7 +91,19 @@ NativeWindow::NativeWindow(
   // mode.
   ui::GpuSwitchingManager::SetTransparent(transparent_);
 
+  auto host = web_contents()->GetRenderViewHost();
+  if (host)
+    host->GetWidget()->AddInputEventObserver(this);
+
   WindowList::AddWindow(this);
+}
+
+void NativeWindow::RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) {
+  if (old_host)
+    old_host->GetWidget()->RemoveInputEventObserver(this);
+  if (new_host)
+    new_host->GetWidget()->AddInputEventObserver(this);
 }
 
 NativeWindow::~NativeWindow() {
@@ -265,6 +277,23 @@ extensions::SizeConstraints NativeWindow::GetSizeConstraints() {
     window_constraints.set_minimum_size(min_bounds.size());
   }
   return window_constraints;
+}
+
+void NativeWindow::OnInputEvent(const blink::WebInputEvent& event) {
+  switch (event.type) {
+    case blink::WebInputEvent::GestureScrollBegin:
+      LOG(ERROR) << "scroll begin";
+      break;
+    case blink::WebInputEvent::GestureScrollUpdate:
+      LOG(ERROR) << "scroll update";
+      break;
+    case blink::WebInputEvent::GestureScrollEnd:
+      LOG(ERROR) << "scroll end";
+      break;
+    default:
+      LOG(ERROR) << event.type;
+      break;
+  }
 }
 
 void NativeWindow::SetContentSizeConstraints(

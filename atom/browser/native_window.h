@@ -23,6 +23,7 @@
 #include "extensions/browser/app_window/size_constraints.h"
 #include "ui/gfx/image/image.h"
 #include "ui/gfx/image/image_skia.h"
+#include "content/public/browser/render_widget_host.h"
 
 class SkRegion;
 
@@ -49,7 +50,8 @@ namespace atom {
 struct DraggableRegion;
 
 class NativeWindow : public base::SupportsUserData,
-                     public content::WebContentsObserver {
+                     public content::WebContentsObserver,
+                     public content::RenderWidgetHost::InputEventObserver {
  public:
   ~NativeWindow() override;
 
@@ -63,8 +65,12 @@ class NativeWindow : public base::SupportsUserData,
   // Find a window from its WebContents
   static NativeWindow* FromWebContents(content::WebContents* web_contents);
 
+  void RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) override;
+
   void InitFromOptions(const mate::Dictionary& options);
 
+  void OnInputEvent(const blink::WebInputEvent& event) override;
   virtual void Close() = 0;
   virtual void CloseImmediately() = 0;
   virtual bool IsClosed() const { return is_closed_; }
