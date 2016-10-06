@@ -531,11 +531,9 @@ void WebContents::ContentsMouseEvent(content::WebContents* source,
 
 bool WebContents::PreHandleGestureEvent(content::WebContents* source,
                                           const blink::WebGestureEvent& event) {
-  LOG(ERROR) << "pre handle gesture " << source->GetURL();
+  LOG(ERROR) << "pre handle gesture " << source->GetURL() << " " << event.resendingPluginId;
   // return false;
-  return !IsGuest() || event.type == blink::WebGestureEvent::GesturePinchBegin ||
-      event.type == blink::WebGestureEvent::GesturePinchUpdate ||
-      event.type == blink::WebGestureEvent::GesturePinchEnd;
+  return !IsGuest();
 
 
       // auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
