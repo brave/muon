@@ -96,6 +96,9 @@
 #include "atom/browser/extensions/tab_helper.h"
 #endif
 
+#include "content/browser/web_contents/web_contents_impl.h"
+#include "content/browser/browser_plugin/browser_plugin_guest.h"
+
 namespace {
 
 struct PrintSettings {
@@ -531,7 +534,8 @@ void WebContents::ContentsMouseEvent(content::WebContents* source,
 
 bool WebContents::PreHandleGestureEvent(content::WebContents* source,
                                           const blink::WebGestureEvent& event) {
-  LOG(ERROR) << "pre handle gesture " << source->GetURL() << " " << event.resendingPluginId;
+  LOG(ERROR) << "pre handle gesture " << IsGuest() << " " << web_contents()->GetURL() << " " << source->GetURL() << " " << event.resendingPluginId;
+  LOG(ERROR) << "embedder " << static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->embedder_web_contents();
   // return false;
   return !IsGuest();
 
