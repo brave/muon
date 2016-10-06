@@ -139,6 +139,7 @@ v8::Local<v8::Value> WebFrame::RegisterEmbedderCustomElement(
 void WebFrame::RegisterElementResizeCallback(
     int element_instance_id,
     const GuestViewContainer::ResizeCallback& callback) {
+  LOG(ERROR) << " register resize " << content::BrowserPluginManager::Get()->GetBrowserPlugin(element_instance_id)->browser_plugin_instance_id();
   auto guest_view_container = GuestViewContainer::FromID(element_instance_id);
   if (guest_view_container)
     guest_view_container->RegisterElementResizeCallback(callback);
@@ -159,7 +160,10 @@ void WebFrame::AttachGuest(int id) {
   // marking it as hidden while attaching
   content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
     updateVisibility(false);
+LOG(ERROR) << " before attach " << content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->browser_plugin_instance_id();
+
   content::RenderFrame::FromWebFrame(web_frame_)->AttachGuest(id);
+  LOG(ERROR) << " after attach " << content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->browser_plugin_instance_id();
   content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
     updateVisibility(true);
 }
