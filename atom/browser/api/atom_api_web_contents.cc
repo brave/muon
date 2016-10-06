@@ -545,7 +545,8 @@ bool WebContents::CanOverscrollContent() const {
 
 bool WebContents::PreHandleGestureEvent(content::WebContents* source,
                                           const blink::WebGestureEvent& event) {
-  // LOG(ERROR) << "pre handle gesture " << IsGuest() << " " << web_contents()->GetURL() << " " << source->GetURL() << " " << event.resendingPluginId;
+  LOG(ERROR) << event.type << " " << blink::WebInputEvent::Type::GestureScrollBegin << " " << blink::WebInputEvent::Type::GesturePinchUpdate;
+  LOG(ERROR) << "pre handle gesture " << IsGuest() << " " << web_contents()->GetURL() << " " << source->GetURL() << " " << event.resendingPluginId;
   // // LOG(ERROR) << "embedder " << static_cast<content::WebContentsImpl*>(web_contents())->GetBrowserPluginGuest()->browser_plugin_instance_id();
   // // return false;
   // if (event.type == blink::WebInputEvent::GestureFlingStart) {
