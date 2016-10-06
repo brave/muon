@@ -182,7 +182,7 @@ bool WebViewGuestDelegate::IsAttached() {
 }
 
 void WebViewGuestDelegate::DidAttach(int guest_proxy_routing_id) {
-  LOG(ERROR) << "did attach " << api_web_contents_->GetURL();
+  LOG(ERROR) << "did attach " << api_web_contents_->GetURL() << " " << guest_proxy_routing_id;
   guest_proxy_routing_id_ = guest_proxy_routing_id;
   // update the owner window
   auto relay = NativeWindowRelay::FromWebContents(embedder_web_contents_);
@@ -209,6 +209,7 @@ void WebViewGuestDelegate::SetGuestHost(content::GuestHost* guest_host) {
 }
 
 void WebViewGuestDelegate::DidDetach() {
+  LOG(ERROR) << "did detach " << api_web_contents_->GetURL() << " " << guest_proxy_routing_id_;
   guest_proxy_routing_id_ = -1;
   api_web_contents_->Emit("did-detach");
 }
@@ -219,7 +220,7 @@ void WebViewGuestDelegate::WillAttach(
     bool is_full_page_plugin,
     const base::Closure& completion_callback) {
   embedder_web_contents_ = embedder_web_contents;
-  LOG(ERROR) << "set embedder for " << api_web_contents_->GetURL();
+  LOG(ERROR) << "set embedder for " << api_web_contents_->GetURL() << " " << element_instance_id;
   // update the embedder
   auto embedder_api_web_contents_ =
       api::WebContents::CreateFrom(api_web_contents_->isolate(),
