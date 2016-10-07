@@ -109,8 +109,8 @@ class BraveBrowserContext : public atom::AtomBrowserContext {
 
   bool sent_destroyed_notification_;
   bool has_parent_;
-  BraveBrowserContext* original_context_;
-  scoped_refptr<BraveBrowserContext> otr_context_;
+  scoped_refptr<BraveBrowserContext> original_context_;
+  BraveBrowserContext* otr_context_;
   const std::string partition_;
 
   scoped_refptr<autofill::AutofillWebDataService> autofill_data_;

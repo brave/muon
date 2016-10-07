@@ -101,14 +101,15 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
   }
   InitPrefs();
 
-  if (original_context_)
+  if (original_context_) {
     TrackZoomLevelsFromParent();
+  }
 #if defined(ENABLE_EXTENSIONS)
   if (IsOffTheRecord()) {
     BrowserThread::PostTask(
         BrowserThread::IO, FROM_HERE,
         base::Bind(&NotifyOTRProfileCreatedOnIOThread,
-          base::Unretained(original_context_),
+          base::Unretained(original_context_.get()),
           base::Unretained(this)));
   }
 #endif
@@ -129,17 +130,22 @@ void BraveBrowserContext::MaybeSendDestroyedNotification() {
 BraveBrowserContext::~BraveBrowserContext() {
   MaybeSendDestroyedNotification();
 
+  if (track_zoom_subscription_.get())
+    track_zoom_subscription_.reset(nullptr);
+
+  if (parent_default_zoom_level_subscription_.get())
+    parent_default_zoom_level_subscription_.reset(nullptr);
+
   if (user_prefs_registrar_.get())
     user_prefs_registrar_->RemoveAll();
 
-  if (otr_context_.get()) {
-    auto user_prefs = user_prefs::UserPrefs::Get(otr_context_.get());
+  if (IsOffTheRecord()) {
+    auto user_prefs = user_prefs::UserPrefs::Get(this);
     if (user_prefs)
       user_prefs->ClearMutableValues();
-    otr_context_ = nullptr;
 #if defined(ENABLE_EXTENSIONS)
-    ExtensionPrefValueMapFactory::GetForBrowserContext(this)->
-        ClearAllIncognitoSessionOnlyPreferences();
+    ExtensionPrefValueMapFactory::GetForBrowserContext(
+        original_context_.get())->ClearAllIncognitoSessionOnlyPreferences();
 #endif
   }
 
@@ -172,7 +178,7 @@ BraveBrowserContext::~BraveBrowserContext() {
   BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(&NotifyOTRProfileDestroyedOnIOThread,
-          base::Unretained(original_context_), base::Unretained(this)));
+          base::Unretained(original_context_.get()), base::Unretained(this)));
 #endif
   }
 }
@@ -191,7 +197,7 @@ BraveBrowserContext* BraveBrowserContext::original_context() {
   if (!IsOffTheRecord() && !HasParentContext()) {
     return this;
   }
-  return original_context_;
+  return original_context_.get();;
 }
 
 BraveBrowserContext* BraveBrowserContext::otr_context() {
@@ -202,8 +208,8 @@ BraveBrowserContext* BraveBrowserContext::otr_context() {
   if (HasParentContext())
     return original_context_->otr_context();
 
-  if (otr_context_.get()) {
-    return otr_context_.get();
+  if (otr_context_) {
+    return otr_context_;
   }
 
   return nullptr;
@@ -215,7 +221,7 @@ void BraveBrowserContext::TrackZoomLevelsFromParent() {
   // partitions, e.g. those used by WebViewGuests.
   HostZoomMap* host_zoom_map = HostZoomMap::GetDefaultForBrowserContext(this);
   HostZoomMap* parent_host_zoom_map =
-      HostZoomMap::GetDefaultForBrowserContext(original_context_);
+      HostZoomMap::GetDefaultForBrowserContext(original_context_.get());
   host_zoom_map->CopyFrom(parent_host_zoom_map);
   // Observe parent profile's HostZoomMap changes so they can also be applied
   // to this profile's HostZoomMap.

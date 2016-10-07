@@ -569,10 +569,7 @@ v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
 v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
 #if defined(ENABLE_EXTENSIONS)
   if (extensions_.IsEmpty()) {
-    auto original_context = extensions::ExtensionsBrowserClient::Get()->
-        GetOriginalContext(browser_context_.get());
-
-    auto handle = atom::api::Extension::Create(isolate, original_context);
+    auto handle = atom::api::Extension::Create(isolate, browser_context());
     extensions_.Reset(isolate, handle.ToV8());
   }
 #endif

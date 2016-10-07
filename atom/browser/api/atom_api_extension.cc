@@ -24,6 +24,7 @@
 #include "content/public/common/url_constants.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
+#include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/notification_types.h"
 #include "extensions/common/extension.h"
 #include "extensions/common/file_util.h"
@@ -99,15 +100,16 @@ namespace atom {
 namespace api {
 
 Extension::Extension(v8::Isolate* isolate,
-                 content::BrowserContext* browser_context)
+                 AtomBrowserContext* browser_context)
     : browser_context_(browser_context) {
   Init(isolate);
-  extensions::ExtensionRegistry::Get(browser_context_)->AddObserver(this);
+  extensions::ExtensionRegistry::Get(browser_context_.get())->AddObserver(this);
 }
 
 Extension::~Extension() {
-  if (extensions::ExtensionRegistry::Get(browser_context_)) {
-    extensions::ExtensionRegistry::Get(browser_context_)->RemoveObserver(this);
+  if (extensions::ExtensionRegistry::Get(browser_context_.get())) {
+    extensions::ExtensionRegistry::Get(browser_context_.get())->
+        RemoveObserver(this);
   }
 }
 
@@ -132,7 +134,7 @@ void Extension::Load(mate::Arguments* args) {
     manifest_copy = extensions::file_util::LoadManifest(path, &error);
   }
 
-  if (!error.empty()) {
+  if (!manifest_copy || !error.empty()) {
     node::Environment* env = node::Environment::GetCurrent(isolate());
     mate::EmitEvent(isolate(),
                   env->process_object(),
@@ -145,14 +147,14 @@ void Extension::Load(mate::Arguments* args) {
                               flags,
                               &error);
 
-    if (!error.empty()) {
+    if (!extension || !error.empty()) {
       node::Environment* env = node::Environment::GetCurrent(isolate());
       mate::EmitEvent(isolate(),
                   env->process_object(),
                   "extension-load-error",
                   error);
     } else {
-      extensions::ExtensionSystem::Get(browser_context_)->ready().Post(
+      extensions::ExtensionSystem::Get(browser_context_.get())->ready().Post(
             FROM_HERE,
             base::Bind(&Extension::AddExtension,
               // GetWeakPtr()
@@ -163,7 +165,8 @@ void Extension::Load(mate::Arguments* args) {
 
 void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {
   auto extension_service =
-      extensions::ExtensionSystem::Get(browser_context_)->extension_service();
+      extensions::ExtensionSystem::Get(browser_context_.get())->
+          extension_service();
   extension_service->AddExtension(extension.get());
 }
 
@@ -197,7 +200,8 @@ void Extension::OnExtensionUnloaded(content::BrowserContext* browser_context,
 
 void Extension::Disable(const std::string& extension_id) {
   auto extension_service =
-      extensions::ExtensionSystem::Get(browser_context_)->extension_service();
+      extensions::ExtensionSystem::Get(browser_context_.get())->
+          extension_service();
   if (extension_service) {
     extension_service->DisableExtension(
         extension_id, extensions::Extension::DISABLE_USER_ACTION);
@@ -206,7 +210,8 @@ void Extension::Disable(const std::string& extension_id) {
 
 void Extension::Enable(const std::string& extension_id) {
   auto extension_service =
-      extensions::ExtensionSystem::Get(browser_context_)->extension_service();
+      extensions::ExtensionSystem::Get(browser_context_.get())->
+          extension_service();
   if (extension_service) {
     extension_service->EnableExtension(
         extension_id);
@@ -269,7 +274,11 @@ bool Extension::HandleURLOverrideReverse(GURL* url,
 mate::Handle<Extension> Extension::Create(
     v8::Isolate* isolate,
     content::BrowserContext* browser_context) {
-  return mate::CreateHandle(isolate, new Extension(isolate, browser_context));
+  auto original_context = extensions::ExtensionsBrowserClient::Get()->
+        GetOriginalContext(browser_context);
+  return mate::CreateHandle(isolate,
+      new Extension(isolate,
+          static_cast<AtomBrowserContext*>(original_context)));
 }
 
 // static

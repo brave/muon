@@ -39,7 +39,7 @@ class Extension : public mate::TrackableObject<Extension>,
                   public extensions::ExtensionRegistryObserver {
  public:
   static mate::Handle<Extension> Create(v8::Isolate* isolate,
-                                  content::BrowserContext* browser_context);
+                                    content::BrowserContext* browser_context);
   // mate::TrackableObject:
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
@@ -57,7 +57,7 @@ class Extension : public mate::TrackableObject<Extension>,
                                          WebContents* web_contents);
 
  protected:
-  Extension(v8::Isolate* isolate, content::BrowserContext* browser_context);
+  Extension(v8::Isolate* isolate, AtomBrowserContext* browser_context);
   ~Extension() override;
 
   void Load(mate::Arguments* args);
@@ -73,7 +73,7 @@ class Extension : public mate::TrackableObject<Extension>,
   void Enable(const std::string& extension_id);
 
  private:
-  content::BrowserContext* browser_context_;  // not owned
+  scoped_refptr<AtomBrowserContext> browser_context_;
 
   DISALLOW_COPY_AND_ASSIGN(Extension);
 };
