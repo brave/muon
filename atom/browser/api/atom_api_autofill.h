@@ -10,10 +10,12 @@
 #include "atom/browser/api/trackable_object.h"
 #include "base/callback.h"
 #include "brave/browser/brave_browser_context.h"
+#include "components/autofill/core/browser/personal_data_manager_observer.h"
 #include "native_mate/handle.h"
 
 namespace autofill {
 class AutofillProfile;
+class PersonalDataManager;
 }
 
 namespace base {
@@ -29,7 +31,8 @@ namespace atom {
 
 namespace api {
 
-class Autofill : public mate::TrackableObject<Autofill> {
+class Autofill : public mate::TrackableObject<Autofill>,
+                 public autofill::PersonalDataManagerObserver {
  public:
   static mate::Handle<Autofill> Create(v8::Isolate* isolate,
                                   content::BrowserContext* browser_context);
@@ -42,16 +45,19 @@ class Autofill : public mate::TrackableObject<Autofill> {
   Autofill(v8::Isolate* isolate, content::BrowserContext* browser_context);
   ~Autofill() override;
 
-  std::string AddProfile(const base::DictionaryValue& profile);
+  void AddProfile(const base::DictionaryValue& profile);
   autofill::AutofillProfile* GetProfile(const std::string& guid);
-  bool RemoveProfile(const std::string& guid);
+  void RemoveProfile(const std::string& guid);
 
-  std::string AddCreditCard(const base::DictionaryValue& card);
+  void AddCreditCard(const base::DictionaryValue& card);
   autofill::CreditCard* GetCreditCard(const std::string& guid);
-  bool RemoveCreditCard(const std::string& guid);
+  void RemoveCreditCard(const std::string& guid);
 
   void ClearAutocompleteData();
   void ClearAutofillData();
+
+  // PersonalDataManagerObserver
+  void OnPersonalDataChanged() override;
 
   brave::BraveBrowserContext* browser_context() {
     return static_cast<brave::BraveBrowserContext*>(browser_context_);
@@ -62,6 +68,8 @@ class Autofill : public mate::TrackableObject<Autofill> {
   void OnClearedAutofillData();
 
   content::BrowserContext* browser_context_;  // not owned
+
+  autofill::PersonalDataManager* personal_data_manager_;  // not owned
 
   base::WeakPtrFactory<Autofill> weak_ptr_factory_;
 

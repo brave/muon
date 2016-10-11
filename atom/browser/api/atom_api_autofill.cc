@@ -4,9 +4,12 @@
 
 #include "atom/browser/api/atom_api_autofill.h"
 
+#include <vector>
+
 #include "atom/browser/autofill/personal_data_manager_factory.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "atom/common/node_includes.h"
 #include "base/guid.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
@@ -154,12 +157,16 @@ Autofill::Autofill(v8::Isolate* isolate,
       : browser_context_(browser_context),
       weak_ptr_factory_(this) {
   Init(isolate);
+  personal_data_manager_ =
+      autofill::PersonalDataManagerFactory::GetForBrowserContext(
+      browser_context_);
+  personal_data_manager_->AddObserver(this);
 }
 
 Autofill::~Autofill() {
 }
 
-std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
+void Autofill::AddProfile(const base::DictionaryValue& profile) {
   std::string full_name, company_name, street_address, city, state, locality,
     postal_code, sorting_code, country_code, phone, email, language_code, guid;
   profile.GetString("full_name", &full_name);
@@ -176,14 +183,11 @@ std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
   profile.GetString("language_code", &language_code);
   if (!profile.GetString("guid", &guid)) {
     NOTREACHED();
-    return std::string();
+    return;
   }
-  autofill::PersonalDataManager* personal_data =
-      autofill::PersonalDataManagerFactory::GetForBrowserContext(
-      browser_context_);
-  if (!personal_data) {
+  if (!personal_data_manager_) {
     LOG(ERROR) << "No Data";
-    return std::string();
+    return;
   }
 
   autofill::AutofillProfile autofill_profile(guid, autofill::kSettingsOrigin);
@@ -258,39 +262,31 @@ std::string Autofill::AddProfile(const base::DictionaryValue& profile) {
 
   if (!base::IsValidGUID(autofill_profile.guid())) {
     autofill_profile.set_guid(base::GenerateGUID());
-    personal_data->AddProfile(autofill_profile);
+    personal_data_manager_->AddProfile(autofill_profile);
   } else {
-    personal_data->UpdateProfile(autofill_profile);
+    personal_data_manager_->UpdateProfile(autofill_profile);
   }
-  return autofill_profile.guid();
 }
 
 autofill::AutofillProfile* Autofill::GetProfile(const std::string& guid) {
-  autofill::PersonalDataManager* personal_data =
-      autofill::PersonalDataManagerFactory::GetForBrowserContext(
-      browser_context_);
-  if (!personal_data) {
+  if (!personal_data_manager_) {
     LOG(ERROR) << "No Data";
     return nullptr;
   }
 
-  return personal_data->GetProfileByGUID(guid);
+  return personal_data_manager_->GetProfileByGUID(guid);
 }
 
-bool Autofill::RemoveProfile(const std::string& guid) {
-  autofill::PersonalDataManager* personal_data =
-      autofill::PersonalDataManagerFactory::GetForBrowserContext(
-      browser_context_);
-  if (!personal_data) {
+void Autofill::RemoveProfile(const std::string& guid) {
+  if (!personal_data_manager_) {
     LOG(ERROR) << "No Data";
-    return false;
+    return;
   }
 
-  personal_data->RemoveByGUID(guid);
-  return true;
+  personal_data_manager_->RemoveByGUID(guid);
 }
 
-std::string Autofill::AddCreditCard(const base::DictionaryValue& card) {
+void Autofill::AddCreditCard(const base::DictionaryValue& card) {
   std::string name, card_number, expiration_month, expiration_year, guid;
   card.GetString("name", &name);
   card.GetString("card_number", &card_number);
@@ -298,14 +294,11 @@ std::string Autofill::AddCreditCard(const base::DictionaryValue& card) {
   card.GetString("expiration_year", &expiration_year);
   if (!card.GetString("guid", &guid)) {
     NOTREACHED();
-    return std::string();
+    return;
   }
-  autofill::PersonalDataManager* personal_data =
-      autofill::PersonalDataManagerFactory::GetForBrowserContext(
-      browser_context_);
-  if (!personal_data) {
+  if (!personal_data_manager_) {
     LOG(ERROR) << "No Data";
-    return std::string();
+    return;
   }
 
   autofill::CreditCard credit_card(guid, autofill::kSettingsOrigin);
@@ -334,34 +327,26 @@ std::string Autofill::AddCreditCard(const base::DictionaryValue& card) {
 
   if (!base::IsValidGUID(credit_card.guid())) {
     credit_card.set_guid(base::GenerateGUID());
-    personal_data->AddCreditCard(credit_card);
+    personal_data_manager_->AddCreditCard(credit_card);
   } else {
-    personal_data->UpdateCreditCard(credit_card);
+    personal_data_manager_->UpdateCreditCard(credit_card);
   }
-  return credit_card.guid();
 }
 
 autofill::CreditCard* Autofill::GetCreditCard(const std::string& guid) {
-  autofill::PersonalDataManager* personal_data =
-      autofill::PersonalDataManagerFactory::GetForBrowserContext(
-      browser_context_);
-  if (!personal_data) {
+  if (!personal_data_manager_) {
     return nullptr;
   }
 
-  return personal_data->GetCreditCardByGUID(guid);
+  return personal_data_manager_->GetCreditCardByGUID(guid);
 }
 
-bool Autofill::RemoveCreditCard(const std::string& guid) {
-  autofill::PersonalDataManager* personal_data =
-      autofill::PersonalDataManagerFactory::GetForBrowserContext(
-      browser_context_);
-  if (!personal_data) {
-    return false;
+void Autofill::RemoveCreditCard(const std::string& guid) {
+  if (!personal_data_manager_) {
+    return;
   }
 
-  personal_data->RemoveByGUID(guid);
-  return true;
+  personal_data_manager_->RemoveByGUID(guid);
 }
 
 void Autofill::ClearAutocompleteData() {
@@ -427,6 +412,30 @@ void Autofill::OnClearedAutocompleteData() {
 
 void Autofill::OnClearedAutofillData() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+}
+
+void Autofill::OnPersonalDataChanged() {
+  std::vector<autofill::AutofillProfile*> profiles =
+    personal_data_manager_->GetProfiles();
+  std::vector<std::string> profile_guids;
+  for (auto it = profiles.begin(); it < profiles.end(); ++it) {
+    autofill::AutofillDataModel* model = *it;
+    profile_guids.push_back(model->guid());
+  }
+  std::vector<autofill::CreditCard*> credit_cards =
+    personal_data_manager_->GetCreditCards();
+  std::vector<std::string> credit_card_guids;
+  for (auto it = credit_cards.begin(); it < credit_cards.end(); ++it) {
+    autofill::AutofillDataModel* model = *it;
+    credit_card_guids.push_back(model->guid());
+  }
+
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "personal-data-changed",
+                  profile_guids,
+                  credit_card_guids);
 }
 
 // static
