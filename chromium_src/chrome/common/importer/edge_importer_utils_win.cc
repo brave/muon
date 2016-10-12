@@ -73,7 +73,8 @@ bool IsEdgeFavoritesLegacyMode() {
   // for its favorites.
   if (key.ReadValueDW(L"FavoritesESEEnabled", &ese_enabled) == ERROR_SUCCESS)
     return !ese_enabled;
-  return true;
+  // No value to read means not legacy mode
+  return false;
 }
 
 bool EdgeImporterCanImport() {
