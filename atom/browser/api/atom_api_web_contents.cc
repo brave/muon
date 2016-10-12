@@ -2044,6 +2044,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
       .SetMethod("setTabValues", &WebContents::SetTabValues)
 #endif
+      .SetMethod("close", &WebContents::CloseContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
       .SetProperty("session", &WebContents::Session)

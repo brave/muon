@@ -166,8 +166,12 @@ var bindings = {
 
   remove: function (tabIds, cb) {
     var responseId = ++id
-    cb && ipc.once('chrome-tabs-remove-response-' + responseId, function (evt) {
-      cb()
+    cb && ipc.once('chrome-tabs-remove-response-' + responseId, function (evt, error) {
+      if (error) {
+        lastError.run('tabs.remove', error, '', cb)
+      } else {
+        cb()
+      }
     })
     ipc.send('chrome-tabs-remove', responseId, tabIds)
   },
@@ -189,12 +193,10 @@ var bindings = {
       throw 'executeScript: must specify tab id'
     }
     cb && ipc.once('chrome-tabs-execute-script-response-' + responseId, function (evt, error, on_url, results) {
-      try {
-        if (error)
-          lastError.set('tabs.executeScript', error, null, chrome);
-        cb(results);
-      } finally {
-        lastError.clear(chrome);
+      if (error) {
+        lastError.run('tabs.executeScript', error, '', cb, results)
+      } else {
+        cb(results)
       }
     })
     ipc.send('chrome-tabs-execute-script', responseId, extensionId, tabId, details)
