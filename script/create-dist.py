@@ -49,6 +49,8 @@ TARGET_BINARIES = {
     'xinput1_3.dll',
     'natives_blob.bin',
     'snapshot_blob.bin',
+    'widevinecdm.dll',
+    'widevinecdmadapter.dll',
   ],
   'linux': [
     PROJECT_NAME,  # 'electron'
@@ -66,6 +68,8 @@ TARGET_BINARIES = {
     'extensions_renderer_resources.pak',
     'extensions_api_resources.pak',
     'atom_resources.pak',
+    'libwidevinecdm.so',
+    'libwidevinecdmadapter.so',
   ],
 }
 TARGET_DIRECTORIES = {
