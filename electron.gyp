@@ -593,7 +593,7 @@
                   }],
                 ]
               },
-              'destination': '<(PRODUCT_DIR)/<(product_name) Framework.framework/Internet Plug-Ins',
+              'destination': '<(PRODUCT_DIR)/<(product_name) Framework.framework/Versions/A/Internet Plug-Ins',
               'files': [
                 '<@(copied_libraries)',
               ],
@@ -626,6 +626,14 @@
                 'tools/mac/create-framework-subdir-symlinks.sh',
                 '<(product_name) Framework',
                 'Libraries',
+              ],
+            },
+            {
+              'postbuild_name': 'Add symlinks for framework subdirectories',
+              'action': [
+                'tools/mac/create-framework-subdir-symlinks.sh',
+                '<(product_name) Framework',
+                'Internet Plug-Ins',
               ],
             },
             {
