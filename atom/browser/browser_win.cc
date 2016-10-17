@@ -21,6 +21,7 @@
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/win/registry.h"
+#include "base/win/scoped_comptr.h"
 #include "base/win/win_util.h"
 #include "base/win/windows_version.h"
 
@@ -171,6 +172,52 @@ bool Browser::RemoveAsDefaultProtocolClient(const std::string& protocol,
   }
 }
 
+// Returns the target used as a activate parameter when opening the settings
+// pointing to the page that is the most relevant to a user trying to change the
+// default handler for |protocol|.
+base::string16 GetTargetForDefaultAppsSettings(const wchar_t* protocol) {
+  static const wchar_t kSystemSettingsDefaultAppsFormat[] =
+      L"SystemSettings_DefaultApps_%ls";
+
+  if (base::EqualsCaseInsensitiveASCII(protocol, L"http"))
+    return base::StringPrintf(kSystemSettingsDefaultAppsFormat, L"Browser");
+  if (base::EqualsCaseInsensitiveASCII(protocol, L"mailto"))
+    return base::StringPrintf(kSystemSettingsDefaultAppsFormat, L"Email");
+  return L"SettingsPageAppsDefaultsProtocolView";
+}
+
+// Launches the Windows 'settings' modern app with the 'default apps' view
+// focused. This only works for Windows 8 and Windows 10. The appModelId
+// looks arbitrary but it is the same in Win8 and Win10. There is no easy way to
+// retrieve the appModelId from the registry.
+bool LaunchDefaultAppsSettingsModernDialog(const wchar_t* protocol) {
+  DCHECK(protocol);
+  static const wchar_t kControlPanelAppModelId[] =
+      L"windows.immersivecontrolpanel_cw5n1h2txyewy"
+      L"!microsoft.windows.immersivecontrolpanel";
+
+  base::win::ScopedComPtr<IApplicationActivationManager> activator;
+  HRESULT hr = activator.CreateInstance(CLSID_ApplicationActivationManager);
+  if (SUCCEEDED(hr)) {
+    DWORD pid = 0;
+    CoAllowSetForegroundWindow(activator.get(), nullptr);
+    hr = activator->ActivateApplication(kControlPanelAppModelId,
+                                        L"page=SettingsPageAppsDefaults",
+                                        AO_NONE, &pid);
+    if (SUCCEEDED(hr)) {
+      hr = activator->ActivateApplication(
+          kControlPanelAppModelId,
+          base::StringPrintf(L"page=SettingsPageAppsDefaults&target=%ls",
+                             GetTargetForDefaultAppsSettings(protocol).c_str())
+              .c_str(),
+          AO_NONE, &pid);
+    }
+    if (SUCCEEDED(hr))
+      return true;
+  }
+  return false;
+}
+
 bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
                                         mate::Arguments* args) {
   // HKEY_CLASSES_ROOT
@@ -189,6 +236,10 @@ bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
 
   if (protocol.empty())
     return false;
+
+  if (base::win::GetVersion() >= base::win::VERSION_WIN8)
+    return LaunchDefaultAppsSettingsModernDialog(
+      base::UTF8ToUTF16(protocol).c_str());
 
   base::string16 exe;
   if (!GetProtocolLaunchPath(args, &exe))

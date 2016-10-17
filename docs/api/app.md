@@ -459,7 +459,7 @@ bar, and on macOS you can visit it from dock menu.
 
 Clears the recent documents list.
 
-### `app.setAsDefaultProtocolClient(protocol[, path, args])` _macOS_ _Windows_
+### `app.setAsDefaultProtocolClient(protocol[, path, args])` _macOS_ _Windows_ _Brave on Linux_
 
 * `protocol` String - The name of your protocol, without `://`. If you want your
   app to handle `electron://` links, call this method with `electron` as the
@@ -496,7 +496,7 @@ protocol (aka URI scheme). If so, it will remove the app as the default handler.
 
 Returns `true` when the call succeeded, otherwise returns `false`.
 
-### `app.isDefaultProtocolClient(protocol[, path, args])` _macOS_ _Windows_
+### `app.isDefaultProtocolClient(protocol[, path, args])` _macOS_ _Windows_ _Brave on Linux_
 
 * `protocol` String - The name of your protocol, without `://`.
 * `path` String (optional) _Windows_ - Defaults to `process.execPath`
