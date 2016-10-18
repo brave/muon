@@ -1,0 +1,35 @@
+[
+  {
+    "namespace": "tabViewInternal",
+    "description": "none",
+    "compiler_options": {
+      "implemented_in": "electron/brave/browser/extensions/api/guest_view/tab_view/tab_view_internal_api.h"
+    },
+    "functions": [
+      {
+        "name": "getTabID",
+        "type": "function",
+        "description": "Returns the tabID for the guest webcontents.",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "instanceId",
+            "description": "The instance ID of the guest <webview> process."
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "description": "Called after the operation is completed.",
+            "parameters": [
+              {
+                "name": "tabID",
+                "type": "integer",
+                "description": "The tabID or -1"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

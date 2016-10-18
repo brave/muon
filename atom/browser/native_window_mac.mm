@@ -206,7 +206,7 @@ bool ScopedDisableResize::disable_resize_ = false;
   // titlebar is expected to be empty, but after entering fullscreen mode we
   // have to set one, because title bar is visible here.
   NSWindow* window = shell_->GetNativeWindow();
-  if ((shell_->transparent() || !shell_->has_frame()) &&
+  if (!shell_->has_frame() &&
       base::mac::IsOSYosemiteOrLater() &&
       // FIXME(zcbenz): Showing titlebar for hiddenInset window is weird under
       // fullscreen mode.
@@ -232,7 +232,7 @@ bool ScopedDisableResize::disable_resize_ = false;
 - (void)windowWillExitFullScreen:(NSNotification*)notification {
   // Restore the titlebar visibility.
   NSWindow* window = shell_->GetNativeWindow();
-  if ((shell_->transparent() || !shell_->has_frame()) &&
+  if (!shell_->has_frame() &&
       base::mac::IsOSYosemiteOrLater() &&
       shell_->title_bar_style() != atom::NativeWindowMac::HIDDEN_INSET) {
     [window setTitleVisibility:NSWindowTitleHidden];
@@ -578,7 +578,7 @@ NativeWindowMac::NativeWindowMac(
     // The window without titlebar is treated the same with frameless window.
     set_has_frame(false);
   }
-  if (!useStandardWindow || transparent() || !has_frame()) {
+  if (!useStandardWindow || !has_frame()) {
     styleMask |= NSTexturedBackgroundWindowMask;
   }
   if (resizable) {
@@ -601,11 +601,6 @@ NativeWindowMac::NativeWindowMac(
     SetParentWindow(parent);
   }
 
-  if (transparent()) {
-    // Setting the background color to clear will also hide the shadow.
-    [window_ setBackgroundColor:[NSColor clearColor]];
-  }
-
   if (windowType == "desktop") {
     [window_ setLevel:kCGDesktopWindowLevel - 1];
     [window_ setDisableKeyOrMainWindow:YES];
@@ -619,7 +614,7 @@ NativeWindowMac::NativeWindowMac(
   if (options.Get(options::kFocusable, &focusable) && !focusable)
     [window_ setDisableKeyOrMainWindow:YES];
 
-  if (transparent() || !has_frame()) {
+  if (!has_frame()) {
     if (base::mac::IsOSYosemiteOrLater()) {
       // Don't show title bar.
       [window_ setTitleVisibility:NSWindowTitleHidden];
@@ -789,7 +784,11 @@ void NativeWindowMac::Unmaximize() {
   [window_ zoom:nil];
 }
 
-bool NativeWindowMac::IsMaximized() {
+bool NativeWindowMac::IsActive() const {
+  return [window_ isKeyWindow];
+}
+
+bool NativeWindowMac::IsMaximized() const {
   if (([window_ styleMask] & NSResizableWindowMask) != 0) {
     return [window_ isZoomed];
   } else {
@@ -810,7 +809,7 @@ void NativeWindowMac::Restore() {
   [window_ deminiaturize:nil];
 }
 
-bool NativeWindowMac::IsMinimized() {
+bool NativeWindowMac::IsMinimized() const {
   return [window_ isMiniaturized];
 }
 
@@ -823,6 +822,10 @@ void NativeWindowMac::SetFullScreen(bool fullscreen) {
 
 bool NativeWindowMac::IsFullscreen() const {
   return [window_ styleMask] & NSFullScreenWindowMask;
+}
+
+void NativeWindowMac::SetBounds(const gfx::Rect& bounds) {
+  SetBounds(bounds, false);
 }
 
 void NativeWindowMac::SetBounds(const gfx::Rect& bounds, bool animate) {
@@ -846,7 +849,7 @@ void NativeWindowMac::SetBounds(const gfx::Rect& bounds, bool animate) {
   [window_ setFrame:cocoa_bounds display:YES animate:animate];
 }
 
-gfx::Rect NativeWindowMac::GetBounds() {
+gfx::Rect NativeWindowMac::GetBounds() const {
   NSRect frame = [window_ frame];
   gfx::Rect bounds(frame.origin.x, 0, NSWidth(frame), NSHeight(frame));
   NSScreen* screen = [[NSScreen screens] objectAtIndex:0];
@@ -948,7 +951,7 @@ void NativeWindowMac::SetAlwaysOnTop(bool top) {
   [window_ setLevel:(top ? NSFloatingWindowLevel : NSNormalWindowLevel)];
 }
 
-bool NativeWindowMac::IsAlwaysOnTop() {
+bool NativeWindowMac::IsAlwaysOnTop() const {
   return [window_ level] == NSFloatingWindowLevel;
 }
 
@@ -959,7 +962,7 @@ void NativeWindowMac::Center() {
 void NativeWindowMac::SetTitle(const std::string& title) {
   // For macOS <= 10.9, the setTitleVisibility API is not available, we have
   // to avoid calling setTitle for frameless window.
-  if (!base::mac::IsOSYosemiteOrLater() && (transparent() || !has_frame()))
+  if (!base::mac::IsOSYosemiteOrLater() && !has_frame())
     return;
 
   [window_ setTitle:base::SysUTF8ToNSString(title)];
@@ -1067,6 +1070,23 @@ void NativeWindowMac::SetParentWindow(NativeWindow* parent) {
 
 gfx::NativeWindow NativeWindowMac::GetNativeWindow() {
   return window_;
+}
+
+gfx::Rect NativeWindowMac::GetRestoredBounds() const {
+  // Flip coordinates based on the primary screen.
+  NSScreen* screen = [[NSScreen screens] firstObject];
+  NSRect frame = restored_bounds_;
+  gfx::Rect bounds(frame.origin.x, 0, NSWidth(frame), NSHeight(frame));
+  bounds.set_y(NSHeight([screen frame]) - NSMaxY(frame));
+  return bounds;
+}
+
+ui::WindowShowState NativeWindowMac::GetRestoredState() const {
+  if (IsMaximized())
+    return ui::SHOW_STATE_MAXIMIZED;
+  if (IsFullscreen())
+    return ui::SHOW_STATE_FULLSCREEN;
+  return ui::SHOW_STATE_NORMAL;
 }
 
 gfx::AcceleratedWidget NativeWindowMac::GetAcceleratedWidget() {
@@ -1198,17 +1218,16 @@ void NativeWindowMac::ShowWindowButton(NSWindowButton button) {
   [view.superview addSubview:view positioned:NSWindowAbove relativeTo:nil];
 }
 
+// inspectable_web_contents()->GetView()->GetNativeView()
 void NativeWindowMac::InstallView() {
   // Make sure the bottom corner is rounded: http://crbug.com/396264.
-  // But do not enable it on OS X 10.9 for transparent window, otherwise a
-  // semi-transparent frame would show.
-  if (!(transparent() && base::mac::IsOSMavericks()))
-    [[window_ contentView] setWantsLayer:YES];
+  [[window_ contentView] setWantsLayer:YES];
 
   NSView* view = inspectable_web_contents()->GetView()->GetNativeView();
   if (has_frame()) {
-    [view setFrame:[[window_ contentView] bounds]];
-    [[window_ contentView] addSubview:view];
+    NSView* frameView = [window_ contentView];
+    [view setFrame:[frameView bounds]];
+    [frameView addSubview:view];
   } else {
     // In OSX 10.10, adding subviews to the root view for the NSView hierarchy
     // produces warnings. To eliminate the warnings, we resize the contentView

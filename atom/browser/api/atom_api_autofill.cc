@@ -166,6 +166,10 @@ Autofill::Autofill(v8::Isolate* isolate,
 Autofill::~Autofill() {
 }
 
+Profile* Autofill::profile() {
+  return Profile::FromBrowserContext(browser_context_);
+}
+
 void Autofill::AddProfile(const base::DictionaryValue& profile) {
   std::string full_name, company_name, street_address, city, state, locality,
     postal_code, sorting_code, country_code, phone, email, language_code, guid;
@@ -351,8 +355,7 @@ void Autofill::RemoveCreditCard(const std::string& guid) {
 
 void Autofill::ClearAutocompleteData() {
   scoped_refptr<autofill::AutofillWebDataService> web_data_service =
-    static_cast<brave::BraveBrowserContext*>(browser_context_)
-    ->GetAutofillWebdataService();
+    profile()->GetAutofillWebdataService();
 
   if (web_data_service.get()) {
     base::Time delete_begin;
@@ -379,8 +382,7 @@ void Autofill::ClearAutocompleteData() {
 
 void Autofill::ClearAutofillData() {
   scoped_refptr<autofill::AutofillWebDataService> web_data_service =
-    static_cast<brave::BraveBrowserContext*>(browser_context_)
-    ->GetAutofillWebdataService();
+      profile()->GetAutofillWebdataService();
 
   if (web_data_service.get()) {
     base::Time delete_begin;

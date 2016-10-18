@@ -8,16 +8,14 @@
 #include "atom/browser/browser.h"
 #include "base/command_line.h"
 #include "base/logging.h"
-#include "brave/browser/brave_browser_context.h"
 #include "build/build_config.h"
 #include "chrome/browser/chrome_notification_types.h"
+#include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/notification_service.h"
 #include "extensions/browser/extension_system.h"
 #include "extensions/browser/process_manager.h"
 #include "extensions/browser/process_manager_factory.h"
 #include "extensions/common/one_shot_event.h"
-
-using brave::BraveBrowserContext;
 
 namespace extensions {
 
@@ -49,15 +47,15 @@ void AtomProcessManagerDelegate::Observe(
     const content::NotificationDetails& details) {
   switch (type) {
     case chrome::NOTIFICATION_PROFILE_CREATED: {
-      BraveBrowserContext* browser_context =
-        content::Source<BraveBrowserContext>(source).ptr();
-      OnProfileCreated(browser_context);
+      Profile* profile =
+        content::Source<Profile>(source).ptr();
+      OnProfileCreated(profile);
       break;
     }
     case chrome::NOTIFICATION_PROFILE_DESTROYED: {
-      BraveBrowserContext* browser_context =
-        content::Source<BraveBrowserContext>(source).ptr();
-      OnProfileDestroyed(browser_context);
+      Profile* profile =
+        content::Source<Profile>(source).ptr();
+      OnProfileDestroyed(profile);
       break;
     }
     default:
@@ -66,25 +64,25 @@ void AtomProcessManagerDelegate::Observe(
 }
 
 void AtomProcessManagerDelegate::OnProfileCreated(
-                                        BraveBrowserContext* browser_context) {
-  // Incognito browser_contexts are handled by their original browser_context.
-  if (browser_context->IsOffTheRecord() || browser_context->HasParentContext())
+                                        Profile* profile) {
+  // Profiles are handled by their original profile.
+  if (profile->GetOriginalProfile() != profile)
     return;
 
-  // The browser_context can be created before the extension system is ready.
-  if (!ExtensionSystem::Get(browser_context)->ready().is_signaled())
+  // The profile can be created before the extension system is ready.
+  if (!ExtensionSystem::Get(profile)->ready().is_signaled())
     return;
 
-  // The browser_context might have been initialized asynchronously (in
+  // The profile might have been initialized asynchronously (in
   // parallel with extension system startup). Now that initialization is
   // complete the ProcessManager can load deferred background pages.
-  ProcessManager::Get(browser_context)->MaybeCreateStartupBackgroundHosts();
+  ProcessManager::Get(profile)->MaybeCreateStartupBackgroundHosts();
 }
 
 void AtomProcessManagerDelegate::OnProfileDestroyed(
-                                        BraveBrowserContext* browser_context) {
+                                        Profile* profile) {
   ProcessManager* manager =
-      ProcessManagerFactory::GetForBrowserContextIfExists(browser_context);
+      ProcessManagerFactory::GetForBrowserContextIfExists(profile);
   if (manager) {
     manager->CloseBackgroundHosts();
   }

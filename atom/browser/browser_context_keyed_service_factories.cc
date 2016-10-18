@@ -4,7 +4,10 @@
 
 #include "atom/browser/browser_context_keyed_service_factories.h"
 
+#include "chrome/browser/content_settings/cookie_settings_factory.h"
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+// #include "chrome/browser/plugins/plugin_prefs_factory.h"
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "extensions/browser/api/alarms/alarm_manager.h"
@@ -32,7 +35,6 @@
 namespace atom {
 
 void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
-  ProtocolHandlerRegistryFactory::GetInstance();
 #if defined(ENABLE_EXTENSIONS)
   // keep AtomExtensionsBrowserClient::RegisterExtensionFunctions in sync
   extensions::AlarmManager::GetFactoryInstance();
@@ -60,6 +62,13 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   extensions::WebRequestAPI::GetFactoryInstance();
   extensions::AtomExtensionSystemFactory::GetInstance();
 #endif
+  CookieSettingsFactory::GetInstance();
+  HostContentSettingsMapFactory::GetInstance();
+  // autofill::PersonalDataManagerFactory::GetInstance();
+// #if defined(ENABLE_PLUGINS)
+//   PluginPrefsFactory::GetInstance();
+// #endif
+  ProtocolHandlerRegistryFactory::GetInstance();
 }
 
 }  // namespace atom

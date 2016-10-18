@@ -21,6 +21,7 @@ void MediaAccessAllowed(
     const content::MediaStreamRequest& request,
     const content::MediaResponseCallback& callback,
     bool allowed) {
+  // TODO(bridiver) - IOThread >>
   brightray::MediaStreamDevicesController controller(request, callback);
   if (allowed)
     controller.TakeAction();
@@ -65,7 +66,7 @@ void WebContentsPermissionHelper::RequestPermission(
     origin = security_origin;
   }
   permission_manager->RequestPermission(
-      permission, rfh, origin,
+      permission, rfh, origin, user_gesture,
       base::Bind(&OnPermissionResponse, callback));
 }
 

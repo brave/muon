@@ -10,6 +10,10 @@
 #include "brightray/common/content_client.h"
 #include "brightray/common/main_delegate.h"
 
+namespace base {
+class CommandLine;
+}
+
 namespace atom {
 
 base::FilePath GetResourcesPakFilePathByName(const std::string resource_name);
@@ -17,7 +21,7 @@ base::FilePath GetResourcesPakFilePathByName(const std::string resource_name);
 class AtomMainDelegate : public brightray::MainDelegate {
  public:
   AtomMainDelegate();
-  ~AtomMainDelegate();
+  ~AtomMainDelegate() override;
 
  protected:
   // content::ContentMainDelegate:
@@ -29,6 +33,11 @@ class AtomMainDelegate : public brightray::MainDelegate {
   int RunProcess(
       const std::string& process_type,
       const content::MainFunctionParams& main_function_params) override;
+  void SandboxInitialized(const std::string& process_type) override;
+#if defined(OS_POSIX) && !defined(OS_MACOSX)
+  void ZygoteForked() override;
+#endif
+
 #if defined(OS_MACOSX)
   bool ShouldSendMachPort(const std::string& process_type) override;
   bool DelaySandboxInitialization(const std::string& process_type) override;
@@ -40,10 +49,13 @@ class AtomMainDelegate : public brightray::MainDelegate {
   void OverrideChildProcessPath() override;
   void OverrideFrameworkBundlePath() override;
 #endif
-
+  void ProcessExiting(const std::string& process_type) override;
  private:
 #if defined(OS_MACOSX)
   void SetUpBundleOverrides();
+  void InitMacCrashReporter(
+      base::CommandLine* command_line,
+      const std::string& process_type);
 #endif
 
   brightray::ContentClient content_client_;

@@ -222,9 +222,8 @@ int SetupSocketOnly() {
   int sock = socket(PF_UNIX, SOCK_STREAM, 0);
   PCHECK(sock >= 0) << "socket() failed";
 
-  int rv = base::SetNonBlocking(sock);
-  DCHECK_EQ(0, rv) << "Failed to make non-blocking socket.";
-  rv = SetCloseOnExec(sock);
+  DCHECK(base::SetNonBlocking(sock)) << "Failed to make non-blocking socket.";
+  int rv = SetCloseOnExec(sock);
   DCHECK_EQ(0, rv) << "Failed to set CLOEXEC on socket.";
 
   return sock;

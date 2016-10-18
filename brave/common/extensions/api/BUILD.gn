@@ -1,0 +1,79 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/json_schema_api.gni")
+import("//tools/json_schema_compiler/json_features.gni")
+import("schemas.gni")
+
+# assert(enable_extensions)
+
+json_schema_api("api") {
+  sources = schema_sources
+  schemas = true
+  bundle = true
+  bundle_name = "Brave"
+
+  deps = schema_dependencies
+}
+
+# GYP version: extensions/shell/browser/api/api_registration.gyp:shell_api_registration
+json_schema_api("api_registration") {
+  sources = schema_sources
+  impl_dir = "//electron/brave/common/extensions/api"
+  bundle_registration = true
+  bundle_name = "Brave"
+
+  deps = [
+    ":api",
+  ]
+
+  deps += schema_dependencies
+}
+
+json_features("api_features") {
+  feature_class = "APIFeature"
+  provider_class = "BraveAPIFeatureProvider"
+  sources = [
+    "../../../../../chrome/common/extensions/api/_api_features.json",
+    "../../../../../extensions/common/api/_api_features.json",
+    "_api_features.json",
+  ]
+}
+
+json_features("permission_features") {
+  feature_class = "PermissionFeature"
+  provider_class = "BravePermissionFeatureProvider"
+  sources = [
+    "../../../../../chrome/common/extensions/api/_permission_features.json",
+    "../../../../../extensions/common/api/_permission_features.json",
+    "_permission_features.json",
+  ]
+}
+
+json_features("manifest_features") {
+  feature_class = "ManifestFeature"
+  provider_class = "BraveManifestFeatureProvider"
+  sources = [
+    "../../../../../chrome/common/extensions/api/_manifest_features.json",
+    "../../../../../extensions/common/api/_manifest_features.json",
+    # "_manifest_features.json",
+  ]
+}
+
+json_features("behavior_features") {
+  feature_class = "BehaviorFeature"
+  provider_class = "BraveBehaviorFeatureProvider"
+  sources = [
+    "../../../../../extensions/common/api/_behavior_features.json",
+  ]
+}
+
+group("extensions_features") {
+  public_deps = [
+    ":api_features",
+    ":behavior_features",
+    ":manifest_features",
+    ":permission_features",
+  ]
+}

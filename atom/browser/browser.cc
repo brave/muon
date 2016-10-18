@@ -10,8 +10,8 @@
 #include "atom/browser/native_window.h"
 #include "atom/browser/window_list.h"
 #include "base/files/file_util.h"
-#include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "brightray/browser/brightray_paths.h"
 
 namespace atom {
@@ -84,9 +84,9 @@ void Browser::Shutdown() {
 
   FOR_EACH_OBSERVER(BrowserObserver, observers_, OnQuit());
 
-  if (base::MessageLoop::current()) {
-    base::MessageLoop::current()->PostTask(
-        FROM_HERE, base::MessageLoop::QuitWhenIdleClosure());
+  if (base::ThreadTaskRunnerHandle::Get()) {
+    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
+        base::MessageLoop::QuitWhenIdleClosure());
   } else {
     // There is no message loop available so we are in early stage.
     exit(0);
@@ -149,11 +149,6 @@ void Browser::WillFinishLaunching() {
 }
 
 void Browser::DidFinishLaunching(const base::DictionaryValue& launch_info) {
-  // Make sure the userData directory is created.
-  base::FilePath user_data;
-  if (PathService::Get(brightray::DIR_USER_DATA, &user_data))
-    base::CreateDirectoryAndGetError(user_data, nullptr);
-
   is_ready_ = true;
   FOR_EACH_OBSERVER(BrowserObserver, observers_,
     OnFinishLaunching(launch_info));

@@ -1,0 +1,61 @@
+[
+  {
+    "namespace": "webFrame",
+    "description": "none",
+    "functions": [
+      {
+        "name": "setGlobal",
+        "nocompile": true,
+        "type": "function",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "path"
+          },
+          {
+            "type": "any",
+            "name": "value"
+          }
+        ]
+      },
+      {
+        "name": "setSpellCheckProvider",
+        "nocompile": true,
+        "type": "function",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "lang"
+          },
+          {
+            "type": "boolean",
+            "name": "autoCorrectEnabled"
+          },
+          {
+            "type": "object",
+            "name": "spellCheckProvider",
+            "properties": {
+              "spellCheck": {
+                "type": "function",
+                "parameters": [
+                  {"name": "word", "type": "string"}
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "executeJavaScript",
+        "nocompile": true,
+        "type": "function",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "code"
+          }
+        ]
+      }
+    ]
+  }
+]

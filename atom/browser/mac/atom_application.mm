@@ -5,7 +5,9 @@
 #import "atom/browser/mac/atom_application.h"
 
 #include "atom/browser/browser.h"
-#include "base/auto_reset.h"
+// #include "base/auto_reset.h"
+#include "base/mac/call_with_eh_frame.h"
+#import "base/mac/scoped_nsobject.h"
 #include "base/strings/sys_string_conversions.h"
 #include "content/public/browser/browser_accessibility_state.h"
 
@@ -20,8 +22,10 @@
 }
 
 - (void)sendEvent:(NSEvent*)event {
-  base::AutoReset<BOOL> scoper(&handlingSendEvent_, YES);
-  [super sendEvent:event];
+  base::mac::CallWithEHFrame(^{
+    base::mac::ScopedSendingEvent sendingEventScoper;
+    [super sendEvent:event];
+  });
 }
 
 - (void)setHandlingSendEvent:(BOOL)handlingSendEvent {

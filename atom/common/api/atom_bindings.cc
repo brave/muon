@@ -9,11 +9,11 @@
 #include <string>
 
 #include "atom/common/atom_version.h"
-#include "atom/common/chrome_version.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/node_includes.h"
 #include "base/logging.h"
 #include "base/process/process_metrics.h"
+#include "chrome/common/chrome_version.h"
 #include "native_mate/dictionary.h"
 
 namespace atom {
@@ -116,7 +116,7 @@ void AtomBindings::BindTo(v8::Isolate* isolate,
 
   mate::Dictionary versions;
   if (dict.Get("versions", &versions)) {
-    versions.Set(ATOM_PROJECT_NAME, ATOM_VERSION_STRING);
+    versions.Set(PRODUCT_FULLNAME_STRING, ATOM_VERSION_STRING);
     versions.Set("atom-shell", ATOM_VERSION_STRING);  // For compatibility.
     versions.Set("chrome", CHROME_VERSION_STRING);
   }

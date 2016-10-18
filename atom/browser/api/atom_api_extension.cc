@@ -78,6 +78,8 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
     const extensions::Manifest::Location& manifest_location,
     int flags,
     std::string* error) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::FILE);
+
   scoped_refptr<extensions::Extension> extension(extensions::Extension::Create(
       path, manifest_location, manifest, flags, error));
   if (!extension.get())
@@ -113,6 +115,62 @@ Extension::~Extension() {
   }
 }
 
+
+void Extension::LoadOnFILEThread(const base::FilePath path,
+    std::unique_ptr<base::DictionaryValue> manifest,
+    extensions::Manifest::Location manifest_location,
+    int flags) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::FILE);
+
+  std::string error;
+  if (manifest->empty()) {
+    manifest = extensions::file_util::LoadManifest(path, &error);
+  }
+
+  if (!manifest || !error.empty()) {
+    content::BrowserThread::PostTask(
+          content::BrowserThread::UI, FROM_HERE,
+          base::Bind(&Extension::NotifyErrorOnUIThread,
+              base::Unretained(this), error));
+  } else {
+    scoped_refptr<extensions::Extension> extension = LoadExtension(path,
+                              *manifest,
+                              manifest_location,
+                              flags,
+                              &error);
+
+    if (!extension || !error.empty()) {
+      content::BrowserThread::PostTask(
+          content::BrowserThread::FILE, FROM_HERE,
+          base::Bind(&Extension::NotifyErrorOnUIThread,
+              base::Unretained(this), error));
+    } else {
+      content::BrowserThread::PostTask(
+          content::BrowserThread::UI, FROM_HERE,
+          base::Bind(&Extension::NotifyLoadOnUIThread,
+              base::Unretained(this), base::Passed(&extension)));
+    }
+  }
+}
+
+void Extension::NotifyLoadOnUIThread(
+    scoped_refptr<extensions::Extension> extension) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  extensions::ExtensionSystem::Get(browser_context_.get())->ready().Post(
+        FROM_HERE,
+        base::Bind(&Extension::AddExtension,
+          // GetWeakPtr()
+          base::Unretained(this), base::Passed(&extension)));
+}
+
+void Extension::NotifyErrorOnUIThread(const std::string& error) {
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  mate::EmitEvent(isolate(),
+                env->process_object(),
+                "extension-load-error",
+                error);
+}
+
 void Extension::Load(mate::Arguments* args) {
   base::FilePath path;
   args->GetNext(&path);
@@ -127,40 +185,14 @@ void Extension::Load(mate::Arguments* args) {
   int flags = 0;
   args->GetNext(&flags);
 
-  std::string error;
   std::unique_ptr<base::DictionaryValue> manifest_copy =
       manifest.CreateDeepCopy();
-  if (manifest_copy->empty()) {
-    manifest_copy = extensions::file_util::LoadManifest(path, &error);
-  }
 
-  if (!manifest_copy || !error.empty()) {
-    node::Environment* env = node::Environment::GetCurrent(isolate());
-    mate::EmitEvent(isolate(),
-                  env->process_object(),
-                  "extension-load-error",
-                  error);
-  } else {
-    scoped_refptr<extensions::Extension> extension = LoadExtension(path,
-                              *manifest_copy,
-                              manifest_location,
-                              flags,
-                              &error);
-
-    if (!extension || !error.empty()) {
-      node::Environment* env = node::Environment::GetCurrent(isolate());
-      mate::EmitEvent(isolate(),
-                  env->process_object(),
-                  "extension-load-error",
-                  error);
-    } else {
-      extensions::ExtensionSystem::Get(browser_context_.get())->ready().Post(
-            FROM_HERE,
-            base::Bind(&Extension::AddExtension,
-              // GetWeakPtr()
-              base::Unretained(this), base::Passed(&extension)));
-    }
-  }
+  content::BrowserThread::PostTask(
+        content::BrowserThread::FILE, FROM_HERE,
+        base::Bind(&Extension::LoadOnFILEThread,
+            base::Unretained(this),
+            path, Passed(&manifest_copy), manifest_location, flags));
 }
 
 void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {

@@ -13,6 +13,8 @@
 #include "extensions/browser/extension_system.h"
 #include "extensions/common/one_shot_event.h"
 
+class HostContentSettingsMap;
+
 class ExtensionService {
  public:
   virtual bool IsExtensionEnabled(const std::string& extension_id) const = 0;
@@ -30,6 +32,10 @@ class ExtensionService {
   virtual const extensions::Extension* GetExtensionById(
       const std::string& id,
       bool include_disabled) const = 0;
+
+  virtual void RegisterContentSettings(
+      HostContentSettingsMap* host_content_settings_map) = 0;
+
   virtual bool is_ready() = 0;
 };
 
@@ -42,10 +48,9 @@ class ExtensionPrefs;
 class ExtensionRegistry;
 class ValueStoreFactory;
 
-
 class AtomExtensionSystem : public ExtensionSystem {
  public:
-  explicit AtomExtensionSystem(brave::BraveBrowserContext* browser_context);
+  explicit AtomExtensionSystem(Profile* browser_context);
   ~AtomExtensionSystem() override;
 
   // KeyedService implementation.
@@ -86,7 +91,7 @@ class AtomExtensionSystem : public ExtensionSystem {
                  public content::NotificationObserver,
                  public base::SupportsWeakPtr<Shared> {
    public:
-    explicit Shared(brave::BraveBrowserContext* browser_context);
+    explicit Shared(Profile* browser_context);
     ~Shared() override;
 
     void InitPrefs();
@@ -118,6 +123,8 @@ class AtomExtensionSystem : public ExtensionSystem {
     void EnableExtension(const std::string& extension_id) override;
     void DisableExtension(const std::string& extension_id,
                           int disable_reasons) override;
+    void RegisterContentSettings(
+        HostContentSettingsMap* host_content_settings_map) override;
 
     // Removes the extension with the given id from the list of
     // terminated extensions if it is there.
@@ -149,7 +156,7 @@ class AtomExtensionSystem : public ExtensionSystem {
 
     ExtensionRegistry* registry_;  // Not owned.
 
-    brave::BraveBrowserContext* browser_context_;
+    Profile* browser_context_;
 
     extensions::ExtensionPrefs* extension_prefs_;
 
@@ -177,7 +184,7 @@ class AtomExtensionSystem : public ExtensionSystem {
     OneShotEvent ready_;
   };
 
-  brave::BraveBrowserContext* browser_context_;
+  Profile* browser_context_;
 
   Shared* shared_;
 

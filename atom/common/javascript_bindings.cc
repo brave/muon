@@ -5,8 +5,11 @@
 #include "atom/common/javascript_bindings.h"
 
 #include <vector>
-#include "atom/browser/web_contents_preferences.h"
 #include "atom/common/api/api_messages.h"
+#include "atom/common/api/remote_callback_freer.h"
+#include "atom/common/api/remote_object_freer.h"
+#include "atom/common/api/atom_api_key_weak_map.h"
+#include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "content/public/renderer/render_frame.h"
@@ -72,6 +75,33 @@ v8::Local<v8::Value> JavascriptBindings::GetHiddenValue(v8::Isolate* isolate,
   return v8::Local<v8::Value>();
 }
 
+v8::Local<v8::Value> JavascriptBindings::GetHiddenValueOnObject(
+                                    v8::Isolate* isolate,
+                                    v8::Local<v8::Object> object,
+                                    v8::Local<v8::String> key) {
+  v8::Local<v8::Context> context = isolate->GetCurrentContext();
+  v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
+  v8::Local<v8::Value> value;
+  v8::Maybe<bool> result = object->HasPrivate(context, privateKey);
+  if (!(result.IsJust() && result.FromJust()))
+    return v8::Local<v8::Value>();
+  if (object->GetPrivate(context, privateKey).ToLocal(&value))
+    return value;
+  return v8::Local<v8::Value>();
+}
+
+void JavascriptBindings::SetHiddenValueOnObject(v8::Isolate* isolate,
+                    v8::Local<v8::Object> object,
+                    v8::Local<v8::String> key,
+                    v8::Local<v8::Value> value) {
+  if (value.IsEmpty())
+    return;
+  v8::Local<v8::Context> context = isolate->GetCurrentContext();
+  v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
+  object->SetPrivate(context, privateKey, value);
+}
+
+
 void JavascriptBindings::SetHiddenValue(v8::Isolate* isolate,
                     v8::Local<v8::String> key,
                     v8::Local<v8::Value> value) {
@@ -89,6 +119,22 @@ void JavascriptBindings::SetHiddenValue(v8::Isolate* isolate,
 
   v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
   main_context->Global()->SetPrivate(main_context, privateKey, value);
+}
+
+void JavascriptBindings::DeleteHiddenValue(v8::Isolate* isolate,
+                       v8::Local<v8::Object> object,
+                       v8::Local<v8::String> key) {
+  if (!is_valid() || !render_view())
+    return;
+
+  v8::Local<v8::Context> main_context =
+      render_view()->GetWebView()->mainFrame()->mainWorldScriptContext();
+
+  v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
+  // Actually deleting the value would make force the object into
+  // dictionary mode which is unnecessarily slow. Instead, we replace
+  // the hidden value with "undefined".
+  object->SetPrivate(main_context, privateKey, v8::Undefined(isolate));
 }
 
 void JavascriptBindings::IPCSend(mate::Arguments* args,
@@ -143,13 +189,27 @@ void JavascriptBindings::GetBinding(
       base::Unretained(this)));
   v8.SetMethod("setHiddenValue", base::Bind(&JavascriptBindings::SetHiddenValue,
       base::Unretained(this)));
+  v8.SetMethod("deleteHiddenValue",
+      base::Bind(&JavascriptBindings::DeleteHiddenValue,
+      base::Unretained(this)));
+  v8.SetMethod("getHiddenValueOnObject",
+      base::Bind(&JavascriptBindings::GetHiddenValueOnObject,
+      base::Unretained(this)));
+  v8.SetMethod("setHiddenValueOnObject",
+      base::Bind(&JavascriptBindings::SetHiddenValueOnObject,
+      base::Unretained(this)));
+
+
+  v8.SetMethod("setRemoteCallbackFreer", &atom::RemoteCallbackFreer::BindTo);
+  v8.SetMethod("setRemoteObjectFreer", &atom::RemoteObjectFreer::BindTo);
+  v8.SetMethod("createIDWeakMap", &atom::api::KeyWeakMap<int32_t>::Create);
   binding.Set("v8", v8.GetHandle());
 
   args.GetReturnValue().Set(binding.GetHandle());
 }
 
 bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
-  if (!is_valid() || WebContentsPreferences::run_node())
+  if (!is_valid())
     return false;
 
   // only handle ipc messages in the main frame script context

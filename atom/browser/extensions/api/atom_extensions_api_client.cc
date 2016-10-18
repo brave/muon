@@ -8,13 +8,13 @@
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "base/memory/ptr_util.h"
+#include "brave/browser/guest_view/brave_guest_view_manager_delegate.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/browser/api/management/management_api_delegate.h"
 #include "extensions/browser/api/web_request/web_request_event_details.h"
 #include "extensions/browser/api/web_request/web_request_event_router_delegate.h"
 #include "extensions/browser/requirements_checker.h"
 #include "extensions/common/manifest_handlers/icons_handler.h"
-
 
 namespace extensions {
 
@@ -52,9 +52,9 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
   AtomManagementAPIDelegate() {}
   ~AtomManagementAPIDelegate() override {}
 
-  bool LaunchAppFunctionDelegate(
+  void LaunchAppFunctionDelegate(
       const Extension* extension,
-      content::BrowserContext* context) const override { return false; }
+      content::BrowserContext* context) const override { }
   bool IsNewBookmarkAppsEnabled() const override { return false; }
   bool CanHostedAppsOpenInWindows() const override { return false; }
   GURL GetFullLaunchURL(const Extension* extension) const override {
@@ -176,15 +176,16 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
 AtomExtensionsAPIClient::AtomExtensionsAPIClient() {
 }
 
+std::unique_ptr<guest_view::GuestViewManagerDelegate>
+AtomExtensionsAPIClient::CreateGuestViewManagerDelegate(
+    content::BrowserContext* context) const {
+  return base::WrapUnique(new brave::BraveGuestViewManagerDelegate(context));
+}
+
 void AtomExtensionsAPIClient::AttachWebContentsHelpers(
     content::WebContents* web_contents) const {
   extensions::TabHelper::CreateForWebContents(web_contents);
   AtomExtensionWebContentsObserver::CreateForWebContents(web_contents);
-}
-
-WebViewGuestDelegate* AtomExtensionsAPIClient::CreateWebViewGuestDelegate(
-    WebViewGuest* web_view_guest) const {
-  return ExtensionsAPIClient::CreateWebViewGuestDelegate(web_view_guest);
 }
 
 std::unique_ptr<WebRequestEventRouterDelegate>

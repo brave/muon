@@ -1,0 +1,56 @@
+{
+  "ipcRenderer": {
+    "channel": "stable",
+    "contexts": [
+      "webui",
+      "content_script",
+      "blessed_extension",
+      "unblessed_extension"
+    ],
+    "matches": [
+       "chrome://brave/*"
+    ]
+  },
+  "remote": {
+    "channel": "stable",
+    "contexts": [
+      "webui"
+    ],
+    "matches": [
+      "chrome://brave/*"
+    ]
+  },
+  "webFrame": {
+    "channel": "stable",
+    "contexts": [
+      "webui",
+      "content_script",
+      "blessed_extension",
+      "unblessed_extension"
+    ],
+    "matches": [
+      "chrome://brave/*"
+    ]
+  },
+  "contentSettings.get": {
+    "dependencies": ["permission:contentSettings"],
+    "contexts": [
+      "webui",
+      "content_script",
+      "blessed_extension",
+      "unblessed_extension"
+    ],
+    "matches": [
+      "chrome://brave/*"
+    ]
+  },
+  "tabViewInternal": {
+    "channel": "stable",
+    "contexts": [
+      "webui"
+    ],
+    "matches": [
+      "chrome://brave/*"
+    ]
+  }
+}

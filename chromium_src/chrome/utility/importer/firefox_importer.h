@@ -58,7 +58,6 @@ class FirefoxImporter : public Importer {
   // defined in browserconfig.properties.
   void ImportHomepage();
   void ImportAutofillFormData();
-  void ImportCookies();
   void GetSearchEnginesXMLData(std::vector<std::string>* search_engine_data);
   void GetSearchEnginesXMLDataFromJSON(
       std::vector<std::string>* search_engine_data);

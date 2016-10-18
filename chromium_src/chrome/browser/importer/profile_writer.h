@@ -111,8 +111,6 @@ class ProfileWriter : public base::RefCountedThreadSafe<ProfileWriter> {
   virtual void AddAutofillFormDataEntries(
       const std::vector<autofill::AutofillEntry>& autofill_entries);
 
-  virtual void AddCookies(const std::vector<ImportedCookieEntry>& cookies);
-
   void Initialize(atom::api::Importer* importer);
 
   void ShowWarningDialog();

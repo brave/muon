@@ -5,17 +5,23 @@
 #include "atom/common/extensions/atom_extensions_client.h"
 
 #include <string>
-#include "atom/grit/atom_resources.h"  // NOLINT: This file is generated
+#include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
+#include "brave/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
+#include "chrome/common/chrome_version.h"
 #include "chrome/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
 #include "chrome/common/extensions/manifest_handlers/content_scripts_handler.h"
 #include "chrome/grit/common_resources.h"  // NOLINT: This file is generated
-#include "chrome/grit/extensions_api_resources.h"  // NOLINT: This file is generated
+#include "brave/common/extensions/api/api_features.h"
+#include "brave/common/extensions/api/behavior_features.h"
+#include "chrome/common/extensions/api/extension_action/action_info.h"
+#include "chrome/common/extensions/api/generated_schemas.h"
+#include "brave/common/extensions/api/manifest_features.h"
+#include "brave/common/extensions/api/permission_features.h"
 #include "extensions/common/api/generated_schemas.h"  // NOLINT: This file is generated
 #include "extensions/common/common_manifest_handlers.h"
 #include "extensions/common/extension_api.h"
 #include "extensions/common/extension_urls.h"
 #include "extensions/common/features/api_feature.h"
-#include "extensions/common/features/base_feature_provider.h"
 #include "extensions/common/features/behavior_feature.h"
 #include "extensions/common/features/json_feature_provider_source.h"
 #include "extensions/common/features/manifest_feature.h"
@@ -99,26 +105,20 @@ AtomExtensionsClient::GetPermissionMessageProvider() const {
 }
 
 const std::string AtomExtensionsClient::GetProductName() {
-  return ATOM_PRODUCT_NAME;
+  return PRODUCT_SHORTNAME_STRING;
 }
 
 std::unique_ptr<FeatureProvider> AtomExtensionsClient::CreateFeatureProvider(
     const std::string& name) const {
   std::unique_ptr<FeatureProvider> provider;
-  std::unique_ptr<JSONFeatureProviderSource> source(
-      CreateFeatureProviderSource(name));
   if (name == "api") {
-    provider.reset(new BaseFeatureProvider(source->dictionary(),
-                                           CreateFeature<APIFeature>));
+    provider.reset(new BraveAPIFeatureProvider());
   } else if (name == "manifest") {
-    provider.reset(new BaseFeatureProvider(source->dictionary(),
-                                           CreateFeature<ManifestFeature>));
+    provider.reset(new BraveManifestFeatureProvider());
   } else if (name == "permission") {
-    provider.reset(new BaseFeatureProvider(source->dictionary(),
-                                           CreateFeature<PermissionFeature>));
+    provider.reset(new BravePermissionFeatureProvider());
   } else if (name == "behavior") {
-    provider.reset(new BaseFeatureProvider(source->dictionary(),
-                                           CreateFeature<BehaviorFeature>));
+    provider.reset(new BraveBehaviorFeatureProvider());
   } else {
     NOTREACHED();
   }
@@ -126,25 +126,29 @@ std::unique_ptr<FeatureProvider> AtomExtensionsClient::CreateFeatureProvider(
 }
 
 std::unique_ptr<JSONFeatureProviderSource>
-AtomExtensionsClient::CreateFeatureProviderSource(
-    const std::string& name) const {
+AtomExtensionsClient::CreateAPIFeatureSource() const {
   std::unique_ptr<JSONFeatureProviderSource> source(
-      new JSONFeatureProviderSource(name));
-  if (name == "api") {
-    source->LoadJSON(IDR_EXTENSION_API_FEATURES);
-    source->LoadJSON(IDR_ATOM_API_FEATURES);
-  } else if (name == "manifest") {
-    source->LoadJSON(IDR_EXTENSION_MANIFEST_FEATURES);
-  } else if (name == "permission") {
-    source->LoadJSON(IDR_EXTENSION_PERMISSION_FEATURES);
-    source->LoadJSON(IDR_ATOM_PERMISSION_FEATURES);
-  } else if (name == "behavior") {
-    source->LoadJSON(IDR_EXTENSION_BEHAVIOR_FEATURES);
-  } else {
-    NOTREACHED();
-    source.reset();
-  }
+      new JSONFeatureProviderSource("api"));
+  source->LoadJSON(IDR_EXTENSION_API_FEATURES);
+  source->LoadJSON(IDR_BRAVE_API_FEATURES);
   return source;
+}
+
+std::set<base::FilePath> AtomExtensionsClient::GetBrowserImagePaths(
+    const Extension* extension) {
+  std::set<base::FilePath> image_paths =
+      ExtensionsClient::GetBrowserImagePaths(extension);
+
+  const ActionInfo* page_action = ActionInfo::GetPageActionInfo(extension);
+  if (page_action && !page_action->default_icon.empty())
+    page_action->default_icon.GetPaths(&image_paths);
+
+  const ActionInfo* browser_action =
+      ActionInfo::GetBrowserActionInfo(extension);
+  if (browser_action && !browser_action->default_icon.empty())
+    browser_action->default_icon.GetPaths(&image_paths);
+
+  return image_paths;
 }
 
 void AtomExtensionsClient::FilterHostPermissions(
@@ -177,24 +181,21 @@ bool AtomExtensionsClient::IsScriptableURL(
 
 bool AtomExtensionsClient::IsAPISchemaGenerated(
     const std::string& name) const {
-  return api::ChromeGeneratedSchemas::IsGenerated(name) ||
+  return api::BraveGeneratedSchemas::IsGenerated(name) ||
+         api::ChromeGeneratedSchemas::IsGenerated(name) ||
          api::GeneratedSchemas::IsGenerated(name);
 }
 
 base::StringPiece AtomExtensionsClient::GetAPISchema(
     const std::string& name) const {
+  if (api::BraveGeneratedSchemas::IsGenerated(name))
+    return api::BraveGeneratedSchemas::Get(name);
+
   // Test from most common to least common.
   if (api::ChromeGeneratedSchemas::IsGenerated(name))
     return api::ChromeGeneratedSchemas::Get(name);
 
   return api::GeneratedSchemas::Get(name);
-}
-
-void AtomExtensionsClient::RegisterAPISchemaResources(
-    ExtensionAPI* api) const {
-  api->RegisterSchemaResource("ipc", IDR_ATOM_EXTENSION_API_JSON_IPC);
-  api->RegisterSchemaResource("webFrame",
-                              IDR_ATOM_EXTENSION_API_JSON_WEB_FRAME);
 }
 
 bool AtomExtensionsClient::ShouldSuppressFatalErrors() const {

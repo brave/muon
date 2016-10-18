@@ -8,14 +8,13 @@
 #include <string>
 #include <vector>
 
+#include "atom/browser/net/atom_network_delegate.h"
 #include "brightray/browser/browser_context.h"
 
 namespace atom {
 
 class AtomDownloadManagerDelegate;
-class AtomNetworkDelegate;
 class AtomPermissionManager;
-class WebViewManager;
 
 class AtomBrowserContext : public brightray::BrowserContext {
  public:
@@ -41,13 +40,12 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
   // content::BrowserContext:
   content::DownloadManagerDelegate* GetDownloadManagerDelegate() override;
-  content::BrowserPluginGuestManager* GetGuestManager() override;
   content::PermissionManager* GetPermissionManager() override;
 
   // brightray::BrowserContext:
   void RegisterPrefs(PrefRegistrySimple* pref_registry) override;
 
-  virtual AtomNetworkDelegate* network_delegate() const {
+  virtual AtomNetworkDelegate* network_delegate() {
       return network_delegate_; }
 
  protected:
@@ -57,7 +55,6 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
  private:
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;
-  std::unique_ptr<WebViewManager> guest_manager_;
   std::unique_ptr<AtomPermissionManager> permission_manager_;
   std::string user_agent_;
   bool use_cache_;

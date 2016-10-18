@@ -9,13 +9,17 @@
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
 #include "chrome/common/chrome_utility_messages.h"
+#include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/profile_import_handler.h"
 #include "chrome/utility/utility_message_handler.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/utility/utility_thread.h"
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
-
+#include "mojo/public/cpp/bindings/strong_binding.h"
+#include "net/proxy/mojo_proxy_resolver_factory_impl.h"
+#include "net/proxy/proxy_resolver_v8.h"
+#include "services/shell/public/cpp/interface_registry.h"
 
 #if defined(OS_WIN)
 #include "chrome/utility/printing_handler_win.h"
@@ -23,17 +27,50 @@
 
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/common/extensions/atom_extensions_client.h"
+#include "extensions/utility/utility_handler.h"
 #endif
+
+namespace atom {
 
 namespace {
 
-bool Send(IPC::Message* message) {
-  return content::UtilityThread::Get()->Send(message);
+void CreateProxyResolverFactory(
+    mojo::InterfaceRequest<net::interfaces::ProxyResolverFactory> request) {
+  // MojoProxyResolverFactoryImpl is strongly bound to the Mojo message pipe it
+  // is connected to. When that message pipe is closed, either explicitly on the
+  // other end (in the browser process), or by a connection error, this object
+  // will be destroyed.
+  new net::MojoProxyResolverFactoryImpl(std::move(request));
+}
+
+class ResourceUsageReporterImpl : public mojom::ResourceUsageReporter {
+ public:
+  explicit ResourceUsageReporterImpl(
+      mojo::InterfaceRequest<mojom::ResourceUsageReporter> req)
+      : binding_(this, std::move(req)) {}
+  ~ResourceUsageReporterImpl() override {}
+
+ private:
+  void GetUsageData(const GetUsageDataCallback& callback) override {
+    mojom::ResourceUsageDataPtr data = mojom::ResourceUsageData::New();
+    size_t total_heap_size = net::ProxyResolverV8::GetTotalHeapSize();
+    if (total_heap_size) {
+      data->reports_v8_stats = true;
+      data->v8_bytes_allocated = total_heap_size;
+      data->v8_bytes_used = net::ProxyResolverV8::GetUsedHeapSize();
+    }
+    callback.Run(std::move(data));
+  }
+
+  mojo::StrongBinding<mojom::ResourceUsageReporter> binding_;
+};
+
+void CreateResourceUsageReporter(
+    mojo::InterfaceRequest<mojom::ResourceUsageReporter> request) {
+  new ResourceUsageReporterImpl(std::move(request));
 }
 
 }  // namespace
-
-namespace atom {
 
 int64_t AtomContentUtilityClient::max_ipc_message_size_ =
     IPC::Channel::kMaximumMessageSize;
@@ -44,9 +81,10 @@ AtomContentUtilityClient::AtomContentUtilityClient()
 #if defined(OS_WIN)
   handlers_.push_back(new printing::PrintingHandlerWin());
 #endif
-#if defined(ENABLE_EXTENSIONS)
-  extensions::ExtensionsClient::Set(
-      extensions::AtomExtensionsClient::GetInstance());
+
+#if defined(ENABLE_PRINT_PREVIEW) || \
+    (defined(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
+  handlers_.push_back(new printing::PrintingHandler());
 #endif
 }
 
@@ -54,29 +92,60 @@ AtomContentUtilityClient::~AtomContentUtilityClient() {
 }
 
 void AtomContentUtilityClient::UtilityThreadStarted() {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::UtilityHandler::UtilityThreadStarted();
+#endif
 }
 
 bool AtomContentUtilityClient::OnMessageReceived(
     const IPC::Message& message) {
-  if (filter_messages_ && !ContainsKey(message_id_whitelist_, message.type()))
+  if (filter_messages_ &&
+      !base::ContainsKey(message_id_whitelist_, message.type()))
     return false;
 
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(AtomContentUtilityClient, message)
-    IPC_MESSAGE_HANDLER(ChromeUtilityMsg_StartupPing, OnStartupPing)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
-  for (auto it = handlers_.begin(); !handled && it != handlers_.end(); ++it) {
-    handled = (*it)->OnMessageReceived(message);
+  if (handled)
+    return true;
+
+  for (auto* handler : handlers_) {
+    // At least one of the utility process handlers adds a new handler to
+    // |handlers_| when it handles a message. This causes any iterator over
+    // |handlers_| to become invalid. Therefore, it is necessary to break the
+    // loop at this point instead of evaluating it as a loop condition (if the
+    // for loop was using iterators explicitly, as originally done).
+    if (handler->OnMessageReceived(message))
+      return true;
   }
 
-  return handled;
+  return false;
 }
 
-void AtomContentUtilityClient::OnStartupPing() {
-  Send(new ChromeUtilityHostMsg_ProcessStarted);
-  // Don't release the process, we assume further messages are on the way.
+void AtomContentUtilityClient::ExposeInterfacesToBrowser(
+    shell::InterfaceRegistry* registry) {
+  // When the utility process is running with elevated privileges, we need to
+  // filter messages so that only a whitelist of IPCs can run. In Mojo, there's
+  // no way of filtering individual messages. Instead, we can avoid adding
+  // non-whitelisted Mojo services to the shell::InterfaceRegistry.
+  // TODO(amistry): Use a whitelist once the whistlisted IPCs have been
+  // converted to Mojo.
+  if (filter_messages_)
+    return;
+
+  registry->AddInterface<net::interfaces::ProxyResolverFactory>(
+      base::Bind(CreateProxyResolverFactory));
+  registry->AddInterface(base::Bind(CreateResourceUsageReporter));
+}
+
+// static
+void AtomContentUtilityClient::PreSandboxStartup() {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::ExtensionsClient::Set(
+      extensions::AtomExtensionsClient::GetInstance());
+#endif
 }
 
 }  // namespace atom

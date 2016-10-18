@@ -52,21 +52,21 @@ AtomExtensionSystemSharedFactory::~AtomExtensionSystemSharedFactory() {
 
 KeyedService* AtomExtensionSystemSharedFactory::BuildServiceInstanceFor(
     content::BrowserContext* context) const {
-  return new AtomExtensionSystem::Shared(
-      static_cast<brave::BraveBrowserContext*>(context));
+  return new AtomExtensionSystem::Shared(static_cast<Profile*>(context));
 }
 
-content::BrowserContext*
-    AtomExtensionSystemSharedFactory::GetBrowserContextToUse(
-                              content::BrowserContext* context) const {
+content::BrowserContext* AtomExtensionSystemSharedFactory::GetBrowserContextToUse(
+    content::BrowserContext* context) const {
   // Redirected in incognito.
   return ExtensionsBrowserClient::Get()->GetOriginalContext(context);
 }
 
-// ExtensionSystemFactory
+// AtomExtensionSystemFactory
+
+// static
 ExtensionSystem* AtomExtensionSystemFactory::GetForBrowserContext(
     content::BrowserContext* context) {
-  return static_cast<AtomExtensionSystem*>(
+  return static_cast<ExtensionSystem*>(
       GetInstance()->GetServiceForBrowserContext(context, true));
 }
 
@@ -79,7 +79,7 @@ AtomExtensionSystemFactory::AtomExtensionSystemFactory()
     : ExtensionSystemProvider("ExtensionSystem",
                               BrowserContextDependencyManager::GetInstance()) {
   DCHECK(ExtensionsBrowserClient::Get())
-      << "ExtensionSystemFactory must be initialized after BrowserProcess";
+      << "AtomExtensionSystemFactory must be initialized after BrowserProcess";
   DependsOn(AtomExtensionSystemSharedFactory::GetInstance());
 }
 
@@ -88,13 +88,12 @@ AtomExtensionSystemFactory::~AtomExtensionSystemFactory() {
 
 KeyedService* AtomExtensionSystemFactory::BuildServiceInstanceFor(
     content::BrowserContext* context) const {
-  return new AtomExtensionSystem(
-      static_cast<brave::BraveBrowserContext*>(context));
+  return new AtomExtensionSystem(static_cast<Profile*>(context));
 }
 
 content::BrowserContext* AtomExtensionSystemFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  // Use a separate instance for incognito.
+  // Separate instance in incognito.
   return context;
 }
 

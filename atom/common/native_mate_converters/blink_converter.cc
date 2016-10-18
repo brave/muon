@@ -88,11 +88,11 @@ struct Converter<blink::WebMouseEvent::Button> {
                      blink::WebMouseEvent::Button* out) {
     std::string button = base::ToLowerASCII(V8ToString(val));
     if (button == "left")
-      *out = blink::WebMouseEvent::Button::ButtonLeft;
+      *out = blink::WebMouseEvent::Button::Left;
     else if (button == "middle")
-      *out = blink::WebMouseEvent::Button::ButtonMiddle;
+      *out = blink::WebMouseEvent::Button::Middle;
     else if (button == "right")
-      *out = blink::WebMouseEvent::Button::ButtonRight;
+      *out = blink::WebMouseEvent::Button::Right;
     else
       return false;
     return true;
@@ -141,6 +141,16 @@ int GetWebInputEventType(v8::Isolate* isolate, v8::Local<v8::Value> val) {
   return type;
 }
 
+bool IsSystemKeyEvent(const blink::WebKeyboardEvent& event) {
+#if defined(OS_MACOSX)
+  return event.modifiers & blink::WebInputEvent::MetaKey &&
+      event.windowsKeyCode != ui::VKEY_B &&
+      event.windowsKeyCode != ui::VKEY_I;
+#else
+  return !!(event.modifiers & blink::WebInputEvent::AltKey);
+#endif
+}
+
 bool Converter<blink::WebInputEvent>::FromV8(
     v8::Isolate* isolate, v8::Local<v8::Value> val,
     blink::WebInputEvent* out) {
@@ -165,6 +175,9 @@ bool Converter<blink::WebKeyboardEvent>::FromV8(
   if (!ConvertFromV8(isolate, val, static_cast<blink::WebInputEvent*>(out)))
     return false;
 
+  if (out->modifiers != 0)
+    out->isSystemKey = IsSystemKeyEvent(*out);
+
   std::string str;
   bool shifted = false;
   if (dict.Get("keyCode", &str))
@@ -174,7 +187,6 @@ bool Converter<blink::WebKeyboardEvent>::FromV8(
 
   if (shifted)
     out->modifiers |= blink::WebInputEvent::ShiftKey;
-  out->setKeyIdentifierFromWindowsKeyCode();
   if ((out->type == blink::WebInputEvent::Char ||
        out->type == blink::WebInputEvent::RawKeyDown)) {
     // Make sure to not read beyond the buffer in case some bad code doesn't
@@ -214,7 +226,7 @@ bool Converter<blink::WebMouseEvent>::FromV8(
   if (!dict.Get("x", &out->x) || !dict.Get("y", &out->y))
     return false;
   if (!dict.Get("button", &out->button))
-    out->button = blink::WebMouseEvent::Button::ButtonLeft;
+    out->button = blink::WebMouseEvent::Button::Left;
   dict.Get("globalX", &out->globalX);
   dict.Get("globalY", &out->globalY);
   dict.Get("movementX", &out->movementX);

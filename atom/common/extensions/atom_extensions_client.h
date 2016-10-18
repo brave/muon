@@ -7,9 +7,9 @@
 
 #include <string>
 
-#include "atom/common/extensions/permissions/chrome_api_permissions.h"
 #include "base/compiler_specific.h"
 #include "base/macros.h"
+#include "chrome/common/extensions/permissions/chrome_api_permissions.h"
 #include "extensions/common/extensions_client.h"
 #include "extensions/common/permissions/extensions_api_permissions.h"
 
@@ -27,8 +27,8 @@ class AtomExtensionsClient : public ExtensionsClient {
   const std::string GetProductName() override;
   std::unique_ptr<FeatureProvider> CreateFeatureProvider(
       const std::string& name) const override;
-  std::unique_ptr<JSONFeatureProviderSource> CreateFeatureProviderSource(
-      const std::string& name) const override;
+  std::unique_ptr<JSONFeatureProviderSource> CreateAPIFeatureSource()
+      const override;
   void FilterHostPermissions(const URLPatternSet& hosts,
                              URLPatternSet* new_hosts,
                              PermissionIDSet* permissions) const override;
@@ -40,12 +40,13 @@ class AtomExtensionsClient : public ExtensionsClient {
   bool IsScriptableURL(const GURL& url, std::string* error) const override;
   bool IsAPISchemaGenerated(const std::string& name) const override;
   base::StringPiece GetAPISchema(const std::string& name) const override;
-  void RegisterAPISchemaResources(ExtensionAPI* api) const override;
   bool ShouldSuppressFatalErrors() const override;
   void RecordDidSuppressFatalError() override;
   std::string GetWebstoreBaseURL() const override;
   std::string GetWebstoreUpdateURL() const override;
   bool IsBlacklistUpdateURL(const GURL& url) const override;
+  std::set<base::FilePath> GetBrowserImagePaths(
+    const Extension* extension);
 
   // Get the LazyInstance for AtomExtensionsClient.
   static AtomExtensionsClient* GetInstance();

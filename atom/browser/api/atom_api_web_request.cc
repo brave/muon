@@ -14,6 +14,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
+#include "net/url_request/url_request_context.h"
 #include "v8/include/v8.h"
 
 using content::BrowserThread;
@@ -135,7 +136,7 @@ void WebRequest::Fetch(mate::Arguments* args) {
   if (!path.empty())
     fetcher->SaveResponseToFileAtPath(
         path,
-        BrowserThread::GetMessageLoopProxyForThread(BrowserThread::FILE));
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE));
   fetcher->Start();
   fetchers_[fetcher] = FetchCallback(callback);
 }
@@ -150,6 +151,17 @@ template<AtomNetworkDelegate::ResponseEvent type>
 void WebRequest::SetResponseListener(mate::Arguments* args) {
   SetListener<AtomNetworkDelegate::ResponseListener>(
       &AtomNetworkDelegate::SetResponseListenerInIO, type, args);
+}
+
+template<typename Listener, typename Method, typename Event>
+void WebRequest::SetListenerOnIOThread(
+    const scoped_refptr<net::URLRequestContextGetter>& getter,
+    Method method, Event type, URLPatterns patterns, Listener listener) {
+  auto delegate = static_cast<AtomNetworkDelegate*>(
+      getter->GetURLRequestContext()->network_delegate());
+  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+                            base::Bind(method, base::Unretained(delegate),
+                            type, patterns, listener));
 }
 
 template<typename Listener, typename Method, typename Event>
@@ -168,16 +180,19 @@ void WebRequest::SetListener(Method method, Event type, mate::Arguments* args) {
     return;
   }
 
-  auto delegate = browser_context_->network_delegate();
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-                          base::Bind(method, base::Unretained(delegate), type,
-                                     patterns, listener));
+      base::Bind(&WebRequest::SetListenerOnIOThread<Listener, Method, Event>,
+        base::Unretained(this),
+        scoped_refptr<net::URLRequestContextGetter>(
+          browser_context_->GetRequestContext()),
+          method, type, patterns, listener));
 }
 
 // static
 mate::Handle<WebRequest> WebRequest::Create(
     v8::Isolate* isolate,
     AtomBrowserContext* browser_context) {
+  DCHECK(browser_context);
   return mate::CreateHandle(isolate, new WebRequest(isolate, browser_context));
 }
 

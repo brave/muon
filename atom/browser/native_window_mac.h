@@ -40,14 +40,16 @@ class NativeWindowMac : public NativeWindow,
   bool IsEnabled() override;
   void Maximize() override;
   void Unmaximize() override;
-  bool IsMaximized() override;
+  bool IsActive() const;
+  bool IsMaximized() const override;
   void Minimize() override;
   void Restore() override;
-  bool IsMinimized() override;
+  bool IsMinimized() const override;
   void SetFullScreen(bool fullscreen) override;
   bool IsFullscreen() const override;
+  void SetBounds(const gfx::Rect& bounds) override;
   void SetBounds(const gfx::Rect& bounds, bool animate = false) override;
-  gfx::Rect GetBounds() override;
+  gfx::Rect GetBounds() const override;
   void SetContentSizeConstraints(
       const extensions::SizeConstraints& size_constraints) override;
   void SetResizable(bool resizable) override;
@@ -65,7 +67,7 @@ class NativeWindowMac : public NativeWindow,
   void SetClosable(bool closable) override;
   bool IsClosable() override;
   void SetAlwaysOnTop(bool top) override;
-  bool IsAlwaysOnTop() override;
+  bool IsAlwaysOnTop() const override;
   void Center() override;
   void SetTitle(const std::string& title) override;
   std::string GetTitle() override;
@@ -84,6 +86,8 @@ class NativeWindowMac : public NativeWindow,
   void SetContentProtection(bool enable) override;
   void SetParentWindow(NativeWindow* parent) override;
   gfx::NativeWindow GetNativeWindow() override;
+  gfx::Rect GetRestoredBounds() const override;
+  ui::WindowShowState GetRestoredState() const override;
   gfx::AcceleratedWidget GetAcceleratedWidget() override;
   void SetProgressBar(double progress, const ProgressState state) override;
   void SetOverlayIcon(const gfx::Image& overlay,
@@ -159,6 +163,10 @@ class NativeWindowMac : public NativeWindow,
 
   // The "titleBarStyle" option.
   TitleBarStyle title_bar_style_;
+
+  bool is_maximized_;
+  bool is_fullscreen_;
+  NSRect restored_bounds_;
 
   DISALLOW_COPY_AND_ASSIGN(NativeWindowMac);
 };

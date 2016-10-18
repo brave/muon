@@ -216,7 +216,8 @@ class WidevineCdmComponentInstallerTraits
 
  private:
   // The following methods override ComponentInstallerTraits.
-  bool CanAutoUpdate() const override;
+  bool SupportsGroupPolicyEnabledComponentUpdates() const override;
+  std::vector<std::string> GetMimeTypes() const override;
   bool RequiresNetworkEncryption() const override;
   bool OnCustomInstall(const base::DictionaryValue& manifest,
                                const base::FilePath& install_dir) override;
@@ -254,8 +255,12 @@ WidevineCdmComponentInstallerTraits::WidevineCdmComponentInstallerTraits(
     const ReadyCallback& ready_callback) : ready_callback_(ready_callback) {
 }
 
-bool WidevineCdmComponentInstallerTraits::CanAutoUpdate() const {
+bool WidevineCdmComponentInstallerTraits::SupportsGroupPolicyEnabledComponentUpdates() const {
   return true;
+}
+
+std::vector<std::string> WidevineCdmComponentInstallerTraits::GetMimeTypes() const {
+  return std::vector<std::string>();
 }
 
 bool WidevineCdmComponentInstallerTraits::RequiresNetworkEncryption() const {

@@ -16,6 +16,7 @@ class GURL;
 namespace blink {
 struct WebPluginParams;
 class WebFrame;
+class WebLocalFrame;
 }
 
 namespace content {
@@ -26,6 +27,7 @@ class RenderView;
 namespace extensions {
 
 class Dispatcher;
+class ExtensionsGuestViewContainerDispatcher;
 class RendererPermissionsPolicyDelegate;
 class AtomExtensionsDispatcherDelegate;
 
@@ -52,6 +54,11 @@ class AtomExtensionsRendererClient : public ExtensionsRendererClient {
   void RunScriptsAtDocumentStart(content::RenderFrame* render_frame);
   void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame);
 
+  static bool ShouldFork(blink::WebLocalFrame* frame,
+                         const GURL& url,
+                         bool is_initial_navigation,
+                         bool is_server_redirect,
+                         bool* send_referrer);
   extensions::Dispatcher* extension_dispatcher() {
     return extension_dispatcher_.get();
   }
@@ -62,7 +69,8 @@ class AtomExtensionsRendererClient : public ExtensionsRendererClient {
   std::unique_ptr<Dispatcher> extension_dispatcher_;
   std::unique_ptr<RendererPermissionsPolicyDelegate>
       permissions_policy_delegate_;
-
+  std::unique_ptr<extensions::ExtensionsGuestViewContainerDispatcher>
+      guest_view_container_dispatcher_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionsRendererClient);
 };

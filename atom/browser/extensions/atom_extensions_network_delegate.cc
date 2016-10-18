@@ -5,6 +5,7 @@
 #include "atom/browser/extensions/atom_extensions_network_delegate.h"
 
 #include "base/stl_util.h"
+#include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
@@ -20,7 +21,7 @@ bool g_accept_all_cookies = true;
 }
 
 AtomExtensionsNetworkDelegate::AtomExtensionsNetworkDelegate(
-      content::BrowserContext* browser_context) {
+      Profile* browser_context) {
   browser_context_ = browser_context;
 }
 

@@ -49,15 +49,9 @@ class AtomBrowserClient : public brightray::BrowserClient,
   void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
   content::SpeechRecognitionManagerDelegate*
       CreateSpeechRecognitionManagerDelegate() override;
-  content::GeolocationDelegate* CreateGeolocationDelegate() override;
   void OverrideWebkitPrefs(content::RenderViewHost* render_view_host,
                            content::WebPreferences* prefs) override;
   std::string GetApplicationLocale() override;
-  void OverrideSiteInstanceForNavigation(
-      content::BrowserContext* browser_context,
-      content::SiteInstance* current_instance,
-      const GURL& dest_url,
-      content::SiteInstance** new_instance) override;
   void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
                                       int child_process_id) override;
   void DidCreatePpapiPlugin(content::BrowserPpapiHost* browser_host) override;
@@ -71,29 +65,12 @@ class AtomBrowserClient : public brightray::BrowserClient,
       bool overridable,
       bool strict_enforcement,
       bool expired_previous_decision,
-      const base::Callback<void(bool)>& callback,
-      content::CertificateRequestResultType* request) override;
+      const base::Callback<void(content::CertificateRequestResultType)>& callback) override;
   void SelectClientCertificate(
       content::WebContents* web_contents,
       net::SSLCertRequestInfo* cert_request_info,
       std::unique_ptr<content::ClientCertificateDelegate> delegate) override;
   void ResourceDispatcherHostCreated() override;
-  bool CanCreateWindow(const GURL& opener_url,
-                       const GURL& opener_top_level_frame_url,
-                       const GURL& source_origin,
-                       WindowContainerType container_type,
-                       const std::string& frame_name,
-                       const GURL& target_url,
-                       const content::Referrer& referrer,
-                       WindowOpenDisposition disposition,
-                       const blink::WebWindowFeatures& features,
-                       bool user_gesture,
-                       bool opener_suppressed,
-                       content::ResourceContext* context,
-                       int render_process_id,
-                       int opener_render_view_id,
-                       int opener_render_frame_id,
-                       bool* no_javascript_access) override;
   void GetAdditionalAllowedSchemesForFileSystem(
       std::vector<std::string>* schemes) override;
 

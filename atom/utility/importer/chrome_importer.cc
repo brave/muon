@@ -208,45 +208,6 @@ void ChromeImporter::LoadFaviconData(
   }
 }
 
-void ChromeImporter::ImportCookies() {
-  base::FilePath cookies_path =
-    source_path_.Append(
-      base::FilePath::StringType(FILE_PATH_LITERAL("Cookies")));
-  if (!base::PathExists(cookies_path))
-    return;
-
-  sql::Connection db;
-  if (!db.Open(cookies_path))
-    return;
-
-  const char query[] =
-    "SELECT host_key, name, value, path, expires_utc, secure, httponly, "
-    "encrypted_value FROM cookies WHERE length(encrypted_value) = 0";
-
-  sql::Statement s(db.GetUniqueStatement(query));
-
-  std::vector<ImportedCookieEntry> cookies;
-  while (s.Step() && !cancelled()) {
-    ImportedCookieEntry cookie;
-    base::string16 host(base::UTF8ToUTF16("*"));
-    host.append(s.ColumnString16(0));
-    cookie.domain = s.ColumnString16(0);
-    cookie.name = s.ColumnString16(1);
-    cookie.value = s.ColumnString16(2);
-    cookie.host = host;
-    cookie.path = s.ColumnString16(3);
-    cookie.expiry_date =
-      base::Time::FromDoubleT(chromeTimeToDouble((s.ColumnInt64(4))));
-    cookie.secure = s.ColumnBool(5);
-    cookie.httponly = s.ColumnBool(6);
-
-    cookies.push_back(cookie);
-  }
-
-  if (!cookies.empty() && !cancelled())
-    bridge_->SetCookies(cookies);
-}
-
 void ChromeImporter::RecursiveReadBookmarksFolder(
   const base::DictionaryValue* folder,
   const std::vector<base::string16>& parent_path,

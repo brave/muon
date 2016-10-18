@@ -89,11 +89,32 @@ void BluetoothChooser::ShowDiscoveryState(DiscoveryState state) {
   }
 }
 
-void BluetoothChooser::AddDevice(const std::string& device_id,
-                                 const base::string16& device_name) {
-  DeviceInfo info = {device_id, device_name};
+void BluetoothChooser::AddOrUpdateDevice(const std::string& device_id,
+                       bool should_update_name,
+                       const base::string16& device_name,
+                       bool is_gatt_connected,
+                       bool is_paired,
+                       int signal_strength_level) {
+
+  for (auto it = device_list_.begin(); it != device_list_.end(); ++it) {
+    if (it->device_id == device_id) {
+      if (should_update_name) {
+        base::string16 previous_device_name = it->device_name;
+        it->device_name = device_name;
+      }
+
+      // When Bluetooth device scanning stops, the |signal_strength_level|
+      // is -1, and in this case, should still use the previously stored
+      // signal strength level value.
+      if (signal_strength_level != -1)
+        it->signal_strength_level = signal_strength_level;
+      return;
+    }
+  }
+
+  DeviceInfo info = {device_id, device_name, signal_strength_level};
   device_list_.push_back(info);
-}
+};
 
 void BluetoothChooser::RemoveDevice(const std::string& device_id) {
   for (auto it = device_list_.begin(); it != device_list_.end(); ++it) {

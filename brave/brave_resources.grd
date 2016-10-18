@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grit latest_public_release="0" current_release="1">
+  <outputs>
+    <output filename="grit/brave_resources.h" type="rc_header">
+      <emit emit_type='prepend'></emit>
+    </output>
+    <output filename="brave_resources.pak" type="data_package" />
+  </outputs>
+  <release seq="1">
+    <includes>
+      <include name="IDR_BRAVE_API_FEATURES" file="common\extensions\api\_api_features.json" type="BINDATA" />
+
+      <include name="IDR_BRAVE_PERMISSION_FEATURES" file="common\extensions\api\_permission_features.json" type="BINDATA" />
+
+      <include name="IDR_BRAVE_IPC_RENDERER_JS" file="renderer\resources\extensions\ipc_renderer_custom_bindings.js" type="BINDATA" />
+
+    </includes>
+  </release>
+</grit>

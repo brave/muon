@@ -1,0 +1,17 @@
+executable("electron_app") {
+
+  # This is just a stub and doesn't work yet
+  sources = [
+    "//electron:main",
+  ]
+
+  defines = []
+
+  deps = [
+    "//electron:electron_dll",
+    "//build/config/sanitizers:deps",
+    "//build/win:default_exe_manifest",
+  ]
+
+  deps += [ "//sandbox" ]
+}

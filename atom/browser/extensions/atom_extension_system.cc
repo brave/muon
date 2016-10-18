@@ -17,6 +17,7 @@
 #include "base/path_service.h"
 #include "base/version.h"
 #include "components/component_updater/component_updater_paths.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/notification_service.h"
@@ -46,7 +47,7 @@ namespace extensions {
 // AtomExtensionSystem::Shared
 //
 
-AtomExtensionSystem::Shared::Shared(brave::BraveBrowserContext* browser_context)
+AtomExtensionSystem::Shared::Shared(Profile* browser_context)
     : registry_(ExtensionRegistry::Get(browser_context)),
       browser_context_(browser_context),
       extension_prefs_(ExtensionPrefs::Get(browser_context_)) {
@@ -359,6 +360,24 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
   return extension;
 }
 
+void AtomExtensionSystem::Shared::RegisterContentSettings(
+    HostContentSettingsMap* host_content_settings_map) {
+  TRACE_EVENT0("browser,startup", "ExtensionService::RegisterContentSettings");
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+  // host_content_settings_map->RegisterProvider(
+  //     HostContentSettingsMap::INTERNAL_EXTENSION_PROVIDER,
+  //     std::unique_ptr<content_settings::ObservableProvider>(
+  //         new content_settings::InternalExtensionProvider(browser_context_)));
+
+  // host_content_settings_map->RegisterProvider(
+  //     HostContentSettingsMap::CUSTOM_EXTENSION_PROVIDER,
+  //     std::unique_ptr<content_settings::ObservableProvider>(
+  //         new content_settings::CustomExtensionProvider(
+  //             extensions::ContentSettingsService::Get(browser_context_)
+  //                 ->content_settings_store(),
+  //             browser_context_->GetOriginalProfile() != browser_context_)));
+};
+
 void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
       const Extension* extension) {
   AtomExtensionSystemFactory::GetInstance()->
@@ -472,12 +491,12 @@ void AtomExtensionSystem::Shared::Observe(int type,
 // AtomExtensionSystem
 //
 AtomExtensionSystem::AtomExtensionSystem(
-    brave::BraveBrowserContext* browser_context)
+    Profile* browser_context)
     : browser_context_(browser_context) {
   shared_ =
       AtomExtensionSystemSharedFactory::GetForBrowserContext(browser_context_);
 
-  if (browser_context_->original_context() == browser_context_) {
+  if (browser_context_->GetOriginalProfile() == browser_context_) {
     shared_->InitPrefs();
   }
 }
@@ -489,7 +508,7 @@ void AtomExtensionSystem::Shutdown() {
 }
 
 void AtomExtensionSystem::InitForRegularProfile(bool extensions_enabled) {
-  DCHECK(browser_context_->original_context() == browser_context_);
+  DCHECK(browser_context_->GetOriginalProfile() == browser_context_);
   if (shared_user_script_master() || extension_service())
     return;  // Already initialized.
 

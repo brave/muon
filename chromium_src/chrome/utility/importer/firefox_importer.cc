@@ -155,11 +155,6 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
     ImportAutofillFormData();
     bridge_->NotifyItemEnded(importer::AUTOFILL_FORM_DATA);
   }
-  if ((items & importer::COOKIES) && !cancelled()) {
-    bridge_->NotifyItemStarted(importer::COOKIES);
-    ImportCookies();
-    bridge_->NotifyItemEnded(importer::COOKIES);
-  }
   bridge_->NotifyEnded();
 }
 
@@ -346,7 +341,7 @@ void FirefoxImporter::ImportBookmarks() {
     }
   }
 
-  STLDeleteElements(&list);
+  base::STLDeleteElements(&list);
 
   // Write into profile.
   if (!bookmarks.empty() && !cancelled()) {
@@ -546,50 +541,6 @@ void FirefoxImporter::GetSearchEnginesXMLData(
     base::ReadFileToString(file, &file_data);
     search_engine_data->push_back(file_data);
   }
-}
-
-void FirefoxImporter::ImportCookies() {
-  base::FilePath file = source_path_.AppendASCII("cookies.sqlite");
-  if (!base::PathExists(file))
-    return;
-
-  sql::Connection db;
-  if (!db.Open(file))
-    return;
-
-  const char query[] =
-      "SELECT baseDomain, name, value, host, path, expiry, isSecure, "
-      "isHttpOnly FROM moz_cookies";
-
-  sql::Statement s(db.GetUniqueStatement(query));
-
-  std::vector<ImportedCookieEntry> cookies;
-  while (s.Step() && !cancelled()) {
-    ImportedCookieEntry cookie;
-    base::string16 domain(base::UTF8ToUTF16("."));
-    domain.append(s.ColumnString16(0));
-    base::string16 host;
-    if (s.ColumnString16(3)[0] == '.') {
-      host.append(base::UTF8ToUTF16("*"));
-      host.append(s.ColumnString16(3));
-    } else {
-      host = s.ColumnString16(3);
-    }
-    cookie.domain = domain;
-    cookie.name = s.ColumnString16(1);
-    cookie.value = s.ColumnString16(2);
-    cookie.host = host;
-    cookie.path = s.ColumnString16(4);
-    cookie.expiry_date =
-      base::Time::FromDoubleT(s.ColumnInt64(5));
-    cookie.secure = s.ColumnBool(6);
-    cookie.httponly = s.ColumnBool(7);
-
-    cookies.push_back(cookie);
-  }
-
-  if (!cookies.empty() && !cancelled())
-    bridge_->SetCookies(cookies);
 }
 
 void FirefoxImporter::GetSearchEnginesXMLDataFromJSON(

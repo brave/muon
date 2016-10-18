@@ -103,6 +103,11 @@ class WebRequest : public mate::TrackableObject<WebRequest>,
   template<AtomNetworkDelegate::ResponseEvent type>
   void SetResponseListener(mate::Arguments* args);
   template<typename Listener, typename Method, typename Event>
+  void SetListenerOnIOThread(
+      const scoped_refptr<net::URLRequestContextGetter>& request_context,
+      Method method, Event type,
+      URLPatterns patterns, Listener listener);
+  template<typename Listener, typename Method, typename Event>
   void SetListener(Method method, Event type, mate::Arguments* args);
 
  private:

@@ -35,7 +35,7 @@ void MenuMac::PopupAt(Window* window, int x, int y, int positioning_item) {
       [[AtomMenuController alloc] initWithModel:model_.get()
                           useDefaultAccelerator:NO]);
   NSMenu* menu = [menu_controller menu];
-  NSView* view = web_contents->GetView()->GetNativeView();
+  NSView* view = web_contents->GetWebContents()->GetNativeView();
 
   // Which menu item to show.
   NSMenuItem* item = nil;

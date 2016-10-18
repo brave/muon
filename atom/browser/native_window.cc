@@ -12,6 +12,7 @@
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/unresponsive_suppressor.h"
+#include "atom/browser/web_contents_preferences.h"
 #include "atom/browser/window_list.h"
 #include "atom/common/api/api_messages.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
@@ -56,7 +57,6 @@ NativeWindow::NativeWindow(
     NativeWindow* parent)
     : content::WebContentsObserver(inspectable_web_contents->GetWebContents()),
       has_frame_(true),
-      transparent_(false),
       enable_larger_than_screen_(false),
       is_closed_(false),
       sheet_offset_x_(0.0),
@@ -67,7 +67,6 @@ NativeWindow::NativeWindow(
       inspectable_web_contents_(inspectable_web_contents),
       weak_factory_(this) {
   options.Get(options::kFrame, &has_frame_);
-  options.Get(options::kTransparent, &transparent_);
   options.Get(options::kEnableLargerThanScreen, &enable_larger_than_screen_);
 
   if (parent)
@@ -86,11 +85,6 @@ NativeWindow::NativeWindow(
   prefs->use_bitmaps = params.use_bitmaps;
   prefs->subpixel_rendering = params.subpixel_rendering;
 #endif
-
-  // Tell the content module to initialize renderer widget with transparent
-  // mode.
-  ui::GpuSwitchingManager::SetTransparent(transparent_);
-
   WindowList::AddWindow(this);
 }
 
@@ -188,7 +182,7 @@ void NativeWindow::InitFromOptions(const mate::Dictionary& options) {
   std::string color;
   if (options.Get(options::kBackgroundColor, &color)) {
     SetBackgroundColor(color);
-  } else if (!transparent()) {
+  } else {
     // For normal window, use white as default background.
     SetBackgroundColor("#FFFF");
   }
@@ -557,18 +551,6 @@ std::unique_ptr<SkRegion> NativeWindow::DraggableRegionsToSkRegion(
   return sk_region;
 }
 
-void NativeWindow::RenderViewCreated(
-    content::RenderViewHost* render_view_host) {
-  if (!transparent_)
-    return;
-
-  content::RenderWidgetHostImpl* impl = content::RenderWidgetHostImpl::FromID(
-      render_view_host->GetProcess()->GetID(),
-      render_view_host->GetRoutingID());
-  if (impl)
-    impl->SetBackgroundOpaque(false);
-}
-
 void NativeWindow::BeforeUnloadDialogCancelled() {
   WindowList::WindowCloseCancelled(this);
 
@@ -587,7 +569,7 @@ void NativeWindow::DidFirstVisuallyNonEmptyPaint() {
   view->SetSize(GetContentSize());
 
   // Emit the ReadyToShow event in next tick in case of pending drawing work.
-  base::MessageLoop::current()->PostTask(
+  base::ThreadTaskRunnerHandle::Get()->PostTask(
       FROM_HERE,
       base::Bind(&NativeWindow::NotifyReadyToShow, GetWeakPtr()));
 }
@@ -618,7 +600,7 @@ void NativeWindow::ScheduleUnresponsiveEvent(int ms) {
   window_unresposive_closure_.Reset(
       base::Bind(&NativeWindow::NotifyWindowUnresponsive,
                  weak_factory_.GetWeakPtr()));
-  base::MessageLoop::current()->PostDelayedTask(
+  base::ThreadTaskRunnerHandle::Get()->PostDelayedTask(
       FROM_HERE,
       window_unresposive_closure_.callback(),
       base::TimeDelta::FromMilliseconds(ms));

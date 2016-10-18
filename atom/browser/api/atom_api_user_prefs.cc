@@ -5,15 +5,14 @@
 #include "atom/browser/api/atom_api_user_prefs.h"
 
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "atom/common/native_mate_converters/v8_value_converter.h"
 #include "base/values.h"
 #include "content/public/browser/browser_thread.h"
+#include "chrome/browser/profiles/profile.h"
 
-#if defined(ENABLE_EXTENSIONS)
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/syncable_prefs/pref_service_syncable.h"
-#endif
 
-#include "atom/common/native_mate_converters/v8_value_converter.h"
 
 namespace mate {
 
@@ -54,122 +53,127 @@ UserPrefs::UserPrefs(v8::Isolate* isolate,
 UserPrefs::~UserPrefs() {
 }
 
+Profile* UserPrefs::profile() {
+  return Profile::FromBrowserContext(browser_context_);
+}
+
 void UserPrefs::RegisterStringPref(const std::string& path,
     const std::string& default_value, bool overlay) {
-  browser_context()->pref_registry()->RegisterStringPref(path, default_value);
+  profile()->pref_registry()->RegisterStringPref(path, default_value);
   if (overlay)
-    browser_context()->AddOverlayPref(path);
+    profile()->AddOverlayPref(path);
 }
 
 void UserPrefs::RegisterDictionaryPref(const std::string& path,
     const base::DictionaryValue& default_value, bool overlay) {
   std::unique_ptr<base::DictionaryValue> copied(
       default_value.CreateDeepCopy());
-  browser_context()->pref_registry()->
+  profile()->pref_registry()->
       RegisterDictionaryPref(path, copied.release());
   if (overlay)
-    browser_context()->AddOverlayPref(path);
+    profile()->AddOverlayPref(path);
 }
 
 void UserPrefs::RegisterListPref(const std::string& path,
     const base::ListValue& default_value, bool overlay) {
   std::unique_ptr<base::ListValue> copied(
       default_value.CreateDeepCopy());
-  browser_context()->pref_registry()->
+  profile()->pref_registry()->
       RegisterListPref(path, copied.release());
   if (overlay)
-    browser_context()->AddOverlayPref(path);
+    profile()->AddOverlayPref(path);
 }
 
 void UserPrefs::RegisterBooleanPref(const std::string& path,
     bool default_value, bool overlay) {
-  browser_context()->pref_registry()->RegisterBooleanPref(path, default_value);
+  profile()->pref_registry()->RegisterBooleanPref(path, default_value);
   if (overlay)
-    browser_context()->AddOverlayPref(path);
+    profile()->AddOverlayPref(path);
 }
 
 void UserPrefs::RegisterIntegerPref(const std::string& path,
     int default_value, bool overlay) {
-  browser_context()->pref_registry()->RegisterIntegerPref(path, default_value);
+  profile()->pref_registry()->RegisterIntegerPref(path, default_value);
   if (overlay)
-    browser_context()->AddOverlayPref(path);
+    profile()->AddOverlayPref(path);
 }
 
 void UserPrefs::RegisterDoublePref(const std::string& path,
     double default_value, bool overlay) {
-  browser_context()->pref_registry()->RegisterDoublePref(path, default_value);
+  profile()->pref_registry()->RegisterDoublePref(path, default_value);
   if (overlay)
-    browser_context()->AddOverlayPref(path);
+    profile()->AddOverlayPref(path);
 }
 
 std::string UserPrefs::GetStringPref(const std::string& path) {
-  return browser_context()->user_prefs()->GetString(path);
+  return profile()->GetPrefs()->GetString(path);
 }
 
 const base::DictionaryValue* UserPrefs::GetDictionaryPref(
       const std::string& path) {
-  return browser_context()->user_prefs()->GetDictionary(path);
+  return profile()->GetPrefs()->GetDictionary(path);
 }
 
 const base::ListValue* UserPrefs::GetListPref(const std::string& path) {
-  return browser_context()->user_prefs()->GetList(path);
+  return profile()->GetPrefs()->GetList(path);
 }
 
 bool UserPrefs::GetBooleanPref(const std::string& path) {
-  return browser_context()->user_prefs()->GetBoolean(path);
+  return profile()->GetPrefs()->GetBoolean(path);
 }
 
 int UserPrefs::GetIntegerPref(const std::string& path) {
-  return browser_context()->user_prefs()->GetInteger(path);
+  return profile()->GetPrefs()->GetInteger(path);
 }
 
 double UserPrefs::GetDoublePref(const std::string& path) {
-  return browser_context()->user_prefs()->GetDouble(path);
+  return profile()->GetPrefs()->GetDouble(path);
 }
 
 void UserPrefs::SetStringPref(const std::string& path,
     const std::string& value) {
-  browser_context()->user_prefs()->SetString(path, value);
+  profile()->GetPrefs()->SetString(path, value);
 }
 
 void UserPrefs::SetDictionaryPref(const std::string& path,
     const base::DictionaryValue& value) {
-  browser_context()->user_prefs()->Set(path, value);
+  profile()->GetPrefs()->Set(path, value);
 }
 
 void UserPrefs::SetListPref(const std::string& path,
     const base::ListValue& value) {
-  browser_context()->user_prefs()->Set(path, value);
+  profile()->GetPrefs()->Set(path, value);
 }
 
 void UserPrefs::SetBooleanPref(const std::string& path,
     bool value) {
-  browser_context()->user_prefs()->SetBoolean(path, value);
+  profile()->GetPrefs()->SetBoolean(path, value);
 }
 
 void UserPrefs::SetIntegerPref(const std::string& path,
     int value) {
-  browser_context()->user_prefs()->SetInteger(path, value);
+  profile()->GetPrefs()->SetInteger(path, value);
 }
 
 void UserPrefs::SetDoublePref(const std::string& path,
     double value) {
-  browser_context()->user_prefs()->SetDouble(path, value);
+  profile()->GetPrefs()->SetDouble(path, value);
 }
 
 double UserPrefs::GetDefaultZoomLevel() {
-  return browser_context()->GetZoomLevelPrefs()->GetDefaultZoomLevelPref();
+  return profile()->GetZoomLevelPrefs()->GetDefaultZoomLevelPref();
 }
 
 void UserPrefs::SetDefaultZoomLevel(double zoom) {
-  if (!browser_context()->IsOffTheRecord())
-    browser_context()->GetZoomLevelPrefs()->SetDefaultZoomLevelPref(zoom);
+  if (!profile()->IsOffTheRecord())
+    profile()->GetZoomLevelPrefs()->SetDefaultZoomLevelPref(zoom);
 }
 
 // static
 mate::Handle<UserPrefs> UserPrefs::Create(
     v8::Isolate* isolate,
     content::BrowserContext* browser_context) {
+  DCHECK(browser_context);
   return mate::CreateHandle(isolate, new UserPrefs(isolate, browser_context));
 }
 

@@ -61,7 +61,8 @@ int BravePermissionManager::RequestPermission(
     content::PermissionType permission,
     content::RenderFrameHost* render_frame_host,
     const GURL& requesting_origin,
-    const ResponseCallback& response_callback) {
+    bool user_gesture,
+      const base::Callback<void(blink::mojom::PermissionStatus)>& response_callback) {
   int render_frame_id = MSG_ROUTING_NONE;
   int render_process_id = MSG_ROUTING_NONE;
   GURL url;
@@ -105,7 +106,7 @@ int BravePermissionManager::RequestPermission(
 void BravePermissionManager::OnPermissionResponse(
     int request_id,
     const GURL& origin,
-    const ResponseCallback& callback,
+    const base::Callback<void(blink::mojom::PermissionStatus)>& callback,
     blink::mojom::PermissionStatus status) {
   auto request = pending_requests_.find(request_id);
   if (request != pending_requests_.end()) {

@@ -38,7 +38,8 @@ class BravePermissionManager : public atom::AtomPermissionManager {
       content::PermissionType permission,
       content::RenderFrameHost* render_frame_host,
       const GURL& requesting_origin,
-      const ResponseCallback& callback) override;
+      bool user_gesture,
+      const base::Callback<void(blink::mojom::PermissionStatus)>& callback) override;
 
  protected:
   void OnPermissionResponse(int request_id,

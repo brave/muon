@@ -60,6 +60,12 @@ class Extension : public mate::TrackableObject<Extension>,
   Extension(v8::Isolate* isolate, AtomBrowserContext* browser_context);
   ~Extension() override;
 
+  void NotifyLoadOnUIThread(scoped_refptr<extensions::Extension> extension);
+  void NotifyErrorOnUIThread(const std::string& error);
+  void LoadOnFILEThread(const base::FilePath path,
+      std::unique_ptr<base::DictionaryValue> manifest,
+      extensions::Manifest::Location manifest_location,
+      int flags);
   void Load(mate::Arguments* args);
   void AddExtension(scoped_refptr<extensions::Extension> extension);
   void OnExtensionReady(content::BrowserContext* browser_context,

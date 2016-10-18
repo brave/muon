@@ -86,6 +86,14 @@ class AtomAutofillClient
   void OnFirstUserGestureObserved() override;
   bool IsContextSecure(const GURL& form_origin) override;
 
+  // TODO(bridiver)
+  void ConfirmCreditCardFillAssist(
+      const CreditCard& card,
+      const base::Closure& callback) override {};
+  bool ShouldShowSigninPromo() override { return false; };
+  void StartSigninFlow() override {};
+
+
   // content::WebContentsObserver implementation.
   void WebContentsDestroyed() override;
  private:

@@ -8,8 +8,8 @@
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/common/api/api_messages.h"
 #include "base/command_line.h"
-#include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/renderer_host/chrome_extension_message_filter.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -20,39 +20,33 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/site_instance.h"
+#include "content/public/common/content_switches.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
 #include "extensions/browser/extension_message_filter.h"
 #include "extensions/browser/extension_registry.h"
+#include "extensions/browser/extension_service_worker_message_filter.h"
 #include "extensions/browser/extension_system.h"
+#include "extensions/browser/guest_view/extensions_guest_view_message_filter.h"
 #include "extensions/browser/info_map.h"
 #include "extensions/browser/io_thread_extension_message_filter.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/extension_l10n_util.h"
+#include "extensions/common/extensions_client.h"
 #include "extensions/common/manifest_handlers/web_accessible_resources_info.h"
 #include "extensions/common/switches.h"
 
-using brave::BraveBrowserContext;
 using content::BrowserContext;
 using content::BrowserThread;
 using content::BrowserURLHandler;
 using content::SiteInstance;
 
+namespace extensions {
+
 namespace {
 
 static std::map<int, void*> render_process_hosts_;
 
-// Cached version of the locale so we can return the locale on the I/O
-// thread.
-base::LazyInstance<std::string> io_thread_application_locale;
-
-void SetApplicationLocaleOnIOThread(const std::string& locale) {
-  DCHECK_CURRENTLY_ON(BrowserThread::IO);
-  io_thread_application_locale.Get() = locale;
-}
-
 }  // namespace
-
-namespace extensions {
 
 AtomBrowserClientExtensionsPart::AtomBrowserClientExtensionsPart() {
 }
@@ -162,29 +156,11 @@ bool AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
 }
 
 std::string AtomBrowserClientExtensionsPart::GetApplicationLocale() {
-  if (BrowserThread::CurrentlyOn(BrowserThread::IO)) {
-    return io_thread_application_locale.Get();
-  } else {
-    return extension_l10n_util::CurrentLocaleOrDefault();
-  }
+  return extension_l10n_util::CurrentLocaleOrDefault();
 }
 
 // static
 void AtomBrowserClientExtensionsPart::SetApplicationLocale(std::string locale) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-
-  // This object is guaranteed to outlive all threads so we don't have to
-  // worry about the lack of refcounting and can just post as Unretained.
-  //
-  // The common case is that this function is called early in Chrome startup
-  // before any threads are created (it will also be called later if the user
-  // changes the pref). In this case, there will be no threads created and
-  // posting will fail. When there are no threads, we can just set the string
-  // without worrying about threadsafety.
-  if (!BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-          base::Bind(&SetApplicationLocaleOnIOThread, locale))) {
-    io_thread_application_locale.Get() = locale;
-  }
   extension_l10n_util::SetProcessLocale(locale);
 }
 
@@ -205,11 +181,16 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
     content::RenderProcessHost* host) {
   int id = host->GetID();
   auto context =
-      BraveBrowserContext::FromBrowserContext(host->GetBrowserContext());
+      Profile::FromBrowserContext(host->GetBrowserContext());
 
   host->AddFilter(new ChromeExtensionMessageFilter(id, context));
   host->AddFilter(new ExtensionMessageFilter(id, context));
   host->AddFilter(new IOThreadExtensionMessageFilter(id, context));
+  host->AddFilter(new ExtensionsGuestViewMessageFilter(id, context));
+  if (extensions::ExtensionsClient::Get()
+          ->ExtensionAPIEnabledInExtensionServiceWorkers()) {
+    host->AddFilter(new ExtensionServiceWorkerMessageFilter(id, context));
+  }
   extension_web_request_api_helpers::SendExtensionWebRequestStatusToHost(host);
 
   auto user_prefs_registrar = context->user_prefs_change_registrar();
@@ -220,6 +201,31 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
                    base::Unretained(this)));
   }
   UpdateContentSettingsForHost(host->GetID());
+}
+
+// static
+GURL AtomBrowserClientExtensionsPart::GetEffectiveURL(
+    BrowserContext* context, const GURL& url) {
+  // If the input |url| is part of an installed app, the effective URL is an
+  // extension URL with the ID of that extension as the host. This has the
+  // effect of grouping apps together in a common SiteInstance.
+  ExtensionRegistry* registry = ExtensionRegistry::Get(context);
+  if (!registry)
+    return url;
+
+  const Extension* extension =
+      registry->enabled_extensions().GetHostedAppByURL(url);
+  if (!extension)
+    return url;
+
+  // Bookmark apps do not use the hosted app process model, and should be
+  // treated as normal URLs.
+  if (extension->from_bookmark())
+    return url;
+
+  // If the URL is part of an extension's web extent, convert it to an
+  // extension URL.
+  return extension->GetResourceURL(url.path());
 }
 
 void AtomBrowserClientExtensionsPart::UpdateContentSettingsForHost(
@@ -321,6 +327,13 @@ void AtomBrowserClientExtensionsPart::
   DCHECK(context);
   if (ProcessMap::Get(context)->Contains(process->GetID())) {
     command_line->AppendSwitch(switches::kExtensionProcess);
+#if defined(ENABLE_WEBRTC)
+    command_line->AppendSwitch(::switches::kEnableWebRtcHWH264Encoding);
+#endif
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kEnableMojoSerialService)) {
+      command_line->AppendSwitch(switches::kEnableMojoSerialService);
+    }
   }
 }
 

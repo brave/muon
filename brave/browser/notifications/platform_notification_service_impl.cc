@@ -132,13 +132,14 @@ void PlatformNotificationServiceImpl::DisplayNotification(
 
   auto permission_manager = browser_context->GetPermissionManager();
   permission_manager->RequestPermission(
-      content::PermissionType::NOTIFICATIONS, NULL, origin,
+      content::PermissionType::NOTIFICATIONS, NULL, origin, false, // TODO(bridiver) user gesture
         base::Bind(&OnPermissionResponse, callback));
 }
 
 void PlatformNotificationServiceImpl::DisplayPersistentNotification(
     content::BrowserContext* browser_context,
     int64_t persistent_notification_id,
+    const GURL& service_worker_origin,
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
     const content::NotificationResources& notification_resources) {

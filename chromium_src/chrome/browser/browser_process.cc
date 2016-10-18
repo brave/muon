@@ -4,10 +4,16 @@
 
 #include "chrome/browser/browser_process.h"
 
+#include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/atom_browser_context.h"
 #include "base/command_line.h"
+#include "base/path_service.h"
+#include "base/threading/thread.h"
+#include "base/threading/thread_restrictions.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
+#include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/printing/print_job_manager.h"
+#include "chrome/browser/profiles/profile_manager.h"
 #include "components/component_updater/component_updater_service.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "ui/base/idle/idle.h"
@@ -16,6 +22,7 @@
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "atom/common/extensions/atom_extensions_client.h"
+#include "chrome/browser/extensions/event_router_forwarder.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/features/feature_provider.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -24,7 +31,8 @@
 BrowserProcess* g_browser_process = NULL;
 
 BrowserProcess::BrowserProcess()
-    : tearing_down_(false) {
+    : tearing_down_(false),
+      created_profile_manager_(false) {
   g_browser_process = this;
 
   print_job_manager_.reset(new printing::PrintJobManager);
@@ -39,15 +47,12 @@ BrowserProcess::BrowserProcess()
   content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
       extensions::kExtensionResourceScheme);
 
+  extension_event_router_forwarder_ = new extensions::EventRouterForwarder;
+
   extensions::ExtensionsClient::Set(new extensions::AtomExtensionsClient());
   extensions_browser_client_.reset(
       new extensions::AtomExtensionsBrowserClient());
   extensions::ExtensionsBrowserClient::Set(extensions_browser_client_.get());
-  // make sure everything is loaded
-  extensions::FeatureProvider::GetAPIFeatures();
-  extensions::FeatureProvider::GetPermissionFeatures();
-  extensions::FeatureProvider::GetManifestFeatures();
-  extensions::FeatureProvider::GetBehaviorFeatures();
 #endif
 }
 
@@ -55,10 +60,31 @@ BrowserProcess::~BrowserProcess() {
   g_browser_process = NULL;
 }
 
+void BrowserProcess::CreateProfileManager() {
+  DCHECK(!created_profile_manager_ && !profile_manager_);
+  created_profile_manager_ = true;
+
+  base::FilePath user_data_dir;
+  PathService::Get(brightray::DIR_USER_DATA, &user_data_dir);
+  profile_manager_.reset(new ProfileManager(user_data_dir));
+}
+
+ProfileManager* BrowserProcess::profile_manager() {
+  DCHECK(thread_checker_.CalledOnValidThread());
+  if (!created_profile_manager_)
+    CreateProfileManager();
+  return profile_manager_.get();
+}
+
+rappor::RapporService* BrowserProcess::rappor_service() {
+  return nullptr;
+}
+
 component_updater::ComponentUpdateService*
 BrowserProcess::component_updater(
     std::unique_ptr<component_updater::ComponentUpdateService> &component_updater,
     bool use_brave_server) {
+  DCHECK(thread_checker_.CalledOnValidThread());
   if (!component_updater.get()) {
     auto browser_context = atom::AtomBrowserContext::From("", false);
     scoped_refptr<update_client::Configurator> configurator =
@@ -80,8 +106,13 @@ BrowserProcess::brave_component_updater() {
 }
 
 component_updater::ComponentUpdateService*
-BrowserProcess::google_component_updater() {
-  return component_updater(google_component_updater_, false);
+BrowserProcess::component_updater() {
+  return component_updater(component_updater_, false);
+}
+
+extensions::EventRouterForwarder*
+BrowserProcess::extension_event_router_forwarder() {
+  return extension_event_router_forwarder_.get();
 }
 
 void BrowserProcess::StartTearDown() {
@@ -100,3 +131,7 @@ printing::PrintJobManager* BrowserProcess::print_job_manager() {
 bool BrowserProcess::IsShuttingDown() {
   return tearing_down_;
 }
+
+void BrowserProcess::PreCreateThreads() {
+}
+

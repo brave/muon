@@ -34,7 +34,6 @@ const int kNumBookmarksToSend = 100;
 const int kNumHistoryRowsToSend = 100;
 const int kNumFaviconsToSend = 100;
 const int kNumAutofillFormDataToSend = 100;
-const int kNumCookiesToSend = 100;
 
 } // namespace
 
@@ -176,30 +175,6 @@ void ExternalProcessImporterBridge::SetAutofillFormData(
     it = end_group;
   }
   DCHECK_EQ(0, autofill_form_data_entries_left);
-}
-
-void ExternalProcessImporterBridge::SetCookies(
-    const std::vector<ImportedCookieEntry>& cookies) {
-  Send(new ProfileImportProcessHostMsg_NotifyCookiesImportStart(
-      cookies.size()));
-
-  // |cookies_left| is required for the checks below as Windows has a
-  // Debug bounds-check which prevents pushing an iterator beyond its end()
-  // (i.e., |it + 2 < s.end()| crashes in debug mode if |i + 1 == s.end()|).
-  int cookies_left = cookies.end() - cookies.begin();
-  for (std::vector<ImportedCookieEntry>::const_iterator it =
-           cookies.begin(); it < cookies.end();) {
-    std::vector<ImportedCookieEntry> cookies_group;
-    std::vector<ImportedCookieEntry>::const_iterator end_group =
-        it + std::min(cookies_left, kNumCookiesToSend);
-    cookies_group.assign(it, end_group);
-
-    Send(new ProfileImportProcessHostMsg_NotifyCookiesImportGroup(
-        cookies_group));
-    cookies_left -= end_group - it;
-    it = end_group;
-  }
-  DCHECK_EQ(0, cookies_left);
 }
 
 void ExternalProcessImporterBridge::NotifyStarted() {

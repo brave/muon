@@ -290,13 +290,6 @@ void InProcessImporterBridge::SetAutofillFormData(
                                      autofill_entries));
 }
 
-void InProcessImporterBridge::SetCookies(
-    const std::vector<ImportedCookieEntry>& cookies) {
-  BrowserThread::PostTask(
-      BrowserThread::UI, FROM_HERE,
-      base::Bind(&ProfileWriter::AddCookies, writer_, cookies));
-}
-
 void InProcessImporterBridge::NotifyStarted() {
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,

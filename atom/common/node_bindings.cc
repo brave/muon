@@ -23,6 +23,7 @@
 
 #include "atom/common/node_includes.h"
 
+#include "atom/common/asar/asar_util.h"
 using content::BrowserThread;
 
 // Force all builtin modules to be referenced so they can actually run their
@@ -32,14 +33,16 @@ using content::BrowserThread;
   void (*fp_register_ ## name)(void) = _register_ ## name
 // Electron's builtin modules.
 REFERENCE_MODULE(atom_browser_app);
-REFERENCE_MODULE(atom_browser_auto_updater);
+// REFERENCE_MODULE(atom_browser_auto_updater);
 REFERENCE_MODULE(atom_browser_component_updater);
 REFERENCE_MODULE(atom_browser_content_tracing);
 REFERENCE_MODULE(atom_browser_dialog);
-REFERENCE_MODULE(atom_browser_debugger);
+// REFERENCE_MODULE(atom_browser_debugger);
+#if defined(ENABLE_WEBRTC)
 REFERENCE_MODULE(atom_browser_desktop_capturer);
+#endif
 REFERENCE_MODULE(atom_browser_download_item);
-REFERENCE_MODULE(atom_browser_importer);
+// REFERENCE_MODULE(atom_browser_importer);
 REFERENCE_MODULE(atom_browser_menu);
 REFERENCE_MODULE(atom_browser_power_monitor);
 REFERENCE_MODULE(atom_browser_power_save_blocker);
@@ -50,18 +53,15 @@ REFERENCE_MODULE(atom_browser_session);
 REFERENCE_MODULE(atom_browser_system_preferences);
 REFERENCE_MODULE(atom_browser_tray);
 REFERENCE_MODULE(atom_browser_web_contents);
-REFERENCE_MODULE(atom_browser_web_view_manager);
 REFERENCE_MODULE(atom_browser_window);
 REFERENCE_MODULE(atom_browser_extension);
 REFERENCE_MODULE(atom_common_asar);
 REFERENCE_MODULE(atom_common_clipboard);
-REFERENCE_MODULE(atom_common_crash_reporter);
+// REFERENCE_MODULE(atom_common_crash_reporter);
 REFERENCE_MODULE(atom_common_native_image);
 REFERENCE_MODULE(atom_common_screen);
 REFERENCE_MODULE(atom_common_shell);
 REFERENCE_MODULE(atom_common_v8_util);
-REFERENCE_MODULE(atom_renderer_ipc);
-REFERENCE_MODULE(atom_renderer_web_frame);
 #undef REFERENCE_MODULE
 
 // The "v8::Function::kLineOffsetNotFound" is exported in node.dll, but the
@@ -172,8 +172,8 @@ node::Environment* NodeBindings::CreateEnvironment(
 
   std::unique_ptr<const char*[]> c_argv = StringVectorToArgArray(args);
   node::Environment* env = node::CreateEnvironment(
-      context->GetIsolate(), uv_default_loop(), context,
-      args.size(), c_argv.get(), 0, nullptr);
+      node::CreateIsolateData(context->GetIsolate(), uv_default_loop()),
+      context, args.size(), c_argv.get(), 0, nullptr);
 
   // Node uses the deprecated SetAutorunMicrotasks(false) mode, we should switch
   // to use the scoped policy to match blink's behavior.
@@ -191,7 +191,6 @@ node::Environment* NodeBindings::CreateEnvironment(
   base::FilePath helper_exec_path;
   PathService::Get(content::CHILD_PROCESS_EXE, &helper_exec_path);
   process.Set("helperExecPath", helper_exec_path);
-
   // Set process._debugWaitConnect if --debug-brk was specified to stop
   // the debugger on the first line
   if (is_browser_ &&
@@ -255,7 +254,7 @@ void NodeBindings::UvRunOnce() {
 
 void NodeBindings::WakeupMainThread() {
   DCHECK(message_loop_);
-  message_loop_->PostTask(FROM_HERE, base::Bind(&NodeBindings::UvRunOnce,
+  message_loop_->task_runner()->PostTask(FROM_HERE, base::Bind(&NodeBindings::UvRunOnce,
                                                 weak_factory_.GetWeakPtr()));
 }
 

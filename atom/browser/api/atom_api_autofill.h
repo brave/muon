@@ -59,10 +59,7 @@ class Autofill : public mate::TrackableObject<Autofill>,
   // PersonalDataManagerObserver
   void OnPersonalDataChanged() override;
 
-  brave::BraveBrowserContext* browser_context() {
-    return static_cast<brave::BraveBrowserContext*>(browser_context_);
-  }
-
+  Profile* profile();
  private:
   void OnClearedAutocompleteData();
   void OnClearedAutofillData();

@@ -9,12 +9,17 @@
 #include "brightray/browser/mac/event_dispatching_window.h"
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "ui/events/keycodes/keyboard_codes.h"
+#include "ui/gfx/image/image.h"
 
 @interface NSWindow (EventDispatchingWindow)
 - (void)redispatchKeyEvent:(NSEvent*)event;
 @end
 
 namespace atom {
+
+gfx::ImageSkia CommonWebContentsDelegate::GetDevToolsWindowIcon() {
+  return gfx::ImageSkia();
+}
 
 void CommonWebContentsDelegate::HandleKeyboardEvent(
     content::WebContents* source,

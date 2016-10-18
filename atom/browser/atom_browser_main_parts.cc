@@ -11,7 +11,7 @@
 #include "atom/browser/browser.h"
 #include "atom/browser/browser_context_keyed_service_factories.h"
 #include "atom/browser/javascript_environment.h"
-#include "atom/browser/node_debugger.h"
+// #include "atom/browser/node_debugger.h"
 #include "atom/common/api/atom_bindings.h"
 #include "atom/common/node_bindings.h"
 #include "atom/common/node_includes.h"
@@ -21,10 +21,18 @@
 #include "base/memory/memory_pressure_monitor.h"
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
+#include "browser/media/media_capture_devices_dispatcher.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "content/public/browser/child_process_security_policy.h"
+#include "content/public/browser/web_ui_controller_factory.h"
 #include "v8/include/v8-debug.h"
+
+#include "v8/include/v8.h"
+#include "gin/public/v8_platform.h"
+#include "v8/include/libplatform/libplatform.h"
+
 
 #if defined(USE_X11)
 #include "chrome/browser/ui/libgtk2ui/gtk2_util.h"
@@ -51,8 +59,8 @@ AtomBrowserMainParts::AtomBrowserMainParts()
   DCHECK(!self_) << "Cannot have two AtomBrowserMainParts";
   self_ = this;
   // Register extension scheme as web safe scheme.
-  content::ChildProcessSecurityPolicy::GetInstance()->
-      RegisterWebSafeScheme("chrome-extension");
+  // content::ChildProcessSecurityPolicy::GetInstance()->
+  //     RegisterWebSafeScheme("chrome-extension");
 }
 
 AtomBrowserMainParts::~AtomBrowserMainParts() {
@@ -97,40 +105,17 @@ void AtomBrowserMainParts::PreEarlyInitialization() {
 #endif
 }
 
+int AtomBrowserMainParts::PreCreateThreads() {
+  fake_browser_process_->PreCreateThreads();
+
+  // Force MediaCaptureDevicesDispatcher to be created on UI thread.
+  brightray::MediaCaptureDevicesDispatcher::GetInstance();
+
+  return BrowserMainParts::PreCreateThreads();
+}
+
 void AtomBrowserMainParts::PostEarlyInitialization() {
   brightray::BrowserMainParts::PostEarlyInitialization();
-
-  // Temporary set the bridge_task_runner_ as current thread's task runner,
-  // so we can fool gin::PerIsolateData to use it as its task runner, instead
-  // of getting current message loop's task runner, which is null for now.
-  bridge_task_runner_ = new BridgeTaskRunner;
-  base::ThreadTaskRunnerHandle handle(bridge_task_runner_);
-
-  // The ProxyResolverV8 has setup a complete V8 environment, in order to
-  // avoid conflicts we only initialize our V8 environment after that.
-  js_env_.reset(new JavascriptEnvironment);
-
-  node_bindings_->Initialize();
-
-  // Support the "--debug" switch.
-  node_debugger_.reset(new NodeDebugger(js_env_->isolate()));
-
-  // Create the global environment.
-  node::Environment* env =
-      node_bindings_->CreateEnvironment(js_env_->context());
-
-  // Make sure node can get correct environment when debugging.
-  if (node_debugger_->IsRunning())
-    env->AssignToContext(v8::Debug::GetDebugContext());
-
-  // Add atom-shell extended APIs.
-  atom_bindings_->BindTo(js_env_->isolate(), env->process_object());
-
-  // Load everything.
-  node_bindings_->LoadEnvironment(env);
-
-  // Wrap the uv loop with global env.
-  node_bindings_->set_uv_env(env);
 }
 
 void AtomBrowserMainParts::OnMemoryPressure(
@@ -150,12 +135,34 @@ void AtomBrowserMainParts::IdleHandler() {
 }
 
 void AtomBrowserMainParts::PreMainMessageLoopRun() {
-  js_env_->OnMessageLoopCreated();
+  brightray::BrowserMainParts::PreMainMessageLoopRun();
+  content::WebUIControllerFactory::RegisterFactory(
+      ChromeWebUIControllerFactory::GetInstance());
+  js_env_.reset(new JavascriptEnvironment);
+  js_env_->isolate()->Enter();
 
-  // Run user's main script before most things get initialized, so we can have
-  // a chance to setup everything.
-  node_bindings_->PrepareMessageLoop();
-  node_bindings_->RunMessageLoop();
+
+  node_bindings_->Initialize();
+
+  // Support the "--debug" switch.
+  // node_debugger_.reset(new NodeDebugger(js_env_->isolate()));
+
+  // Create the global environment.
+  node::Environment* env =
+      node_bindings_->CreateEnvironment(js_env_->context());
+
+  // Make sure node can get correct environment when debugging.
+  // if (node_debugger_->IsRunning())
+  //   env->AssignToContext(v8::Debug::GetDebugContext(js_env_->isolate()));
+
+  // Add atom-shell extended APIs.
+  atom_bindings_->BindTo(js_env_->isolate(), env->process_object());
+
+  // Load everything.
+  node_bindings_->LoadEnvironment(env);
+
+  // Wrap the uv loop with global env.
+  node_bindings_->set_uv_env(env);
 
 #if defined(USE_X11)
   ui::TouchFactory::SetTouchDeviceListFromCommandLine();
@@ -181,8 +188,10 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   browser_context_ = AtomBrowserContext::From("", false);
   brightray::BrowserMainParts::PreMainMessageLoopRun();
-  bridge_task_runner_->MessageLoopIsReady();
-  bridge_task_runner_ = nullptr;
+
+  js_env_->OnMessageLoopCreated();
+  node_bindings_->PrepareMessageLoop();
+  node_bindings_->RunMessageLoop();
 
 #if defined(USE_X11)
   libgtk2ui::GtkInitFromCommandLine(*base::CommandLine::ForCurrentProcess());
@@ -214,6 +223,7 @@ void AtomBrowserMainParts::PostMainMessageLoopRun() {
 
   js_env_->OnMessageLoopDestroying();
 
+  js_env_->isolate()->Exit();
 #if defined(OS_MACOSX)
   FreeAppDelegate();
 #endif

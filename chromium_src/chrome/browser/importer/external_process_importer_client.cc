@@ -119,10 +119,6 @@ bool ExternalProcessImporterClient::OnMessageReceived(
                         OnAutofillFormDataImportStart)
     IPC_MESSAGE_HANDLER(ProfileImportProcessHostMsg_AutofillFormDataImportGroup,
                         OnAutofillFormDataImportGroup)
-    IPC_MESSAGE_HANDLER(ProfileImportProcessHostMsg_NotifyCookiesImportStart,
-                        OnCookiesImportStart)
-    IPC_MESSAGE_HANDLER(ProfileImportProcessHostMsg_NotifyCookiesImportGroup,
-                        OnCookiesImportGroup)
 #if defined(OS_WIN)
     IPC_MESSAGE_HANDLER(ProfileImportProcessHostMsg_NotifyIE7PasswordInfo,
                         OnIE7PasswordReceived)
@@ -288,24 +284,6 @@ void ExternalProcessImporterClient::OnAutofillFormDataImportGroup(
   if (autofill_form_data_.size() >= total_autofill_form_data_entry_count_)
     bridge_->SetAutofillFormData(autofill_form_data_);
 }
-void ExternalProcessImporterClient::OnCookiesImportStart(
-    size_t total_cookies_count) {
-  if (cancelled_)
-    return;
-
-  total_cookies_count_ = total_cookies_count;
-  cookies_.reserve(total_cookies_count);
-}
-void ExternalProcessImporterClient::OnCookiesImportGroup(
-    const std::vector<ImportedCookieEntry>& cookies_group) {
-  if (cancelled_)
-    return;
-
-  cookies_.insert(cookies_.end(), cookies_group.begin(),
-                    cookies_group.end());
-  if (cookies_.size() >= total_cookies_count_)
-    bridge_->SetCookies(cookies_);
-}
 
 #if defined(OS_WIN)
 void ExternalProcessImporterClient::OnIE7PasswordReceived(
@@ -340,9 +318,10 @@ void ExternalProcessImporterClient::NotifyItemFinishedOnIOThread(
 
 void ExternalProcessImporterClient::StartProcessOnIOThread(
     BrowserThread::ID thread_id) {
-  utility_process_host_ = UtilityProcessHost::Create(
-      this, BrowserThread::GetMessageLoopProxyForThread(thread_id).get())
-      ->AsWeakPtr();
+  utility_process_host_ =
+      UtilityProcessHost::Create(
+          this, BrowserThread::GetTaskRunnerForThread(thread_id).get())
+          ->AsWeakPtr();
   utility_process_host_->SetName(l10n_util::GetStringUTF16(
       IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME));
   utility_process_host_->DisableSandbox();
