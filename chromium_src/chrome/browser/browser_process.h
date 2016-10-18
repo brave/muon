@@ -14,20 +14,40 @@
 #include <string>
 
 #include "base/macros.h"
+#include "base/threading/thread_checker.h"
+#include "net/log/net_log.h"
 
-#if defined(ENABLE_EXTENSIONS)
-namespace extensions {
-class ExtensionsBrowserClient;
+namespace atom {
+namespace api {
+class App;
 }
+}
+
 namespace component_updater {
 class ComponentUpdateService;
 }
+
+#if defined(ENABLE_EXTENSIONS)
+namespace extensions {
+class EventRouterForwarder;
+class ExtensionsBrowserClient;
+}
 #endif
 
+namespace metrics {
+class MetricsService;
+}
 namespace printing {
 class PrintJobManager;
 }
 
+namespace rappor {
+class RapporService;
+}
+
+class IOThread;
+class PrefService;
+class ProfileManager;
 // NOT THREAD SAFE, call only from the main thread.
 // These functions shouldn't return NULL unless otherwise noted.
 class BrowserProcess {
@@ -35,25 +55,53 @@ class BrowserProcess {
   BrowserProcess();
   ~BrowserProcess();
 
+  // Called before the browser threads are created.
+  void PreCreateThreads();
+
   std::string GetApplicationLocale();
 
   printing::PrintJobManager* print_job_manager();
 
   bool IsShuttingDown();
   void StartTearDown();
+
+  void set_app(atom::api::App* app) { app_ = app; }
+  atom::api::App* app() { return app_; }
+
+  metrics::MetricsService* metrics_service() { return NULL; };
+  PrefService* local_state();
+  ProfileManager* profile_manager();
+  rappor::RapporService* rappor_service();
   component_updater::ComponentUpdateService* brave_component_updater();
-  component_updater::ComponentUpdateService* google_component_updater();
+  component_updater::ComponentUpdateService* component_updater();
+
+#if defined(ENABLE_EXTENSIONS)
+  extensions::EventRouterForwarder* extension_event_router_forwarder();
+#endif
 
  private:
+  base::ThreadChecker thread_checker_;
+
+  void CreateProfileManager();
+
   std::unique_ptr<printing::PrintJobManager> print_job_manager_;
 #if defined(ENABLE_EXTENSIONS)
+  scoped_refptr<extensions::EventRouterForwarder>
+      extension_event_router_forwarder_;
   std::unique_ptr<extensions::ExtensionsBrowserClient> extensions_browser_client_;
 #endif
   bool tearing_down_;
+
+  bool created_profile_manager_;
+  std::unique_ptr<ProfileManager> profile_manager_;
+
+  atom::api::App* app_;  // not owned
+
+  net::NetLog net_log_;
   std::unique_ptr<component_updater::ComponentUpdateService>
       brave_component_updater_;
   std::unique_ptr<component_updater::ComponentUpdateService>
-      google_component_updater_;
+      component_updater_;
   component_updater::ComponentUpdateService* component_updater(
       std::unique_ptr<component_updater::ComponentUpdateService> &,
       bool use_brave_server);

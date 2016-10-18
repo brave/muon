@@ -1,0 +1,92 @@
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/features.gni")
+
+action("lib") {
+  script = "//electron/tools/js2asar.py"
+
+  inputs = [
+    "browser/api/app.js",
+    "browser/api/auto-updater.js",
+    "browser/api/auto-updater/auto-updater-native.js",
+    "browser/api/auto-updater/auto-updater-win.js",
+    "browser/api/auto-updater/squirrel-update-win.js",
+    "browser/api/browser-window.js",
+    "browser/api/component-updater.js",
+    "browser/api/content-tracing.js",
+    "browser/api/dialog.js",
+    "browser/api/exports/electron.js",
+    "browser/api/global-shortcut.js",
+    "browser/api/importer.js",
+    "browser/api/ipc-main.js",
+    "browser/api/menu.js",
+    "browser/api/menu-item.js",
+    "browser/api/menu-item-roles.js",
+    "browser/api/navigation-controller.js",
+    "browser/api/power-monitor.js",
+    "browser/api/power-save-blocker.js",
+    "browser/api/protocol.js",
+    "browser/api/session.js",
+    "browser/api/screen.js",
+    "browser/api/system-preferences.js",
+    "browser/api/tray.js",
+    "browser/api/web-contents.js",
+    "browser/guest-view-manager.js",
+    "browser/init.js",
+    "browser/objects-registry.js",
+    "browser/rpc-server.js",
+    "common/api/callbacks-registry.js",
+    "common/api/clipboard.js",
+    "common/api/crash-reporter.js",
+    "common/api/deprecate.js",
+    "common/api/deprecations.js",
+    "common/api/is-promise.js",
+    "common/api/exports/electron.js",
+    "common/api/native-image.js",
+    "common/api/shell.js",
+    "common/init.js",
+    "common/reset-search-paths.js",
+  ]
+
+  if (enable_extensions) {
+    inputs += [
+      "browser/api/browser-actions.js",
+      "browser/api/extensions.js",
+    ]
+  }
+
+  outputs = [
+    "$root_out_dir/electron.asar"
+  ]
+
+  args = [
+    rebase_path("$root_out_dir/electron.asar"),
+    rebase_path("//electron/lib"),
+  ]
+
+  foreach(filename, inputs) {
+    args += [ rebase_path(filename, root_build_dir) ]
+  }
+}
+
+action("atom_js2c") {
+  script = "//electron/tools/js2c.py"
+  inputs = [
+    "common/asar.js",
+    "common/asar_init.js",
+  ]
+
+  outputs = [
+    "$root_gen_dir/atom_natives.h"
+  ]
+
+  args = [
+    rebase_path("$root_gen_dir/atom_natives.h"),
+  ]
+
+  foreach(filename, inputs) {
+    args += [ rebase_path(filename, root_build_dir) ]
+  }
+}
+

@@ -8,23 +8,35 @@
 #include <vector>
 
 #include "atom/common/atom_version.h"
-#include "atom/common/chrome_version.h"
 #include "atom/common/options_switches.h"
 #include "atom/common/pepper_flash_util.h"
 #include "base/command_line.h"
+#include "base/debug/crash_logging.h"
 #include "base/files/file_util.h"
+#include "base/memory/ptr_util.h"
+#include "base/strings/string16.h"
+#include "base/strings/string_number_conversions.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
+#include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
+#include "chrome/common/crash_keys.h"
+#include "chrome/common/chrome_version.h"
+#include "chrome/common/extensions/extension_process_policy.h"
+#include "chrome/common/secure_origin_whitelist.h"
 #include "content/public/common/content_constants.h"
 #include "content/public/common/pepper_plugin_info.h"
 #include "content/public/common/user_agent.h"
+#include "gpu/config/gpu_info.h"
+#include "third_party/widevine/cdm/stub/widevine_cdm_version.h"
 #include "ui/base/l10n/l10n_util.h"
+#include "ui/base/resource/resource_bundle.h"
 #include "url/url_constants.h"
 
 #if defined(ENABLE_EXTENSIONS)
 #include "content/public/common/url_constants.h"
 #include "extensions/common/constants.h"
+#include "extensions/common/features/feature_util.h"
 #endif
 
 namespace atom {
@@ -50,6 +62,25 @@ AtomContentClient::AtomContentClient() {
 AtomContentClient::~AtomContentClient() {
 }
 
+void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {
+  base::debug::SetCrashKeyValue(crash_keys::kGPUVendorID,
+      base::StringPrintf("0x%04x", gpu_info.gpu.vendor_id));
+  base::debug::SetCrashKeyValue(crash_keys::kGPUDeviceID,
+      base::StringPrintf("0x%04x", gpu_info.gpu.device_id));
+  base::debug::SetCrashKeyValue(crash_keys::kGPUDriverVersion,
+      gpu_info.driver_version);
+  base::debug::SetCrashKeyValue(crash_keys::kGPUPixelShaderVersion,
+      gpu_info.pixel_shader_version);
+  base::debug::SetCrashKeyValue(crash_keys::kGPUVertexShaderVersion,
+      gpu_info.vertex_shader_version);
+#if defined(OS_MACOSX)
+  base::debug::SetCrashKeyValue(crash_keys::kGPUGLVersion, gpu_info.gl_version);
+#elif defined(OS_POSIX)
+  base::debug::SetCrashKeyValue(crash_keys::kGPUVendor, gpu_info.gl_vendor);
+  base::debug::SetCrashKeyValue(crash_keys::kGPURenderer, gpu_info.gl_renderer);
+#endif
+}
+
 std::string AtomContentClient::GetProduct() const {
   return "Chrome/" CHROME_VERSION_STRING;
 }
@@ -57,28 +88,61 @@ std::string AtomContentClient::GetProduct() const {
 std::string AtomContentClient::GetUserAgent() const {
   return content::BuildUserAgentFromProduct(
       "Chrome/" CHROME_VERSION_STRING " "
-      ATOM_PRODUCT_NAME "/" ATOM_VERSION_STRING);
+      PRODUCT_SHORTNAME_STRING "/" ATOM_VERSION_STRING);
 }
 
-base::string16 AtomContentClient::GetLocalizedString(int message_id) const {
-  return l10n_util::GetStringUTF16(message_id);
+bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
+#if defined(ENABLE_EXTENSIONS)
+  return extensions::IsIsolateExtensionsEnabled();
+#else
+  return false;
+#endif
 }
 
 void AtomContentClient::AddAdditionalSchemes(
     std::vector<url::SchemeWithType>* standard_schemes,
     std::vector<url::SchemeWithType>* referrer_schemes,
     std::vector<std::string>* savable_schemes) {
-  standard_schemes->push_back({"chrome-extension", url::SCHEME_WITHOUT_PORT});
+  standard_schemes->push_back(
+    {extensions::kExtensionScheme, url::SCHEME_WITHOUT_PORT});
+  standard_schemes->push_back(
+    {extensions::kExtensionResourceScheme, url::SCHEME_WITHOUT_PORT});
+  savable_schemes->push_back(extensions::kExtensionScheme);
+  savable_schemes->push_back(extensions::kExtensionResourceScheme);
 }
 
 void AtomContentClient::AddSecureSchemesAndOrigins(
     std::set<std::string>* schemes,
     std::set<GURL>* origins) {
-#if defined(ENABLE_EXTENSIONS)
   schemes->insert(content::kChromeUIScheme);
   schemes->insert(extensions::kExtensionScheme);
   schemes->insert(extensions::kExtensionResourceScheme);
+  GetSecureOriginWhitelist(origins);
+}
+
+void AtomContentClient::AddServiceWorkerSchemes(
+    std::set<std::string>* schemes) {
+#if defined(ENABLE_EXTENSIONS)
+  if (extensions::feature_util::ExtensionServiceWorkersEnabled())
+    schemes->insert(extensions::kExtensionScheme);
 #endif
+}
+
+bool AtomContentClient::AllowScriptExtensionForServiceWorker(
+    const GURL& script_url) {
+#if defined(ENABLE_EXTENSIONS)
+  return script_url.SchemeIs(extensions::kExtensionScheme) ||
+         script_url.SchemeIs(extensions::kExtensionResourceScheme);
+#else
+  return false;
+#endif
+}
+
+content::OriginTrialPolicy* AtomContentClient::GetOriginTrialPolicy() {
+  if (!origin_trial_policy_) {
+    origin_trial_policy_ = base::WrapUnique(new ChromeOriginTrialPolicy());
+  }
+  return origin_trial_policy_.get();
 }
 
 void AtomContentClient::AddPepperPlugins(
@@ -86,19 +150,19 @@ void AtomContentClient::AddPepperPlugins(
   AddPepperFlashFromCommandLine(plugins);
 }
 
-void AtomContentClient::AddServiceWorkerSchemes(
-    std::set<std::string>* service_worker_schemes) {
-  std::vector<std::string> schemes;
-  ConvertStringWithSeparatorToVector(&schemes, ",",
-                                     switches::kRegisterServiceWorkerSchemes);
-  if (!schemes.empty()) {
-    for (const std::string& scheme : schemes)
-      service_worker_schemes->insert(scheme);
-  }
-  service_worker_schemes->insert(url::kFileScheme);
-#if defined(ENABLE_EXTENSIONS)
-  service_worker_schemes->insert(extensions::kExtensionScheme);
-#endif
-}
+// void AtomContentClient::AddServiceWorkerSchemes(
+//     std::set<std::string>* service_worker_schemes) {
+//   std::vector<std::string> schemes;
+//   ConvertStringWithSeparatorToVector(&schemes, ",",
+//                                      switches::kRegisterServiceWorkerSchemes);
+//   if (!schemes.empty()) {
+//     for (const std::string& scheme : schemes)
+//       service_worker_schemes->insert(scheme);
+//   }
+//   service_worker_schemes->insert(url::kFileScheme);
+// #if defined(ENABLE_EXTENSIONS)
+//   service_worker_schemes->insert(extensions::kExtensionScheme);
+// #endif
+// }
 
 }  // namespace atom

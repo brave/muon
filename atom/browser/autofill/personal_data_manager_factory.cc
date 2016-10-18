@@ -5,7 +5,6 @@
 #include "atom/browser/autofill/personal_data_manager_factory.h"
 
 #include "base/memory/singleton.h"
-#include "brave/browser/brave_browser_context.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/incognito_helpers.h"
@@ -43,7 +42,7 @@ KeyedService* PersonalDataManagerFactory::BuildServiceInstanceFor(
   PersonalDataManager* service =
       new PersonalDataManager(
           brave::BraveContentBrowserClient::Get()->GetApplicationLocale());
-  service->Init(static_cast<brave::BraveBrowserContext*>(context)
+  service->Init(static_cast<Profile*>(context)
                 ->GetAutofillWebdataService(),
                 user_prefs::UserPrefs::Get(context),
                 nullptr,

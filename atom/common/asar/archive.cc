@@ -20,6 +20,8 @@
 #include "atom/node/osfhandle.h"
 #endif
 
+#include "base/threading/thread_restrictions.h"
+
 namespace asar {
 
 namespace {
@@ -129,6 +131,7 @@ Archive::Archive(const base::FilePath& path)
 }
 
 Archive::~Archive() {
+  base::ThreadRestrictions::SetIOAllowed(true); // ugh electron
 #if defined(OS_WIN)
   if (fd_ != -1) {
     node::close(fd_);

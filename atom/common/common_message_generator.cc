@@ -14,6 +14,12 @@
 #include "ipc/struct_destructor_macros.h"
 #include "atom/common/common_message_generator.h"
 
+// Generate param traits size methods.
+#include "ipc/param_traits_size_macros.h"
+namespace IPC {
+#include "atom/common/common_message_generator.h"
+}  // namespace IPC
+
 // Generate param traits write methods.
 #include "ipc/param_traits_write_macros.h"
 namespace IPC {
@@ -31,4 +37,3 @@ namespace IPC {
 namespace IPC {
 #include "atom/common/common_message_generator.h"
 }  // namespace IPC
-

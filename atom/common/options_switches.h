@@ -38,7 +38,6 @@ extern const char kTitleBarStyle[];
 extern const char kAutoHideMenuBar[];
 extern const char kEnableLargerThanScreen[];
 extern const char kDarkTheme[];
-extern const char kTransparent[];
 extern const char kType[];
 extern const char kDisableAutoHideCursor[];
 extern const char kStandardWindow[];
@@ -49,14 +48,9 @@ extern const char kWebPreferences[];
 
 // WebPreferences.
 extern const char kZoomFactor[];
-extern const char kPreloadScript[];
-extern const char kPreloadURL[];
-extern const char kNodeIntegration[];
 extern const char kGuestInstanceID[];
 extern const char kExperimentalFeatures[];
 extern const char kExperimentalCanvasFeatures[];
-extern const char kOpenerID[];
-extern const char kScrollBounce[];
 extern const char kBlinkFeatures[];
 extern const char kDisableBlinkFeatures[];
 
@@ -79,16 +73,10 @@ extern const char kAppUserModelId[];
 
 extern const char kBackgroundColor[];
 extern const char kZoomFactor[];
-extern const char kPreloadScript[];
-extern const char kPreloadURL[];
-extern const char kNodeIntegration[];
 extern const char kGuestInstanceID[];
-extern const char kOpenerID[];
-extern const char kScrollBounce[];
 
 extern const char kWidevineCdmPath[];
 extern const char kWidevineCdmVersion[];
-
 }  // namespace switches
 
 }  // namespace atom

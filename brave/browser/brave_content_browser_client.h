@@ -12,6 +12,7 @@
 
 namespace content {
 class PlatformNotificationService;
+class NavigationHandle;
 }
 
 #if defined(ENABLE_EXTENSIONS)
@@ -33,6 +34,9 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
 
  protected:
   // content::ContentBrowserClient:
+  void RegisterRenderFrameMojoInterfaces(
+      shell::InterfaceRegistry* registry,
+      content::RenderFrameHost* render_frame_host) override;
   void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
   void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
                                       int child_process_id) override;
@@ -44,9 +48,9 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
                        const GURL& opener_top_level_frame_url,
                        const GURL& source_origin,
                        WindowContainerType container_type,
-                       const std::string& frame_name,
                        const GURL& target_url,
                        const content::Referrer& referrer,
+                       const std::string& frame_name,
                        WindowOpenDisposition disposition,
                        const blink::WebWindowFeatures& features,
                        bool user_gesture,
@@ -60,18 +64,48 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
                                        const GURL& effective_url) override;
   void GetAdditionalAllowedSchemesForFileSystem(
       std::vector<std::string>* additional_allowed_schemes) override;
+  void GetAdditionalWebUISchemes(
+      std::vector<std::string>* additional_schemes) override;
   bool ShouldAllowOpenURL(content::SiteInstance* site_instance,
                                       const GURL& url) override;
   void BrowserURLHandlerCreated(
       content::BrowserURLHandler* handler) override;
   void SiteInstanceGotProcess(
-    content::SiteInstance* site_instance) override;
+      content::SiteInstance* site_instance) override;
   void SiteInstanceDeleting(
-    content::SiteInstance* site_instance) override;
+      content::SiteInstance* site_instance) override;
   bool ShouldSwapBrowsingInstancesForNavigation(
       content::SiteInstance* site_instance,
       const GURL& current_url,
       const GURL& new_url) override;
+  std::string GetStoragePartitionIdForSite(
+      content::BrowserContext* browser_context,
+      const GURL& site) override;
+  void GetStoragePartitionConfigForSite(
+    content::BrowserContext* browser_context,
+      const GURL& site,
+      bool can_be_default,
+      std::string* partition_domain,
+      std::string* partition_name,
+      bool* in_memory) override;
+  GURL GetEffectiveURL(
+      content::BrowserContext* browser_context, const GURL& url) override;
+  base::FilePath GetShaderDiskCacheDirectory() override;
+  gpu::GpuChannelEstablishFactory* GetGpuChannelEstablishFactory() override;
+
+void RegisterInProcessMojoApplications(StaticMojoApplicationMap* apps) override;
+void RegisterOutOfProcessMojoApplications(
+    OutOfProcessMojoApplicationMap* apps) override;
+
+
+  ScopedVector<content::NavigationThrottle> CreateThrottlesForNavigation(
+      content::NavigationHandle* handle) override;
+
+ protected:
+  bool IsValidStoragePartitionId(
+    content::BrowserContext* browser_context,
+    const std::string& partition_id);
+
 
  private:
 #if defined(ENABLE_EXTENSIONS)

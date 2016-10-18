@@ -10,9 +10,7 @@
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/net/atom_network_delegate.h"
 
-namespace content {
-class BrowserContext;
-}
+class Profile;
 
 namespace extensions {
 
@@ -21,7 +19,7 @@ class InfoMap;
 class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
  public:
   explicit AtomExtensionsNetworkDelegate(
-      content::BrowserContext* browser_context);
+      Profile* browser_context);
   ~AtomExtensionsNetworkDelegate() override;
   void set_extension_info_map(extensions::InfoMap* extension_info_map);
 

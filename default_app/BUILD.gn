@@ -1,0 +1,23 @@
+action("default_app") {
+  script = "//electron/tools/js2asar.py"
+  inputs = [
+    "default_app.js",
+    "icon.png",
+    "index.html",
+    "main.js",
+    "package.json",
+  ]
+
+  outputs = [
+    "$root_out_dir/default_app.asar"
+  ]
+
+  args = [
+    rebase_path("$root_out_dir/default_app.asar"),
+    rebase_path("//electron/default_app"),
+  ]
+
+  foreach(filename, inputs) {
+    args += [ rebase_path(filename, root_build_dir) ]
+  }
+}

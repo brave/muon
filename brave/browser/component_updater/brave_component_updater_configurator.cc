@@ -50,9 +50,10 @@ class BraveConfigurator : public update_client::Configurator {
   net::URLRequestContextGetter* RequestContext() const override;
   scoped_refptr<update_client::OutOfProcessPatcher> CreateOutOfProcessPatcher()
       const override;
-  bool DeltasEnabled() const override;
-  bool UseBackgroundDownloader() const override;
-  bool UseCupSigning() const override;
+  bool EnabledDeltas() const override;
+  bool EnabledComponentUpdates() const override;
+  bool EnabledBackgroundDownloader() const override;
+  bool EnabledCupSigning() const override;
   scoped_refptr<base::SequencedTaskRunner> GetSequencedTaskRunner()
       const override;
   PrefService* GetPrefService() const override;
@@ -149,21 +150,25 @@ BraveConfigurator::CreateOutOfProcessPatcher() const {
   return nullptr;
 }
 
-bool BraveConfigurator::DeltasEnabled() const {
+bool BraveConfigurator::EnabledComponentUpdates() const {
+  return configurator_impl_.EnabledComponentUpdates();
+}
+
+bool BraveConfigurator::EnabledDeltas() const {
   // TODO(bbondy): Re-enable
   // return configurator_impl_.DeltasEnabled();
   return false;
 }
 
-bool BraveConfigurator::UseBackgroundDownloader() const {
-  return configurator_impl_.UseBackgroundDownloader();
+bool BraveConfigurator::EnabledBackgroundDownloader() const {
+  return configurator_impl_.EnabledBackgroundDownloader();
 }
 
-bool BraveConfigurator::UseCupSigning() const {
+bool BraveConfigurator::EnabledCupSigning() const {
   if (use_brave_server_) {
     return false;
   }
-  return configurator_impl_.UseCupSigning();
+  return configurator_impl_.EnabledCupSigning();
 }
 
 // Returns a task runner to run blocking tasks. The task runner continues to run

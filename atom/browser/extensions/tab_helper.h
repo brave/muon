@@ -79,6 +79,7 @@ class TabHelper : public content::WebContentsObserver,
 
   static content::WebContents* GetTabById(int tab_id,
                          content::BrowserContext* browser_context);
+  static content::WebContents* GetTabById(int32_t tab_id);
 
   static int32_t IdForWindowContainingTab(
       const content::WebContents* tab);
@@ -97,7 +98,7 @@ class TabHelper : public content::WebContentsObserver,
       extensions::ScriptExecutor::ExecuteScriptCallback callback,
       const GURL& file_url,
       bool success,
-      const std::string& code_string);
+      std::unique_ptr<std::string> code_string);
 
   // content::WebContentsObserver overrides.
   void RenderViewCreated(content::RenderViewHost* render_view_host) override;

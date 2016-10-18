@@ -1,0 +1,65 @@
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/util/branding.gni")
+import("//chrome/version.gni")
+
+config("electron_config") {
+  include_dirs = [
+    "//electron",
+    "//skia/config",
+    "//third_party/skia/include/core",
+    "$root_gen_dir/electron",
+    "//electron/vendor/brightray",
+    "//electron/vendor/native_mate",
+    "//electron/vendor/node/src",
+    "//electron/vendor/node/deps/http_parser",
+    "//electron/vendor/node/deps/uv/include",
+    # The `node.h` is using `#include"ares.h"`.
+    "//electron/vendor/node/deps/cares/include",
+    "//electron/vendor",
+  ]
+
+  defines = [
+    "ATOM_PRODUCT_NAME=\"$chrome_product_short_name\"",
+    "NODE_WANT_INTERNALS=1",
+    "NODE_SHARED_MODE",
+    "V8_SHARED",
+    "USING_V8_SHARED",
+    # "USING_V8_SHARED",
+    # "V8_SHARED",
+    # "BUILDING_V8_SHARED",
+    # "BORINGSSL_SHARED_LIBRARY",
+  ]
+
+  if (is_clang) {
+    cflags = [
+      "-Wno-error",
+      "-Wno-unknown-warning-option",
+      "-Wno-parentheses-equality",
+      "-Wno-unused-function",
+      "-Wno-sometimes-uninitialized",
+      "-Wno-pointer-sign",
+      "-Wno-sign-compare",
+      "-Wno-string-plus-int",
+      "-Wno-unused-variable",
+      "-Wno-deprecated-declarations",
+      "-Wno-return-type",
+      "-Wno-gnu-folding-constant",
+      "-Wno-shift-negative-value",
+      "-Wno-varargs", # https://git.io/v6Olj
+      "-Wno-deprecated-declarations",
+      "-Wno-deprecated-register",
+      "-Wno-unused-private-field",
+      "-Wno-unused-function",
+      "-Wno-unguarded-availability",
+      "-Wno-overloaded-virtual",
+    ]
+  }
+
+  common_flags = []
+  if (is_mac) {
+    common_flags += [ "-mmacosx-version-min=10.9" ]
+  }
+  ldflags = common_flags
+  cflags_objcc = common_flags
+}

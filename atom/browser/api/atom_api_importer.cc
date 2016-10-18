@@ -18,10 +18,8 @@
 #include "brave/browser/brave_content_browser_client.h"
 #include "chrome/browser/importer/external_process_importer_host.h"
 #include "chrome/browser/importer/importer_list.h"
-#include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/dictionary.h"
-#include "native_mate/object_template_builder.h"
 
 using content::BrowserThread;
 

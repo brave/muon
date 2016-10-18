@@ -66,10 +66,6 @@ ExtensionInstallerTraits::ExtensionInstallerTraits(
     public_key_(public_key), ready_callback_(ready_callback) {
 }
 
-bool ExtensionInstallerTraits::CanAutoUpdate() const {
-  return true;
-}
-
 bool ExtensionInstallerTraits::RequiresNetworkEncryption() const {
   return false;
 }
@@ -85,6 +81,14 @@ void ExtensionInstallerTraits::ComponentReady(
     const base::FilePath& install_dir,
   std::unique_ptr<base::DictionaryValue> manifest) {
   ready_callback_.Run(install_dir);
+}
+
+bool ExtensionInstallerTraits::SupportsGroupPolicyEnabledComponentUpdates() const {
+  return false; // TODO(bridiver) - true for widevine
+}
+
+std::vector<std::string> ExtensionInstallerTraits::GetMimeTypes() const {
+  return std::vector<std::string>();
 }
 
 // Called during startup and installation before ComponentReady().

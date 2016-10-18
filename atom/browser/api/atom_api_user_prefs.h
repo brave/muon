@@ -17,9 +17,7 @@ class DictionaryValue;
 class ListValue;
 }
 
-namespace brave {
-class BraveBrowserContext;
-}
+class Profile;
 
 namespace atom {
 
@@ -78,10 +76,7 @@ class UserPrefs : public mate::TrackableObject<UserPrefs> {
   double GetDefaultZoomLevel();
   void SetDefaultZoomLevel(double zoom);
 
-  brave::BraveBrowserContext* browser_context() {
-    return static_cast<brave::BraveBrowserContext*>(browser_context_);
-  }
-
+  Profile* profile();
  private:
   content::BrowserContext* browser_context_;  // not owned
 

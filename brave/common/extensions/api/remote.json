@@ -1,0 +1,13 @@
+[
+  {
+    "namespace": "remote",
+    "description": "none",
+    "functions": [
+      {
+        "name": "getCurrentWindow",
+        "nocompile": true,
+        "type": "function"
+      }
+    ]
+  }
+]

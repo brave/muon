@@ -1,0 +1,347 @@
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/features.gni")
+import("//build/config/locales.gni")
+import("//build/config/sanitizers/sanitizers.gni")
+import("//build/config/ui.gni")
+import("//ui/base/ui_features.gni")
+import("//v8/gni/v8.gni")
+import("//chrome/version.gni")
+import("//build/compiled_action.gni")
+import("//build/config/mac/rules.gni")
+import("//build/config/mac/symbols.gni")
+import("//build/mac/tweak_info_plist.gni")
+import("//build/util/branding.gni")
+import("//build_overrides/v8.gni")
+import("//media/cdm/ppapi/cdm_paths.gni")
+import("//third_party/icu/config.gni")
+
+chrome_version_full = "Frameworks"
+chrome_framework_name = chrome_product_full_name + " Framework"
+chrome_helper_name = chrome_product_full_name + " Helper"
+
+tweak_info_plist("electron_app_plist") {
+  info_plist = "resources/app-Info.plist"
+  _keystone_arg = "0"
+  args = [
+    "--breakpad=0",
+    "--keystone=$_keystone_arg",
+    "--scm=1",
+    "--bundle_id=$chrome_mac_bundle_id",
+  ]
+}
+
+mac_app_bundle("electron_app") {
+
+  remove_configs = [ "//build/config/mac:strip_all" ]
+
+  output_name = chrome_product_full_name
+
+  info_plist_target = ":electron_app_plist"
+  extra_substitutions = [
+    "ATOM_PROJECT_NAME=brave",
+    "CHROMIUM_BUNDLE_ID=$chrome_mac_bundle_id",
+    "CHROMIUM_SHORT_NAME=$chrome_product_short_name",
+  ]
+
+  extra_configs = [
+    "//build/config/compiler:wexit_time_destructors",
+  ]
+
+  sources = [
+    "brave_exe_main_mac.c",
+  ]
+
+  deps = [
+    ":electron_versioned_bundle_data",
+    ":electron_app_resources",
+    "//build/config/sanitizers:deps",
+    "//chrome/common:version_header",
+  ]
+
+  # Remove the default strip configuration (which strips all symbols) so that
+  # a saves file can be specified.
+  # if (enable_stripping) {
+  #   remove_configs = [ "//build/config/mac:strip_all" ]
+
+  #   ldflags +=
+  #       [ "-Wcrl,strip,-s," + rebase_path("app/app.saves", root_build_dir) ]
+  # }
+}
+
+tweak_info_plist("electron_framework_plist") {
+  info_plist = "resources/framework-Info.plist"
+  args = [
+    "--breakpad=0",
+    "--keystone=0",
+    "--scm=1",
+    "--branding",
+    chrome_product_short_name,
+  ]
+}
+
+mac_framework_bundle("electron_framework") {
+  output_name = chrome_framework_name
+
+  configs += [
+    "//electron/build/node:node_external_config",
+    "//build/config/compiler:wexit_time_destructors",
+  ]
+
+  info_plist_target = ":electron_framework_plist"
+  extra_substitutions = [
+    "CHROMIUM_BUNDLE_ID=$chrome_mac_bundle_id",
+    "CHROMIUM_SHORT_NAME=$chrome_product_short_name",
+  ]
+
+  public_deps = [
+    ":electron_dll",
+  ]
+
+  deps = [
+    "//chrome:chrome_framework_helpers",
+    "//chrome:chrome_framework_locales",
+    ":node_resources",
+    ":electron_framework_resources",
+    "//build/config/sanitizers:deps",
+    ":electron_xibs",
+  ]
+
+  ldflags = [
+    "-Wl,-install_name,@executable_path/../$chrome_version_full/$chrome_framework_name.framework/$chrome_framework_name",
+    # "-compatibility_version",
+    # chrome_dylib_version,
+    # "-current_version",
+    # chrome_dylib_version,
+    # "-Wl,-order_file," + rebase_path("app/framework.order", root_build_dir),
+  ]
+
+  data_deps = [
+    ":node_resources"
+  ]
+
+  if (is_component_build) {
+    ldflags += [
+      "-rpath",
+      "@loader_path/../../../..",
+      "-Wl,-reexport_library,libelectron_dll.dylib",
+    ]
+
+    data_deps += [
+      ":electron_dll",
+    ]
+  } else {
+    ldflags += [
+      "-rpath",
+      "@loader_path/Libraries",
+    ]
+  }
+}
+
+tweak_info_plist("electron_helper_plist") {
+  info_plist = "resources/helper-Info.plist"
+  args = [
+    "--breakpad=0",
+    "--keystone=0",
+    "--scm=0",
+  ]
+}
+
+mac_app_bundle("electron_helper_app") {
+  output_name = chrome_helper_name
+
+  info_plist_target = ":electron_helper_plist"
+  extra_substitutions = [
+    "CHROMIUM_BUNDLE_ID=$chrome_mac_bundle_id",
+    "CHROMIUM_SHORT_NAME=$chrome_product_short_name",
+  ]
+
+  sources = [
+    "brave_exe_main_mac.c",
+  ]
+
+  extra_configs = [ "//build/config/compiler:wexit_time_destructors" ]
+
+  defines = [ "HELPER_EXECUTABLE" ]
+
+  deps = [
+    "//build/config/sanitizers:deps",
+    "//chrome/common:version_header",
+  ]
+
+  ldflags = []
+
+  if (is_component_build) {
+    ldflags += [
+      # The helper is in Brave.app/Contents/Frameworks/Brave Helper.app/Contents/MacOS/
+      # so set rpath up to the base.
+      "-rpath",
+      "@loader_path/../../../../../..",
+    ]
+  }
+
+  # Remove the default strip configuration (which strips all symbols) so that
+  # a saves file can be specified.
+  # if (enable_stripping) {
+  #   remove_configs = [ "//build/config/mac:strip_all" ]
+
+  #   ldflags +=
+  #       [ "-Wcrl,strip,-s," + rebase_path("app/app.saves", root_build_dir) ]
+  # }
+}
+
+bundle_data("electron_versioned_bundle_data") {
+  sources = [
+    "$root_out_dir/$chrome_framework_name.framework",
+    "$root_out_dir/$chrome_helper_name.app",
+  ]
+
+  outputs = [
+    "{{bundle_root_dir}}/$chrome_version_full/{{source_file_part}}",
+  ]
+
+  public_deps = [
+    ":electron_helper_app",
+    # Before bundling the versioned app components, delete any existing
+    # versions.
+    "//chrome:clean_up_old_versions",
+    ":electron_framework",
+  ]
+}
+
+bundle_data("electron_app_resources") {
+  # asar
+  sources = [
+    "$root_out_dir/electron.asar",
+    "$root_out_dir/default_app.asar",
+  ]
+  public_deps = [
+    "//electron/lib",
+    "//electron/default_app",
+  ]
+
+  # icon
+  if (is_component_build) {
+    sources += [
+      "//electron/app/resources/dev/brave.icns",
+    ]
+  } else {
+    sources += [
+      "//electron/app/resources/nightly/brave.icns",
+    ]
+  }
+
+  outputs = [
+    "{{bundle_resources_dir}}/{{source_file_part}}",
+  ]
+}
+
+bundle_data("electron_framework_resources") {
+  # pak
+  sources = [
+    "$root_gen_dir/repack/electron_resources.pak",
+    "$root_out_dir/chrome_100_percent.pak",
+  ]
+  if (enable_hidpi) {
+    sources += [
+      "$root_out_dir/chrome_200_percent.pak",
+    ]
+  }
+  public_deps = [
+    "//electron:packed_resources",
+  ]
+
+  # v8
+  if (icu_use_data_file) {
+    sources += [ "$root_out_dir/icudtl.dat" ]
+    public_deps += [ "//third_party/icu:icudata" ]
+  }
+  if (v8_use_external_startup_data) {
+    sources += [
+      "$root_out_dir/natives_blob.bin",
+      "$root_out_dir/snapshot_blob.bin",
+    ]
+    public_deps += [ "//v8:v8" ]
+  }
+
+  outputs = [
+    "{{bundle_resources_dir}}/{{source_file_part}}",
+  ]
+}
+
+# On Mac, speed up the component build by not re-bundling the framework
+# every time it changes. Instead, place all the sources and their deps in
+# a library that the bundled framework links (and re-exports). That way
+# only the library needs to be re-linked when it changes.
+if (is_component_build) {
+  _dll_target_type = "shared_library"
+} else {
+  _dll_target_type = "source_set"
+}
+target(_dll_target_type, "electron_dll") {
+  visibility = [
+    ":electron_framework",
+    ":electron_framework_shared_library",
+  ]
+
+  public_configs = [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "//electron/atom/app/atom_library_main.h",
+    "//electron/atom/app/atom_library_main.mm",
+  ]
+
+  deps = [
+    "//electron:browser_dependencies",
+    "//electron:child_dependencies",
+    "//chrome/common:constants",
+    "//components/crash/content/app",
+    "//components/policy:generated",
+    "//content/public/app:both",
+    "//third_party/cld",
+  ]
+
+  ldflags = [
+    # "-Wl,-order_file",
+    # "-Wl," + rebase_path("app/framework.order", root_build_dir),
+    "-ObjC",
+  ]
+
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+}
+
+bundle_data("node_resources") {
+  sources = [
+    "$root_out_dir/libnode.dylib",
+  ]
+  outputs = [
+    "{{bundle_root_dir}}/Libraries/{{source_file_part}}",
+  ]
+  public_deps = [
+    "//electron/build/node",
+  ]
+}
+
+mac_xib_bundle_data("electron_xibs") {
+  sources = [
+    "resources/MainMenu.xib",
+  ]
+}
+
+# action("fix_node_path") {
+#   script = "//build/gn_run_binary.py"
+#   args = [
+#     "/usr/bin/install_name_tool",
+#     "-change", "/usr/local/lib/libnode.dylib",
+#     "@executable_path/../Frameworks/Libraries/libnode.dylib",
+#     rebase_path("$root_out_dir/$chrome_product_short_name.app/Contents/Frameworks/$chrome_framework_name.framework/$chrome_framework_name") ]
+#   deps = [
+#     ":electron_versioned_bundle_data",
+#     ":build_node"
+#   ]
+#   outputs = [ "$root_build_dir/alwaysrun" ]
+# }
+

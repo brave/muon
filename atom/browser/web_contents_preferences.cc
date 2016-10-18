@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "atom/browser/native_window.h"
-#include "atom/browser/web_view_manager.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/strings/string_number_conversions.h"
 #include "cc/base/switches.h"
@@ -99,28 +98,6 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
   if (web_preferences.GetBoolean(options::kExperimentalCanvasFeatures, &b) && b)
     command_line->AppendSwitch(::switches::kEnableExperimentalCanvasFeatures);
 
-  // Check if we have node integration specified.
-  bool node_integration = true;
-  web_preferences.GetBoolean(options::kNodeIntegration, &node_integration);
-  command_line->AppendSwitchASCII(switches::kNodeIntegration,
-                                  node_integration ? "true" : "false");
-
-  // The preload script.
-  base::FilePath::StringType preload;
-  if (web_preferences.GetString(options::kPreloadScript, &preload)) {
-    if (base::FilePath(preload).IsAbsolute())
-      command_line->AppendSwitchNative(switches::kPreloadScript, preload);
-    else
-      LOG(ERROR) << "preload script must have absolute path.";
-  } else if (web_preferences.GetString(options::kPreloadURL, &preload)) {
-    // Translate to file path if there is "preload-url" option.
-    base::FilePath preload_path;
-    if (net::FileURLToFilePath(GURL(preload), &preload_path))
-      command_line->AppendSwitchPath(switches::kPreloadScript, preload_path);
-    else
-      LOG(ERROR) << "preload url must be file:// protocol.";
-  }
-
   // --background-color.
   std::string color;
   if (web_preferences.GetString(options::kBackgroundColor, &color))
@@ -132,26 +109,6 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
       zoom_factor != 1.0)
     command_line->AppendSwitchASCII(switches::kZoomFactor,
                                     base::DoubleToString(zoom_factor));
-
-  // --guest-instance-id, which is used to identify guest WebContents.
-  int guest_instance_id = 0;
-  if (web_preferences.GetInteger(options::kGuestInstanceID, &guest_instance_id))
-    command_line->AppendSwitchASCII(switches::kGuestInstanceID,
-                                    base::IntToString(guest_instance_id));
-
-  // Pass the opener's window id.
-  int opener_id;
-  if (web_preferences.GetInteger(options::kOpenerID, &opener_id))
-    command_line->AppendSwitchASCII(switches::kOpenerID,
-                                    base::IntToString(opener_id));
-
-#if defined(OS_MACOSX)
-  // Enable scroll bounce.
-  bool scroll_bounce;
-  if (web_preferences.GetBoolean(options::kScrollBounce, &scroll_bounce) &&
-      scroll_bounce)
-    command_line->AppendSwitch(switches::kScrollBounce);
-#endif
 
   // Custom command line switches.
   const base::ListValue* args;
@@ -175,31 +132,6 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
                                 &disable_blink_features))
     command_line->AppendSwitchASCII(::switches::kDisableBlinkFeatures,
                                     disable_blink_features);
-
-  // The initial visibility state.
-  NativeWindow* window = NativeWindow::FromWebContents(web_contents);
-
-  // Use embedder window for webviews
-  if (guest_instance_id && !window) {
-    auto manager = WebViewManager::GetWebViewManager(web_contents);
-    if (manager) {
-      auto embedder = manager->GetEmbedder(guest_instance_id);
-      if (embedder)
-        window = NativeWindow::FromWebContents(embedder);
-    }
-  }
-
-  if (window) {
-    bool visible = window->IsVisible() && !window->IsMinimized();
-    if (!visible)  // Default state is visible.
-      command_line->AppendSwitch("hidden-page");
-  }
-
-  // Use frame scheduling for offscreen renderers.
-  // TODO(zcbenz): Remove this after Chrome 54, on which it becomes default.
-  bool offscreen;
-  if (web_preferences.GetBoolean("offscreen", &offscreen) && offscreen)
-    command_line->AppendSwitch(cc::switches::kEnableBeginFrameScheduling);
 }
 
 // static

@@ -1,0 +1,378 @@
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/features.gni")
+import("//build/config/locales.gni")
+import("//build/config/crypto.gni")
+import("//build/config/sanitizers/sanitizers.gni")
+import("//build/config/ui.gni")
+import("//tools/grit/grit_rule.gni")
+import("//tools/grit/repack.gni")
+import("//ui/base/ui_features.gni")
+import("//v8/gni/v8.gni")
+import("//chrome/version.gni")
+
+enable_service_discovery = false
+
+group("electron") {
+  testonly = false
+
+  if (is_mac) {
+    deps = [
+      "app/mac:electron_app",
+    ]
+
+    data_deps = [
+      "app/mac:electron_app",
+    ]
+  }
+
+  if (is_linux) {
+    deps = [
+      "app/linux:electron_app",
+    ]
+
+    data_deps = [
+      "app/linux:electron_app",
+    ]
+  }
+
+  if (is_win) {
+    deps = [
+      "app/win:electron_app",
+    ]
+
+    data_deps = [
+      "app/win:electron_app",
+    ]
+  }
+}
+
+source_set("main") {
+  public_configs = [
+    "build:electron_config",
+  ]
+
+  sources = [
+    "atom/app/atom_main.cc",
+    "atom/app/atom_main.h",
+    # "atom/app/node_main.cc",
+    # "atom/app/node_main.h",
+  ]
+
+  if (is_win) {
+    sources += [
+    # 'atom/browser/resources/win/resource.h',
+    # 'atom/browser/resources/win/atom.ico',
+    # 'atom/browser/resources/win/atom.rc',
+    # # Cursors.
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/aliasb.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/cell.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/col_resize.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/copy.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/hand_grab.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/hand_grabbing.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/none.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_east.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_middle.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_north.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_north_east.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_north_west.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_south.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_south_east.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_south_west.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/pan_west.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/row_resize.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/vertical_text.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/zoom_in.cur',
+    # '<(libchromiumcontent_src_dir)/ui/resources/cursors/zoom_out.cur',
+    ]
+  }
+}
+
+grit("atom_resources") {
+  source = "atom/atom_resources.grd"
+  output_dir = "$root_gen_dir/atom/"
+  outputs = [
+    "grit/atom_resources.h",
+    "atom_resources.pak",
+  ]
+
+  resource_ids = "//electron/resource_ids"
+}
+
+grit("brave_resources") {
+  source = "brave/brave_resources.grd"
+  output_dir = "$root_gen_dir/brave/"
+  outputs = [
+    "grit/brave_resources.h",
+    "brave_resources.pak",
+  ]
+
+  resource_ids = "//electron/resource_ids"
+}
+
+grit("electron_api_resources") {
+  source = "lib/electron_api_resources.grd"
+  output_dir = "$root_gen_dir/atom/"
+  outputs = [
+    "grit/electron_api_resources.h",
+    "electron_api_resources.pak",
+  ]
+
+  resource_ids = "//electron/resource_ids"
+}
+
+grit("brave_strings") {
+  source = "brave/brave_strings.grd"
+  output_dir = "$root_gen_dir/brave"
+  use_qualified_include = true
+  outputs = [
+    "grit/brave_strings.h",
+    "brave_strings.pak",
+ ]
+
+ resource_ids = "//electron/resource_ids"
+}
+
+group("packed_resources") {
+  public_deps = [
+    ":packed_extra_resources",
+    "//chrome:packed_resources",
+  ]
+}
+
+repack("packed_extra_resources") {
+  visibility = [ "./*" ]
+  sources = [
+    "$root_gen_dir/atom/atom_resources.pak",
+    "$root_gen_dir/brave/brave_resources.pak",
+    "$root_gen_dir/brave/brave_strings.pak",
+    "$root_gen_dir/chrome/common_resources.pak",
+    "$root_gen_dir/blink/public/resources/blink_resources.pak",
+    "$root_gen_dir/content/app/strings/content_strings_en-US.pak",
+    "$root_gen_dir/content/browser/tracing/tracing_resources.pak",
+    "$root_gen_dir/content/content_resources.pak",
+    "$root_gen_dir/net/net_resources.pak",
+    "$root_gen_dir/ui/resources/webui_resources.pak",
+    "$root_gen_dir/ui/strings/app_locale_settings_en-US.pak",
+    "$root_gen_dir/ui/strings/ui_strings_en-US.pak",
+    "$root_gen_dir/components/components_resources.pak",
+    "$root_gen_dir/blink/devtools_resources.pak",
+  ]
+
+  deps = [
+    ":atom_resources",
+    ":brave_resources",
+    ":brave_strings",
+    "//chrome/common:resources",
+    "//chrome/renderer:resources",
+    "//content:resources",
+    "//content/app/resources",
+    "//content/app/strings",
+    "//content/browser/tracing:resources",
+    "//net:net_resources",
+    "//third_party/WebKit/public:image_resources",
+    "//third_party/WebKit/public:resources",
+    "//ui/resources",
+    "//ui/strings",
+    "//content/browser/devtools:resources",
+    "//components/resources:components_resources",
+  ]
+
+  if (enable_extensions) {
+    sources += [
+      "$root_gen_dir/atom/electron_api_resources.pak",
+      "$root_gen_dir/extensions/extensions_renderer_resources.pak",
+      "$root_gen_dir/extensions/extensions_resources.pak",
+    ]
+    deps += [
+      ":electron_api_resources",
+      "//extensions:extensions_resources"
+    ]
+  }
+
+  if (is_mac) {
+    output = "$root_gen_dir/repack/electron_resources.pak"
+  } else {
+    output = "$root_out_dir/electron_resources.pak"
+  }
+}
+
+source_set("browser_dependencies") {
+  public_configs = [
+    "build:electron_config",
+  ]
+
+  public_deps = [
+    "atom/app",
+    "brave/browser",
+    ":common",
+    "lib:atom_js2c",
+  ]
+
+  sources = []
+
+  if (enable_plugins) {
+    public_deps += [ "//ppapi/host" ]
+  }
+
+  if (enable_basic_printing || enable_print_preview) {
+    public_deps += [ "//printing" ]
+  }
+}
+
+group("child_dependencies") {
+  public_deps = [
+    "atom/app",
+    ":common",
+    ":renderer",
+    ":utility",
+    "//content/public/child",
+    "//content/public/gpu",
+    "//third_party/WebKit/public:blink_devtools_frontend_resources",
+  ]
+}
+
+source_set("common") {
+  public_deps = [
+    "atom/common"
+  ]
+
+  sources = [
+    "brave/common/brave_paths.cc",
+    "brave/common/brave_paths.h",
+  ]
+
+  if (enable_extensions) {
+    public_deps += [
+      "brave/common/extensions/api",
+    ]
+  }
+}
+
+source_set("utility") {
+  public_configs = [
+    "build:electron_config",
+  ]
+
+  deps = [
+    "//chrome/utility",
+    "//third_party/protobuf:protobuf_lite",
+  ]
+
+  sources = [
+    "atom/utility/atom_content_utility_client.cc",
+    "atom/utility/atom_content_utility_client.h",
+  ]
+}
+
+source_set("renderer") {
+  public_configs = [
+    "build:electron_config",
+  ]
+
+  sources = [
+    "atom/renderer/api/atom_api_spell_check_client.cc",
+    "atom/renderer/api/atom_api_spell_check_client.h",
+    "atom/renderer/atom_render_view_observer.cc",
+    "atom/renderer/atom_render_view_observer.h",
+    "atom/renderer/atom_renderer_client.cc",
+    "atom/renderer/atom_renderer_client.h",
+    "atom/renderer/content_settings_client.cc",
+    "atom/renderer/content_settings_client.h",
+    "atom/renderer/content_settings_manager.cc",
+    "atom/renderer/content_settings_manager.h",
+    "atom/renderer/content_settings_observer.h",
+    "brave/renderer/brave_content_renderer_client.cc",
+    "brave/renderer/brave_content_renderer_client.h",
+  ]
+
+  public_deps = [
+    "//chrome/renderer",
+  ]
+
+  deps = [
+    ":common",
+    "//third_party/WebKit/public:blink_headers",
+  ]
+
+  data_deps = [
+    ":atom_resources",
+    ":brave_resources",
+    ":electron_api_resources",
+  ]
+
+  if (enable_basic_printing) {
+    sources += [
+      "brave/renderer/printing/brave_print_web_view_helper_delegate.cc",
+      "brave/renderer/printing/brave_print_web_view_helper_delegate.h",
+    ]
+
+    deps += [
+      "//components/printing/renderer",
+    ]
+  }
+
+  if (enable_extensions) {
+    sources += [
+      # TODO(bridiver) - change to brave/renderer/extensions
+      "atom/common/javascript_bindings.cc",
+      "atom/common/javascript_bindings.h",
+      "atom/renderer/extensions/atom_extensions_dispatcher_delegate.cc",
+      "atom/renderer/extensions/atom_extensions_dispatcher_delegate.h",
+      "atom/renderer/extensions/atom_extensions_renderer_client.cc",
+      "atom/renderer/extensions/atom_extensions_renderer_client.h",
+      "brave/renderer/extensions/content_settings_bindings.cc",
+      "brave/renderer/extensions/content_settings_bindings.h",
+      "brave/renderer/extensions/web_frame_bindings.cc",
+      "brave/renderer/extensions/web_frame_bindings.h",
+    ]
+
+    deps += [
+      ":common",
+      "chromium_src:renderer",
+      "//extensions:extensions_resources",
+      "//extensions/renderer",
+      "//media/cast:net",
+      "//media/cast:receiver",
+      "//media/cast:sender",
+    ]
+  }
+}
+
+source_set("native_mate") {
+  configs += [
+    "build:electron_config",
+  ]
+
+  sources = [
+    "vendor/native_mate/native_mate/arguments.cc",
+    "vendor/native_mate/native_mate/arguments.h",
+    "vendor/native_mate/native_mate/compat.h",
+    "vendor/native_mate/native_mate/constructor.h",
+    "vendor/native_mate/native_mate/converter.cc",
+    "vendor/native_mate/native_mate/converter.h",
+    "vendor/native_mate/native_mate/dictionary.cc",
+    "vendor/native_mate/native_mate/dictionary.h",
+    "vendor/native_mate/native_mate/function_template.cc",
+    "vendor/native_mate/native_mate/function_template.h",
+    "vendor/native_mate/native_mate/handle.h",
+    "vendor/native_mate/native_mate/object_template_builder.cc",
+    "vendor/native_mate/native_mate/object_template_builder.h",
+    "vendor/native_mate/native_mate/persistent_dictionary.cc",
+    "vendor/native_mate/native_mate/persistent_dictionary.h",
+    "vendor/native_mate/native_mate/scoped_persistent.h",
+    "vendor/native_mate/native_mate/template_util.h",
+    "vendor/native_mate/native_mate/try_catch.cc",
+    "vendor/native_mate/native_mate/try_catch.h",
+    "vendor/native_mate/native_mate/wrappable.cc",
+    "vendor/native_mate/native_mate/wrappable.h",
+    "vendor/native_mate/native_mate/wrappable_base.h",
+  ]
+
+  deps = [
+    "build/node",
+    "//third_party/WebKit/public:blink_headers",
+  ]
+}

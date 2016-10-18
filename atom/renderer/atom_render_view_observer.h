@@ -12,6 +12,10 @@ namespace base {
 class ListValue;
 }
 
+namespace web_cache {
+class WebCacheImpl;
+}
+
 namespace atom {
 
 class AtomRendererClient;
@@ -19,7 +23,8 @@ class AtomRendererClient;
 class AtomRenderViewObserver : public content::RenderViewObserver {
  public:
   explicit AtomRenderViewObserver(content::RenderView* render_view,
-                                  AtomRendererClient* renderer_client);
+                                  AtomRendererClient* renderer_client,
+                                  web_cache::WebCacheImpl* web_cache_impl);
 
  protected:
   virtual ~AtomRenderViewObserver();
@@ -28,14 +33,11 @@ class AtomRenderViewObserver : public content::RenderViewObserver {
   // content::RenderViewObserver implementation.
   void DidCreateDocumentElement(blink::WebLocalFrame* frame) override;
   void DraggableRegionsChanged(blink::WebFrame* frame) override;
-  bool OnMessageReceived(const IPC::Message& message) override;
   void OnDestruct() override;
-
-  void OnBrowserMessage(bool send_to_all,
-                        const base::string16& channel,
-                        const base::ListValue& args);
+  void Navigate(const GURL& url) override;
 
   // Whether the document object has been created.
+  web_cache::WebCacheImpl* web_cache_impl_;  // not owned
   bool document_created_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomRenderViewObserver);

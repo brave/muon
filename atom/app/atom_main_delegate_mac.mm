@@ -14,6 +14,8 @@
 #include "base/strings/sys_string_conversions.h"
 #include "brightray/common/application_info.h"
 #include "brightray/common/mac/main_application_bundle.h"
+#include "chrome/common/chrome_version.h"
+#include "chrome/common/chrome_paths_internal.h"
 #include "content/public/common/content_paths.h"
 
 namespace atom {
@@ -36,8 +38,10 @@ base::FilePath GetHelperAppPath(const base::FilePath& frameworks_path,
 }  // namespace
 
 void AtomMainDelegate::OverrideFrameworkBundlePath() {
+  base::FilePath* version_path = new base::FilePath(GetFrameworksPath());
+  chrome::SetOverrideVersionedDirectory(version_path);
   base::mac::SetOverrideFrameworkBundlePath(
-      GetFrameworksPath().Append(ATOM_PRODUCT_NAME " Framework.framework"));
+      GetFrameworksPath().Append(PRODUCT_SHORTNAME_STRING " Framework.framework"));
 }
 
 base::FilePath GetResourcesPakFilePathByName(const std::string resource_name) {
@@ -49,7 +53,7 @@ base::FilePath GetResourcesPakFilePathByName(const std::string resource_name) {
 void AtomMainDelegate::OverrideChildProcessPath() {
   base::FilePath frameworks_path = GetFrameworksPath();
   base::FilePath helper_path = GetHelperAppPath(frameworks_path,
-                                                ATOM_PRODUCT_NAME);
+                                                PRODUCT_SHORTNAME_STRING);
   if (!base::PathExists(helper_path))
     helper_path = GetHelperAppPath(frameworks_path,
                                    brightray::GetApplicationName());

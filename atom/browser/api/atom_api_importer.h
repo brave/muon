@@ -13,6 +13,7 @@
 #include "base/callback.h"
 #include "base/values.h"
 #include "chrome/browser/importer/importer_progress_observer.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/common/importer/importer_data_types.h"
 #include "native_mate/handle.h"
 

@@ -10,7 +10,7 @@
 #include "atom/common/google_api_key.h"
 #include "base/environment.h"
 #include "content/public/browser/browser_thread.h"
-#include "content/public/browser/geolocation_provider.h"
+#include "device/geolocation/geolocation_provider.h"
 
 using content::BrowserThread;
 
@@ -30,7 +30,7 @@ const char* kGeolocationProviderURL =
 class TokenLoadingJob : public base::RefCountedThreadSafe<TokenLoadingJob> {
  public:
   explicit TokenLoadingJob(
-      const content::AccessTokenStore::LoadAccessTokensCallback& callback)
+      const device::AccessTokenStore::LoadAccessTokensCallback& callback)
       : callback_(callback), request_context_getter_(nullptr) {}
 
   void Run() {
@@ -56,7 +56,7 @@ class TokenLoadingJob : public base::RefCountedThreadSafe<TokenLoadingJob> {
     // Equivelent to access_token_map[kGeolocationProviderURL].
     // Somehow base::string16 is causing compilation errors when used in a pair
     // of std::map on Linux, this can work around it.
-    content::AccessTokenStore::AccessTokenMap access_token_map;
+    device::AccessTokenStore::AccessTokenMap access_token_map;
     std::pair<GURL, base::string16> token_pair;
     token_pair.first = GURL(kGeolocationProviderURL);
     access_token_map.insert(token_pair);
@@ -64,14 +64,14 @@ class TokenLoadingJob : public base::RefCountedThreadSafe<TokenLoadingJob> {
     callback_.Run(access_token_map, request_context_getter_);
   }
 
-  content::AccessTokenStore::LoadAccessTokensCallback callback_;
+  device::AccessTokenStore::LoadAccessTokensCallback callback_;
   net::URLRequestContextGetter* request_context_getter_;
 };
 
 }  // namespace
 
 AtomAccessTokenStore::AtomAccessTokenStore() {
-  content::GeolocationProvider::GetInstance()->UserDidOptIntoLocationServices();
+  device::GeolocationProvider::GetInstance()->UserDidOptIntoLocationServices();
 }
 
 AtomAccessTokenStore::~AtomAccessTokenStore() {

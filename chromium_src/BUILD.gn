@@ -1,0 +1,270 @@
+import("//build/config/features.gni")
+import("//build/config/ui.gni")
+
+config("chromium_src_config") {
+  include_dirs = [
+    ".",
+    "..",
+    "../..",
+    "$root_gen_dir/chrome",
+    "$root_gen_dir/components/strings",
+    "//skia/config",
+    "//third_party/skia/include/core",
+  ]
+
+  if (is_clang) {
+    cflags = [
+      "-Wno-error",
+      "-Wno-unknown-warning-option",
+      "-Wno-parentheses-equality",
+      "-Wno-unused-function",
+      "-Wno-sometimes-uninitialized",
+      "-Wno-pointer-sign",
+      "-Wno-sign-compare",
+      "-Wno-string-plus-int",
+      "-Wno-unused-variable",
+      "-Wno-deprecated-declarations",
+      "-Wno-return-type",
+      "-Wno-gnu-folding-constant",
+      "-Wno-shift-negative-value",
+      "-Wno-varargs", # https://git.io/v6Olj
+      "-Wno-deprecated-declarations",
+      "-Wno-deprecated-register",
+      "-Wno-unused-private-field",
+      "-Wno-unused-function",
+    ]
+  }
+}
+
+source_set("debug") {
+  public_configs = [ ":chromium_src_config" ]
+
+  include_dirs = [
+    # force this to appear before the chromium root src dir
+    ".",
+  ]
+
+  sources = [
+    "net/test/embedded_test_server/stream_listen_socket.cc",
+    "net/test/embedded_test_server/stream_listen_socket.h",
+    "net/test/embedded_test_server/tcp_listen_socket.cc",
+    "net/test/embedded_test_server/tcp_listen_socket.h",
+  ]
+}
+
+source_set("renderer") {
+  configs += [ ":chromium_src_config" ]
+
+  include_dirs = [
+    # force this to appear before the chromium root src dir
+    ".",
+  ]
+
+  sources = []
+
+  deps = []
+
+  if (enable_plugins) {
+    sources += [
+      # "chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc",
+      # "chrome/renderer/pepper/chrome_renderer_pepper_host_factory.h",
+    ]
+
+    deps += [
+      "//components/pdf/renderer",
+      "//components/strings",
+      "//ppapi/host",
+      "//ppapi/proxy",
+      "//ppapi/proxy:ipc",
+      "//ppapi/shared_impl",
+      "//third_party/icu",
+      "//third_party/WebKit/public:blink_headers",
+    ]
+  }
+}
+
+source_set("browser") {
+  configs += [ ":chromium_src_config" ]
+
+  include_dirs = [
+    # force this to appear before the chromium root src dir
+    ".",
+  ]
+
+  sources = [
+    "chrome/browser/browser_process.cc",
+    "chrome/browser/browser_process.h",
+    "chrome/browser/chrome_process_finder_win.cc",
+    "chrome/browser/chrome_process_finder_win.h",
+    "chrome/browser/chrome_notification_types.h",
+    "chrome/browser/custom_handlers/protocol_handler_registry.cc",
+    "chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
+    "chrome/browser/extensions/global_shortcut_listener.cc",
+    "chrome/browser/extensions/global_shortcut_listener.h",
+    "chrome/browser/extensions/global_shortcut_listener_mac.mm",
+    "chrome/browser/extensions/global_shortcut_listener_mac.h",
+    "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
+    "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
+    # TODO(bridiver) - maybe use chrome?
+    # "chrome/browser/media/media_capture_devices_dispatcher.cc",
+    # "chrome/browser/media/media_capture_devices_dispatcher.h",
+
+    "chrome/browser/importer/external_process_importer_client.cc",
+    "chrome/browser/importer/external_process_importer_client.h",
+    "chrome/browser/importer/external_process_importer_host.cc",
+    "chrome/browser/importer/external_process_importer_host.h",
+    "chrome/browser/importer/firefox_profile_lock.cc",
+    "chrome/browser/importer/firefox_profile_lock.h",
+    "chrome/browser/importer/firefox_profile_lock_posix.cc",
+    "chrome/browser/importer/firefox_profile_lock_win.cc",
+    "chrome/browser/importer/importer_list.cc",
+    "chrome/browser/importer/importer_list.h",
+    "chrome/browser/importer/importer_lock_dialog.h",
+    "chrome/browser/importer/importer_progress_observer.h",
+    "chrome/browser/importer/importer_uma.cc",
+    "chrome/browser/importer/importer_uma.h",
+    "chrome/browser/importer/in_process_importer_bridge.cc",
+    "chrome/browser/importer/in_process_importer_bridge.h",
+    "chrome/browser/importer/profile_writer.h",
+    "chrome/browser/process_singleton_posix.cc",
+    # "chrome/browser/process_singleton_win.cc",
+    "chrome/browser/process_singleton.h",
+    "chrome/browser/profiles/incognito_helpers.cc",
+    "chrome/browser/profiles/incognito_helpers.h",
+    "chrome/browser/profiles/profile_io_data.cc",
+    "chrome/browser/profiles/profile_io_data.h",
+    "chrome/browser/profiles/profile.cc",
+    "chrome/browser/profiles/profile.h",
+    "chrome/browser/profiles/profile_manager.cc",
+    "chrome/browser/profiles/profile_manager.h",
+    "chrome/browser/profiles/profiles_state.cc",
+    "chrome/browser/profiles/profiles_state.h",
+    "//chrome/browser/renderer_host/chrome_extension_message_filter.cc",
+    "//chrome/browser/renderer_host/chrome_extension_message_filter.h",
+    "//chrome/browser/speech/tts_controller.h",
+    "//chrome/browser/speech/tts_controller_impl.cc",
+    "//chrome/browser/speech/tts_controller_impl.h",
+    "//chrome/browser/speech/tts_linux.cc",
+    "//chrome/browser/speech/tts_mac.mm",
+    "//chrome/browser/speech/tts_message_filter.cc",
+    "//chrome/browser/speech/tts_message_filter.h",
+    "//chrome/browser/speech/tts_platform.cc",
+    "//chrome/browser/speech/tts_platform.h",
+    "//chrome/browser/speech/tts_win.cc",
+    "chrome/browser/ui/browser_dialogs.h",
+    "//chrome/browser/ui/cocoa/color_chooser_mac.mm",
+    "//chrome/browser/ui/zoom/chrome_zoom_level_prefs.cc",
+    "//chrome/browser/ui/zoom/chrome_zoom_level_prefs.h",
+    "//chrome/browser/content_settings/cookie_settings_factory.cc",
+    "//chrome/browser/content_settings/cookie_settings_factory.h",
+    "chrome/browser/content_settings/host_content_settings_map_factory.cc",
+    "chrome/browser/content_settings/host_content_settings_map_factory.h",
+    "//chrome/browser/printing/print_job.cc",
+    "//chrome/browser/printing/print_job.h",
+    "//chrome/browser/printing/print_job_manager.cc",
+    "//chrome/browser/printing/print_job_manager.h",
+    "//chrome/browser/printing/print_job_worker.cc",
+    "//chrome/browser/printing/print_job_worker.h",
+    "//chrome/browser/printing/print_job_worker_owner.cc",
+    "//chrome/browser/printing/print_job_worker_owner.h",
+    # "//chrome/browser/printing/print_view_manager.cc",
+    # "//chrome/browser/printing/print_view_manager.h",
+    # "//chrome/browser/printing/print_view_manager_base.cc",
+    # "//chrome/browser/printing/print_view_manager_base.h",
+    # "//chrome/browser/printing/print_view_manager_basic.cc",
+    # "//chrome/browser/printing/print_view_manager_basic.h",
+    # "//chrome/browser/printing/print_view_manager_common.cc",
+    # "//chrome/browser/printing/print_view_manager_common.h",
+    # "//chrome/browser/printing/print_view_manager_observer.h",
+    "//chrome/browser/printing/printer_query.cc",
+    "//chrome/browser/printing/printer_query.h",
+    "//chrome/browser/printing/printing_message_filter.cc",
+    "//chrome/browser/printing/printing_message_filter.h",
+    "//chrome/browser/tab_contents/tab_util.cc",
+    "//chrome/browser/tab_contents/tab_util.h",
+  ]
+
+  public_deps = []
+  deps = [
+    "//electron/atom/browser",
+    "//components/certificate_transparency",
+    "//components/data_usage/core",
+    "//components/prefs",
+    "//components/ssl_config",
+  ]
+
+  if (enable_webrtc) {
+    sources += [
+      "chrome/browser/media/desktop_media_list.h",
+      "chrome/browser/media/desktop_media_list_observer.h",
+      "chrome/browser/media/native_desktop_media_list.cc",
+      "chrome/browser/media/native_desktop_media_list.h",
+    ]
+
+    public_deps += [
+      "//third_party/libyuv",
+      "//third_party/webrtc/modules/desktop_capture",
+    ]
+  }
+
+  if (enable_plugins) {
+    sources += [
+      "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc",
+      "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h",
+      "//chrome/browser/renderer_host/pepper/device_id_fetcher.cc",
+      "//chrome/browser/renderer_host/pepper/device_id_fetcher.h",
+      "//chrome/browser/renderer_host/pepper/monitor_finder_mac.h",
+      "//chrome/browser/renderer_host/pepper/monitor_finder_mac.mm",
+      "//chrome/browser/renderer_host/pepper/pepper_broker_message_filter.cc",
+      "//chrome/browser/renderer_host/pepper/pepper_broker_message_filter.h",
+      "//chrome/browser/renderer_host/pepper/pepper_flash_browser_host.cc",
+      "//chrome/browser/renderer_host/pepper/pepper_flash_browser_host.h",
+      "//chrome/browser/renderer_host/pepper/pepper_flash_clipboard_message_filter.cc",
+      "//chrome/browser/renderer_host/pepper/pepper_flash_clipboard_message_filter.h",
+      "//chrome/browser/renderer_host/pepper/pepper_flash_drm_host.cc",
+      "//chrome/browser/renderer_host/pepper/pepper_flash_drm_host.h",
+      "//chrome/browser/renderer_host/pepper/pepper_isolated_file_system_message_filter.cc",
+      "//chrome/browser/renderer_host/pepper/pepper_isolated_file_system_message_filter.h",
+      "//chrome/browser/plugins/plugin_info_message_filter.cc",
+      "//chrome/browser/plugins/plugin_info_message_filter.h",
+    ]
+
+    if (enable_extensions) {
+      sources += [
+        "chrome/browser/extensions/extension_util.cc",
+        "chrome/browser/extensions/extension_util.h",
+        "chrome/browser/extensions/extension_tab_util.cc",
+        "chrome/browser/extensions/extension_tab_util.h",
+        "//chrome/browser/extensions/api/messaging/extension_message_port.cc",
+        "//chrome/browser/extensions/api/messaging/extension_message_port.h",
+        # "//chrome/browser/extensions/api/messaging/incognito_connectability.cc",
+        # "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
+        "//chrome/browser/extensions/api/messaging/message_property_provider.cc",
+        "//chrome/browser/extensions/api/messaging/message_property_provider.h",
+        "//chrome/browser/extensions/api/messaging/message_service.cc",
+        "//chrome/browser/extensions/api/messaging/message_service.h",
+        "//chrome/browser/extensions/api/messaging/native_message_port.cc",
+        "//chrome/browser/extensions/api/messaging/native_message_port.h",
+        "//chrome/browser/extensions/api/messaging/native_messaging_host_manifest.cc",
+        "//chrome/browser/extensions/api/messaging/native_messaging_host_manifest.h",
+        "//chrome/browser/extensions/api/messaging/native_messaging_policy_handler.cc",
+        "//chrome/browser/extensions/api/messaging/native_messaging_policy_handler.h",
+        "//chrome/browser/extensions/api/messaging/native_message_process_host.cc",
+        "//chrome/browser/extensions/api/messaging/native_message_process_host.h",
+        "//chrome/browser/extensions/api/messaging/native_process_launcher.cc",
+        "//chrome/browser/extensions/api/messaging/native_process_launcher.h",
+        "//chrome/browser/extensions/api/messaging/native_process_launcher_posix.cc",
+        "//chrome/browser/extensions/api/messaging/native_process_launcher_win.cc",
+        "//chrome/browser/extensions/event_router_forwarder.cc",
+        "//chrome/browser/extensions/event_router_forwarder.h",
+      ]
+
+      deps += [ "//extensions/browser" ]
+    }
+
+    public_deps += [
+      "//ppapi/host",
+      "//ppapi/proxy",
+    ]
+  }
+}

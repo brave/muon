@@ -18,13 +18,15 @@
 #include "atom/browser/web_dialog_helper.h"
 #include "atom/common/atom_constants.h"
 #include "base/files/file_util.h"
+#include "base/strings/utf_string_conversions.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
-#include "chrome/browser/printing/print_preview_message_handler.h"
-#include "chrome/browser/printing/print_view_manager_basic.h"
+// #include "chrome/browser/printing/print_preview_message_handler.h"
+// #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/ui/browser_dialogs.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "chrome/common/pref_names.h"
+#include "chrome/grit/generated_resources.h"
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/scoped_user_pref_update.h"
@@ -37,6 +39,9 @@
 #include "content/public/browser/security_style_explanation.h"
 #include "content/public/browser/security_style_explanations.h"
 #include "storage/browser/fileapi/isolated_context.h"
+#include "net/ssl/ssl_cipher_suite_names.h"
+#include "net/ssl/ssl_connection_status_flags.h"
+#include "ui/base/l10n/l10n_util.h"
 
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/api/atom_api_window.h"
@@ -178,6 +183,74 @@ content::SecurityStyle SecurityLevelToSecurityStyle(
   return content::SECURITY_STYLE_UNKNOWN;
 }
 
+void AddConnectionExplanation(
+    const security_state::SecurityStateModel::SecurityInfo& security_info,
+    content::SecurityStyleExplanations* security_style_explanations) {
+
+  // Avoid showing TLS details when we couldn't even establish a TLS connection
+  // (e.g. for net errors) or if there was no real connection (some tests). We
+  // check the |cert_id| to see if there was a connection.
+  if (security_info.cert_id == 0 || security_info.connection_status == 0) {
+    return;
+  }
+
+  int ssl_version =
+      net::SSLConnectionStatusToVersion(security_info.connection_status);
+  const char* protocol;
+  net::SSLVersionToString(&protocol, ssl_version);
+  const char* key_exchange;
+  const char* cipher;
+  const char* mac;
+  bool is_aead;
+  uint16_t cipher_suite =
+      net::SSLConnectionStatusToCipherSuite(security_info.connection_status);
+  net::SSLCipherSuiteToStrings(&key_exchange, &cipher, &mac, &is_aead,
+                               cipher_suite);
+  base::string16 protocol_name = base::ASCIIToUTF16(protocol);
+  base::string16 key_exchange_name = base::ASCIIToUTF16(key_exchange);
+  const base::string16 cipher_name =
+      (mac == NULL) ? base::ASCIIToUTF16(cipher)
+                    : l10n_util::GetStringFUTF16(IDS_CIPHER_WITH_MAC,
+                                                 base::ASCIIToUTF16(cipher),
+                                                 base::ASCIIToUTF16(mac));
+  if (security_info.obsolete_ssl_status == net::OBSOLETE_SSL_NONE) {
+    security_style_explanations->secure_explanations.push_back(
+        content::SecurityStyleExplanation(
+            l10n_util::GetStringUTF8(IDS_STRONG_SSL_SUMMARY),
+            l10n_util::GetStringFUTF8(IDS_STRONG_SSL_DESCRIPTION, protocol_name,
+                                      key_exchange_name, cipher_name)));
+    return;
+  }
+
+  std::vector<base::string16> description_replacements;
+  int status = security_info.obsolete_ssl_status;
+  int str_id;
+
+  str_id = (status & net::OBSOLETE_SSL_MASK_PROTOCOL)
+               ? IDS_SSL_AN_OBSOLETE_PROTOCOL
+               : IDS_SSL_A_STRONG_PROTOCOL;
+  description_replacements.push_back(l10n_util::GetStringUTF16(str_id));
+  description_replacements.push_back(protocol_name);
+
+  str_id = (status & net::OBSOLETE_SSL_MASK_KEY_EXCHANGE)
+               ? IDS_SSL_AN_OBSOLETE_KEY_EXCHANGE
+               : IDS_SSL_A_STRONG_KEY_EXCHANGE;
+  description_replacements.push_back(l10n_util::GetStringUTF16(str_id));
+  description_replacements.push_back(key_exchange_name);
+
+  str_id = (status & net::OBSOLETE_SSL_MASK_CIPHER) ? IDS_SSL_AN_OBSOLETE_CIPHER
+                                                    : IDS_SSL_A_STRONG_CIPHER;
+  description_replacements.push_back(l10n_util::GetStringUTF16(str_id));
+  description_replacements.push_back(cipher_name);
+
+  security_style_explanations->info_explanations.push_back(
+      content::SecurityStyleExplanation(
+          l10n_util::GetStringUTF8(IDS_OBSOLETE_SSL_SUMMARY),
+          base::UTF16ToUTF8(
+              l10n_util::GetStringFUTF16(IDS_OBSOLETE_SSL_DESCRIPTION,
+                                         description_replacements, nullptr))));
+}
+
 }  // namespace
 
 CommonWebContentsDelegate::CommonWebContentsDelegate()
@@ -195,8 +268,8 @@ void CommonWebContentsDelegate::InitWithWebContents(
   browser_context_ = browser_context;
   web_contents->SetDelegate(this);
 
-  printing::PrintViewManagerBasic::CreateForWebContents(web_contents);
-  printing::PrintPreviewMessageHandler::CreateForWebContents(web_contents);
+  // printing::PrintViewManagerBasic::CreateForWebContents(web_contents);
+  // printing::PrintPreviewMessageHandler::CreateForWebContents(web_contents);
 
   // Create InspectableWebContents.
   web_contents_.reset(brightray::InspectableWebContents::Create(web_contents));
@@ -408,83 +481,99 @@ bool CommonWebContentsDelegate::IsFullscreenForTabOrPending(
 
 content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
     content::WebContents* web_contents,
-    content::SecurityStyleExplanations* explanations) {
+    content::SecurityStyleExplanations* security_style_explanations) {
   auto model_client =
       AtomSecurityStateModelClient::FromWebContents(web_contents);
-
-  const SecurityStateModel::SecurityInfo& security_info =
-      model_client->GetSecurityInfo();
+  auto security_info = model_client->GetSecurityInfo();
 
   const content::SecurityStyle security_style =
       SecurityLevelToSecurityStyle(security_info.security_level);
 
-  explanations->ran_insecure_content_style =
+  security_style_explanations->ran_insecure_content_style =
       SecurityLevelToSecurityStyle(
           SecurityStateModel::kRanInsecureContentLevel);
-  explanations->displayed_insecure_content_style =
+  security_style_explanations->displayed_insecure_content_style =
       SecurityLevelToSecurityStyle(
           SecurityStateModel::kDisplayedInsecureContentLevel);
 
-  explanations->scheme_is_cryptographic = security_info.scheme_is_cryptographic;
-  if (!security_info.scheme_is_cryptographic)
+  // Check if the page is HTTP; if so, no explanations are needed. Note
+  // that SECURITY_STYLE_UNAUTHENTICATED does not necessarily mean that
+  // the page is loaded over HTTP, because the security style merely
+  // represents how the embedder wishes to display the security state of
+  // the page, and the embedder can choose to display HTTPS page as HTTP
+  // if it wants to (for example, displaying deprecated crypto
+  // algorithms with the same UI treatment as HTTP pages).
+  security_style_explanations->scheme_is_cryptographic =
+      security_info.scheme_is_cryptographic;
+  if (!security_info.scheme_is_cryptographic) {
     return security_style;
+  }
 
   if (security_info.sha1_deprecation_status ==
       SecurityStateModel::DEPRECATED_SHA1_MAJOR) {
-    explanations->broken_explanations.push_back(
+    security_style_explanations->broken_explanations.push_back(
         content::SecurityStyleExplanation(
-            kSHA1Certificate,
-            kSHA1MajorDescription,
+            l10n_util::GetStringUTF8(IDS_MAJOR_SHA1),
+            l10n_util::GetStringUTF8(IDS_MAJOR_SHA1_DESCRIPTION),
             security_info.cert_id));
   } else if (security_info.sha1_deprecation_status ==
-                SecurityStateModel::DEPRECATED_SHA1_MINOR) {
-    explanations->unauthenticated_explanations.push_back(
+             SecurityStateModel::DEPRECATED_SHA1_MINOR) {
+    security_style_explanations->unauthenticated_explanations.push_back(
         content::SecurityStyleExplanation(
-            kSHA1Certificate,
-            kSHA1MinorDescription,
+            l10n_util::GetStringUTF8(IDS_MINOR_SHA1),
+            l10n_util::GetStringUTF8(IDS_MINOR_SHA1_DESCRIPTION),
             security_info.cert_id));
   }
 
-  explanations->ran_insecure_content =
+  security_style_explanations->ran_insecure_content =
       security_info.mixed_content_status ==
-          SecurityStateModel::RAN_MIXED_CONTENT ||
+          SecurityStateModel::CONTENT_STATUS_RAN ||
       security_info.mixed_content_status ==
-          SecurityStateModel::RAN_AND_DISPLAYED_MIXED_CONTENT;
-  explanations->displayed_insecure_content =
+          SecurityStateModel::CONTENT_STATUS_DISPLAYED_AND_RAN;
+  security_style_explanations->displayed_insecure_content =
       security_info.mixed_content_status ==
-          SecurityStateModel::DISPLAYED_MIXED_CONTENT ||
+          SecurityStateModel::CONTENT_STATUS_DISPLAYED ||
       security_info.mixed_content_status ==
-          SecurityStateModel::RAN_AND_DISPLAYED_MIXED_CONTENT;
+          SecurityStateModel::CONTENT_STATUS_DISPLAYED_AND_RAN;
 
   if (net::IsCertStatusError(security_info.cert_status)) {
-    std::string error_string = net::ErrorToString(
-        net::MapCertStatusToNetError(security_info.cert_status));
+    base::string16 error_string = base::UTF8ToUTF16(net::ErrorToString(
+        net::MapCertStatusToNetError(security_info.cert_status)));
 
     content::SecurityStyleExplanation explanation(
-        kCertificateError,
-        "There are issues with the site's certificate chain " + error_string,
+        l10n_util::GetStringUTF8(IDS_CERTIFICATE_CHAIN_ERROR),
+        l10n_util::GetStringFUTF8(
+            IDS_CERTIFICATE_CHAIN_ERROR_DESCRIPTION_FORMAT, error_string),
         security_info.cert_id);
 
     if (net::IsCertStatusMinorError(security_info.cert_status))
-      explanations->unauthenticated_explanations.push_back(explanation);
+      security_style_explanations->unauthenticated_explanations.push_back(
+          explanation);
     else
-      explanations->broken_explanations.push_back(explanation);
+      security_style_explanations->broken_explanations.push_back(explanation);
   } else {
+    // If the certificate does not have errors and is not using
+    // deprecated SHA1, then add an explanation that the certificate is
+    // valid.
     if (security_info.sha1_deprecation_status ==
         SecurityStateModel::NO_DEPRECATED_SHA1) {
-      explanations->secure_explanations.push_back(
+      security_style_explanations->secure_explanations.push_back(
           content::SecurityStyleExplanation(
-              kValidCertificate,
-              kValidCertificateDescription,
+              l10n_util::GetStringUTF8(IDS_VALID_SERVER_CERTIFICATE),
+              l10n_util::GetStringUTF8(
+                  IDS_VALID_SERVER_CERTIFICATE_DESCRIPTION),
               security_info.cert_id));
     }
   }
 
-  if (security_info.is_secure_protocol_and_ciphersuite) {
-    explanations->secure_explanations.push_back(
+  AddConnectionExplanation(security_info, security_style_explanations);
+
+  security_style_explanations->pkp_bypassed = security_info.pkp_bypassed;
+  if (security_info.pkp_bypassed) {
+    security_style_explanations->info_explanations.push_back(
         content::SecurityStyleExplanation(
-            kSecureProtocol,
-            kSecureProtocolDescription));
+            "Public-Key Pinning Bypassed",
+            "Public-key pinning was bypassed by a local root certificate."));
   }
 
   return security_style;

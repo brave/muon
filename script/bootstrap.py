@@ -34,39 +34,39 @@ def main():
   if sys.platform == 'cygwin':
     update_win32_python()
 
-  update_submodules()
+  # update_submodules()
 
-  libcc_source_path = args.libcc_source_path
-  libcc_shared_library_path = args.libcc_shared_library_path
-  libcc_static_library_path = args.libcc_static_library_path
+  # libcc_source_path = args.libcc_source_path
+  # libcc_shared_library_path = args.libcc_shared_library_path
+  # libcc_static_library_path = args.libcc_static_library_path
 
-  # Redirect to use local libchromiumcontent build.
-  if args.build_libchromiumcontent:
-    build_libchromiumcontent(args.verbose, args.target_arch, defines)
-    dist_dir = os.path.join(SOURCE_ROOT, 'vendor', 'brightray', 'vendor',
-                            'libchromiumcontent', 'dist', 'main')
-    libcc_source_path = os.path.join(dist_dir, 'src')
-    libcc_shared_library_path = os.path.join(dist_dir, 'shared_library')
-    libcc_static_library_path = os.path.join(dist_dir, 'static_library')
+  # # Redirect to use local libchromiumcontent build.
+  # if args.build_libchromiumcontent:
+  #   build_libchromiumcontent(args.verbose, args.target_arch, defines)
+  #   dist_dir = os.path.join(SOURCE_ROOT, 'vendor', 'brightray', 'vendor',
+  #                           'libchromiumcontent', 'dist', 'main')
+  #   libcc_source_path = os.path.join(dist_dir, 'src')
+  #   libcc_shared_library_path = os.path.join(dist_dir, 'shared_library')
+  #   libcc_static_library_path = os.path.join(dist_dir, 'static_library')
 
-  if PLATFORM != 'win32':
-    if not args.disable_clang and args.clang_dir == '':
-      # Download prebuilt clang binaries.
-      update_clang()
+  # if PLATFORM != 'win32':
+  #   if not args.disable_clang and args.clang_dir == '':
+  #     # Download prebuilt clang binaries.
+  #     update_clang()
 
-  setup_python_libs()
+  # setup_python_libs()
   update_node_modules('.')
-  bootstrap_brightray(args.dev, args.url, args.target_arch,
-                      libcc_source_path, libcc_shared_library_path,
-                      libcc_static_library_path)
+  # bootstrap_brightray(args.dev, args.url, args.target_arch,
+  #                     libcc_source_path, libcc_shared_library_path,
+  #                     libcc_static_library_path)
 
-  if PLATFORM == 'linux':
-    download_sysroot(args.target_arch)
+  # if PLATFORM == 'linux':
+  #   download_sysroot(args.target_arch)
 
-  create_chrome_version_h()
-  touch_config_gypi()
-  run_update(defines, args.msvs)
-  update_electron_modules('spec', args.target_arch)
+  # create_chrome_version_h()
+  # touch_config_gypi()
+  # run_update(defines, args.msvs)
+  # update_electron_modules('spec', args.target_arch)
 
 
 def parse_args():

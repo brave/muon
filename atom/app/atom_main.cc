@@ -27,7 +27,7 @@
 #include "atom/app/atom_library_main.h"
 #endif  // defined(OS_MACOSX)
 
-#include "atom/app/node_main.h"
+// #include "atom/app/node_main.h"
 #include "atom/common/atom_command_line.h"
 #include "base/at_exit.h"
 #include "base/i18n/icu_util.h"
@@ -135,9 +135,9 @@ int main(int argc, const char* argv[]) {
 #else  // defined(OS_LINUX)
 
 int main(int argc, const char* argv[]) {
-  if (IsEnvSet(kRunAsNode)) {
-    return AtomInitializeICUandStartNode(argc, const_cast<char**>(argv));
-  }
+  // if (IsEnvSet(kRunAsNode)) {
+  //   return AtomInitializeICUandStartNode(argc, const_cast<char**>(argv));
+  // }
 
   return AtomMain(argc, argv);
 }

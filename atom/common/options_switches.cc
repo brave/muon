@@ -57,9 +57,6 @@ const char kEnableLargerThanScreen[] = "enableLargerThanScreen";
 // Forces to use dark theme on Linux.
 const char kDarkTheme[] = "darkTheme";
 
-// Whether the window should be transparent.
-const char kTransparent[] = "transparent";
-
 // Window type hint.
 const char kType[] = "type";
 
@@ -84,27 +81,12 @@ const char kWebPreferences[] = "webPreferences";
 // The factor of which page should be zoomed.
 const char kZoomFactor[] = "zoomFactor";
 
-// Script that will be loaded by guest WebContents before other scripts.
-const char kPreloadScript[] = "preload";
-
-// Like --preload, but the passed argument is an URL.
-const char kPreloadURL[] = "preloadURL";
-
-// Enable the node integration.
-const char kNodeIntegration[] = "nodeIntegration";
-
 // Instancd ID of guest WebContents.
 const char kGuestInstanceID[] = "guestInstanceId";
 
 // Web runtime features.
 const char kExperimentalFeatures[]       = "experimentalFeatures";
 const char kExperimentalCanvasFeatures[] = "experimentalCanvasFeatures";
-
-// Opener window's ID.
-const char kOpenerID[] = "openerId";
-
-// Enable the rubber banding effect.
-const char kScrollBounce[] = "scrollBounce";
 
 // Enable blink features.
 // TODO(kevinsawicki) Rename to enableBlinkFeatures in 2.0
@@ -148,19 +130,12 @@ const char kAppUserModelId[] = "app-user-model-id";
 // The command line switch versions of the options.
 const char kBackgroundColor[] = "background-color";
 const char kZoomFactor[]      = "zoom-factor";
-const char kPreloadScript[]   = "preload";
-const char kPreloadURL[]      = "preload-url";
-const char kNodeIntegration[] = "node-integration";
-const char kGuestInstanceID[] = "guest-instance-id";
-const char kOpenerID[]        = "opener-id";
-const char kScrollBounce[]    = "scroll-bounce";
 
 // Widevine options
 // Path to Widevine CDM binaries.
 const char kWidevineCdmPath[] = "widevine-cdm-path";
 // Widevine CDM version.
 const char kWidevineCdmVersion[] = "widevine-cdm-version";
-
 }  // namespace switches
 
 }  // namespace atom

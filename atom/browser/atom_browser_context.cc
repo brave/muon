@@ -15,9 +15,7 @@
 #include "atom/browser/net/atom_ssl_config_service.h"
 #include "atom/browser/net/atom_url_request_job_factory.h"
 #include "atom/browser/net/http_protocol_handler.h"
-#include "atom/browser/web_view_manager.h"
 #include "atom/common/atom_version.h"
-#include "atom/common/chrome_version.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
@@ -28,6 +26,7 @@
 #include "base/threading/sequenced_worker_pool.h"
 #include "base/threading/worker_pool.h"
 #include "chrome/common/chrome_paths.h"
+#include "chrome/common/chrome_version.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "content/public/browser/browser_thread.h"
@@ -73,12 +72,12 @@ AtomBrowserContext::AtomBrowserContext(
   Browser* browser = Browser::Get();
   std::string name = RemoveWhitespace(browser->GetName());
   std::string user_agent;
-  if (name == ATOM_PRODUCT_NAME) {
+  if (name == PRODUCT_SHORTNAME_STRING) {
     user_agent = "Chrome/" CHROME_VERSION_STRING " "
-                 ATOM_PRODUCT_NAME "/" ATOM_VERSION_STRING;
+                 PRODUCT_SHORTNAME_STRING "/" ATOM_VERSION_STRING;
   } else {
     user_agent = base::StringPrintf(
-        "%s/%s Chrome/%s " ATOM_PRODUCT_NAME "/" ATOM_VERSION_STRING,
+        "%s/%s Chrome/%s " PRODUCT_SHORTNAME_STRING "/" ATOM_VERSION_STRING,
         name.c_str(),
         browser->GetVersion().c_str(),
         CHROME_VERSION_STRING);
@@ -90,7 +89,7 @@ AtomBrowserContext::AtomBrowserContext(
   options.GetBoolean("cache", &use_cache_);
 
   // Initialize Pref Registry in brightray.
-  InitPrefs();
+  // InitPrefs();
 }
 
 AtomBrowserContext::~AtomBrowserContext() {
@@ -169,12 +168,6 @@ AtomBrowserContext::GetDownloadManagerDelegate() {
   return download_manager_delegate_.get();
 }
 
-content::BrowserPluginGuestManager* AtomBrowserContext::GetGuestManager() {
-  if (!guest_manager_)
-    guest_manager_.reset(new WebViewManager);
-  return guest_manager_.get();
-}
-
 content::PermissionManager* AtomBrowserContext::GetPermissionManager() {
   if (!permission_manager_.get())
     permission_manager_.reset(new AtomPermissionManager);
@@ -206,16 +199,5 @@ void AtomBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
                                       download_dir);
   pref_registry->RegisterDictionaryPref(prefs::kDevToolsFileSystemPaths);
 }
-
-// static
-// scoped_refptr<AtomBrowserContext> AtomBrowserContext::From(
-//     const std::string& partition, bool in_memory,
-//     const base::DictionaryValue& options) {
-//  auto browser_context = brightray::BrowserContext::Get(partition, in_memory);
-//   if (browser_context)
-//     return static_cast<AtomBrowserContext*>(browser_context.get());
-
-//   return new AtomBrowserContext(partition, in_memory, options);
-// }
 
 }  // namespace atom

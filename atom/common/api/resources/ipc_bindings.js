@@ -1,4 +1,4 @@
-var ipc = require('ipc_utils')
+const ipc = require('ipc_utils')
 
 exports.didCreateDocumentElement = function() {
   // don't try to run if there is no window object
@@ -31,5 +31,3 @@ exports.didCreateDocumentElement = function() {
       return window.chrome.tabs.create({url: url})
     }
 }
-
-exports.binding = ipc

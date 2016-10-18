@@ -35,7 +35,6 @@ class AtomExtensionsDispatcherDelegate
                                 bool is_within_platform_app) override;
   void OnActiveExtensionsUpdated(
       const std::set<std::string>& extensions_ids) override;
-  void SetChannel(int channel) override;
 
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionsDispatcherDelegate);
 };

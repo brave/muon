@@ -1,0 +1,208 @@
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/features.gni")
+
+source_set("node") {
+  public_configs = [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "api/atom_api_asar.cc",
+    "api/atom_api_clipboard.cc",
+    # "api/atom_api_crash_reporter.cc",
+    "api/atom_api_key_weak_map.h",
+    "api/atom_api_native_image.cc",
+    "api/atom_api_native_image.h",
+    "api/atom_api_shell.cc",
+    "api/atom_api_v8_util.cc",
+    "api/atom_bindings.cc",
+    "api/atom_bindings.h",
+    "api/event_emitter_caller.cc",
+    "api/event_emitter_caller.h",
+    "api/locker.cc",
+    "api/locker.h",
+    "native_mate_converters/blink_converter.cc",
+    "native_mate_converters/blink_converter.h",
+    "native_mate_converters/callback.cc",
+    "native_mate_converters/callback.h",
+    "native_mate_converters/content_converter.cc",
+    "native_mate_converters/content_converter.h",
+    "native_mate_converters/file_path_converter.h",
+    "native_mate_converters/gfx_converter.cc",
+    "native_mate_converters/gfx_converter.h",
+    "native_mate_converters/gurl_converter.h",
+    "native_mate_converters/image_converter.cc",
+    "native_mate_converters/image_converter.h",
+    "native_mate_converters/net_converter.cc",
+    "native_mate_converters/net_converter.h",
+    "native_mate_converters/string16_converter.h",
+    "native_mate_converters/ui_base_types_converter.h",
+    "native_mate_converters/v8_value_converter.cc",
+    "native_mate_converters/v8_value_converter.h",
+    "native_mate_converters/value_converter.cc",
+    "native_mate_converters/value_converter.h",
+    "node_bindings.cc",
+    "node_bindings.h",
+    "node_includes.h",
+  ]
+
+  sources += [
+    # move the converter to accelerator.h
+    "native_mate_converters/accelerator_converter.cc",
+    "native_mate_converters/accelerator_converter.h",
+  ]
+
+  public_deps = [
+    "//electron/build/node",
+    "//electron:native_mate",
+  ]
+
+  deps = [
+    "//third_party/WebKit/public:blink",
+  ]
+}
+
+source_set("common") {
+  public_configs = [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "api/api_messages.h",
+    "api/object_life_monitor.cc",
+    "api/object_life_monitor.h",
+    "api/remote_callback_freer.cc",
+    "api/remote_callback_freer.h",
+    "api/remote_object_freer.cc",
+    "api/remote_object_freer.h",
+    "asar/archive.cc",
+    "asar/archive.h",
+    "asar/asar_util.cc",
+    "asar/asar_util.h",
+    "asar/scoped_temporary_file.cc",
+    "asar/scoped_temporary_file.h",
+    "atom_command_line.cc",
+    "atom_command_line.h",
+    "atom_constants.cc",
+    "atom_constants.h",
+    "color_util.cc",
+    "color_util.h",
+    "common_message_generator.cc",
+    "common_message_generator.h",
+    # "crash_reporter/crash_reporter.cc",
+    # "crash_reporter/crash_reporter.h",
+    "draggable_region.cc",
+    "draggable_region.h",
+    "google_api_key.h",
+    "importer/chrome_importer_utils.cc",
+    "importer/chrome_importer_utils.h",
+    "importer/imported_cookie_entry.cc",
+    "importer/imported_cookie_entry.h",
+    "key_weak_map.h",
+    "keyboard_util.cc",
+    "keyboard_util.h",
+    "mouse_util.cc",
+    "mouse_util.h",
+    "options_switches.cc",
+    "options_switches.h",
+    "pepper_flash_util.cc",
+    "pepper_flash_util.h",
+    "platform_util.h",
+  ]
+
+  public_deps = [
+    ":node",
+    "//chrome/common",
+    "//components/autofill/content/common",
+    "//components/autofill/core/common",
+  ]
+
+  deps = [
+    "//base",
+    "//base:base_static",
+    "//base:i18n",
+    "//components/autofill/content/common",
+    "//components/autofill/core/common",
+  ]
+
+  if (is_mac) {
+    sources += [
+      "api/atom_api_native_image_mac.mm",
+      # "crash_reporter/crash_reporter_mac.h",
+      # "crash_reporter/crash_reporter_mac.mm",
+      "importer/chrome_importer_utils_mac.mm",
+      "node_bindings_mac.cc",
+      "node_bindings_mac.h",
+      "platform_util_mac.mm",
+    ]
+
+    if (is_component_build) {
+      libs = [
+        "Carbon.framework",
+        "CoreFoundation.framework",
+        "CoreGraphics.framework",
+        "CoreText.framework",
+        "Foundation.framework",
+      ]
+    }
+  }
+
+  if (is_linux) {
+    sources += [
+      # "crash_reporter/crash_reporter_linux.cc",
+      # "crash_reporter/crash_reporter_linux.h",
+      # "crash_reporter/linux/crash_dump_handler.cc",
+      # "crash_reporter/linux/crash_dump_handler.h",
+      "importer/chrome_importer_utils_linux.cc",
+      "linux/application_info.cc",
+      "node_bindings_linux.cc",
+      "node_bindings_linux.h",
+      "platform_util_linux.cc",
+    ]
+  }
+
+  if (is_win) {
+    sources += [
+      # "crash_reporter/crash_reporter_win.cc",
+      # "crash_reporter/crash_reporter_win.h",
+      # "crash_reporter/win/crash_service.cc",
+      # "crash_reporter/win/crash_service.h",
+      # "crash_reporter/win/crash_service_main.cc",
+      # "crash_reporter/win/crash_service_main.h",
+      "importer/chrome_importer_utils_win.cc",
+      "node_bindings_win.cc",
+      "node_bindings_win.h",
+      "platform_util_win.cc",
+    ]
+  }
+
+  if (enable_basic_printing || enable_print_preview) {
+    public_deps += [
+      "//components/printing/common",
+      "//printing",
+    ]
+  }
+
+  if (enable_extensions) {
+    sources += [
+      "extensions/atom_extensions_client.cc",
+      "extensions/atom_extensions_client.h",
+    ]
+    deps += [
+      "//chrome/common/extensions/api",
+      "//chrome/common/extensions/api:api_registration",
+      "//chrome/common/extensions/api:extensions_features",
+      "//device/usb",
+      "//electron/brave/common/extensions/api",
+      "//electron/brave/common/extensions/api:api_registration",
+      "//electron/brave/common/extensions/api:extensions_features",
+      "//extensions:extensions_resources",
+      "//extensions/common",
+      "//extensions/common/api",
+      "//extensions/strings",
+      "//media/cast:net",
+    ]
+  }
+}

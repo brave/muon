@@ -19,6 +19,10 @@ class FilePath;
 struct FileDescriptor;
 }
 
+namespace shell {
+class InterfaceRegistry;
+}
+
 class UtilityMessageHandler;
 
 namespace atom {
@@ -30,11 +34,9 @@ class AtomContentUtilityClient : public content::ContentUtilityClient {
 
   void UtilityThreadStarted() override;
   bool OnMessageReceived(const IPC::Message& message) override;
+  void ExposeInterfacesToBrowser(shell::InterfaceRegistry* registry) override;
 
-  static void set_max_ipc_message_size_for_test(int64_t max_message_size) {
-    max_ipc_message_size_ = max_message_size;
-  }
-
+  static void PreSandboxStartup();
  private:
   void OnStartupPing();
 

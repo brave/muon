@@ -76,8 +76,6 @@ class ImporterBridge : public base::RefCountedThreadSafe<ImporterBridge> {
   virtual void SetAutofillFormData(
       const std::vector<ImporterAutofillFormDataEntry>& entries) = 0;
 
-  virtual void SetCookies(const std::vector<ImportedCookieEntry>& cookies) = 0;
-
   // Notifies the coordinator that the import operation has begun.
   virtual void NotifyStarted() = 0;
 

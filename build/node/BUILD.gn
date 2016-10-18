@@ -1,0 +1,58 @@
+import("//v8/gni/v8.gni")
+
+config("node_external_config") {
+  if (is_linux) {
+    ldflags =
+        [ rebase_path("$root_out_dir/libnode.so",
+                      root_build_dir) ]
+  } else if (is_win) {
+    ldflags =
+        [ rebase_path("$root_out_dir/node.dll.lib",
+                      root_build_dir) ]
+  } else if (is_mac) {
+    ldflags =
+        [ rebase_path("$root_out_dir/libnode.dylib",
+                      root_build_dir) ]
+  }
+}
+
+source_set("node") {
+  public_configs = [
+    ":node_external_config",
+  ]
+
+  public_deps = [
+    ":build_node",
+    "//v8:v8",
+    "//third_party/boringssl:boringssl",
+  ]
+}
+
+action("build_node") {
+  # dummy script - these are actually produced separately through gyp
+  script = "//electron/tools/node_gyp_build.py"
+
+  outputs = [
+    "$root_out_dir/libnode.dylib",
+  ]
+}
+
+# TODO(bridiver) this isn't used right now because generating the node target wipes out the electron target
+action("node_gyp_chromium") {
+  script = "//build/gyp_chromium"
+  inputs = [
+    "//electron/node.gypi",
+    "//electron/vendor/node/node.gyp",
+  ]
+  outputs = [
+    "$root_build_dir/obj/electron/vendor/node/node.ninja",
+  ]
+  args = []
+  if (is_component_build) {
+    args += [ "-D", "component=shared_library", ]
+  }
+  args += [
+    "-I", rebase_path("node.gypi", root_build_dir),
+    rebase_path("vendor/node/node.gyp", root_build_dir),
+  ]
+}

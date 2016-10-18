@@ -9,6 +9,7 @@
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/image_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "native_mate/constructor.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
@@ -160,7 +161,7 @@ void Menu::MenuDestroyed() {
   if (!is_destroyed_) {
     is_destroyed_ = true;
     FOR_EACH_OBSERVER(MenuObserver, observers_, MenuDestroyed());
-    base::MessageLoop::current()->PostTask(FROM_HERE, GetDestroyClosure());
+    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
   }
 }
 

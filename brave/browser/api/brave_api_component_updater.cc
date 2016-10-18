@@ -13,10 +13,14 @@
 #include "brave/browser/component_updater/widevine_cdm_component_installer.h"
 #include "native_mate/dictionary.h"
 
+
+void Noop(int error) {}
+
 void ComponentsUI::OnDemandUpdate(
     component_updater::ComponentUpdateService* cus,
     const std::string& component_id) {
-  cus->GetOnDemandUpdater().OnDemandUpdate(component_id);
+  cus->GetOnDemandUpdater().OnDemandUpdate(component_id,
+      base::Bind(Noop));
 }
 
 bool
@@ -31,7 +35,7 @@ ComponentsUI::GetComponentDetails(const std::string& component_id,
 component_updater::ComponentUpdateService* ComponentsUI::GetCUSForID(
     const std::string& component_id) const {
   if (component_id == kWidevineId) {
-    return g_browser_process->google_component_updater();
+    return g_browser_process->component_updater();
   }
   return g_browser_process->brave_component_updater();
 }
@@ -101,7 +105,7 @@ void ComponentUpdater::RegisterComponent(const std::string& component_id) {
   static bool registeredObserver = false;
   if (!registeredObserver) {
     g_browser_process->brave_component_updater()->AddObserver(this);
-    g_browser_process->google_component_updater()->AddObserver(this);
+    g_browser_process->component_updater()->AddObserver(this);
     registeredObserver = true;
   }
   base::Closure registered_callback =
@@ -127,16 +131,16 @@ void ComponentUpdater::RegisterComponent(const std::string& component_id) {
         kPocketPublicKeyStr, registered_callback, ready_callback);
   } else if (component_id == kWidevineId) {
     brave::RegisterWidevineCdmComponent(
-        g_browser_process->google_component_updater(),
+        g_browser_process->component_updater(),
         registered_callback, ready_callback);
   }
 }
 
 std::vector<std::string> ComponentUpdater::GetComponentIDs() {
   std::vector<std::string> components =
-      g_browser_process->google_component_updater()->GetComponentIDs();
+      g_browser_process->component_updater()->GetComponentIDs();
   std::vector<std::string> brave_components =
-      g_browser_process->google_component_updater()->GetComponentIDs();
+      g_browser_process->component_updater()->GetComponentIDs();
   components.insert(components.end(),
       brave_components.begin(), brave_components.end());
   return components;

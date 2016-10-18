@@ -1,0 +1,42 @@
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/features.gni")
+
+source_set("app") {
+  public_configs = [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "atom_content_client.cc",
+    "atom_content_client.h",
+    "atom_main_delegate.h",
+    "atom_main_delegate.cc",
+    "uv_task_runner.cc",
+    "uv_task_runner.h",
+  ]
+
+  if (is_mac) {
+    sources += [
+      "atom_main_delegate_mac.mm",
+    ]
+  }
+
+  deps = [
+    "//third_party/kasko",
+  ]
+
+  # TODO(bridiver) - this doesn't belong here
+  if (is_debug) {
+    sources += [
+      "//electron/atom/browser/node_debugger.cc",
+      "//electron/atom/browser/node_debugger.h",
+    ]
+
+    deps += [
+      "//v8:v8",
+      "//electron/chromium_src:debug",
+    ]
+  }
+}

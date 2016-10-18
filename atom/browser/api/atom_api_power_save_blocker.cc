@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "chrome/common/chrome_version.h"
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/dictionary.h"
 
@@ -75,10 +76,10 @@ void PowerSaveBlocker::UpdatePowerSaveBlocker() {
         new device::PowerSaveBlocker(
             new_blocker_type,
             device::PowerSaveBlocker::kReasonOther,
-            ATOM_PRODUCT_NAME,
-            content::BrowserThread::GetMessageLoopProxyForThread(
+            PRODUCT_SHORTNAME_STRING,
+            content::BrowserThread::GetTaskRunnerForThread(
                 content::BrowserThread::UI),
-            content::BrowserThread::GetMessageLoopProxyForThread(
+            content::BrowserThread::GetTaskRunnerForThread(
                 content::BrowserThread::FILE)));
     power_save_blocker_.swap(new_blocker);
     current_blocker_type_ = new_blocker_type;

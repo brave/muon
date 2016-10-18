@@ -6,15 +6,24 @@
 
 #include "atom/browser/net/atom_url_request_job_factory.h"
 #include "base/path_service.h"
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "brave/browser/brave_permission_manager.h"
 #include "brightray/browser/brightray_paths.h"
+#include "chrome/browser/browser_process.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/common/pref_names.h"
+#include "common/application_info.h"
 #include "components/autofill/core/browser/autofill_manager.h"
 #include "components/autofill/core/browser/webdata/autofill_table.h"
+#include "components/component_updater/component_updater_paths.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
+#include "components/guest_view/browser/guest_view_manager.h"
+#include "components/guest_view/browser/guest_view_manager_delegate.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
@@ -29,13 +38,15 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/dom_storage_context.h"
 #include "content/public/browser/storage_partition.h"
+#include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
 #include "net/url_request/url_request_context.h"
 
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
-#include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extensions_network_delegate.h"
+#include "atom/browser/extensions/atom_extension_system_factory.h"
+#include "extensions/browser/api/extensions_api_client.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
 #include "extensions/browser/extension_pref_store.h"
 #include "extensions/browser/extension_pref_value_map_factory.h"
@@ -68,25 +79,24 @@ void NotifyOTRProfileDestroyedOnIOThread(void* original_profile,
 
 namespace brave {
 
-void DatabaseErrorCallback(sql::InitStatus status) {
-  // TODO(bridiver) - we should send a notification of failure
+void DatabaseErrorCallback(sql::InitStatus init_status,
+                           const std::string& diagnostics) {
   LOG(WARNING) << "initializing autocomplete database failed";
 }
 
 BraveBrowserContext::BraveBrowserContext(const std::string& partition,
-                                       bool in_memory,
-                                       const base::DictionaryValue& options)
-    : atom::AtomBrowserContext(partition, in_memory, options),
+                           bool in_memory,
+                           const base::DictionaryValue& options,
+                           scoped_refptr<base::SequencedTaskRunner> task_runner)
+    : Profile(partition, in_memory, options),
       pref_registry_(new user_prefs::PrefRegistrySyncable),
-#if defined(ENABLE_EXTENSIONS)
-      network_delegate_(new extensions::AtomExtensionsNetworkDelegate(this)),
-#else
-      network_delegate_(new AtomNetworkDelegate),
-#endif
-      sent_destroyed_notification_(false),
       has_parent_(false),
       original_context_(nullptr),
-      partition_(partition) {
+      partition_(partition),
+      ready_(
+        new base::WaitableEvent(base::WaitableEvent::ResetPolicy::MANUAL,
+                              base::WaitableEvent::InitialState::NOT_SIGNALED))
+    {
   std::string parent_partition;
   if (options.GetString("parent_partition", &parent_partition)) {
     has_parent_ = true;
@@ -99,8 +109,7 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
         atom::AtomBrowserContext::From(partition, false).get());
     original_context_->otr_context_ = this;
   }
-  InitPrefs();
-
+  CreateProfilePrefs(task_runner);
   if (original_context_) {
     TrackZoomLevelsFromParent();
   }
@@ -113,18 +122,6 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
           base::Unretained(this)));
   }
 #endif
-}
-
-void BraveBrowserContext::MaybeSendDestroyedNotification() {
-  if (!sent_destroyed_notification_) {
-    sent_destroyed_notification_ = true;
-
-    NotifyWillBeDestroyed(this);
-    content::NotificationService::current()->Notify(
-        chrome::NOTIFICATION_PROFILE_DESTROYED,
-        content::Source<BraveBrowserContext>(this),
-        content::NotificationService::NoDetails());
-  }
 }
 
 BraveBrowserContext::~BraveBrowserContext() {
@@ -161,15 +158,6 @@ BraveBrowserContext::~BraveBrowserContext() {
     }
   }
 
-  if (!IsOffTheRecord()) {
-    // temporary fix for https://github.com/brave/browser-laptop/issues/2335
-    // TODO(brivdiver) - it seems like something is holding onto a reference to
-    // url_request_context_getter or the url_request_context and is preventing
-    // it from being destroyed
-    url_request_context_getter()->GetURLRequestContext()->cookie_store()->
-        FlushStore(base::Closure());
-  }
-
   BrowserContextDependencyManager::GetInstance()->
       DestroyBrowserContextServices(this);
 
@@ -181,12 +169,30 @@ BraveBrowserContext::~BraveBrowserContext() {
           base::Unretained(original_context_.get()), base::Unretained(this)));
 #endif
   }
+
+  ShutdownStoragePartitions();
 }
 
 // static
 BraveBrowserContext* BraveBrowserContext::FromBrowserContext(
     content::BrowserContext* browser_context) {
   return static_cast<BraveBrowserContext*>(browser_context);
+}
+
+Profile* BraveBrowserContext::GetOffTheRecordProfile() {
+  return otr_context();
+}
+
+bool BraveBrowserContext::HasOffTheRecordProfile() {
+  return !!otr_context();
+}
+
+Profile* BraveBrowserContext::GetOriginalProfile() {
+  return original_context();
+}
+
+bool BraveBrowserContext::IsSameProfile(Profile* profile) {
+  return GetOriginalProfile() == profile->GetOriginalProfile();
 }
 
 bool BraveBrowserContext::HasParentContext() {
@@ -213,6 +219,14 @@ BraveBrowserContext* BraveBrowserContext::otr_context() {
   }
 
   return nullptr;
+}
+
+content::BrowserPluginGuestManager* BraveBrowserContext::GetGuestManager() {
+#if defined(ENABLE_EXTENSIONS)
+  return guest_view::GuestViewManager::FromBrowserContext(this);
+#else
+  return NULL;
+#endif
 }
 
 void BraveBrowserContext::TrackZoomLevelsFromParent() {
@@ -279,8 +293,20 @@ content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
   return permission_manager_.get();
 }
 
+atom::AtomNetworkDelegate* BraveBrowserContext::network_delegate() {
+  auto getter = GetRequestContext();
+  DCHECK(getter);
+  return static_cast<atom::AtomNetworkDelegate*>(
+      getter->GetURLRequestContext()->network_delegate());
+}
+
+net::URLRequestContextGetter* BraveBrowserContext::GetRequestContext() {
+  return GetDefaultStoragePartition(this)->GetURLRequestContext();
+}
+
 net::NetworkDelegate* BraveBrowserContext::CreateNetworkDelegate() {
-  return network_delegate_;
+  DCHECK_CURRENTLY_ON(BrowserThread::IO);
+  return new extensions::AtomExtensionsNetworkDelegate(this);
 }
 
 std::unique_ptr<net::URLRequestJobFactory>
@@ -298,18 +324,13 @@ BraveBrowserContext::CreateURLRequestJobFactory(
           extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),
                                                      extension_info_map));
 #endif
-
-  std::unique_ptr<ProtocolHandlerRegistry::JobInterceptorFactory>
-    protocol_handler_interceptor =
-        ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
-          ->CreateJobInterceptorFactory();
-
-  protocol_handler_interceptor->Chain(std::move(job_factory));
-  return std::move(protocol_handler_interceptor);
+  protocol_handler_interceptor_->Chain(std::move(job_factory));
+  return std::move(protocol_handler_interceptor_);
 }
 
-void BraveBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
-  AtomBrowserContext::RegisterPrefs(pref_registry);
+void BraveBrowserContext::CreateProfilePrefs(
+    scoped_refptr<base::SequencedTaskRunner> task_runner) {
+  InitPrefs(task_runner);
 #if defined(ENABLE_EXTENSIONS)
   PrefStore* extension_prefs = new ExtensionPrefStore(
       ExtensionPrefValueMapFactory::GetForBrowserContext(original_context()),
@@ -340,9 +361,14 @@ void BraveBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
     pref_registry_->RegisterDictionaryPref("app_state");
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionDefaultZoomLevel);
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionPerHostZoomLevels);
+#if defined(ENABLE_PRINTING)
+    pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);
+#endif
+    pref_registry_->RegisterBooleanPref(prefs::kPrintPreviewDisabled, false);
     // TODO(bridiver) - is this necessary or is it covered by
     // BrowserContextDependencyManager
     ProtocolHandlerRegistry::RegisterProfilePrefs(pref_registry_.get());
+    HostContentSettingsMap::RegisterProfilePrefs(pref_registry_.get());
     autofill::AutofillManager::RegisterProfilePrefs(pref_registry_.get());
 #if defined(ENABLE_EXTENSIONS)
     extensions::AtomBrowserClientExtensionsPart::RegisterProfilePrefs(
@@ -355,9 +381,6 @@ void BraveBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
     // create profile prefs
     base::FilePath filepath = GetPath().Append(
         FILE_PATH_LITERAL("UserPrefs"));
-    scoped_refptr<base::SequencedTaskRunner> task_runner =
-        JsonPrefStore::GetTaskRunnerForFile(
-            filepath, BrowserThread::GetBlockingPool());
     scoped_refptr<JsonPrefStore> pref_store =
         new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
 
@@ -368,14 +391,14 @@ void BraveBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
     factory.set_user_prefs(pref_store);
     user_prefs_ = factory.CreateSyncable(pref_registry_.get());
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
+    if (async) {
+      user_prefs_->AddPrefInitObserver(base::Bind(
+          &BraveBrowserContext::OnPrefsLoaded, base::Unretained(this)));
+      return;
+    }
   }
 
-  if (async) {
-    user_prefs_->AddPrefInitObserver(base::Bind(
-        &BraveBrowserContext::OnPrefsLoaded, base::Unretained(this)));
-  } else {
-    OnPrefsLoaded(true);
-  }
+  OnPrefsLoaded(true);
 }
 
 void BraveBrowserContext::OnPrefsLoaded(bool success) {
@@ -387,9 +410,6 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
   if (!IsOffTheRecord() && !HasParentContext()) {
 #if defined(ENABLE_EXTENSIONS)
     extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
-    static_cast<extensions::AtomExtensionsNetworkDelegate*>(network_delegate_)->
-        set_extension_info_map(
-            extensions::ExtensionSystem::Get(this)->info_map());
 #endif
     content::BrowserContext::GetDefaultStoragePartition(this)->
         GetDOMStorageContext()->SetSaveSessionStorageOnDisk();
@@ -399,24 +419,41 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
 
     CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
     web_database_ = new WebDatabaseService(webDataPath,
-        BrowserThread::GetMessageLoopProxyForThread(BrowserThread::UI),
-        BrowserThread::GetMessageLoopProxyForThread(BrowserThread::DB));
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::DB));
     web_database_->AddTable(base::WrapUnique(new autofill::AutofillTable));
     web_database_->LoadDatabase();
 
     autofill_data_ = new autofill::AutofillWebDataService(
         web_database_,
-        BrowserThread::GetMessageLoopProxyForThread(BrowserThread::UI),
-        BrowserThread::GetMessageLoopProxyForThread(BrowserThread::DB),
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::DB),
         base::Bind(&DatabaseErrorCallback));
     autofill_data_->Init();
   }
 
+  protocol_handler_interceptor_ =
+        ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
+          ->CreateJobInterceptorFactory();
+
   user_prefs_registrar_->Init(user_prefs_.get());
+
+#if defined(ENABLE_EXTENSIONS)
+  guest_view::GuestViewManager* guest_view_manager =
+        guest_view::GuestViewManager::FromBrowserContext(this);
+  if (!guest_view_manager) {
+    guest_view::GuestViewManager::CreateWithDelegate(
+        this,
+        extensions::ExtensionsAPIClient::Get()->
+            CreateGuestViewManagerDelegate(this));
+  }
+#endif
+
   content::NotificationService::current()->Notify(
       chrome::NOTIFICATION_PROFILE_CREATED,
       content::Source<BraveBrowserContext>(this),
       content::NotificationService::NoDetails());
+  ready_->Signal();
 }
 
 content::ResourceContext* BraveBrowserContext::GetResourceContext() {
@@ -445,6 +482,40 @@ base::FilePath BraveBrowserContext::GetPath() const {
 
 namespace atom {
 
+void CreateDirectoryAndSignal(const base::FilePath& path,
+                              base::WaitableEvent* done_creating) {
+  if (!base::PathExists(path)) {
+    DVLOG(1) << "Creating directory " << path.value();
+    base::CreateDirectory(path);
+  }
+  done_creating->Signal();
+}
+
+// Task that blocks the FILE thread until CreateDirectoryAndSignal() finishes on
+// blocking I/O pool.
+void BlockFileThreadOnDirectoryCreate(base::WaitableEvent* done_creating) {
+  done_creating->Wait();
+}
+
+// Initiates creation of profile directory on |sequenced_task_runner| and
+// ensures that FILE thread is blocked until that operation finishes. If
+// |create_readme| is true, the profile README will be created in the profile
+// directory.
+void CreateProfileDirectory(base::SequencedTaskRunner* sequenced_task_runner,
+                            const base::FilePath& path) {
+  base::WaitableEvent* done_creating =
+      new base::WaitableEvent(base::WaitableEvent::ResetPolicy::AUTOMATIC,
+                              base::WaitableEvent::InitialState::NOT_SIGNALED);
+  sequenced_task_runner->PostTask(
+      FROM_HERE, base::Bind(&CreateDirectoryAndSignal, path, done_creating));
+  // Block the FILE thread until directory is created on I/O pool to make sure
+  // that we don't attempt any operation until that part completes.
+  BrowserThread::PostTask(
+      BrowserThread::FILE, FROM_HERE,
+      base::Bind(&BlockFileThreadOnDirectoryCreate,
+                 base::Owned(done_creating)));
+}
+
 // TODO(bridiver) find a better way to do this
 // static
 scoped_refptr<AtomBrowserContext> AtomBrowserContext::From(
@@ -454,7 +525,31 @@ scoped_refptr<AtomBrowserContext> AtomBrowserContext::From(
   if (browser_context)
     return static_cast<AtomBrowserContext*>(browser_context.get());
 
-  return new brave::BraveBrowserContext(partition, in_memory, options);
+  // TODO(bridiver) - pass the path to initialize the browser context
+  // TODO(bridiver) - create these with the profile manager
+  base::FilePath path;
+  PathService::Get(brightray::DIR_USER_DATA, &path);
+  if (!in_memory && !partition.empty())
+    path = path.Append(FILE_PATH_LITERAL("Partitions"))
+                 .Append(base::FilePath::FromUTF8Unsafe(
+                      net::EscapePath(base::ToLowerASCII(partition))));
+
+  // Get sequenced task runner for making sure that file operations of
+  // this profile (defined by |path|) are executed in expected order
+  // (what was previously assured by the FILE thread).
+  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner =
+      JsonPrefStore::GetTaskRunnerForFile(path,
+                                          BrowserThread::GetBlockingPool());
+
+  CreateProfileDirectory(sequenced_task_runner.get(), path);
+
+  auto profile = new brave::BraveBrowserContext(partition, in_memory, options,
+      sequenced_task_runner);
+
+  if (profile == profile->GetOriginalProfile())
+    g_browser_process->profile_manager()->AddProfile(profile);
+
+  return profile;
 }
 
 }  // namespace atom

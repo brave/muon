@@ -9,6 +9,8 @@
 #include "base/command_line.h"
 #include "base/strings/stringprintf.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
+#include "chrome/common/extensions/extension_process_policy.h"
+#include "chrome/common/url_constants.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_thread.h"
 #include "extensions/common/manifest_handlers/background_info.h"
@@ -20,6 +22,10 @@
 #include "extensions/renderer/extension_helper.h"
 #include "extensions/renderer/extensions_render_frame_observer.h"
 #include "extensions/renderer/extensions_renderer_client.h"
+#include "extensions/renderer/guest_view/extensions_guest_view_container.h"
+#include "extensions/renderer/guest_view/extensions_guest_view_container_dispatcher.h"
+#include "extensions/renderer/guest_view/mime_handler_view/mime_handler_view_container.h"
+#include "extensions/renderer/module_system.h"
 #include "third_party/WebKit/public/web/WebConsoleMessage.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
 #include "third_party/WebKit/public/web/WebFrame.h"
@@ -27,6 +33,11 @@
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 
 namespace {
+
+bool IsStandaloneExtensionProcess() {
+  return base::CommandLine::ForCurrentProcess()->HasSwitch(
+      extensions::switches::kExtensionProcess);
+}
 
 void DidCreateDocumentElement(content::RenderFrame* render_frame) {
   v8::Isolate* isolate = blink::mainThreadIsolate();
@@ -39,9 +50,12 @@ void DidCreateDocumentElement(content::RenderFrame* render_frame) {
   auto script_context =
       extensions::ScriptContextSet::GetContextByV8Context(context);
 
-  if (script_context)
+  if (script_context) {
+    extensions::ModuleSystem::NativesEnabledScope
+      natives_enabled(script_context->module_system());
     script_context->module_system()
-        ->CallModuleMethod("ipc", "didCreateDocumentElement");
+        ->CallModuleMethod("windowDialogs", "didCreateDocumentElement");
+  }
 
   // reschedule the callback because a new render frame
   // is not always created when navigating
@@ -100,8 +114,11 @@ void AtomExtensionsRendererClient::RenderThreadStarted() {
       new extensions::Dispatcher(extension_dispatcher_delegate_.get()));
   permissions_policy_delegate_.reset(
       new extensions::RendererPermissionsPolicyDelegate());
+  guest_view_container_dispatcher_.reset(
+      new extensions::ExtensionsGuestViewContainerDispatcher());
 
   thread->AddObserver(extension_dispatcher_.get());
+  thread->AddObserver(guest_view_container_dispatcher_.get());
 }
 
 void AtomExtensionsRendererClient::RenderFrameCreated(
@@ -201,11 +218,39 @@ bool AtomExtensionsRendererClient::WillSendRequest(
       frame->addMessageToConsole(
           blink::WebConsoleMessage(blink::WebConsoleMessage::LevelError,
                                     blink::WebString::fromUTF8(message)));
-      *new_url = GURL("chrome-extension://invalid/");
+      *new_url = GURL(chrome::kExtensionInvalidRequestURL);
       return true;
     }
   }
 
+  return false;
+}
+
+// static
+bool AtomExtensionsRendererClient::ShouldFork(blink::WebLocalFrame* frame,
+                                                const GURL& url,
+                                                bool is_initial_navigation,
+                                                bool is_server_redirect,
+                                                bool* send_referrer) {
+  const extensions::RendererExtensionRegistry* extension_registry =
+      extensions::RendererExtensionRegistry::Get();
+
+  // Determine if the new URL is an extension (excluding bookmark apps).
+  const Extension* new_url_extension = extensions::GetNonBookmarkAppExtension(
+      *extension_registry->GetMainThreadExtensionSet(), url);
+  bool is_extension_url = !!new_url_extension;
+
+  // If this is a reload, check whether it has the wrong process type.  We
+  // should send it to the browser if it's an extension URL (e.g., hosted app)
+  // in a normal process, or if it's a process for an extension that has been
+  // uninstalled.  Without --site-per-process mode, we never fork processes for
+  // subframes, so this check only makes sense for top-level frames.
+  // TODO(alexmos,nasko): Figure out how this check should work when reloading
+  // subframes in --site-per-process mode.
+  if (!frame->parent() && frame->document().url() == url) {
+    if (is_extension_url != IsStandaloneExtensionProcess())
+      return true;
+  }
   return false;
 }
 

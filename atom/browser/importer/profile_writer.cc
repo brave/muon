@@ -474,34 +474,6 @@ void ProfileWriter::AddAutofillFormDataEntries(
   }
 }
 
-void ProfileWriter::AddCookies(
-    const std::vector<ImportedCookieEntry>& cookies) {
-  if (importer_) {
-    base::ListValue imported_cookies;
-    for (const ImportedCookieEntry& cookie_entry : cookies) {
-      base::DictionaryValue* cookie = new base::DictionaryValue();
-      base::string16 url;
-      if (cookie_entry.httponly) {
-        url.append(base::UTF8ToUTF16("http://"));
-        url.append(cookie_entry.host);
-      } else {
-        url.append(base::UTF8ToUTF16("https://"));
-        url.append(cookie_entry.host);
-      }
-      cookie->SetString("url", url);
-      cookie->SetString("domain", cookie_entry.domain);
-      cookie->SetString("name", cookie_entry.name);
-      cookie->SetString("value", cookie_entry.value);
-      cookie->SetString("path", cookie_entry.path);
-      cookie->SetInteger("expiry_date", cookie_entry.expiry_date.ToDoubleT());
-      cookie->SetBoolean("secure", cookie_entry.secure);
-      cookie->SetBoolean("httponly", cookie_entry.httponly);
-      imported_cookies.Append(cookie);
-    }
-    importer_->Emit("add-cookies", imported_cookies);
-  }
-}
-
 void ProfileWriter::Initialize(atom::api::Importer* importer) {
   importer_ = importer;
 }

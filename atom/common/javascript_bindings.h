@@ -38,6 +38,22 @@ class JavascriptBindings : public content::RenderViewObserver,
                       v8::Local<v8::String> key,
                       v8::Local<v8::Value> value);
 
+  void DeleteHiddenValue(v8::Isolate* isolate,
+                         v8::Local<v8::Object> object,
+                         v8::Local<v8::String> key);
+
+  v8::Local<v8::Value> GetHiddenValueOnObject(
+                                      v8::Isolate* isolate,
+                                      v8::Local<v8::Object> object,
+                                      v8::Local<v8::String> key);
+  void SetHiddenValueOnObject(v8::Isolate* isolate,
+                    v8::Local<v8::Object> object,
+                    v8::Local<v8::String> key,
+                    v8::Local<v8::Value> value);
+
+
+
+
   void OnDestruct() override;
   bool OnMessageReceived(const IPC::Message& message) override;
   void OnBrowserMessage(bool all_frames,

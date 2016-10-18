@@ -18,7 +18,7 @@ EventEmitter2.prototype.once = function (event, fn) {
   return this;
 };
 
-EventEmitter2.prototype.off = function off(event, fn) {
+EventEmitter2.prototype.off = function (event, fn) {
   this._callbacks = this._callbacks || {};
   var callbacks = this._callbacks['$' + event];
 
@@ -55,5 +55,11 @@ EventEmitter2.prototype.listeners = function(event){
 EventEmitter2.prototype.hasListeners = function(event){
   return !!this.listeners(event).length;
 };
+
+EventEmitter2.prototype.removeAllListeners = function(event){
+  delete this._callbacks['$' + event]
+};
+
+EventEmitter2.prototype.removeListener = EventEmitter2.prototype.off
 
 exports.EventEmitter = EventEmitter2;

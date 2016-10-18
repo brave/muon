@@ -81,7 +81,7 @@ void AtomSecurityStateModelClient::GetVisibleSecurityState(
     return;
   }
 
-  state->initialized = true;
+  state->connection_info_initialized = true;
   state->url = entry->GetURL();
   const content::SSLStatus& ssl = entry->GetSSL();
   state->initial_security_level =
@@ -90,22 +90,20 @@ void AtomSecurityStateModelClient::GetVisibleSecurityState(
   state->cert_status = ssl.cert_status;
   state->connection_status = ssl.connection_status;
   state->security_bits = ssl.security_bits;
+  state->pkp_bypassed = ssl.pkp_bypassed;
   state->sct_verify_statuses.clear();
-  state->sct_verify_statuses.insert(state->sct_verify_statuses.end(),
-                                    ssl.num_unknown_scts,
-                                    net::ct::SCT_STATUS_LOG_UNKNOWN);
-  state->sct_verify_statuses.insert(state->sct_verify_statuses.end(),
-                                    ssl.num_invalid_scts,
-                                    net::ct::SCT_STATUS_INVALID);
-  state->sct_verify_statuses.insert(state->sct_verify_statuses.end(),
-                                    ssl.num_valid_scts, net::ct::SCT_STATUS_OK);
+  state->sct_verify_statuses.insert(state->sct_verify_statuses.begin(),
+                                    ssl.sct_statuses.begin(),
+                                    ssl.sct_statuses.end());
   state->displayed_mixed_content =
-      (ssl.content_status & content::SSLStatus::DISPLAYED_INSECURE_CONTENT)
-          ? true
-          : false;
+      !!(ssl.content_status & content::SSLStatus::DISPLAYED_INSECURE_CONTENT);
   state->ran_mixed_content =
-      (ssl.content_status & content::SSLStatus::RAN_INSECURE_CONTENT) ? true
-                                                                      : false;
+      !!(ssl.content_status & content::SSLStatus::RAN_INSECURE_CONTENT);
+  state->displayed_content_with_cert_errors =
+      !!(ssl.content_status &
+         content::SSLStatus::DISPLAYED_CONTENT_WITH_CERT_ERRORS);
+  state->ran_content_with_cert_errors =
+      !!(ssl.content_status & content::SSLStatus::RAN_CONTENT_WITH_CERT_ERRORS);
 }
 
 }  // namespace atom

@@ -16,7 +16,9 @@
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
+#include "content/public/browser/resource_dispatcher_host.h"
 #include "content/public/common/content_switches.h"
 #include "native_mate/constructor.h"
 #include "native_mate/dictionary.h"
@@ -71,7 +73,9 @@ v8::Local<v8::Value> ToBuffer(v8::Isolate* isolate, void* val, int size) {
 
 
 Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
-               const mate::Dictionary& options) {
+               const mate::Dictionary& options)
+    : is_window_ready_(false),
+      is_blocking_requests_(false) {
   // Use options.webPreferences to create WebContents.
   mate::Dictionary web_preferences = mate::Dictionary::CreateEmpty(isolate);
   options.Get(options::kWebPreferences, &web_preferences);
@@ -81,13 +85,12 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
   if (options.Get(options::kBackgroundColor, &value))
     web_preferences.Set(options::kBackgroundColor, value);
 
-  v8::Local<v8::Value> transparent;
-  if (options.Get("transparent", &transparent))
-    web_preferences.Set("transparent", transparent);
   // Creates the WebContents used by BrowserWindow.
   auto web_contents = WebContents::Create(isolate, web_preferences);
   web_contents_.Reset(isolate, web_contents.ToV8());
   api_web_contents_ = web_contents.get();
+  // TODO(bridiver) - should we always do this?
+  SuspendRenderFrameHost(api_web_contents_->GetWebContents()->GetMainFrame());
 
   // Keep a copy of the options for later use.
   mate::Dictionary(isolate, web_contents->GetWrapper()).Set(
@@ -132,7 +135,16 @@ Window::~Window() {
 
   // Destroy the native window in next tick because the native code might be
   // iterating all windows.
-  base::MessageLoop::current()->DeleteSoon(FROM_HERE, window_.release());
+  base::ThreadTaskRunnerHandle::Get()->DeleteSoon(FROM_HERE, window_.release());
+}
+
+void Window::SuspendRenderFrameHost(content::RenderFrameHost* rfh) {
+  DCHECK(rfh);
+  // Don't bother blocking requests if the renderer side is already good to go.
+  if (is_window_ready_)
+    return;
+  is_blocking_requests_ = true;
+  content::ResourceDispatcherHost::BlockRequestsForFrameFromUI(rfh);
 }
 
 void Window::WillCloseWindow(bool* prevent_default) {
@@ -165,7 +177,7 @@ void Window::OnWindowClosed() {
   RemoveFromParentChildWindows();
 
   // Destroy the native class when window is closed.
-  base::MessageLoop::current()->PostTask(FROM_HERE, GetDestroyClosure());
+  base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
 }
 
 void Window::OnWindowBlur() {
@@ -198,6 +210,15 @@ void Window::OnWindowUnmaximize() {
 
 void Window::OnWindowMinimize() {
   Emit("minimize");
+}
+
+void Window::OnWindowReady() {
+  is_window_ready_ = true;
+  if (is_blocking_requests_) {
+    is_blocking_requests_ = false;
+    content::ResourceDispatcherHost::ResumeBlockedRequestsForFrameFromUI(
+        api_web_contents_->GetWebContents()->GetMainFrame());
+  }
 }
 
 void Window::OnWindowRestore() {
@@ -880,6 +901,7 @@ void Window::BuildPrototype(v8::Isolate* isolate,
                  &Window::SetVisibleOnAllWorkspaces)
       .SetMethod("isVisibleOnAllWorkspaces",
                  &Window::IsVisibleOnAllWorkspaces)
+      .SetMethod("notifyReady", &Window::OnWindowReady)
 #if defined(OS_WIN)
       .SetMethod("hookWindowMessage", &Window::HookWindowMessage)
       .SetMethod("isWindowMessageHooked", &Window::IsWindowMessageHooked)

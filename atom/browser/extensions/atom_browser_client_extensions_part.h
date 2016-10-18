@@ -71,6 +71,8 @@ class AtomBrowserClientExtensionsPart {
       content::RenderProcessHost* process,
       content::BrowserContext* browser_context);
   std::string GetApplicationLocale();
+  static GURL GetEffectiveURL(
+    content::BrowserContext*, const GURL& url);
 
  private:
   void UpdateContentSettings();

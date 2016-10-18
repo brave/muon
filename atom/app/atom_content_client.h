@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "brightray/common/content_client.h"
+#include "chrome/common/origin_trials/chrome_origin_trial_policy.h"
 
 namespace atom {
 
@@ -22,7 +23,8 @@ class AtomContentClient : public brightray::ContentClient {
   // content::ContentClient:
   std::string GetProduct() const override;
   std::string GetUserAgent() const override;
-  base::string16 GetLocalizedString(int message_id) const override;
+  void SetGpuInfo(const gpu::GPUInfo& gpu_info);
+  bool IsSupplementarySiteIsolationModeEnabled() override;
   void AddAdditionalSchemes(
       std::vector<url::SchemeWithType>* standard_schemes,
       std::vector<url::SchemeWithType>* referrer_schemes,
@@ -31,10 +33,13 @@ class AtomContentClient : public brightray::ContentClient {
       std::vector<content::PepperPluginInfo>* plugins) override;
   void AddServiceWorkerSchemes(
       std::set<std::string>* service_worker_schemes) override;
+  bool AllowScriptExtensionForServiceWorker(const GURL& script_url) override;
   void AddSecureSchemesAndOrigins(std::set<std::string>* schemes,
                                           std::set<GURL>* origins) override;
+  content::OriginTrialPolicy* GetOriginTrialPolicy() override;
 
  private:
+  std::unique_ptr<ChromeOriginTrialPolicy> origin_trial_policy_;
   DISALLOW_COPY_AND_ASSIGN(AtomContentClient);
 };
 

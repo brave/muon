@@ -1,0 +1,21 @@
+schema_sources = [
+  "tab_view_internal.json",
+]
+
+uncompiled_sources = [
+  "ipc.json",
+  "web_frame.json",
+  "remote.json"
+]
+
+root_namespace = "extensions::api::%(namespace)s"
+schema_include_rules = "extensions/common/api:chrome/common/extensions/api:extensions::api::%(namespace)s"
+schema_dependencies = [
+  "//extensions/common/api",
+  "//chrome/common/extensions/api",
+  "//electron/brave/browser/extensions"
+]
+
+set_defaults("json_schema_api") {
+  configs = [ "//electron/build:electron_config" ]
+}

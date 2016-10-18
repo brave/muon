@@ -29,6 +29,14 @@ namespace blink {
 struct WebDeviceEmulationParams;
 }
 
+namespace brave {
+class TabViewGuest;
+}
+
+namespace guest_view {
+class GuestViewBase;
+}
+
 namespace brightray {
 class InspectableWebContents;
 }
@@ -62,9 +70,17 @@ class Dictionary;
 
 namespace atom {
 
-struct SetSizeParams;
+struct SetSizeParams {
+  SetSizeParams() {}
+  ~SetSizeParams() {}
+
+  std::unique_ptr<bool> enable_auto_size;
+  std::unique_ptr<gfx::Size> min_size;
+  std::unique_ptr<gfx::Size> max_size;
+  std::unique_ptr<gfx::Size> normal_size;
+};
+
 class AtomBrowserContext;
-class WebViewGuestDelegate;
 
 namespace api {
 
@@ -77,12 +93,15 @@ class WebContents : public mate::TrackableObject<WebContents>,
     BROWSER_WINDOW,  // Used by BrowserWindow.
     REMOTE,  // Thin wrap around an existing WebContents.
     WEB_VIEW,  // Used by <webview>.
-    OFF_SCREEN,  // Used for offscreen rendering
   };
 
   // For node.js callback function type: function(error, buffer)
   using PrintToPDFCallback =
       base::Callback<void(v8::Local<v8::Value>, v8::Local<v8::Value>)>;
+
+  // Get the webcontents by tabId.
+  static mate::Handle<WebContents> FromTabID(
+    v8::Isolate* isolate, int tab_id);
 
   // Create from an existing WebContents.
   static mate::Handle<WebContents> CreateFrom(
@@ -133,7 +152,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool IsCrashed() const;
   void SetUserAgent(const std::string& user_agent, mate::Arguments* args);
   std::string GetUserAgent();
-  void InsertCSS(const std::string& css);
   bool SavePage(const base::FilePath& full_file_path,
                 const content::SavePageType& save_type,
                 const SavePageHandler::SavePageCallback& callback);
@@ -224,24 +242,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void SetSize(const SetSizeParams& params);
   bool IsGuest() const;
 
-  // Methods for offscreen rendering
-  bool IsOffScreen() const;
-  void OnPaint(const gfx::Rect& dirty_rect, const SkBitmap& bitmap);
-  void StartPainting();
-  void StopPainting();
-  bool IsPainting() const;
-  void SetFrameRate(int frame_rate);
-  int GetFrameRate() const;
-
   // Callback triggered on permission response.
   void OnEnterFullscreenModeForTab(content::WebContents* source,
                                    const GURL& origin,
                                    bool allowed);
-
-  // Create window with the given disposition.
-  void OnCreateWindow(const GURL& target_url,
-                      const std::string& frame_name,
-                      WindowOpenDisposition disposition);
 
   void AutofillSelect(const std::string& value, int frontend_id, int index);
   void AutofillPopupHidden();
@@ -344,6 +348,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   // content::WebContentsObserver:
   void BeforeUnloadFired(const base::TimeTicks& proceed_time) override;
+  void RenderViewReady() override;
   void RenderViewDeleted(content::RenderViewHost*) override;
   void RenderProcessGone(base::TerminationStatus status) override;
   void DocumentAvailableInMainFrame() override;
@@ -396,6 +401,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
       base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level);
 
  private:
+  friend brave::TabViewGuest;
   AtomBrowserContext* GetBrowserContext() const;
 
   uint32_t GetNextRequestId() {
@@ -418,11 +424,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   v8::Global<v8::Value> devtools_web_contents_;
   v8::Global<v8::Value> debugger_;
 
-  std::unique_ptr<WebViewGuestDelegate> guest_delegate_;
-
-  // The host webcontents that may contain this webcontents.
-  WebContents* embedder_;
-
   // The type of current WebContents.
   Type type_;
 
@@ -434,11 +435,12 @@ class WebContents : public mate::TrackableObject<WebContents>,
   std::unique_ptr<content::NavigationController::LoadURLParams>
     delayed_load_url_params_;
 
-  // Whether background throttling is disabled.
-  bool background_throttling_;
-
   // Whether to enable devtools.
   bool enable_devtools_;
+
+  bool is_being_destroyed_;
+
+  guest_view::GuestViewBase* guest_delegate_;  // not owned
 
   // When a new tab is created asynchronously, stores the OpenURLParams needed
   // to continue loading the page once the tab is ready.

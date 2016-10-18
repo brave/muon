@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "base/callback.h"
-#include "chrome/renderer/spellchecker/spellcheck_worditerator.h"
+#include "components/spellcheck/renderer/spellcheck_worditerator.h"
 #include "native_mate/scoped_persistent.h"
 #include "third_party/WebKit/public/web/WebSpellCheckClient.h"
 
@@ -32,10 +32,6 @@ class SpellCheckClient : public blink::WebSpellCheckClient {
       int& misspelledOffset,
       int& misspelledLength,
       blink::WebVector<blink::WebString>* optionalSuggestions) override;
-  void checkTextOfParagraph(
-      const blink::WebString&,
-      blink::WebTextCheckingTypeMask mask,
-      blink::WebVector<blink::WebTextCheckingResult>* results) override;
   void requestCheckingOfText(
       const blink::WebString& textToCheck,
       const blink::WebVector<uint32_t>& markersInText,
@@ -45,6 +41,7 @@ class SpellCheckClient : public blink::WebSpellCheckClient {
   bool isShowingSpellingUI() override;
   void updateSpellingUIWithMisspelledWord(
       const blink::WebString& word) override;
+  void cancelAllPendingRequests() { }
 
   // Check the spelling of text.
   void SpellCheckText(const base::string16& text,

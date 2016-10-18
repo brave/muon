@@ -1,0 +1,119 @@
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/features.gni")
+
+source_set("browser") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  include_dirs = [
+    # make sure chromium_src comes before the chrome src root
+    "//electron/chromium_src",
+  ]
+
+  sources = [
+    # "api"
+    "guest_view/tab_view/tab_view_guest.h",
+    "guest_view/tab_view/tab_view_guest.cc",
+    "guest_view/brave_guest_view_manager_delegate.h",
+    "guest_view/brave_guest_view_manager_delegate.cc",
+    "notifications/platform_notification_service_impl.h",
+    "notifications/platform_notification_service_impl.cc",
+    "brave_browser_context.h",
+    "brave_browser_context.cc",
+    "brave_content_browser_client.h",
+    "brave_content_browser_client.cc",
+    "brave_permission_manager.h",
+    "brave_permission_manager.cc",
+    "renderer_preferences_helper.h",
+    "renderer_preferences_helper.cc",
+  ]
+
+  public_deps = [
+    "//components/autofill/core/browser",
+  ]
+
+  deps = [
+    ":component_updater_api",
+    "//electron/atom/browser",
+    "//electron/chromium_src:browser",
+    "//electron:common",
+    "//chrome/common",
+    "//components/autofill/content/browser:risk_proto",
+    "//components/autofill/content/browser",
+    "//components/autofill/core/browser",
+    "//components/devtools_discovery",
+    "//components/devtools_http_handler",
+    "//components/resources",
+    "//components/subresource_filter/content/browser",
+    "//components/subresource_filter/core/browser",
+    "//components/syncable_prefs",
+    "//device/usb/mojo",
+    "//device/usb/public/interfaces",
+    "//gpu/config",
+    "//mojo/common",
+    "//mojo/edk/system",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/js",
+    "//third_party/WebKit/public:image_resources",
+    "//third_party/WebKit/public:resources",
+  ]
+
+  if (enable_basic_printing || enable_print_preview) {
+    deps += [
+      "//components/printing/browser",
+      "//printing",
+    ]
+  }
+
+  if (enable_extensions) {
+    public_deps += [
+      "extensions",
+    ]
+
+    deps += [
+      "//chrome/common/extensions/api",
+      "//chrome/common/extensions/api:api_registration",
+      "//chrome/common/extensions/api:extensions_features",
+      "//extensions/browser",
+    ]
+  }
+
+  if (is_posix && !is_mac) {
+    sources += [
+      # "//chrome/app/chrome_crash_reporter_client.cc",
+      # "//chrome/app/chrome_crash_reporter_client.h",
+    ]
+    deps += [
+      "//components/crash/content/app",
+      "//components/crash/content/browser",
+      "//components/version_info:generate_version_info",
+    ]
+  }
+}
+
+source_set("component_updater_api") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  include_dirs = [
+    # make sure chromium_src comes before the chrome src root
+    "//electron/chromium_src",
+  ]
+
+  sources = [
+    "api/brave_api_component_updater.cc",
+    "api/brave_api_component_updater.h",
+  ]
+
+  deps = [
+    "//v8:v8"
+  ]
+
+  public_deps = [
+    "component_updater",
+  ]
+}

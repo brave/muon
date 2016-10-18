@@ -70,8 +70,6 @@ class InProcessImporterBridge : public ImporterBridge {
   void SetAutofillFormData(
       const std::vector<ImporterAutofillFormDataEntry>& entries) override;
 
-  void SetCookies(const std::vector<ImportedCookieEntry>& cookies) override;
-
   void NotifyStarted() override;
   void NotifyItemStarted(importer::ImportItem item) override;
   void NotifyItemEnded(importer::ImportItem item) override;

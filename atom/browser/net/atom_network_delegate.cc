@@ -257,7 +257,7 @@ int AtomNetworkDelegate::OnBeforeURLRequest(
     net::URLRequest* request,
     const net::CompletionCallback& callback,
     GURL* new_url) {
-  if (!ContainsKey(response_listeners_, kOnBeforeRequest))
+  if (!base::ContainsKey(response_listeners_, kOnBeforeRequest))
     return brightray::NetworkDelegate::OnBeforeURLRequest(
         request, callback, new_url);
 
@@ -278,7 +278,7 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
     headers->SetHeader(
         DevToolsNetworkTransaction::kDevToolsEmulateNetworkConditionsClientId,
         client_id);
-  if (!ContainsKey(response_listeners_, kOnBeforeSendHeaders))
+  if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))
     return brightray::NetworkDelegate::OnBeforeStartTransaction(
         request, callback, headers);
 
@@ -289,7 +289,7 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
 void AtomNetworkDelegate::OnStartTransaction(
     net::URLRequest* request,
     const net::HttpRequestHeaders& headers) {
-  if (!ContainsKey(simple_listeners_, kOnSendHeaders)) {
+  if (!base::ContainsKey(simple_listeners_, kOnSendHeaders)) {
     brightray::NetworkDelegate::OnStartTransaction(request, headers);
     return;
   }
@@ -303,7 +303,7 @@ int AtomNetworkDelegate::OnHeadersReceived(
     const net::HttpResponseHeaders* original,
     scoped_refptr<net::HttpResponseHeaders>* override,
     GURL* allowed) {
-  if (!ContainsKey(response_listeners_, kOnHeadersReceived))
+  if (!base::ContainsKey(response_listeners_, kOnHeadersReceived))
     return brightray::NetworkDelegate::OnHeadersReceived(
         request, callback, original, override, allowed);
 
@@ -314,7 +314,7 @@ int AtomNetworkDelegate::OnHeadersReceived(
 
 void AtomNetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
                                            const GURL& new_location) {
-  if (!ContainsKey(simple_listeners_, kOnBeforeRedirect)) {
+  if (!base::ContainsKey(simple_listeners_, kOnBeforeRedirect)) {
     brightray::NetworkDelegate::OnBeforeRedirect(request, new_location);
     return;
   }
@@ -325,7 +325,7 @@ void AtomNetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
 }
 
 void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request) {
-  if (!ContainsKey(simple_listeners_, kOnResponseStarted)) {
+  if (!base::ContainsKey(simple_listeners_, kOnResponseStarted)) {
     brightray::NetworkDelegate::OnResponseStarted(request);
     return;
   }
@@ -354,7 +354,7 @@ void AtomNetworkDelegate::OnCompleted(net::URLRequest* request, bool started) {
     return;
   }
 
-  if (!ContainsKey(simple_listeners_, kOnCompleted)) {
+  if (!base::ContainsKey(simple_listeners_, kOnCompleted)) {
     brightray::NetworkDelegate::OnCompleted(request, started);
     return;
   }
@@ -369,7 +369,7 @@ void AtomNetworkDelegate::OnURLRequestDestroyed(net::URLRequest* request) {
 
 void AtomNetworkDelegate::OnErrorOccurred(
     net::URLRequest* request, bool started) {
-  if (!ContainsKey(simple_listeners_, kOnErrorOccurred)) {
+  if (!base::ContainsKey(simple_listeners_, kOnErrorOccurred)) {
     brightray::NetworkDelegate::OnCompleted(request, started);
     return;
   }
@@ -424,7 +424,7 @@ template<typename T>
 void AtomNetworkDelegate::OnListenerResultInIO(
     uint64_t id, T out, std::unique_ptr<base::DictionaryValue> response) {
   // The request has been destroyed.
-  if (!ContainsKey(callbacks_, id))
+  if (!base::ContainsKey(callbacks_, id))
     return;
 
   ReadFromResponseObject(*response.get(), out);

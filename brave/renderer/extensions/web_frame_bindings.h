@@ -18,6 +18,10 @@ class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
   virtual ~WebFrameBindings();
 
   void WebFrame(const v8::FunctionCallbackInfo<v8::Value>& args);
+  void RegisterElementResizeCallback(
+    const v8::FunctionCallbackInfo<v8::Value>& args);
+  void RegisterEmbedderCustomElement(
+    const v8::FunctionCallbackInfo<v8::Value>& args);
   void SetSpellCheckProvider(const v8::FunctionCallbackInfo<v8::Value>& args);
   void SetGlobal(const v8::FunctionCallbackInfo<v8::Value>& args);
   void ExecuteJavaScript(const v8::FunctionCallbackInfo<v8::Value>& args);

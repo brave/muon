@@ -2,5 +2,14 @@
   "SRCDIR": ".",
   "atom/atom_resources.grd": {
     "includes": [60000],
-  }
+  },
+  "brave/brave_resources.grd": {
+    "includes": [61000],
+  },
+  "lib/electron_api_resources.grd": {
+    "includes": [62000],
+  },
+  "brave/brave_strings.grd": {
+    "messages": [11200],
+  },
 }

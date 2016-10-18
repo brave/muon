@@ -8,10 +8,6 @@
   </outputs>
   <release seq="1">
     <includes>
-      <include name="IDR_ATOM_API_FEATURES" file="common\api\resources\_api_features.json" type="BINDATA" />
-
-      <include name="IDR_ATOM_PERMISSION_FEATURES" file="common\api\resources\_permission_features.json" type="BINDATA" />
-
       <include name="IDR_ATOM_BROWSER_ACTION_BINDINGS_JS" file="common\api\resources\browser_action_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_CONTENT_SETTINGS_BINDINGS_JS" file="common\api\resources\content_settings_bindings.js" type="BINDATA" />
@@ -21,11 +17,7 @@
       <include name="IDR_ATOM_EVENT_EMITTER_JS" file="common\api\resources\event_emitter.js" type="BINDATA" />
       <include name="IDR_ATOM_IPC_INTERNAL_JS" file="common\api\resources\ipc_utils.js" type="BINDATA" />
 
-      <include name="IDR_ATOM_EXTENSION_API_JSON_IPC" file="common\api\resources\ipc.json" type="BINDATA" />
-
-      <include name="IDR_ATOM_EXTENSION_API_JSON_WEB_FRAME" file="common\api\resources\web_frame.json" type="BINDATA" />
-
-      <include name="IDR_ATOM_IPC_BINDINGS_JS" file="common\api\resources\ipc_bindings.js" type="BINDATA" />
+      <include name="IDR_ATOM_IPC_WINDOW_DIALOGS_JS" file="common\api\resources\ipc_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_PRIVACY_BINDINGS_JS" file="common\api\resources\privacy_bindings.js" type="BINDATA" />
 
@@ -33,9 +25,16 @@
 
       <include name="IDR_ATOM_WEB_FRAME_BINDINGS_JS" file="common\api\resources\web_frame_bindings.js" type="BINDATA" />
 
+      <include name="IDR_ATOM_WEB_VIEW_INTERNAL_BINDINGS_JS" file="common\api\resources\web_view_internal_bindings.js" type="BINDATA" />
+
+      <include name="IDR_ATOM_TAB_VIEW_INTERNAL_BINDINGS_JS" file="common\api\resources\tab_view_internal_bindings.js" type="BINDATA" />
+
+      <include name="IDR_ATOM_WEB_VIEW_API_BINDINGS_JS" file="common\api\resources\web_view_api_bindings.js" type="BINDATA" />
+
       <include name="IDR_ATOM_WINDOWS_BINDINGS_JS" file="common\api\resources\windows_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_APP_BINDINGS_JS" file="common\api\resources\app_bindings.js" type="BINDATA" />
+
     </includes>
   </release>
 </grit>

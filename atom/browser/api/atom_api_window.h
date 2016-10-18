@@ -20,6 +20,10 @@
 
 class GURL;
 
+namespace content {
+class RenderFrameHost;
+}
+
 namespace gfx {
 class Rect;
 }
@@ -87,6 +91,9 @@ class Window : public mate::TrackableObject<Window>,
   #if defined(OS_WIN)
   void OnWindowMessage(UINT message, WPARAM w_param, LPARAM l_param) override;
   #endif
+
+  void OnWindowReady();
+  void SuspendRenderFrameHost(content::RenderFrameHost* rfh);
 
  private:
   // APIs for NativeWindow.
@@ -211,6 +218,8 @@ class Window : public mate::TrackableObject<Window>,
 
   std::unique_ptr<NativeWindow> window_;
 
+  bool is_window_ready_;
+  bool is_blocking_requests_;
   DISALLOW_COPY_AND_ASSIGN(Window);
 };
 

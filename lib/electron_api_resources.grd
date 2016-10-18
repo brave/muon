@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grit latest_public_release="0" current_release="1">
+  <outputs>
+    <output filename="grit/electron_api_resources.h" type="rc_header">
+      <emit emit_type='prepend'></emit>
+    </output>
+    <output filename="electron_api_resources.pak" type="data_package" />
+  </outputs>
+  <release seq="1">
+    <includes>
+      <include name="IDR_ELECTRON_REMOTE_BINDINGS_JS" file="renderer/api/remote.js" type="BINDATA" />
+
+      <include name="IDR_ELECTRON_BUFFER_BINDINGS_JS" file="util/buffer.js" type="BINDATA" />
+
+      <include name="IDR_ELECTRON_IS_PROMISE_BINDINGS_JS" file="common/api/is-promise.js" type="BINDATA" />
+
+      <include name="IDR_ELECTRON_CALLBACKS_REGISTRY_BINDINGS_JS" file="common/api/callbacks-registry.js" type="BINDATA" />
+
+      <include name="IDR_ELECTRON_GUEST_VIEW_INTERNAL_BINDINGS_JS" file="renderer/web-view/guest-view-internal.js" type="BINDATA" />
+    </includes>
+  </release>
+</grit>

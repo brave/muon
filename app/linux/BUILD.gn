@@ -1,0 +1,84 @@
+executable("electron_app") {
+
+  output_name = "brave"
+
+  # This is just a stub and doesn't work yet
+  deps = [
+    "//electron:main",
+    "//electron:app",
+    "//electron:browser_dependencies",
+    "//electron:child_dependencies",
+    "//content/public/app:both",
+    "//build/config/sanitizers:deps",
+  ]
+
+  data = [
+    "$root_gen_dir/repack/electron_resources.pak",
+    "$root_out_dir/chrome_100_percent.pak",
+  ]
+
+  public_deps = [
+    "//electron:packed_extra_resources",
+    "//chrome:packed_resources",
+    ":electron_resources",
+    ":node_resources",
+  ]
+
+  ldflags = [ "-pie" ]
+
+  if (use_x11) {
+    configs += [
+      "//build/config/linux:x11",
+      "//build/config/linux:xext",
+    ]
+  }
+}
+
+copy("node_resources") {
+  sources = [
+    "$root_out_dir/libnode.so",
+  ]
+  outputs = [
+    "$root_build_dir/libnode.so",
+  ]
+  deps = [
+    "//electron/build/node",
+  ]
+}
+
+bundle_data("electron_resources") {
+  sources = [
+    "$root_out_dir/electron.asar",
+    "$root_out_dir/default_app.asar",
+    "//electron/app/resources/linux/brave_linux.png",
+  ]
+
+  outputs = [
+    "{{bundle_resources_dir}}/{{source_file_part}}",
+  ]
+
+  public_deps = [
+    "//electron/lib",
+    "//electron/default_app",
+  ]
+}
+
+
+
+  "$root_gen_dir/repack/electron_resources.pak",
+  "$root_out_dir/chrome_100_percent.pak",
+]
+
+
+if (icu_use_data_file) {
+  sources += [ "$root_out_dir/icudtl.dat" ]
+  public_deps += [ "//third_party/icu:icudata" ]
+}
+
+# if (v8_use_external_startup_data) {
+  sources += [
+    "$root_out_dir/natives_blob.bin",
+    "$root_out_dir/snapshot_blob.bin",
+  ]
+  public_deps += [ "//v8:v8" ]
+# }

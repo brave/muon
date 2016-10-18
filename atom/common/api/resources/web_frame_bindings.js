@@ -1,13 +1,22 @@
-var webFrame = requireNative('webFrame');
+var binding = require('binding').Binding.create('webFrame')
 
-function setGlobal(path, value) {
-  return webFrame.setGlobal(path.split('.'), value)
-}
+var webFrameNatives = requireNative('webFrame')
 
-var binding = {
-  setSpellCheckProvider: webFrame.setSpellCheckProvider,
-  executeJavaScript: webFrame.executeJavaScript,
-  setGlobal
-}
+binding.registerCustomHook(function(bindingsAPI, extensionId) {
+  var apiFunctions = bindingsAPI.apiFunctions;
+  var webFrame = bindingsAPI.compiledApi;
 
-exports.binding = binding
+  apiFunctions.setHandleRequest('setGlobal', function(path, value) {
+    return webFrameNatives.setGlobal(path.split('.'), value)
+  })
+
+  apiFunctions.setHandleRequest('executeJavaScript', function(code) {
+    return webFrameNatives.executeJavaScript(code)
+  })
+
+  apiFunctions.setHandleRequest('setSpellCheckProvider', function(lang, autoCorrectEnabled, spellCheckProvider) {
+    return webFrameNatives.setSpellCheckProvider(lang, autoCorrectEnabled, spellCheckProvider)
+  })
+})
+
+exports.$set('binding', binding.generate())

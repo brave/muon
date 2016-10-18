@@ -11,6 +11,7 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
+#include "chrome/common/chrome_version.h"
 #include "content/public/browser/browser_thread.h"
 #include "net/test/embedded_test_server/tcp_listen_socket.h"
 
@@ -51,7 +52,7 @@ NodeDebugger::NodeDebugger(v8::Isolate* isolate)
       base::StringToInt(port_str, &port);
 
     isolate_->SetData(kIsolateSlot, this);
-    v8::Debug::SetMessageHandler(DebugMessageHandler);
+    v8::Debug::SetMessageHandler(isolate_, DebugMessageHandler);
 
     uv_async_init(uv_default_loop(), &weak_up_ui_handle_, ProcessMessageInUI);
 
@@ -64,7 +65,7 @@ NodeDebugger::NodeDebugger(v8::Isolate* isolate)
     }
 
     // Start the server in new IO thread.
-    thread_.message_loop()->PostTask(
+    thread_.message_loop()->task_runner()->PostTask(
         FROM_HERE,
         base::Bind(&NodeDebugger::StartServer, weak_factory_.GetWeakPtr(),
                    port));
@@ -121,12 +122,13 @@ void NodeDebugger::SendConnectMessage() {
       "Protocol-Version: 1\r\n"
       "Embedding-Host: %s\r\n"
       "%s: 0\r\n",
-      v8::V8::GetVersion(), ATOM_PRODUCT_NAME, kContentLength), true);
+      v8::V8::GetVersion(), PRODUCT_SHORTNAME_STRING, kContentLength), true);
 }
 
 // static
 void NodeDebugger::ProcessMessageInUI(uv_async_t* handle) {
-  v8::Debug::ProcessDebugMessages();
+  // TODO(bridiver) how do we get the isolate??
+  // v8::Debug::ProcessDebugMessages();
 }
 
 // static
@@ -136,7 +138,7 @@ void NodeDebugger::DebugMessageHandler(const v8::Debug::Message& message) {
 
   if (self) {
     std::string message8(*v8::String::Utf8Value(message.GetJSON()));
-    self->thread_.message_loop()->PostTask(
+    self->thread_.message_loop()->task_runner()->PostTask(
         FROM_HERE,
         base::Bind(&NodeDebugger::SendMessage, self->weak_factory_.GetWeakPtr(),
                    message8));

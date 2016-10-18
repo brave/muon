@@ -4,13 +4,15 @@
 
 #include "brave/renderer/brave_content_renderer_client.h"
 
-#include "atom/browser/web_contents_preferences.h"
 #include "atom/renderer/content_settings_client.h"
 #include "atom/renderer/content_settings_manager.h"
+#include "brave/renderer/printing/brave_print_web_view_helper_delegate.h"
 #include "chrome/renderer/pepper/pepper_helper.h"
 #include "content/public/renderer/render_thread.h"
 #include "components/autofill/content/renderer/autofill_agent.h"
 #include "components/autofill/content/renderer/password_autofill_agent.h"
+#include "components/printing/renderer/print_web_view_helper.h"
+
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/renderer/extensions/atom_extensions_renderer_client.h"
 #include "atom/common/extensions/atom_extensions_client.h"
@@ -52,11 +54,7 @@ void BraveContentRendererClient::RenderFrameCreated(
   extensions::AtomExtensionsRendererClient::GetInstance()->RenderFrameCreated(
     render_frame);
 #endif
-  if (atom::WebContentsPreferences::run_node()) {
-    AtomRendererClient::RenderFrameCreated(render_frame);
-  } else {
-    new PepperHelper(render_frame);
-  }
+  AtomRendererClient::RenderFrameCreated(render_frame);
   autofill::PasswordAutofillAgent* password_autofill_agent =
     new autofill::PasswordAutofillAgent(render_frame);
   new autofill::AutofillAgent(render_frame, password_autofill_agent,
@@ -66,6 +64,9 @@ void BraveContentRendererClient::RenderFrameCreated(
 void BraveContentRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
   AtomRendererClient::RenderViewCreated(render_view);
+  new printing::PrintWebViewHelper(
+      render_view, std::unique_ptr<printing::PrintWebViewHelper::Delegate>(
+                       new BravePrintWebViewHelperDelegate()));
 #if defined(ENABLE_EXTENSIONS)
   extensions::AtomExtensionsRendererClient::GetInstance()->
       RenderViewCreated(render_view);
@@ -78,8 +79,6 @@ void BraveContentRendererClient::RunScriptsAtDocumentStart(
   extensions::AtomExtensionsRendererClient::GetInstance()->
       RunScriptsAtDocumentStart(render_frame);
 #endif
-  if (atom::WebContentsPreferences::run_node())
-    AtomRendererClient::RunScriptsAtDocumentStart(render_frame);
 }
 
 void BraveContentRendererClient::RunScriptsAtDocumentEnd(
@@ -88,19 +87,13 @@ void BraveContentRendererClient::RunScriptsAtDocumentEnd(
   extensions::AtomExtensionsRendererClient::GetInstance()->
       RunScriptsAtDocumentEnd(render_frame);
 #endif
-  if (atom::WebContentsPreferences::run_node())
-    AtomRendererClient::RunScriptsAtDocumentEnd(render_frame);
 }
 
 bool BraveContentRendererClient::AllowPopup() {
-  if (atom::WebContentsPreferences::run_node()) {
-    return false;  // TODO(bridiver) - should return setting for allow popups
-  }
-
 #if defined(ENABLE_EXTENSIONS)
   return extensions::AtomExtensionsRendererClient::GetInstance()->AllowPopup();
 #else
-  return false;
+  return false;  // TODO(bridiver) - should return setting for allow popups
 #endif
 }
 
@@ -110,10 +103,15 @@ bool BraveContentRendererClient::ShouldFork(blink::WebLocalFrame* frame,
                                     bool is_initial_navigation,
                                     bool is_server_redirect,
                                     bool* send_referrer) {
-  if (atom::WebContentsPreferences::run_node()) {
-    AtomRendererClient::ShouldFork(frame, url, http_method,
-        is_initial_navigation, is_server_redirect, send_referrer);
-  }
+  if (http_method != "GET")
+    return false;
+
+#if defined(ENABLE_EXTENSIONS)
+  bool should_fork = extensions::AtomExtensionsRendererClient::ShouldFork(
+      frame, url, is_initial_navigation, is_server_redirect, send_referrer);
+  if (should_fork)
+    return true;
+#endif  // defined(ENABLE_EXTENSIONS)
 
   return false;
 }

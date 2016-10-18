@@ -44,12 +44,15 @@
 #include "content/public/browser/navigation_details.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/render_frame_host.h"
+#include "chrome/browser/browser_process.h"
 #include "content/public/common/content_switches.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/ssl/ssl_cert_request_info.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/gfx/image/image.h"
+
+#include "base/threading/thread_restrictions.h"
 
 #if defined(OS_WIN)
 #include "atom/browser/ui/win/jump_list.h"
@@ -325,6 +328,47 @@ struct Converter<Browser::LoginItemSettings> {
     return dict.GetHandle();
   }
 };
+
+template<>
+struct Converter<content::CertificateRequestResultType> {
+  static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
+                     content::CertificateRequestResultType* out) {
+    std::string item_type;
+    if (!ConvertFromV8(isolate, val, &item_type))
+      return false;
+
+    if (item_type == "continue")
+      *out = content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE;
+    else if (item_type == "cancel")
+      *out = content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL;
+    else if (item_type == "deny")
+      *out = content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_DENY;
+    else
+      return false;
+
+    return true;
+  }
+
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   content::CertificateRequestResultType val) {
+    std::string item_type;
+    switch (val) {
+      case content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE:
+        item_type = "continue";
+        break;
+
+      case content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL:
+        item_type = "cancel";
+        break;
+
+      case content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_DENY:
+        item_type = "deny";
+        break;
+    }
+    return mate::ConvertToV8(isolate, item_type);
+  }
+};
+
 }  // namespace mate
 
 
@@ -459,8 +503,9 @@ App::App(v8::Isolate* isolate) {
   static_cast<brave::BraveContentBrowserClient*>(
     brave::BraveContentBrowserClient::Get())->set_delegate(this);
   Browser::Get()->AddObserver(this);
-  content::GpuDataManager::GetInstance()->AddObserver(this);
+  // content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
+  g_browser_process->set_app(this);
 #if defined(ENABLE_EXTENSIONS)
   registrar_.Add(this,
                  content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED,
@@ -475,7 +520,6 @@ App::App(v8::Isolate* isolate) {
 void App::Observe(
     int type, const content::NotificationSource& source,
     const content::NotificationDetails& details) {
-#if defined(ENABLE_EXTENSIONS)
   switch (type) {
     case content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED: {
       content::WebContents* web_contents =
@@ -483,11 +527,13 @@ void App::Observe(
       auto browser_context = web_contents->GetBrowserContext();
       auto url = web_contents->GetURL();
 
+#if defined(ENABLE_EXTENSIONS)
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC
       if (Extension::IsBackgroundPageUrl(url, browser_context)) {
         WebContents::CreateFrom(isolate(), web_contents);
       }
+#endif
       break;
     }
     case chrome::NOTIFICATION_PROFILE_CREATED: {
@@ -498,7 +544,6 @@ void App::Observe(
       break;
     }
   }
-#endif
 }
 
 App::~App() {
@@ -582,58 +627,6 @@ void App::OnLogin(LoginHandler* login_handler,
     login_handler->CancelAuth();
 }
 
-bool App::CanCreateWindow(const GURL& opener_url,
-                     const GURL& opener_top_level_frame_url,
-                     const GURL& source_origin,
-                     WindowContainerType container_type,
-                     const std::string& frame_name,
-                     const GURL& target_url,
-                     const content::Referrer& referrer,
-                     WindowOpenDisposition disposition,
-                     const blink::WebWindowFeatures& features,
-                     bool user_gesture,
-                     bool opener_suppressed,
-                     content::ResourceContext* context,
-                     int render_process_id,
-                     int opener_render_view_id,
-                     int opener_render_frame_id,
-                     bool* no_javascript_access) {
-  // just a reminder that we are on the IO thread
-  // and need to be careful about v8 isolate usage
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-
-  *no_javascript_access = false;
-
-  if (container_type == WINDOW_CONTAINER_TYPE_BACKGROUND) {
-    return true;
-  }
-
-  // this will override allowpopups we need some way to integerate
-  // it so we can turn popup blocking off if desired
-  if (!user_gesture) {
-    return false;
-  }
-
-  return true;
-}
-
-void App::OnCreateWindow(const GURL& target_url,
-                         const std::string& frame_name,
-                         WindowOpenDisposition disposition,
-                         int render_process_id,
-                         int render_frame_id) {
-  v8::Locker locker(isolate());
-  v8::HandleScope handle_scope(isolate());
-  content::RenderFrameHost* rfh =
-      content::RenderFrameHost::FromID(render_process_id, render_frame_id);
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(rfh);
-  if (web_contents) {
-    auto api_web_contents = WebContents::CreateFrom(isolate(), web_contents);
-    api_web_contents->OnCreateWindow(target_url, frame_name, disposition);
-  }
-}
-
 void App::AllowCertificateError(
     content::WebContents* web_contents,
     int cert_error,
@@ -643,24 +636,21 @@ void App::AllowCertificateError(
     bool overridable,
     bool strict_enforcement,
     bool expired_previous_decision,
-    const base::Callback<void(bool)>& callback,
-    content::CertificateRequestResultType* request) {
+    const base::Callback<void(content::CertificateRequestResultType)>&
+        callback) {
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
-  bool prevent_default = Emit("certificate-error",
-                              WebContents::CreateFrom(isolate(), web_contents),
-                              request_url,
-                              net::ErrorToString(cert_error),
-                              ssl_info.cert,
-                              ResourceTypeToString(resource_type),
-                              overridable,
-                              strict_enforcement,
-                              expired_previous_decision,
-                              callback);
-
-  // Deny the certificate by default.
-  if (!prevent_default)
-    *request = content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY;
+  // TODO(bridiver) handle CertificateRequestResultType
+  Emit("certificate-error",
+      WebContents::CreateFrom(isolate(), web_contents),
+      request_url,
+      net::ErrorToString(cert_error),
+      ssl_info.cert,
+      ResourceTypeToString(resource_type),
+      overridable,
+      strict_enforcement,
+      expired_previous_decision,
+      callback);
 }
 
 void App::SelectClientCertificate(
@@ -748,6 +738,7 @@ void App::SetLocale(std::string locale) {
 
 bool App::MakeSingleInstance(
     const ProcessSingleton::NotificationCallback& callback) {
+  base::ThreadRestrictions::SetIOAllowed(true); // ugh electron
   if (process_singleton_.get())
     return false;
 

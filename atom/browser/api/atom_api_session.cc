@@ -29,6 +29,7 @@
 #include "base/guid.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
+#include "base/threading/thread_restrictions.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
@@ -59,6 +60,11 @@
 
 using content::BrowserThread;
 using content::StoragePartition;
+
+class ScopedAllowWaitForLegacyWebViewApi {
+ private:
+  base::ThreadRestrictions::ScopedAllowWait wait;
+};
 
 namespace {
 
@@ -223,7 +229,7 @@ class ResolveProxyHelper {
 
     // Start the request.
     int result = proxy_service->ResolveProxy(
-        url, "GET", net::LOAD_NORMAL, &proxy_info_, completion_callback,
+        url, "GET", &proxy_info_, completion_callback,
         &pac_req_, nullptr, net::BoundNetLog());
 
     // Completed synchronously.
@@ -620,6 +626,11 @@ mate::Handle<Session> Session::FromPartition(
     browser_context = AtomBrowserContext::From(
         partition == "default" ? "" : partition, true, options);
   }
+  DCHECK(browser_context.get());
+  // TODO(bridiver) - this is a huge hack to deal with sync call
+  ScopedAllowWaitForLegacyWebViewApi wait_allowed;
+  static_cast<brave::BraveBrowserContext*>(
+      browser_context.get())->ready()->Wait();
   return CreateFrom(isolate,
                     static_cast<AtomBrowserContext*>(browser_context.get()));
 }

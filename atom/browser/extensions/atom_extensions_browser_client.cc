@@ -62,6 +62,11 @@
 #include "extensions/common/file_util.h"
 #include "net/url_request/url_request_simple_job.h"
 
+
+// #include "chrome/browser/extensions/api/generated_api_registration.h"
+#include "electron/brave/common/extensions/api/generated_api_registration.h"
+#include "extensions/browser/api/generated_api_registration.h"
+
 namespace {
 
 bool IsWhitelistedForIncognito(const extensions::Extension* extension) {
@@ -428,103 +433,109 @@ AtomExtensionsBrowserClient::GetExtensionSystemFactory() {
 
 void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
     ExtensionFunctionRegistry* registry) const {
-  registry->RegisterFunction<WebRequestHandlerBehaviorChangedFunction>();
-  registry->RegisterFunction<api::SocketsUdpCreateFunction>();
-  registry->RegisterFunction<api::SocketsUdpUpdateFunction>();
-  registry->RegisterFunction<api::SocketsUdpSetPausedFunction>();
-  registry->RegisterFunction<api::SocketsUdpBindFunction>();
-  registry->RegisterFunction<api::SocketsUdpSendFunction>();
-  registry->RegisterFunction<api::SocketsUdpCloseFunction>();
-  registry->RegisterFunction<api::SocketsUdpGetInfoFunction>();
-  registry->RegisterFunction<api::SocketsUdpGetSocketsFunction>();
-  registry->RegisterFunction<api::SocketsUdpJoinGroupFunction>();
-  registry->RegisterFunction<api::SocketsUdpLeaveGroupFunction>();
-  registry->RegisterFunction<api::SocketsUdpSetMulticastTimeToLiveFunction>();
-  registry->RegisterFunction<api::SocketsUdpSetMulticastLoopbackModeFunction>();
-  registry->RegisterFunction<api::SocketsUdpGetJoinedGroupsFunction>();
-  registry->RegisterFunction<api::SocketsUdpSetBroadcastFunction>();
-  registry->RegisterFunction<StorageStorageAreaGetFunction>();
-  registry->RegisterFunction<StorageStorageAreaGetBytesInUseFunction>();
-  registry->RegisterFunction<StorageStorageAreaSetFunction>();
-  registry->RegisterFunction<StorageStorageAreaRemoveFunction>();
-  registry->RegisterFunction<StorageStorageAreaClearFunction>();
-  registry->RegisterFunction<EventsEventAddRulesFunction>();
-  registry->RegisterFunction<EventsEventGetRulesFunction>();
-  registry->RegisterFunction<EventsEventRemoveRulesFunction>();
-  registry->RegisterFunction<AudioGetInfoFunction>();
-  registry->RegisterFunction<AudioSetActiveDevicesFunction>();
-  registry->RegisterFunction<AudioSetPropertiesFunction>();
-  registry->RegisterFunction<SocketCreateFunction>();
-  registry->RegisterFunction<SocketDestroyFunction>();
-  registry->RegisterFunction<SocketConnectFunction>();
-  registry->RegisterFunction<SocketBindFunction>();
-  registry->RegisterFunction<SocketDisconnectFunction>();
-  registry->RegisterFunction<SocketReadFunction>();
-  registry->RegisterFunction<SocketWriteFunction>();
-  registry->RegisterFunction<SocketRecvFromFunction>();
-  registry->RegisterFunction<SocketSendToFunction>();
-  registry->RegisterFunction<SocketListenFunction>();
-  registry->RegisterFunction<SocketAcceptFunction>();
-  registry->RegisterFunction<SocketSetKeepAliveFunction>();
-  registry->RegisterFunction<SocketSetNoDelayFunction>();
-  registry->RegisterFunction<SocketGetInfoFunction>();
-  registry->RegisterFunction<SocketGetNetworkListFunction>();
-  registry->RegisterFunction<SocketJoinGroupFunction>();
-  registry->RegisterFunction<SocketLeaveGroupFunction>();
-  registry->RegisterFunction<SocketSetMulticastTimeToLiveFunction>();
-  registry->RegisterFunction<SocketSetMulticastLoopbackModeFunction>();
-  registry->RegisterFunction<SocketGetJoinedGroupsFunction>();
-  registry->RegisterFunction<SocketSecureFunction>();
-  registry->RegisterFunction<api::SocketsTcpCreateFunction>();
-  registry->RegisterFunction<api::SocketsTcpUpdateFunction>();
-  registry->RegisterFunction<api::SocketsTcpSetPausedFunction>();
-  registry->RegisterFunction<api::SocketsTcpSetKeepAliveFunction>();
-  registry->RegisterFunction<api::SocketsTcpSetNoDelayFunction>();
-  registry->RegisterFunction<api::SocketsTcpConnectFunction>();
-  registry->RegisterFunction<api::SocketsTcpDisconnectFunction>();
-  registry->RegisterFunction<api::SocketsTcpSecureFunction>();
-  registry->RegisterFunction<api::SocketsTcpSendFunction>();
-  registry->RegisterFunction<api::SocketsTcpCloseFunction>();
-  registry->RegisterFunction<api::SocketsTcpGetInfoFunction>();
-  registry->RegisterFunction<api::SocketsTcpGetSocketsFunction>();
-  registry->RegisterFunction<IdleQueryStateFunction>();
-  registry->RegisterFunction<IdleSetDetectionIntervalFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerCreateFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerUpdateFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerSetPausedFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerListenFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerDisconnectFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerCloseFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerGetInfoFunction>();
-  registry->RegisterFunction<api::SocketsTcpServerGetSocketsFunction>();
-  registry->RegisterFunction<AlarmsCreateFunction>();
-  registry->RegisterFunction<AlarmsGetFunction>();
-  registry->RegisterFunction<AlarmsGetAllFunction>();
-  registry->RegisterFunction<AlarmsClearFunction>();
-  registry->RegisterFunction<AlarmsClearAllFunction>();
-  registry->RegisterFunction<ManagementGetAllFunction>();
-  registry->RegisterFunction<ManagementGetFunction>();
-  registry->RegisterFunction<ManagementGetSelfFunction>();
-  registry->RegisterFunction<ManagementGetPermissionWarningsByIdFunction>();
-  registry->RegisterFunction<
-      ManagementGetPermissionWarningsByManifestFunction>();
-  registry->RegisterFunction<ManagementSetEnabledFunction>();
-  registry->RegisterFunction<ManagementUninstallFunction>();
-  registry->RegisterFunction<ManagementUninstallSelfFunction>();
-  registry->RegisterFunction<ManagementLaunchAppFunction>();
-  registry->RegisterFunction<ManagementCreateAppShortcutFunction>();
-  registry->RegisterFunction<ManagementSetLaunchTypeFunction>();
-  registry->RegisterFunction<ManagementGenerateAppForLinkFunction>();
-  registry->RegisterFunction<RuntimeGetBackgroundPageFunction>();
-  registry->RegisterFunction<RuntimeOpenOptionsPageFunction>();
-  registry->RegisterFunction<RuntimeSetUninstallURLFunction>();
-  registry->RegisterFunction<RuntimeReloadFunction>();
-  registry->RegisterFunction<RuntimeRequestUpdateCheckFunction>();
-  registry->RegisterFunction<RuntimeRestartFunction>();
-  registry->RegisterFunction<RuntimeGetPlatformInfoFunction>();
-  registry->RegisterFunction<RuntimeGetPackageDirectoryEntryFunction>();
-  registry->RegisterFunction<WebRequestInternalAddEventListenerFunction>();
-  registry->RegisterFunction<WebRequestInternalEventHandledFunction>();
+  api::GeneratedFunctionRegistry::RegisterAll(registry);
+
+  api::BraveGeneratedFunctionRegistry::RegisterAll(registry);
+  // Generated APIs from Chrome.
+  // api::ChromeGeneratedFunctionRegistry::RegisterAll(registry);
+
+  // registry->RegisterFunction<WebRequestHandlerBehaviorChangedFunction>();
+  // registry->RegisterFunction<api::SocketsUdpCreateFunction>();
+  // registry->RegisterFunction<api::SocketsUdpUpdateFunction>();
+  // registry->RegisterFunction<api::SocketsUdpSetPausedFunction>();
+  // registry->RegisterFunction<api::SocketsUdpBindFunction>();
+  // registry->RegisterFunction<api::SocketsUdpSendFunction>();
+  // registry->RegisterFunction<api::SocketsUdpCloseFunction>();
+  // registry->RegisterFunction<api::SocketsUdpGetInfoFunction>();
+  // registry->RegisterFunction<api::SocketsUdpGetSocketsFunction>();
+  // registry->RegisterFunction<api::SocketsUdpJoinGroupFunction>();
+  // registry->RegisterFunction<api::SocketsUdpLeaveGroupFunction>();
+  // registry->RegisterFunction<api::SocketsUdpSetMulticastTimeToLiveFunction>();
+  // registry->RegisterFunction<api::SocketsUdpSetMulticastLoopbackModeFunction>();
+  // registry->RegisterFunction<api::SocketsUdpGetJoinedGroupsFunction>();
+  // registry->RegisterFunction<api::SocketsUdpSetBroadcastFunction>();
+  // registry->RegisterFunction<StorageStorageAreaGetFunction>();
+  // registry->RegisterFunction<StorageStorageAreaGetBytesInUseFunction>();
+  // registry->RegisterFunction<StorageStorageAreaSetFunction>();
+  // registry->RegisterFunction<StorageStorageAreaRemoveFunction>();
+  // registry->RegisterFunction<StorageStorageAreaClearFunction>();
+  // registry->RegisterFunction<EventsEventAddRulesFunction>();
+  // registry->RegisterFunction<EventsEventGetRulesFunction>();
+  // registry->RegisterFunction<EventsEventRemoveRulesFunction>();
+  // registry->RegisterFunction<AudioGetInfoFunction>();
+  // registry->RegisterFunction<AudioSetActiveDevicesFunction>();
+  // registry->RegisterFunction<AudioSetPropertiesFunction>();
+  // registry->RegisterFunction<SocketCreateFunction>();
+  // registry->RegisterFunction<SocketDestroyFunction>();
+  // registry->RegisterFunction<SocketConnectFunction>();
+  // registry->RegisterFunction<SocketBindFunction>();
+  // registry->RegisterFunction<SocketDisconnectFunction>();
+  // registry->RegisterFunction<SocketReadFunction>();
+  // registry->RegisterFunction<SocketWriteFunction>();
+  // registry->RegisterFunction<SocketRecvFromFunction>();
+  // registry->RegisterFunction<SocketSendToFunction>();
+  // registry->RegisterFunction<SocketListenFunction>();
+  // registry->RegisterFunction<SocketAcceptFunction>();
+  // registry->RegisterFunction<SocketSetKeepAliveFunction>();
+  // registry->RegisterFunction<SocketSetNoDelayFunction>();
+  // registry->RegisterFunction<SocketGetInfoFunction>();
+  // registry->RegisterFunction<SocketGetNetworkListFunction>();
+  // registry->RegisterFunction<SocketJoinGroupFunction>();
+  // registry->RegisterFunction<SocketLeaveGroupFunction>();
+  // registry->RegisterFunction<SocketSetMulticastTimeToLiveFunction>();
+  // registry->RegisterFunction<SocketSetMulticastLoopbackModeFunction>();
+  // registry->RegisterFunction<SocketGetJoinedGroupsFunction>();
+  // registry->RegisterFunction<SocketSecureFunction>();
+  // registry->RegisterFunction<api::SocketsTcpCreateFunction>();
+  // registry->RegisterFunction<api::SocketsTcpUpdateFunction>();
+  // registry->RegisterFunction<api::SocketsTcpSetPausedFunction>();
+  // registry->RegisterFunction<api::SocketsTcpSetKeepAliveFunction>();
+  // registry->RegisterFunction<api::SocketsTcpSetNoDelayFunction>();
+  // registry->RegisterFunction<api::SocketsTcpConnectFunction>();
+  // registry->RegisterFunction<api::SocketsTcpDisconnectFunction>();
+  // registry->RegisterFunction<api::SocketsTcpSecureFunction>();
+  // registry->RegisterFunction<api::SocketsTcpSendFunction>();
+  // registry->RegisterFunction<api::SocketsTcpCloseFunction>();
+  // registry->RegisterFunction<api::SocketsTcpGetInfoFunction>();
+  // registry->RegisterFunction<api::SocketsTcpGetSocketsFunction>();
+  // registry->RegisterFunction<IdleQueryStateFunction>();
+  // registry->RegisterFunction<IdleSetDetectionIntervalFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerCreateFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerUpdateFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerSetPausedFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerListenFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerDisconnectFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerCloseFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerGetInfoFunction>();
+  // registry->RegisterFunction<api::SocketsTcpServerGetSocketsFunction>();
+  // registry->RegisterFunction<AlarmsCreateFunction>();
+  // registry->RegisterFunction<AlarmsGetFunction>();
+  // registry->RegisterFunction<AlarmsGetAllFunction>();
+  // registry->RegisterFunction<AlarmsClearFunction>();
+  // registry->RegisterFunction<AlarmsClearAllFunction>();
+  // registry->RegisterFunction<ManagementGetAllFunction>();
+  // registry->RegisterFunction<ManagementGetFunction>();
+  // registry->RegisterFunction<ManagementGetSelfFunction>();
+  // registry->RegisterFunction<ManagementGetPermissionWarningsByIdFunction>();
+  // registry->RegisterFunction<
+  //     ManagementGetPermissionWarningsByManifestFunction>();
+  // registry->RegisterFunction<ManagementSetEnabledFunction>();
+  // registry->RegisterFunction<ManagementUninstallFunction>();
+  // registry->RegisterFunction<ManagementUninstallSelfFunction>();
+  // registry->RegisterFunction<ManagementLaunchAppFunction>();
+  // registry->RegisterFunction<ManagementCreateAppShortcutFunction>();
+  // registry->RegisterFunction<ManagementSetLaunchTypeFunction>();
+  // registry->RegisterFunction<ManagementGenerateAppForLinkFunction>();
+  // registry->RegisterFunction<RuntimeGetBackgroundPageFunction>();
+  // registry->RegisterFunction<RuntimeOpenOptionsPageFunction>();
+  // registry->RegisterFunction<RuntimeSetUninstallURLFunction>();
+  // registry->RegisterFunction<RuntimeReloadFunction>();
+  // registry->RegisterFunction<RuntimeRequestUpdateCheckFunction>();
+  // registry->RegisterFunction<RuntimeRestartFunction>();
+  // registry->RegisterFunction<RuntimeGetPlatformInfoFunction>();
+  // registry->RegisterFunction<RuntimeGetPackageDirectoryEntryFunction>();
+  // registry->RegisterFunction<WebRequestInternalAddEventListenerFunction>();
+  // registry->RegisterFunction<WebRequestInternalEventHandledFunction>();
 }
 
 std::unique_ptr<RuntimeAPIDelegate>

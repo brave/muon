@@ -191,7 +191,7 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
   }
 
   ExecuteScript(extension_id, std::move(copy), result, callback, file_url,
-      true, file.empty() ? code_string : file);
+      true, base::MakeUnique<std::string>(file.empty() ? code_string : file));
   return true;
 }
 
@@ -202,7 +202,7 @@ void TabHelper::ExecuteScript(
     extensions::ScriptExecutor::ExecuteScriptCallback callback,
     const GURL& file_url,
     bool success,
-    const std::string& code_string) {
+    std::unique_ptr<std::string> code_string) {
   extensions::ScriptExecutor* executor = script_executor();
 
   bool all_frames = false;
@@ -233,7 +233,7 @@ void TabHelper::ExecuteScript(
   executor->ExecuteScript(
       HostID(HostID::EXTENSIONS, extension_id),
       extensions::ScriptExecutor::JAVASCRIPT,
-      code_string,
+      *code_string,
       frame_scope,
       frame_id,
       match_about_blank ? extensions::ScriptExecutor::MATCH_ABOUT_BLANK
@@ -249,13 +249,22 @@ void TabHelper::ExecuteScript(
 }
 
 // static
-content::WebContents* TabHelper::GetTabById(int32_t tab_id,
-                          content::BrowserContext* browser_context) {
+content::WebContents* TabHelper::GetTabById(int32_t tab_id) {
   content::RenderViewHost* rvh =
       content::RenderViewHost::FromID(render_view_map_[tab_id].first,
                                       render_view_map_[tab_id].second);
   if (rvh) {
-    auto contents = content::WebContents::FromRenderViewHost(rvh);
+    return content::WebContents::FromRenderViewHost(rvh);
+  } else {
+    return NULL;
+  }
+}
+
+// static
+content::WebContents* TabHelper::GetTabById(int32_t tab_id,
+                          content::BrowserContext* browser_context) {
+  auto contents = GetTabById(tab_id);
+  if (contents) {
     if (extensions::ExtensionsBrowserClient::Get()->IsSameContext(
                                       browser_context,
                                       contents->GetBrowserContext())) {

@@ -1,0 +1,31 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/features.gni")
+import("//build/config/ui.gni")
+import("//chrome/common/features.gni")
+
+assert(enable_extensions)
+
+static_library("extensions") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "api/guest_view/tab_view/tab_view_internal_api.cc",
+    "api/guest_view/tab_view/tab_view_internal_api.h",
+    "//extensions/shell/browser/shell_display_info_provider.cc",
+  ]
+
+  configs += [
+    "//build/config:precompiled_headers",
+    "//build/config/compiler:wexit_time_destructors",
+  ]
+
+  public_deps = [
+    "//chrome/common/extensions/api",
+    "//content/public/browser",
+  ]
+}

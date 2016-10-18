@@ -14,11 +14,11 @@ namespace brave {
 class BraveContentRendererClient;
 }
 
-namespace atom {
+namespace web_cache {
+class WebCacheImpl;
+}
 
-class AtomBindings;
-class PreferencesManager;
-class NodeBindings;
+namespace atom {
 
 class AtomRendererClient : public content::ContentRendererClient {
  public:
@@ -43,20 +43,12 @@ class AtomRendererClient : public content::ContentRendererClient {
   void RenderThreadStarted() override;
   void RenderFrameCreated(content::RenderFrame*) override;
   void RenderViewCreated(content::RenderView*) override;
-  void RunScriptsAtDocumentStart(content::RenderFrame* render_frame) override;
-  void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame) override;
   blink::WebSpeechSynthesizer* OverrideSpeechSynthesizer(
       blink::WebSpeechSynthesizerClient* client) override;
   bool OverrideCreatePlugin(content::RenderFrame* render_frame,
                             blink::WebLocalFrame* frame,
                             const blink::WebPluginParams& params,
                             blink::WebPlugin** plugin) override;
-  bool ShouldFork(blink::WebLocalFrame* frame,
-                  const GURL& url,
-                  const std::string& http_method,
-                  bool is_initial_navigation,
-                  bool is_server_redirect,
-                  bool* send_referrer) override;
   content::BrowserPluginDelegate* CreateBrowserPluginDelegate(
       content::RenderFrame* render_frame,
       const std::string& mime_type,
@@ -65,9 +57,7 @@ class AtomRendererClient : public content::ContentRendererClient {
       std::vector<std::unique_ptr<::media::KeySystemProperties>>* key_systems)
       override;
 
-  std::unique_ptr<NodeBindings> node_bindings_;
-  std::unique_ptr<AtomBindings> atom_bindings_;
-  std::unique_ptr<PreferencesManager> preferences_manager_;
+  std::unique_ptr<web_cache::WebCacheImpl> web_cache_impl_;
 
   friend class brave::BraveContentRendererClient;
 

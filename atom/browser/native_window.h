@@ -21,6 +21,7 @@
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "extensions/browser/app_window/size_constraints.h"
+#include "ui/base/ui_base_types.h"
 #include "ui/gfx/image/image.h"
 #include "ui/gfx/image/image_skia.h"
 
@@ -77,14 +78,15 @@ class NativeWindow : public base::SupportsUserData,
   virtual bool IsEnabled() = 0;
   virtual void Maximize() = 0;
   virtual void Unmaximize() = 0;
-  virtual bool IsMaximized() = 0;
+  virtual bool IsMaximized() const = 0;
   virtual void Minimize() = 0;
   virtual void Restore() = 0;
-  virtual bool IsMinimized() = 0;
+  virtual bool IsMinimized() const = 0;
   virtual void SetFullScreen(bool fullscreen) = 0;
   virtual bool IsFullscreen() const = 0;
+  virtual void SetBounds(const gfx::Rect& bounds) = 0;
   virtual void SetBounds(const gfx::Rect& bounds, bool animate = false) = 0;
-  virtual gfx::Rect GetBounds() = 0;
+  virtual gfx::Rect GetBounds() const = 0;
   virtual void SetSize(const gfx::Size& size, bool animate = false);
   virtual gfx::Size GetSize();
   virtual void SetPosition(const gfx::Point& position, bool animate = false);
@@ -119,7 +121,7 @@ class NativeWindow : public base::SupportsUserData,
   virtual void SetClosable(bool closable) = 0;
   virtual bool IsClosable() = 0;
   virtual void SetAlwaysOnTop(bool top) = 0;
-  virtual bool IsAlwaysOnTop() = 0;
+  virtual bool IsAlwaysOnTop() const = 0;
   virtual void Center() = 0;
   virtual void SetTitle(const std::string& title) = 0;
   virtual std::string GetTitle() = 0;
@@ -139,6 +141,8 @@ class NativeWindow : public base::SupportsUserData,
   virtual void SetFocusable(bool focusable);
   virtual void SetMenu(AtomMenuModel* menu);
   virtual void SetParentWindow(NativeWindow* parent);
+  virtual gfx::Rect GetRestoredBounds() const = 0;
+  virtual ui::WindowShowState GetRestoredState() const = 0;
   virtual gfx::NativeWindow GetNativeWindow() = 0;
   virtual gfx::AcceleratedWidget GetAcceleratedWidget() = 0;
 
@@ -233,7 +237,6 @@ class NativeWindow : public base::SupportsUserData,
   bool has_frame() const { return has_frame_; }
   void set_has_frame(bool has_frame) { has_frame_ = has_frame; }
 
-  bool transparent() const { return transparent_; }
   SkRegion* draggable_region() const { return draggable_region_.get(); }
   bool enable_larger_than_screen() const { return enable_larger_than_screen_; }
 
@@ -259,7 +262,6 @@ class NativeWindow : public base::SupportsUserData,
       const std::vector<DraggableRegion>& regions);
 
   // content::WebContentsObserver:
-  void RenderViewCreated(content::RenderViewHost* render_view_host) override;
   void BeforeUnloadDialogCancelled() override;
   void DidFirstVisuallyNonEmptyPaint() override;
   bool OnMessageReceived(const IPC::Message& message) override;
@@ -276,9 +278,6 @@ class NativeWindow : public base::SupportsUserData,
 
   // Whether window has standard frame.
   bool has_frame_;
-
-  // Whether window is transparent.
-  bool transparent_;
 
   // For custom drag, the whole window is non-draggable and the draggable region
   // has to been explicitly provided.
