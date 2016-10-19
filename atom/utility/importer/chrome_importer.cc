@@ -16,6 +16,7 @@
 #include "chrome/common/importer/imported_bookmark_entry.h"
 #include "chrome/common/importer/importer_bridge.h"
 #include "chrome/common/importer/importer_url_row.h"
+#include "chrome/utility/importer/favicon_reencode.h"
 #include "sql/connection.h"
 #include "sql/statement.h"
 #include "url/gurl.h"
@@ -131,6 +132,79 @@ void ChromeImporter::ImportBookmarks() {
     const base::string16& first_folder_name =
       base::UTF8ToUTF16("Imported from Chrome");
     bridge_->AddBookmarks(bookmarks, first_folder_name);
+  }
+
+  // Import favicons.
+  base::FilePath favicons_path =
+    source_path_.Append(
+      base::FilePath::StringType(FILE_PATH_LITERAL("Favicons")));
+  if (!base::PathExists(favicons_path))
+    return;
+
+  sql::Connection db;
+  if (!db.Open(favicons_path))
+    return;
+
+  FaviconMap favicon_map;
+  ImportFaviconURLs(&db, &favicon_map);
+  // Write favicons into profile.
+  if (!favicon_map.empty() && !cancelled()) {
+    favicon_base::FaviconUsageDataList favicons;
+    LoadFaviconData(&db, favicon_map, &favicons);
+    bridge_->SetFavicons(favicons);
+  }
+}
+
+void ChromeImporter::ImportFaviconURLs(
+  sql::Connection* db,
+  FaviconMap* favicon_map) {
+  const char query[] = "SELECT icon_id, page_url FROM icon_mapping;";
+  sql::Statement s(db->GetUniqueStatement(query));
+
+  while (s.Step() && !cancelled()) {
+    int64_t icon_id = s.ColumnInt64(0);
+    GURL url = GURL(s.ColumnString(1));
+    (*favicon_map)[icon_id].insert(url);
+  }
+}
+
+void ChromeImporter::LoadFaviconData(
+    sql::Connection* db,
+    const FaviconMap& favicon_map,
+    favicon_base::FaviconUsageDataList* favicons) {
+  const char query[] = "SELECT url "
+                       "FROM favicons "
+                       "WHERE id = ?;";
+  sql::Statement s(db->GetUniqueStatement(query));
+
+  for (FaviconMap::const_iterator i = favicon_map.begin();
+       i != favicon_map.end(); ++i) {
+    s.Reset(true);
+    s.BindInt64(0, i->first);
+    if (s.Step()) {
+      favicon_base::FaviconUsageData usage;
+
+      GURL url = GURL(s.ColumnString(0));
+      if (url.is_valid()) {
+        if (url.SchemeIs(url::kDataScheme)) {
+          std::vector<unsigned char> data;
+          s.ColumnBlobAsVector(0, &data);
+          if (data.empty()) {
+            continue;  // Data definitely invalid.
+          }
+          if (!importer::ReencodeFavicon(&data[0], data.size(),
+                                         &usage.png_data))
+            continue;  // Unable to decode.
+        } else {
+          usage.favicon_url = url;
+        }
+      } else {
+        continue;  // Don't bother importing favicons with invalid URLs.
+      }
+
+      usage.urls = i->second;
+      favicons->push_back(usage);
+    }
   }
 }
 
