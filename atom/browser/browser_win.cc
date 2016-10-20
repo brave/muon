@@ -283,12 +283,34 @@ bool Browser::IsDefaultProtocolClient(const std::string& protocol,
   if (protocol.empty())
     return false;
 
+  // Main Registry Key
+  HKEY root = HKEY_CURRENT_USER;
+  base::win::RegKey choiceKey;
+
+  // TODO(Anthony): Make it configurable
+  base::string16 prog = L"BraveHTML";
+
+  // choice path
+  base::string16 choicePath = base::UTF8ToUTF16(
+    "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\"
+    + protocol + "\\UserChoice");
+
+  if (FAILED(choiceKey.Open(root, choicePath.c_str(), KEY_ALL_ACCESS)))
+    // Key doesn't exist, we can confirm that it is not set
+    return false;
+
+  base::string16 choiceVal;
+  if (FAILED(choiceKey.ReadValue(L"Progid", &choiceVal)))
+    // value not set, we can confirm that it is not set
+    return false;
+
+  if (base::win::GetVersion() >= base::win::VERSION_WIN8)
+    return choiceVal == prog;
+
   base::string16 exe;
   if (!GetProtocolLaunchPath(args, &exe))
     return false;
 
-  // Main Registry Key
-  HKEY root = HKEY_CURRENT_USER;
   base::string16 keyPath = base::UTF8ToUTF16("Software\\Classes\\" + protocol);
 
   // Command Key
@@ -307,30 +329,6 @@ bool Browser::IsDefaultProtocolClient(const std::string& protocol,
   base::string16 keyVal;
   if (FAILED(commandKey.ReadValue(L"", &keyVal)))
     // Default value not set, we can confirm that it is not set
-    return false;
-
-  // TODO(Anthony): Make it configurable
-  base::string16 prog = L"BraveHTML";
-
-  // url assocaition path
-  base::string16 urlAssoPath = base::UTF8ToUTF16(
-    "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\"
-    + protocol);
-
-  // Choise path
-  base::string16 choicePath = urlAssoPath + L"\\UserChoice";
-
-  if (FAILED(key.Open(root, urlAssoPath.c_str(), KEY_ALL_ACCESS)))
-    // key doesn't exist, we can confirm that it is not set
-    return false;
-
-  if (FAILED(commandKey.Open(root, choicePath.c_str(), KEY_ALL_ACCESS)))
-    // Key doesn't exist, we can confirm that it is not set
-    return false;
-
-  base::string16 choiceVal;
-  if (FAILED(commandKey.ReadValue(L"Progid", &choiceVal)))
-    // value not set, we can confirm that it is not set
     return false;
 
   // Default value is the same as current file path and
