@@ -263,6 +263,18 @@ bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
   if (FAILED(commandKey.WriteValue(L"", exe.c_str())))
     return false;
 
+  // TODO(Anthony): Make it configurable
+  base::string16 prog = L"BraveHTML";
+
+  // choice path
+  base::string16 choicePath = base::UTF8ToUTF16(
+    "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\"
+    + protocol + "\\UserChoice");
+
+  base::win::RegKey choiceKey(root, choicePath.c_str(), KEY_ALL_ACCESS);
+  if (FAILED(choiceKey.WriteValue(L"Progid", prog.c_str())))
+    return false;
+
   return true;
 }
 
@@ -297,8 +309,33 @@ bool Browser::IsDefaultProtocolClient(const std::string& protocol,
     // Default value not set, we can confirm that it is not set
     return false;
 
-  // Default value is the same as current file path
-  return keyVal == exe;
+  // TODO(Anthony): Make it configurable
+  base::string16 prog = L"BraveHTML";
+
+  // url assocaition path
+  base::string16 urlAssoPath = base::UTF8ToUTF16(
+    "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\"
+    + protocol);
+
+  // Choise path
+  base::string16 choicePath = urlAssoPath + L"\\UserChoice";
+
+  if (FAILED(key.Open(root, urlAssoPath.c_str(), KEY_ALL_ACCESS)))
+    // key doesn't exist, we can confirm that it is not set
+    return false;
+
+  if (FAILED(commandKey.Open(root, choicePath.c_str(), KEY_ALL_ACCESS)))
+    // Key doesn't exist, we can confirm that it is not set
+    return false;
+
+  base::string16 choiceVal;
+  if (FAILED(commandKey.ReadValue(L"Progid", &choiceVal)))
+    // value not set, we can confirm that it is not set
+    return false;
+
+  // Default value is the same as current file path and
+  // user choice in url associations should be same as prog
+  return keyVal == exe && choiceVal == prog;
 }
 
 bool Browser::SetBadgeCount(int count) {
