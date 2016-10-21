@@ -237,7 +237,9 @@ bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
   if (protocol.empty())
     return false;
 
-  if (base::win::GetVersion() >= base::win::VERSION_WIN8)
+  // TODO(Anthony): refactoring set default browser and set default protocol
+  // client as separated APIs
+  if (base::win::GetVersion() >= base::win::VERSION_WIN8 && protocol == "http")
     return LaunchDefaultAppsSettingsModernDialog(
       base::UTF8ToUTF16(protocol).c_str());
 
@@ -304,7 +306,10 @@ bool Browser::IsDefaultProtocolClient(const std::string& protocol,
     // value not set, we can confirm that it is not set
     return false;
 
-  if (base::win::GetVersion() >= base::win::VERSION_WIN8)
+  // TODO(Anthony): refactoring is default browser and is default protocol
+  // client as separated APIs
+  if (base::win::GetVersion() >= base::win::VERSION_WIN8 &&
+      (protocol == "http" || protocol == "https"))
     return choiceVal == prog;
 
   base::string16 exe;
