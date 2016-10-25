@@ -184,9 +184,6 @@ void AtomMainDelegate::PreSandboxStartup() {
   command_line->AppendSwitch(::switches::kNoSandbox);
 #endif
 
-  // Allow file:// URIs to read other file:// URIs by default.
-  command_line->AppendSwitch(::switches::kAllowFileAccessFromFiles);
-
 #if defined(OS_MACOSX)
   // Enable AVFoundation.
   command_line->AppendSwitch("enable-avfoundation");

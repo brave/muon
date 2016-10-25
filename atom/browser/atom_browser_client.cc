@@ -130,12 +130,12 @@ void AtomBrowserClient::OverrideWebkitPrefs(
   prefs->plugins_enabled = true;
   prefs->dom_paste_enabled = true;
   prefs->allow_scripts_to_close_windows = true;
-  prefs->javascript_can_access_clipboard = true;
+  prefs->javascript_can_access_clipboard = false;
   prefs->local_storage_enabled = true;
   prefs->databases_enabled = true;
   prefs->application_cache_enabled = true;
-  prefs->allow_universal_access_from_file_urls = true;
-  prefs->allow_file_access_from_file_urls = true;
+  prefs->allow_universal_access_from_file_urls = false;
+  prefs->allow_file_access_from_file_urls = false;
   prefs->experimental_webgl_enabled = true;
   prefs->allow_displaying_insecure_content = false;
   prefs->allow_running_insecure_content = false;
