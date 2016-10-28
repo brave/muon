@@ -874,11 +874,12 @@ void WebContents::DidFinishNavigation(
   auto url = navigation_handle->GetURL();
   if (navigation_handle->HasCommitted() && !navigation_handle->IsErrorPage()) {
     bool is_in_page = navigation_handle->IsSamePage();
+    bool is_renderer_initiated = navigation_handle->IsRendererInitiated();
     if (!is_in_page) {
       Emit("load-commit", url, is_main_frame);
     }
     if (is_main_frame && !is_in_page) {
-      Emit("did-navigate", url);
+      Emit("did-navigate", url, is_renderer_initiated);
     } else if (is_in_page) {
       Emit("did-navigate-in-page", url, is_main_frame);
     }
