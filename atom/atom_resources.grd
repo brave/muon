@@ -36,6 +36,8 @@
       <include name="IDR_ATOM_WINDOWS_BINDINGS_JS" file="common\api\resources\windows_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_APP_BINDINGS_JS" file="common\api\resources\app_bindings.js" type="BINDATA" />
+
+      <include name="IDR_ATOM_RUNTIME_EXTRA_BINDINGS_JS" file="common\api\resources\runtime_extra_bindings.js" type="BINDATA" />
     </includes>
   </release>
 </grit>
