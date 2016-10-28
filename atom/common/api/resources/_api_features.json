@@ -54,6 +54,10 @@
     "channel": "stable",
     "contexts": ["blessed_extension"]
   },
+  "runtimeExtra": {
+    "channel": "stable",
+    "contexts": ["blessed_extension"]
+  },
   "windows": {
     "channel": "stable",
     "contexts": ["blessed_extension"]
