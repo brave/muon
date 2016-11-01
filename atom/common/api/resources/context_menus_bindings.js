@@ -34,6 +34,18 @@ var binding = {
   create: function (properties, cb) {
     var responseId = createResponseId()
     var menuItemId = properties.id || createMenuItemId()
+    if (properties.checked !== undefined) {
+      throw new Error('createProperties.checked of contextMenus.create is not supported yet')
+    }
+    if (properties.documentUrlPatterns !== undefined) {
+      throw new Error('createProperties.documentUrlPatterns of contextMenus.create is not supported yet')
+    }
+    if (properties.targetUrlPatterns !== undefined) {
+      throw new Error('createProperties.targetUrlPatterns of contextMenus.create is not supported yet')
+    }
+    if (properties.enabled !== undefined) {
+      throw new Error('createProperties.enabled of contextMenus.create is not supported yet')
+    }
     cb && ipc.once('chrome-context-menus-create-response-' + responseId, function(evt) {
       cb()
     })
@@ -43,6 +55,7 @@ var binding = {
       }
     })
     ipc.send('chrome-context-menus-create', responseId, extensionId, menuItemId, properties)
+    return menuItemId
   }
 }
 
