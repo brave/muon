@@ -1,6 +1,7 @@
 var ipc = require('ipc_utils')
 var process = requireNative('process')
 var extensionId = process.GetExtensionId()
+var runtime = require('runtime').binding
 
 var id = 0
 
@@ -54,7 +55,9 @@ var binding = {
         properties.onclick(info, tab)
       }
     })
-    ipc.send('chrome-context-menus-create', responseId, extensionId, menuItemId, properties)
+    let manifest = runtime.getManifest()
+    let icon = manifest.icons['16']
+    ipc.send('chrome-context-menus-create', responseId, extensionId, menuItemId, properties, icon)
     return menuItemId
   }
 }
@@ -62,7 +65,6 @@ var binding = {
 exports.binding = binding
 
 // TODO (Anthony): Move this to separated binding
-var runtime = require('runtime').binding
 var tabs = require('tabs').binding
 
 runtime.openOptionsPage = function (cb) {
