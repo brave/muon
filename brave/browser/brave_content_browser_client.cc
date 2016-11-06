@@ -93,12 +93,10 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
         command_line, process, process->GetBrowserContext());
 #endif
 
-#if !defined(OS_LINUX)
   if (atom::WebContentsPreferences::run_node(command_line)) {
     // Disable renderer sandbox for most of node's functions.
     command_line->AppendSwitch(::switches::kNoSandbox);
   }
-#endif
 }
 
 bool BraveContentBrowserClient::CanCreateWindow(
