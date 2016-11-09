@@ -372,6 +372,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void WebContentsDestroyed() override;
   void NavigationEntryCommitted(
       const content::LoadCommittedDetails& load_details) override;
+  void SecurityStyleChanged(
+      content::SecurityStyle security_style,
+      const content::SecurityStyleExplanations& explanations) override;
   void TitleWasSet(content::NavigationEntry* entry, bool explicit_set) override;
   void DidUpdateFaviconURL(
       const std::vector<content::FaviconURL>& urls) override;
