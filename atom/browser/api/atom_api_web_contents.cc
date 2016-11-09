@@ -890,6 +890,26 @@ void WebContents::DidFinishNavigation(
   }
 }
 
+void WebContents::SecurityStyleChanged(
+    content::SecurityStyle security_style,
+    const content::SecurityStyleExplanations& explanations) {
+    std::string type = "unknown";
+    switch (security_style) {
+      case content::SECURITY_STYLE_UNAUTHENTICATED:
+      case content::SECURITY_STYLE_AUTHENTICATION_BROKEN:
+        type = "insecure";
+        break;
+      case content::SECURITY_STYLE_WARNING:
+        type = "warning";
+        break;
+      case content::SECURITY_STYLE_AUTHENTICATED:
+        type = "secure";
+        break;
+      default: break;
+    }
+    Emit("did-change-security", type);
+}
+
 void WebContents::TitleWasSet(content::NavigationEntry* entry,
                               bool explicit_set) {
   if (entry)
