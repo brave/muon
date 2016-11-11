@@ -54,7 +54,7 @@ WebContentsPermissionHelper::~WebContentsPermissionHelper() {
 void WebContentsPermissionHelper::RequestPermission(
     content::PermissionType permission,
     const base::Callback<void(bool)>& callback,
-    bool user_gesture, const GURL& security_origin) {
+    const GURL& security_origin, bool user_gesture) {
   auto rfh = web_contents_->GetMainFrame();
   auto permission_manager = static_cast<AtomPermissionManager*>(
       web_contents_->GetBrowserContext()->GetPermissionManager());
@@ -82,7 +82,7 @@ void WebContentsPermissionHelper::RequestMediaAccessPermission(
   // The permission type doesn't matter here, AUDIO_CAPTURE/VIDEO_CAPTURE
   // are presented as same type in content_converter.h.
   RequestPermission(content::PermissionType::AUDIO_CAPTURE, callback,
-                    false, request.security_origin);
+                    request.security_origin);
 }
 
 void WebContentsPermissionHelper::RequestWebNotificationPermission(
@@ -94,6 +94,7 @@ void WebContentsPermissionHelper::RequestPointerLockPermission(
     bool user_gesture) {
   RequestPermission((content::PermissionType)(PermissionType::POINTER_LOCK),
                     base::Bind(&OnPointerLockResponse, web_contents_),
+                    GURL(),
                     user_gesture);
 }
 
@@ -102,6 +103,7 @@ void WebContentsPermissionHelper::RequestOpenExternalPermission(
     bool user_gesture) {
   RequestPermission((content::PermissionType)(PermissionType::OPEN_EXTERNAL),
                     callback,
+                    GURL(),
                     user_gesture);
 }
 
@@ -111,6 +113,7 @@ void WebContentsPermissionHelper::RequestProtocolRegistrationPermission(
   RequestPermission((content::PermissionType)
       (PermissionType::PROTOCOL_REGISTRATION),
                     callback,
+                    GURL(),
                     user_gesture);
 }
 
