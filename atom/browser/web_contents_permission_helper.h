@@ -46,8 +46,8 @@ class WebContentsPermissionHelper
   void RequestPermission(
       content::PermissionType permission,
       const base::Callback<void(bool)>& callback,
-      bool user_gesture = false,
-      const GURL& security_origin = GURL());
+      const GURL& security_origin = GURL(),
+      bool user_gesture = false);
 
   content::WebContents* web_contents_;
 
