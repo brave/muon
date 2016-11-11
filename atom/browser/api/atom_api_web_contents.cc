@@ -72,6 +72,7 @@
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/resource_request_details.h"
+#include "content/public/browser/security_style_explanations.h"
 #include "content/public/browser/service_worker_context.h"
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
@@ -192,6 +193,51 @@ struct Converter<atom::api::WebContents::Type> {
       *out = Type::BACKGROUND_PAGE;
     } else if (type == "offscreen") {
       *out = Type::OFF_SCREEN;
+    } else {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct Converter<content::SecurityStyle> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   content::SecurityStyle val) {
+    std::string type;
+    switch (val) {
+      case content::SECURITY_STYLE_UNAUTHENTICATED:
+        type = "insecure";
+        break;
+      case content::SECURITY_STYLE_AUTHENTICATION_BROKEN:
+        type = "broken";
+        break;
+      case content::SECURITY_STYLE_WARNING:
+        type = "warning";
+        break;
+      case content::SECURITY_STYLE_AUTHENTICATED:
+        type = "secure";
+        break;
+      default:
+        type = "unknown";
+        break;
+    }
+    return mate::ConvertToV8(isolate, type);
+  }
+
+  static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
+                     content::SecurityStyle* out) {
+    std::string type;
+    if (!ConvertFromV8(isolate, val, &type))
+      return false;
+    if (type == "insecure") {
+      *out = content::SECURITY_STYLE_UNAUTHENTICATED;
+    } else if (type == "broken") {
+      *out = content::SECURITY_STYLE_AUTHENTICATION_BROKEN;
+    } else if (type == "warning") {
+      *out = content::SECURITY_STYLE_WARNING;
+    } else if (type == "secure") {
+      *out = content::SECURITY_STYLE_AUTHENTICATED;
     } else {
       return false;
     }
@@ -893,21 +939,13 @@ void WebContents::DidFinishNavigation(
 void WebContents::SecurityStyleChanged(
     content::SecurityStyle security_style,
     const content::SecurityStyleExplanations& explanations) {
-    std::string type = "unknown";
-    switch (security_style) {
-      case content::SECURITY_STYLE_UNAUTHENTICATED:
-      case content::SECURITY_STYLE_AUTHENTICATION_BROKEN:
-        type = "insecure";
-        break;
-      case content::SECURITY_STYLE_WARNING:
-        type = "warning";
-        break;
-      case content::SECURITY_STYLE_AUTHENTICATED:
-        type = "secure";
-        break;
-      default: break;
+    if (explanations.ran_insecure_content) {
+      Emit("security-style-changed", "active-mixed-content");
+    } else if (explanations.displayed_insecure_content) {
+      Emit("security-style-changed", "passive-mixed-content");
+    } else {
+      Emit("security-style-changed", security_style);
     }
-    Emit("did-change-security", type);
 }
 
 void WebContents::TitleWasSet(content::NavigationEntry* entry,
