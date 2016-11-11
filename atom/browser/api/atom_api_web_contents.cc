@@ -939,9 +939,8 @@ void WebContents::DidFinishNavigation(
 void WebContents::SecurityStyleChanged(
     content::SecurityStyle security_style,
     const content::SecurityStyleExplanations& explanations) {
-    if (explanations.ran_insecure_content) {
-      Emit("security-style-changed", "active-mixed-content");
-    } else if (explanations.displayed_insecure_content) {
+    if (explanations.displayed_insecure_content &&
+        security_style == content::SECURITY_STYLE_UNAUTHENTICATED) {
       Emit("security-style-changed", "passive-mixed-content");
     } else {
       Emit("security-style-changed", security_style);
