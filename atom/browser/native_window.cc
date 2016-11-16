@@ -394,9 +394,10 @@ void NativeWindow::RequestToClosePage() {
 void NativeWindow::CloseContents(content::WebContents* source) {
   if (!inspectable_web_contents_)
     return;
-
-  inspectable_web_contents_->GetView()->SetDelegate(nullptr);
+  if (inspectable_web_contents_->GetView())
+    inspectable_web_contents_->GetView()->SetDelegate(nullptr);
   inspectable_web_contents_ = nullptr;
+
   Observe(nullptr);
 
   FOR_EACH_OBSERVER(NativeWindowObserver, observers_,
