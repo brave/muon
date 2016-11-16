@@ -30,7 +30,6 @@ DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
 
 namespace keys {
 const char kIdKey[] = "id";
-const char kTabIdKey[] = "tabId";
 const char kActiveKey[] = "active";
 const char kIncognitoKey[] = "incognito";
 const char kWindowIdKey[] = "windowId";
@@ -38,7 +37,12 @@ const char kTitleKey[] = "title";
 const char kUrlKey[] = "url";
 const char kStatusKey[] = "status";
 const char kAudibleKey[] = "audible";
-const char kMutedKey[] = "muted";
+const char kDiscardedKey[] = "discarded";
+const char kAutoDiscardableKey[] = "autoDiscardable";
+const char kHighlightedKey[] = "highlighted";
+const char kIndexKey[] = "index";
+const char kPinnedKey[] = "pinned";
+const char kSelectedKey[] = "selected";
 }  // namespace keys
 
 static std::map<int, std::pair<int, int>> render_view_map_;
@@ -282,21 +286,29 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   auto window_id = IdForWindowContainingTab(contents);
   auto tab_helper = TabHelper::FromWebContents(contents);
 
+  bool active = (active_tab_map_[window_id] == tab_id);
   std::unique_ptr<base::DictionaryValue> result(
       tab_helper->getTabValues()->CreateDeepCopy());
 
   result->SetInteger(keys::kIdKey, tab_id);
-  result->SetInteger(keys::kTabIdKey, tab_id);
   result->SetInteger(keys::kWindowIdKey, window_id);
   result->SetBoolean(keys::kIncognitoKey,
                      contents->GetBrowserContext()->IsOffTheRecord());
-  result->SetBoolean(keys::kActiveKey, active_tab_map_[window_id] == tab_id);
+  result->SetBoolean(keys::kActiveKey, active);
   result->SetString(keys::kUrlKey, contents->GetURL().spec());
   result->SetString(keys::kTitleKey, contents->GetTitle());
   result->SetString(keys::kStatusKey, contents->IsLoading()
       ? "loading" : "complete");
   result->SetBoolean(keys::kAudibleKey, contents->WasRecentlyAudible());
-  result->SetBoolean(keys::kMutedKey, contents->IsAudioMuted());
+  result->SetBoolean(keys::kDiscardedKey, false);
+  result->SetBoolean(keys::kAutoDiscardableKey, false);
+  result->SetBoolean(keys::kHighlightedKey, active);
+  // TODO(bridiver) - set index value
+  result->SetInteger(keys::kIndexKey, 0);
+  // TODO(bridiver) - set pinned value
+  result->SetBoolean(keys::kPinnedKey, false);
+  result->SetBoolean(keys::kSelectedKey, active);
+
   return result.release();
 }
 

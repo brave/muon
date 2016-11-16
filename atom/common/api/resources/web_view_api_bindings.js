@@ -58,6 +58,7 @@ const asyncMethods = [
 ]
 
 const syncMethods = [
+  'getZoomPercent',
   'getURL',
   'canGoBack',
   'canGoForward',
