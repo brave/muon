@@ -118,19 +118,9 @@ mac_framework_bundle("electron_framework") {
     # "-Wl,-order_file," + rebase_path("app/framework.order", root_build_dir),
   ]
 
-  ldflags += [
-    "-F",
-    rebase_path("$root_out_dir"),
-    "-framework",
-    "Squirrel",
-    "-framework",
-    "ReactiveCocoa",
-    "-framework",
-    "Mantle",
-  ]
-
   data_deps = [
-    ":node_resources"
+    ":node_resources",
+    ":external_binaries_resources",
   ]
 
   if (is_component_build) {
@@ -326,6 +316,7 @@ target(_dll_target_type, "electron_dll") {
 
   public_configs = [
     "//electron/build:electron_config",
+    ":external_binaries_config"
   ]
 
   sources = [
@@ -350,6 +341,19 @@ target(_dll_target_type, "electron_dll") {
   ]
 
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
+}
+
+config("external_binaries_config") {
+  ldflags = [
+    "-F",
+    rebase_path("$root_out_dir"),
+    "-framework",
+    "Squirrel",
+    "-framework",
+    "ReactiveCocoa",
+    "-framework",
+    "Mantle",
+  ]
 }
 
 bundle_data("node_resources") {
