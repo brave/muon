@@ -9,6 +9,7 @@
 #include "atom/common/javascript_bindings.h"
 #include "atom/grit/atom_resources.h"  // NOLINT: This file is generated
 #include "atom/grit/electron_api_resources.h"  // NOLINT: This file is generated
+#include "base/win/windows_version.h"
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
 #include "brave/renderer/extensions/content_settings_bindings.h"
 #include "brave/renderer/extensions/web_frame_bindings.h"
@@ -52,6 +53,44 @@ v8::Local<v8::Value> GetOrCreateProcess(ScriptContext* context) {
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
         v8_helpers::ToV8StringUnsafe(context->isolate(), "platform"),
         v8_helpers::ToV8StringUnsafe(context->isolate(), kPlatform)),
+#if defined(OS_WIN)
+    switch (base::win::GetVersion()) {
+      case VERSION_WIN7:
+        gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win7")),
+          break;
+      case VERSION_WIN8:
+        gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8")),
+          break;
+      case VERSION_WIN8_1:
+        gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8_1")),
+          break;
+      case VERSION_WIN10:
+        gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10")),
+          break;
+      case  VERSION_WIN10_TH2:
+        gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10_th2")),
+          break;
+      default:
+        gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "")),
+        break;
+    }
+#else
+    gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+        v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
+        v8_helpers::ToV8StringUnsafe(context->isolate(), "")),
+#endif
     // TODO(bridiver) - add a function to return env vars
     // std::unique_ptr<base::Environment> env(base::Environment::Create());
     // gin::SetProperty(context->isolate(), process.As<v8::Object>(),
