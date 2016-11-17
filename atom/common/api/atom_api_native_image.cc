@@ -34,6 +34,8 @@
 
 #include "atom/common/node_includes.h"
 
+#include "base/threading/thread_restrictions.h"
+
 namespace atom {
 
 namespace api {
@@ -95,6 +97,7 @@ bool AddImageSkiaRep(gfx::ImageSkia* image,
 bool AddImageSkiaRep(gfx::ImageSkia* image,
                      const base::FilePath& path,
                      double scale_factor) {
+  base::ThreadRestrictions::SetIOAllowed(true); // ugh electron
   std::string file_contents;
   if (!asar::ReadFileToString(path, &file_contents))
     return false;
