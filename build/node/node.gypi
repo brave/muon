@@ -46,12 +46,12 @@
       #
       # Concrete configurations
       #
-      'Node_Debug': {
-        'inherit_from': ['Common_Base', 'x86_Base', 'Debug_Base'],
-      },
-      'Node_Release': {
-        'inherit_from': ['Common_Base', 'x86_Base', 'Release_Base'],
-      },
+      # 'Node_Debug': {
+      #   'inherit_from': ['Common_Base', 'x86_Base', 'Debug_Base'],
+      # },
+      # 'Node_Release': {
+      #   'inherit_from': ['Common_Base', 'x86_Base', 'Release_Base'],
+      # },
     },
     'target_conditions': [
       ['_target_name in ["libuv", "http_parser", "boringssl", "openssl-cli", "cares", "node", "zlib"]', {
