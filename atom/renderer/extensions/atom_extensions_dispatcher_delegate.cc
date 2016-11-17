@@ -151,11 +151,6 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
                              IDR_ATOM_CONTENT_SETTINGS_BINDINGS_JS);
   source_map->RegisterSource("windows",
                              IDR_ATOM_WINDOWS_BINDINGS_JS);
-  // source_map->RegisterSource("chromeWebViewInternal",
-  //                            IDR_CHROME_WEB_VIEW_INTERNAL_CUSTOM_BINDINGS_JS);
-  // source_map->RegisterSource("chromeWebView", IDR_CHROME_WEB_VIEW_JS);
-  // source_map->RegisterSource("app",
-  //                            IDR_ATOM_APP_BINDINGS_JS);
   source_map->RegisterSource("ChromeSetting", IDR_CHROME_SETTING_JS);
   source_map->RegisterSource("ContentSetting", IDR_CONTENT_SETTING_JS);
   source_map->RegisterSource("ChromeDirectSetting",
@@ -166,17 +161,7 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
       IDR_ATOM_TAB_VIEW_INTERNAL_BINDINGS_JS);
   source_map->RegisterSource("webViewApiMethods",
       IDR_ATOM_WEB_VIEW_API_BINDINGS_JS);
-
-
 }
-
-
-  // // Unpacked extensions start off with file access since they are a developer
-  // // feature.
-  // static inline bool ShouldAlwaysAllowFileAccess(Location location) {
-  //   return IsUnpackedLocation(location);
-  // }
-
 
 void AtomExtensionsDispatcherDelegate::RequireAdditionalModules(
     extensions::ScriptContext* context,
@@ -190,17 +175,6 @@ void AtomExtensionsDispatcherDelegate::RequireAdditionalModules(
     module_system->Require("webViewInternal");
     module_system->Require("webViewApiMethods");
     module_system->Require("webViewAttributes");
-    // module_system->Require("web-view");
-    // module_system->Require("web-view-attributes");
-  }
-
-    // Note: setting up the WebView class here, not the chrome.webview API.
-  // The API will be automatically set up when first used.
-  if (context->GetAvailability("webViewInternal").is_available()) {
-    LOG(ERROR) << "web view internal is available";
-    // module_system->Require("chromeWebView");
-  } else {
-    LOG(ERROR) << "web view internal is not available";
   }
 
   if (context_type == extensions::Feature::WEBUI_CONTEXT ||
