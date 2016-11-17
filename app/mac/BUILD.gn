@@ -87,6 +87,7 @@ mac_framework_bundle("electron_framework") {
   configs += [
     "//electron/build/node:node_external_config",
     "//build/config/compiler:wexit_time_destructors",
+    ":external_binaries_config"
   ]
 
   info_plist_target = ":electron_framework_plist"
@@ -316,7 +317,6 @@ target(_dll_target_type, "electron_dll") {
 
   public_configs = [
     "//electron/build:electron_config",
-    ":external_binaries_config"
   ]
 
   sources = [
@@ -341,6 +341,12 @@ target(_dll_target_type, "electron_dll") {
   ]
 
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
+
+  if (is_component_build) {
+    configs += [
+      ":external_binaries_config"
+    ]
+  }
 }
 
 config("external_binaries_config") {
