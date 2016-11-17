@@ -11,13 +11,28 @@ source_set("browser") {
     "//electron/chromium_src",
   ]
 
+  public_deps = [
+    "//electron/vendor/brightray:browser",
+    "//ui/events",
+    "//components/security_state",
+    "//components/autofill/content/browser:browser",
+    "//third_party/protobuf:protobuf_lite",
+    "//third_party/WebKit/public:blink_headers",
+  ]
+
+  deps = [
+    "//electron:common",
+    "//storage/browser",
+    "//storage/common",
+  ]
+
   sources = [
     "api/atom_api_app.cc",
     "api/atom_api_app.h",
     "api/atom_api_autofill.cc",
     "api/atom_api_autofill.h",
-    # "api/atom_api_auto_updater.cc",
-    # "api/atom_api_auto_updater.h",
+    "api/atom_api_auto_updater.cc",
+    "api/atom_api_auto_updater.h",
     "api/atom_api_content_tracing.cc",
     "api/atom_api_cookies.cc",
     "api/atom_api_cookies.h",
@@ -172,12 +187,15 @@ source_set("browser") {
   }
 
   if (is_mac) {
+    deps += [
+      ":mac_auto_updater",
+    ]
+
     sources += [
       "api/atom_api_system_preferences_mac.mm",
       "common_web_contents_delegate_mac.mm",
       "api/atom_api_menu_mac.h",
       "api/atom_api_menu_mac.mm",
-      # "auto_updater_mac.mm",
       "atom_browser_main_parts_mac.mm",
       "browser_mac.mm",
       "mac/atom_application.h",
@@ -268,21 +286,6 @@ source_set("browser") {
     ]
   }
 
-  public_deps = [
-    "//electron/vendor/brightray:browser",
-    "//ui/events",
-    "//components/security_state",
-    "//components/autofill/content/browser:browser",
-    "//third_party/protobuf:protobuf_lite",
-    "//third_party/WebKit/public:blink_headers",
-  ]
-
-  deps = [
-    "//electron:common",
-    "//storage/browser",
-    "//storage/common",
-  ]
-
   if (use_aura) {
     sources += [
       "native_window_views.cc",
@@ -329,4 +332,20 @@ source_set("browser") {
       "extensions/tab_helper.h",
     ]
   }
+}
+
+source_set("mac_auto_updater") {
+  public_configs = [
+    "//electron/build:electron_config",
+  ]
+
+  cflags = [
+    "-fobjc-weak",
+    "-F",
+    rebase_path("//electron/external_binaries"),
+  ]
+
+  sources = [
+    "auto_updater_mac.mm",
+  ]
 }

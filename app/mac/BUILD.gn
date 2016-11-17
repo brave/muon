@@ -103,6 +103,7 @@ mac_framework_bundle("electron_framework") {
     "//chrome:chrome_framework_helpers",
     "//chrome:chrome_framework_locales",
     ":node_resources",
+    ":external_binaries_resources",
     ":electron_framework_resources",
     "//build/config/sanitizers:deps",
     ":electron_xibs",
@@ -115,6 +116,17 @@ mac_framework_bundle("electron_framework") {
     # "-current_version",
     # chrome_dylib_version,
     # "-Wl,-order_file," + rebase_path("app/framework.order", root_build_dir),
+  ]
+
+  ldflags += [
+    "-F",
+    rebase_path("$root_out_dir"),
+    "-framework",
+    "Squirrel",
+    "-framework",
+    "ReactiveCocoa",
+    "-framework",
+    "Mantle",
   ]
 
   data_deps = [
@@ -137,6 +149,33 @@ mac_framework_bundle("electron_framework") {
       "@loader_path/Libraries",
     ]
   }
+}
+
+bundle_data("external_binaries_resources") {
+  sources = [
+    "$root_out_dir/Squirrel.framework",
+    "$root_out_dir/ReactiveCocoa.framework",
+    "$root_out_dir/Mantle.framework",
+  ]
+
+  public_deps = [
+    ":external_binaries"
+  ]
+
+  outputs = [
+    "{{bundle_root_dir}}/Libraries/{{source_file_part}}",
+  ]
+}
+
+copy("external_binaries") {
+  sources = [
+    rebase_path("//electron/external_binaries/Squirrel.framework"),
+    rebase_path("//electron/external_binaries/ReactiveCocoa.framework"),
+    rebase_path("//electron/external_binaries/Mantle.framework"),
+  ]
+  outputs = [
+    "$root_out_dir/{{source_file_part}}",
+  ]
 }
 
 tweak_info_plist("electron_helper_plist") {
