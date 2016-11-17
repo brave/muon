@@ -35,7 +35,7 @@
     'uv_use_dtrace': 'false',
     'V8_BASE': '',
     'v8_postmortem_support': 'false',
-    'v8_enable_i18n_support': 'true',
+    'v8_enable_i18n_support': 0,
     'v8_inspector': 'false',
     'library': 'static_library',
   },
@@ -268,6 +268,7 @@
       4819,  # The file contains a character that cannot be represented in the current code page
       4838,  # (atlgdi.h) conversion from 'int' to 'UINT' requires a narrowing conversion
       4996,  # (atlapp.h) 'GetVersionExW': was declared deprecated
+      4716,  # 'function' must return a value
     ],
   },
 }
