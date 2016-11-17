@@ -64,11 +64,11 @@ hooks = [
   {
     'name': 'bootstrap',
     'pattern': '.',
-    'action': ['python', 'script/bootstrap.py'],
+    'action': ['python', 'src/electron/script/bootstrap.py'],
   },
   {
     'name': 'update_external_binaries',
     'pattern': '.',
-    'action': ['python', 'script/update-external-binaries.py']
+    'action': ['python', 'src/electron/script/update-external-binaries.py']
   }
 ]
