@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "brightray/common/content_client.h"
 #include "chrome/common/origin_trials/chrome_origin_trial_policy.h"
