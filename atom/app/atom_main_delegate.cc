@@ -353,6 +353,7 @@ int AtomMainDelegate::RunProcess(
         relauncher::RelauncherMain },
         // mac_relauncher::internal::RelauncherMain },
   #endif
+      { "<invalid>", NULL },  // To avoid constant array of size 0
     };
 
     for (size_t i = 0; i < arraysize(kMainFunctions); ++i) {

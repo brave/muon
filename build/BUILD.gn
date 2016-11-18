@@ -31,8 +31,10 @@ config("electron_config") {
     # "BORINGSSL_SHARED_LIBRARY",
   ]
 
+  cflags = []
+
   if (is_clang) {
-    cflags = [
+    cflags += [
       "-Wno-error",
       "-Wno-unknown-warning-option",
       "-Wno-parentheses-equality",
@@ -53,6 +55,27 @@ config("electron_config") {
       "-Wno-unused-function",
       "-Wno-unguarded-availability",
       "-Wno-overloaded-virtual",
+    ]
+  }
+
+  if (is_win) {
+    cflags += [
+      "/wd4100", # unreferenced formal parameter
+      "/wd4121", # alignment of a member was sensitive to packing
+      "/wd4127", # conditional expression is constant
+      "/wd4189", # local variable is initialized but not referenced
+      "/wd4244", # 'initializing' : conversion from 'double' to 'size_t', possible loss of data
+      "/wd4245", # 'initializing' : conversion from 'int' to 'const net::QuicVersionTag', signed/unsigned mismatch
+      "/wd4251", # class 'std::xx' needs to have dll-interface.
+      "/wd4310", # cast truncates constant value
+      "/wd4355", # 'this' : used in base member initializer list
+      "/wd4480", # nonstandard extension used: specifying underlying type for enum
+      "/wd4481", # nonstandard extension used: override specifier 'override'
+      "/wd4510", # default constructor could not be generated
+      "/wd4512", # assignment operator could not be generated
+      "/wd4610", # user defined constructor required
+      "/wd4702", # unreachable code
+      "/wd4819", # The file contains a character that cannot be represented in the current code page
     ]
   }
 
