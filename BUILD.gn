@@ -242,6 +242,7 @@ source_set("common") {
   sources = [
     "brave/common/brave_paths.cc",
     "brave/common/brave_paths.h",
+    "brave/common/importer/imported_cookie_entry.h",
   ]
 
   if (enable_extensions) {
@@ -264,6 +265,8 @@ source_set("utility") {
   sources = [
     "atom/utility/atom_content_utility_client.cc",
     "atom/utility/atom_content_utility_client.h",
+    "brave/utility/importer/chrome_importer.cc",
+    "brave/utility/importer/chrome_importer.h",
   ]
 }
 
