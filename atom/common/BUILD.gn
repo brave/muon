@@ -98,8 +98,6 @@ source_set("common") {
     "google_api_key.h",
     "importer/chrome_importer_utils.cc",
     "importer/chrome_importer_utils.h",
-    "importer/imported_cookie_entry.cc",
-    "importer/imported_cookie_entry.h",
     "key_weak_map.h",
     "keyboard_util.cc",
     "keyboard_util.h",

@@ -13,7 +13,6 @@
 
 #include <stddef.h>
 
-#include "atom/common/importer/imported_cookie_entry.h"
 #include "base/bind.h"
 #include "base/files/file_util.h"
 #include "base/macros.h"
@@ -23,6 +22,7 @@
 #include "chrome/browser/importer/external_process_importer_host.h"
 // #include "chrome/browser/search_engines/ui_thread_search_terms_data.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
+#include "chrome/common/importer/imported_cookie_entry.h"
 #include "chrome/common/importer/importer_autofill_form_data_entry.h"
 #include "components/autofill/core/browser/webdata/autofill_entry.h"
 #include "components/autofill/core/common/password_form.h"
@@ -288,6 +288,13 @@ void InProcessImporterBridge::SetAutofillFormData(
                           base::Bind(&ProfileWriter::AddAutofillFormDataEntries,
                                      writer_,
                                      autofill_entries));
+}
+
+void InProcessImporterBridge::SetCookies(
+    const std::vector<ImportedCookieEntry>& cookies) {
+  BrowserThread::PostTask(
+      BrowserThread::UI, FROM_HERE,
+      base::Bind(&ProfileWriter::AddCookies, writer_, cookies));
 }
 
 void InProcessImporterBridge::NotifyStarted() {

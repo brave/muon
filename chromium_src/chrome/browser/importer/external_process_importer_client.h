@@ -101,6 +101,9 @@ class ExternalProcessImporterClient : public content::UtilityProcessHostClient {
       size_t total_autofill_form_data_entry_count);
   void OnAutofillFormDataImportGroup(const std::vector<
       ImporterAutofillFormDataEntry>& autofill_form_data_entry_group);
+  void OnCookiesImportStart(size_t total_cookies_count);
+  void OnCookiesImportGroup(
+      const std::vector<ImportedCookieEntry>& cookies_group);
 #if defined(OS_WIN)
   void OnIE7PasswordReceived(
         const importer::ImporterIE7PasswordInfo& importer_password_info);

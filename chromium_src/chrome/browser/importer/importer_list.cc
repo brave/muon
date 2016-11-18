@@ -52,8 +52,7 @@ void DetectIEProfiles(std::vector<importer::SourceProfile>* profiles) {
   DCHECK_CURRENTLY_ON(BrowserThread::FILE);
   // IE always exists and doesn't have multiple profiles.
   importer::SourceProfile ie;
-  // ie.importer_name = l10n_util::GetStringUTF16(IDS_IMPORT_FROM_IE);
-  ie.importer_name = base::UTF8ToUTF16("Microsoft Internet Explorer");
+  ie.importer_name = l10n_util::GetStringUTF16(IDS_IMPORT_FROM_IE);
   ie.importer_type = importer::TYPE_IE;
   ie.services_supported = importer::HISTORY | importer::FAVORITES |
                           importer::PASSWORDS | importer::SEARCH_ENGINES;
@@ -62,8 +61,7 @@ void DetectIEProfiles(std::vector<importer::SourceProfile>* profiles) {
 
 void DetectEdgeProfiles(std::vector<importer::SourceProfile>* profiles) {
   importer::SourceProfile edge;
-  // edge.importer_name = l10n_util::GetStringUTF16(IDS_IMPORT_FROM_EDGE);
-  edge.importer_name = base::UTF8ToUTF16("Microsoft Edge");
+  edge.importer_name = l10n_util::GetStringUTF16(IDS_IMPORT_FROM_EDGE);
   edge.importer_type = importer::TYPE_EDGE;
   edge.services_supported = importer::FAVORITES;
   edge.source_path = importer::GetEdgeDataFilePath();
@@ -88,8 +86,7 @@ void DetectSafariProfiles(std::vector<importer::SourceProfile>* profiles) {
     return;
 
   importer::SourceProfile safari;
-  // safari.importer_name = l10n_util::GetStringUTF16(IDS_IMPORT_FROM_SAFARI);
-  safari.importer_name = base::UTF8ToUTF16("Safari");
+  safari.importer_name = l10n_util::GetStringUTF16(IDS_IMPORT_FROM_SAFARI);
   safari.importer_type = importer::TYPE_SAFARI;
   safari.services_supported = items;
   profiles->push_back(safari);
@@ -203,8 +200,7 @@ std::vector<importer::SourceProfile> DetectSourceProfilesWorker(
   if (include_interactive_profiles) {
     importer::SourceProfile bookmarks_profile;
     bookmarks_profile.importer_name =
-        // l10n_util::GetStringUTF16(IDS_IMPORT_FROM_BOOKMARKS_HTML_FILE);
-        base::UTF8ToUTF16("Bookmarks HTML File");
+        l10n_util::GetStringUTF16(IDS_IMPORT_FROM_BOOKMARKS_HTML_FILE);
     bookmarks_profile.importer_type = importer::TYPE_BOOKMARKS_FILE;
     bookmarks_profile.services_supported = importer::FAVORITES;
     profiles.push_back(bookmarks_profile);
