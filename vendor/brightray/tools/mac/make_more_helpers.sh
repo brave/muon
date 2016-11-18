@@ -84,8 +84,5 @@ fi
 DIRECTORY_WITHIN_CONTENTS="${1}"
 APP_NAME="${2}"
 
-CONTENTS_DIR="${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}"
-CONTAINING_DIR="${CONTENTS_DIR}/${DIRECTORY_WITHIN_CONTENTS}"
-
-make_helper "${CONTAINING_DIR}" "${APP_NAME}" "EH" "--executable-heap"
-make_helper "${CONTAINING_DIR}" "${APP_NAME}" "NP" "--no-pie"
+make_helper "${DIRECTORY_WITHIN_CONTENTS}" "${APP_NAME}" "EH" "--executable-heap"
+make_helper "${DIRECTORY_WITHIN_CONTENTS}" "${APP_NAME}" "NP" "--no-pie"

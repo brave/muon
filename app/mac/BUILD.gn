@@ -221,10 +221,36 @@ mac_app_bundle("electron_helper_app") {
   # }
 }
 
+action("extra_helpers") {
+  script = "//build/gn_run_binary.py"
+  shell_script = "//electron/vendor/brightray/tools/mac/make_more_helpers.sh"
+
+  inputs = [
+    script,
+    shell_script,
+    "$root_out_dir/$chrome_helper_name.app",
+  ]
+  outputs = [
+    "$root_out_dir/$chrome_helper_name EH.app",
+    "$root_out_dir/$chrome_helper_name NP.app",
+  ]
+  args = [
+    rebase_path(shell_script, root_out_dir),
+    rebase_path(root_out_dir),
+    chrome_product_full_name
+  ]
+
+  deps = [
+    ":electron_helper_app"
+  ]
+}
+
 bundle_data("electron_versioned_bundle_data") {
   sources = [
     "$root_out_dir/$chrome_framework_name.framework",
     "$root_out_dir/$chrome_helper_name.app",
+    "$root_out_dir/$chrome_helper_name EH.app",
+    "$root_out_dir/$chrome_helper_name NP.app",
   ]
 
   outputs = [
@@ -233,6 +259,7 @@ bundle_data("electron_versioned_bundle_data") {
 
   public_deps = [
     ":electron_helper_app",
+    ":extra_helpers",
     # Before bundling the versioned app components, delete any existing
     # versions.
     "//chrome:clean_up_old_versions",
