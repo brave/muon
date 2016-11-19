@@ -172,13 +172,14 @@ base::FilePath InitializeUserDataDir() {
   if (!user_data_dir.empty())
     PathService::OverrideAndCreateIfNeeded(brightray::DIR_USER_DATA,
           user_data_dir, false, true);
-
+    PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
   // TODO(bridiver) Warn and fail early if the process fails
   // to get a user data directory.
   if (!PathService::Get(brightray::DIR_USER_DATA, &user_data_dir)) {
     brave::GetDefaultUserDataDirectory(&user_data_dir);
     PathService::OverrideAndCreateIfNeeded(brightray::DIR_USER_DATA,
             user_data_dir, false, true);
+    PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
   }
 
   return user_data_dir;
@@ -258,17 +259,9 @@ void AtomMainDelegate::PreSandboxStartup() {
   if (path.empty()) {
     LOG(ERROR) << "Could not create user data dir";
   } else {
-    if (!PathService::Get(component_updater::DIR_COMPONENT_USER, &path)) {
-      base::FilePath component_path =
-        path.Append(FILE_PATH_LITERAL("Extensions"));
-      PathService::Override(component_updater::DIR_COMPONENT_USER, component_path);
-    }
-    // TODO(bridiver) - do we need this for component updater??
-    // why does chrome set DIR_COMPONENT_USER to the user data dir?
-    // component_updater::RegisterPathProvider(chrome::DIR_COMPONENTS,
-    //                                         chrome::DIR_INTERNAL_PLUGINS,
-    //                                         chrome::DIR_USER_DATA);
-
+    PathService::OverrideAndCreateIfNeeded(
+        component_updater::DIR_COMPONENT_USER,
+        path.Append(FILE_PATH_LITERAL("Extensions")), false, true);
   }
 
 #if !defined(OS_WIN)
