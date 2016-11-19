@@ -418,10 +418,6 @@ void RegisterWidevineCdmComponent(
     component_updater::ComponentUpdateService* cus,
     const base::Closure& registered_callback,
     const ReadyCallback& ready_callback) {
-  base::FilePath adapter_source_path;
-  PathService::Get(chrome::FILE_WIDEVINE_CDM_ADAPTER, &adapter_source_path);
-  if (!base::PathExists(adapter_source_path))
-    return;
   std::unique_ptr<component_updater::ComponentInstallerTraits> traits(
       new WidevineCdmComponentInstallerTraits(ready_callback));
   // |cus| will take ownership of |installer| during installer->Register(cus).

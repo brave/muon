@@ -15,6 +15,7 @@
 #include "chrome/browser/printing/print_job_manager.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "components/component_updater/component_updater_service.h"
+#include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -84,8 +85,9 @@ component_updater::ComponentUpdateService*
 BrowserProcess::component_updater(
     std::unique_ptr<component_updater::ComponentUpdateService> &component_updater,
     bool use_brave_server) {
-  DCHECK(thread_checker_.CalledOnValidThread());
   if (!component_updater.get()) {
+    if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
+      return NULL;
     auto browser_context = atom::AtomBrowserContext::From("", false);
     scoped_refptr<update_client::Configurator> configurator =
         component_updater::MakeBraveComponentUpdaterConfigurator(

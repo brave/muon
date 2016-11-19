@@ -104,6 +104,7 @@ mac_framework_bundle("electron_framework") {
     "//chrome:chrome_framework_helpers",
     "//chrome:chrome_framework_locales",
     ":node_resources",
+    ":widevine_cdm_adapter",
     ":external_binaries_resources",
     ":electron_framework_resources",
     "//build/config/sanitizers:deps",
@@ -121,6 +122,7 @@ mac_framework_bundle("electron_framework") {
 
   data_deps = [
     ":node_resources",
+    ":widevine_cdm_adapter",
     ":external_binaries_resources",
   ]
 
@@ -140,6 +142,21 @@ mac_framework_bundle("electron_framework") {
       "@loader_path/Libraries",
     ]
   }
+}
+
+bundle_data("widevine_cdm_adapter") {
+  sources = [
+    "$root_out_dir/$widevine_cdm_path/widevinecdmadapter.plugin",
+  ]
+  outputs = [
+    "{{bundle_root_dir}}/Libraries/$widevine_cdm_path/{{source_file_part}}",
+  ]
+  data_deps = [
+    "//third_party/widevine/cdm:widevinecdm",
+  ]
+  public_deps = [
+    "//third_party/widevine/cdm:widevinecdmadapter",
+  ]
 }
 
 bundle_data("external_binaries_resources") {

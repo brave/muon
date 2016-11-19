@@ -28,7 +28,7 @@
 #include "content/public/common/pepper_plugin_info.h"
 #include "content/public/common/user_agent.h"
 #include "gpu/config/gpu_info.h"
-#include "third_party/widevine/cdm/stub/widevine_cdm_version.h"
+#include "widevine_cdm_version.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "url/url_constants.h"
