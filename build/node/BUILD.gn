@@ -3,7 +3,7 @@ import("//v8/gni/v8.gni")
 config("node_external_config") {
   if (is_linux) {
     ldflags =
-        [ rebase_path("$root_out_dir/libnode.so",
+        [ rebase_path("$root_out_dir/lib/libnode.so",
                       root_build_dir) ]
   } else if (is_win) {
     ldflags =

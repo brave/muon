@@ -239,6 +239,10 @@ source_set("browser") {
       "ui/views/native_frame_view.h",
       "ui/views/submenu_button.cc",
       "ui/views/submenu_button.h",
+    ]
+  }
+  if (is_win) {
+    sources += [
       "ui/views/win_frame_view.cc",
       "ui/views/win_frame_view.h",
     ]
@@ -284,6 +288,7 @@ source_set("browser") {
       "ui/x/x_window_utils.cc",
       "ui/x/x_window_utils.h",
     ]
+    public_configs +=  ["//electron/build:gtk2_internal_config"]
   }
 
   if (use_aura) {

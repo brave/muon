@@ -8,6 +8,7 @@
 
 #include "atom/common/native_mate_converters/accelerator_converter.h"
 #include "atom/common/native_mate_converters/callback.h"
+#include "chrome/browser/extensions/global_shortcut_listener.h"
 #include "base/stl_util.h"
 #include "native_mate/dictionary.h"
 

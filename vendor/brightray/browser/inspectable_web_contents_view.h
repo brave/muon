@@ -6,7 +6,7 @@
 
 class DevToolsContentsResizingStrategy;
 
-#if defined(USE_ASH)
+#if defined(USE_AURA)
 namespace views {
 class View;
 }
@@ -29,7 +29,7 @@ class InspectableWebContentsView {
     return delegate_;
   }
 
-#if defined(USE_ASH)
+#if defined(USE_AURA)
   // Returns the container control, which has devtools view attached.
   virtual views::View* GetView() = 0;
 

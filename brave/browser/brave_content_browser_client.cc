@@ -261,9 +261,9 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
       command_line, child_process_id);
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
-  if (breakpad::IsCrashReporterEnabled()) {
-    command_line->AppendSwitch(switches::kEnableCrashReporter);
-  }
+//  if (breakpad::IsCrashReporterEnabled()) {
+//    command_line->AppendSwitch(switches::kEnableCrashReporter);
+//  }
 #endif
 
   std::string process_type =
@@ -457,8 +457,8 @@ base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
 gpu::GpuChannelEstablishFactory*
 BraveContentBrowserClient::GetGpuChannelEstablishFactory() {
 #if defined(USE_AURA)
-  if (views::WindowManagerConnection::Exists())
-    return views::WindowManagerConnection::Get()->gpu_service();
+//  if (views::WindowManagerConnection::Exists())
+//    return views::WindowManagerConnection::Get()->gpu_service();
 #endif
   return nullptr;
 }
