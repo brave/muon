@@ -21,10 +21,6 @@
 #include "net/proxy/proxy_resolver_v8.h"
 #include "services/shell/public/cpp/interface_registry.h"
 
-#if defined(OS_WIN)
-#include "chrome/utility/printing_handler_win.h"
-#endif
-
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/common/extensions/atom_extensions_client.h"
 #include "extensions/utility/utility_handler.h"
