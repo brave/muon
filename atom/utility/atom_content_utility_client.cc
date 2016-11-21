@@ -74,12 +74,8 @@ int64_t AtomContentUtilityClient::max_ipc_message_size_ =
 AtomContentUtilityClient::AtomContentUtilityClient()
     : filter_messages_(false) {
   handlers_.push_back(new ProfileImportHandler());
-#if defined(OS_WIN)
-  handlers_.push_back(new printing::PrintingHandlerWin());
-#endif
 
-#if defined(ENABLE_PRINT_PREVIEW) || \
-    (defined(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
+#if defined(ENABLE_PRINT_PREVIEW) || defined(ENABLE_BASIC_PRINTING)
   handlers_.push_back(new printing::PrintingHandler());
 #endif
 }
