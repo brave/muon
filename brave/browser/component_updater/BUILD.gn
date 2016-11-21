@@ -1,6 +1,8 @@
 source_set("component_updater") {
   configs += [
     "//electron/build:electron_config",
+    # shouldn't be needed; but required on Windows
+    "//build/config/compiler:no_size_t_to_int_warning"
   ]
 
   sources = [
