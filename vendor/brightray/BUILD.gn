@@ -6,6 +6,7 @@ toolkit_views = !is_mac
 config("brightray_config") {
   include_dirs = [
     ".",
+    "/usr/include",
     "//gpu",
     "//skia/config",
     "//third_party/skia/include/core",
@@ -23,6 +24,10 @@ source_set("common") {
   public_configs = [
     ":brightray_config",
   ]
+
+  if (is_linux) {
+    public_configs += [ "//electron/build:gtk2_internal_config" ]
+  }
 
   sources = [
     "common/application_info.h",

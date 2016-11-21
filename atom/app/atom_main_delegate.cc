@@ -156,10 +156,10 @@ base::FilePath InitializeUserDataDir() {
   if (user_data_dir.empty() ||
       command_line->HasSwitch(switches::kUserDataDir)) {
     user_data_dir =
-        command_line->GetSwitchValuePath(switches::kUserDataDir);
+      command_line->GetSwitchValuePath(switches::kUserDataDir);
     if (!user_data_dir.empty() && !user_data_dir.IsAbsolute()) {
       base::FilePath app_data_dir;
-      PathService::Get(base::DIR_APP_DATA, &app_data_dir);
+      PathService::Get(brightray::DIR_APP_DATA, &app_data_dir);
       user_data_dir = app_data_dir.Append(user_data_dir);
     }
   }
@@ -286,7 +286,7 @@ void AtomMainDelegate::PreSandboxStartup() {
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
   // Zygote needs to call InitCrashReporter() in RunZygote().
   if (process_type != switches::kZygoteProcess) {
-    breakpad::InitCrashReporter(process_type);
+//    breakpad::InitCrashReporter(process_type);
   }
 #endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
 
@@ -310,7 +310,7 @@ void AtomMainDelegate::ZygoteForked() {
     std::string process_type =
         command_line->GetSwitchValueASCII(
             switches::kProcessType);
-    breakpad::InitCrashReporter(process_type);
+    //breakpad::InitCrashReporter(process_type);
     // Reset the command line for the newly spawned process.
     crash_keys::SetCrashKeysFromCommandLine(*command_line);
   }

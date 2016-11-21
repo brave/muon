@@ -44,8 +44,8 @@ class InspectableWebContentsImpl :
   explicit InspectableWebContentsImpl(content::WebContents*);
   virtual ~InspectableWebContentsImpl();
 
-  InspectableWebContentsView* GetView() const override;
-  content::WebContents* GetWebContents() const override;
+  InspectableWebContentsView* GetView() override;
+  content::WebContents* GetWebContents() override;
   content::WebContents* GetDevToolsWebContents() const override;
 
   void SetDelegate(InspectableWebContentsDelegate* delegate) override;
