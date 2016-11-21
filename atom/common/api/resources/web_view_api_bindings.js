@@ -55,6 +55,7 @@ const asyncMethods = [
   'close',
   'focus',
   'send',
+  'setAllowPlugins',
 ]
 
 const syncMethods = [
@@ -137,6 +138,13 @@ WebViewImpl.prototype.getTabID = function (instanceId, cb) {
   } else {
     cb(this.tabID)
   }
+}
+
+WebViewImpl.prototype.setAllowPlugins = function (allow) {
+  this.getWebContents((webContents) => {
+    const webPreferences = webContents.getWebPreferences()
+    webPreferences.plugins = allow
+  })
 }
 
 const attachWindow = WebViewImpl.prototype.attachWindow$
