@@ -190,6 +190,9 @@ group("child_dependencies") {
     "//content/public/gpu",
     "//third_party/WebKit/public:blink_devtools_frontend_resources",
   ]
+  if (use_aura) {
+    public_deps += [ "//ui/views/mus" ]
+  }
 }
 
 source_set("common") {
