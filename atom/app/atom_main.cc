@@ -94,12 +94,7 @@ int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE, wchar_t* cmd, int) {
     }
   }
 
-  if (run_as_node) {
-    // Now that argv conversion is done, we can finally start.
-    base::AtExitManager atexit_manager;
-    base::i18n::InitializeICU();
-    return atom::NodeMain(argc, argv);
-  } else if (IsEnvSet("ELECTRON_INTERNAL_CRASH_SERVICE")) {
+  if (IsEnvSet("ELECTRON_INTERNAL_CRASH_SERVICE")) {
     return crash_service::Main(cmd);
   }
 
