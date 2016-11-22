@@ -94,6 +94,8 @@ config("electron_config") {
       "/wd4065", # switch statement contains 'default' but no 'case' labels
       "/wd4800", # forcing value to bool 'true' or 'false' (performance warning)
       "/wd4302", # 'type cast': truncation from 'LPCTSTR' to 'WORD'
+      "/wd4701", # potentially uninitialized local variable used
+      "/wd4703", # potentially uninitialized local pointer variable used
     ]
   }
   if (is_linux) {
