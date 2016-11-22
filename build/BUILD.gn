@@ -78,6 +78,8 @@ config("electron_config") {
       "/wd4819", # The file contains a character that cannot be represented in the current code page
       "/wd4267", # conversion from 'size_t' to 'int', possible loss of data
       "/wd4065", # switch statement contains 'default' but no 'case' labels
+      "/wd4800", # forcing value to bool 'true' or 'false' (performance warning)
+      "/wd4302", # 'type cast': truncation from 'LPCTSTR' to 'WORD'
     ]
   }
 
