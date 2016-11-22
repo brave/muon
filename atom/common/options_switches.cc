@@ -99,9 +99,6 @@ const char kDisableBlinkFeatures[] = "disableBlinkFeatures";
 
 namespace switches {
 
-// Enable plugins.
-const char kEnablePlugins[] = "enable-plugins";
-
 // Ppapi Flash path.
 const char kPpapiFlashPath[] = "ppapi-flash-path";
 
