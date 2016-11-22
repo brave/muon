@@ -66,11 +66,11 @@ REFERENCE_MODULE(atom_common_v8_util);
 
 // The "v8::Function::kLineOffsetNotFound" is exported in node.dll, but the
 // linker can not find it, could be a bug of VS.
-#if defined(OS_WIN) && !defined(DEBUG)
-namespace v8 {
-const int Function::kLineOffsetNotFound = -1;
-}
-#endif
+// #if defined(OS_WIN) && !defined(DEBUG)
+// namespace v8 {
+// const int Function::kLineOffsetNotFound = -1;
+// }
+// #endif
 
 namespace atom {
 
