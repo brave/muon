@@ -1,5 +1,6 @@
 import("//build/config/features.gni")
 import("//build/config/ui.gni")
+import("///build/config/crypto.gni")
 
 config("chromium_src_config") {
   include_dirs = [
@@ -102,7 +103,7 @@ source_set("browser") {
     "chrome/browser/extensions/global_shortcut_listener.cc",
     "chrome/browser/extensions/global_shortcut_listener.h",
     "chrome/browser/extensions/global_shortcut_listener_mac.mm",
-    "chrome/browser/extensions/global_shortcut_listener_mac.h",
+    "chrome/browser/extensions/global_shortcut_listener_mac.mm",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
     # TODO(bridiver) - maybe use chrome?
@@ -183,6 +184,19 @@ source_set("browser") {
     "//chrome/browser/tab_contents/tab_util.cc",
     "//chrome/browser/tab_contents/tab_util.h",
   ]
+  if (is_linux) {
+    sources += [
+      "chrome/browser/extensions/global_shortcut_listener_x11.cc",
+      "chrome/browser/extensions/global_shortcut_listener_x11.h",
+    ]
+  }
+
+  if (use_nss_certs) {
+    sources += [
+      "chrome/browser/certificate_manager_model.cc",
+      "chrome/browser/certificate_manager_model.h"
+    ]
+  }
 
   public_deps = []
   deps = [
@@ -262,6 +276,18 @@ source_set("browser") {
       ]
 
       deps += [ "//extensions/browser" ]
+    }
+    if (use_aura) {
+      sources += [
+        "//electron/chromium_src/chrome/browser/ui/views/color_chooser_aura.cc",
+        "//electron/chromium_src/chrome/browser/ui/views/color_chooser_aura.h"
+      ]
+    }
+    if (is_linux) {
+      sources += [
+        "//electron/chromium_src/chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.cc",
+        "//electron/chromium_src/chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.h"
+      ]
     }
 
     public_deps += [

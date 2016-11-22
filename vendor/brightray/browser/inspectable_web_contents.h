@@ -26,8 +26,8 @@ class InspectableWebContents {
 
   virtual ~InspectableWebContents() {}
 
-  virtual InspectableWebContentsView* GetView() const = 0;
-  virtual content::WebContents* GetWebContents() const = 0;
+  virtual InspectableWebContentsView* GetView() = 0;
+  virtual content::WebContents* GetWebContents() = 0;
   virtual content::WebContents* GetDevToolsWebContents() const = 0;
 
   // The delegate manages its own life.

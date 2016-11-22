@@ -78,15 +78,14 @@ class NativeWindow : public base::SupportsUserData,
   virtual bool IsEnabled() = 0;
   virtual void Maximize() = 0;
   virtual void Unmaximize() = 0;
-  virtual bool IsMaximized() const = 0;
+  virtual bool IsMaximized() = 0;
   virtual void Minimize() = 0;
   virtual void Restore() = 0;
-  virtual bool IsMinimized() const = 0;
+  virtual bool IsMinimized() = 0;
   virtual void SetFullScreen(bool fullscreen) = 0;
   virtual bool IsFullscreen() const = 0;
-  virtual void SetBounds(const gfx::Rect& bounds) = 0;
   virtual void SetBounds(const gfx::Rect& bounds, bool animate = false) = 0;
-  virtual gfx::Rect GetBounds() const = 0;
+  virtual gfx::Rect GetBounds() = 0;
   virtual void SetSize(const gfx::Size& size, bool animate = false);
   virtual gfx::Size GetSize();
   virtual void SetPosition(const gfx::Point& position, bool animate = false);
@@ -121,7 +120,7 @@ class NativeWindow : public base::SupportsUserData,
   virtual void SetClosable(bool closable) = 0;
   virtual bool IsClosable() = 0;
   virtual void SetAlwaysOnTop(bool top) = 0;
-  virtual bool IsAlwaysOnTop() const = 0;
+  virtual bool IsAlwaysOnTop() = 0;
   virtual void Center() = 0;
   virtual void SetTitle(const std::string& title) = 0;
   virtual std::string GetTitle() = 0;
@@ -141,8 +140,6 @@ class NativeWindow : public base::SupportsUserData,
   virtual void SetFocusable(bool focusable);
   virtual void SetMenu(AtomMenuModel* menu);
   virtual void SetParentWindow(NativeWindow* parent);
-  virtual gfx::Rect GetRestoredBounds() const = 0;
-  virtual ui::WindowShowState GetRestoredState() const = 0;
   virtual gfx::NativeWindow GetNativeWindow() = 0;
   virtual gfx::AcceleratedWidget GetAcceleratedWidget() = 0;
 

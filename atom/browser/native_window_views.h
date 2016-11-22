@@ -60,14 +60,14 @@ class NativeWindowViews : public NativeWindow,
   bool IsEnabled() override;
   void Maximize() override;
   void Unmaximize() override;
-  bool IsMaximized() const override;
+  bool IsMaximized() override;
   void Minimize() override;
   void Restore() override;
-  bool IsMinimized() const override;
+  bool IsMinimized() override;
   void SetFullScreen(bool fullscreen) override;
   bool IsFullscreen() const override;
   void SetBounds(const gfx::Rect& bounds, bool animate) override;
-  gfx::Rect GetBounds() const override;
+  gfx::Rect GetBounds() override;
   gfx::Rect GetContentBounds() override;
   gfx::Size GetContentSize() override;
   void SetContentSizeConstraints(
@@ -85,7 +85,7 @@ class NativeWindowViews : public NativeWindow,
   void SetClosable(bool closable) override;
   bool IsClosable() override;
   void SetAlwaysOnTop(bool top) override;
-  bool IsAlwaysOnTop() const override;
+  bool IsAlwaysOnTop() override;
   void Center() override;
   void SetTitle(const std::string& title) override;
   std::string GetTitle() override;

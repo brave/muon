@@ -252,11 +252,11 @@ InspectableWebContentsImpl::~InspectableWebContentsImpl() {
   }
 }
 
-InspectableWebContentsView* InspectableWebContentsImpl::GetView() const {
+InspectableWebContentsView* InspectableWebContentsImpl::GetView() {
   return view_.get();
 }
 
-content::WebContents* InspectableWebContentsImpl::GetWebContents() const {
+content::WebContents* InspectableWebContentsImpl::GetWebContents() {
   return web_contents_;
 }
 

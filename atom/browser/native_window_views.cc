@@ -188,13 +188,13 @@ NativeWindowViews::NativeWindowViews(
   params.type = views::Widget::InitParams::TYPE_WINDOW;
   params.remove_standard_frame = !has_frame();
 
-  if (transparent())
+/*  if (transparent())
     params.opacity = views::Widget::InitParams::TRANSLUCENT_WINDOW;
 
   // The given window is most likely not rectangular since it uses
   // transparency and has no standard frame, don't show a shadow for it.
   if (transparent() && !has_frame())
-    params.shadow_type = views::Widget::InitParams::SHADOW_TYPE_NONE;
+    params.shadow_type = views::Widget::InitParams::SHADOW_TYPE_NONE;*/
 
   bool focusable;
   if (options.Get(options::kFocusable, &focusable) && !focusable)

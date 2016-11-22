@@ -27,7 +27,6 @@
 #include "atom/app/atom_library_main.h"
 #endif  // defined(OS_MACOSX)
 
-// #include "atom/app/node_main.h"
 #include "atom/common/atom_command_line.h"
 #include "base/at_exit.h"
 #include "base/i18n/icu_util.h"
@@ -113,12 +112,6 @@ int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE, wchar_t* cmd, int) {
 #elif defined(OS_LINUX)  // defined(OS_WIN)
 
 int main(int argc, const char* argv[]) {
-  if (IsEnvSet(kRunAsNode)) {
-    base::i18n::InitializeICU();
-    base::AtExitManager atexit_manager;
-    return atom::NodeMain(argc, const_cast<char**>(argv));
-  }
-
   atom::AtomMainDelegate delegate;
   content::ContentMainParams params(&delegate);
   params.argc = argc;

@@ -1,84 +1,89 @@
-executable("electron_app") {
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/features.gni")
+import("//build/config/locales.gni")
+import("//build/config/sanitizers/sanitizers.gni")
+import("//build/config/ui.gni")
+import("//ui/base/ui_features.gni")
+import("//v8/gni/v8.gni")
+import("//chrome/version.gni")
+import("//build/compiled_action.gni")
+import("//build/util/branding.gni")
+import("//build_overrides/v8.gni")
+import("//media/cdm/ppapi/cdm_paths.gni")
+import("//third_party/icu/config.gni")
 
+executable("electron_app") {
   output_name = "brave"
 
-  # This is just a stub and doesn't work yet
+  configs += [ "//build/config/compiler:wexit_time_destructors"]
+  defines = []
   deps = [
-    "//electron:main",
-    "//electron:app",
-    "//electron:browser_dependencies",
-    "//electron:child_dependencies",
-    "//content/public/app:both",
-    "//build/config/sanitizers:deps",
+     ":electron_framework_resources",
+     "//build/config/sanitizers:deps",
+     "//build/linux:fontconfig",
+     "//chrome/browser/ui/libgtk2ui",
+     "//chrome/common:version_header",
+     "//components/crash/content/app",
+     "//components/policy:generated",
+     "//content/app/resources",
+     "//content/public/app:both",
+     "//crypto",
+     "//dbus",
+     "//electron:browser_dependencies",
+     "//electron:child_dependencies",
+     "//net:net_resources",
+     "//third_party/wtl",
+     "//sandbox" ,
+     "//third_party/cld",
+     "//third_party/speech-dispatcher",
+     "//ui/views",
+     "//ui/views/controls/webview/",
+     "//ui/compositor",
   ]
 
-  data = [
-    "$root_gen_dir/repack/electron_resources.pak",
+  public_configs = [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "//electron/atom/app/atom_main.cc",
+    "//electron/atom/app/atom_main.h",
+  ]
+
+}
+
+bundle_data("electron_framework_resources") {
+  # pak
+  sources = [
+    "$root_out_dir/electron_resources.pak",
     "$root_out_dir/chrome_100_percent.pak",
   ]
-
-  public_deps = [
-    "//electron:packed_extra_resources",
-    "//chrome:packed_resources",
-    ":electron_resources",
-    ":node_resources",
-  ]
-
-  ldflags = [ "-pie" ]
-
-  if (use_x11) {
-    configs += [
-      "//build/config/linux:x11",
-      "//build/config/linux:xext",
+  if (enable_hidpi) {
+    sources += [
+      "$root_out_dir/chrome_200_percent.pak",
     ]
   }
-}
+  public_deps = [
+    "//electron:packed_resources",
+  ]
 
-copy("node_resources") {
-  sources = [
-    "$root_out_dir/libnode.so",
-  ]
-  outputs = [
-    "$root_build_dir/libnode.so",
-  ]
-  deps = [
-    "//electron/build/node",
-  ]
-}
-
-bundle_data("electron_resources") {
-  sources = [
-    "$root_out_dir/electron.asar",
-    "$root_out_dir/default_app.asar",
-    "//electron/app/resources/linux/brave_linux.png",
-  ]
+  # v8
+  if (icu_use_data_file) {
+    sources += [ "$root_out_dir/icudtl.dat" ]
+    public_deps += [ "//third_party/icu:icudata" ]
+  }
+  if (v8_use_external_startup_data) {
+    sources += [
+      "$root_out_dir/natives_blob.bin",
+      "$root_out_dir/snapshot_blob.bin",
+    ]
+    public_deps += [ "//v8:v8" ]
+  }
 
   outputs = [
     "{{bundle_resources_dir}}/{{source_file_part}}",
   ]
-
-  public_deps = [
-    "//electron/lib",
-    "//electron/default_app",
-  ]
 }
 
-
-
-  "$root_gen_dir/repack/electron_resources.pak",
-  "$root_out_dir/chrome_100_percent.pak",
-]
-
-
-if (icu_use_data_file) {
-  sources += [ "$root_out_dir/icudtl.dat" ]
-  public_deps += [ "//third_party/icu:icudata" ]
-}
-
-# if (v8_use_external_startup_data) {
-  sources += [
-    "$root_out_dir/natives_blob.bin",
-    "$root_out_dir/snapshot_blob.bin",
-  ]
-  public_deps += [ "//v8:v8" ]
-# }
