@@ -81,15 +81,16 @@ bool g_in_x11_io_error_handler = false;
 // the background thread.
 const int kWaitForUIThreadSeconds = 10;
 
-const base::FilePath& OverrideLinuxAppDataPath() {
+const bool OverrideLinuxAppDataPath() {
   base::FilePath path;
   if (PathService::Get(DIR_APP_DATA, &path))
-    return path;
+    return true;
 
   if (brave::GetDefaultUserDataDirectory(&path)) {
     PathService::Override(DIR_APP_DATA, path);
+    return true;
   }
-  return path;
+  return false;
 }
 
 int BrowserX11ErrorHandler(Display* d, XErrorEvent* error) {
@@ -168,8 +169,7 @@ void BrowserMainParts::PreEarlyInitialization() {
 
 #if defined(USE_X11)
   views::LinuxUI::SetInstance(BuildGtk2UI());
-  const base::FilePath path = OverrideLinuxAppDataPath();
-  if (path.empty()) {
+  if (OverrideLinuxAppDataPath()) {
     LOG(ERROR) << "Could not set linux app data path";
   }
 

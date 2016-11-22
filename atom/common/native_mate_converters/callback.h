@@ -73,7 +73,7 @@ struct V8FunctionInvoker<void(ArgTypes...)> {
     v8::Local<v8::Function> holder = function.NewHandle(isolate);
     v8::Local<v8::Context> context = holder->CreationContext();
     v8::Context::Scope context_scope(context);
-    std::vector<v8::Local<v8::Value>> args = { ConvertToV8(isolate, raw)... };
+    std::vector<v8::Local<v8::Value>> args = std::vector<v8::Local<v8::Value>>{ ConvertToV8(isolate, raw)... };
     holder->Call(holder, args.size(), &args.front());
   }
 };
