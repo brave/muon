@@ -262,7 +262,7 @@ Profile* ProfileManager::GetActiveUserOrOffTheRecordProfileFromPath(
   return GetProfile(default_profile_dir);
 }
 
-void ProfileManager::AddProfile(Profile* profile) {
+bool ProfileManager::AddProfile(Profile* profile) {
   DCHECK(profile);
 
   if (GetProfileByPathInternal(profile->GetPath())) {
@@ -273,6 +273,7 @@ void ProfileManager::AddProfile(Profile* profile) {
   }
 
   RegisterProfile(profile, true);
+  return true;
 }
 
 ProfileManager::ProfileInfo* ProfileManager::RegisterProfile(
