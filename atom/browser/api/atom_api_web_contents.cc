@@ -48,8 +48,8 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
-#include "chrome/browser/printing/print_preview_message_handler.h"
-#include "chrome/browser/printing/print_view_manager_basic.h"
+// #include "chrome/browser/printing/print_preview_message_handler.h"
+// #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
 #include "components/zoom/page_zoom.h"
@@ -1383,14 +1383,14 @@ void WebContents::Print(mate::Arguments* args) {
     return;
   }
 
-  printing::PrintViewManagerBasic::FromWebContents(web_contents())->
-       PrintNow();
+  // printing::PrintViewManagerBasic::FromWebContents(web_contents())->
+  //     PrintNow();
 }
 
 void WebContents::PrintToPDF(const base::DictionaryValue& setting,
                              const PrintToPDFCallback& callback) {
-  printing::PrintPreviewMessageHandler::FromWebContents(web_contents())->
-       PrintToPDF(setting, callback);
+  // printing::PrintPreviewMessageHandler::FromWebContents(web_contents())->
+  //     PrintToPDF(setting, callback);
 }
 
 int WebContents::GetContentWindowId() {

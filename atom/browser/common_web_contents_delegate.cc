@@ -21,8 +21,8 @@
 #include "base/strings/utf_string_conversions.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
-#include "chrome/browser/printing/print_preview_message_handler.h"
-#include "chrome/browser/printing/print_view_manager_basic.h"
+// #include "chrome/browser/printing/print_preview_message_handler.h"
+// #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/ui/browser_dialogs.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "chrome/common/pref_names.h"
@@ -268,8 +268,8 @@ void CommonWebContentsDelegate::InitWithWebContents(
   browser_context_ = browser_context;
   web_contents->SetDelegate(this);
 
-  printing::PrintViewManagerBasic::CreateForWebContents(web_contents);
-  printing::PrintPreviewMessageHandler::CreateForWebContents(web_contents);
+  // printing::PrintViewManagerBasic::CreateForWebContents(web_contents);
+  // printing::PrintPreviewMessageHandler::CreateForWebContents(web_contents);
 
   // Create InspectableWebContents.
   web_contents_.reset(brightray::InspectableWebContents::Create(web_contents));
