@@ -330,9 +330,25 @@ WebContents::WebContents(v8::Isolate* isolate,
       : content::WebContents::CreateParams(browser_context));
 
   if (IsGuest()) {
-    WebContents* embedder;
-    if (!params.guest_delegate && options.Get("embedder", &embedder)) {
-      params.guest_delegate = brave::TabViewGuest::Create(embedder->web_contents());
+    if (!params.guest_delegate) {
+      guest_view::GuestViewBase* tab_view_guest;
+      WebContents* embedder;
+      if (options.Get("embedder", &embedder)) {
+        tab_view_guest = brave::TabViewGuest::Create(embedder->web_contents());
+      }
+
+      WebContents* opener;
+      if (options.Get("opener", &opener)) {
+        DCHECK(opener->IsGuest() && opener->HostWebContents());
+
+        if (!tab_view_guest) {
+          tab_view_guest = brave::TabViewGuest::Create(opener->HostWebContents());
+        }
+        tab_view_guest->SetOpener(opener->guest_delegate_);
+      }
+
+      DCHECK(tab_view_guest);
+      params.guest_delegate = tab_view_guest;
     }
     guest_delegate_ =
         static_cast<guest_view::GuestViewBase*>(params.guest_delegate);
@@ -424,7 +440,7 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
                                 const GURL& target_url,
                                 content::WebContents* new_contents) {
   ProtocolHandlerRegistry* registry =
-    ProtocolHandlerRegistryFactory::GetForBrowserContext(GetBrowserContext());
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(GetBrowserContext());
   GURL translated_url = registry->TranslateUrl(target_url);
 
   if (guest_delegate_) {
