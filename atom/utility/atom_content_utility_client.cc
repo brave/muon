@@ -30,6 +30,11 @@
 #include "extensions/utility/utility_handler.h"
 #endif
 
+#if defined(ENABLE_PRINT_PREVIEW) || \
+    (defined(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
+#include "chrome/utility/printing_handler.h"
+#endif
+
 namespace atom {
 
 namespace {
