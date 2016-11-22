@@ -79,7 +79,8 @@ AtomContentUtilityClient::AtomContentUtilityClient()
     : filter_messages_(false) {
   handlers_.push_back(new ProfileImportHandler());
 
-#if defined(ENABLE_PRINT_PREVIEW) || defined(ENABLE_BASIC_PRINTING)
+#if defined(ENABLE_PRINT_PREVIEW) || \
+    (defined(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
   handlers_.push_back(new printing::PrintingHandler());
 #endif
 }
