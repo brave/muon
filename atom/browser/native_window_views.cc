@@ -161,8 +161,6 @@ NativeWindowViews::NativeWindowViews(
 
   // Transparent window must not have thick frame.
   options.Get("thickFrame", &thick_frame_);
-  if (transparent())
-    thick_frame_ = false;
 #endif
 
   if (enable_larger_than_screen())
