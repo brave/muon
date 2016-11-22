@@ -108,7 +108,7 @@ class ProfileManager : public base::NonThreadSafe {
   // otherwise return null.
   Profile* GetProfileByPath(const base::FilePath& path) const;
 
-  void AddProfile(Profile* profile);
+  bool AddProfile(Profile* profile);
 
   const base::FilePath& user_data_dir() const { return user_data_dir_; }
 
