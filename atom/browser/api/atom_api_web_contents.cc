@@ -330,9 +330,9 @@ WebContents::WebContents(v8::Isolate* isolate,
       : content::WebContents::CreateParams(browser_context));
 
   if (IsGuest()) {
-    if (!params.guest_delegate) {
-      params.guest_delegate = brave::TabViewGuest::Create(
-          HostWebContents());
+    WebContents* embedder;
+    if (!params.guest_delegate && options.Get("embedder", &embedder)) {
+      params.guest_delegate = brave::TabViewGuest::Create(embedder->web_contents());
     }
     guest_delegate_ =
         static_cast<guest_view::GuestViewBase*>(params.guest_delegate);
