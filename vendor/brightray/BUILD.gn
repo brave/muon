@@ -6,7 +6,6 @@ toolkit_views = !is_mac
 config("brightray_config") {
   include_dirs = [
     ".",
-    "/usr/include",
     "//gpu",
     "//skia/config",
     "//third_party/skia/include/core",

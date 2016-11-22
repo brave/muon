@@ -102,7 +102,7 @@ source_set("browser") {
     "chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
     "chrome/browser/extensions/global_shortcut_listener.cc",
     "chrome/browser/extensions/global_shortcut_listener.h",
-    "chrome/browser/extensions/global_shortcut_listener_mac.mm",
+    "chrome/browser/extensions/global_shortcut_listener_mac.h",
     "chrome/browser/extensions/global_shortcut_listener_mac.mm",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
