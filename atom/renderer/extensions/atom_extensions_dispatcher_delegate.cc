@@ -25,6 +25,9 @@
 #include "extensions/renderer/resource_bundle_source_map.h"
 #include "extensions/renderer/v8_helpers.h"
 #include "gin/converter.h"
+#if defined(OS_WIN)
+#include "base/win/windows_version.h"
+#endif
 
 namespace extensions {
 
@@ -52,44 +55,44 @@ v8::Local<v8::Value> GetOrCreateProcess(ScriptContext* context) {
         v8_helpers::ToV8StringUnsafe(context->isolate(), "renderer"));
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
         v8_helpers::ToV8StringUnsafe(context->isolate(), "platform"),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), kPlatform)),
+        v8_helpers::ToV8StringUnsafe(context->isolate(), kPlatform));
 #if defined(OS_WIN)
     switch (base::win::GetVersion()) {
-      case VERSION_WIN7:
+      case base::win::VERSION_WIN7:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
           v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win7")),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win7"));
           break;
-      case VERSION_WIN8:
+      case base::win::VERSION_WIN8:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
           v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8")),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8"));
           break;
-      case VERSION_WIN8_1:
+      case base::win::VERSION_WIN8_1:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
           v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8_1")),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8_1"));
           break;
-      case VERSION_WIN10:
+      case base::win::VERSION_WIN10:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
           v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10")),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10"));
           break;
-      case  VERSION_WIN10_TH2:
+      case base::win::VERSION_WIN10_TH2:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
           v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10_th2")),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10_th2"));
           break;
       default:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
           v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "")),
+          v8_helpers::ToV8StringUnsafe(context->isolate(), ""));
         break;
     }
 #else
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
         v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), "")),
+        v8_helpers::ToV8StringUnsafe(context->isolate(), ""));
 #endif
     // TODO(bridiver) - add a function to return env vars
     // std::unique_ptr<base::Environment> env(base::Environment::Create());
