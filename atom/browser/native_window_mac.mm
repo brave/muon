@@ -784,11 +784,11 @@ void NativeWindowMac::Unmaximize() {
   [window_ zoom:nil];
 }
 
-bool NativeWindowMac::IsActive() const {
+bool NativeWindowMac::IsActive() {
   return [window_ isKeyWindow];
 }
 
-bool NativeWindowMac::IsMaximized() const {
+bool NativeWindowMac::IsMaximized() {
   if (([window_ styleMask] & NSResizableWindowMask) != 0) {
     return [window_ isZoomed];
   } else {
@@ -809,7 +809,7 @@ void NativeWindowMac::Restore() {
   [window_ deminiaturize:nil];
 }
 
-bool NativeWindowMac::IsMinimized() const {
+bool NativeWindowMac::IsMinimized() {
   return [window_ isMiniaturized];
 }
 
@@ -849,7 +849,7 @@ void NativeWindowMac::SetBounds(const gfx::Rect& bounds, bool animate) {
   [window_ setFrame:cocoa_bounds display:YES animate:animate];
 }
 
-gfx::Rect NativeWindowMac::GetBounds() const {
+gfx::Rect NativeWindowMac::GetBounds() {
   NSRect frame = [window_ frame];
   gfx::Rect bounds(frame.origin.x, 0, NSWidth(frame), NSHeight(frame));
   NSScreen* screen = [[NSScreen screens] objectAtIndex:0];
@@ -951,7 +951,7 @@ void NativeWindowMac::SetAlwaysOnTop(bool top) {
   [window_ setLevel:(top ? NSFloatingWindowLevel : NSNormalWindowLevel)];
 }
 
-bool NativeWindowMac::IsAlwaysOnTop() const {
+bool NativeWindowMac::IsAlwaysOnTop() {
   return [window_ level] == NSFloatingWindowLevel;
 }
 
@@ -1072,7 +1072,7 @@ gfx::NativeWindow NativeWindowMac::GetNativeWindow() {
   return window_;
 }
 
-gfx::Rect NativeWindowMac::GetRestoredBounds() const {
+gfx::Rect NativeWindowMac::GetRestoredBounds() {
   // Flip coordinates based on the primary screen.
   NSScreen* screen = [[NSScreen screens] firstObject];
   NSRect frame = restored_bounds_;
@@ -1081,7 +1081,7 @@ gfx::Rect NativeWindowMac::GetRestoredBounds() const {
   return bounds;
 }
 
-ui::WindowShowState NativeWindowMac::GetRestoredState() const {
+ui::WindowShowState NativeWindowMac::GetRestoredState() {
   if (IsMaximized())
     return ui::SHOW_STATE_MAXIMIZED;
   if (IsFullscreen())
