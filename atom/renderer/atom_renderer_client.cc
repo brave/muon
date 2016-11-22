@@ -91,13 +91,9 @@ bool AtomRendererClient::OverrideCreatePlugin(
     blink::WebLocalFrame* frame,
     const blink::WebPluginParams& params,
     blink::WebPlugin** plugin) {
-  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-  if (params.mimeType.utf8() == content::kBrowserPluginMimeType ||
-      command_line->HasSwitch(switches::kEnablePlugins))
-    return false;
-
-  *plugin = nullptr;
-  return true;
+  // TODO(bridiver) - content settings handles the actual permission, but
+  // we should check it here so we can return true
+  return false;
 }
 
 content::BrowserPluginDelegate* AtomRendererClient::CreateBrowserPluginDelegate(

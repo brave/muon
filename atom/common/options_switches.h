@@ -61,7 +61,6 @@ extern const char kDisableBlinkFeatures[];
 
 namespace switches {
 
-extern const char kEnablePlugins[];
 extern const char kPpapiFlashPath[];
 extern const char kPpapiFlashVersion[];
 extern const char kDisableHttpCache[];

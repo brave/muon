@@ -55,7 +55,6 @@ const asyncMethods = [
   'close',
   'focus',
   'send',
-  'setAllowPlugins',
 ]
 
 const syncMethods = [
@@ -112,7 +111,7 @@ syncMethods.forEach((method) => {
 
     let webContents = this.getWebContents()
     if (!webContents)
-      throw "webContents is not available"
+      throw 'webContents is not available'
     return webContents[method].apply(this, arguments)
   }
 })
@@ -140,13 +139,6 @@ WebViewImpl.prototype.getTabID = function (instanceId, cb) {
   }
 }
 
-WebViewImpl.prototype.setAllowPlugins = function (allow) {
-  this.getWebContents((webContents) => {
-    const webPreferences = webContents.getWebPreferences()
-    webPreferences.plugins = allow
-  })
-}
-
 const attachWindow = WebViewImpl.prototype.attachWindow$
 WebViewImpl.prototype.attachWindow$ = function(opt_guestInstanceId) {
   let attached = attachWindow.bind(this)(opt_guestInstanceId)
@@ -165,13 +157,13 @@ WebViewImpl.prototype.setGuestInstanceId = function (guestInstanceId) {
 }
 
 WebViewImpl.prototype.getWebContents = function (cb) {
-  if (!this.webContents) {
+  if (!this.webContents_) {
     WebViewInternal.getWebContents(this.guest.getId(), (webContents) => {
       this.webContents_ = webContents
       cb && cb(this.webContents_)
     })
   } else {
-    cb(this.webContents_)
+    cb && cb(this.webContents_)
   }
   return this.webContents_
 }
@@ -196,7 +188,8 @@ WebViewImpl.prototype.setUserAgentOverride = function(userAgentOverride) {
     // attachment.
     return false;
   }
-  WebViewInternal.overrideUserAgent(this.guest.getId(), userAgentOverride);
+  // TODO(bridiver) - FIX THIS!!!
+  // WebViewInternal.overrideUserAgent(this.guest.getId(), userAgentOverride);
   return true;
 };
 

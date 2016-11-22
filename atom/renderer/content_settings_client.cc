@@ -223,7 +223,25 @@ bool ContentSettingsClient::allowIndexedDB(const WebString& name,
 }
 
 bool ContentSettingsClient::allowPlugins(bool enabled_per_settings) {
-  return enabled_per_settings;
+  if (IsWhitelistedForContentSettings())
+    return true;
+
+  WebFrame* frame = render_frame()->GetWebFrame();
+
+  bool allow = enabled_per_settings;
+  if (content_settings_manager_->content_settings()) {
+    allow =
+        content_settings_manager_->GetSetting(
+                                   GetOriginOrURL(frame),
+                                   GURL(),
+                                   "plugins",
+                                   allow) != CONTENT_SETTING_BLOCK;
+  }
+
+  if (!allow)
+    DidBlockContentType("plugins");
+
+  return allow;
 }
 
 bool ContentSettingsClient::allowScript(bool enabled_per_settings) {

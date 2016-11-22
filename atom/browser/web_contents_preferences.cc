@@ -87,9 +87,6 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
   base::DictionaryValue& web_preferences = self->web_preferences_;
 
   bool b;
-  // Check if plugins are enabled.
-  if (web_preferences.GetBoolean("plugins", &b) && b)
-    command_line->AppendSwitch(switches::kEnablePlugins);
 
   // Experimental flags.
   if (web_preferences.GetBoolean(options::kExperimentalFeatures, &b) && b)
