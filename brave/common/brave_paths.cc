@@ -6,7 +6,9 @@
 #include "base/environment.h"
 #include "base/lazy_instance.h"
 #include "base/files/file_path.h"
+#if defined(OS_LINUX)
 #include "base/nix/xdg_util.h"
+#endif
 #include "base/path_service.h"
 #include "base/files/file_path.h"
 #include "browser/brightray_paths.h"
@@ -16,20 +18,20 @@
 
 namespace brave {
   bool GetDefaultAppDataDirectory(base::FilePath* result) {
-    #if defined(OS_LINUX)
+#if defined(OS_LINUX)
     std::unique_ptr<base::Environment> env(base::Environment::Create());
-    if (!env)
-      return false;
+    if (!env) return false;
       
     *result = base::nix::GetXDGDirectory(env.get(), 
         base::nix::kXdgConfigHomeEnvVar,
         base::nix::kDotConfigDir);
-    if (result->BaseName().value() != base::nix::kDotConfigDir)
+    if (result->BaseName().value() != base::nix::kDotConfigDir) {
       return false;
+    }
     return true;
-    #else
-      return PathService::Get(brightray::DIR_APP_DATA, result);
-    #endif
+#else
+    return PathService::Get(brightray::DIR_APP_DATA, result);
+#endif
   }
 
   bool GetDefaultUserDataDirectory(base::FilePath* result) {
