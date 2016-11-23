@@ -103,7 +103,7 @@ mac_framework_bundle("electron_framework") {
   deps = [
     "//chrome:chrome_framework_helpers",
     "//chrome:chrome_framework_locales",
-    "//build/node:node_resources",
+    "//electron/build/node:node_resources",
     ":widevine_cdm_adapter",
     ":external_binaries_resources",
     ":electron_framework_resources",
@@ -121,7 +121,7 @@ mac_framework_bundle("electron_framework") {
   ]
 
   data_deps = [
-    "//build/node:node_resources",
+    "//electron/build/node:node_resources",
     ":widevine_cdm_adapter",
     ":external_binaries_resources",
   ]

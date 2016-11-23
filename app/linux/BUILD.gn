@@ -22,7 +22,7 @@ executable("electron_app") {
   deps = [
      ":electron_framework_resources",
      ":electron_app_resources",
-     "//build/node:node_resources",
+     "//electron/build/node:node_resources",
      "//build/config/sanitizers:deps",
      "//build/linux:fontconfig",
      "//chrome/browser/ui/libgtk2ui",
