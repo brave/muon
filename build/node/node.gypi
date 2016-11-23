@@ -209,7 +209,7 @@
             # Fix the linking error with icu.
              # 'conditions': [
               # ['libchromiumcontent_component==0', {
-              #   
+              #
               #   'msvs_settings': {
               #     'VCLinkerTool': {
               #       # There is nothing like "whole-archive" on Windows, so we
@@ -274,6 +274,21 @@
       4716,  # 'function' must return a value
     ],
   },
+
+  'conditions': [
+    ['OS=="win"', {
+      'target_defaults': {
+        'configurations': {
+          'Debug': {
+           'inherit_from': ['Common_Base', 'x64_Base', 'Debug_Base'],
+          },
+          'Release': {
+            'inherit_from': ['Common_Base', 'x64_Base', 'Release_Base'],
+          },
+        },
+      },
+    }],  # OS=="win"
+  ]
 }
 
 
