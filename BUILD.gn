@@ -46,6 +46,9 @@ group("electron") {
       "app/win:electron_app",
     ]
   }
+  deps += [
+    "//chrome/test/chromedriver:chromedriver",
+  ]
 }
 
 source_set("main") {

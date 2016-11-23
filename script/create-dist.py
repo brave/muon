@@ -86,7 +86,7 @@ def main():
 
   #create_symbols()
   copy_binaries()
-  #copy_chrome_binary('chromedriver')
+  copy_chrome_binary('chromedriver')
   copy_chrome_binary('mksnapshot')
   copy_license()
 
@@ -95,7 +95,7 @@ def main():
 
   create_version()
   create_dist_zip()
-  #create_chrome_binary_zip('chromedriver', get_chromedriver_version())
+  create_chrome_binary_zip('chromedriver', get_chromedriver_version())
   create_chrome_binary_zip('mksnapshot', ELECTRON_VERSION)
   #create_ffmpeg_zip()
   #create_symbols_zip()
