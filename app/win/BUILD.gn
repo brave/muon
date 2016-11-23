@@ -21,19 +21,17 @@ executable("electron_app") {
   ]
 
   sources = [
-    "//base/win/dllmain.cc",
     "//electron/atom/app/atom_main.cc",
-    "//electron/atom/app/atom_main_delegate.cc",
-    "//electron/atom/app/atom_main_delegate.h",
+    "//electron/atom/app/atom_main.h",
   ]
 
   deps = [
     "//build/win:default_exe_manifest",
-    "//electron:main",
     "//electron:electron_framework_resources",
     "//electron:electron_app_resources",
     "//electron/build/node:node_resources",
     "//electron:browser_dependencies",
+    "//electron:child_dependencies",
     "//build/config/sanitizers:deps",
     "//chrome/common:features",
     "//third_party/cld",
@@ -44,7 +42,6 @@ executable("electron_app") {
     "//net:net_resources",
     "//third_party/wtl",
     "//ui/views",
-    "//electron:child_dependencies",
     "//content/public/app:both",
     "//sandbox",
   ]
