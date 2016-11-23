@@ -11,6 +11,7 @@ import("//tools/grit/repack.gni")
 import("//ui/base/ui_features.gni")
 import("//v8/gni/v8.gni")
 import("//chrome/version.gni")
+import("//third_party/icu/config.gni")
 
 enable_service_discovery = false
 
@@ -340,4 +341,105 @@ source_set("native_mate") {
     "build/node",
     "//third_party/WebKit/public:blink_headers",
   ]
+}
+
+electron_framework_sources = [
+  "$root_gen_dir/repack/electron_resources.pak",
+  "$root_out_dir/chrome_100_percent.pak",
+]
+
+electron_framework_public_deps = [
+  ":packed_resources",
+]
+
+if (enable_hidpi) {
+  electron_framework_sources += [
+    "$root_out_dir/chrome_200_percent.pak",
+  ]
+}
+
+if (icu_use_data_file) {
+  electron_framework_sources += [
+    "$root_out_dir/icudtl.dat"
+  ]
+  electron_framework_public_deps += [
+    "//third_party/icu:icudata"
+  ]
+}
+
+if (v8_use_external_startup_data) {
+  electron_framework_sources += [
+    "$root_out_dir/natives_blob.bin",
+    "$root_out_dir/snapshot_blob.bin",
+  ]
+  electron_framework_public_deps += [ "//v8:v8" ]
+}
+
+if (is_mac) {
+  bundle_data("electron_framework_resources") {
+    sources = electron_framework_sources
+    public_deps = electron_framework_public_deps
+
+    outputs = [
+      "{{bundle_resources_dir}}/{{source_file_part}}",
+    ]
+  }
+} else {
+  copy("electron_framework_resources") {
+    sources = electron_framework_sources
+    public_deps = electron_framework_public_deps
+
+    outputs = [
+      "$root_build_dir/resources/{{source_file_part}}",
+    ]
+  }
+}
+
+electron_app_sources = [
+  "$root_out_dir/electron.asar",
+  "$root_out_dir/default_app.asar",
+]
+
+electron_app_public_deps = [
+  "//electron/lib",
+  "//electron/default_app",
+]
+
+electron_icon_dir = "nightly"
+if (is_component_build) {
+  electron_icon_dir = "dev"
+}
+
+if (is_mac) {
+  electron_app_sources += [
+    "//electron/app/resources/$electron_icon_dir/brave.icns",
+  ]
+} else if (is_win) {
+  electron_app_sources += [
+    "//electron/app/resources/$electron_icon_dir/brave_win.ico",
+  ]
+} else if (is_linux) {
+  electron_app_sources += [
+    "//electron/app/resources/$electron_icon_dir/brave_linux.png",
+  ]
+}
+
+if (is_mac) {
+  bundle_data("electron_app_resources") {
+    sources = electron_app_sources
+    public_deps = electron_app_public_deps
+
+    outputs = [
+      "{{bundle_resources_dir}}/{{source_file_part}}",
+    ]
+  }
+} else {
+  copy("electron_app_resources") {
+    sources = electron_app_sources
+    public_deps = electron_app_public_deps
+
+    outputs = [
+      "$root_build_dir/resources/{{source_file_part}}"
+    ]
+  }
 }
