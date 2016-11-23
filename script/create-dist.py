@@ -12,19 +12,18 @@ from lib.config import LIBCHROMIUMCONTENT_COMMIT, BASE_URL, PLATFORM, \
                        get_target_arch, get_chromedriver_version, \
                        get_zip_name
 from lib.util import scoped_cwd, rm_rf, get_electron_version, make_zip, \
-                     execute, electron_gyp
+                     execute, electron_package
 
 
 ELECTRON_VERSION = get_electron_version()
 
-SOURCE_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+SOURCE_ROOT = os.path.dirname(os.path.abspath((os.path.dirname(os.path.dirname(__file__)))))
+BOOTSTRAP_ROOT = os.path.dirname(SOURCE_ROOT)
 DIST_DIR = os.path.join(SOURCE_ROOT, 'dist')
-OUT_DIR = os.path.join(SOURCE_ROOT, 'out', 'R')
-CHROMIUM_DIR = os.path.join(SOURCE_ROOT, 'vendor', 'brightray', 'vendor',
-                            'download', 'libchromiumcontent', 'static_library')
+OUT_DIR = os.path.join(SOURCE_ROOT, 'out', 'Release')
 
-PROJECT_NAME = electron_gyp()['project_name%']
-PRODUCT_NAME = electron_gyp()['product_name%']
+PROJECT_NAME = electron_package()['project']
+PRODUCT_NAME = electron_package()['product']
 
 TARGET_BINARIES = {
   'darwin': [
@@ -85,10 +84,9 @@ def main():
   rm_rf(DIST_DIR)
   os.makedirs(DIST_DIR)
 
-  force_build()
-  create_symbols()
+  #create_symbols()
   copy_binaries()
-  copy_chrome_binary('chromedriver')
+  #copy_chrome_binary('chromedriver')
   copy_chrome_binary('mksnapshot')
   copy_license()
 
@@ -97,15 +95,10 @@ def main():
 
   create_version()
   create_dist_zip()
-  create_chrome_binary_zip('chromedriver', get_chromedriver_version())
+  #create_chrome_binary_zip('chromedriver', get_chromedriver_version())
   create_chrome_binary_zip('mksnapshot', ELECTRON_VERSION)
-  create_ffmpeg_zip()
-  create_symbols_zip()
-
-
-def force_build():
-  build = os.path.join(SOURCE_ROOT, 'script', 'build.py')
-  execute([sys.executable, build, '-c', 'Release'])
+  #create_ffmpeg_zip()
+  #create_symbols_zip()
 
 
 def copy_binaries():
@@ -121,7 +114,7 @@ def copy_binaries():
 def copy_chrome_binary(binary):
   if PLATFORM == 'win32':
     binary += '.exe'
-  src = os.path.join(CHROMIUM_DIR, binary)
+  src = os.path.join(OUT_DIR, binary)
   dest = os.path.join(DIST_DIR, binary)
 
   # Copy file and keep the executable bit.
@@ -130,8 +123,8 @@ def copy_chrome_binary(binary):
 
 
 def copy_license():
-  shutil.copy2(os.path.join(CHROMIUM_DIR, '..', 'LICENSES.chromium.html'),
-               DIST_DIR)
+  # shutil.copy2(os.path.join(CHROMIUM_DIR, '..', 'LICENSES.chromium.html'),
+               # DIST_DIR)
   shutil.copy2(os.path.join(SOURCE_ROOT, 'LICENSE'), DIST_DIR)
 
 
