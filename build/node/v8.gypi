@@ -10,6 +10,7 @@
     # The icu libraries.
     'icu_libraries': '["icui18n", "icuuc"]',
     'v8_use_snapshot': 'true',
+    'v8_use_external_startup_data': 1,
   },
   'target_defaults': {
     'msvs_disabled_warnings': [
