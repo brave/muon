@@ -22,7 +22,7 @@ executable("electron_app") {
   deps = [
      ":electron_framework_resources",
      ":electron_app_resources",
-     ":libnode",
+     "//build/node:node_resources",
      "//build/config/sanitizers:deps",
      "//build/linux:fontconfig",
      "//chrome/browser/ui/libgtk2ui",
@@ -116,19 +116,3 @@ copy("electron_app_resources") {
     "$root_build_dir/resources/{{source_file_part}}"
   ]
 }
-
-copy("libnode") {
-  # asar
-  sources = [
-    "$root_out_dir/lib/libnode.so",
-  ]
-
-  public_deps = [
-    "//electron/build/node",
-  ]
-
-  outputs = [
-    "$root_build_dir/libnode.so",
-  ]
-}
-
