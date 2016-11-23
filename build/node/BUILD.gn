@@ -32,9 +32,13 @@ action("build_node") {
   # dummy script - these are actually produced separately through gyp
   script = "//electron/tools/node_gyp_build.py"
 
-  outputs = [
-    "$root_out_dir/libnode.dylib",
-  ]
+  if (is_mac) {
+    outputs = [ "$root_out_dir/libnode.dylib" ]
+  } else if (is_win) {
+    outputs = [ "$root_out_dir/libnode.dll" ]
+  } else if (is_linux) {
+    outputs = [ "$root_out_dir/lib/libnode.so" ]
+  }
 }
 
 # TODO(bridiver) this isn't used right now because generating the node target wipes out the electron target
