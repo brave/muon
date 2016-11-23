@@ -40,14 +40,15 @@ if (is_mac) {
       ":node",
     ]
   }
-} else {
+} else if (is_win) {
+  group("node_resources") {
+    public_deps = [
+      ":node",
+    ]
+  }
+} else if (is_linux) {
   copy("node_resources") {
-    sources = []
-    if (is_win) {
-      sources += [ "$root_out_dir/node.dll.lib" ]
-    } else if (is_linux) {
-      sources += [ "$root_out_dir/lib/libnode.so" ]
-    }
+    sources = [ "$root_out_dir/lib/libnode.so" ]
 
     public_deps = [
       ":node",
@@ -58,7 +59,6 @@ if (is_mac) {
     ]
   }
 }
-
 
 action("build_node") {
   # dummy script - these are actually produced separately through gyp
