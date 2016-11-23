@@ -41,18 +41,6 @@
   },
   'target_defaults': {
     'default_configuration': 'Release',
-    'configurations': {
-
-      #
-      # Concrete configurations
-      #
-      # 'Node_Debug': {
-      #   'inherit_from': ['Common_Base', 'x86_Base', 'Debug_Base'],
-      # },
-      # 'Node_Release': {
-      #   'inherit_from': ['Common_Base', 'x86_Base', 'Release_Base'],
-      # },
-    },
     'target_conditions': [
       ['_target_name in ["libuv", "http_parser", "boringssl", "openssl-cli", "cares", "node", "zlib"]', {
         'msvs_disabled_warnings': [
@@ -172,55 +160,6 @@
             ],
             # Node is using networking API but linking with this itself.
             'libraries': [ '-lwinmm.lib' ],
-            'variables': {
-              'conditions': [
-                ['target_arch=="ia32"', {
-                  'reference_symbols': [
-                    '_u_errorName_56',
-                    '_ubidi_setPara_56',
-                    '_ucsdet_getName_56',
-                    '_uidna_openUTS46_56',
-                    '_ulocdata_close_56',
-                    '_unorm_normalize_56',
-                    '_uregex_matches_56',
-                    '_uscript_getCode_56',
-                    '_uspoof_open_56',
-                    '_usearch_setPattern_56',
-                    '?createInstance@Transliterator@icu_56@@SAPAV12@ABVUnicodeString@2@W4UTransDirection@@AAW4UErrorCode@@@Z',
-                    '??0MeasureFormat@icu_56@@QAE@ABVLocale@1@W4UMeasureFormatWidth@@AAW4UErrorCode@@@Z',
-                  ],
-                }, {
-                  'reference_symbols': [
-                    'u_errorName_56',
-                    'ubidi_setPara_56',
-                    'ucsdet_getName_56',
-                    'uidna_openUTS46_56',
-                    'ulocdata_close_56',
-                    'unorm_normalize_56',
-                    'uregex_matches_56',
-                    'uspoof_open_56',
-                    'usearch_setPattern_56',
-                    '?createInstance@Transliterator@icu_56@@SAPEAV12@AEBVUnicodeString@2@W4UTransDirection@@AEAW4UErrorCode@@@Z',
-                    '??0MeasureFormat@icu_56@@QEAA@AEBVLocale@1@W4UMeasureFormatWidth@@AEAW4UErrorCode@@@Z',
-                  ],
-                }],
-              ],
-            },
-
-            # Fix the linking error with icu.
-             # 'conditions': [
-              # ['libchromiumcontent_component==0', {
-              #
-              #   'msvs_settings': {
-              #     'VCLinkerTool': {
-              #       # There is nothing like "whole-archive" on Windows, so we
-              #       # have to manually force some objets files to be included
-              #       # by referencing them.
-              #       'ForceSymbolReferences': [ '<@(reference_symbols)' ],  # '/INCLUDE'
-              #     },
-              #   },
-              # }],
-            # ],
           }],
           # ['OS=="linux" and libchromiumcontent_component==0', {
           #   # Prevent the linker from stripping symbols.

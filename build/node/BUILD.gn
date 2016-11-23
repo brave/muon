@@ -42,6 +42,10 @@ if (is_mac) {
   }
 } else if (is_win) {
   group("node_resources") {
+    public_configs = [
+      ":node_external_config",
+    ]
+
     public_deps = [
       ":node",
     ]
@@ -67,7 +71,7 @@ action("build_node") {
   if (is_mac) {
     outputs = [ "$root_out_dir/libnode.dylib" ]
   } else if (is_win) {
-    outputs = [ "$root_out_dir/libnode.dll" ]
+    outputs = [ "$root_out_dir/node.dll.lib" ]
   } else if (is_linux) {
     outputs = [ "$root_out_dir/lib/libnode.so" ]
   }
