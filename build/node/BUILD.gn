@@ -28,6 +28,38 @@ source_set("node") {
   ]
 }
 
+if (is_mac) {
+  bundle_data("node_resources") {
+    sources = [
+      "$root_out_dir/libnode.dylib",
+    ]
+    outputs = [
+      "{{bundle_root_dir}}/Libraries/{{source_file_part}}",
+    ]
+    public_deps = [
+      ":node",
+    ]
+  }
+} else {
+  copy("node_resources") {
+    sources = []
+    if (is_win) {
+      sources += [ "$root_out_dir/node.dll.lib" ]
+    } else if (is_linux) {
+      sources += [ "$root_out_dir/lib/libnode.so" ]
+    }
+
+    public_deps = [
+      ":node",
+    ]
+
+    outputs = [
+      "$root_build_dir/{{source_file_part}}",
+    ]
+  }
+}
+
+
 action("build_node") {
   # dummy script - these are actually produced separately through gyp
   script = "//electron/tools/node_gyp_build.py"

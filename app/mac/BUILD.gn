@@ -103,7 +103,7 @@ mac_framework_bundle("electron_framework") {
   deps = [
     "//chrome:chrome_framework_helpers",
     "//chrome:chrome_framework_locales",
-    ":node_resources",
+    "//build/node:node_resources",
     ":widevine_cdm_adapter",
     ":external_binaries_resources",
     ":electron_framework_resources",
@@ -121,7 +121,7 @@ mac_framework_bundle("electron_framework") {
   ]
 
   data_deps = [
-    ":node_resources",
+    "//build/node:node_resources",
     ":widevine_cdm_adapter",
     ":external_binaries_resources",
   ]
@@ -403,18 +403,6 @@ config("external_binaries_config") {
     "ReactiveCocoa",
     "-framework",
     "Mantle",
-  ]
-}
-
-bundle_data("node_resources") {
-  sources = [
-    "$root_out_dir/libnode.dylib",
-  ]
-  outputs = [
-    "{{bundle_root_dir}}/Libraries/{{source_file_part}}",
-  ]
-  public_deps = [
-    "//electron/build/node",
   ]
 }
 

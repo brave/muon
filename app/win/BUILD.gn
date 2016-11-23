@@ -21,8 +21,6 @@ executable("electron_app") {
     "//electron:main",
   ]
 
-  defines = []
-
   deps = [
     ":electron_dll",
     "//build/config/sanitizers:deps",
@@ -32,16 +30,8 @@ executable("electron_app") {
   deps += [ "//sandbox" ]
 }
 
-group("electron_dll") {
-  data_deps = [
-    ":main_dll",
-  ]
-}
-
-shared_library("main_dll") {
+shared_library("electron_dll") {
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
-  defines = []
-  ldflags = []
 
   public_configs = [
     "//electron/build:electron_config",
@@ -49,30 +39,17 @@ shared_library("main_dll") {
 
   sources = [
     "//base/win/dllmain.cc",
-    # "app/electron_dll.rc",
-    # "app/electron_dll_resource.h",
     "//electron/atom/app/atom_main.cc",
     "//electron/atom/app/atom_main_delegate.cc",
     "//electron/atom/app/atom_main_delegate.h",
   ]
 
   deps = [
+    "//build/node:node_resources",
     "//electron:browser_dependencies",
     "//build/config/sanitizers:deps",
-    # "//chrome/app:command_ids",
     "//chrome/common:features",
     "//third_party/cld",
-  ]
-
-  output_name = "brave"
-
-  deps += [
-    # ":electron_dll_manifest",
-    # ":electron_dll_version",
-    #"//base/trace_event/etw_manifest:electron_events_win",
-    # "//chrome/app/theme:electron_unscaled_resources",
-    # "//chrome/install_static:install_static_util",
-    # "//electron_elf",
     "//components/crash/content/app",
     "//components/policy:generated",
     "//content/app/resources",
@@ -80,9 +57,13 @@ shared_library("main_dll") {
     "//net:net_resources",
     "//third_party/wtl",
     "//ui/views",
+    "//electron:child_dependencies",
+    "//content/public/app:both",
   ]
 
-  ldflags += [
+  output_name = "brave"
+
+  ldflags = [
     "/DELAYLOAD:comdlg32.dll",
     "/DELAYLOAD:crypt32.dll",
     "/DELAYLOAD:cryptui.dll",
@@ -111,14 +92,4 @@ shared_library("main_dll") {
   if (use_aura) {
     deps += [ "//ui/compositor" ]
   }
-
-  # if (is_multi_dll_chrome) {
-  #   defines += [ "CHROME_MULTIPLE_DLL_BROWSER" ]
-  #   deps += [ "//content/public/app:browser" ]
-  # } else {
-  deps += [
-    "//electron:child_dependencies",
-    "//content/public/app:both",
-  ]
-  # }
 }
