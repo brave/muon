@@ -344,7 +344,6 @@ source_set("native_mate") {
 }
 
 electron_framework_sources = [
-  "$root_gen_dir/repack/electron_resources.pak",
   "$root_out_dir/chrome_100_percent.pak",
 ]
 
@@ -378,6 +377,9 @@ if (v8_use_external_startup_data) {
 if (is_mac) {
   bundle_data("electron_framework_resources") {
     sources = electron_framework_sources
+    sources += [
+      "$root_gen_dir/repack/electron_resources.pak",
+    ]
     public_deps = electron_framework_public_deps
 
     outputs = [
@@ -387,6 +389,9 @@ if (is_mac) {
 } else {
   copy("electron_framework_resources") {
     sources = electron_framework_sources
+    sources += [
+      "$root_gen_dir/electron_resources.pak",
+    ]
     public_deps = electron_framework_public_deps
 
     outputs = [
