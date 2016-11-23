@@ -127,6 +127,7 @@
               '-Wno-return-type',
               '-Wno-shift-negative-value',
               '-Wno-varargs', # https://git.io/v6Olj
+              '-Wno-string-conversion',
               # Required when building as shared library.
               '-fPIC',
             ],
