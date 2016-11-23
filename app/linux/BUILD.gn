@@ -12,7 +12,6 @@ import("//build/compiled_action.gni")
 import("//build/util/branding.gni")
 import("//build_overrides/v8.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
-import("//third_party/icu/config.gni")
 
 executable("electron_app") {
   output_name = "brave"
@@ -20,8 +19,8 @@ executable("electron_app") {
   configs += [ "//build/config/compiler:wexit_time_destructors"]
   defines = []
   deps = [
-     ":electron_framework_resources",
-     ":electron_app_resources",
+     "//electron:electron_framework_resources",
+     "//electron:electron_app_resources",
      "//electron/build/node:node_resources",
      "//build/config/sanitizers:deps",
      "//build/linux:fontconfig",
@@ -55,64 +54,4 @@ executable("electron_app") {
     "//electron/atom/app/atom_main.h",
   ]
 
-}
-
-copy("electron_framework_resources") {
-  # pak
-  sources = [
-    "$root_out_dir/electron_resources.pak",
-    "$root_out_dir/chrome_100_percent.pak",
-  ]
-  if (enable_hidpi) {
-    sources += [
-      "$root_out_dir/chrome_200_percent.pak",
-    ]
-  }
-  public_deps = [
-    "//electron:packed_resources",
-  ]
-
-  # v8
-  if (icu_use_data_file) {
-    sources += [ "$root_out_dir/icudtl.dat" ]
-    public_deps += [ "//third_party/icu:icudata" ]
-  }
-  if (v8_use_external_startup_data) {
-    sources += [
-      "$root_out_dir/natives_blob.bin",
-      "$root_out_dir/snapshot_blob.bin",
-    ]
-    public_deps += [ "//v8:v8" ]
-  }
-
-  outputs = [
-    "$root_build_dir/resources/{{source_file_part}}",
-  ]
-}
-
-copy("electron_app_resources") {
-  # asar
-  sources = [
-    "$root_out_dir/electron.asar",
-    "$root_out_dir/default_app.asar",
-  ]
-  public_deps = [
-    "//electron/lib",
-    "//electron/default_app",
-  ]
-
-  # icon
-  if (is_component_build) {
-    sources += [
-      "//electron/app/resources/dev/brave.icns",
-    ]
-  } else {
-    sources += [
-      "//electron/app/resources/nightly/brave.icns",
-    ]
-  }
-
-  outputs = [
-    "$root_build_dir/resources/{{source_file_part}}"
-  ]
 }

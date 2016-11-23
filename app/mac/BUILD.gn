@@ -15,7 +15,6 @@ import("//build/mac/tweak_info_plist.gni")
 import("//build/util/branding.gni")
 import("//build_overrides/v8.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
-import("//third_party/icu/config.gni")
 
 chrome_version_full = "Frameworks"
 chrome_framework_name = chrome_product_full_name + " Framework"
@@ -55,7 +54,7 @@ mac_app_bundle("electron_app") {
 
   deps = [
     ":electron_versioned_bundle_data",
-    ":electron_app_resources",
+    "//electron:electron_app_resources",
     "//build/config/sanitizers:deps",
     "//chrome/common:version_header",
   ]
@@ -106,7 +105,7 @@ mac_framework_bundle("electron_framework") {
     "//electron/build/node:node_resources",
     ":widevine_cdm_adapter",
     ":external_binaries_resources",
-    ":electron_framework_resources",
+    "//electron:electron_framework_resources",
     "//build/config/sanitizers:deps",
     ":electron_xibs",
   ]
@@ -281,66 +280,6 @@ bundle_data("electron_versioned_bundle_data") {
     # versions.
     "//chrome:clean_up_old_versions",
     ":electron_framework",
-  ]
-}
-
-bundle_data("electron_app_resources") {
-  # asar
-  sources = [
-    "$root_out_dir/electron.asar",
-    "$root_out_dir/default_app.asar",
-  ]
-  public_deps = [
-    "//electron/lib",
-    "//electron/default_app",
-  ]
-
-  # icon
-  if (is_component_build) {
-    sources += [
-      "//electron/app/resources/dev/brave.icns",
-    ]
-  } else {
-    sources += [
-      "//electron/app/resources/nightly/brave.icns",
-    ]
-  }
-
-  outputs = [
-    "{{bundle_resources_dir}}/{{source_file_part}}",
-  ]
-}
-
-bundle_data("electron_framework_resources") {
-  # pak
-  sources = [
-    "$root_gen_dir/repack/electron_resources.pak",
-    "$root_out_dir/chrome_100_percent.pak",
-  ]
-  if (enable_hidpi) {
-    sources += [
-      "$root_out_dir/chrome_200_percent.pak",
-    ]
-  }
-  public_deps = [
-    "//electron:packed_resources",
-  ]
-
-  # v8
-  if (icu_use_data_file) {
-    sources += [ "$root_out_dir/icudtl.dat" ]
-    public_deps += [ "//third_party/icu:icudata" ]
-  }
-  if (v8_use_external_startup_data) {
-    sources += [
-      "$root_out_dir/natives_blob.bin",
-      "$root_out_dir/snapshot_blob.bin",
-    ]
-    public_deps += [ "//v8:v8" ]
-  }
-
-  outputs = [
-    "{{bundle_resources_dir}}/{{source_file_part}}",
   ]
 }
 
