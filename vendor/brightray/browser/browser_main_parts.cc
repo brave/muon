@@ -81,7 +81,7 @@ bool g_in_x11_io_error_handler = false;
 // the background thread.
 const int kWaitForUIThreadSeconds = 10;
 
-const bool OverrideLinuxAppDataPath() {
+bool OverrideLinuxAppDataPath() {
   base::FilePath path;
   if (PathService::Get(DIR_APP_DATA, &path))
     return true;
