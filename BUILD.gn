@@ -390,7 +390,7 @@ if (is_mac) {
   copy("electron_framework_resources") {
     sources = electron_framework_sources
     sources += [
-      "$root_gen_dir/electron_resources.pak",
+      "$root_out_dir/electron_resources.pak",
     ]
     public_deps = electron_framework_public_deps
 
