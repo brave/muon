@@ -6,11 +6,11 @@ import("//chrome/version.gni")
 if (is_linux) {
   import("//build/config/linux/pkg_config.gni")
   pkg_config("gtk2_internal_config") {
-    packages = [ 
+    packages = [
                  "dbus-1",
                  "gmodule-2.0",
                  "glib-2.0",
-                 "gtk+-2.0", 
+                 "gtk+-2.0",
                  "gthread-2.0",
                  "gdk-pixbuf-2.0"
     ]
@@ -39,10 +39,6 @@ config("electron_config") {
     "NODE_SHARED_MODE",
     "V8_SHARED",
     "USING_V8_SHARED",
-    # "USING_V8_SHARED",
-    # "V8_SHARED",
-    # "BUILDING_V8_SHARED",
-    # "BORINGSSL_SHARED_LIBRARY",
   ]
 
   cflags = []
