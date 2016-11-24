@@ -135,6 +135,13 @@
           '-fvisibility=default',
         ],
         'conditions': [
+          ['OS == "win"', {
+            'defines': [
+              'V8_SHARED',
+              'BUILDING_V8_SHARED',
+              'BUILDING_UV_SHARED=1',
+            ],
+          }],
           ['OS=="mac"', {
             'xcode_settings': {
               'GCC_INLINES_ARE_PRIVATE_EXTERN': 'NO',

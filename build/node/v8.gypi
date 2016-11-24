@@ -73,6 +73,12 @@
           '-ffunction-sections',
         ],
         'cflags_cc!': ['-fvisibility-inlines-hidden'],
+        'cflags': [
+          '-fvisibility=default',
+        ],
+        'ldflags!': [
+          '-Wl,--gc-sections',
+        ],
       }],
       ['_target_name in <(v8_libraries) + ["mksnapshot"]', {
         'defines': [
