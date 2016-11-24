@@ -42,6 +42,7 @@ executable("electron_app") {
     "//net:net_resources",
     "//third_party/wtl",
     "//ui/views",
+    "//ui/views/controls/webview",
     "//content/public/app:both",
     "//sandbox",
   ]
