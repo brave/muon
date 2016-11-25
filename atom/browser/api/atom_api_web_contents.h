@@ -107,6 +107,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static mate::Handle<WebContents> CreateFrom(
       v8::Isolate* isolate, content::WebContents* web_contents);
 
+  static void CreateTab(v8::Isolate* isolate,
+      const mate::Dictionary& options,
+      base::Callback<void(WebContents*)> callback);
+
   // Create a new WebContents.
   static mate::Handle<WebContents> Create(
       v8::Isolate* isolate, const mate::Dictionary& options);
@@ -268,6 +272,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
               const content::WebContents::CreateParams* create_params = NULL);
   ~WebContents();
+
+  void OnTabCreated(const mate::Dictionary& options,
+      base::Callback<void(WebContents*)> callback,
+      content::WebContents* tab);
 
   // content::WebContentsDelegate:
   bool AddMessageToConsole(content::WebContents* source,

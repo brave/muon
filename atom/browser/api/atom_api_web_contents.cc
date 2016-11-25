@@ -1735,7 +1735,6 @@ void WebContents::OnCursorChange(const content::WebCursor& cursor) {
 }
 
 void WebContents::SetSize(const SetSizeParams& params) {
-  LOG(ERROR) << "set size!!";
   NOTIMPLEMENTED();
   // if (guest_delegate_)
   //   guest_delegate_->SetSize(params);
@@ -2009,6 +2008,74 @@ mate::Handle<WebContents> WebContents::CreateFrom(
   return mate::CreateHandle(isolate, new WebContents(isolate, web_contents));
 }
 
+void WebContents::OnTabCreated(const mate::Dictionary& options,
+    base::Callback<void(WebContents*)> callback,
+    content::WebContents* tab) {
+  std::string src = "about:blank";
+  options.Get("src", &src);
+
+  WebContentsCreated(web_contents(),
+                            -1,
+                            "",
+                            GURL(src),
+                            tab);
+
+  bool was_blocked = false;
+  AddNewContents(web_contents(),
+                    tab,
+                    NEW_FOREGROUND_TAB,
+                    gfx::Rect(),
+                    true,
+                    &was_blocked);
+
+  if (was_blocked)
+    callback.Run(nullptr);
+  else
+    callback.Run(WebContents::CreateFrom(isolate(), tab).get());
+}
+
+// static
+void WebContents::CreateTab(v8::Isolate* isolate,
+    const mate::Dictionary& options,
+    base::Callback<void(WebContents*)> callback) {
+
+  WebContents* owner;
+  if (!options.Get("owner", &owner)) {
+    callback.Run(nullptr);
+    return;
+  }
+
+  std::string partition;
+  mate::Handle<api::Session> session;
+  if (options.Get("partition", &partition)) {
+    session = Session::FromPartition(isolate, partition);
+  } else {
+    session = Session::FromPartition(isolate, "");
+  }
+  auto guest_view_manager = guest_view::GuestViewManager::FromBrowserContext(
+      session->browser_context());
+
+  // if (!guest_view_manager) {
+  //   guest_view_manager = GuestViewManager::CreateWithDelegate(
+  //       session->browser_context(),
+  //       ExtensionsAPIClient::Get()->CreateGuestViewManagerDelegate(
+  //           session->browser_context()));
+  // }
+
+  std::string src = "about:blank";
+  options.Get("src", &src);
+
+  base::DictionaryValue create_params;
+  create_params.SetString("partition", partition);
+  create_params.SetString("src", src);
+
+  guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
+      owner->web_contents(),
+      create_params,
+      base::Bind(&WebContents::OnTabCreated, base::Unretained(owner),
+          options, callback));
+}
+
 // static
 mate::Handle<WebContents> WebContents::Create(
     v8::Isolate* isolate, const mate::Dictionary& options) {
@@ -2038,6 +2105,7 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   mate::Dictionary dict(isolate, exports);
   dict.Set("WebContents", WebContents::GetConstructor(isolate)->GetFunction());
   dict.SetMethod("create", &WebContents::Create);
+  dict.SetMethod("_createTab", &WebContents::CreateTab);
   dict.SetMethod("fromTabID", &WebContents::FromTabID);
   dict.SetMethod("fromId", &mate::TrackableObject<WebContents>::FromWeakMapID);
   dict.SetMethod("getAllWebContents",
