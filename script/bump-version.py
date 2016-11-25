@@ -27,7 +27,7 @@ def main():
   version = '.'.join(versions[:3])
 
   with scoped_cwd(SOURCE_ROOT):
-    update_electron_gyp(version)
+    # update_electron_gyp(version)
     update_win_rc(version, versions)
     update_version_h(versions)
     update_info_plist(version)
@@ -42,17 +42,17 @@ def increase_version(versions, index):
   return versions
 
 
-def update_electron_gyp(version):
-  pattern = re.compile(" *'version%' *: *'[0-9.]+'")
-  with open('electron.gyp', 'r') as f:
-    lines = f.readlines()
+# def update_electron_gyp(version):
+#   pattern = re.compile(" *'version%' *: *'[0-9.]+'")
+#   with open('electron.gyp', 'r') as f:
+#     lines = f.readlines()
 
-  for i in range(0, len(lines)):
-    if pattern.match(lines[i]):
-      lines[i] = "    'version%': '{0}',\n".format(version)
-      with open('electron.gyp', 'w') as f:
-        f.write(''.join(lines))
-      return
+#   for i in range(0, len(lines)):
+#     if pattern.match(lines[i]):
+#       lines[i] = "    'version%': '{0}',\n".format(version)
+#       with open('electron.gyp', 'w') as f:
+#         f.write(''.join(lines))
+#       return
 
 
 def update_win_rc(version, versions):
@@ -99,7 +99,7 @@ def update_version_h(versions):
 
 
 def update_info_plist(version):
-  info_plist = os.path.join('atom', 'browser', 'resources', 'mac', 'Info.plist')
+  info_plist = os.path.join('app', 'mac', 'resources', 'app-Info.plist')
   with open(info_plist, 'r') as f:
     lines = f.readlines()
 
