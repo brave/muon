@@ -40,6 +40,25 @@
     'library': 'static_library',
   },
   'target_defaults': {
+    'configurations': {
+      'Debug': {
+        'conditions': [
+          ['target_arch=="x64"', {
+            'inherit_from': ['x64_Base'],
+          }]
+        ]
+      },
+      'Release': {
+        'defines': [
+          'NDEBUG',
+        ],
+        'conditions': [
+          ['target_arch=="x64"', {
+            'inherit_from': ['x64_Base'],
+          }]
+        ]
+      },
+    },
     'default_configuration': 'Release',
     'target_conditions': [
       ['_target_name in ["libuv", "http_parser", "boringssl", "openssl-cli", "cares", "node", "zlib"]', {
@@ -135,13 +154,6 @@
           '-fvisibility=default',
         ],
         'conditions': [
-          ['OS == "win"', {
-            'defines': [
-              'V8_SHARED',
-              'BUILDING_V8_SHARED',
-              'BUILDING_UV_SHARED=1',
-            ],
-          }],
           ['OS=="mac"', {
             'xcode_settings': {
               'GCC_INLINES_ARE_PRIVATE_EXTERN': 'NO',
@@ -157,6 +169,11 @@
             },
           }],
           ['OS=="win"', {
+            'defines': [
+              'V8_SHARED',
+              'BUILDING_V8_SHARED',
+              'BUILDING_UV_SHARED=1',
+            ],
             # Fix passing fd across modules, see |osfhandle.h| for more.
             'sources': [
               '../../atom/node/osfhandle.cc',
@@ -167,17 +184,13 @@
             ],
             # Node is using networking API but linking with this itself.
             'libraries': [ '-lwinmm.lib' ],
+            'msvs_settings': {
+              'VCLinkerTool': {
+                'EnableCOMDATFolding': '1', # disable
+                'OptimizeReferences': '1', # disable
+              },
+            },
           }],
-          # ['OS=="linux" and libchromiumcontent_component==0', {
-          #   # Prevent the linker from stripping symbols.
-          #   'ldflags': [
-          #     '-Wl,--whole-archive',
-          #     '<@(libchromiumcontent_v8_libraries)',
-          #     '-Wl,--no-whole-archive',
-          #   ],
-          # }, {
-          #   'libraries': [ '<@(libchromiumcontent_v8_libraries)' ],
-          # }],
         ],
       }],
       ['_target_name=="boringssl"', {
@@ -221,21 +234,6 @@
       4716,  # 'function' must return a value
     ],
   },
-
-  'conditions': [
-    ['OS=="win"', {
-      'target_defaults': {
-        'configurations': {
-          'Debug': {
-           'inherit_from': ['Common_Base', 'x64_Base', 'Debug_Base'],
-          },
-          'Release': {
-            'inherit_from': ['Common_Base', 'x64_Base', 'Release_Base'],
-          },
-        },
-      },
-    }],  # OS=="win"
-  ]
 }
 
 
