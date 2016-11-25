@@ -17,7 +17,5 @@ action("default_app") {
     rebase_path("//electron/default_app"),
   ]
 
-  foreach(filename, inputs) {
-    args += [ rebase_path(filename, root_build_dir) ]
-  }
+  args += inputs
 }

@@ -65,9 +65,7 @@ action("lib") {
     rebase_path("//electron/lib"),
   ]
 
-  foreach(filename, inputs) {
-    args += [ rebase_path(filename, root_build_dir) ]
-  }
+  args += inputs
 }
 
 action("atom_js2c") {
