@@ -90,8 +90,6 @@ source_set("browser") {
   sources = [
     "chrome/browser/browser_process.cc",
     "chrome/browser/browser_process.h",
-    "chrome/browser/chrome_process_finder_win.cc",
-    "chrome/browser/chrome_process_finder_win.h",
     "chrome/browser/chrome_notification_types.h",
     "chrome/browser/custom_handlers/protocol_handler_registry.cc",
     "chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
@@ -180,6 +178,8 @@ source_set("browser") {
     "//chrome/browser/printing/printing_message_filter.h",
     "//chrome/browser/tab_contents/tab_util.cc",
     "//chrome/browser/tab_contents/tab_util.h",
+    "//chrome/browser/win/chrome_process_finder.cc",
+    "//chrome/browser/win/chrome_process_finder.h",
   ]
 
   if (is_win) {
