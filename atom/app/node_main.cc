@@ -6,9 +6,7 @@
 
 #include "atom/app/uv_task_runner.h"
 #include "atom/browser/javascript_environment.h"
-#ifndef NDEBUG
 #include "atom/browser/node_debugger.h"
-#endif
 #include "base/command_line.h"
 #include "base/feature_list.h"
 #include "base/threading/thread_task_runner_handle.h"
@@ -48,12 +46,10 @@ int NodeMain(int argc, char *argv[]) {
         node::CreateIsolateData(gin_env.isolate(), loop), gin_env.context(), argc, argv,
         exec_argc, exec_argv);
 
-#ifndef NDEBUG
     // Start our custom debugger implementation.
     NodeDebugger node_debugger(gin_env.isolate());
     if (node_debugger.IsRunning())
       env->AssignToContext(v8::Debug::GetDebugContext(gin_env.isolate()));
-#endif
 
     node::LoadEnvironment(env);
 
