@@ -11,7 +11,7 @@
 #include "atom/browser/browser.h"
 #include "atom/browser/browser_context_keyed_service_factories.h"
 #include "atom/browser/javascript_environment.h"
-// #include "atom/browser/node_debugger.h"
+#include "atom/browser/node_debugger.h"
 #include "atom/common/api/atom_bindings.h"
 #include "atom/common/node_bindings.h"
 #include "atom/common/node_includes.h"
@@ -141,19 +141,18 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   js_env_.reset(new JavascriptEnvironment);
   js_env_->isolate()->Enter();
 
-
   node_bindings_->Initialize();
 
   // Support the "--debug" switch.
-  // node_debugger_.reset(new NodeDebugger(js_env_->isolate()));
+  node_debugger_.reset(new NodeDebugger(js_env_->isolate()));
 
   // Create the global environment.
   node::Environment* env =
       node_bindings_->CreateEnvironment(js_env_->context());
 
   // Make sure node can get correct environment when debugging.
-  // if (node_debugger_->IsRunning())
-  //   env->AssignToContext(v8::Debug::GetDebugContext(js_env_->isolate()));
+  if (node_debugger_->IsRunning())
+    env->AssignToContext(v8::Debug::GetDebugContext(js_env_->isolate()));
 
   // Add atom-shell extended APIs.
   atom_bindings_->BindTo(js_env_->isolate(), env->process_object());

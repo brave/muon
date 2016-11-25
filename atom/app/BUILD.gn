@@ -27,17 +27,4 @@ source_set("app") {
     "//third_party/widevine/cdm:version_h",
     "//third_party/kasko",
   ]
-
-  # TODO(bridiver) - this doesn't belong here
-  if (is_debug) {
-    sources += [
-      "//electron/atom/browser/node_debugger.cc",
-      "//electron/atom/browser/node_debugger.h",
-    ]
-
-    deps += [
-      "//v8:v8",
-      "//electron/chromium_src:debug",
-    ]
-  }
 }
