@@ -2,7 +2,7 @@
   "name": "electron",
   "project": "brave",
   "product": "Brave",
-  "version": "1.4.25",
+  "version": "2.0.0",
   "devDependencies": {
     "asar": "^0.11.0",
     "electabul": "~0.0.4",
