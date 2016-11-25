@@ -66,11 +66,6 @@ source_set("renderer") {
   deps = []
 
   if (enable_plugins) {
-    sources += [
-      # "chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc",
-      # "chrome/renderer/pepper/chrome_renderer_pepper_host_factory.h",
-    ]
-
     deps += [
       "//components/pdf/renderer",
       "//components/strings",
@@ -100,12 +95,12 @@ source_set("browser") {
     "chrome/browser/chrome_notification_types.h",
     "chrome/browser/custom_handlers/protocol_handler_registry.cc",
     "chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
-    "chrome/browser/extensions/global_shortcut_listener.cc",
-    "chrome/browser/extensions/global_shortcut_listener.h",
-    "chrome/browser/extensions/global_shortcut_listener_mac.h",
-    "chrome/browser/extensions/global_shortcut_listener_mac.mm",
-    "chrome/browser/extensions/global_shortcut_listener_win.cc",
-    "chrome/browser/extensions/global_shortcut_listener_win.h",
+    "//chrome/browser/extensions/global_shortcut_listener.cc",
+    "//chrome/browser/extensions/global_shortcut_listener.h",
+    "//chrome/browser/extensions/global_shortcut_listener_mac.h",
+    "//chrome/browser/extensions/global_shortcut_listener_mac.mm",
+    "//chrome/browser/extensions/global_shortcut_listener_win.cc",
+    "//chrome/browser/extensions/global_shortcut_listener_win.h",
     "chrome/browser/ui/browser_otr_state.cc",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
@@ -186,10 +181,19 @@ source_set("browser") {
     "//chrome/browser/tab_contents/tab_util.cc",
     "//chrome/browser/tab_contents/tab_util.h",
   ]
+
+  if (is_win) {
+    "//chrome/browser/ui/views/color_chooser_dialog.cc",
+    "//chrome/browser/ui/views/color_chooser_dialog.h",
+    "chrome/browser/ui/views/color_chooser_win.cc",
+    "//chrome/browser/printing/pdf_to_emf_converter.cc",
+    "//chrome/browser/printing/pdf_to_emf_converter.h",
+  }
+
   if (is_linux) {
     sources += [
-      "chrome/browser/extensions/global_shortcut_listener_x11.cc",
-      "chrome/browser/extensions/global_shortcut_listener_x11.h",
+      "//chrome/browser/extensions/global_shortcut_listener_x11.cc",
+      "//chrome/browser/extensions/global_shortcut_listener_x11.h",
     ]
   }
 
@@ -281,8 +285,8 @@ source_set("browser") {
     }
     if (use_aura) {
       sources += [
-        "//electron/chromium_src/chrome/browser/ui/views/color_chooser_aura.cc",
-        "//electron/chromium_src/chrome/browser/ui/views/color_chooser_aura.h"
+        "//chrome/browser/ui/views/color_chooser_aura.cc",
+        "//chrome/browser/ui/views/color_chooser_aura.h"
       ]
     }
     if (is_linux) {
