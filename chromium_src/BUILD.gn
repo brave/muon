@@ -183,11 +183,13 @@ source_set("browser") {
   ]
 
   if (is_win) {
-    "//chrome/browser/ui/views/color_chooser_dialog.cc",
-    "//chrome/browser/ui/views/color_chooser_dialog.h",
-    "chrome/browser/ui/views/color_chooser_win.cc",
-    "//chrome/browser/printing/pdf_to_emf_converter.cc",
-    "//chrome/browser/printing/pdf_to_emf_converter.h",
+    sources += [
+      "//chrome/browser/ui/views/color_chooser_dialog.cc",
+      "//chrome/browser/ui/views/color_chooser_dialog.h",
+      "chrome/browser/ui/views/color_chooser_win.cc",
+      "//chrome/browser/printing/pdf_to_emf_converter.cc",
+      "//chrome/browser/printing/pdf_to_emf_converter.h",
+    ]
   }
 
   if (is_linux) {
