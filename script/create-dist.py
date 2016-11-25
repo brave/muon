@@ -17,9 +17,9 @@ from lib.util import scoped_cwd, rm_rf, get_electron_version, make_zip, \
 
 ELECTRON_VERSION = get_electron_version()
 
-SOURCE_ROOT = os.path.dirname(os.path.abspath((os.path.dirname(os.path.dirname(__file__)))))
-BOOTSTRAP_ROOT = os.path.dirname(SOURCE_ROOT)
-DIST_DIR = os.path.join(SOURCE_ROOT, 'dist')
+SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+DIST_DIR = os.path.join(PROJECT_ROOT, 'dist')
 OUT_DIR = os.path.join(SOURCE_ROOT, 'out', 'Release')
 
 PROJECT_NAME = electron_package()['project']
@@ -30,39 +30,9 @@ TARGET_BINARIES = {
   ],
   'win32': [
     '{0}.exe'.format(PROJECT_NAME),  # 'electron.exe'
-    'content_shell.pak',
-    'd3dcompiler_47.dll',
-    'icudtl.dat',
-    'libEGL.dll',
-    'libGLESv2.dll',
-    'ffmpeg.dll',
-    'node.dll',
-    'blink_image_resources_200_percent.pak',
-    'content_resources_200_percent.pak',
-    'ui_resources_200_percent.pak',
-    'views_resources_200_percent.pak',
-    'libchromiumcontent_resources.pak',
-    'atom_resources.pak',
-    'xinput1_3.dll',
-    'natives_blob.bin',
-    'snapshot_blob.bin',
-    'widevinecdmadapter.dll',
   ],
   'linux': [
     PROJECT_NAME,  # 'electron'
-    'content_shell.pak',
-    'icudtl.dat',
-    'libffmpeg.so',
-    'libnode.so',
-    'blink_image_resources_200_percent.pak',
-    'content_resources_200_percent.pak',
-    'ui_resources_200_percent.pak',
-    'views_resources_200_percent.pak',
-    'natives_blob.bin',
-    'snapshot_blob.bin',
-    'libchromiumcontent_resources.pak',
-    'atom_resources.pak',
-    'libwidevinecdmadapter.so',
   ],
 }
 TARGET_DIRECTORIES = {
@@ -88,6 +58,7 @@ def main():
   copy_binaries()
   copy_chrome_binary('chromedriver')
   copy_chrome_binary('mksnapshot')
+  generate_licenses()
   copy_license()
 
   if PLATFORM == 'linux':
@@ -122,10 +93,18 @@ def copy_chrome_binary(binary):
   os.chmod(dest, os.stat(dest).st_mode | stat.S_IEXEC)
 
 
+def generate_licenses():
+  file_template = os.path.join(PROJECT_ROOT, 'resources', 'about_credits.tmpl')
+  entry_template = os.path.join(PROJECT_ROOT, 'resources',
+                                'about_credits_entry.tmpl')
+  licenses_py = os.path.join(SOURCE_ROOT, 'tools', 'licenses.py')
+  target = os.path.join(DIST_DIR, 'LICENSES.chromium.html')
+  subprocess.check_call([sys.executable, licenses_py, 'credits', target,
+                         '--file-template', file_template,
+                         '--entry-template', entry_template])
+
 def copy_license():
-  # shutil.copy2(os.path.join(CHROMIUM_DIR, '..', 'LICENSES.chromium.html'),
-               # DIST_DIR)
-  shutil.copy2(os.path.join(SOURCE_ROOT, 'LICENSE'), DIST_DIR)
+  shutil.copy2(os.path.join(PROJECT_ROOT, 'LICENSE'), DIST_DIR)
 
 
 def strip_binaries():
