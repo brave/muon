@@ -17,10 +17,10 @@ from lib.util import scoped_cwd, rm_rf, get_electron_version, make_zip, \
 
 ELECTRON_VERSION = get_electron_version()
 
-SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-DIST_DIR = os.path.join(PROJECT_ROOT, 'dist')
-OUT_DIR = os.path.join(SOURCE_ROOT, 'out', 'Release')
+SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+DIST_DIR = os.path.join(SOURCE_ROOT, 'dist')
+OUT_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'Release')
 
 PROJECT_NAME = electron_package()['project']
 PRODUCT_NAME = electron_package()['product']
@@ -94,17 +94,17 @@ def copy_chrome_binary(binary):
 
 
 def generate_licenses():
-  file_template = os.path.join(PROJECT_ROOT, 'resources', 'about_credits.tmpl')
-  entry_template = os.path.join(PROJECT_ROOT, 'resources',
+  file_template = os.path.join(SOURCE_ROOT, 'resources', 'about_credits.tmpl')
+  entry_template = os.path.join(SOURCE_ROOT, 'resources',
                                 'about_credits_entry.tmpl')
-  licenses_py = os.path.join(SOURCE_ROOT, 'tools', 'licenses.py')
+  licenses_py = os.path.join(CHROMIUM_ROOT, 'tools', 'licenses.py')
   target = os.path.join(DIST_DIR, 'LICENSES.chromium.html')
   subprocess.check_call([sys.executable, licenses_py, 'credits', target,
                          '--file-template', file_template,
                          '--entry-template', entry_template])
 
 def copy_license():
-  shutil.copy2(os.path.join(PROJECT_ROOT, 'LICENSE'), DIST_DIR)
+  shutil.copy2(os.path.join(SOURCE_ROOT, 'LICENSE'), DIST_DIR)
 
 
 def strip_binaries():

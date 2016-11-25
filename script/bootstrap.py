@@ -54,7 +54,7 @@ def main():
   #     # Download prebuilt clang binaries.
   #     update_clang()
 
-  # setup_python_libs()
+  setup_python_libs()
   update_node_modules('.')
   # bootstrap_brightray(args.dev, args.url, args.target_arch,
   #                     libcc_source_path, libcc_shared_library_path,
@@ -132,9 +132,8 @@ def update_submodules():
 
 
 def setup_python_libs():
-  for lib in ('requests', 'boto'):
-    with scoped_cwd(os.path.join(VENDOR_DIR, lib)):
-      execute_stdout([sys.executable, 'setup.py', 'build'])
+  with scoped_cwd(os.path.join(VENDOR_DIR, 'requests')):
+    execute_stdout([sys.executable, 'setup.py', 'build'])
 
 
 def bootstrap_brightray(is_dev, url, target_arch, libcc_source_path,

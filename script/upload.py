@@ -12,20 +12,22 @@ import tempfile
 from io import StringIO
 from lib.config import PLATFORM, get_target_arch, get_chromedriver_version, \
                        get_env_var, s3_config, get_zip_name
-from lib.util import electron_gyp, execute, get_electron_version, \
+from lib.util import electron_package, execute, get_electron_version, \
                      parse_version, scoped_cwd, s3put
 from lib.github import GitHub
 
 
-ELECTRON_REPO = 'brave/electron'
 ELECTRON_VERSION = get_electron_version()
 
-PROJECT_NAME = electron_gyp()['project_name%']
-PRODUCT_NAME = electron_gyp()['product_name%']
+ELECTRON_REPO = "brave/electron"
 
-SOURCE_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-OUT_DIR = os.path.join(SOURCE_ROOT, 'out', 'R')
+CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DIST_DIR = os.path.join(SOURCE_ROOT, 'dist')
+OUT_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'Release')
+
+PROJECT_NAME = electron_package()['project']
+PRODUCT_NAME = electron_package()['product']
 
 DIST_NAME = get_zip_name(PROJECT_NAME, ELECTRON_VERSION)
 SYMBOLS_NAME = get_zip_name(PROJECT_NAME, ELECTRON_VERSION, 'symbols')
@@ -118,21 +120,7 @@ def run_python_script(script, *args):
 
 
 def get_electron_build_version():
-  if get_target_arch() == 'arm' or os.environ.has_key('CI'):
-    # In CI we just build as told.
-    return ELECTRON_VERSION
-  if PLATFORM == 'darwin':
-    electron = os.path.join(SOURCE_ROOT, 'out', 'R',
-                              '{0}.app'.format(PRODUCT_NAME), 'Contents',
-                              'MacOS', PRODUCT_NAME)
-  elif PLATFORM == 'win32':
-    electron = os.path.join(SOURCE_ROOT, 'out', 'R',
-                              '{0}.exe'.format(PROJECT_NAME))
-  else:
-    electron = os.path.join(SOURCE_ROOT, 'out', 'R', PROJECT_NAME)
-
-  return subprocess.check_output([electron, '--version']).strip()
-
+  return ELECTRON_VERSION
 
 def dist_newer_than_head():
   with scoped_cwd(SOURCE_ROOT):
@@ -179,14 +167,7 @@ def create_or_get_release_draft(github, releases, tag, tag_exists):
 
 def create_release_draft(github, tag):
   name = '{0} {1}'.format(PROJECT_NAME, tag)
-  if os.environ.has_key('CI'):
-    body = '(placeholder)'
-  else:
-    body = get_text_with_editor(name)
-  if body == '':
-    sys.stderr.write('Quit due to empty release note.\n')
-    sys.exit(0)
-
+  body = '(placeholder)'
   data = dict(tag_name=tag, name=name, body=body, draft=True)
   r = github.repos(ELECTRON_REPO).releases.post(data=data)
   return r
