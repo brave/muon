@@ -218,9 +218,10 @@ void BrowserMainParts::PreMainMessageLoopRun() {
       WebUIControllerFactory::GetInstance());
 
   // --remote-debugging-port
-  // auto command_line = base::CommandLine::ForCurrentProcess();
-  // if (command_line->HasSwitch(switches::kRemoteDebuggingPort))
-  //   devtools_http_handler_.reset(DevToolsManagerDelegate::CreateHttpHandler());
+  auto command_line = base::CommandLine::ForCurrentProcess();
+  if (command_line->HasSwitch(switches::kRemoteDebuggingPort)) {
+    devtools_http_handler_.reset(DevToolsManagerDelegate::CreateHttpHandler());
+  }
 }
 
 void BrowserMainParts::PostMainMessageLoopStart() {

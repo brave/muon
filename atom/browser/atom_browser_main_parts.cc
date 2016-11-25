@@ -135,7 +135,6 @@ void AtomBrowserMainParts::IdleHandler() {
 }
 
 void AtomBrowserMainParts::PreMainMessageLoopRun() {
-  brightray::BrowserMainParts::PreMainMessageLoopRun();
   content::WebUIControllerFactory::RegisterFactory(
       ChromeWebUIControllerFactory::GetInstance());
   js_env_.reset(new JavascriptEnvironment);
