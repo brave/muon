@@ -546,7 +546,8 @@ scoped_refptr<AtomBrowserContext> AtomBrowserContext::From(
   auto profile = new brave::BraveBrowserContext(partition, in_memory, options,
       sequenced_task_runner);
 
-  if (profile == profile->GetOriginalProfile())
+  if (profile == profile->GetOriginalProfile() &&
+      !g_browser_process->profile_manager()->GetProfileByPath(profile->GetPath()))
     g_browser_process->profile_manager()->AddProfile(profile);
 
   return profile;

@@ -91,12 +91,6 @@ WebContents* TabViewGuest::OpenURLFromTab(
     return nullptr;
   }
 
-  // bool scheme_is_blocked = true // TODO(bridiver) - block access to chrome:// urls
-      // (!content::ChildProcessSecurityPolicy::GetInstance()->IsWebSafeScheme(
-      //      url.scheme()) &&
-      //  !url.SchemeIs(url::kAboutScheme)) ||
-      // url.SchemeIs(url::kJavaScriptScheme);
-
   // let the api_web_contents navigate
   return web_contents();
 }
