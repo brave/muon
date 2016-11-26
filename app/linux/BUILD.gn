@@ -38,9 +38,11 @@ executable("electron_app") {
      "//sandbox" ,
      "//third_party/cld",
      "//third_party/speech-dispatcher",
+     "//ui/compositor",
+     "//ui/gfx/x",
      "//ui/views",
      "//ui/views/controls/webview/",
-     "//ui/compositor",
+     "//ui/wm",
   ]
 
   ldflags = [
