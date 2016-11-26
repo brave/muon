@@ -10,9 +10,6 @@ config("brightray_config") {
     "//skia/config",
     "//third_party/skia/include/core",
   ]
-  if (is_linux) {
-    include_dirs += ["/usr/include"]
-  }
 
   if (is_mac) {
     libs = [
@@ -170,6 +167,16 @@ source_set("browser") {
     "//content/shell:resources",
     ":common",
   ]
+
+  if (is_linux) {
+    include_dirs = [
+      "/usr/include",
+    ]
+
+    deps += [
+      "//electron/build:gtk2",
+    ]
+  }
 
   if (toolkit_views) {
     sources += [

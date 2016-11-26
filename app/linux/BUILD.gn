@@ -24,7 +24,6 @@ executable("electron_app") {
      "//electron/build/node:node_resources",
      "//build/config/sanitizers:deps",
      "//build/linux:fontconfig",
-     "//chrome/browser/ui/libgtk2ui",
      "//chrome/common:version_header",
      "//components/crash/content/app",
      "//components/policy:generated",

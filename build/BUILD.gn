@@ -15,6 +15,12 @@ if (is_linux) {
                  "gdk-pixbuf-2.0"
     ]
   }
+
+  group("gtk2") {
+    public_configs = [
+      ":gtk2_internal_config"
+    ]
+  }
 }
 
 declare_args() {
