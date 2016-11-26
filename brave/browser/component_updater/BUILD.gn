@@ -16,6 +16,8 @@ source_set("component_updater") {
   ]
 
   deps = [
+    "//third_party/widevine/cdm:version_h",
     "//components/component_updater",
+    "//components/update_client",
   ]
 }

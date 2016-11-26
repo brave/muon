@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "atom/browser/api/frame_subscriber.h"
 #include "atom/browser/api/save_page_handler.h"
 #include "atom/browser/api/trackable_object.h"
 #include "atom/browser/common_web_contents_delegate.h"
@@ -227,10 +226,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   // Send WebInputEvent to the page.
   void SendInputEvent(v8::Isolate* isolate, v8::Local<v8::Value> input_event);
-
-  // Subscribe to the frame updates.
-  void BeginFrameSubscription(mate::Arguments* args);
-  void EndFrameSubscription();
 
   // Dragging native items.
   void StartDrag(const mate::Dictionary& item, mate::Arguments* args);
