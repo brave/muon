@@ -217,6 +217,13 @@ source_set("browser") {
     "//components/ssl_config",
   ]
 
+  if (enable_basic_printing || enable_print_preview) {
+    deps += [
+      "//components/printing/browser",
+      "//printing",
+    ]
+  }
+  
   if (enable_webrtc) {
     sources += [
       "chrome/browser/media/desktop_media_list.h",

@@ -78,8 +78,6 @@ source_set("browser") {
     "api/event_emitter.h",
     "api/trackable_object.cc",
     "api/trackable_object.h",
-    "api/frame_subscriber.cc",
-    "api/frame_subscriber.h",
     "api/save_page_handler.cc",
     "api/save_page_handler.h",
     "auto_updater.cc",

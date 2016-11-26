@@ -4,8 +4,14 @@
 
 #include "chrome/browser/printing/print_preview_message_handler.h"
 
-#include "atom/common/node_includes.h"
+#include <stdint.h>
+
+#include <memory>
+#include <vector>
+
 #include "base/bind.h"
+#include "base/memory/ref_counted.h"
+#include "base/memory/ref_counted_memory.h"
 #include "base/memory/shared_memory.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/printing/print_job_manager.h"
@@ -18,23 +24,27 @@
 #include "printing/pdf_metafile_skia.h"
 #include "printing/print_job_constants.h"
 
+#include "atom/common/node_includes.h"
+
 using content::BrowserThread;
 using content::WebContents;
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(printing::PrintPreviewMessageHandler);
+
+namespace printing {
 
 namespace {
 
 void StopWorker(int document_cookie) {
   if (document_cookie <= 0)
     return;
-  scoped_refptr<printing::PrintQueriesQueue> queue =
+  scoped_refptr<PrintQueriesQueue> queue =
       g_browser_process->print_job_manager()->queue();
-  scoped_refptr<printing::PrinterQuery> printer_query =
+  scoped_refptr<PrinterQuery> printer_query =
       queue->PopPrinterQuery(document_cookie);
   if (printer_query.get()) {
     BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-                            base::Bind(&printing::PrinterQuery::StopWorker,
+                            base::Bind(&PrinterQuery::StopWorker,
                                        printer_query));
   }
 }
@@ -54,8 +64,6 @@ char* CopyPDFDataOnIOThread(
 }
 
 }  // namespace
-
-namespace printing {
 
 PrintPreviewMessageHandler::PrintPreviewMessageHandler(
     WebContents* web_contents)
@@ -107,7 +115,7 @@ void PrintPreviewMessageHandler::PrintToPDF(
     const base::DictionaryValue& options,
     const atom::api::WebContents::PrintToPDFCallback& callback) {
   int request_id;
-  options.GetInteger(printing::kPreviewRequestID, &request_id);
+  options.GetInteger(kPreviewRequestID, &request_id);
   print_to_pdf_callback_map_[request_id] = callback;
 
   content::RenderViewHost* rvh = web_contents()->GetRenderViewHost();

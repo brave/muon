@@ -4,7 +4,6 @@
 
 #include "brave/browser/api/brave_api_component_updater.h"
 
-#include "atom/common/node_includes.h"
 #include "brave/browser/component_updater/default_extensions.h"
 #include "brave/browser/component_updater/extension_installer_traits.h"
 #include "brave/browser/component_updater/widevine_cdm_component_installer.h"
@@ -13,6 +12,7 @@
 #include "components/update_client/crx_update_item.h"
 #include "native_mate/dictionary.h"
 
+#include "atom/common/node_includes.h"
 
 void Noop(int error) {}
 
