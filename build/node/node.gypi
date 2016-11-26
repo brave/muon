@@ -19,7 +19,6 @@
     'node_shared_http_parser': 'false',
     'node_shared_libuv': 'false',
     'node_shared_openssl': 'true',
-    'node_shared_v8': 'true',
     'node_shared_zlib': 'false',
     'node_tag': '',
     'node_use_dtrace': 'false',
@@ -38,28 +37,26 @@
     'v8_enable_i18n_support': 0,
     'v8_inspector': 'false',
     'library': 'static_library',
+    'msvs_use_common_release': 0,
   },
   'target_defaults': {
+    'default_configuration': 'Release',
     'configurations': {
+      'Release': {
+        'conditions': [
+          ['target_arch == "x64"', {
+            'inherit_from': ['x64_Base'],
+          }]
+        ]
+      },
       'Debug': {
         'conditions': [
-          ['target_arch=="x64"', {
+          ['target_arch == "x64"', {
             'inherit_from': ['x64_Base'],
           }]
         ]
-      },
-      'Release': {
-        'defines': [
-          'NDEBUG',
-        ],
-        'conditions': [
-          ['target_arch=="x64"', {
-            'inherit_from': ['x64_Base'],
-          }]
-        ]
-      },
+      }
     },
-    'default_configuration': 'Release',
     'target_conditions': [
       ['_target_name in ["libuv", "http_parser", "boringssl", "openssl-cli", "cares", "node", "zlib"]', {
         'msvs_disabled_warnings': [
@@ -146,12 +143,17 @@
           '../v8',
           '../v8/include',
         ],
-        'defines': [
-          'NODE_WANT_INTERNALS=1',
-          'NODE_SHARED_MODE',
+        'cflags!': [
+          '-fvisibility=hidden',
+          '-fdata-sections',
+          '-ffunction-sections',
         ],
+        'cflags_cc!': ['-fvisibility-inlines-hidden'],
         'cflags': [
           '-fvisibility=default',
+        ],
+        'ldflags!': [
+          '-Wl,--gc-sections',
         ],
         'conditions': [
           ['OS=="mac"', {
@@ -170,8 +172,16 @@
           }],
           ['OS=="win"', {
             'defines': [
-              'V8_SHARED',
-              'BUILDING_V8_SHARED',
+              'WIN32',
+              # we don't really want VC++ warning us about
+              # how dangerous C functions are...
+              '_CRT_SECURE_NO_DEPRECATE',
+              # ... or that C implementations shouldn't use
+              # POSIX names
+              '_CRT_NONSTDC_NO_DEPRECATE',
+              # Make sure the STL doesn't try to use exceptions
+              '_HAS_EXCEPTIONS=0',
+              'BUILDING_V8_SHARED=1',
               'BUILDING_UV_SHARED=1',
             ],
             # Fix passing fd across modules, see |osfhandle.h| for more.
