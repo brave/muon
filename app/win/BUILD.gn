@@ -5,6 +5,7 @@ import("//build/config/features.gni")
 import("//build/config/locales.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/ui.gni")
+import("//build/config/win/manifest.gni")
 import("//ui/base/ui_features.gni")
 import("//v8/gni/v8.gni")
 import("//chrome/version.gni")
@@ -14,42 +15,62 @@ import("//build_overrides/v8.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
 
 executable("electron_app") {
-  configs += [ "//build/config/compiler:wexit_time_destructors" ]
-
-  public_configs = [
+  configs += [ 
+    "//build/config/compiler:wexit_time_destructors",
     "//electron/build:electron_config",
   ]
 
+  configs -= [ "//build/config/win:console" ]
+  configs += [ "//build/config/win:windowed" ]
+
+  data_deps = [
+    ":external_binaries",
+    "//electron:electron_framework_resources",
+    "//electron:electron_app_resources",
+  ]
+
   sources = [
+    "//electron/atom/browser/resources/win/resource.h",
+    "//electron/atom/browser/resources/win/atom.rc",
     "//electron/atom/app/atom_main.cc",
     "//electron/atom/app/atom_main.h",
   ]
 
   deps = [
+    "//build/config/sanitizers:deps",
     "//build/win:default_exe_manifest",
-    "//electron:electron_framework_resources",
-    "//electron:electron_app_resources",
     "//electron/build/node:node_resources",
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
-    "//build/config/sanitizers:deps",
+    "//base",
+    "//breakpad:breakpad_handler",
+    "//breakpad:breakpad_sender",
+    "//chrome/browser:chrome_process_finder",
+    "//chrome/common:constants",
+    "//components/crash/content/app:run_as_crashpad_handler",
+    "//components/flags_ui:switches",
+    "//content:sandbox_helper_win",
     "//chrome/common:features",
     "//third_party/cld",
     "//components/crash/content/app",
     "//components/policy:generated",
     "//content/app/resources",
-    "//crypto",
     "//net:net_resources",
     "//third_party/wtl",
     "//ui/views",
     "//ui/views/controls/webview",
     "//content/public/app:both",
+    "//crypto",
     "//sandbox",
   ]
 
   output_name = "brave"
 
   ldflags = [
+    "/DELAYLOAD:dbghelp.dll",
+    "/DELAYLOAD:uxtheme.dll",
+    "/DELAYLOAD:ole32.dll",
+    "/DELAYLOAD:oleaut32.dll",
     "/DELAYLOAD:comdlg32.dll",
     "/DELAYLOAD:crypt32.dll",
     "/DELAYLOAD:cryptui.dll",
@@ -78,4 +99,13 @@ executable("electron_app") {
   if (use_aura) {
     deps += [ "//ui/compositor" ]
   }
+}
+
+copy("external_binaries") {
+  sources = [
+    rebase_path("//electron/external_binaries/xinput1_3.dll"),
+  ]
+  outputs = [
+    "$root_build_dir/{{source_file_part}}",
+  ]
 }
