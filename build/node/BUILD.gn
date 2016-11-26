@@ -1,6 +1,11 @@
 import("//v8/gni/v8.gni")
 
 config("node_external_config") {
+  defines = [
+    "NODE_WANT_INTERNALS=1",
+    "NODE_SHARED_MODE",
+  ]
+
   if (is_linux) {
     ldflags =
         [ rebase_path("$root_out_dir/lib/libnode.so",
@@ -19,6 +24,7 @@ config("node_external_config") {
 source_set("node") {
   public_configs = [
     ":node_external_config",
+    "//electron/build:electron_config",
   ]
 
   public_deps = [
@@ -53,6 +59,10 @@ if (is_mac) {
 } else if (is_linux) {
   copy("node_resources") {
     sources = [ "$root_out_dir/lib/libnode.so" ]
+
+    public_configs = [
+      ":node_external_config",
+    ]
 
     public_deps = [
       ":node",

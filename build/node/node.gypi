@@ -1,4 +1,5 @@
 {
+  'includes': [ 'v8.gypi' ],
   'variables': {
     'clang_use_chrome_plugins': 0,
     'openssl_fips': '',

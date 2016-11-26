@@ -42,7 +42,11 @@ executable("electron_app") {
      "//ui/views/controls/webview/",
      "//ui/compositor",
   ]
-  ldflags = [ "-rpath", "\$ORIGIN", "-rdynamic" ]
+
+  ldflags = [
+    "-Wl,-rpath=\$ORIGIN/",
+    "-rdynamic",
+  ]
 
   public_configs = [
     "//electron/build:electron_config",
