@@ -40,6 +40,7 @@ executable("electron_app") {
      "//third_party/speech-dispatcher",
      "//ui/compositor",
      "//ui/gfx/x",
+     "//ui/events/devices/x11/",
      "//ui/views",
      "//ui/views/controls/webview/",
      "//ui/wm",
