@@ -32,7 +32,6 @@
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "native_mate/dictionary.h"
-#include "atom/common/node_includes.h"
 
 using content::RenderFrameHost;
 using content::RenderProcessHost;
@@ -240,18 +239,8 @@ TabViewGuest::~TabViewGuest() {
 
 void TabViewGuest::WillAttachToEmbedder() {
   // register the guest for event forwarding
-  v8::Isolate* isolate = api_web_contents_->isolate();
-  v8::HandleScope handle_scope(isolate);
-
-  auto add_guest_event =
-            v8::Local<v8::Object>::Cast(mate::Event::Create(isolate).ToV8());
-  node::Environment* env = node::Environment::GetCurrent(isolate);
-  mate::EmitEvent(isolate,
-                  env->process_object(),
-                  "ELECTRON_GUEST_VIEW_MANAGER_REGISTER_GUEST",
-                  add_guest_event,
-                  api_web_contents_,
-                  extensions::TabHelper::IdForTab(web_contents()));
+  api_web_contents_->Emit("ELECTRON_GUEST_VIEW_MANAGER_REGISTER_GUEST", 
+      extensions::TabHelper::IdForTab(web_contents()));
 
   // update the owner window
   auto relay = atom::NativeWindowRelay::FromWebContents(
