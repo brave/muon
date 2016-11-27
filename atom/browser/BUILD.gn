@@ -247,6 +247,8 @@ source_set("browser") {
       "ui/views/submenu_button.cc",
       "ui/views/submenu_button.h",
     ]
+
+    deps += [ "//ui/wm" ]
   }
   if (is_win) {
     sources += [
