@@ -3,20 +3,13 @@
 import os
 import sys
 
-from lib.config import PLATFORM
-from lib.util import electron_gyp, execute, rm_rf
-
-
-SOURCE_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-DIST_DIR = os.path.join(SOURCE_ROOT, 'dist')
-OUT_DIR = os.path.join(SOURCE_ROOT, 'out', 'R')
-CHROMIUM_DIR = os.path.join(SOURCE_ROOT, 'vendor', 'brightray', 'vendor',
-                            'download', 'libchromiumcontent', 'static_library')
+from lib.config import PLATFORM, SOURCE_ROOT, CHROMIUM_ROOT, OUT_DIR, product_name, project_name
+from lib.util import execute, rm_rf
 
 
 def main(destination):
-  # if PLATFORM == 'win32':
-  #   register_required_dll()
+  if PLATFORM == 'win32':
+    register_required_dll()
 
   rm_rf(destination)
   (project_name, product_name) = get_names_from_gyp()
@@ -33,7 +26,7 @@ def main(destination):
       '--build-dir={0}'.format(OUT_DIR),
       '--binary={0}'.format(start),
       '--symbols-dir={0}'.format(destination),
-      '--libchromiumcontent-dir={0}'.format(CHROMIUM_DIR),
+      '--libchromiumcontent-dir={0}'.format(CHROMIUM_ROOT),
       '--clear',
       '--jobs=16',
     ]
@@ -56,8 +49,7 @@ def register_required_dll():
 
 
 def get_names_from_gyp():
-  variables = electron_gyp()
-  return (variables['project_name%'], variables['product_name%'])
+  return (project_name(), product_name())
 
 
 if __name__ == '__main__':

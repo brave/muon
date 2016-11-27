@@ -8,36 +8,43 @@ import subprocess
 import sys
 import stat
 
-from lib.config import LIBCHROMIUMCONTENT_COMMIT, BASE_URL, PLATFORM, \
-                       get_target_arch, get_chromedriver_version, \
-                       get_zip_name
-from lib.util import scoped_cwd, rm_rf, get_electron_version, make_zip, \
-                     execute, electron_package
+from lib.config import PLATFORM, SOURCE_ROOT, CHROMIUM_ROOT, DIST_DIR, OUT_DIR, \
+                       get_target_arch, get_chromedriver_version, get_zip_name, \
+                       project_name, product_name, get_electron_version
+from lib.util import scoped_cwd, rm_rf, make_zip, \
+                     execute
 
-
-ELECTRON_VERSION = get_electron_version()
-
-SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-DIST_DIR = os.path.join(SOURCE_ROOT, 'dist')
-OUT_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'Release')
-
-PROJECT_NAME = electron_package()['project']
-PRODUCT_NAME = electron_package()['product']
 
 TARGET_BINARIES = {
   'darwin': [
   ],
   'win32': [
-    '{0}.exe'.format(PROJECT_NAME),  # 'electron.exe'
+    '{0}.exe'.format(project_name()),  # 'electron.exe'
+    'electron_resources.pak',
+    'd3dcompiler_47.dll',
+    'libEGL.dll',
+    'libGLESv2.dll',
+    'ffmpeg.dll',
+    'node.dll',
+    'xinput1_3.dll',
+    'natives_blob.bin',
+    'snapshot_blob.bin',
+    'widevinecdmadapter.dll',
   ],
   'linux': [
-    PROJECT_NAME,  # 'electron'
+    project_name(),  # 'electron'
+    'electron_resources.pak',
+    'icudtl.dat',
+    'libnode.so',
+    'natives_blob.bin',
+    'snapshot_blob.bin',
+    'libwidevinecdmadapter.so',
   ],
 }
+
 TARGET_DIRECTORIES = {
   'darwin': [
-    '{0}.app'.format(PRODUCT_NAME),
+    '{0}.app'.format(product_name()),
   ],
   'win32': [
     'resources',
@@ -54,7 +61,7 @@ def main():
   rm_rf(DIST_DIR)
   os.makedirs(DIST_DIR)
 
-  #create_symbols()
+  # create_symbols()
   copy_binaries()
   copy_chrome_binary('chromedriver')
   copy_chrome_binary('mksnapshot')
@@ -67,9 +74,8 @@ def main():
   create_version()
   create_dist_zip()
   create_chrome_binary_zip('chromedriver', get_chromedriver_version())
-  create_chrome_binary_zip('mksnapshot', ELECTRON_VERSION)
-  #create_ffmpeg_zip()
-  #create_symbols_zip()
+  create_chrome_binary_zip('mksnapshot', get_electron_version())
+  # create_symbols_zip()
 
 
 def copy_binaries():
@@ -122,13 +128,13 @@ def strip_binary(binary_path):
 
 
 def create_version():
-  version_path = os.path.join(SOURCE_ROOT, 'dist', 'version')
+  version_path = os.path.join(DIST_DIR, 'version')
   with open(version_path, 'w') as version_file:
-    version_file.write(ELECTRON_VERSION)
+    version_file.write(get_electron_version())
 
 
 def create_symbols():
-  destination = os.path.join(DIST_DIR, '{0}.breakpad.syms'.format(PROJECT_NAME))
+  destination = os.path.join(DIST_DIR, '{0}.breakpad.syms'.format(project_name()))
   dump_symbols = os.path.join(SOURCE_ROOT, 'script', 'dump-symbols.py')
   execute([sys.executable, dump_symbols, destination])
 
@@ -143,8 +149,8 @@ def create_symbols():
 
 
 def create_dist_zip():
-  dist_name = get_zip_name(PROJECT_NAME, ELECTRON_VERSION)
-  zip_file = os.path.join(SOURCE_ROOT, 'dist', dist_name)
+  dist_name = get_zip_name(project_name(), get_electron_version())
+  zip_file = os.path.join(DIST_DIR, dist_name)
 
   with scoped_cwd(DIST_DIR):
     files = TARGET_BINARIES[PLATFORM] +  ['LICENSE', 'LICENSES.chromium.html',
@@ -155,7 +161,7 @@ def create_dist_zip():
 
 def create_chrome_binary_zip(binary, version):
   dist_name = get_zip_name(binary, version)
-  zip_file = os.path.join(SOURCE_ROOT, 'dist', dist_name)
+  zip_file = os.path.join(DIST_DIR, dist_name)
 
   with scoped_cwd(DIST_DIR):
     files = ['LICENSE', 'LICENSES.chromium.html']
@@ -166,43 +172,22 @@ def create_chrome_binary_zip(binary, version):
     make_zip(zip_file, files, [])
 
 
-def create_ffmpeg_zip():
-  dist_name = get_zip_name('ffmpeg', ELECTRON_VERSION)
-  zip_file = os.path.join(SOURCE_ROOT, 'dist', dist_name)
-
-  if PLATFORM == 'darwin':
-    ffmpeg_name = 'libffmpeg.dylib'
-  elif PLATFORM == 'linux':
-    ffmpeg_name = 'libffmpeg.so'
-  elif PLATFORM == 'win32':
-    ffmpeg_name = 'ffmpeg.dll'
-
-  shutil.copy2(os.path.join(CHROMIUM_DIR, '..', 'ffmpeg', ffmpeg_name),
-               DIST_DIR)
-
-  if PLATFORM == 'linux':
-    strip_binary(os.path.join(DIST_DIR, ffmpeg_name))
-
-  with scoped_cwd(DIST_DIR):
-    make_zip(zip_file, [ffmpeg_name, 'LICENSE', 'LICENSES.chromium.html'], [])
-
-
 def create_symbols_zip():
-  dist_name = get_zip_name(PROJECT_NAME, ELECTRON_VERSION, 'symbols')
+  dist_name = get_zip_name(project_name(), get_electron_version(), 'symbols')
   zip_file = os.path.join(DIST_DIR, dist_name)
   licenses = ['LICENSE', 'LICENSES.chromium.html', 'version']
 
   with scoped_cwd(DIST_DIR):
-    dirs = ['{0}.breakpad.syms'.format(PROJECT_NAME)]
+    dirs = ['{0}.breakpad.syms'.format(project_name())]
     make_zip(zip_file, licenses, dirs)
 
   if PLATFORM == 'darwin':
-    dsym_name = get_zip_name(PROJECT_NAME, ELECTRON_VERSION, 'dsym')
+    dsym_name = get_zip_name(project_name(), get_electron_version(), 'dsym')
     with scoped_cwd(DIST_DIR):
       dsyms = glob.glob('*.dSYM')
       make_zip(os.path.join(DIST_DIR, dsym_name), licenses, dsyms)
   elif PLATFORM == 'win32':
-    pdb_name = get_zip_name(PROJECT_NAME, ELECTRON_VERSION, 'pdb')
+    pdb_name = get_zip_name(project_name(), get_electron_version(), 'pdb')
     with scoped_cwd(DIST_DIR):
       pdbs = glob.glob('*.pdb')
       make_zip(os.path.join(DIST_DIR, pdb_name), pdbs + licenses, [])

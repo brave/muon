@@ -388,16 +388,8 @@ if (is_mac) {
     ]
   }
 } else {
-  copy("electron_framework_resources") {
-    sources = electron_framework_sources
-    sources += [
-      "$root_out_dir/electron_resources.pak",
-    ]
+  group("electron_framework_resources") {
     public_deps = electron_framework_public_deps
-
-    outputs = [
-      "$root_build_dir/resources/{{source_file_part}}",
-    ]
   }
 }
 

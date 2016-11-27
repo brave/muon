@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 
 import errno
+import json
 import os
 import platform
 import sys
-
-
-BASE_URL = os.getenv('LIBCHROMIUMCONTENT_MIRROR') or \
-    'https://s3.amazonaws.com/brave-laptop-binaries/libchromiumcontent'
-LIBCHROMIUMCONTENT_COMMIT = os.getenv('LIBCHROMIUMCONTENT_COMMIT') or \
-    'd715734c03b0c892ea66695ae63fc0db9c3fc027'
 
 PLATFORM = {
   'cygwin': 'win32',
@@ -18,7 +13,31 @@ PLATFORM = {
   'win32': 'win32',
 }[sys.platform]
 
+SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+OUT_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'Release')
+DIST_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'dist')
+
 verbose_mode = False
+
+
+def electron_package():
+  pjson = os.path.join(SOURCE_ROOT, 'package.json')
+  with open(pjson) as f:
+    obj = json.load(f);
+    return obj;
+
+
+def product_name():
+  return os.environ.get('npm_config_electron_product_name') or electron_package()['name']
+
+
+def project_name():
+  return os.environ.get('npm_config_electron_project_name') or electron_package()['name']
+
+
+def get_electron_version():
+  return 'v' + electron_package()['version']
 
 
 def get_platform_key():
@@ -29,30 +48,18 @@ def get_platform_key():
 
 
 def get_target_arch():
-  try:
-    target_arch_path = os.path.join(__file__, '..', '..', '..', 'vendor',
-                                    'brightray', 'vendor', 'download',
-                                    'libchromiumcontent', '.target_arch')
-    with open(os.path.normpath(target_arch_path)) as f:
-      return f.read().strip()
-  except IOError as e:
-    if e.errno != errno.ENOENT:
-      raise
-
-  return 'x64'
+  return os.environ['TARGET_ARCH'] if os.environ.has_key('TARGET_ARCH') else 'x64'
 
 
 def get_chromedriver_version():
-  return 'v2.21'
+  version_file_path = os.path.join(CHROMIUM_ROOT, 'chrome', 'test', 'chromedriver', 'VERSION')
+  with open(version_file_path, 'r') as version_file:
+    version = version_file.read().strip()
+  return 'v' + version
+
 
 def get_env_var(name):
-  value = os.environ.get('ELECTRON_' + name, '')
-  if not value:
-    # TODO Remove ATOM_SHELL_* fallback values
-    value = os.environ.get('ATOM_SHELL_' + name, '')
-    if value:
-      print 'Warning: Use $ELECTRON_' + name + ' instead of $ATOM_SHELL_' + name
-  return value
+  return os.environ.get('ELECTRON_' + name, '')
 
 
 def s3_config():

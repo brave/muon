@@ -28,6 +28,7 @@ executable("electron_app") {
     ":external_binaries",
     "//electron:electron_framework_resources",
     "//electron:electron_app_resources",
+    ":widevine_cdm_adapter",
   ]
 
   sources = [
@@ -101,6 +102,15 @@ executable("electron_app") {
   if (use_aura) {
     deps += [ "//ui/compositor" ]
   }
+}
+
+group("widevine_cdm_adapter") {
+  data_deps = [
+    "//third_party/widevine/cdm:widevinecdm",
+  ]
+  public_deps = [
+    "//third_party/widevine/cdm:widevinecdmadapter",
+  ]
 }
 
 copy("external_binaries") {

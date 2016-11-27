@@ -1,7 +1,5 @@
 {
   "name": "electron",
-  "project": "brave",
-  "product": "Brave",
   "version": "2.0.0",
   "devDependencies": {
     "asar": "^0.11.0",
