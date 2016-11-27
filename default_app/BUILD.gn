@@ -1,3 +1,5 @@
+import("//electron/build/config.gni")
+
 action("default_app") {
   script = "//electron/tools/js2asar.py"
   inputs = [
@@ -14,8 +16,25 @@ action("default_app") {
 
   args = [
     rebase_path("$root_out_dir/default_app.asar"),
-    rebase_path("//electron/default_app"),
+    rebase_path("$root_out_dir/default_app"),
   ]
 
   args += inputs
+
+  deps = [
+    ":default_app_sources",
+  ]
+}
+
+copy("default_app_sources") {
+  sources = [
+    "default_app.js",
+    "//electron/app/resources/$electron_icon_dir/icon.png",
+    "index.html",
+    "main.js",
+    "package.json",
+  ]
+  outputs = [
+    "${root_out_dir}/default_app/{{source_file_part}}",
+  ]
 }

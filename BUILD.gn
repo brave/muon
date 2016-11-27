@@ -12,6 +12,7 @@ import("//ui/base/ui_features.gni")
 import("//v8/gni/v8.gni")
 import("//chrome/version.gni")
 import("//third_party/icu/config.gni")
+import("//electron/build/config.gni")
 
 enable_service_discovery = false
 
@@ -410,22 +411,9 @@ electron_app_public_deps = [
   "//electron/default_app",
 ]
 
-electron_icon_dir = "nightly"
-if (is_component_build) {
-  electron_icon_dir = "dev"
-}
-
 if (is_mac) {
   electron_app_sources += [
     "//electron/app/resources/$electron_icon_dir/brave.icns",
-  ]
-} else if (is_win) {
-  electron_app_sources += [
-    "//electron/app/resources/$electron_icon_dir/brave_win.ico",
-  ]
-} else if (is_linux) {
-  electron_app_sources += [
-    "//electron/app/resources/$electron_icon_dir/brave_linux.png",
   ]
 }
 
