@@ -13,6 +13,7 @@ import("//build/compiled_action.gni")
 import("//build/util/branding.gni")
 import("//build_overrides/v8.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
+import("//electron/build/config.gni")
 
 executable("electron_app") {
   configs += [ 
@@ -32,6 +33,7 @@ executable("electron_app") {
   sources = [
     "//electron/atom/browser/resources/win/resource.h",
     "//electron/atom/browser/resources/win/atom.rc",
+    "//electron/app/resources/$electron_icon_dir/atom.ico",
     "//electron/atom/app/atom_main.cc",
     "//electron/atom/app/atom_main.h",
   ]

@@ -1,0 +1,6 @@
+declare_args() {
+  electron_icon_dir = "nightly"
+  if (is_component_build) {
+    electron_icon_dir = "dev"
+  }
+}
