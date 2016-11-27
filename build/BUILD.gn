@@ -54,13 +54,13 @@ config("electron_config") {
 
   if (electron_google_api_key != "") {
     defines += [
-      "GOOGLEAPIS_API_KEY=$electron_google_api_key"
+      "GOOGLEAPIS_API_KEY=\"$electron_google_api_key\""
     ]
   }
 
   if (electron_google_api_endpoint != "") {
     defines += [
-      "GOOGLEAPIS_ENDPOINT=$electron_google_api_endpoint"
+      "GOOGLEAPIS_ENDPOINT=\"$electron_google_api_endpoint\""
     ]
   }
 

@@ -118,6 +118,35 @@ copy("external_binaries") {
     rebase_path("//electron/external_binaries/xinput1_3.dll"),
   ]
   outputs = [
-    "$root_build_dir/{{source_file_part}}",
+    "$root_out_dir/{{source_file_part}}",
   ]
 }
+
+copy("dist") {
+  sources = electron_framework_sources
+
+  sources += [
+    "$root_out_dir/$widevine_cdm_path/widevinecdmadapter.dll",
+    "$root_out_dir/xinput1_3.dll",
+    "$root_out_dir/node.dll",
+    "$root_shlib_dir/libEGL.dll",
+    "$root_shlib_dir/libGLESv2.dll",
+    "$root_out_dir/d3dcompiler_47.dll",
+    "$root_out_dir/brave.exe",
+  ]
+  
+  outputs = [
+    "$root_build_dir/dist/{{source_file_part}}",
+  ]
+
+  data_deps = electron_framework_resources
+  data_deps += [
+    ":electron_app",
+    ":external_binaries",
+    ":widevine_cdm_adapter",
+    "//electron/build/node:node_resources",
+    "//third_party/angle:libEGL",
+    "//third_party/angle:libGLESv2",
+  ]
+}
+

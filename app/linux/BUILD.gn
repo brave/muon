@@ -59,5 +59,24 @@ executable("electron_app") {
     "//electron/atom/app/atom_main.cc",
     "//electron/atom/app/atom_main.h",
   ]
-
 }
+
+copy("dist") {
+  sources = electron_framework_sources
+
+  sources += [
+    "$root_out_dir/libnode.so",
+    "$root_out_dir/brave",
+  ]
+  
+  outputs = [
+    "$root_build_dir/dist/{{source_file_part}}",
+  ]
+
+  data_deps = electron_framework_resources
+  data_deps += [
+    ":electron_app",
+    "//electron/build/node:node_resources",
+  ]
+}
+
