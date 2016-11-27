@@ -3,7 +3,6 @@
 import atexit
 import contextlib
 import errno
-import json
 import platform
 import re
 import shutil
@@ -181,18 +180,6 @@ def execute_stdout(argv, env=os.environ):
       raise e
   else:
     execute(argv, env)
-
-
-def electron_package():
-  SOURCE_ROOT = os.path.abspath(os.path.join(__file__, '..', '..', '..'))
-  pjson = os.path.join(SOURCE_ROOT, 'package.json')
-  with open(pjson) as f:
-    obj = json.load(f);
-    return obj;
-
-
-def get_electron_version():
-  return 'v' + electron_package()['version']
 
 
 def parse_version(version):

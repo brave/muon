@@ -12,6 +12,7 @@ from lib.util import execute, safe_mkdir, scoped_cwd, s3put
 
 
 SOURCE_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 DIST_DIR    = os.path.join(SOURCE_ROOT, 'dist')
 NODE_DIR    = os.path.join(SOURCE_ROOT, 'vendor', 'node')
 OUT_DIR     = os.path.join(SOURCE_ROOT, 'out', 'R')
@@ -80,8 +81,7 @@ def copy_headers(dist_headers_dir):
                      dist_headers_dir)
 
   # Copy V8 headers from chromium's repository.
-  src = os.path.join(SOURCE_ROOT, 'vendor', 'brightray', 'vendor', 'download',
-                    'libchromiumcontent', 'src')
+  const src = CHROMIUM_ROOT
   for dirpath, _, filenames in os.walk(os.path.join(src, 'v8')):
     for filename in filenames:
       extension = os.path.splitext(filename)[1]

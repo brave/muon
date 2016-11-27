@@ -11,28 +11,21 @@ import tempfile
 
 from io import StringIO
 from lib.config import PLATFORM, get_target_arch, get_chromedriver_version, \
-                       get_env_var, s3_config, get_zip_name
+                       get_env_var, s3_config, get_zip_name, product_name, project_name, \
+                       SOURCE_ROOT, DIST_DIR
 from lib.util import electron_package, execute, get_electron_version, \
                      parse_version, scoped_cwd, s3put
 from lib.github import GitHub
 
 
-ELECTRON_VERSION = get_electron_version()
+electron_version()
 
 ELECTRON_REPO = "brave/electron"
 
-CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-DIST_DIR = os.path.join(SOURCE_ROOT, 'dist')
-OUT_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'Release')
-
-PROJECT_NAME = electron_package()['project']
-PRODUCT_NAME = electron_package()['product']
-
-DIST_NAME = get_zip_name(PROJECT_NAME, ELECTRON_VERSION)
-SYMBOLS_NAME = get_zip_name(PROJECT_NAME, ELECTRON_VERSION, 'symbols')
-DSYM_NAME = get_zip_name(PROJECT_NAME, ELECTRON_VERSION, 'dsym')
-PDB_NAME = get_zip_name(PROJECT_NAME, ELECTRON_VERSION, 'pdb')
+DIST_NAME = get_zip_name(project_name(), electron_version())
+SYMBOLS_NAME = get_zip_name(project_name(), electron_version(), 'symbols')
+DSYM_NAME = get_zip_name(project_name(), electron_version(), 'dsym')
+PDB_NAME = get_zip_name(project_name(), electron_version(), 'pdb')
 
 
 def main():
@@ -43,9 +36,9 @@ def main():
       run_python_script('create-dist.py')
 
     build_version = get_electron_build_version()
-    if not ELECTRON_VERSION.startswith(build_version):
+    if not electron_version().startswith(build_version):
       error = 'Tag name ({0}) should match build version ({1})\n'.format(
-          ELECTRON_VERSION, build_version)
+          electron_version(), build_version)
       sys.stderr.write(error)
       sys.stderr.flush()
       return 1
@@ -63,7 +56,7 @@ def main():
 
   if args.publish_release:
     # Upload the Node SHASUMS*.txt.
-    run_python_script('upload-node-checksums.py', '-v', ELECTRON_VERSION)
+    run_python_script('upload-node-checksums.py', '-v', electron_version())
 
     # Upload the index.json.
     run_python_script('upload-index-json.py')
@@ -86,14 +79,14 @@ def main():
     upload_electron(github, release, os.path.join(DIST_DIR, PDB_NAME))
 
   # Upload free version of ffmpeg.
-  ffmpeg = get_zip_name('ffmpeg', ELECTRON_VERSION)
+  ffmpeg = get_zip_name('ffmpeg', electron_version())
   upload_electron(github, release, os.path.join(DIST_DIR, ffmpeg))
 
   # Upload chromedriver and mksnapshot for minor version update.
   if parse_version(args.version)[2] == '0':
     chromedriver = get_zip_name('chromedriver', get_chromedriver_version())
     upload_electron(github, release, os.path.join(DIST_DIR, chromedriver))
-    mksnapshot = get_zip_name('mksnapshot', ELECTRON_VERSION)
+    mksnapshot = get_zip_name('mksnapshot', electron_version())
     upload_electron(github, release, os.path.join(DIST_DIR, mksnapshot))
 
   if PLATFORM == 'win32' and not tag_exists:
@@ -107,7 +100,7 @@ def main():
 def parse_args():
   parser = argparse.ArgumentParser(description='upload distribution file')
   parser.add_argument('-v', '--version', help='Specify the version',
-                      default=ELECTRON_VERSION)
+                      default=electron_version())
   parser.add_argument('-p', '--publish-release',
                       help='Publish the release',
                       action='store_true')
@@ -120,7 +113,7 @@ def run_python_script(script, *args):
 
 
 def get_electron_build_version():
-  return ELECTRON_VERSION
+  return electron_version()
 
 def dist_newer_than_head():
   with scoped_cwd(SOURCE_ROOT):
@@ -166,7 +159,7 @@ def create_or_get_release_draft(github, releases, tag, tag_exists):
 
 
 def create_release_draft(github, tag):
-  name = '{0} {1}'.format(PROJECT_NAME, tag)
+  name = '{0} {1}'.format(project_name(), tag)
   body = '(placeholder)'
   data = dict(tag_name=tag, name=name, body=body, draft=True)
   r = github.repos(ELECTRON_REPO).releases.post(data=data)
@@ -175,7 +168,7 @@ def create_release_draft(github, tag):
 
 def release_electron_checksums(github, release):
   checksums = run_python_script('merge-electron-checksums.py',
-                                '-v', ELECTRON_VERSION)
+                                '-v', electron_version())
   upload_io_to_github(github, release, 'SHASUMS256.txt',
                       StringIO(checksums.decode('utf-8')), 'text/plain')
 
