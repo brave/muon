@@ -351,6 +351,20 @@ mac_xib_bundle_data("electron_xibs") {
   ]
 }
 
+copy("dist") {
+  sources = [
+    "$root_build_dir/$chrome_product_full_name.app"
+  ]
+  
+  outputs = [
+    "$root_build_dir/dist/{{source_file_part}}",
+  ]
+
+  deps = [
+    ":electron_app",
+  ]
+}
+
 # action("fix_node_path") {
 #   script = "//build/gn_run_binary.py"
 #   args = [

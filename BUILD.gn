@@ -16,6 +16,39 @@ import("//electron/build/config.gni")
 
 enable_service_discovery = false
 
+declare_args() {
+  electron_framework_sources = [
+    "$root_out_dir/chrome_100_percent.pak",
+  ]
+
+  electron_framework_public_deps = [
+    ":packed_resources",
+  ]
+
+  if (enable_hidpi) {
+    electron_framework_sources += [
+      "$root_out_dir/chrome_200_percent.pak",
+    ]
+  }
+
+  if (icu_use_data_file) {
+    electron_framework_sources += [
+      "$root_out_dir/icudtl.dat"
+    ]
+    electron_framework_public_deps += [
+      "//third_party/icu:icudata"
+    ]
+  }
+
+  if (v8_use_external_startup_data) {
+    electron_framework_sources += [
+      "$root_out_dir/natives_blob.bin",
+      "$root_out_dir/snapshot_blob.bin",
+    ]
+    electron_framework_public_deps += [ "//v8:v8" ]
+  }
+}
+
 group("electron") {
   testonly = false
 
@@ -342,37 +375,6 @@ source_set("native_mate") {
     "build/node",
     "//third_party/WebKit/public:blink_headers",
   ]
-}
-
-electron_framework_sources = [
-  "$root_out_dir/chrome_100_percent.pak",
-]
-
-electron_framework_public_deps = [
-  ":packed_resources",
-]
-
-if (enable_hidpi) {
-  electron_framework_sources += [
-    "$root_out_dir/chrome_200_percent.pak",
-  ]
-}
-
-if (icu_use_data_file) {
-  electron_framework_sources += [
-    "$root_out_dir/icudtl.dat"
-  ]
-  electron_framework_public_deps += [
-    "//third_party/icu:icudata"
-  ]
-}
-
-if (v8_use_external_startup_data) {
-  electron_framework_sources += [
-    "$root_out_dir/natives_blob.bin",
-    "$root_out_dir/snapshot_blob.bin",
-  ]
-  electron_framework_public_deps += [ "//v8:v8" ]
 }
 
 if (is_mac) {

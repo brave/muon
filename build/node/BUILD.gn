@@ -81,7 +81,10 @@ action("build_node") {
   if (is_mac) {
     outputs = [ "$root_out_dir/libnode.dylib" ]
   } else if (is_win) {
-    outputs = [ "$root_out_dir/node.dll.lib" ]
+    outputs = [ 
+      "$root_out_dir/node.dll",
+      "$root_out_dir/node.dll.lib",
+    ]
   } else if (is_linux) {
     outputs = [ "$root_out_dir/lib/libnode.so" ]
   }
