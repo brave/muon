@@ -87,6 +87,17 @@ source_set("browser") {
     ".",
   ]
 
+  public_deps = []
+  deps = [
+    "//electron/atom/browser",
+    "//chrome/common",
+    "//chrome/utility",
+    "//components/certificate_transparency",
+    "//components/data_usage/core",
+    "//components/prefs",
+    "//components/ssl_config",
+  ]
+
   sources = [
     "chrome/browser/browser_process.cc",
     "chrome/browser/browser_process.h",
@@ -190,6 +201,10 @@ source_set("browser") {
       "//chrome/browser/printing/pdf_to_emf_converter.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.h",
     ]
+
+    deps += [
+      "//ui/shell_dialogs",
+    ]
   }
 
   if (is_linux) {
@@ -205,17 +220,6 @@ source_set("browser") {
       "chrome/browser/certificate_manager_model.h"
     ]
   }
-
-  public_deps = []
-  deps = [
-    "//electron/atom/browser",
-    "//chrome/common",
-    "//chrome/utility",
-    "//components/certificate_transparency",
-    "//components/data_usage/core",
-    "//components/prefs",
-    "//components/ssl_config",
-  ]
 
   if (enable_basic_printing || enable_print_preview) {
     deps += [
