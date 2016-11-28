@@ -5,11 +5,8 @@ import hashlib
 import os
 import tempfile
 
-from lib.config import s3_config
+from lib.config import s3_config, DIST_URL
 from lib.util import download, rm_rf, s3put
-
-
-DIST_URL = 'https://atom.io/download/atom-shell/'
 
 
 def main():
@@ -33,6 +30,9 @@ def parse_args():
   parser = argparse.ArgumentParser(description='upload sumsha file')
   parser.add_argument('-v', '--version', help='Specify the version',
                       required=True)
+  parser.add_argument('-d', '--dist-url',
+                      help='The base dist url for download',
+                      default=DIST_URL)
   return parser.parse_args()
 
 

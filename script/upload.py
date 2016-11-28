@@ -10,7 +10,7 @@ import sys
 import tempfile
 
 from io import StringIO
-from lib.config import PLATFORM, get_target_arch, get_chromedriver_version, \
+from lib.config import PLATFORM, DIST_URL, get_target_arch, get_chromedriver_version, \
                        get_env_var, s3_config, get_zip_name, product_name, project_name, \
                        SOURCE_ROOT, DIST_DIR, get_electron_version
 from lib.util import execute, parse_version, scoped_cwd, s3put
@@ -51,7 +51,7 @@ def main():
 
   if args.publish_release:
     # Upload the Node SHASUMS*.txt.
-    run_python_script('upload-node-checksums.py', '-v', get_electron_version())
+    run_python_script('upload-node-checksums.py', '-v', get_electron_version(), '--dist-url', args.dist_url)
 
     # Upload the index.json.
     run_python_script('upload-index-json.py')
@@ -95,6 +95,9 @@ def parse_args():
   parser.add_argument('-p', '--publish-release',
                       help='Publish the release',
                       action='store_true')
+  parser.add_argument('-d', '--dist-url',
+                      help='The base dist url for download',
+                      default=DIST_URL)
   return parser.parse_args()
 
 
