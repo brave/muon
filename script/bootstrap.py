@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-from lib.config import LIBCHROMIUMCONTENT_COMMIT, BASE_URL, PLATFORM, SOURCE_ROOT, \
+from lib.config import BASE_URL, PLATFORM, SOURCE_ROOT, \
                        enable_verbose_mode, is_verbose_mode, get_target_arch, \
                        get_electron_version
 from lib.util import execute_stdout, scoped_cwd
