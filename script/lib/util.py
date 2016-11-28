@@ -124,7 +124,7 @@ def make_zip(zip_file_path, files, dirs):
     files += dirs
     execute(['zip', '-r', '-y', zip_file_path] + files)
   else:
-    zip_file = zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED)
+    zip_file = zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64 = True)
     for filename in files:
       zip_file.write(filename, filename)
     for dirname in dirs:
