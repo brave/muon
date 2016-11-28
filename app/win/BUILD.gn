@@ -28,7 +28,6 @@ executable("electron_app") {
     ":external_binaries",
     "//electron:electron_framework_resources",
     "//electron:electron_app_resources",
-    ":widevine_cdm_adapter",
   ]
 
   sources = [
@@ -65,9 +64,10 @@ executable("electron_app") {
     "//content/public/app:both",
     "//crypto",
     "//sandbox",
+    ":widevine_cdm_adapter",
   ]
 
-  output_name = "brave"
+  output_name = executable_name
 
   ldflags = [
     "/DELAYLOAD:dbghelp.dll",
@@ -122,26 +122,21 @@ copy("external_binaries") {
   ]
 }
 
-copy("dist") {
-  sources = electron_framework_sources
-
+copy("dist_resources") {
   sources += [
-    "$root_out_dir/$widevine_cdm_path/widevinecdmadapter.dll",
+    "$root_out_dir/$widevine_cdm_path",
     "$root_out_dir/xinput1_3.dll",
     "$root_out_dir/node.dll",
     "$root_shlib_dir/libEGL.dll",
     "$root_shlib_dir/libGLESv2.dll",
     "$root_out_dir/d3dcompiler_47.dll",
-    "$root_out_dir/brave.exe",
   ]
   
   outputs = [
-    "$root_build_dir/dist/{{source_file_part}}",
+    "$electron_dist_dir/{{source_file_part}}",
   ]
 
-  data_deps = electron_framework_resources
-  data_deps += [
-    ":electron_app",
+  deps = [
     ":external_binaries",
     ":widevine_cdm_adapter",
     "//electron/build/node:node_resources",

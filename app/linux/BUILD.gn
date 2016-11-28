@@ -12,9 +12,10 @@ import("//build/compiled_action.gni")
 import("//build/util/branding.gni")
 import("//build_overrides/v8.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
+import("//electron/build/config.gni")
 
 executable("electron_app") {
-  output_name = "brave"
+  output_name = executable_name
 
   configs += [ "//build/config/compiler:wexit_time_destructors"]
   defines = []
@@ -61,22 +62,16 @@ executable("electron_app") {
   ]
 }
 
-copy("dist") {
-  sources = electron_framework_sources
-
+copy("dist_resources") {
   sources += [
     "$root_out_dir/libnode.so",
-    "$root_out_dir/brave",
   ]
   
   outputs = [
-    "$root_build_dir/dist/{{source_file_part}}",
+    "$dist_dir/{{source_file_part}}",
   ]
 
-  data_deps = electron_framework_resources
-  data_deps += [
-    ":electron_app",
+  deps = [
     "//electron/build/node:node_resources",
   ]
 }
-

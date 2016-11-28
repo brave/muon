@@ -69,7 +69,7 @@ if (is_mac) {
     ]
 
     outputs = [
-      "$root_build_dir/{{source_file_part}}",
+      "$root_out_dir/{{source_file_part}}",
     ]
   }
 }
@@ -98,7 +98,7 @@ action("node_gyp_chromium") {
     "//electron/vendor/node/node.gyp",
   ]
   outputs = [
-    "$root_build_dir/obj/electron/vendor/node/node.ninja",
+    "$root_out_dir/obj/electron/vendor/node/node.ninja",
   ]
   args = []
   if (is_component_build) {
