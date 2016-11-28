@@ -14,7 +14,9 @@ import("//build/config/mac/symbols.gni")
 import("//build/mac/tweak_info_plist.gni")
 import("//build/util/branding.gni")
 import("//build_overrides/v8.gni")
+import("//build/config/zip.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
+import("//electron/build/config.gni")
 
 chrome_version_full = "Frameworks"
 chrome_framework_name = chrome_product_full_name + " Framework"
@@ -351,31 +353,4 @@ mac_xib_bundle_data("electron_xibs") {
   ]
 }
 
-copy("dist") {
-  sources = [
-    "$root_build_dir/$chrome_product_full_name.app"
-  ]
-  
-  outputs = [
-    "$root_build_dir/dist/{{source_file_part}}",
-  ]
-
-  deps = [
-    ":electron_app",
-  ]
-}
-
-# action("fix_node_path") {
-#   script = "//build/gn_run_binary.py"
-#   args = [
-#     "/usr/bin/install_name_tool",
-#     "-change", "/usr/local/lib/libnode.dylib",
-#     "@executable_path/../Frameworks/Libraries/libnode.dylib",
-#     rebase_path("$root_out_dir/$chrome_product_short_name.app/Contents/Frameworks/$chrome_framework_name.framework/$chrome_framework_name") ]
-#   deps = [
-#     ":electron_versioned_bundle_data",
-#     ":build_node"
-#   ]
-#   outputs = [ "$root_build_dir/alwaysrun" ]
-# }
-
+group("dist_resources") {}

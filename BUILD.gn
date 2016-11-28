@@ -6,6 +6,8 @@ import("//build/config/locales.gni")
 import("//build/config/crypto.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/ui.gni")
+import("//build/config/zip.gni")
+import("//build/util/branding.gni")
 import("//tools/grit/grit_rule.gni")
 import("//tools/grit/repack.gni")
 import("//ui/base/ui_features.gni")
@@ -16,44 +18,11 @@ import("//electron/build/config.gni")
 
 enable_service_discovery = false
 
-declare_args() {
-  electron_framework_sources = [
-    "$root_out_dir/chrome_100_percent.pak",
-  ]
-
-  electron_framework_public_deps = [
-    ":packed_resources",
-  ]
-
-  if (enable_hidpi) {
-    electron_framework_sources += [
-      "$root_out_dir/chrome_200_percent.pak",
-    ]
-  }
-
-  if (icu_use_data_file) {
-    electron_framework_sources += [
-      "$root_out_dir/icudtl.dat"
-    ]
-    electron_framework_public_deps += [
-      "//third_party/icu:icudata"
-    ]
-  }
-
-  if (v8_use_external_startup_data) {
-    electron_framework_sources += [
-      "$root_out_dir/natives_blob.bin",
-      "$root_out_dir/snapshot_blob.bin",
-    ]
-    electron_framework_public_deps += [ "//v8:v8" ]
-  }
-}
-
 group("electron") {
   testonly = false
 
   if (is_mac) {
-    deps = [
+    public_deps = [
       "app/mac:electron_app",
     ]
 
@@ -63,7 +32,7 @@ group("electron") {
   }
 
   if (is_linux) {
-    deps = [
+    public_deps = [
       "app/linux:electron_app",
     ]
 
@@ -73,7 +42,7 @@ group("electron") {
   }
 
   if (is_win) {
-    deps = [
+    public_deps = [
       "app/win:electron_app",
     ]
 
@@ -81,9 +50,6 @@ group("electron") {
       "app/win:electron_app",
     ]
   }
-  deps += [
-    "//chrome/test/chromedriver:chromedriver",
-  ]
 }
 
 grit("atom_resources") {
@@ -377,22 +343,35 @@ source_set("native_mate") {
   ]
 }
 
-if (is_mac) {
-  bundle_data("electron_framework_resources") {
-    sources = electron_framework_sources
-    sources += [
-      "$root_gen_dir/repack/electron_resources.pak",
-    ]
-    public_deps = electron_framework_public_deps
+electron_framework_sources = [
+  "$root_out_dir/chrome_100_percent.pak",
+]
 
-    outputs = [
-      "{{bundle_resources_dir}}/{{source_file_part}}",
-    ]
-  }
-} else {
-  group("electron_framework_resources") {
-    public_deps = electron_framework_public_deps
-  }
+electron_framework_public_deps = [
+  ":packed_resources",
+]
+
+if (enable_hidpi) {
+  electron_framework_sources += [
+    "$root_out_dir/chrome_200_percent.pak",
+  ]
+}
+
+if (icu_use_data_file) {
+  electron_framework_sources += [
+    "$root_out_dir/icudtl.dat"
+  ]
+  electron_framework_public_deps += [
+    "//third_party/icu:icudata"
+  ]
+}
+
+if (v8_use_external_startup_data) {
+  electron_framework_sources += [
+    "$root_out_dir/natives_blob.bin",
+    "$root_out_dir/snapshot_blob.bin",
+  ]
+  electron_framework_public_deps += [ "//v8:v8" ]
 }
 
 electron_app_sources = [
@@ -412,6 +391,24 @@ if (is_mac) {
 }
 
 if (is_mac) {
+  bundle_data("electron_framework_resources") {
+    sources = electron_framework_sources
+    sources += [
+      "$root_gen_dir/repack/electron_resources.pak",
+    ]
+    public_deps = electron_framework_public_deps
+
+    outputs = [
+      "{{bundle_resources_dir}}/{{source_file_part}}",
+    ]
+  }
+} else {
+  group("electron_framework_resources") {
+    public_deps = electron_framework_public_deps
+  }
+}
+
+if (is_mac) {
   bundle_data("electron_app_resources") {
     sources = electron_app_sources
     public_deps = electron_app_public_deps
@@ -426,7 +423,136 @@ if (is_mac) {
     public_deps = electron_app_public_deps
 
     outputs = [
-      "$root_build_dir/resources/{{source_file_part}}"
+      "$root_out_dir/resources/{{source_file_part}}"
     ]
   }
 }
+
+action("dist") {
+  output = "$electron_dist_dir/$chrome_product_full_name-v$electron_version-$electron_platform-$target_cpu.zip"
+  
+  script = "//electron/script/create-dist.py"
+
+  file_inputs = [
+    "version", "LICENSE", "LICENSES.chromium.html"
+  ]
+
+  inputs = [
+    "$electron_dist_dir/version",
+    "$electron_dist_dir/LICENSE",
+    "$electron_dist_dir/LICENSES.chromium.html",
+  ]
+
+  if (is_mac) {
+    dir_inputs = [
+      "$electron_exe",
+    ]
+  } else {
+    inputs += [ "$electron_dist_dir/$electron_exe" ]
+    file_inputs += electron_exe
+    dir_inputs = [ "resources" ]
+  }
+
+  outputs = [
+    output
+  ]
+
+  deps = [
+    ":electron_dist_resources",
+    ":chromedriver_zip"
+  ]
+
+  rebase_output = rebase_path(output)
+  rebase_base_dir = rebase_path(electron_dist_dir, root_build_dir)
+  args = [
+    "--base-dir=$rebase_base_dir",
+    "--inputs=$file_inputs",
+    "--dir-inputs=$dir_inputs",
+    "--output=$rebase_output",
+  ]
+}
+
+chromedriver = "chromedriver"
+if (is_win) {
+  chromedriver = "$chromedriver.exe"
+}
+
+chromedriver_version = "2.23"
+
+zip("chromedriver_zip") {
+  inputs = [
+    "$electron_dist_dir/$chromedriver",
+    "$electron_dist_dir/LICENSE",
+    "$electron_dist_dir/LICENSES.chromium.html",
+  ]
+  base_dir = electron_dist_dir
+  output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_cpu.zip"
+  deps = [
+    ":electron_dist_resources",
+  ]
+}
+
+copy("electron_dist_resources") {
+  if (is_mac) {
+    sources = []
+  } else {
+    sources = electron_framework_sources
+    sources += [ 
+      "$root_out_dir/resources", 
+    ]
+  }
+  
+  sources += [
+    "$root_out_dir/$electron_exe",
+    "$root_out_dir/version",
+    "//electron/LICENSE",
+    "$root_gen_dir/LICENSES.chromium.html",
+    "$root_out_dir/$chromedriver",
+  ]
+
+  deps = [
+    ":electron",
+    ":generate_chromium_licenses",
+    ":generate_version",
+    "//chrome/test/chromedriver:chromedriver",
+    "app/$current_os:dist_resources",
+  ]
+  data_deps = electron_framework_public_deps
+  data_deps += [
+    ":electron_app_resources",
+  ]
+
+  outputs = [
+    "$electron_dist_dir/{{source_file_part}}"
+  ]
+}
+
+action("generate_version") {
+  script = "//electron/script/version.py"
+
+  outputs = [
+    "$root_out_dir/version"
+  ]
+}
+
+action("generate_chromium_licenses") {
+  license_file = "$root_gen_dir/LICENSES.chromium.html"
+
+  script = "//tools/licenses.py"
+
+  inputs = [
+    rebase_path("//electron/resources/about_credits.tmpl"),
+    rebase_path("//electron/resources/about_credits_entry.tmpl"),
+  ]
+
+  outputs = [
+    license_file
+  ]
+
+  args = [
+    "--target-os=$target_os",
+    "credits",
+    rebase_path(license_file, root_build_dir),
+  ]
+}
+

@@ -1,6 +1,29 @@
+import("//build/toolchain/toolchain.gni")
+import("//build/util/branding.gni")
+
 declare_args() {
-  electron_icon_dir = "nightly"
-  if (is_component_build) {
-    electron_icon_dir = "dev"
-  }
+  electron_product_name = ""
+  electron_project_name = ""
+  executable_name = electron_project_name
+  electron_version = ""
+}
+
+electron_dist_dir = "$root_out_dir/dist"
+electron_exe = executable_name
+if (is_win) {
+  electron_exe = "$electron_exe.exe"
+} else if (is_mac) {
+  electron_exe = "$chrome_product_full_name.app"
+}
+
+electron_icon_dir = "nightly"
+if (is_component_build) {
+  electron_icon_dir = "dev"
+}
+
+electron_platform = "darwin"
+if (is_win) {
+  electron_platform = "win32"
+} else if (is_linux) {
+  electron_platform = "linux"
 }
