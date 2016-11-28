@@ -30,6 +30,7 @@ tweak_info_plist("electron_app_plist") {
     "--keystone=$_keystone_arg",
     "--scm=1",
     "--bundle_id=$chrome_mac_bundle_id",
+    "--version=$electron_version",
   ]
 }
 

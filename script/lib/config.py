@@ -37,7 +37,8 @@ def project_name():
 
 
 def get_electron_version():
-  return 'v' + electron_package()['version']
+  version = os.environ.get('npm_config_electron_version') or electron_package()['version']
+  return 'v' + version
 
 
 def get_platform_key():
