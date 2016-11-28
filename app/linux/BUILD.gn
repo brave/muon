@@ -63,12 +63,12 @@ executable("electron_app") {
 }
 
 copy("dist_resources") {
-  sources += [
+  sources = [
     "$root_out_dir/libnode.so",
   ]
   
   outputs = [
-    "$dist_dir/{{source_file_part}}",
+    "$electron_dist_dir/{{source_file_part}}",
   ]
 
   deps = [
