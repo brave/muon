@@ -46,68 +46,8 @@ def main():
   output = options.output
   base_dir = options.base_dir
 
-  # create_symbols()
-
-  if PLATFORM == 'linux':
-    strip_binaries()
-
-  create_dist_zip(base_dir, output, inputs, dir_inputs)
-  # create_symbols_zip()
-
-
-def strip_binaries():
-  for binary in TARGET_BINARIES[PLATFORM]:
-    if binary.endswith('.so') or '.' not in binary:
-      strip_binary(os.path.join(DIST_DIR, binary))
-
-
-def strip_binary(binary_path):
-    if get_target_arch() == 'arm':
-      strip = 'arm-linux-gnueabihf-strip'
-    else:
-      strip = 'strip'
-    execute([strip, binary_path])
-
-
-def create_symbols():
-  destination = os.path.join(DIST_DIR, '{0}.breakpad.syms'.format(project_name()))
-  dump_symbols = os.path.join(SOURCE_ROOT, 'script', 'dump-symbols.py')
-  execute([sys.executable, dump_symbols, destination])
-
-  if PLATFORM == 'darwin':
-    dsyms = glob.glob(os.path.join(OUT_DIR, '*.dSYM'))
-    for dsym in dsyms:
-      shutil.copytree(dsym, os.path.join(DIST_DIR, os.path.basename(dsym)))
-  elif PLATFORM == 'win32':
-    pdbs = glob.glob(os.path.join(OUT_DIR, '*.pdb'))
-    for pdb in pdbs:
-      shutil.copy2(pdb, DIST_DIR)
-
-
-def create_dist_zip(base_dir, zip_file, files, dirs):
   with scoped_cwd(base_dir):
-    make_zip(zip_file, files, dirs)
-
-
-def create_symbols_zip():
-  dist_name = get_zip_name(project_name(), get_electron_version(), 'symbols')
-  zip_file = os.path.join(DIST_DIR, dist_name)
-  licenses = ['LICENSE', 'LICENSES.chromium.html', 'version']
-
-  with scoped_cwd(DIST_DIR):
-    dirs = ['{0}.breakpad.syms'.format(project_name())]
-    make_zip(zip_file, licenses, dirs)
-
-  if PLATFORM == 'darwin':
-    dsym_name = get_zip_name(project_name(), get_electron_version(), 'dsym')
-    with scoped_cwd(DIST_DIR):
-      dsyms = glob.glob('*.dSYM')
-      make_zip(os.path.join(DIST_DIR, dsym_name), licenses, dsyms)
-  elif PLATFORM == 'win32':
-    pdb_name = get_zip_name(project_name(), get_electron_version(), 'pdb')
-    with scoped_cwd(DIST_DIR):
-      pdbs = glob.glob('*.pdb')
-      make_zip(os.path.join(DIST_DIR, pdb_name), pdbs + licenses, [])
+    make_zip(output, inputs, dir_inputs)
 
 
 if __name__ == '__main__':
