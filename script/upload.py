@@ -54,13 +54,13 @@ def main():
     run_python_script('upload-node-checksums.py', '-v', get_electron_version(), '--dist-url', args.dist_url)
 
     # Upload the index.json.
-    run_python_script('upload-index-json.py')
+    # run_python_script('upload-index-json.py')
 
     # Create and upload the Electron SHASUMS*.txt
     release_electron_checksums(github, release)
 
     # Press the publish button.
-    publish_release(github, release['id'])
+    # publish_release(github, release['id'])
 
     # Do not upload other files when passed "-p".
     return
