@@ -67,26 +67,22 @@ def main():
 
   # Upload Electron with GitHub Releases API.
   upload_electron(github, release, os.path.join(DIST_DIR, DIST_NAME))
-  upload_electron(github, release, os.path.join(DIST_DIR, SYMBOLS_NAME))
-  if PLATFORM == 'darwin':
-    upload_electron(github, release, os.path.join(DIST_DIR, DSYM_NAME))
-  elif PLATFORM == 'win32':
-    upload_electron(github, release, os.path.join(DIST_DIR, PDB_NAME))
-
-  # Upload free version of ffmpeg.
-  ffmpeg = get_zip_name('ffmpeg', get_electron_version())
-  upload_electron(github, release, os.path.join(DIST_DIR, ffmpeg))
+  # upload_electron(github, release, os.path.join(DIST_DIR, SYMBOLS_NAME))
+  # if PLATFORM == 'darwin':
+  #   upload_electron(github, release, os.path.join(DIST_DIR, DSYM_NAME))
+  # elif PLATFORM == 'win32':
+  #   upload_electron(github, release, os.path.join(DIST_DIR, PDB_NAME))
 
   # Upload chromedriver and mksnapshot for minor version update.
   if parse_version(args.version)[2] == '0':
     chromedriver = get_zip_name('chromedriver', get_chromedriver_version())
     upload_electron(github, release, os.path.join(DIST_DIR, chromedriver))
-    mksnapshot = get_zip_name('mksnapshot', get_electron_version())
-    upload_electron(github, release, os.path.join(DIST_DIR, mksnapshot))
+    # mksnapshot = get_zip_name('mksnapshot', get_electron_version())
+    # upload_electron(github, release, os.path.join(DIST_DIR, mksnapshot))
 
   if PLATFORM == 'win32' and not tag_exists:
     # Upload PDBs to Windows symbol server.
-    run_python_script('upload-windows-pdb.py')
+    # run_python_script('upload-windows-pdb.py')
 
     # Upload node headers.
     run_python_script('upload-node-headers.py', '-v', args.version)
