@@ -17,6 +17,7 @@ SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'
 CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 OUT_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'Release')
 DIST_DIR = os.path.join(OUT_DIR, 'dist')
+DIST_URL = 'http://brave-laptop-binaries.s3.amazonaws.com/atom-shell/dist/'
 
 verbose_mode = False
 

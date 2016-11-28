@@ -91,21 +91,21 @@ action("build_node") {
 }
 
 # TODO(bridiver) this isn't used right now because generating the node target wipes out the electron target
-action("node_gyp_chromium") {
-  script = "//build/gyp_chromium"
-  inputs = [
-    "//electron/node.gypi",
-    "//electron/vendor/node/node.gyp",
-  ]
-  outputs = [
-    "$root_out_dir/obj/electron/vendor/node/node.ninja",
-  ]
-  args = []
-  if (is_component_build) {
-    args += [ "-D", "component=shared_library", ]
-  }
-  args += [
-    "-I", rebase_path("node.gypi", root_build_dir),
-    rebase_path("vendor/node/node.gyp", root_build_dir),
-  ]
-}
+# action("node_gyp_chromium") {
+#   script = "//build/gyp_chromium"
+#   inputs = [
+#     "//electron/node.gypi",
+#     "//electron/vendor/node/node.gyp",
+#   ]
+#   outputs = [
+#     "$root_out_dir/obj/electron/vendor/node/node.ninja",
+#   ]
+#   args = []
+#   if (is_component_build) {
+#     args += [ "-D", "component=shared_library", ]
+#   }
+#   args += [
+#     "-I", rebase_path("node.gypi", root_build_dir),
+#     rebase_path("vendor/node/node.gyp", root_build_dir),
+#   ]
+# }
