@@ -5,9 +5,8 @@ import os
 import subprocess
 import sys
 
-from lib.config import BASE_URL, PLATFORM, SOURCE_ROOT, \
-                       enable_verbose_mode, is_verbose_mode, get_target_arch, \
-                       get_electron_version
+from lib.config import PLATFORM, SOURCE_ROOT, \
+                       enable_verbose_mode, is_verbose_mode
 from lib.util import execute_stdout, scoped_cwd
 
 
@@ -39,6 +38,11 @@ def parse_args():
   parser.add_argument('-v', '--verbose',
                       action='store_true',
                       help='Prints the output of the subprocesses')
+  parser.add_argument('-y', '--yes', '--assume-yes',
+                      action='store_true',
+                      help='Run non-interactively by assuming "yes" to all ' \
+                           'prompts.')
+
   return parser.parse_args()
 
 

@@ -519,16 +519,18 @@ zip("chromedriver_zip") {
   ]
 }
 
-copy("electron_app_dist_resources") {
-  sources = get_target_outputs(":electron_app_resources")
+if (!is_mac) {
+  copy("electron_app_dist_resources") {
+    sources = get_target_outputs(":electron_app_resources")
 
-  deps = [
-    ":electron_app_resources",
-  ]
+    deps = [
+      ":electron_app_resources",
+    ]
 
-  outputs = [
-    "$electron_dist_dir/resources/{{source_file_part}}"
-  ]
+    outputs = [
+      "$electron_dist_dir/resources/{{source_file_part}}"
+    ]
+  }
 }
 
 copy("electron_dist_resources") {
@@ -558,10 +560,13 @@ action("create_dist") {
   
   script = "//electron/script/create-dist.py"
 
-  inputs = get_target_outputs(":electron_dist_resources")
-  inputs += get_target_outputs(":electron_app_dist_resources")
-  inputs += get_target_outputs(":electron_license_dist_resources")
+  inputs = get_target_outputs(":electron_license_dist_resources")
 
+  if (!is_mac) {
+    inputs += get_target_outputs(":electron_dist_resources")
+    inputs += get_target_outputs(":electron_app_dist_resources")
+  }
+  
   if (is_win) {
     inputs += [
       "$electron_dist_dir/xinput1_3.dll",
@@ -593,12 +598,17 @@ action("create_dist") {
   ]
 
   deps = [
-    ":electron_dist_resources",
-    ":electron_app_dist_resources",
     ":electron_license_dist_resources",
     "app/$current_os:dist_resources",
     ":chromedriver_zip"
   ]
+
+  if (!is_mac) {
+    deps += [
+      ":electron_dist_resources",
+      ":electron_app_dist_resources",
+    ]
+  }
 
   rebase_output = rebase_path(output)
   rebase_base_dir = rebase_path(electron_dist_dir, root_build_dir)

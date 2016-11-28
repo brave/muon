@@ -12,33 +12,28 @@ import tempfile
 from io import StringIO
 from lib.config import PLATFORM, get_target_arch, get_chromedriver_version, \
                        get_env_var, s3_config, get_zip_name, product_name, project_name, \
-                       SOURCE_ROOT, DIST_DIR
-from lib.util import electron_package, execute, get_electron_version, \
-                     parse_version, scoped_cwd, s3put
+                       SOURCE_ROOT, DIST_DIR, get_electron_version
+from lib.util import execute, parse_version, scoped_cwd, s3put
+                     
 from lib.github import GitHub
 
 
-electron_version()
-
 ELECTRON_REPO = "brave/electron"
 
-DIST_NAME = get_zip_name(project_name(), electron_version())
-SYMBOLS_NAME = get_zip_name(project_name(), electron_version(), 'symbols')
-DSYM_NAME = get_zip_name(project_name(), electron_version(), 'dsym')
-PDB_NAME = get_zip_name(project_name(), electron_version(), 'pdb')
+DIST_NAME = get_zip_name(project_name(), get_electron_version())
+SYMBOLS_NAME = get_zip_name(project_name(), get_electron_version(), 'symbols')
+DSYM_NAME = get_zip_name(project_name(), get_electron_version(), 'dsym')
+PDB_NAME = get_zip_name(project_name(), get_electron_version(), 'pdb')
 
 
 def main():
   args = parse_args()
 
   if not args.publish_release:
-    if not dist_newer_than_head():
-      run_python_script('create-dist.py')
-
     build_version = get_electron_build_version()
-    if not electron_version().startswith(build_version):
+    if not get_electron_version().startswith(build_version):
       error = 'Tag name ({0}) should match build version ({1})\n'.format(
-          electron_version(), build_version)
+          get_electron_version(), build_version)
       sys.stderr.write(error)
       sys.stderr.flush()
       return 1
@@ -56,7 +51,7 @@ def main():
 
   if args.publish_release:
     # Upload the Node SHASUMS*.txt.
-    run_python_script('upload-node-checksums.py', '-v', electron_version())
+    run_python_script('upload-node-checksums.py', '-v', get_electron_version())
 
     # Upload the index.json.
     run_python_script('upload-index-json.py')
@@ -79,14 +74,14 @@ def main():
     upload_electron(github, release, os.path.join(DIST_DIR, PDB_NAME))
 
   # Upload free version of ffmpeg.
-  ffmpeg = get_zip_name('ffmpeg', electron_version())
+  ffmpeg = get_zip_name('ffmpeg', get_electron_version())
   upload_electron(github, release, os.path.join(DIST_DIR, ffmpeg))
 
   # Upload chromedriver and mksnapshot for minor version update.
   if parse_version(args.version)[2] == '0':
     chromedriver = get_zip_name('chromedriver', get_chromedriver_version())
     upload_electron(github, release, os.path.join(DIST_DIR, chromedriver))
-    mksnapshot = get_zip_name('mksnapshot', electron_version())
+    mksnapshot = get_zip_name('mksnapshot', get_electron_version())
     upload_electron(github, release, os.path.join(DIST_DIR, mksnapshot))
 
   if PLATFORM == 'win32' and not tag_exists:
@@ -100,7 +95,7 @@ def main():
 def parse_args():
   parser = argparse.ArgumentParser(description='upload distribution file')
   parser.add_argument('-v', '--version', help='Specify the version',
-                      default=electron_version())
+                      default=get_electron_version())
   parser.add_argument('-p', '--publish-release',
                       help='Publish the release',
                       action='store_true')
@@ -113,7 +108,7 @@ def run_python_script(script, *args):
 
 
 def get_electron_build_version():
-  return electron_version()
+  return get_electron_version()
 
 def dist_newer_than_head():
   with scoped_cwd(SOURCE_ROOT):
@@ -168,7 +163,7 @@ def create_release_draft(github, tag):
 
 def release_electron_checksums(github, release):
   checksums = run_python_script('merge-electron-checksums.py',
-                                '-v', electron_version())
+                                '-v', get_electron_version())
   upload_io_to_github(github, release, 'SHASUMS256.txt',
                       StringIO(checksums.decode('utf-8')), 'text/plain')
 
