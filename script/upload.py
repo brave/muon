@@ -80,12 +80,12 @@ def main():
     # mksnapshot = get_zip_name('mksnapshot', get_electron_version())
     # upload_electron(github, release, os.path.join(DIST_DIR, mksnapshot))
 
-  if PLATFORM == 'win32' and not tag_exists:
-    # Upload PDBs to Windows symbol server.
-    # run_python_script('upload-windows-pdb.py')
+  # if PLATFORM == 'win32' and not tag_exists:
+  #   # Upload PDBs to Windows symbol server.
+  #   run_python_script('upload-windows-pdb.py')
 
-    # Upload node headers.
-    run_python_script('upload-node-headers.py', '-v', args.version)
+  # Upload node headers.
+  run_python_script('upload-node-headers.py', '-v', args.version)
 
 
 def parse_args():
