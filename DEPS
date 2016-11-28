@@ -59,6 +59,7 @@ deps = {
   "vendor/node": "https://github.com/brave/node.git@a57e6ac8d99e84bce640bf854c34d4ff0338f915",
   "vendor/native_mate": "https://github.com/zcbenz/native-mate.git@b5e5de626c6a57e44c7e6448d8bbaaac475d493c",
   "vendor/requests": "https://github.com/kennethreitz/requests@e4d59bedfd3c7f4f254f4f5d036587bcd8152458",
+  "vendor/boto": "https://github.com/boto/boto@f7574aa6cc2c819430c1f05e9a1a1a666ef8169b",
 }
 
 hooks = [

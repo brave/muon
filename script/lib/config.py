@@ -60,7 +60,7 @@ def get_chromedriver_version():
 
 
 def get_env_var(name):
-  return os.environ.get('ELECTRON_' + name, '')
+  return os.environ.get('ELECTRON_' + name) or os.environ.get('npm_config_ELECTRON_' + name, '')
 
 
 def s3_config():
