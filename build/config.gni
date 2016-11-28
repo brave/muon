@@ -4,8 +4,17 @@ import("//build/util/branding.gni")
 declare_args() {
   electron_product_name = ""
   electron_project_name = ""
+  executable_name = ""
+  electron_version_major = ""
+  electron_version_minor = ""
+  electron_version_build = ""
+  electron_version_patch = 0
+}
+
+electron_version = "$electron_version_major.$electron_version_minor.$electron_version_build.$electron_version_patch"
+
+if (executable_name == "") {
   executable_name = electron_project_name
-  electron_version = ""
 }
 
 electron_dist_dir = "$root_out_dir/dist"

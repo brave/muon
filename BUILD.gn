@@ -208,6 +208,10 @@ source_set("common") {
     "brave/common/importer/imported_cookie_entry.h",
   ]
 
+  deps = [
+    ":electron_version_header",
+  ]
+
   if (enable_extensions) {
     public_deps += [
       "brave/common/extensions/api",
@@ -428,7 +432,19 @@ if (is_mac) {
   }
 }
 
-action("dist") {
+process_version("electron_version_header") {
+  sources = []
+  template_file = "app/resources/atom_version.h.in"
+  extra_args = [
+    "-e", "MAJOR=$electron_version_major",
+    "-e", "MINOR=$electron_version_minor",
+    "-e", "BUILD=$electron_version_build",
+  ]
+
+  output = "$target_gen_dir/atom/common/atom_version.h"
+}
+
+action("create_dist") {
   output = "$electron_dist_dir/$chrome_product_full_name-v$electron_version-$electron_platform-$target_cpu.zip"
   
   script = "//electron/script/create-dist.py"
@@ -449,7 +465,7 @@ action("dist") {
     ]
   } else {
     inputs += [ "$electron_dist_dir/$electron_exe" ]
-    file_inputs += electron_exe
+    file_inputs += [ electron_exe ]
     dir_inputs = [ "resources" ]
   }
 
@@ -497,9 +513,7 @@ copy("electron_dist_resources") {
     sources = []
   } else {
     sources = electron_framework_sources
-    sources += [ 
-      "$root_out_dir/resources", 
-    ]
+    sources += get_target_outputs(":electron_app_resources")
   }
   
   sources += [
@@ -510,16 +524,14 @@ copy("electron_dist_resources") {
     "$root_out_dir/$chromedriver",
   ]
 
-  deps = [
+  deps = electron_framework_public_deps
+  deps += [
     ":electron",
     ":generate_chromium_licenses",
     ":generate_version",
+    ":electron_app_resources",
     "//chrome/test/chromedriver:chromedriver",
     "app/$current_os:dist_resources",
-  ]
-  data_deps = electron_framework_public_deps
-  data_deps += [
-    ":electron_app_resources",
   ]
 
   outputs = [

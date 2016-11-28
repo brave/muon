@@ -19,9 +19,9 @@
   <key>CFBundleIconFile</key>
   <string>brave.icns</string>
   <key>CFBundleVersion</key>
-  <string>2.0.0</string>
+  <string>0.1.0</string>
   <key>CFBundleShortVersionString</key>
-  <string>2.0.0</string>
+  <string>0.1.0</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.developer-tools</string>
   <key>LSMinimumSystemVersion</key>
