@@ -444,101 +444,6 @@ process_version("electron_version_header") {
   output = "$target_gen_dir/atom/common/atom_version.h"
 }
 
-action("create_dist") {
-  output = "$electron_dist_dir/$chrome_product_full_name-v$electron_version-$electron_platform-$target_cpu.zip"
-  
-  script = "//electron/script/create-dist.py"
-
-  file_inputs = [
-    "version", "LICENSE", "LICENSES.chromium.html"
-  ]
-
-  inputs = [
-    "$electron_dist_dir/version",
-    "$electron_dist_dir/LICENSE",
-    "$electron_dist_dir/LICENSES.chromium.html",
-  ]
-
-  if (is_mac) {
-    dir_inputs = [
-      "$electron_exe",
-    ]
-  } else {
-    inputs += [ "$electron_dist_dir/$electron_exe" ]
-    file_inputs += [ electron_exe ]
-    dir_inputs = [ "resources" ]
-  }
-
-  outputs = [
-    output
-  ]
-
-  deps = [
-    ":electron_dist_resources",
-    ":chromedriver_zip"
-  ]
-
-  rebase_output = rebase_path(output)
-  rebase_base_dir = rebase_path(electron_dist_dir, root_build_dir)
-  args = [
-    "--base-dir=$rebase_base_dir",
-    "--inputs=$file_inputs",
-    "--dir-inputs=$dir_inputs",
-    "--output=$rebase_output",
-  ]
-}
-
-chromedriver = "chromedriver"
-if (is_win) {
-  chromedriver = "$chromedriver.exe"
-}
-
-chromedriver_version = "2.23"
-
-zip("chromedriver_zip") {
-  inputs = [
-    "$electron_dist_dir/$chromedriver",
-    "$electron_dist_dir/LICENSE",
-    "$electron_dist_dir/LICENSES.chromium.html",
-  ]
-  base_dir = electron_dist_dir
-  output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_cpu.zip"
-  deps = [
-    ":electron_dist_resources",
-  ]
-}
-
-copy("electron_dist_resources") {
-  if (is_mac) {
-    sources = []
-  } else {
-    sources = electron_framework_sources
-    sources += get_target_outputs(":electron_app_resources")
-  }
-  
-  sources += [
-    "$root_out_dir/$electron_exe",
-    "$root_out_dir/version",
-    "//electron/LICENSE",
-    "$root_gen_dir/LICENSES.chromium.html",
-    "$root_out_dir/$chromedriver",
-  ]
-
-  deps = electron_framework_public_deps
-  deps += [
-    ":electron",
-    ":generate_chromium_licenses",
-    ":generate_version",
-    ":electron_app_resources",
-    "//chrome/test/chromedriver:chromedriver",
-    "app/$current_os:dist_resources",
-  ]
-
-  outputs = [
-    "$electron_dist_dir/{{source_file_part}}"
-  ]
-}
-
 action("generate_version") {
   script = "//electron/script/version.py"
 
@@ -568,3 +473,139 @@ action("generate_chromium_licenses") {
   ]
 }
 
+copy("electron_license_dist_resources") {
+  sources = get_target_outputs(":generate_chromium_licenses")
+  sources += [
+    "//electron/LICENSE",
+  ]
+  deps = [
+    ":generate_chromium_licenses",
+  ]
+
+  outputs = [
+    "$electron_dist_dir/{{source_file_part}}"
+  ]
+}
+
+chromedriver = "chromedriver"
+if (is_win) {
+  chromedriver = "$chromedriver.exe"
+}
+
+chromedriver_version = "2.23"
+
+copy("electron_chromedriver_dist_resources") {
+  sources = [ 
+    "$root_out_dir/$chromedriver",
+  ]
+
+  deps = [
+    "//chrome/test/chromedriver:chromedriver",
+  ]
+
+  outputs = [
+    "$electron_dist_dir/{{source_file_part}}"
+  ]
+}
+
+zip("chromedriver_zip") {
+  inputs = get_target_outputs(":electron_chromedriver_dist_resources")
+  inputs += get_target_outputs(":electron_license_dist_resources")
+  base_dir = electron_dist_dir
+  output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_cpu.zip"
+  deps = [
+    ":electron_chromedriver_dist_resources",
+    ":electron_license_dist_resources",
+  ]
+}
+
+copy("electron_app_dist_resources") {
+  sources = get_target_outputs(":electron_app_resources")
+
+  deps = [
+    ":electron_app_resources",
+  ]
+
+  outputs = [
+    "$electron_dist_dir/resources/{{source_file_part}}"
+  ]
+}
+
+copy("electron_dist_resources") {
+  if (is_mac) {
+    sources = []
+  } else {
+    sources = electron_framework_sources
+    sources += [ "$root_out_dir/$electron_exe" ]
+  }
+  
+  sources += get_target_outputs(":generate_version")
+
+  deps = electron_framework_public_deps
+  deps += [
+    ":electron",
+    ":generate_version",
+    "//chrome/test/chromedriver:chromedriver",
+  ]
+
+  outputs = [
+    "$electron_dist_dir/{{source_file_part}}"
+  ]
+}
+
+action("create_dist") {
+  output = "$electron_dist_dir/$chrome_product_full_name-v$electron_version-$electron_platform-$target_cpu.zip"
+  
+  script = "//electron/script/create-dist.py"
+
+  inputs = get_target_outputs(":electron_dist_resources")
+  inputs += get_target_outputs(":electron_app_dist_resources")
+  inputs += get_target_outputs(":electron_license_dist_resources")
+
+  if (is_win) {
+    inputs += [
+      "$electron_dist_dir/xinput1_3.dll",
+      "$electron_dist_dir/node.dll",
+      "$electron_dist_dir/libEGL.dll",
+      "$electron_dist_dir/libGLESv2.dll",
+      "$electron_dist_dir/d3dcompiler_47.dll",
+    ]
+  } else if (is_linux) {
+    inputs += [
+      "$electron_dist_dir/libnode.so",
+    ]
+  }
+
+  file_inputs = []
+  foreach(input, inputs) {
+    file_inputs += [ rebase_path(input, electron_dist_dir) ]
+  }
+
+  dir_inputs = []
+  if (is_mac) {
+    dir_inputs += [
+      "$electron_exe",
+    ]
+  }
+
+  outputs = [
+    output
+  ]
+
+  deps = [
+    ":electron_dist_resources",
+    ":electron_app_dist_resources",
+    ":electron_license_dist_resources",
+    "app/$current_os:dist_resources",
+    ":chromedriver_zip"
+  ]
+
+  rebase_output = rebase_path(output)
+  rebase_base_dir = rebase_path(electron_dist_dir, root_build_dir)
+  args = [
+    "--base-dir=$rebase_base_dir",
+    "--inputs=$file_inputs",
+    "--dir-inputs=$dir_inputs",
+    "--output=$rebase_output",
+  ]
+}

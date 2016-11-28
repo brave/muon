@@ -11,7 +11,7 @@ declare_args() {
   electron_version_patch = 0
 }
 
-electron_version = "$electron_version_major.$electron_version_minor.$electron_version_build.$electron_version_patch"
+electron_version = "$electron_version_major.$electron_version_minor.$electron_version_build"
 
 if (executable_name == "") {
   executable_name = electron_project_name
