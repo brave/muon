@@ -31,14 +31,15 @@ executable("electron_app") {
   ]
 
   sources = [
+    "//electron/atom/browser/resources/win/atom.rc",
     "//electron/atom/browser/resources/win/resource.h",
-    "$root_gen_dr/electron.rc",
     "//electron/app/resources/$electron_icon_dir/atom.ico",
     "//electron/atom/app/atom_main.cc",
     "//electron/atom/app/atom_main.h",
   ]
 
   deps = [
+    ":electron_exe_version",
     "//build/config/sanitizers:deps",
     "//build/win:default_exe_manifest",
     "//electron/build/node:node_resources",
@@ -107,11 +108,11 @@ executable("electron_app") {
 process_version("electron_exe_version") {
   template_file = chrome_version_rc_template
   extra_args = [
-    "-e", "INTERNAL_NAME=$executable_name_exe",
-    "-e", "ORIGINAL_FILENAME=$electron_exe",
+    "-e", "INTERNAL_NAME=\"${executable_name}_exe\"",
+    "-e", "ORIGINAL_FILENAME=\"$electron_exe\"",
   ]
   sources = []
-  output = "$root_gen_dr/electron.rc",
+  output = "$target_gen_dir/electron_exe.rc"
 }
 
 group("widevine_cdm_adapter") {
