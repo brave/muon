@@ -7,15 +7,11 @@ import shutil
 import sys
 import tarfile
 
-from lib.config import PLATFORM, get_target_arch, s3_config
+from lib.config import PLATFORM, OUT_DIR, SOURCE_ROOT, CHROMIUM_ROOT, DIST_DIR, get_target_arch, s3_config
 from lib.util import execute, safe_mkdir, scoped_cwd, s3put
 
 
-SOURCE_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-DIST_DIR    = os.path.join(SOURCE_ROOT, 'dist')
-NODE_DIR    = os.path.join(SOURCE_ROOT, 'vendor', 'node')
-OUT_DIR     = os.path.join(SOURCE_ROOT, 'out', 'R')
+NODE_DIR  = os.path.join(SOURCE_ROOT, 'vendor', 'node')
 
 HEADERS_SUFFIX = [
   '.h',
@@ -81,7 +77,7 @@ def copy_headers(dist_headers_dir):
                      dist_headers_dir)
 
   # Copy V8 headers from chromium's repository.
-  const src = CHROMIUM_ROOT
+  src = CHROMIUM_ROOT
   for dirpath, _, filenames in os.walk(os.path.join(src, 'v8')):
     for filename in filenames:
       extension = os.path.splitext(filename)[1]
@@ -114,7 +110,7 @@ def upload_node(bucket, access_key, secret_key, version):
           'atom-shell/dist/{0}'.format(version), glob.glob('iojs-*.tar.gz'))
 
   if PLATFORM == 'win32':
-    if get_target_arch() == 'ia32':
+    if get_target_arch() != 'x64':
       node_lib = os.path.join(DIST_DIR, 'node.lib')
       iojs_lib = os.path.join(DIST_DIR, 'win-x86', 'iojs.lib')
     else:

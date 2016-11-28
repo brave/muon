@@ -51,9 +51,9 @@ def check_root():
 
 
 def setup_python_libs():
-  with scoped_cwd(os.path.join(VENDOR_DIR, 'requests')):
-    execute_stdout([sys.executable, 'setup.py', 'build'])
-
+  for lib in ('requests', 'boto'):
+    with scoped_cwd(os.path.join(VENDOR_DIR, lib)):
+      execute_stdout([sys.executable, 'setup.py', 'build'])
 
 def update_node_modules(dirname, env=None):
   if env is None:
