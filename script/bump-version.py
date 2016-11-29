@@ -25,6 +25,7 @@ def main():
   version = '.'.join(versions[:3])
 
   with scoped_cwd(SOURCE_ROOT):
+    update_package_json(version)
     tag_version(version)
 
 
@@ -33,6 +34,21 @@ def increase_version(versions, index):
     versions[i] = '0'
   versions[index] = str(int(versions[index]) + 1)
   return versions
+
+
+def update_package_json(version):
+  package_json = 'package.json'
+  with open(package_json, 'r') as f:
+    lines = f.readlines()
+
+  for i in range(0, len(lines)):
+    line = lines[i];
+    if 'version' in line:
+      lines[i] = '  "version": "{0}",\n'.format(version)
+      break
+
+  with open(package_json, 'w') as f:
+    f.write(''.join(lines))
 
 
 def tag_version(version):
