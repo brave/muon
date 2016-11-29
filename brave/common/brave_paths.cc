@@ -25,9 +25,6 @@ namespace brave {
     *result = base::nix::GetXDGDirectory(env.get(), 
         base::nix::kXdgConfigHomeEnvVar,
         base::nix::kDotConfigDir);
-    if (result->BaseName().value() != base::nix::kDotConfigDir) {
-      return false;
-    }
     return true;
 #else
     return PathService::Get(brightray::DIR_APP_DATA, result);
@@ -42,7 +39,7 @@ namespace brave {
     if (!GetDefaultAppDataDirectory(result)) {
       return false;
     }
-    result->Append(FILE_PATH_LITERAL("brave"));
+    *result = result->Append(FILE_PATH_LITERAL("brave"));
     return true;
 #endif
   }
