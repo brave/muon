@@ -487,6 +487,12 @@ copy("electron_license_dist_resources") {
   ]
 }
 
+if (target_cpu == "x86") {
+  target_arch = "ia32"
+} else {
+  target_arch = target_cpu
+}
+
 chromedriver = "chromedriver"
 if (is_win) {
   chromedriver = "$chromedriver.exe"
@@ -512,7 +518,7 @@ zip("chromedriver_zip") {
   inputs = get_target_outputs(":electron_chromedriver_dist_resources")
   inputs += get_target_outputs(":electron_license_dist_resources")
   base_dir = electron_dist_dir
-  output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_cpu.zip"
+  output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_arch.zip"
   deps = [
     ":electron_chromedriver_dist_resources",
     ":electron_license_dist_resources",
@@ -559,11 +565,6 @@ copy("electron_dist_resources") {
 }
 
 action("create_dist") {
-  if (target_cpu == "x86") {
-    target_arch = "ia32"
-  } else {
-    target_arch = target_cpu
-  }
   output = "$electron_dist_dir/$chrome_product_full_name-v$electron_version-$electron_platform-$target_arch.zip"
 
   script = "//electron/script/create-dist.py"
