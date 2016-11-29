@@ -565,7 +565,7 @@ copy("electron_dist_resources") {
 }
 
 action("create_dist") {
-  output = "$electron_dist_dir/$chrome_product_full_name-v$electron_version-$electron_platform-$target_arch.zip"
+  output = "$electron_dist_dir/$electron_project_name-v$electron_version-$electron_platform-$target_arch.zip"
 
   script = "//electron/script/create-dist.py"
 
