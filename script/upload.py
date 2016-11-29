@@ -14,7 +14,7 @@ from lib.config import PLATFORM, DIST_URL, get_target_arch, get_chromedriver_ver
                        get_env_var, s3_config, get_zip_name, product_name, project_name, \
                        SOURCE_ROOT, DIST_DIR, get_electron_version
 from lib.util import execute, parse_version, scoped_cwd, s3put
-                     
+
 from lib.github import GitHub
 
 
@@ -149,6 +149,7 @@ def create_or_get_release_draft(github, releases, tag, tag_exists):
 
   if tag_exists:
     tag = 'do-not-publish-me'
+
   return create_release_draft(github, tag)
 
 
@@ -168,15 +169,14 @@ def release_electron_checksums(github, release):
 
 
 def upload_electron(github, release, file_path):
-  # Delete the original file before uploading in CI.
+  # Delete the original file before uploading.
   filename = os.path.basename(file_path)
-  if os.environ.has_key('CI'):
-    try:
-      for asset in release['assets']:
-        if asset['name'] == filename:
-          github.repos(ELECTRON_REPO).releases.assets(asset['id']).delete()
-    except Exception:
-      pass
+  try:
+    for asset in release['assets']:
+      if asset['name'] == filename:
+        github.repos(ELECTRON_REPO).releases.assets(asset['id']).delete()
+  except Exception:
+    pass
 
   # Upload the file.
   with open(file_path, 'rb') as f:
