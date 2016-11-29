@@ -4,8 +4,8 @@ import os
 import re
 import sys
 
-from lib.config import SOURCE_ROOT
-from lib.util import execute, get_electron_version, parse_version, scoped_cwd
+from lib.config import SOURCE_ROOT, get_electron_version
+from lib.util import execute, parse_version, scoped_cwd
 
 
 def main():
