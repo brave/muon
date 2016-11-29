@@ -73,10 +73,9 @@ def main():
   # elif PLATFORM == 'win32':
   #   upload_electron(github, release, os.path.join(DIST_DIR, PDB_NAME))
 
-  # Upload chromedriver and mksnapshot for minor version update.
-  if parse_version(args.version)[2] == '0':
-    chromedriver = get_zip_name('chromedriver', get_chromedriver_version())
-    upload_electron(github, release, os.path.join(DIST_DIR, chromedriver))
+  # Upload chromedriver and mksnapshot.
+  chromedriver = get_zip_name('chromedriver', get_chromedriver_version())
+  upload_electron(github, release, os.path.join(DIST_DIR, chromedriver))
     # mksnapshot = get_zip_name('mksnapshot', get_electron_version())
     # upload_electron(github, release, os.path.join(DIST_DIR, mksnapshot))
 
