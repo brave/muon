@@ -21,8 +21,8 @@ namespace brave {
 #if defined(OS_LINUX)
     std::unique_ptr<base::Environment> env(base::Environment::Create());
     if (!env) return false;
-      
-    *result = base::nix::GetXDGDirectory(env.get(), 
+
+    *result = base::nix::GetXDGDirectory(env.get(),
         base::nix::kXdgConfigHomeEnvVar,
         base::nix::kDotConfigDir);
     return true;
