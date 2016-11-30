@@ -110,7 +110,7 @@ std::vector<GURL> BraveConfigurator::UpdateUrl() const {
 }
 
 std::vector<GURL> BraveConfigurator::PingUrl() const {
-  return configurator_impl_.PingUrl();
+  return UpdateUrl();
 }
 
 base::Version BraveConfigurator::GetBrowserVersion() const {
