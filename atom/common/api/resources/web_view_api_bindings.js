@@ -8,6 +8,7 @@ const WebViewInternal = require('webViewInternal').WebViewInternal;
 const TabViewInternal = require('tabViewInternal').TabViewInternal;
 const WebViewImpl = require('webView').WebViewImpl;
 const remote = require('remote')
+const webFrameNatives = requireNative('webFrame')
 const GuestViewInternal = require('guest-view-internal').GuestViewInternal
 
 const asyncMethods = [
@@ -91,6 +92,8 @@ var WEB_VIEW_API_METHODS = [
 
   // Changes the zoom factor of the page.
   'setZoom',
+
+  'executeJavaScript',
 ].concat(asyncMethods).concat(syncMethods)
 
 asyncMethods.forEach((method) => {
@@ -137,6 +140,10 @@ WebViewImpl.prototype.getTabID = function (instanceId, cb) {
   } else {
     cb(this.tabID)
   }
+}
+
+WebViewImpl.prototype.executeJavaScript = function (code) {
+  return webFrameNatives.executeJavaScript(code)
 }
 
 const attachWindow = WebViewImpl.prototype.attachWindow$
