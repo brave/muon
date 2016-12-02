@@ -468,9 +468,16 @@ void WebContents::AddNewContents(content::WebContents* source,
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
 
+  auto source_api_contents = CreateFrom(isolate(), source);
   auto new_api_contents = CreateFrom(isolate(), new_contents);
 
+  if (source_api_contents->GetType() == BACKGROUND_PAGE) {
+    user_gesture = true;
+  }
+
   std::unique_ptr<base::DictionaryValue> options(new base::DictionaryValue);
+  options->SetString("openerUrl", source_api_contents->GetURL().spec());
+  options->SetInteger("openerTabId", source_api_contents->GetID());
   options->SetBoolean("userGesture", user_gesture);
 
   auto url_params = new_api_contents->delayed_load_url_params_.get();

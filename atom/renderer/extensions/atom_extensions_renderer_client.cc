@@ -39,31 +39,6 @@ bool IsStandaloneExtensionProcess() {
       extensions::switches::kExtensionProcess);
 }
 
-void DidCreateDocumentElement(content::RenderFrame* render_frame) {
-  v8::Isolate* isolate = blink::mainThreadIsolate();
-  v8::HandleScope handle_scope(isolate);
-
-  v8::Local<v8::Context> context =
-    render_frame->GetWebFrame()->mainWorldScriptContext();
-  v8::Context::Scope context_scope(context);
-
-  auto script_context =
-      extensions::ScriptContextSet::GetContextByV8Context(context);
-
-  if (script_context) {
-    extensions::ModuleSystem::NativesEnabledScope
-      natives_enabled(script_context->module_system());
-    script_context->module_system()
-        ->CallModuleMethod("windowDialogs", "didCreateDocumentElement");
-  }
-
-  // reschedule the callback because a new render frame
-  // is not always created when navigating
-  extensions::ExtensionFrameHelper::Get(render_frame)
-      ->ScheduleAtDocumentStart(base::Bind(DidCreateDocumentElement,
-                                           render_frame));
-}
-
 }  // namespace
 
 namespace extensions {
@@ -127,9 +102,6 @@ void AtomExtensionsRendererClient::RenderFrameCreated(
   new extensions::ExtensionFrameHelper(render_frame,
                                        extension_dispatcher_.get());
   extension_dispatcher_->OnRenderFrameCreated(render_frame);
-  ExtensionFrameHelper::Get(render_frame)
-      ->ScheduleAtDocumentStart(base::Bind(DidCreateDocumentElement,
-                                           render_frame));
 }
 
 void AtomExtensionsRendererClient::RenderViewCreated(

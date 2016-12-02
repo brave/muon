@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "atom/browser/atom_browser_context.h"
-#include "atom/browser/atom_javascript_dialog_manager.h"
 #include "atom/browser/atom_security_state_model_client.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/native_window.h"
@@ -19,6 +18,7 @@
 #include "atom/common/atom_constants.h"
 #include "base/files/file_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_javascript_dialog_manager.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
@@ -427,10 +427,7 @@ bool CommonWebContentsDelegate::CanOverscrollContent() const {
 content::JavaScriptDialogManager*
 CommonWebContentsDelegate::GetJavaScriptDialogManager(
     content::WebContents* source) {
-  if (!dialog_manager_)
-    dialog_manager_.reset(new AtomJavaScriptDialogManager);
-
-  return dialog_manager_.get();
+  return brave::BraveJavaScriptDialogManager::GetInstance();
 }
 
 content::ColorChooser* CommonWebContentsDelegate::OpenColorChooser(
