@@ -35,7 +35,7 @@ EventEmitter2.prototype.off = function off(event, fn) {
 
 EventEmitter2.prototype.emit = function(event) {
   this._callbacks = this._callbacks || {};
-  var args = [].slice.call(arguments, 1), callbacks = this._callbacks['$' + event];
+  var args = $Array.slice(arguments, 1), callbacks = this._callbacks['$' + event];
 
   if (callbacks) {
     callbacks = callbacks.slice(0);

@@ -4,25 +4,24 @@ var ipc = atom.ipc
 
 var ipcRenderer = atom.v8.getHiddenValue('ipc')
 if (!ipcRenderer) {
-  var slice = [].slice
   ipcRenderer = new EventEmitter
 
   ipcRenderer.send = function () {
     var args
-    args = 1 <= arguments.length ? slice.call(arguments, 0) : []
-    return ipc.send('ipc-message', slice.call(args))
+    args = 1 <= arguments.length ? $Array.slice(arguments, 0) : []
+    return ipc.send('ipc-message', $Array.slice(args))
   }
 
   ipcRenderer.sendSync = function () {
     var args
-    args = 1 <= arguments.length ? slice.call(arguments, 0) : []
-    return JSON.parse(ipc.sendSync('ipc-message-sync', slice.call(args)))
+    args = 1 <= arguments.length ? $Array.slice(arguments, 0) : []
+    return $JSON.parse(ipc.sendSync('ipc-message-sync', $Array.slice(args)))
   }
 
   ipcRenderer.sendToHost = function () {
     var args
-    args = 1 <= arguments.length ? slice.call(arguments, 0) : []
-    return ipc.send('ipc-message-host', slice.call(args))
+    args = 1 <= arguments.length ? $Array.slice(arguments, 0) : []
+    return ipc.send('ipc-message-host', $Array.slice(args))
   }
 
   ipcRenderer.emit = function () {
