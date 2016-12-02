@@ -17,8 +17,6 @@
       <include name="IDR_ATOM_EVENT_EMITTER_JS" file="common\api\resources\event_emitter.js" type="BINDATA" />
       <include name="IDR_ATOM_IPC_INTERNAL_JS" file="common\api\resources\ipc_utils.js" type="BINDATA" />
 
-      <include name="IDR_ATOM_IPC_WINDOW_DIALOGS_JS" file="common\api\resources\ipc_bindings.js" type="BINDATA" />
-
       <include name="IDR_ATOM_PRIVACY_BINDINGS_JS" file="common\api\resources\privacy_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_TABS_BINDINGS_JS" file="common\api\resources\tabs_bindings.js" type="BINDATA" />

@@ -25,6 +25,8 @@ source_set("browser") {
     "brave_browser_context.cc",
     "brave_content_browser_client.h",
     "brave_content_browser_client.cc",
+    "brave_javascript_dialog_manager.h",
+    "brave_javascript_dialog_manager.cc",
     "brave_permission_manager.h",
     "brave_permission_manager.cc",
     "renderer_preferences_helper.h",
