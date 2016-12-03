@@ -20,7 +20,7 @@ class JavaScriptDialogExtraData {
   JavaScriptDialogExtraData();
 
   // The number of dialogs that the webContents has opened
-  bool dialog_count_;
+  int dialog_count_;
 
   // True if the user has decided to block future JavaScript dialogs.
   bool suppress_javascript_messages_;
