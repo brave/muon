@@ -111,7 +111,6 @@ void AtomBrowserClient::OverrideWebkitPrefs(
   prefs->allow_universal_access_from_file_urls = false;
   prefs->allow_file_access_from_file_urls = false;
   prefs->experimental_webgl_enabled = true;
-  prefs->allow_displaying_insecure_content = false;
   prefs->allow_running_insecure_content = false;
 
   // Custom preferences of guest page.

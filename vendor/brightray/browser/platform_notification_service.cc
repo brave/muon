@@ -72,6 +72,7 @@ blink::mojom::PermissionStatus PlatformNotificationService::CheckPermissionOnIOT
 
 void PlatformNotificationService::DisplayNotification(
     content::BrowserContext* browser_context,
+    const std::string& notification_id,
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
     const content::NotificationResources& notification_resources,
@@ -89,7 +90,7 @@ void PlatformNotificationService::DisplayNotification(
 
 void PlatformNotificationService::DisplayPersistentNotification(
     content::BrowserContext* browser_context,
-    int64_t persistent_notification_id,
+    const std::string& notification_id,
     const GURL& origin,
     const GURL& service_worker_origin,
     const content::PlatformNotificationData& notification_data,
@@ -98,7 +99,7 @@ void PlatformNotificationService::DisplayPersistentNotification(
 
 void PlatformNotificationService::ClosePersistentNotification(
     content::BrowserContext* browser_context,
-    int64_t persistent_notification_id) {
+    const std::string& notification_id) {
 }
 
 bool PlatformNotificationService::GetDisplayedPersistentNotifications(

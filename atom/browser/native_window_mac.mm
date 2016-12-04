@@ -194,7 +194,7 @@ bool ScopedDisableResize::disable_resize_ = false;
 - (void)windowWillEnterFullScreen:(NSNotification*)notification {
   // Hide the native toolbar before entering fullscreen, so there is no visual
   // artifacts.
-  if (base::mac::IsOSYosemiteOrLater() &&
+  if (base::mac::IsAtLeastOS10_10() &&
       shell_->title_bar_style() == atom::NativeWindowMac::HIDDEN_INSET) {
     NSWindow* window = shell_->GetNativeWindow();
     [window setToolbar:nil];
@@ -209,7 +209,7 @@ bool ScopedDisableResize::disable_resize_ = false;
   // have to set one, because title bar is visible here.
   NSWindow* window = shell_->GetNativeWindow();
   if (!shell_->has_frame() &&
-      base::mac::IsOSYosemiteOrLater() &&
+      base::mac::IsAtLeastOS10_10() &&
       // FIXME(zcbenz): Showing titlebar for hiddenInset window is weird under
       // fullscreen mode.
       shell_->title_bar_style() != atom::NativeWindowMac::HIDDEN_INSET) {
@@ -218,7 +218,7 @@ bool ScopedDisableResize::disable_resize_ = false;
 
   // Restore the native toolbar immediately after entering fullscreen, if we do
   // this before leaving fullscreen, traffic light buttons will be jumping.
-  if (base::mac::IsOSYosemiteOrLater() &&
+  if (base::mac::IsAtLeastOS10_10() &&
       shell_->title_bar_style() == atom::NativeWindowMac::HIDDEN_INSET) {
     base::scoped_nsobject<NSToolbar> toolbar(
         [[NSToolbar alloc] initWithIdentifier:@"titlebarStylingToolbar"]);
@@ -235,13 +235,13 @@ bool ScopedDisableResize::disable_resize_ = false;
   // Restore the titlebar visibility.
   NSWindow* window = shell_->GetNativeWindow();
   if (!shell_->has_frame() &&
-      base::mac::IsOSYosemiteOrLater() &&
+      base::mac::IsAtLeastOS10_10() &&
       shell_->title_bar_style() != atom::NativeWindowMac::HIDDEN_INSET) {
     [window setTitleVisibility:NSWindowTitleHidden];
   }
 
   // Turn off the style for toolbar.
-  if (base::mac::IsOSYosemiteOrLater() &&
+  if (base::mac::IsAtLeastOS10_10() &&
       shell_->title_bar_style() == atom::NativeWindowMac::HIDDEN_INSET) {
     shell_->SetStyleMask(false, NSFullSizeContentViewWindowMask);
   }
@@ -617,7 +617,7 @@ NativeWindowMac::NativeWindowMac(
     [window_ setDisableKeyOrMainWindow:YES];
 
   if (!has_frame()) {
-    if (base::mac::IsOSYosemiteOrLater()) {
+    if (base::mac::IsAtLeastOS10_10()) {
       // Don't show title bar.
       [window_ setTitleVisibility:NSWindowTitleHidden];
     }
@@ -630,7 +630,7 @@ NativeWindowMac::NativeWindowMac(
 
   // Hide the title bar.
   if (title_bar_style_ == HIDDEN_INSET) {
-    if (base::mac::IsOSYosemiteOrLater()) {
+    if (base::mac::IsAtLeastOS10_10()) {
       [window_ setTitlebarAppearsTransparent:YES];
       base::scoped_nsobject<NSToolbar> toolbar(
           [[NSToolbar alloc] initWithIdentifier:@"titlebarStylingToolbar"]);
@@ -964,7 +964,7 @@ void NativeWindowMac::Center() {
 void NativeWindowMac::SetTitle(const std::string& title) {
   // For macOS <= 10.9, the setTitleVisibility API is not available, we have
   // to avoid calling setTitle for frameless window.
-  if (!base::mac::IsOSYosemiteOrLater() && !has_frame())
+  if (!base::mac::IsAtLeastOS10_10() && !has_frame())
     return;
 
   [window_ setTitle:base::SysUTF8ToNSString(title)];
@@ -1248,7 +1248,7 @@ void NativeWindowMac::InstallView() {
     [[window_ standardWindowButton:NSWindowFullScreenButton] setHidden:YES];
 
     if (title_bar_style_ != NORMAL) {
-      if (base::mac::IsOSMavericks()) {
+      if (base::mac::IsOS10_9()) {
         ShowWindowButton(NSWindowZoomButton);
         ShowWindowButton(NSWindowMiniaturizeButton);
         ShowWindowButton(NSWindowCloseButton);

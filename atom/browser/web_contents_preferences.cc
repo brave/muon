@@ -157,8 +157,6 @@ void WebContentsPreferences::OverrideWebkitPrefs(
     prefs->allow_file_access_from_file_urls = b;
   if (self->web_preferences_.GetBoolean("allowUniversalAccessFromFileUrls", &b))
     prefs->allow_universal_access_from_file_urls = b;
-  if (self->web_preferences_.GetBoolean("allowDisplayingInsecureContent", &b))
-    prefs->allow_displaying_insecure_content = b;
   if (self->web_preferences_.GetBoolean("allowRunningInsecureContent", &b))
     prefs->allow_running_insecure_content = b;
   if (self->web_preferences_.GetBoolean("hyperlinkAuditingEnabled", &b))

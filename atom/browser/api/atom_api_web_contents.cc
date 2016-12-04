@@ -467,12 +467,14 @@ bool WebContents::ShouldCreateWebContents(
 }
 
 void WebContents::WebContentsCreated(content::WebContents* source_contents,
+                                int opener_render_process_id,
                                 int opener_render_frame_id,
                                 const std::string& frame_name,
                                 const GURL& target_url,
                                 content::WebContents* new_contents) {
   if (guest_delegate_) {
     guest_delegate_->WebContentsCreated(source_contents,
+                                        opener_render_process_id,
                                         opener_render_frame_id,
                                         frame_name,
                                         target_url,
@@ -865,7 +867,6 @@ void WebContents::DidGetResourceResponseStart(
 }
 
 void WebContents::DidGetRedirectForResourceRequest(
-    content::RenderFrameHost* render_frame_host,
     const content::ResourceRedirectDetails& details) {
   Emit("did-get-redirect-request",
        details.url,
@@ -915,7 +916,7 @@ void WebContents::DidFinishNavigation(
 void WebContents::SecurityStyleChanged(
     content::SecurityStyle security_style,
     const content::SecurityStyleExplanations& explanations) {
-    if (explanations.displayed_insecure_content &&
+    if (explanations.displayed_mixed_content &&
         security_style == content::SECURITY_STYLE_UNAUTHENTICATED) {
       Emit("security-style-changed", "passive-mixed-content");
     } else {
@@ -1379,7 +1380,7 @@ void WebContents::InspectServiceWorker() {
 
   for (const auto& agent_host : content::DevToolsAgentHost::GetOrCreateAll()) {
     if (agent_host->GetType() ==
-        content::DevToolsAgentHost::TYPE_SERVICE_WORKER) {
+        content::DevToolsAgentHost::kTypeServiceWorker) {
       OpenDevTools(nullptr);
       managed_web_contents()->AttachTo(agent_host);
       break;
@@ -2070,7 +2071,7 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   bool was_blocked = false;
   AddNewContents(web_contents(),
                     tab,
-                    active ? NEW_FOREGROUND_TAB : NEW_BACKGROUND_TAB,
+                    active ? WindowOpenDisposition::NEW_FOREGROUND_TAB : WindowOpenDisposition::NEW_BACKGROUND_TAB,
                     gfx::Rect(),
                     user_gesture,
                     &was_blocked);
