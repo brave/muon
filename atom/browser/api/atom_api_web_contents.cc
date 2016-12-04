@@ -400,7 +400,8 @@ WebContents::WebContents(v8::Isolate* isolate,
   if (options.Get("delayedLoadUrl", &delayed_load_url)) {
     delayed_open_url_params_.reset(
         new content::OpenURLParams(
-          GURL(delayed_load_url), content::Referrer(), CURRENT_TAB,
+          GURL(delayed_load_url), content::Referrer(),
+          WindowOpenDisposition::CURRENT_TAB,
           ui::PAGE_TRANSITION_AUTO_TOPLEVEL, false));
   }
 
@@ -493,6 +494,7 @@ bool WebContents::ShouldCreateWebContents(
 }
 
 void WebContents::WebContentsCreated(content::WebContents* source_contents,
+                                int opener_render_process_id,
                                 int opener_render_frame_id,
                                 const std::string& frame_name,
                                 const GURL& target_url,
@@ -503,6 +505,7 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
 
   if (guest_delegate_) {
     guest_delegate_->WebContentsCreated(source_contents,
+                                        opener_render_process_id,
                                         opener_render_frame_id,
                                         frame_name,
                                         translated_url,
@@ -552,7 +555,8 @@ void WebContents::AddNewContents(content::WebContents* source,
         guest->guest_instance_id());
   }
 
-  if (disposition == NEW_POPUP || disposition == NEW_WINDOW) {
+  if (disposition == WindowOpenDisposition::NEW_POPUP ||
+      disposition == WindowOpenDisposition::NEW_WINDOW) {
     std::unique_ptr<base::DictionaryValue> window_options(
                                                     new base::DictionaryValue);
     window_options->SetInteger("height", initial_rect.height());
@@ -628,7 +632,7 @@ content::WebContents* WebContents::OpenURLFromTab(
     ProtocolHandlerRegistryFactory::GetForBrowserContext(GetBrowserContext());
   GURL translated_url = registry->TranslateUrl(params.url);
 
-  if (params.disposition != CURRENT_TAB) {
+  if (params.disposition != WindowOpenDisposition::CURRENT_TAB) {
     Emit("new-window", translated_url, "", params.disposition);
     return nullptr;
   }
@@ -933,7 +937,6 @@ void WebContents::DidGetResourceResponseStart(
 }
 
 void WebContents::DidGetRedirectForResourceRequest(
-    content::RenderFrameHost* render_frame_host,
     const content::ResourceRedirectDetails& details) {
   Emit("did-get-redirect-request",
        details.url,
@@ -983,7 +986,7 @@ void WebContents::DidFinishNavigation(
 void WebContents::SecurityStyleChanged(
     content::SecurityStyle security_style,
     const content::SecurityStyleExplanations& explanations) {
-    if (explanations.displayed_insecure_content &&
+    if (explanations.displayed_mixed_content &&
         security_style == content::SECURITY_STYLE_UNAUTHENTICATED) {
       Emit("security-style-changed", "passive-mixed-content");
     } else {
@@ -1464,7 +1467,7 @@ void WebContents::InspectServiceWorker() {
 
   for (const auto& agent_host : content::DevToolsAgentHost::GetOrCreateAll()) {
     if (agent_host->GetType() ==
-        content::DevToolsAgentHost::TYPE_SERVICE_WORKER) {
+        content::DevToolsAgentHost::kTypeServiceWorker) {
       OpenDevTools(nullptr);
       managed_web_contents()->AttachTo(agent_host);
       break;
@@ -2117,6 +2120,7 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
   WebContentsCreated(web_contents(),
                             -1,
+                            -1,
                             "",
                             GURL(src),
                             tab);
@@ -2124,7 +2128,7 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   bool was_blocked = false;
   AddNewContents(web_contents(),
                     tab,
-                    NEW_FOREGROUND_TAB,
+                    WindowOpenDisposition::NEW_FOREGROUND_TAB,
                     gfx::Rect(),
                     true,
                     &was_blocked);

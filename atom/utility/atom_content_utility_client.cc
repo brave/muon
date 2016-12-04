@@ -38,19 +38,14 @@ namespace atom {
 namespace {
 
 void CreateProxyResolverFactory(
-    mojo::InterfaceRequest<net::interfaces::ProxyResolverFactory> request) {
-  // MojoProxyResolverFactoryImpl is strongly bound to the Mojo message pipe it
-  // is connected to. When that message pipe is closed, either explicitly on the
-  // other end (in the browser process), or by a connection error, this object
-  // will be destroyed.
-  new net::MojoProxyResolverFactoryImpl(std::move(request));
+  net::interfaces::ProxyResolverFactoryRequest request) {
+    mojo::MakeStrongBinding(base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
+                            std::move(request));
 }
 
 class ResourceUsageReporterImpl : public mojom::ResourceUsageReporter {
  public:
-  explicit ResourceUsageReporterImpl(
-      mojo::InterfaceRequest<mojom::ResourceUsageReporter> req)
-      : binding_(this, std::move(req)) {}
+  ResourceUsageReporterImpl() {}
   ~ResourceUsageReporterImpl() override {}
 
  private:
@@ -65,12 +60,12 @@ class ResourceUsageReporterImpl : public mojom::ResourceUsageReporter {
     callback.Run(std::move(data));
   }
 
-  mojo::StrongBinding<mojom::ResourceUsageReporter> binding_;
 };
 
 void CreateResourceUsageReporter(
     mojo::InterfaceRequest<mojom::ResourceUsageReporter> request) {
-  new ResourceUsageReporterImpl(std::move(request));
+  mojo::MakeStrongBinding(base::MakeUnique<ResourceUsageReporterImpl>(),
+                          std::move(request));
 }
 
 }  // namespace

@@ -512,8 +512,8 @@ BraveContentBrowserClient::GetGpuChannelEstablishFactory() {
   return nullptr;
 }
 
-void BraveContentBrowserClient::RegisterInProcessMojoApplications(
-    StaticMojoApplicationMap* apps) {
+void BraveContentBrowserClient::RegisterInProcessServices(
+    StaticServiceMap* apps) {
 #if (ENABLE_MOJO_MEDIA_IN_BROWSER_PROCESS)
   content::MojoApplicationInfo app_info;
   app_info.application_factory = base::Bind(&media::CreateMojoMediaApplication);
@@ -521,8 +521,8 @@ void BraveContentBrowserClient::RegisterInProcessMojoApplications(
 #endif
 }
 
-void BraveContentBrowserClient::RegisterOutOfProcessMojoApplications(
-      OutOfProcessMojoApplicationMap* apps) {
+void BraveContentBrowserClient::RegisterOutOfProcessServices(
+      OutOfProcessServiceMap* apps) {
 #if defined(ENABLE_MOJO_MEDIA_IN_UTILITY_PROCESS)
   apps->insert(std::make_pair("mojo:media",
                               base::ASCIIToUTF16("Media App")));

@@ -10,8 +10,10 @@
 #include "atom/browser/native_window.h"
 #include "atom/browser/window_list.h"
 #include "base/files/file_util.h"
+#include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
+#include "base/trace_event/trace_event_impl.h"
 #include "brightray/browser/brightray_paths.h"
 
 namespace atom {

@@ -13,7 +13,7 @@
 #include "base/feature_list.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/utf_string_conversions.h"
-#include "components/devtools_http_handler/devtools_http_handler.h"
+#include "content/browser/devtools/devtools_http_handler.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/content_switches.h"
 #include "media/base/media_resources.h"
@@ -220,7 +220,7 @@ void BrowserMainParts::PreMainMessageLoopRun() {
   // --remote-debugging-port
   auto command_line = base::CommandLine::ForCurrentProcess();
   if (command_line->HasSwitch(switches::kRemoteDebuggingPort)) {
-    devtools_http_handler_.reset(DevToolsManagerDelegate::CreateHttpHandler());
+    // DevToolsManagerDelegate::CreateHttpHandler();
   }
 }
 

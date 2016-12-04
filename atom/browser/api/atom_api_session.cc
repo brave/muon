@@ -233,7 +233,7 @@ class ResolveProxyHelper {
     // Start the request.
     int result = proxy_service->ResolveProxy(
         url, "GET", &proxy_info_, completion_callback,
-        &pac_req_, nullptr, net::BoundNetLog());
+        &pac_req_, nullptr, net::NetLogWithSource());
 
     // Completed synchronously.
     if (result != net::ERR_IO_PENDING)
@@ -310,7 +310,7 @@ void SetProxyInIO(net::URLRequestContextGetter* getter,
       new net::ProxyConfigServiceFixed(config)));
   // Refetches and applies the new pac script if provided.
   proxy_service->ForceReloadProxyConfig();
-  RunCallbackInUI(callback);
+  BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, base::Bind(&base::DoNothing));
 }
 
 void SetCertVerifyProcInIO(
@@ -330,7 +330,8 @@ void ClearHostResolverCacheInIO(
     cache->clear();
     DCHECK_EQ(0u, cache->size());
     if (!callback.is_null())
-      RunCallbackInUI(callback);
+      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
+                              base::Bind(&base::DoNothing));
   }
 }
 

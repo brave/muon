@@ -54,6 +54,7 @@
 #include "extensions/common/features/feature.h"
 #include "extensions/common/features/feature_provider.h"
 #include "extensions/common/manifest_handlers/incognito_info.h"
+#include "extensions/shell/browser/delegates/shell_kiosk_delegate.h"
 #include "ui/base/resource/resource_bundle.h"
 
 // URLRequestResourceBundleJob
@@ -487,6 +488,10 @@ ExtensionWebContentsObserver*
 AtomExtensionsBrowserClient::GetExtensionWebContentsObserver(
     content::WebContents* web_contents) {
   return AtomExtensionWebContentsObserver::FromWebContents(web_contents);;
+}
+
+KioskDelegate* AtomExtensionsBrowserClient::GetKioskDelegate() {
+  return nullptr;
 }
 
 void AtomExtensionsBrowserClient::CleanUpWebView(

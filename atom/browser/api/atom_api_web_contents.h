@@ -53,11 +53,16 @@ struct Converter<WindowOpenDisposition> {
                                    WindowOpenDisposition val) {
     std::string disposition = "other";
     switch (val) {
-      case CURRENT_TAB: disposition = "default"; break;
-      case NEW_FOREGROUND_TAB: disposition = "foreground-tab"; break;
-      case NEW_BACKGROUND_TAB: disposition = "background-tab"; break;
-      case NEW_POPUP: disposition = "new-popup"; break;
-      case NEW_WINDOW: disposition = "new-window"; break;
+      case WindowOpenDisposition::CURRENT_TAB:
+        disposition = "default"; break;
+      case WindowOpenDisposition::NEW_FOREGROUND_TAB:
+        disposition = "foreground-tab"; break;
+      case WindowOpenDisposition::NEW_BACKGROUND_TAB:
+        disposition = "background-tab"; break;
+      case WindowOpenDisposition::NEW_POPUP:
+        disposition = "new-popup"; break;
+      case WindowOpenDisposition::NEW_WINDOW:
+        disposition = "new-window"; break;
       default: disposition = "other"; break;
     }
     return mate::ConvertToV8(isolate, disposition);
@@ -289,6 +294,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
       const std::string& partition_id,
       content::SessionStorageNamespace* session_storage_namespace) override;
   void WebContentsCreated(content::WebContents* source_contents,
+                          int opener_render_process_id,
                           int opener_render_frame_id,
                           const std::string& frame_name,
                           const GURL& target_url,
@@ -370,7 +376,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void DidGetResourceResponseStart(
       const content::ResourceRequestDetails& details) override;
   void DidGetRedirectForResourceRequest(
-      content::RenderFrameHost* render_frame_host,
       const content::ResourceRedirectDetails& details) override;
   void DidStartNavigation(
       content::NavigationHandle* navigation_handle) override;

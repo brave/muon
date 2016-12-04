@@ -55,6 +55,7 @@ bool TabViewGuest::CanRunInDetachedState() const {
 }
 
 void TabViewGuest::WebContentsCreated(WebContents* source_contents,
+                                      int opener_render_process_id,
                                       int opener_render_frame_id,
                                       const std::string& frame_name,
                                       const GURL& target_url,
@@ -177,7 +178,8 @@ void TabViewGuest::DidAttachToEmbedder() {
       const NewWindowInfo& new_window_info = it->second;
       if (new_window_info.changed || !web_contents()->HasOpener()) {
         content::OpenURLParams params(
-          new_window_info.url, content::Referrer(), CURRENT_TAB,
+          new_window_info.url, content::Referrer(),
+          WindowOpenDisposition::CURRENT_TAB,
           ui::PAGE_TRANSITION_LINK, false);
         api_web_contents_->OpenURLFromTab(web_contents(), params);
       }

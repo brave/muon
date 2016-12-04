@@ -4,11 +4,10 @@
 
 #include "atom/browser/atom_security_state_model_client.h"
 
-#include "content/public/browser/cert_store.h"
 #include "content/public/browser/navigation_entry.h"
+#include "content/public/browser/ssl_status.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/origin_util.h"
-#include "content/public/common/ssl_status.h"
 #include "net/cert/x509_certificate.h"
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(atom::AtomSecurityStateModelClient);
@@ -27,7 +26,7 @@ SecurityStateModel::SecurityLevel GetSecurityLevelForSecurityStyle(
     case content::SECURITY_STYLE_UNAUTHENTICATED:
       return SecurityStateModel::NONE;
     case content::SECURITY_STYLE_AUTHENTICATION_BROKEN:
-      return SecurityStateModel::SECURITY_ERROR;
+      return SecurityStateModel::DANGEROUS;
     case content::SECURITY_STYLE_WARNING:
       return SecurityStateModel::SECURITY_WARNING;
     case content::SECURITY_STYLE_AUTHENTICATED:
@@ -48,19 +47,19 @@ AtomSecurityStateModelClient::AtomSecurityStateModelClient(
 AtomSecurityStateModelClient::~AtomSecurityStateModelClient() {
 }
 
-const SecurityStateModel::SecurityInfo&
-AtomSecurityStateModelClient::GetSecurityInfo() const {
-  return security_state_model_->GetSecurityInfo();
+void AtomSecurityStateModelClient::GetSecurityInfo(
+  SecurityStateModel::SecurityInfo* result) const {
+  security_state_model_->GetSecurityInfo(result);
 }
 
 bool AtomSecurityStateModelClient::RetrieveCert(
     scoped_refptr<net::X509Certificate>* cert) {
   content::NavigationEntry* entry =
       web_contents_->GetController().GetVisibleEntry();
-  if (!entry)
+  if (!entry || !entry->GetSSL().certificate)
     return false;
-  return content::CertStore::GetInstance()->RetrieveCert(
-      entry->GetSSL().cert_id, cert);
+  *cert = entry->GetSSL().certificate;
+  return true;
 }
 
 bool AtomSecurityStateModelClient::UsedPolicyInstalledCertificate() {
@@ -86,7 +85,7 @@ void AtomSecurityStateModelClient::GetVisibleSecurityState(
   const content::SSLStatus& ssl = entry->GetSSL();
   state->initial_security_level =
       GetSecurityLevelForSecurityStyle(ssl.security_style);
-  state->cert_id = ssl.cert_id;
+  state->certificate = ssl.certificate;
   state->cert_status = ssl.cert_status;
   state->connection_status = ssl.connection_status;
   state->security_bits = ssl.security_bits;

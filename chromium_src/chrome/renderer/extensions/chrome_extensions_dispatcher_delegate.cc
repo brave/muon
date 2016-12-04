@@ -19,7 +19,6 @@
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/crash_keys.h"
 #include "chrome/grit/renderer_resources.h"  // NOLINT: This file is generated
-#include "chrome/renderer/extensions/tabs_custom_bindings.h"
 #include "content/public/common/bindings_policy.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_view.h"
@@ -148,10 +147,6 @@ void ChromeExtensionsDispatcherDelegate::RegisterNativeHandlers(
       "webFrame",
       std::unique_ptr<NativeHandler>(
           new brave::WebFrameBindings(context)));
-  module_system->RegisterNativeHandler(
-      "tabs",
-      std::unique_ptr<NativeHandler>(
-          new extensions::TabsCustomBindings(context)));
 
   // The following are native handlers that are defined in //extensions, but
   // are only used for APIs defined in Chrome.

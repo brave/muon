@@ -15,18 +15,18 @@
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "common/content_client.h"
-#include "components/devtools_discovery/basic_target_descriptor.h"
-#include "components/devtools_discovery/devtools_discovery_manager.h"
-#include "components/devtools_http_handler/devtools_http_handler.h"
+#include "content/browser/devtools/devtools_http_handler.h"
 #include "content/shell/grit/shell_resources.h"
 #include "content/public/browser/devtools_agent_host.h"
 #include "content/public/browser/devtools_frontend_host.h"
+#include "content/public/browser/devtools_socket_factory.h"
 #include "content/public/browser/favicon_status.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/common/user_agent.h"
 #include "net/base/net_errors.h"
+#include "net/log/net_log_source.h"
 #include "net/socket/tcp_server_socket.h"
 #include "net/socket/stream_socket.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -37,17 +37,27 @@ namespace brightray {
 namespace {
 
 class TCPServerSocketFactory
-    : public devtools_http_handler::DevToolsHttpHandler::ServerSocketFactory {
+    : public content::DevToolsSocketFactory {
  public:
   TCPServerSocketFactory(const std::string& address, int port)
       : address_(address), port_(port) {
   }
 
  private:
-  // content::DevToolsHttpHandler::ServerSocketFactory.
+  // content::DevToolsSocketFactory.
   std::unique_ptr<net::ServerSocket> CreateForHttpServer() override {
     std::unique_ptr<net::ServerSocket> socket(
-        new net::TCPServerSocket(nullptr, net::NetLog::Source()));
+        new net::TCPServerSocket(nullptr, net::NetLogSource()));
+    if (socket->ListenWithAddressAndPort(address_, port_, 10) != net::OK)
+      return std::unique_ptr<net::ServerSocket>();
+
+    return socket;
+  }
+
+  std::unique_ptr<net::ServerSocket> CreateForTethering(
+    std::string* out_name) override {
+    std::unique_ptr<net::ServerSocket> socket(
+        new net::TCPServerSocket(nullptr, net::NetLogSource()));
     if (socket->ListenWithAddressAndPort(address_, port_, 10) != net::OK)
       return std::unique_ptr<net::ServerSocket>();
 
@@ -60,7 +70,7 @@ class TCPServerSocketFactory
   DISALLOW_COPY_AND_ASSIGN(TCPServerSocketFactory);
 };
 
-std::unique_ptr<devtools_http_handler::DevToolsHttpHandler::ServerSocketFactory>
+std::unique_ptr<content::DevToolsSocketFactory>
 CreateSocketFactory() {
   auto& command_line = *base::CommandLine::ForCurrentProcess();
   // See if the user specified a port on the command line (useful for
@@ -77,82 +87,16 @@ CreateSocketFactory() {
       DLOG(WARNING) << "Invalid http debugger port number " << temp_port;
     }
   }
-  return std::unique_ptr<
-      devtools_http_handler::DevToolsHttpHandler::ServerSocketFactory>(
+  return std::unique_ptr<content::DevToolsSocketFactory>(
           new TCPServerSocketFactory("127.0.0.1", port));
-}
-
-
-// DevToolsDelegate --------------------------------------------------------
-
-class DevToolsDelegate :
-    public devtools_http_handler::DevToolsHttpHandlerDelegate {
- public:
-  DevToolsDelegate();
-  ~DevToolsDelegate() override;
-
-  // devtools_http_handler::DevToolsHttpHandlerDelegate.
-  std::string GetDiscoveryPageHTML() override;
-  std::string GetFrontendResource(const std::string& path) override;
-  std::string GetPageThumbnailData(const GURL& url) override;
-  content::DevToolsExternalAgentProxyDelegate* HandleWebSocketConnection(
-      const std::string& path) override;
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(DevToolsDelegate);
-};
-
-DevToolsDelegate::DevToolsDelegate() {
-}
-
-DevToolsDelegate::~DevToolsDelegate() {
-}
-
-std::string DevToolsDelegate::GetDiscoveryPageHTML() {
-  return ResourceBundle::GetSharedInstance().GetRawDataResource(
-      IDR_CONTENT_SHELL_DEVTOOLS_DISCOVERY_PAGE).as_string();
-}
-
-
-std::string DevToolsDelegate::GetFrontendResource(
-  const std::string& path) {
-  return content::DevToolsFrontendHost::GetFrontendResource(path).as_string();
-}
-
-std::string DevToolsDelegate::GetPageThumbnailData(const GURL& url) {
-  return std::string();
-}
-
-content::DevToolsExternalAgentProxyDelegate*
-DevToolsDelegate::HandleWebSocketConnection(const std::string& path) {
-  return nullptr;
 }
 
 }  // namespace
 
 // DevToolsManagerDelegate ---------------------------------------------------
 
-// static
-devtools_http_handler::DevToolsHttpHandler*
-DevToolsManagerDelegate::CreateHttpHandler() {
-  return new devtools_http_handler::DevToolsHttpHandler(
-      CreateSocketFactory(),
-      std::string(),
-      new DevToolsDelegate,
-      base::FilePath(),
-      base::FilePath(),
-      std::string(),
-      GetBrightrayUserAgent());
-}
-
 DevToolsManagerDelegate::DevToolsManagerDelegate()
     : handler_(new DevToolsNetworkProtocolHandler) {
-  // NB(zcbenz): This call does nothing, the only purpose is to make sure the
-  // devtools_discovery module is linked into the final executable on Linux.
-  // Though it is possible to achieve this by modifying the gyp settings, it
-  // would greatly increase gyp file's complexity, so I chose to instead do
-  // this hack.
-  devtools_discovery::DevToolsDiscoveryManager::GetInstance();
 }
 
 DevToolsManagerDelegate::~DevToolsManagerDelegate() {

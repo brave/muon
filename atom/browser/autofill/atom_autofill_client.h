@@ -49,7 +49,7 @@ class AtomAutofillClient
   PersonalDataManager* GetPersonalDataManager() override;
   scoped_refptr<AutofillWebDataService> GetDatabase() override;
   PrefService* GetPrefs() override;
-  sync_driver::SyncService* GetSyncService() override;
+  syncer::SyncService* GetSyncService() override;
   IdentityProvider* GetIdentityProvider() override;
   rappor::RapporService* GetRapporService() override;
   void ShowAutofillSettings() override;

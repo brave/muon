@@ -65,8 +65,6 @@ ContentSetting ContentSettingsManager::GetSetting(
     default_value = web_preferences_.images_enabled;
   else if (content_type == "javascript")
     default_value = web_preferences_.javascript_enabled;
-  else if (content_type == "displayInsecureContent")
-    default_value = web_preferences_.allow_displaying_insecure_content;
   else if (content_type == "runInsecureContent")
     default_value = web_preferences_.allow_running_insecure_content;
 

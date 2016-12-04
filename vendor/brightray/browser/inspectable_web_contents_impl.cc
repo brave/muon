@@ -149,7 +149,7 @@ class ResponseWriter : public net::URLFetcherResponseWriter {
   int Write(net::IOBuffer* buffer,
             int num_bytes,
             const net::CompletionCallback& callback) override;
-  int Finish(const net::CompletionCallback& callback) override;
+  int Finish(int net_error, const net::CompletionCallback& callback) override;
 
  private:
   base::WeakPtr<InspectableWebContentsImpl> bindings_;
@@ -193,7 +193,8 @@ int ResponseWriter::Write(net::IOBuffer* buffer,
   return num_bytes;
 }
 
-int ResponseWriter::Finish(const net::CompletionCallback& callback) {
+int ResponseWriter::Finish(int net_error,
+                           const net::CompletionCallback& callback) {
   return net::OK;
 }
 
@@ -729,7 +730,7 @@ void InspectableWebContentsImpl::OnWebContentsFocused() {
 
 void InspectableWebContentsImpl::DidStartNavigationToPendingEntry(
     const GURL& url,
-    content::NavigationController::ReloadType reload_type) {
+    content::ReloadType reload_type) {
   frontend_host_.reset(
       content::DevToolsFrontendHost::Create(
           web_contents()->GetMainFrame(),

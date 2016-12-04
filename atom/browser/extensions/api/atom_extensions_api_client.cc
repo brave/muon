@@ -122,7 +122,8 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
   // Creates an app shortcut.
   bool CreateAppShortcutFunctionDelegate(
       ManagementCreateAppShortcutFunction* function,
-      const Extension* extension) const override {
+      const Extension* extension,
+      std::string* error) const override {
     NOTIMPLEMENTED();
     return false;
   }

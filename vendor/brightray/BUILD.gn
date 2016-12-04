@@ -9,6 +9,7 @@ config("brightray_config") {
     "//gpu",
     "//skia/config",
     "//third_party/skia/include/core",
+    "//third_party/boringssl/src/include",
   ]
 
   if (is_mac) {
@@ -161,8 +162,6 @@ source_set("browser") {
   ]
 
   deps = [
-    "//components/devtools_discovery",
-    "//components/devtools_http_handler",
     "//third_party/WebKit/public:blink_headers",
     "//content/shell:resources",
     ":common",

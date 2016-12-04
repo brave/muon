@@ -170,14 +170,15 @@ content::SecurityStyle SecurityLevelToSecurityStyle(
     SecurityStateModel::SecurityLevel security_level) {
   switch (security_level) {
     case SecurityStateModel::NONE:
+    case SecurityStateModel::HTTP_SHOW_WARNING:
       return content::SECURITY_STYLE_UNAUTHENTICATED;
     case SecurityStateModel::SECURITY_WARNING:
-    case SecurityStateModel::SECURITY_POLICY_WARNING:
+    case SecurityStateModel::SECURE_WITH_POLICY_INSTALLED_CERT:
       return content::SECURITY_STYLE_WARNING;
     case SecurityStateModel::EV_SECURE:
     case SecurityStateModel::SECURE:
       return content::SECURITY_STYLE_AUTHENTICATED;
-    case SecurityStateModel::SECURITY_ERROR:
+    case SecurityStateModel::DANGEROUS:
       return content::SECURITY_STYLE_AUTHENTICATION_BROKEN;
   }
 
@@ -190,8 +191,8 @@ void AddConnectionExplanation(
 
   // Avoid showing TLS details when we couldn't even establish a TLS connection
   // (e.g. for net errors) or if there was no real connection (some tests). We
-  // check the |cert_id| to see if there was a connection.
-  if (security_info.cert_id == 0 || security_info.connection_status == 0) {
+  // check the |certificate| to see if there was a connection.
+  if (!security_info.certificate || security_info.connection_status == 0) {
     return;
   }
 
@@ -482,7 +483,8 @@ content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
     content::SecurityStyleExplanations* security_style_explanations) {
   auto model_client =
       AtomSecurityStateModelClient::FromWebContents(web_contents);
-  auto security_info = model_client->GetSecurityInfo();
+  security_state::SecurityStateModel::SecurityInfo security_info;
+  model_client->GetSecurityInfo(&security_info);
 
   const content::SecurityStyle security_style =
       SecurityLevelToSecurityStyle(security_info.security_level);
@@ -513,22 +515,22 @@ content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
         content::SecurityStyleExplanation(
             l10n_util::GetStringUTF8(IDS_MAJOR_SHA1),
             l10n_util::GetStringUTF8(IDS_MAJOR_SHA1_DESCRIPTION),
-            security_info.cert_id));
+            !!security_info.certificate));
   } else if (security_info.sha1_deprecation_status ==
              SecurityStateModel::DEPRECATED_SHA1_MINOR) {
     security_style_explanations->unauthenticated_explanations.push_back(
         content::SecurityStyleExplanation(
             l10n_util::GetStringUTF8(IDS_MINOR_SHA1),
             l10n_util::GetStringUTF8(IDS_MINOR_SHA1_DESCRIPTION),
-            security_info.cert_id));
+            !!security_info.certificate));
   }
 
-  security_style_explanations->ran_insecure_content =
+  security_style_explanations->ran_mixed_content =
       security_info.mixed_content_status ==
           SecurityStateModel::CONTENT_STATUS_RAN ||
       security_info.mixed_content_status ==
           SecurityStateModel::CONTENT_STATUS_DISPLAYED_AND_RAN;
-  security_style_explanations->displayed_insecure_content =
+  security_style_explanations->displayed_mixed_content =
       security_info.mixed_content_status ==
           SecurityStateModel::CONTENT_STATUS_DISPLAYED ||
       security_info.mixed_content_status ==
@@ -542,7 +544,7 @@ content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
         l10n_util::GetStringUTF8(IDS_CERTIFICATE_CHAIN_ERROR),
         l10n_util::GetStringFUTF8(
             IDS_CERTIFICATE_CHAIN_ERROR_DESCRIPTION_FORMAT, error_string),
-        security_info.cert_id);
+        !!security_info.certificate);
 
     if (net::IsCertStatusMinorError(security_info.cert_status))
       security_style_explanations->unauthenticated_explanations.push_back(
@@ -560,7 +562,7 @@ content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
               l10n_util::GetStringUTF8(IDS_VALID_SERVER_CERTIFICATE),
               l10n_util::GetStringUTF8(
                   IDS_VALID_SERVER_CERTIFICATE_DESCRIPTION),
-              security_info.cert_id));
+              !!security_info.certificate));
     }
   }
 
