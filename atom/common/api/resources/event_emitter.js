@@ -10,7 +10,7 @@ EventEmitter2.prototype.on = function (event, fn) {
 EventEmitter2.prototype.once = function (event, fn) {
   function on() {
     this.off(event, on);
-    fn.apply(this, arguments);
+    $Function.apply(fn, this, arguments)
   }
 
   on.fn = fn;
@@ -40,7 +40,7 @@ EventEmitter2.prototype.emit = function(event) {
   if (callbacks) {
     callbacks = callbacks.slice(0);
     for (var i = 0, len = callbacks.length; i < len; ++i) {
-      callbacks[i].apply(this, args);
+      $Function.apply(callbacks[i], this, args);
     }
   }
 
