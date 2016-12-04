@@ -104,9 +104,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   base::FilePath GetShaderDiskCacheDirectory() override;
   gpu::GpuChannelEstablishFactory* GetGpuChannelEstablishFactory() override;
 
-void RegisterInProcessMojoApplications(StaticMojoApplicationMap* apps) override;
-void RegisterOutOfProcessMojoApplications(
-    OutOfProcessMojoApplicationMap* apps) override;
+void RegisterInProcessServices(StaticServiceMap* apps) override;
+void RegisterOutOfProcessServices(OutOfProcessServiceMap* apps) override;
 
 
   ScopedVector<content::NavigationThrottle> CreateThrottlesForNavigation(

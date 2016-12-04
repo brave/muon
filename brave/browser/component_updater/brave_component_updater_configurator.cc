@@ -40,6 +40,7 @@ class BraveConfigurator : public update_client::Configurator {
   int UpdateDelay() const override;
   std::vector<GURL> UpdateUrl() const override;
   std::vector<GURL> PingUrl() const override;
+  std::string GetProdId() const override;
   base::Version GetBrowserVersion() const override;
   std::string GetChannel() const override;
   std::string GetBrand() const override;
@@ -57,6 +58,7 @@ class BraveConfigurator : public update_client::Configurator {
   scoped_refptr<base::SequencedTaskRunner> GetSequencedTaskRunner()
       const override;
   PrefService* GetPrefService() const override;
+  bool IsPerUserInstall() const override;
 
  private:
   friend class base::RefCountedThreadSafe<BraveConfigurator>;
@@ -111,6 +113,10 @@ std::vector<GURL> BraveConfigurator::UpdateUrl() const {
 
 std::vector<GURL> BraveConfigurator::PingUrl() const {
   return UpdateUrl();
+}
+
+std::string BraveConfigurator::GetProdId() const {
+  return std::string();
 }
 
 base::Version BraveConfigurator::GetBrowserVersion() const {
@@ -185,6 +191,10 @@ BraveConfigurator::GetSequencedTaskRunner() const {
 
 PrefService* BraveConfigurator::GetPrefService() const {
   return nullptr;
+}
+
+bool BraveConfigurator::IsPerUserInstall() const {
+  return false;
 }
 
 }  // namespace

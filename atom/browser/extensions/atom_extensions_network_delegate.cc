@@ -6,9 +6,11 @@
 
 #include "base/stl_util.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
+#include "extensions/browser/extension_navigation_ui_data.h"
 #include "extensions/browser/extension_system.h"
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/process_manager.h"
@@ -18,6 +20,19 @@ namespace extensions {
 
 namespace {
 bool g_accept_all_cookies = true;
+}
+
+extensions::ExtensionNavigationUIData* GetExtensionNavigationUIData(
+  net::URLRequest* request) {
+  const content::ResourceRequestInfo* info =
+    content::ResourceRequestInfo::ForRequest(request);
+  if (!info)
+    return nullptr;
+  ChromeNavigationUIData* navigation_data =
+    static_cast<ChromeNavigationUIData*>(info->GetNavigationUIData());
+  if (!navigation_data)
+    return nullptr;
+  return navigation_data->GetExtensionNavigationUIData();
 }
 
 AtomExtensionsNetworkDelegate::AtomExtensionsNetworkDelegate(
@@ -87,6 +102,7 @@ int AtomExtensionsNetworkDelegate::OnBeforeURLRequest(
   int result = ExtensionWebRequestEventRouter::GetInstance()->OnBeforeRequest(
                 browser_context_,
                 extension_info_map_.get(),
+                GetExtensionNavigationUIData(request),
                 request,
                 ui_wrapper,
                 new_url);
@@ -127,6 +143,7 @@ int AtomExtensionsNetworkDelegate::OnBeforeStartTransaction(
   int result = ExtensionWebRequestEventRouter::GetInstance()->
       OnBeforeSendHeaders(browser_context_,
                           extension_info_map_.get(),
+                          GetExtensionNavigationUIData(request),
                           request,
                           ui_wrapper,
                           headers);
@@ -142,7 +159,8 @@ void AtomExtensionsNetworkDelegate::OnStartTransaction(
     const net::HttpRequestHeaders& headers) {
   atom::AtomNetworkDelegate::OnStartTransaction(request, headers);
   ExtensionWebRequestEventRouter::GetInstance()->OnSendHeaders(
-      browser_context_, extension_info_map_.get(), request, headers);
+      browser_context_, extension_info_map_.get(),
+      GetExtensionNavigationUIData(request), request, headers);
 }
 
 int AtomExtensionsNetworkDelegate::OnHeadersReceivedInternal(
@@ -183,6 +201,7 @@ int AtomExtensionsNetworkDelegate::OnHeadersReceived(
   int result = ExtensionWebRequestEventRouter::GetInstance()->OnHeadersReceived(
     browser_context_,
     extension_info_map_.get(),
+    GetExtensionNavigationUIData(request),
     request,
     ui_wrapper,
     original_response_headers,
@@ -200,14 +219,16 @@ void AtomExtensionsNetworkDelegate::OnBeforeRedirect(
     const GURL& new_location) {
   atom::AtomNetworkDelegate::OnBeforeRedirect(request, new_location);
   ExtensionWebRequestEventRouter::GetInstance()->OnBeforeRedirect(
-      browser_context_, extension_info_map_.get(), request, new_location);
+      browser_context_, extension_info_map_.get(),
+      GetExtensionNavigationUIData(request), request, new_location);
 }
 
 void AtomExtensionsNetworkDelegate::OnResponseStarted(
     net::URLRequest* request) {
   atom::AtomNetworkDelegate::OnResponseStarted(request);
   ExtensionWebRequestEventRouter::GetInstance()->OnResponseStarted(
-      browser_context_, extension_info_map_.get(), request);
+      browser_context_, extension_info_map_.get(),
+      GetExtensionNavigationUIData(request), request);
 }
 
 void AtomExtensionsNetworkDelegate::OnCompleted(
@@ -222,7 +243,8 @@ void AtomExtensionsNetworkDelegate::OnCompleted(
             request->response_headers()->response_code());
     if (!is_redirect) {
       ExtensionWebRequestEventRouter::GetInstance()->OnCompleted(
-          browser_context_, extension_info_map_.get(), request);
+          browser_context_, extension_info_map_.get(),
+          GetExtensionNavigationUIData(request), request);
     }
     return;
   }
@@ -230,7 +252,8 @@ void AtomExtensionsNetworkDelegate::OnCompleted(
   if (request->status().status() == net::URLRequestStatus::FAILED ||
       request->status().status() == net::URLRequestStatus::CANCELED) {
     ExtensionWebRequestEventRouter::GetInstance()->OnErrorOccurred(
-        browser_context_, extension_info_map_.get(), request, started);
+        browser_context_, extension_info_map_.get(),
+        GetExtensionNavigationUIData(request), request, started);
     return;
   }
 
@@ -257,7 +280,8 @@ AtomExtensionsNetworkDelegate::OnAuthRequired(
     const AuthCallback& callback,
     net::AuthCredentials* credentials) {
   return ExtensionWebRequestEventRouter::GetInstance()->OnAuthRequired(
-      browser_context_, extension_info_map_.get(), request, auth_info, callback,
+      browser_context_, extension_info_map_.get(),
+      GetExtensionNavigationUIData(request), request, auth_info, callback,
       credentials);
 }
 

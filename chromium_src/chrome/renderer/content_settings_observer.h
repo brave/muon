@@ -83,8 +83,6 @@ class ContentSettingsObserver
   bool allowReadFromClipboard(bool default_value) override;
   bool allowWriteToClipboard(bool default_value) override;
   bool allowMutationEvents(bool default_value) override;
-  bool allowDisplayingInsecureContent(bool allowed_per_settings,
-                                      const blink::WebURL& url) override;
   bool allowRunningInsecureContent(bool allowed_per_settings,
                                    const blink::WebSecurityOrigin& context,
                                    const blink::WebURL& url) override;
@@ -93,9 +91,7 @@ class ContentSettingsObserver
   void didNotAllowScript() override;
 
  private:
-  void DidDisplayInsecureContent(GURL resource_url);
   void DidRunInsecureContent(GURL resouce_url);
-  void DidBlockDisplayInsecureContent(GURL resource_url);
   void DidBlockRunInsecureContent(GURL resouce_url);
 
   // RenderFrameObserver implementation.

@@ -36,7 +36,7 @@ bool DevToolsNetworkUploadDataStream::IsInMemory() const {
 }
 
 int DevToolsNetworkUploadDataStream::InitInternal(
-    const net::BoundNetLog& net_log) {
+    const net::NetLogWithSource& net_log) {
   throttled_byte_count_ = 0;
   int result = upload_data_stream_->Init(
       base::Bind(&DevToolsNetworkUploadDataStream::StreamInitCallback,

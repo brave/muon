@@ -193,6 +193,7 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
     } else {
       scoped_refptr<FileReader> file_reader(new FileReader(
           resource,
+          FileReader::OptionalFileThreadTaskCallback(),  // null callback.
           base::Bind(&TabHelper::ExecuteScript, base::Unretained(this),
             extension_id, base::Passed(&copy), result, callback, file_url)));
       file_reader->Start();

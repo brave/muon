@@ -40,10 +40,10 @@ class BraveDataSource : public content::URLDataSource,
     return "brave";
   }
 
-  void StartDataRequest(const std::string& path,
-                        int render_process_id,
-                        int render_frame_id,
-                        const GotDataCallback& callback) override {
+  void StartDataRequest(
+      const std::string& path,
+      const content::ResourceRequestInfo::WebContentsGetter& wc_getter,
+      const GotDataCallback& callback) override {
     GURL url = GURL("file:///" + path);
     if (!url.is_valid()) {
       DLOG(WARNING) << "Invalid webui resource: brave://" << path;

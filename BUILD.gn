@@ -355,19 +355,11 @@ source_set("native_mate") {
   ]
 }
 
-electron_framework_sources = [
-  "$root_out_dir/chrome_100_percent.pak",
-]
+electron_framework_sources = []
 
 electron_framework_public_deps = [
   ":packed_resources",
 ]
-
-if (enable_hidpi) {
-  electron_framework_sources += [
-    "$root_out_dir/chrome_200_percent.pak",
-  ]
-}
 
 if (icu_use_data_file) {
   electron_framework_sources += [

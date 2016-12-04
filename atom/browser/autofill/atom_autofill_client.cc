@@ -99,7 +99,7 @@ PrefService* AtomAutofillClient::GetPrefs() {
   return user_prefs::UserPrefs::Get(web_contents()->GetBrowserContext());
 }
 
-sync_driver::SyncService* AtomAutofillClient::GetSyncService() {
+syncer::SyncService* AtomAutofillClient::GetSyncService() {
   return nullptr;
 }
 

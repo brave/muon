@@ -8,7 +8,6 @@
 #include "browser/net/devtools_network_upload_data_stream.h"
 #include "net/base/load_timing_info.h"
 #include "net/base/net_errors.h"
-#include "net/base/upload_progress.h"
 #include "net/http/http_network_transaction.h"
 #include "net/http/http_request_info.h"
 #include "net/socket/connection_attempts.h"
@@ -106,7 +105,7 @@ bool DevToolsNetworkTransaction::CheckFailed() {
 int DevToolsNetworkTransaction::Start(
     const net::HttpRequestInfo* request,
     const net::CompletionCallback& callback,
-    const net::BoundNetLog& net_log) {
+    const net::NetLogWithSource& net_log) {
   DCHECK(request);
   request_ = request;
 
@@ -244,10 +243,6 @@ DevToolsNetworkTransaction::GetResponseInfo() const {
 
 net::LoadState DevToolsNetworkTransaction::GetLoadState() const {
   return transaction_->GetLoadState();
-}
-
-net::UploadProgress DevToolsNetworkTransaction::GetUploadProgress() const {
-  return transaction_->GetUploadProgress();
 }
 
 void DevToolsNetworkTransaction::SetQuicServerInfo(
