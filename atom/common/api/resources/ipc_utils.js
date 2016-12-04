@@ -26,7 +26,7 @@ if (!ipcRenderer) {
 
   ipcRenderer.emit = function () {
     arguments[1].sender = ipcRenderer
-    return EventEmitter.prototype.emit.apply(ipcRenderer, arguments)
+    return $Function.apply(EventEmitter.prototype.emit, ipcRenderer, arguments)
   }
   atom.v8.setHiddenValue('ipc', ipcRenderer)
 }
