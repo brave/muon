@@ -564,6 +564,27 @@ copy("electron_dist_resources") {
   ]
 }
 
+if (!is_mac) {
+  copy("electron_locale_dist_resources") {
+    deps = [
+      "//chrome:packed_resources",
+    ]
+
+    sources = []
+    foreach(locale, locales) {
+      # print (locale)
+      if (is_mac) {
+        sources += [ "$root_gen_dir/repack/locales/$locale.pak" ]
+      } else {
+        sources += [ "$root_out_dir/locales/$locale.pak" ]
+      }
+    }
+    outputs = [
+      "$electron_dist_dir/locales/l{{source_file_part}}",
+    ]
+  }
+}
+
 action("create_dist") {
   output = "$electron_dist_dir/$electron_project_name-v$electron_version-$electron_platform-$target_arch.zip"
 
@@ -574,6 +595,7 @@ action("create_dist") {
   if (!is_mac) {
     inputs += get_target_outputs(":electron_dist_resources")
     inputs += get_target_outputs(":electron_app_dist_resources")
+    inputs += get_target_outputs(":electron_locale_dist_resources")
   }
 
   if (is_win) {
@@ -616,6 +638,7 @@ action("create_dist") {
     deps += [
       ":electron_dist_resources",
       ":electron_app_dist_resources",
+      ":electron_locale_dist_resources",
     ]
   }
 
