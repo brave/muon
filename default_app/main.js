@@ -272,6 +272,8 @@ function loadApplicationPackage (packagePath) {
       } else if (packageJson.name) {
         app.setName(packageJson.name)
       }
+      app.setPath('userData', path.join(app.getPath('appData'), app.getName()))
+      app.setPath('userCache', path.join(app.getPath('cache'), app.getName()))
       app.setAppPath(packagePath)
     }
 
