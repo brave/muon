@@ -197,11 +197,9 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
   if (!is_valid())
     return false;
 
-  // never handle ipc messages in the main world script context
-  v8::Isolate* isolate = context()->isolate();
-  v8::HandleScope handle_scope(isolate);
-  if (render_view()->GetWebView()->mainFrame()->mainWorldScriptContext() ==
-      context()->v8_context())
+  // never handle ipc messages in a web page context
+  if (context()->effective_context_type() ==
+      extensions::Feature::WEB_PAGE_CONTEXT)
     return false;
 
   bool handled = false;  // don't swallow any of these messages
