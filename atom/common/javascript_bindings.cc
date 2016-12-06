@@ -55,22 +55,15 @@ v8::Local<v8::Value> JavascriptBindings::GetHiddenValue(v8::Isolate* isolate,
   if (!is_valid() || !render_view())
     return v8::Local<v8::Value>();
 
-  v8::Local<v8::Context> main_context =
-      render_view()->GetWebView()->mainFrame()->mainWorldScriptContext();
+  v8::Local<v8::Context> v8_context = context()->v8_context();
   v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
   v8::Local<v8::Value> value;
-  v8::Local<v8::Object> object = main_context->Global();
+  v8::Local<v8::Object> object = v8_context->Global();
 
-  if (!ContextCanAccessObject(main_context, main_context->Global(), false)) {
-    extensions::console::Warn(context()->GetRenderFrame(),
-      "cannot access global in main frame script context");
-    return v8::Local<v8::Value>();
-  }
-
-  v8::Maybe<bool> result = object->HasPrivate(main_context, privateKey);
+  v8::Maybe<bool> result = object->HasPrivate(v8_context, privateKey);
   if (!(result.IsJust() && result.FromJust()))
     return v8::Local<v8::Value>();
-  if (object->GetPrivate(main_context, privateKey).ToLocal(&value))
+  if (object->GetPrivate(v8_context, privateKey).ToLocal(&value))
     return value;
   return v8::Local<v8::Value>();
 }
@@ -108,17 +101,9 @@ void JavascriptBindings::SetHiddenValue(v8::Isolate* isolate,
   if (!is_valid() || !render_view() || value.IsEmpty())
     return;
 
-  v8::Local<v8::Context> main_context =
-      render_view()->GetWebView()->mainFrame()->mainWorldScriptContext();
-
-  if (!ContextCanAccessObject(main_context, main_context->Global(), false)) {
-    extensions::console::Warn(context()->GetRenderFrame(),
-          "cannot access global in main frame script context");
-    return;
-  }
-
+  v8::Local<v8::Context> v8_context = context()->v8_context();
   v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
-  main_context->Global()->SetPrivate(main_context, privateKey, value);
+  v8_context->Global()->SetPrivate(v8_context, privateKey, value);
 }
 
 void JavascriptBindings::DeleteHiddenValue(v8::Isolate* isolate,
@@ -212,18 +197,14 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
   if (!is_valid())
     return false;
 
-  // only handle ipc messages in the main frame script context
+  // never handle ipc messages in the main world script context
   v8::Isolate* isolate = context()->isolate();
   v8::HandleScope handle_scope(isolate);
-  if (context()->context_type() !=
-        extensions::Feature::BLESSED_EXTENSION_CONTEXT &&
-      context()->context_type() !=
-        extensions::Feature::UNBLESSED_EXTENSION_CONTEXT &&
-      render_view()->GetWebView()->mainFrame()->mainWorldScriptContext() !=
+  if (render_view()->GetWebView()->mainFrame()->mainWorldScriptContext() ==
       context()->v8_context())
     return false;
 
-  bool handled = true;
+  bool handled = false;  // don't swallow any of these messages
   IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
     IPC_MESSAGE_HANDLER(AtomViewMsg_Message, OnBrowserMessage)
     IPC_MESSAGE_UNHANDLED(handled = false)
