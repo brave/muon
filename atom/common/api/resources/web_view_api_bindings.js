@@ -59,17 +59,19 @@ const asyncMethods = [
 ]
 
 const syncMethods = [
-  'getZoomPercent',
-  'getURL',
   'canGoBack',
   'canGoForward',
+  'getURL',
   'getWebRTCIPHandlingPolicy',
   'getWebContents',
+  'getZoomPercent',
   'isDevToolsOpened',
 ]
 
 var WEB_VIEW_API_METHODS = [
-  'setGuestInstanceId',
+  'executeJavaScript',
+  'getPreferredSize',
+
   // Returns Chrome's internal process ID for the guest web page's current
   // process.
   'getProcessId',
@@ -87,13 +89,14 @@ var WEB_VIEW_API_METHODS = [
   // overridden.
   'isUserAgentOverridden',
 
+  'setGuestInstanceId',
+  
   // Override the user agent string used by the webview for guest page requests.
   'setUserAgentOverride',
 
   // Changes the zoom factor of the page.
   'setZoom',
 
-  'executeJavaScript',
 ].concat(asyncMethods).concat(syncMethods)
 
 asyncMethods.forEach((method) => {
