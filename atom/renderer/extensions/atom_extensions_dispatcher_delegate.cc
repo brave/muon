@@ -183,6 +183,7 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
                               IDR_ELECTRON_GUEST_VIEW_INTERNAL_BINDINGS_JS);
   source_map->RegisterSource("browserAction",
                              IDR_ATOM_BROWSER_ACTION_BINDINGS_JS);
+  source_map->RegisterSource("permissions", IDR_ATOM_PERMISSIONS_BINDINGS_JS);
   source_map->RegisterSource("privacy", IDR_ATOM_PRIVACY_BINDINGS_JS);
   source_map->RegisterSource("tabs",
                              IDR_ATOM_TABS_BINDINGS_JS);
