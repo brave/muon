@@ -2,8 +2,7 @@ var binding = require('binding').Binding.create('tabs');
 
 var atom = requireNative('atom').GetBinding();
 var messaging = require('messaging');
-var tabsNatives = requireNative('tabs');
-var OpenChannelToTab = tabsNatives.OpenChannelToTab;
+var OpenChannelToTab = requireNative('messaging_natives').OpenChannelToTab
 var process = requireNative('process');
 var sendRequestIsDisabled = process.IsSendRequestDisabled();
 var forEach = require('utils').forEach;
