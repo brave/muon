@@ -66,6 +66,7 @@ const syncMethods = [
   'getWebRTCIPHandlingPolicy',
   'getWebContents',
   'isDevToolsOpened',
+  'getPreferredSize',
 ]
 
 var WEB_VIEW_API_METHODS = [
