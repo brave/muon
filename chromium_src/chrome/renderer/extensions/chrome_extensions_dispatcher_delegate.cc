@@ -1,8 +1,11 @@
-// Copyright (c) 2014 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "atom/renderer/extensions/atom_extensions_dispatcher_delegate.h"
+// This file is meant to override chrome_extensions_dispatch_delegate to provide
+// alternate functionality for Brave. It is not a copy and there are significant
+// change from Chrome
+#include "chrome/renderer/extensions/chrome_extensions_dispatcher_delegate.h"
 
 #include <set>
 #include <string>
@@ -13,6 +16,8 @@
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
 #include "brave/renderer/extensions/content_settings_bindings.h"
 #include "brave/renderer/extensions/web_frame_bindings.h"
+#include "chrome/common/chrome_switches.h"
+#include "chrome/common/crash_keys.h"
 #include "chrome/grit/renderer_resources.h"  // NOLINT: This file is generated
 #include "chrome/renderer/extensions/tabs_custom_bindings.h"
 #include "content/public/common/bindings_policy.h"
@@ -29,7 +34,10 @@
 #include "base/win/windows_version.h"
 #endif
 
-namespace extensions {
+using extensions::Manifest;
+using extensions::NativeHandler;
+using extensions::ScriptContext;
+using extensions::v8_helpers::ToV8StringUnsafe;
 
 namespace {
 
@@ -51,54 +59,54 @@ v8::Local<v8::Value> GetOrCreateProcess(ScriptContext* context) {
   if (process->IsUndefined()) {
     process = v8::Object::New(context->isolate());
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), "type"),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), "renderer"));
+        ToV8StringUnsafe(context->isolate(), "type"),
+        ToV8StringUnsafe(context->isolate(), "renderer"));
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), "platform"),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), kPlatform));
+        ToV8StringUnsafe(context->isolate(), "platform"),
+        ToV8StringUnsafe(context->isolate(), kPlatform));
 #if defined(OS_WIN)
     switch (base::win::GetVersion()) {
       case base::win::VERSION_WIN7:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win7"));
+          ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          ToV8StringUnsafe(context->isolate(), "win7"));
           break;
       case base::win::VERSION_WIN8:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8"));
+          ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          ToV8StringUnsafe(context->isolate(), "win8"));
           break;
       case base::win::VERSION_WIN8_1:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win8_1"));
+          ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          ToV8StringUnsafe(context->isolate(), "win8_1"));
           break;
       case base::win::VERSION_WIN10:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10"));
+          ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          ToV8StringUnsafe(context->isolate(), "win10"));
           break;
       case base::win::VERSION_WIN10_TH2:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "win10_th2"));
+          ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          ToV8StringUnsafe(context->isolate(), "win10_th2"));
           break;
       default:
         gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-          v8_helpers::ToV8StringUnsafe(context->isolate(), ""));
+          ToV8StringUnsafe(context->isolate(), "platformVersion"),
+          ToV8StringUnsafe(context->isolate(), ""));
         break;
     }
 #else
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), "platformVersion"),
-        v8_helpers::ToV8StringUnsafe(context->isolate(), ""));
+        ToV8StringUnsafe(context->isolate(), "platformVersion"),
+        ToV8StringUnsafe(context->isolate(), ""));
 #endif
     // TODO(bridiver) - add a function to return env vars
     // std::unique_ptr<base::Environment> env(base::Environment::Create());
     // gin::SetProperty(context->isolate(), process.As<v8::Object>(),
-    //     v8_helpers::ToV8StringUnsafe(context->isolate(), "env"),
-    //     v8_helpers::ToV8StringUnsafe(context->isolate(), "TODO"));
+    //     ToV8StringUnsafe(context->isolate(), "env"),
+    //     ToV8StringUnsafe(context->isolate(), "TODO"));
     global->Set(process_string, process);
   }
 
@@ -112,18 +120,18 @@ v8::Local<v8::Object> AsObjectOrEmpty(v8::Local<v8::Value> value) {
 
 }
 
-AtomExtensionsDispatcherDelegate::AtomExtensionsDispatcherDelegate() {
+ChromeExtensionsDispatcherDelegate::ChromeExtensionsDispatcherDelegate() {
 }
 
-AtomExtensionsDispatcherDelegate::~AtomExtensionsDispatcherDelegate() {
+ChromeExtensionsDispatcherDelegate::~ChromeExtensionsDispatcherDelegate() {
 }
 
-void AtomExtensionsDispatcherDelegate::InitOriginPermissions(
+void ChromeExtensionsDispatcherDelegate::InitOriginPermissions(
     const extensions::Extension* extension,
     bool is_extension_active) {
 }
 
-void AtomExtensionsDispatcherDelegate::RegisterNativeHandlers(
+void ChromeExtensionsDispatcherDelegate::RegisterNativeHandlers(
     extensions::Dispatcher* dispatcher,
     extensions::ModuleSystem* module_system,
     extensions::ScriptContext* context) {
@@ -161,7 +169,7 @@ void AtomExtensionsDispatcherDelegate::RegisterNativeHandlers(
 
 }
 
-void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
+void ChromeExtensionsDispatcherDelegate::PopulateSourceMap(
     extensions::ResourceBundleSourceMap* source_map) {
   // TODO(bridiver) - add a permission for these
   // so only component extensions can use
@@ -205,7 +213,7 @@ void AtomExtensionsDispatcherDelegate::PopulateSourceMap(
       IDR_ATOM_WEB_VIEW_API_BINDINGS_JS);
 }
 
-void AtomExtensionsDispatcherDelegate::RequireAdditionalModules(
+void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
     extensions::ScriptContext* context,
     bool is_within_platform_app) {
   extensions::ModuleSystem* module_system = context->module_system();
@@ -227,8 +235,7 @@ void AtomExtensionsDispatcherDelegate::RequireAdditionalModules(
   }
 }
 
-void AtomExtensionsDispatcherDelegate::OnActiveExtensionsUpdated(
+void ChromeExtensionsDispatcherDelegate::OnActiveExtensionsUpdated(
     const std::set<std::string>& extension_ids) {
+  crash_keys::SetActiveExtensions(extension_ids);
 }
-
-}  // namespace extensions

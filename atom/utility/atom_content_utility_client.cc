@@ -22,7 +22,7 @@
 #include "services/shell/public/cpp/interface_registry.h"
 
 #if defined(ENABLE_EXTENSIONS)
-#include "atom/common/extensions/atom_extensions_client.h"
+#include "chrome/common/extensions/chrome_extensions_client.h"
 #include "extensions/utility/utility_handler.h"
 #endif
 
@@ -142,7 +142,7 @@ void AtomContentUtilityClient::ExposeInterfacesToBrowser(
 void AtomContentUtilityClient::PreSandboxStartup() {
 #if defined(ENABLE_EXTENSIONS)
   extensions::ExtensionsClient::Set(
-      extensions::AtomExtensionsClient::GetInstance());
+      extensions::ChromeExtensionsClient::GetInstance());
 #endif
 }
 

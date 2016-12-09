@@ -182,10 +182,6 @@ source_set("common") {
   }
 
   if (enable_extensions) {
-    sources += [
-      "extensions/atom_extensions_client.cc",
-      "extensions/atom_extensions_client.h",
-    ]
     deps += [
       "//chrome/common/extensions/api",
       "//chrome/common/extensions/api:api_registration",

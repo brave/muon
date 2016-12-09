@@ -70,6 +70,13 @@ source_set("browser") {
     ]
   }
 
+  if (enable_plugins) {
+    sources += [
+      "plugins/brave_plugin_service_filter.cc",
+      "plugins/brave_plugin_service_filter.h",
+    ]
+  }
+
   if (enable_extensions) {
     public_deps += [
       "extensions",

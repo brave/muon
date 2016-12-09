@@ -271,6 +271,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void OnTabCreated(const mate::Dictionary& options,
       base::Callback<void(WebContents*)> callback,
       content::WebContents* tab);
+  void AuthorizePlugin(mate::Arguments* args);
 
   // content::WebContentsDelegate:
   bool AddMessageToConsole(content::WebContents* source,

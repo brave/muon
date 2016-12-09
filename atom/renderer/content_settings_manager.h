@@ -8,9 +8,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "atom/common/native_mate_converters/callback.h"
-#include "atom/common/native_mate_converters/gurl_converter.h"
-#include "atom/renderer/content_settings_observer.h"
 #include "base/values.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "content/public/common/web_preferences.h"
@@ -22,26 +19,6 @@ class GURL;
 namespace base {
 class DictionaryValue;
 }
-
-namespace mate {
-
-template<>
-struct Converter<ContentSetting> {
-  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   ContentSetting val) {
-    std::string setting;
-    switch (val) {
-      case CONTENT_SETTING_ALLOW: setting = "allow"; break;
-      case CONTENT_SETTING_BLOCK: setting = "block"; break;
-      case CONTENT_SETTING_ASK: setting = "ask"; break;
-      case CONTENT_SETTING_SESSION_ONLY: setting = "session"; break;
-      default: setting = "default"; break;
-    }
-    return mate::ConvertToV8(isolate, setting);
-  }
-};
-
-}  // namespace mate
 
 namespace atom {
 
@@ -63,10 +40,6 @@ class ContentSettingsManager : public content::RenderThreadObserver {
 
   std::vector<std::string> GetContentTypes();
 
-  void AddObserver(ContentSettingsObserver* observer);
-
-  void RemoveObserver(ContentSettingsObserver* observer);
-
  private:
   ContentSetting GetContentSettingFromRules(
     const GURL& primary_url,
@@ -82,7 +55,6 @@ class ContentSettingsManager : public content::RenderThreadObserver {
   void OnUpdateContentSettings(
       const base::DictionaryValue& content_settings);
 
-  ContentSettingsObserverList observers_;
 
   content::WebPreferences web_preferences_;
   std::unique_ptr<base::DictionaryValue> content_settings_;

@@ -8,8 +8,12 @@
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/common/api/api_messages.h"
 #include "base/command_line.h"
-#include "chrome/browser/renderer_host/chrome_extension_message_filter.h"
+#include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/profiles/profile_manager.h"
+#include "chrome/browser/renderer_host/chrome_extension_message_filter.h"
+#include "chrome/common/chrome_constants.h"
+#include "chrome/common/extensions/extension_process_policy.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -22,6 +26,7 @@
 #include "content/public/browser/site_instance.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
+#include "extensions/browser/extension_host.h"
 #include "extensions/browser/extension_message_filter.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_service_worker_message_filter.h"
@@ -29,9 +34,11 @@
 #include "extensions/browser/guest_view/extensions_guest_view_message_filter.h"
 #include "extensions/browser/info_map.h"
 #include "extensions/browser/io_thread_extension_message_filter.h"
+#include "extensions/browser/process_manager.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/extension_l10n_util.h"
 #include "extensions/common/extensions_client.h"
+#include "extensions/common/manifest_handlers/background_info.h"
 #include "extensions/common/manifest_handlers/web_accessible_resources_info.h"
 #include "extensions/common/switches.h"
 
@@ -43,6 +50,41 @@ using content::SiteInstance;
 namespace extensions {
 
 namespace {
+
+enum RenderProcessHostPrivilege {
+  PRIV_NORMAL,
+  PRIV_EXTENSION,
+};
+
+RenderProcessHostPrivilege GetPrivilegeRequiredByUrl(
+    const GURL& url,
+    ExtensionRegistry* registry) {
+  // Default to a normal renderer cause it is lower privileged. This should only
+  // occur if the URL on a site instance is either malformed, or uninitialized.
+  // If it is malformed, then there is no need for better privileges anyways.
+  // If it is uninitialized, but eventually settles on being an a scheme other
+  // than normal webrenderer, the navigation logic will correct us out of band
+  // anyways.
+  if (!url.is_valid())
+    return PRIV_NORMAL;
+
+  if (!url.SchemeIs(kExtensionScheme))
+    return PRIV_NORMAL;
+
+  return PRIV_EXTENSION;
+}
+
+RenderProcessHostPrivilege GetProcessPrivilege(
+    content::RenderProcessHost* process_host,
+    ProcessMap* process_map,
+    ExtensionRegistry* registry) {
+  std::set<std::string> extension_ids =
+      process_map->GetExtensionsInProcess(process_host->GetID());
+  if (extension_ids.empty())
+    return PRIV_NORMAL;
+
+  return PRIV_EXTENSION;
+}
 
 static std::map<int, void*> render_process_hosts_;
 
@@ -56,12 +98,12 @@ AtomBrowserClientExtensionsPart::~AtomBrowserClientExtensionsPart() {
 
 // static
 bool AtomBrowserClientExtensionsPart::ShouldUseProcessPerSite(
-    content::BrowserContext* browser_context, const GURL& effective_url) {
+    Profile* profile, const GURL& effective_url) {
   // return false for non-extension urls
   if (!effective_url.SchemeIs(kExtensionScheme))
     return false;
 
-  ExtensionRegistry* registry = ExtensionRegistry::Get(browser_context);
+  ExtensionRegistry* registry = ExtensionRegistry::Get(profile);
   if (!registry)
     return false;
 
@@ -71,6 +113,122 @@ bool AtomBrowserClientExtensionsPart::ShouldUseProcessPerSite(
     return false;
 
   return true;
+}
+
+// static
+bool AtomBrowserClientExtensionsPart::DoesSiteRequireDedicatedProcess(
+    content::BrowserContext* browser_context,
+    const GURL& effective_site_url) {
+  if (effective_site_url.SchemeIs(extensions::kExtensionScheme)) {
+    // --isolate-extensions should isolate extensions, except for a) hosted
+    // apps, b) platform apps.
+    // a) Isolating hosted apps is a good idea, but ought to be a separate knob.
+    // b) Sandbox pages in platform app can load web content in iframes;
+    //   isolating the app and the iframe leads to StoragePartition mismatch in
+    //   the two processes.
+    //   TODO(lazyboy): We should deprecate this behaviour and not let web
+    //   content load in platform app's process; see http://crbug.com/615585.
+    if (IsIsolateExtensionsEnabled()) {
+      const Extension* extension =
+          ExtensionRegistry::Get(browser_context)
+              ->enabled_extensions()
+              .GetExtensionOrAppByURL(effective_site_url);
+      if (extension && !extension->is_hosted_app() &&
+          !extension->is_platform_app()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// static
+bool AtomBrowserClientExtensionsPart::ShouldLockToOrigin(
+    content::BrowserContext* browser_context,
+    const GURL& effective_site_url) {
+  // https://crbug.com/160576 workaround: Origin lock to the chrome-extension://
+  // scheme for a hosted app would kill processes on legitimate requests for the
+  // app's cookies.
+  if (effective_site_url.SchemeIs(extensions::kExtensionScheme)) {
+    const Extension* extension =
+        ExtensionRegistry::Get(browser_context)
+            ->enabled_extensions()
+            .GetExtensionOrAppByURL(effective_site_url);
+    if (extension && extension->is_hosted_app())
+      return false;
+
+    // http://crbug.com/600441 workaround: Extension process reuse, implemented
+    // in ShouldTryToUseExistingProcessHost(), means that extension processes
+    // aren't always actually dedicated to a single origin, even in
+    // --isolate-extensions. TODO(nick): Fix this.
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            ::switches::kSitePerProcess))
+      return false;
+  }
+  return true;
+}
+
+// static
+bool AtomBrowserClientExtensionsPart::IsSuitableHost(
+    Profile* profile,
+    content::RenderProcessHost* process_host,
+    const GURL& site_url) {
+  DCHECK(profile);
+
+  ExtensionRegistry* registry = ExtensionRegistry::Get(profile);
+  ProcessMap* process_map = ProcessMap::Get(profile);
+
+  // These may be NULL during tests. In that case, just assume any site can
+  // share any host.
+  if (!registry || !process_map)
+    return true;
+
+  // Otherwise, just make sure the process privilege matches the privilege
+  // required by the site.
+  RenderProcessHostPrivilege privilege_required =
+      GetPrivilegeRequiredByUrl(site_url, registry);
+  return GetProcessPrivilege(process_host, process_map, registry) ==
+         privilege_required;
+}
+
+// static
+bool
+AtomBrowserClientExtensionsPart::ShouldTryToUseExistingProcessHost(
+    Profile* profile, const GURL& url) {
+  // This function is trying to limit the amount of processes used by extensions
+  // with background pages. It uses a globally set percentage of processes to
+  // run such extensions and if the limit is exceeded, it returns true, to
+  // indicate to the content module to group extensions together.
+  ExtensionRegistry* registry =
+      profile ? ExtensionRegistry::Get(profile) : NULL;
+  if (!registry)
+    return false;
+
+  // We have to have a valid extension with background page to proceed.
+  const Extension* extension =
+      registry->enabled_extensions().GetExtensionOrAppByURL(url);
+  if (!extension)
+    return false;
+  if (!BackgroundInfo::HasBackgroundPage(extension))
+    return false;
+
+  std::set<int> process_ids;
+  size_t max_process_count =
+      content::RenderProcessHost::GetMaxRendererProcessCount();
+
+  // Go through all profiles to ensure we have total count of extension
+  // processes containing background pages, otherwise one profile can
+  // starve the other.
+  std::vector<Profile*> profiles = g_browser_process->profile_manager()->
+      GetLoadedProfiles();
+  for (size_t i = 0; i < profiles.size(); ++i) {
+    ProcessManager* epm = ProcessManager::Get(profiles[i]);
+    for (ExtensionHost* host : epm->background_hosts())
+      process_ids.insert(host->render_process_host()->GetID());
+  }
+
+  return (process_ids.size() >
+          (max_process_count * chrome::kMaxShareOfExtensionProcesses));
 }
 
 // static
@@ -205,11 +363,11 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
 
 // static
 GURL AtomBrowserClientExtensionsPart::GetEffectiveURL(
-    BrowserContext* context, const GURL& url) {
+    Profile* profile, const GURL& url) {
   // If the input |url| is part of an installed app, the effective URL is an
   // extension URL with the ID of that extension as the host. This has the
   // effect of grouping apps together in a common SiteInstance.
-  ExtensionRegistry* registry = ExtensionRegistry::Get(context);
+  ExtensionRegistry* registry = ExtensionRegistry::Get(profile);
   if (!registry)
     return url;
 

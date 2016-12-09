@@ -8,7 +8,12 @@
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"
-#include "atom/renderer/api/atom_api_spell_check_client.h"
+
+namespace atom {
+namespace api {
+class SpellCheckClient;
+}
+}
 
 namespace brave {
 

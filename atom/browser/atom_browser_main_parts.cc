@@ -60,9 +60,6 @@ AtomBrowserMainParts::AtomBrowserMainParts()
       gc_timer_(true, true) {
   DCHECK(!self_) << "Cannot have two AtomBrowserMainParts";
   self_ = this;
-  // Register extension scheme as web safe scheme.
-  // content::ChildProcessSecurityPolicy::GetInstance()->
-  //     RegisterWebSafeScheme("chrome-extension");
 }
 
 AtomBrowserMainParts::~AtomBrowserMainParts() {
@@ -137,8 +134,11 @@ void AtomBrowserMainParts::IdleHandler() {
 }
 
 void AtomBrowserMainParts::PreMainMessageLoopRun() {
+  fake_browser_process_->PreMainMessageLoopRun();
+
   content::WebUIControllerFactory::RegisterFactory(
       ChromeWebUIControllerFactory::GetInstance());
+
   js_env_.reset(new JavascriptEnvironment);
   js_env_->isolate()->Enter();
 

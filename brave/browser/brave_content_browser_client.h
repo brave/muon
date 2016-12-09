@@ -60,8 +60,20 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
                        int opener_render_view_id,
                        int opener_render_frame_id,
                        bool* no_javascript_access) override;
+  GURL GetEffectiveURL(content::BrowserContext* browser_context,
+                       const GURL& url) override;
   bool ShouldUseProcessPerSite(content::BrowserContext* browser_context,
-                                       const GURL& effective_url) override;
+                               const GURL& effective_url) override;
+  bool DoesSiteRequireDedicatedProcess(content::BrowserContext* browser_context,
+                                       const GURL& effective_site_url) override;
+  bool ShouldLockToOrigin(content::BrowserContext* browser_context,
+                          const GURL& effective_site_url) override;
+  bool IsSuitableHost(content::RenderProcessHost* process_host,
+                      const GURL& site_url) override;
+  bool ShouldTryToUseExistingProcessHost(
+      content::BrowserContext* browser_context,
+      const GURL& url) override;
+
   void GetAdditionalAllowedSchemesForFileSystem(
       std::vector<std::string>* additional_allowed_schemes) override;
   void GetAdditionalWebUISchemes(
@@ -88,8 +100,6 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       std::string* partition_domain,
       std::string* partition_name,
       bool* in_memory) override;
-  GURL GetEffectiveURL(
-      content::BrowserContext* browser_context, const GURL& url) override;
   base::FilePath GetShaderDiskCacheDirectory() override;
   gpu::GpuChannelEstablishFactory* GetGpuChannelEstablishFactory() override;
 

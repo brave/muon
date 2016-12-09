@@ -55,9 +55,8 @@ class BrowserProcess {
   BrowserProcess();
   ~BrowserProcess();
 
-  // Called before the browser threads are created.
   void PreCreateThreads();
-
+  void PreMainMessageLoopRun();
   std::string GetApplicationLocale();
 
   printing::PrintJobManager* print_job_manager();

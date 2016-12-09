@@ -7,7 +7,9 @@
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
-// #include "chrome/browser/plugins/plugin_prefs_factory.h"
+#if defined(ENABLE_PLUGINS)
+#include "chrome/browser/plugins/plugin_prefs_factory.h"
+#endif
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "extensions/browser/api/alarms/alarm_manager.h"
@@ -64,10 +66,9 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
 #endif
   CookieSettingsFactory::GetInstance();
   HostContentSettingsMapFactory::GetInstance();
-  // autofill::PersonalDataManagerFactory::GetInstance();
-// #if defined(ENABLE_PLUGINS)
-//   PluginPrefsFactory::GetInstance();
-// #endif
+#if defined(ENABLE_PLUGINS)
+  PluginPrefsFactory::GetInstance();
+#endif
   ProtocolHandlerRegistryFactory::GetInstance();
 }
 

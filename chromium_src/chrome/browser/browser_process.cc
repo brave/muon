@@ -22,12 +22,20 @@
 
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
-#include "atom/common/extensions/atom_extensions_client.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
+#include "chrome/common/extensions/chrome_extensions_client.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/features/feature_provider.h"
 #include "ui/base/resource/resource_bundle.h"
 #endif
+
+#if defined(ENABLE_PLUGINS)
+#include "brave/browser/plugins/brave_plugin_service_filter.h"
+#include "chrome/browser/plugins/plugin_finder.h"
+#include "content/public/browser/plugin_service.h"
+#endif
+
+using content::PluginService;
 
 BrowserProcess* g_browser_process = NULL;
 
@@ -50,7 +58,7 @@ BrowserProcess::BrowserProcess()
 
   extension_event_router_forwarder_ = new extensions::EventRouterForwarder;
 
-  extensions::ExtensionsClient::Set(new extensions::AtomExtensionsClient());
+  extensions::ExtensionsClient::Set(new extensions::ChromeExtensionsClient());
   extensions_browser_client_.reset(
       new extensions::AtomExtensionsBrowserClient());
   extensions::ExtensionsBrowserClient::Set(extensions_browser_client_.get());
@@ -137,3 +145,13 @@ bool BrowserProcess::IsShuttingDown() {
 void BrowserProcess::PreCreateThreads() {
 }
 
+void BrowserProcess::PreMainMessageLoopRun() {
+#if defined(ENABLE_PLUGINS)
+  PluginService* plugin_service = PluginService::GetInstance();
+  plugin_service->SetFilter(BravePluginServiceFilter::GetInstance());
+
+  // Triggers initialization of the singleton instance on UI thread.
+  PluginFinder::GetInstance()->Init();
+
+#endif  // defined(ENABLE_PLUGINS)
+}

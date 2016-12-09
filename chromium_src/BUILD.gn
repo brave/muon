@@ -53,8 +53,11 @@ source_set("debug") {
   ]
 }
 
-source_set("renderer") {
-  configs += [ ":chromium_src_config" ]
+source_set("common") {
+  configs += [
+    ":chromium_src_config",
+    "//electron/build:electron_config",
+  ]
 
   include_dirs = [
     # force this to appear before the chromium root src dir
@@ -63,18 +66,18 @@ source_set("renderer") {
 
   sources = []
 
-  deps = []
+  if (enable_extensions) {
+    sources += [
+      "chrome/common/extensions/chrome_extensions_client.cc",
+      "chrome/common/extensions/chrome_extensions_client.h",
+    ]
+  }
 
-  if (enable_plugins) {
-    deps += [
-      "//components/pdf/renderer",
-      "//components/strings",
-      "//ppapi/host",
-      "//ppapi/proxy",
-      "//ppapi/proxy:ipc",
-      "//ppapi/shared_impl",
-      "//third_party/icu",
-      "//third_party/WebKit/public:blink_headers",
+  deps = [
+    "//chrome/common",
+  ]
+}
+
 source_set("renderer") {
   configs += [ ":chromium_src_config" ]
 
@@ -87,6 +90,11 @@ source_set("renderer") {
     "chrome/renderer/content_settings_observer.cc",
     "chrome/renderer/content_settings_observer.h",
   ]
+
+  if (enable_extensions) {
+    sources += [
+      "chrome/renderer/extensions/chrome_extensions_dispatcher_delegate.cc",
+      "chrome/renderer/extensions/chrome_extensions_dispatcher_delegate.h",
     ]
   }
 
@@ -245,7 +253,7 @@ source_set("browser") {
       "//printing",
     ]
   }
-  
+
   if (enable_webrtc) {
     sources += [
       "chrome/browser/media/desktop_media_list.h",
@@ -278,8 +286,22 @@ source_set("browser") {
       "//chrome/browser/renderer_host/pepper/pepper_flash_drm_host.h",
       "//chrome/browser/renderer_host/pepper/pepper_isolated_file_system_message_filter.cc",
       "//chrome/browser/renderer_host/pepper/pepper_isolated_file_system_message_filter.h",
+      "//chrome/browser/pepper_flash_settings_manager.cc",
+      "//chrome/browser/pepper_flash_settings_manager.h",
       "//chrome/browser/plugins/plugin_info_message_filter.cc",
       "//chrome/browser/plugins/plugin_info_message_filter.h",
+      "//chrome/browser/plugins/plugin_filter_utils.cc",
+      "//chrome/browser/plugins/plugin_filter_utils.h",
+      "//chrome/browser/plugins/plugin_finder.cc",
+      "//chrome/browser/plugins/plugin_finder.h",
+      "//chrome/browser/plugins/plugin_metadata.cc",
+      "//chrome/browser/plugins/plugin_metadata.h",
+      "//chrome/browser/plugins/plugin_prefs.cc",
+      "//chrome/browser/plugins/plugin_prefs.h",
+      "//chrome/browser/plugins/plugin_prefs_factory.cc",
+      "//chrome/browser/plugins/plugin_prefs_factory.h",
+      "//chrome/browser/plugins/chrome_plugin_service_filter.cc",
+      "//chrome/browser/plugins/chrome_plugin_service_filter.h",
     ]
 
     if (enable_extensions) {

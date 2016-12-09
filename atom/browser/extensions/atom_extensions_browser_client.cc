@@ -21,6 +21,7 @@
 #include "base/version.h"
 #include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/extensions/event_router_forwarder.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_context.h"
@@ -43,6 +44,7 @@
 #include "extensions/browser/extension_function_registry.h"
 #include "extensions/browser/extension_prefs.h"
 #include "extensions/browser/extension_util.h"
+#include "extensions/browser/mojo/service_registration.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/browser/updater/null_extension_cache.h"
 #include "extensions/browser/url_request_util.h"
@@ -552,24 +554,16 @@ AtomExtensionsBrowserClient::GetComponentExtensionResourceManager() {
 void AtomExtensionsBrowserClient::RegisterMojoServices(
     content::RenderFrameHost* render_frame_host,
     const Extension* extension) const {
+  RegisterServicesForFrame(render_frame_host, extension);
 }
 
 void AtomExtensionsBrowserClient::BroadcastEventToRenderers(
     events::HistogramValue histogram_value,
     const std::string& event_name,
     std::unique_ptr<base::ListValue> args) {
-  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
-    content::BrowserThread::PostTask(
-        content::BrowserThread::UI, FROM_HERE,
-        base::Bind(&AtomExtensionsBrowserClient::BroadcastEventToRenderers,
-                   base::Unretained(this), histogram_value, event_name,
-                   base::Passed(&args)));
-    return;
-  }
-
-  std::unique_ptr<Event> event(
-      new Event(histogram_value, event_name, std::move(args)));
-  EventRouter::Get(browser_context_)->BroadcastEvent(std::move(event));
+  g_browser_process->extension_event_router_forwarder()
+      ->BroadcastEventToRenderers(histogram_value, event_name, std::move(args),
+                                  GURL());
 }
 
 net::NetLog* AtomExtensionsBrowserClient::GetNetLog() {

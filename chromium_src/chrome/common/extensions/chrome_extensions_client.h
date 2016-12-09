@@ -1,24 +1,26 @@
-// Copyright (c) 2014 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright (c) 2016 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ATOM_COMMON_EXTENSIONS_ATOM_EXTENSIONS_CLIENT_H_
-#define ATOM_COMMON_EXTENSIONS_ATOM_EXTENSIONS_CLIENT_H_
+#ifndef CHROME_COMMON_EXTENSIONS_CHROME_EXTENSIONS_CLIENT_H_
+#define CHROME_COMMON_EXTENSIONS_CHROME_EXTENSIONS_CLIENT_H_
 
 #include <string>
 
 #include "base/compiler_specific.h"
+#include "base/lazy_instance.h"
 #include "base/macros.h"
 #include "chrome/common/extensions/permissions/chrome_api_permissions.h"
+#include "chrome/common/extensions/permissions/chrome_permission_message_provider.h"
 #include "extensions/common/extensions_client.h"
 #include "extensions/common/permissions/extensions_api_permissions.h"
 
 namespace extensions {
 
-class AtomExtensionsClient : public ExtensionsClient {
+class ChromeExtensionsClient : public ExtensionsClient {
  public:
-  AtomExtensionsClient();
-  ~AtomExtensionsClient() override;
+  ChromeExtensionsClient();
+  ~ChromeExtensionsClient() override;
 
   void Initialize() override;
 
@@ -48,18 +50,24 @@ class AtomExtensionsClient : public ExtensionsClient {
   std::set<base::FilePath> GetBrowserImagePaths(
     const Extension* extension);
 
-  // Get the LazyInstance for AtomExtensionsClient.
-  static AtomExtensionsClient* GetInstance();
+  // Get the LazyInstance for ChromeExtensionsClient.
+  static ChromeExtensionsClient* GetInstance();
 
  private:
   const ChromeAPIPermissions chrome_api_permissions_;
   const ExtensionsAPIPermissions extensions_api_permissions_;
+  const ChromePermissionMessageProvider permission_message_provider_;
 
+  // A whitelist of extensions that can script anywhere. Do not add to this
+  // list (except in tests) without consulting the Extensions team first.
+  // Note: Component extensions have this right implicitly and do not need to be
+  // added to this list.
   ScriptingWhitelist scripting_whitelist_;
 
-  DISALLOW_COPY_AND_ASSIGN(AtomExtensionsClient);
+  friend struct base::DefaultLazyInstanceTraits<ChromeExtensionsClient>;
+  DISALLOW_COPY_AND_ASSIGN(ChromeExtensionsClient);
 };
 
 }  // namespace extensions
 
-#endif  // ATOM_COMMON_EXTENSIONS_ATOM_EXTENSIONS_CLIENT_H_
+#endif  // CHROME_COMMON_EXTENSIONS_CHROME_EXTENSIONS_CLIENT_H_

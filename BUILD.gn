@@ -194,6 +194,11 @@ group("child_dependencies") {
 source_set("common") {
   public_deps = [ "atom/common" ]
 
+  include_dirs = [
+    # force this to appear before the chromium root src dir
+    "chromium_src",
+  ]
+
   sources = [
     "brave/common/brave_paths.cc",
     "brave/common/brave_paths.h",
@@ -201,6 +206,7 @@ source_set("common") {
   ]
 
   deps = [
+    "chromium_src:common",
     ":electron_version_header",
   ]
 
@@ -242,10 +248,6 @@ source_set("renderer") {
   sources = [
     "atom/renderer/api/atom_api_spell_check_client.cc",
     "atom/renderer/api/atom_api_spell_check_client.h",
-    "atom/renderer/atom_render_view_observer.cc",
-    "atom/renderer/atom_render_view_observer.h",
-    "atom/renderer/atom_renderer_client.cc",
-    "atom/renderer/atom_renderer_client.h",
     "atom/renderer/content_settings_manager.cc",
     "atom/renderer/content_settings_manager.h",
     "brave/renderer/brave_content_renderer_client.cc",
@@ -284,10 +286,6 @@ source_set("renderer") {
       # TODO(bridiver) - change to brave/renderer/extensions
       "atom/common/javascript_bindings.cc",
       "atom/common/javascript_bindings.h",
-      "atom/renderer/extensions/atom_extensions_dispatcher_delegate.cc",
-      "atom/renderer/extensions/atom_extensions_dispatcher_delegate.h",
-      "atom/renderer/extensions/atom_extensions_renderer_client.cc",
-      "atom/renderer/extensions/atom_extensions_renderer_client.h",
       "brave/renderer/extensions/content_settings_bindings.cc",
       "brave/renderer/extensions/content_settings_bindings.h",
       "brave/renderer/extensions/web_frame_bindings.cc",

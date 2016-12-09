@@ -117,7 +117,7 @@ v8::Local<v8::Value> Converter<ContextMenuParamsWithWebContents>::ToV8(
   dict.Set("inputFieldType", params.input_field_type);
   dict.Set("menuSourceType",  params.source_type);
 
-  if (params.custom_context.is_pepper_menu)
+  if (params.custom_context.request_id || params.custom_context.is_pepper_menu)
     dict.Set("menu", MenuToV8(isolate, val.second, params.custom_context,
                               params.custom_items));
   return mate::ConvertToV8(isolate, dict);

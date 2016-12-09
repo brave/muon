@@ -14,6 +14,7 @@
 
       <include name="IDR_BRAVE_IPC_RENDERER_JS" file="renderer\resources\extensions\ipc_renderer_custom_bindings.js" type="BINDATA" />
 
+      <include name="IDR_PLUGIN_DB_JSON" file="browser\resources\plugin_metadata\plugins.json" type="BINDATA" />
     </includes>
   </release>
 </grit>

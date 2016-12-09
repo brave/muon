@@ -51,20 +51,6 @@ void ContentSettingsManager::OnUpdateWebKitPrefs(
 void ContentSettingsManager::OnUpdateContentSettings(
     const base::DictionaryValue& content_settings) {
   content_settings_ = content_settings.CreateDeepCopy();
-  FOR_EACH_OBSERVER(
-    ContentSettingsObserver,
-    observers_,
-    OnContentSettingsChanged(content_settings));
-}
-
-void ContentSettingsManager::AddObserver(
-    ContentSettingsObserver* observer) {
-  observers_.AddObserver(observer);
-}
-
-void ContentSettingsManager::RemoveObserver(
-    ContentSettingsObserver* observer) {
-  observers_.RemoveObserver(observer);
 }
 
 ContentSetting ContentSettingsManager::GetSetting(

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "atom/renderer/api/atom_api_spell_check_client.h"
 #include "base/strings/utf_string_conversions.h"
 #include "content/renderer/browser_plugin/browser_plugin.h"
 #include "content/renderer/browser_plugin/browser_plugin_manager.h"
@@ -96,33 +97,6 @@ void WebFrameBindings::RegisterElementResizeCallback(
 
   args.GetReturnValue().Set(v8::Boolean::New(context()->isolate(), true));
 }
-
-// void WebFrameBindings::AddGuest(
-//     const v8::FunctionCallbackInfo<v8::Value>& args) {
-
-
-
-//   CHECK(args.Length() == 1);
-
-//   int id = args[0]->Int32Value();
-//   // This is a workaround for a strange issue on windows with background tabs
-//   // libchromiumcontent doesn't appear to be making the check for
-//   // params.disposition == NEW_BACKGROUND_TAB in WebContentsImpl
-//   // This results in the BrowserPluginGuest trying to access the native
-//   // window before it's actually ready.
-//   //
-//   // It's also possible that the guest is being treated as
-//   // visible because the "embedder", which is the same for all tabs
-//   // in the window, is always visible.
-//   //
-//   // This hack works around the issue by always
-//   // marking it as hidden while attaching
-//   content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
-//     updateVisibility(false);
-//   content::RenderFrame::FromWebFrame(context()->web_frame())->AttachGuest(id);
-//   content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
-//     updateVisibility(true);
-// }
 
 void WebFrameBindings::RegisterEmbedderCustomElement(
     const v8::FunctionCallbackInfo<v8::Value>& args) {

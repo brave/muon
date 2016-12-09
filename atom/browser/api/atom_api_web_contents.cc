@@ -97,6 +97,8 @@
 #endif
 
 
+#include "brave/browser/plugins/brave_plugin_service_filter.h"
+
 namespace mate {
 
 template<>
@@ -717,6 +719,14 @@ void WebContents::RendererResponsive(content::WebContents* source) {
 }
 
 bool WebContents::HandleContextMenu(const content::ContextMenuParams& params) {
+#if defined(ENABLE_PLUGINS)
+    if (params.custom_context.request_id && !params.custom_context.is_pepper_menu) {
+      Emit("enable-pepper-menu", std::make_pair(params, web_contents()));
+      web_contents()->NotifyContextMenuClosed(params.custom_context);
+      return true;
+    }
+#endif
+
   if (params.custom_context.is_pepper_menu) {
     Emit("pepper-context-menu", std::make_pair(params, web_contents()));
     web_contents()->NotifyContextMenuClosed(params.custom_context);
@@ -725,6 +735,22 @@ bool WebContents::HandleContextMenu(const content::ContextMenuParams& params) {
   }
 
   return true;
+}
+
+void WebContents::AuthorizePlugin(mate::Arguments* args) {
+  if (args->Length() != 1) {
+    args->ThrowError("Wrong number of arguments");
+    return;
+  }
+
+  std::string resource_id;
+  if (!args->GetNext(&resource_id)) {
+    args->ThrowError("resourceId is a required field");
+    return;
+  }
+
+  BravePluginServiceFilter::GetInstance()->AuthorizeAllPlugins(
+      web_contents(), true, resource_id);
 }
 
 bool WebContents::OnGoToEntryOffset(int offset) {
@@ -2020,6 +2046,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
                   &WebContents::GetZoomPercent)
       .SetMethod("enablePreferredSizeMode",
                   &WebContents::EnablePreferredSizeMode)
+      .SetMethod("authorizePlugin",
+                  &WebContents::AuthorizePlugin)
 #if defined(ENABLE_EXTENSIONS)
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
       .SetMethod("setTabValues", &WebContents::SetTabValues)

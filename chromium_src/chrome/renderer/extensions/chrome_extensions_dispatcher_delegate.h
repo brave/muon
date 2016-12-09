@@ -1,9 +1,9 @@
-// Copyright (c) 2014 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ATOM_RENDERER_EXTENSIONS_ATOM_EXTENSIONS_DISPATCHER_DELEGATE_H_
-#define ATOM_RENDERER_EXTENSIONS_ATOM_EXTENSIONS_DISPATCHER_DELEGATE_H_
+#ifndef CHROME_RENDERER_EXTENSIONS_CHROME_EXTENSIONS_DISPATCHER_DELEGATE_H_
+#define CHROME_RENDERER_EXTENSIONS_CHROME_EXTENSIONS_DISPATCHER_DELEGATE_H_
 
 #include <set>
 #include <string>
@@ -14,13 +14,11 @@ namespace content {
 class RenderViewObserver;
 }
 
-namespace extensions {
-
-class AtomExtensionsDispatcherDelegate
+class ChromeExtensionsDispatcherDelegate
     : public extensions::DispatcherDelegate {
  public:
-  AtomExtensionsDispatcherDelegate();
-  ~AtomExtensionsDispatcherDelegate() override;
+  ChromeExtensionsDispatcherDelegate();
+  ~ChromeExtensionsDispatcherDelegate() override;
 
  private:
   // extensions::DispatcherDelegate implementation.
@@ -36,9 +34,7 @@ class AtomExtensionsDispatcherDelegate
   void OnActiveExtensionsUpdated(
       const std::set<std::string>& extensions_ids) override;
 
-  DISALLOW_COPY_AND_ASSIGN(AtomExtensionsDispatcherDelegate);
+  DISALLOW_COPY_AND_ASSIGN(ChromeExtensionsDispatcherDelegate);
 };
 
-}  // namespace extensions
-
-#endif  // ATOM_RENDERER_EXTENSIONS_ATOM_EXTENSIONS_DISPATCHER_DELEGATE_H_
+#endif  // CHROME_RENDERER_EXTENSIONS_CHROME_EXTENSIONS_DISPATCHER_DELEGATE_H_

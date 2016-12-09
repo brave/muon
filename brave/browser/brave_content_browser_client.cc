@@ -50,6 +50,7 @@
 
 
 using content::BrowserThread;
+using extensions::AtomBrowserClientExtensionsPart;
 
 namespace brave {
 
@@ -68,7 +69,7 @@ void SetApplicationLocaleOnIOThread(const std::string& locale) {
 
 BraveContentBrowserClient::BraveContentBrowserClient() {
 #if defined(ENABLE_EXTENSIONS)
-  extensions_part_.reset(new extensions::AtomBrowserClientExtensionsPart);
+  extensions_part_.reset(new AtomBrowserClientExtensionsPart);
 #endif
 }
 
@@ -193,8 +194,6 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   //                   new base::UserDataAdapter<WebRtcEventLogHandler>(
   //                       webrtc_event_log_handler));
 #endif
-  host->Send(new ChromeViewMsg_SetIsIncognitoProcess(
-      profile->IsOffTheRecord()));
 
 #if defined(ENABLE_EXTENSIONS)
   extensions_part_->RenderProcessWillLaunch(host);
@@ -213,10 +212,58 @@ GURL BraveContentBrowserClient::GetEffectiveURL(
     return url;
 
 #if defined(ENABLE_EXTENSIONS)
-  return extensions::AtomBrowserClientExtensionsPart::GetEffectiveURL(
+  return AtomBrowserClientExtensionsPart::GetEffectiveURL(
       profile, url);
 #else
   return url;
+#endif
+}
+
+bool BraveContentBrowserClient::ShouldLockToOrigin(
+    content::BrowserContext* browser_context,
+    const GURL& effective_site_url) {
+#if defined(ENABLE_EXTENSIONS)
+  // Disable origin lock if this is an extension/app that applies effective URL
+  // mappings.
+  if (!AtomBrowserClientExtensionsPart::ShouldLockToOrigin(
+          browser_context, effective_site_url)) {
+    return false;
+  }
+#endif
+  return true;
+}
+
+bool BraveContentBrowserClient::IsSuitableHost(
+    content::RenderProcessHost* process_host,
+    const GURL& site_url) {
+  Profile* profile =
+      Profile::FromBrowserContext(process_host->GetBrowserContext());
+  // This may be NULL during tests. In that case, just assume any site can
+  // share any host.
+  if (!profile)
+    return true;
+
+#if defined(ENABLE_EXTENSIONS)
+  return AtomBrowserClientExtensionsPart::IsSuitableHost(
+      profile, process_host, site_url);
+#else
+  return true;
+#endif
+}
+
+bool BraveContentBrowserClient::ShouldTryToUseExistingProcessHost(
+    content::BrowserContext* browser_context, const GURL& url) {
+  // It has to be a valid URL for us to check for an extension.
+  if (!url.is_valid())
+    return false;
+
+#if defined(ENABLE_EXTENSIONS)
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  return AtomBrowserClientExtensionsPart::
+      ShouldTryToUseExistingProcessHost(
+          profile, url);
+#else
+  return false;
 #endif
 }
 
@@ -245,7 +292,7 @@ std::string BraveContentBrowserClient::GetApplicationLocale() {
 void BraveContentBrowserClient::SetApplicationLocale(std::string locale) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 #if defined(ENABLE_EXTENSIONS)
-  extensions::AtomBrowserClientExtensionsPart::SetApplicationLocale(locale);
+  AtomBrowserClientExtensionsPart::SetApplicationLocale(locale);
 #endif
   // This object is guaranteed to outlive all threads so we don't have to
   // worry about the lack of refcounting and can just post as Unretained.
@@ -414,12 +461,28 @@ void BraveContentBrowserClient::SiteInstanceDeleting(
 
 bool BraveContentBrowserClient::ShouldUseProcessPerSite(
     content::BrowserContext* browser_context, const GURL& effective_url) {
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  if (!profile)
+    return false;
+
 #if defined(ENABLE_EXTENSIONS)
-  return extensions::AtomBrowserClientExtensionsPart::ShouldUseProcessPerSite(
-      browser_context, effective_url);
+  return AtomBrowserClientExtensionsPart::ShouldUseProcessPerSite(
+      profile, effective_url);
 #else
   return false;
 #endif
+}
+
+bool BraveContentBrowserClient::DoesSiteRequireDedicatedProcess(
+    content::BrowserContext* browser_context,
+    const GURL& effective_site_url) {
+#if defined(ENABLE_EXTENSIONS)
+  if (AtomBrowserClientExtensionsPart::DoesSiteRequireDedicatedProcess(
+          browser_context, effective_site_url)) {
+    return true;
+  }
+#endif
+  return false;
 }
 
 void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
@@ -446,7 +509,7 @@ bool BraveContentBrowserClient::ShouldAllowOpenURL(
   GURL from_url = site_instance->GetSiteURL();
 #if defined(ENABLE_EXTENSIONS)
   bool result;
-  if (extensions::AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
+  if (AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
       site_instance, from_url, url, &result))
     return result;
 #endif
@@ -492,7 +555,7 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
     const GURL& current_url,
     const GURL& new_url) {
 #if defined(ENABLE_EXTENSIONS)
-  return extensions::AtomBrowserClientExtensionsPart::
+  return AtomBrowserClientExtensionsPart::
       ShouldSwapBrowsingInstancesForNavigation(
           site_instance, current_url, new_url);
 #else

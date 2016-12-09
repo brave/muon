@@ -28,6 +28,8 @@ class RenderViewHost;
 struct WebPreferences;
 }
 
+class Profile;
+
 namespace extensions {
 
 // Implements the extensions portion of AtomBrowserClient.
@@ -37,8 +39,19 @@ class AtomBrowserClientExtensionsPart {
   ~AtomBrowserClientExtensionsPart();
 
   // Corresponds to the AtomBrowserClient function of the same name.
-  static bool ShouldUseProcessPerSite(content::BrowserContext* profile,
+  static GURL GetEffectiveURL(Profile* profile, const GURL& url);
+  static bool ShouldUseProcessPerSite(Profile* profile,
                                       const GURL& effective_url);
+  static bool DoesSiteRequireDedicatedProcess(
+      content::BrowserContext* browser_context,
+      const GURL& effective_site_url);
+  static bool ShouldLockToOrigin(content::BrowserContext* browser_context,
+                                 const GURL& effective_site_url);
+  static bool IsSuitableHost(Profile* profile,
+                             content::RenderProcessHost* process_host,
+                             const GURL& site_url);
+  static bool ShouldTryToUseExistingProcessHost(Profile* profile,
+                                                const GURL& url);
   static bool ShouldSwapBrowsingInstancesForNavigation(
       content::SiteInstance* site_instance,
       const GURL& current_url,
@@ -71,8 +84,6 @@ class AtomBrowserClientExtensionsPart {
       content::RenderProcessHost* process,
       content::BrowserContext* browser_context);
   std::string GetApplicationLocale();
-  static GURL GetEffectiveURL(
-    content::BrowserContext*, const GURL& url);
 
  private:
   void UpdateContentSettings();

@@ -1,5 +1,5 @@
-// Copyright (c) 2013 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2015 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #ifndef BRAVE_RENDERER_BRAVE_CONTENT_RENDERER_CLIENT_H_
@@ -7,15 +7,25 @@
 
 #include <string>
 
-#include "atom/renderer/atom_renderer_client.h"
+#include "chrome/renderer/chrome_content_renderer_client.h"
 
 namespace atom {
 class ContentSettingsManager;
 }
 
+namespace blink {
+class WebPrescientNetworking;
+class WebLocalFrame;
+class WebPlugin;
+}
+
+namespace content {
+class RenderFrame;
+}
+
 namespace brave {
 
-class BraveContentRendererClient : public atom::AtomRendererClient {
+class BraveContentRendererClient : public ChromeContentRendererClient {
  public:
   BraveContentRendererClient();
 
@@ -23,34 +33,27 @@ class BraveContentRendererClient : public atom::AtomRendererClient {
   void RenderThreadStarted() override;
   void RenderFrameCreated(content::RenderFrame*) override;
   void RenderViewCreated(content::RenderView*) override;
-  void RunScriptsAtDocumentStart(content::RenderFrame* render_frame) override;
-  void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame) override;
-  bool AllowPopup() override;
-  bool ShouldFork(blink::WebLocalFrame* frame,
-                  const GURL& url,
-                  const std::string& http_method,
-                  bool is_initial_navigation,
-                  bool is_server_redirect,
-                  bool* send_referrer) override;
-  void DidInitializeServiceWorkerContextOnWorkerThread(
-      v8::Local<v8::Context> context,
-      int embedded_worker_id,
-      const GURL& url) override;
-  void WillDestroyServiceWorkerContextOnWorkerThread(
-      v8::Local<v8::Context> context,
-      int embedded_worker_id,
-      const GURL& url) override;
+  bool OverrideCreatePlugin(
+      content::RenderFrame* render_frame,
+      blink::WebLocalFrame* frame,
+      const blink::WebPluginParams& params,
+      blink::WebPlugin** plugin) override;
+  unsigned long long VisitedLinkHash(
+      const char* canonical_url, size_t length) override;
+  bool IsLinkVisited(unsigned long long link_hash) override;
 
-  bool WillSendRequest(
-    blink::WebFrame* frame,
-    ui::PageTransition transition_type,
-    const GURL& url,
-    const GURL& first_party_for_cookies,
-    GURL* new_url) override;
+  blink::WebPrescientNetworking* GetPrescientNetworking() override;
 
  private:
   atom::ContentSettingsManager* content_settings_manager_;  // not owned
 
+  std::unique_ptr<ChromeRenderThreadObserver> chrome_observer_;
+  std::unique_ptr<web_cache::WebCacheImpl> web_cache_impl_;
+
+  std::unique_ptr<network_hints::PrescientNetworkingDispatcher>
+      prescient_networking_dispatcher_;
+
+  std::unique_ptr<visitedlink::VisitedLinkSlave> visited_link_slave_;
   DISALLOW_COPY_AND_ASSIGN(BraveContentRendererClient);
 };
 
