@@ -1,0 +1,6 @@
+{
+  "manifest_version": 1,
+  "name": "exe:brave",
+  "display_name": "Brave",
+  "capabilities": { }
+}

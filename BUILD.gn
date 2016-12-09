@@ -50,6 +50,10 @@ group("electron") {
       "app/win:electron_app",
     ]
   }
+
+  if (use_aura && (is_win || is_linux)) {
+    data_deps += [ "app:mojo_manifests" ]
+  }
 }
 
 grit("atom_resources") {
@@ -85,18 +89,6 @@ grit("electron_api_resources") {
   resource_ids = "//electron/resource_ids"
 }
 
-grit("brave_strings") {
-  source = "brave/brave_strings.grd"
-  output_dir = "$root_gen_dir/brave"
-  use_qualified_include = true
-  outputs = [
-    "grit/brave_strings.h",
-    "brave_strings.pak",
- ]
-
- resource_ids = "//electron/resource_ids"
-}
-
 group("packed_resources") {
   public_deps = [
     ":packed_extra_resources",
@@ -126,7 +118,7 @@ repack("packed_extra_resources") {
   deps = [
     ":atom_resources",
     ":brave_resources",
-    ":brave_strings",
+    "app:brave_strings",
     "//chrome/common:resources",
     "//chrome/renderer:resources",
     "//content:resources",

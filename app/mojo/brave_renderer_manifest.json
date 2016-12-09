@@ -1,0 +1,6 @@
+{
+  "manifest_version":  1,
+  "name": "exe:brave_renderer",
+  "display_name": "Brave Renderer",
+  "capabilities": { }
+}

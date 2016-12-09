@@ -9,7 +9,7 @@
   "lib/electron_api_resources.grd": {
     "includes": [62000],
   },
-  "brave/brave_strings.grd": {
+  "app/brave_strings.grd": {
     "messages": [11200],
   },
 }

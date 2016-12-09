@@ -1,0 +1,44 @@
+# Copyright 2014 The Brave Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/ui.gni")
+import("//services/shell/public/service_manifest.gni")
+import("//tools/grit/grit_rule.gni")
+
+if (use_aura) {
+  service_manifest("brave_manifest") {
+    type = "exe"
+    name = "brave"
+    source = "mojo/brave_manifest.json"
+    base_manifest = "${root_out_dir}/content_browser_manifest.json"
+    base_deps = [ "//content/public/app:browser_manifest" ]
+  }
+
+  service_manifest("brave_renderer_manifest") {
+    type = "exe"
+    name = "brave_renderer"
+    source = "mojo/brave_renderer_manifest.json"
+    base_manifest = "${root_out_dir}/content_renderer_manifest.json"
+    base_deps = [ "//content/public/app:renderer_manifest" ]
+  }
+
+  group("mojo_manifests") {
+    data_deps = [
+      ":brave_manifest",
+      ":brave_renderer_manifest",
+    ]
+  }
+}
+
+grit("brave_strings") {
+  source = "brave_strings.grd"
+  output_dir = "$root_gen_dir/brave"
+  use_qualified_include = true
+  outputs = [
+    "grit/brave_strings.h",
+    "brave_strings.pak",
+  ]
+
+  resource_ids = "//electron/resource_ids"
+}
