@@ -1,3 +1,6 @@
+const binding = require('binding').Binding.create('tabViewInternal').generate()
+
 exports.$set(
     'TabViewInternal',
-    require('binding').Binding.create('tabViewInternal').generate());
+    binding);
+exports.$set('binding', binding);
