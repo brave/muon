@@ -77,6 +77,7 @@ class Session: public mate::TrackableObject<Session>,
   void SetUserAgent(const std::string& user_agent, mate::Arguments* args);
   std::string GetUserAgent();
   void SetEnableBrotli(bool enabled);
+  v8::Local<v8::Value> ContentSettings(v8::Isolate* isolate);
   v8::Local<v8::Value> Cookies(v8::Isolate* isolate);
   v8::Local<v8::Value> Protocol(v8::Isolate* isolate);
   v8::Local<v8::Value> WebRequest(v8::Isolate* isolate);
@@ -99,6 +100,7 @@ class Session: public mate::TrackableObject<Session>,
   v8::Global<v8::Value> protocol_;
   v8::Global<v8::Value> web_request_;
   v8::Global<v8::Value> user_prefs_;
+  v8::Global<v8::Value> content_settings_;
   v8::Global<v8::Value> autofill_;
   v8::Global<v8::Value> extensions_;
 

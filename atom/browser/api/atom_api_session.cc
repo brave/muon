@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "atom/browser/api/atom_api_autofill.h"
+#include "atom/browser/api/atom_api_content_settings.h"
 #include "atom/browser/api/atom_api_cookies.h"
 #include "atom/browser/api/atom_api_download_item.h"
 #include "atom/browser/api/atom_api_protocol.h"
@@ -564,6 +565,15 @@ v8::Local<v8::Value> Session::UserPrefs(v8::Isolate* isolate) {
   return v8::Local<v8::Value>::New(isolate, user_prefs_);
 }
 
+v8::Local<v8::Value> Session::ContentSettings(v8::Isolate* isolate) {
+  if (content_settings_.IsEmpty()) {
+    auto handle =
+        atom::api::ContentSettings::Create(isolate, browser_context());
+    content_settings_.Reset(isolate, handle.ToV8());
+  }
+  return v8::Local<v8::Value>::New(isolate, content_settings_);
+}
+
 v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
   if (autofill_.IsEmpty()) {
     auto handle = atom::api::Autofill::Create(isolate, browser_context());
@@ -660,6 +670,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getUserAgent", &Session::GetUserAgent)
       .SetMethod("setEnableBrotli", &Session::SetEnableBrotli)
       .SetMethod("equal", &Session::Equal)
+      .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)
       .SetProperty("cookies", &Session::Cookies)
       .SetProperty("protocol", &Session::Protocol)

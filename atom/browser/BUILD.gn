@@ -33,6 +33,8 @@ source_set("browser") {
     "api/atom_api_autofill.h",
     "api/atom_api_auto_updater.cc",
     "api/atom_api_auto_updater.h",
+    "api/atom_api_content_settings.cc",
+    "api/atom_api_content_settings.h",
     "api/atom_api_content_tracing.cc",
     "api/atom_api_cookies.cc",
     "api/atom_api_cookies.h",
