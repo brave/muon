@@ -11,6 +11,7 @@
 /vendor/debian_wheezy_arm-sysroot/
 /vendor/debian_wheezy_i386-sysroot/
 /vendor/python_26/
+/vendor/python-patch
 /vendor/npm/
 /vendor/node/
 /vendor/v8
