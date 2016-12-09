@@ -86,5 +86,10 @@ scoped_refptr<RefcountedKeyedService>
 
 content::BrowserContext* HostContentSettingsMapFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  return context;
+  Profile* profile = static_cast<Profile*>(context);
+
+  if (profile->IsOffTheRecord())
+    return profile;
+
+  return profile->GetOriginalProfile();
 }

@@ -17,6 +17,25 @@
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
 
+namespace mate {
+
+template<>
+struct Converter<ContentSetting> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   ContentSetting val) {
+    std::string setting;
+    switch (val) {
+      case CONTENT_SETTING_ALLOW: setting = "allow"; break;
+      case CONTENT_SETTING_BLOCK: setting = "block"; break;
+      case CONTENT_SETTING_ASK: setting = "ask"; break;
+      case CONTENT_SETTING_SESSION_ONLY: setting = "session"; break;
+      default: setting = "default"; break;
+    }
+    return mate::ConvertToV8(isolate, setting);
+  }
+};
+
+}  // namespace mate
 
 namespace brave {
 
