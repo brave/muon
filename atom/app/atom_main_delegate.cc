@@ -175,14 +175,15 @@ void AtomMainDelegate::PreSandboxStartup() {
       ::switches::kProcessType);
 
   // Only append arguments for browser process.
-  if (!IsBrowserProcess(command_line))
+  if (IsBrowserProcess(command_line)){
+    // https://github.com/brave/browser-laptop/issues/715
+    #if defined(OS_LINUX)
+      command_line->AppendSwitch(::switches::kNoSandbox);
+    #endif
+  } else {
     return;
+  }
 
-#if defined(OS_LINUX)
-  // always disable the sandbox on linux for now
-  // https://github.com/brave/browser-laptop/issues/715
-  command_line->AppendSwitch(::switches::kNoSandbox);
-#endif
 
 #if defined(OS_MACOSX)
   // Enable AVFoundation.
