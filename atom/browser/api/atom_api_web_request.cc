@@ -17,6 +17,10 @@
 #include "net/url_request/url_request_context.h"
 #include "v8/include/v8.h"
 
+#if defined(ENABLE_EXTENSIONS)
+#include "extensions/browser/api/web_request/web_request_api_helpers.h"
+#endif
+
 using content::BrowserThread;
 
 namespace mate {
@@ -188,6 +192,12 @@ void WebRequest::SetListener(Method method, Event type, mate::Arguments* args) {
           method, type, patterns, listener));
 }
 
+void WebRequest::HandleBehaviorChanged() {
+#if defined(ENABLE_EXTENSIONS)
+  extension_web_request_api_helpers::ClearCacheOnNavigation();
+#endif
+}
+
 // static
 mate::Handle<WebRequest> WebRequest::Create(
     v8::Isolate* isolate,
@@ -225,6 +235,8 @@ void WebRequest::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("onErrorOccurred",
                  &WebRequest::SetSimpleListener<
                     AtomNetworkDelegate::kOnErrorOccurred>)
+      .SetMethod("handleBehaviorChanged",
+                 &WebRequest::HandleBehaviorChanged)
       .SetMethod("fetch",
                  &WebRequest::Fetch);
 }

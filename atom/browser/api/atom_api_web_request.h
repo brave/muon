@@ -94,6 +94,7 @@ class WebRequest : public mate::TrackableObject<WebRequest>,
       v8::Local<v8::Value>,
       const mate::Dictionary&,
       v8::Local<v8::String>)> FetchCallback;
+  void HandleBehaviorChanged();
   void Fetch(mate::Arguments* args);
   void OnURLFetchComplete(const net::URLFetcher* source) override;
 
