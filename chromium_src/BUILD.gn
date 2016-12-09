@@ -75,8 +75,26 @@ source_set("renderer") {
       "//ppapi/shared_impl",
       "//third_party/icu",
       "//third_party/WebKit/public:blink_headers",
+source_set("renderer") {
+  configs += [ ":chromium_src_config" ]
+
+  include_dirs = [
+    # force this to appear before the chromium root src dir
+    ".",
+  ]
+
+  sources = [
+    "chrome/renderer/content_settings_observer.cc",
+    "chrome/renderer/content_settings_observer.h",
+  ]
     ]
   }
+
+  deps = [
+    "//chrome/renderer",
+    "//components/content_settings/content/common",
+    "//third_party/WebKit/public:blink_headers",
+  ]
 }
 
 source_set("browser") {

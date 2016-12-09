@@ -1,25 +1,20 @@
-// Copyright (c) 2015 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2015 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ATOM_RENDERER_CONTENT_SETTINGS_CLIENT_H_
-#define ATOM_RENDERER_CONTENT_SETTINGS_CLIENT_H_
+#ifndef CHROME_RENDERER_CONTENT_SETTINGS_OBSERVER_H_
+#define CHROME_RENDERER_CONTENT_SETTINGS_OBSERVER_H_
 
 #include <map>
 #include <set>
-#include <string>
-#include <utility>
-#include "atom/renderer/content_settings_observer.h"
-#include "base/macros.h"
+
+#include "components/content_settings/core/common/content_settings.h"
+#include "components/content_settings/core/common/content_settings_types.h"
 #include "content/public/renderer/render_frame_observer.h"
 #include "content/public/renderer/render_frame_observer_tracker.h"
 #include "third_party/WebKit/public/web/WebContentSettingsClient.h"
 
 class GURL;
-
-namespace base {
-class DictionaryValue;
-}
 
 namespace blink {
 class WebFrame;
@@ -32,19 +27,35 @@ class Dispatcher;
 }
 
 namespace atom {
-
 class ContentSettingsManager;
+}
 
 // Handles blocking content per content settings for each RenderFrame.
-class ContentSettingsClient
+class ContentSettingsObserver
     : public content::RenderFrameObserver,
-      public content::RenderFrameObserverTracker<ContentSettingsClient>,
+      public content::RenderFrameObserverTracker<ContentSettingsObserver>,
       public blink::WebContentSettingsClient {
  public:
-  ContentSettingsClient(content::RenderFrame* render_frame,
+  ContentSettingsObserver(content::RenderFrame* render_frame,
                           extensions::Dispatcher* extension_dispatcher,
-                          ContentSettingsManager* content_settings_manager);
-  ~ContentSettingsClient() override;
+                          bool should_whitelist);
+  ~ContentSettingsObserver() override;
+
+  void SetContentSettingRules(
+      const RendererContentSettingRules* content_setting_rules);
+
+  void SetContentSettingsManager(
+      atom::ContentSettingsManager* content_settings_manager);
+
+  bool IsPluginTemporarilyAllowed(const std::string& identifier);
+
+  // Sends an IPC notification that the specified content type was blocked.
+  void DidBlockContentType(ContentSettingsType settings_type);
+
+  // Sends an IPC notification that the specified content type was blocked
+  // with additional metadata.
+  void DidBlockContentType(ContentSettingsType settings_type,
+                           const base::string16& details);
 
   // Sends an IPC notification that the specified content type was blocked.
   void DidBlockContentType(const std::string& settings_type);
@@ -77,6 +88,9 @@ class ContentSettingsClient
   bool allowRunningInsecureContent(bool allowed_per_settings,
                                    const blink::WebSecurityOrigin& context,
                                    const blink::WebURL& url) override;
+  bool allowAutoplay(bool defaultValue) override;
+  void didNotAllowPlugins() override;
+  void didNotAllowScript() override;
 
  private:
   void DidDisplayInsecureContent(GURL resource_url);
@@ -85,11 +99,14 @@ class ContentSettingsClient
   void DidBlockRunInsecureContent(GURL resouce_url);
 
   // RenderFrameObserver implementation.
+  bool OnMessageReceived(const IPC::Message& message) override;
   void DidCommitProvisionalLoad(bool is_new_navigation,
                                 bool is_same_page_navigation) override;
   void OnDestruct() override;
   // Resets the |content_blocked_| array.
   void ClearBlockedContentSettings();
+
+  void OnLoadBlockedPlugins(const std::string& identifier);
 
   // Helpers.
   // True if |render_frame()| contains content that is white-listed for content
@@ -99,11 +116,22 @@ class ContentSettingsClient
       const blink::WebSecurityOrigin& origin,
       const GURL& document_url);
 
-#if defined(ENABLE_EXTENSIONS)
   // Owned by ChromeContentRendererClient and outlive us.
   extensions::Dispatcher* extension_dispatcher_;
-#endif
-  ContentSettingsManager* content_settings_manager_;  // not owned
+  atom::ContentSettingsManager* content_settings_manager_;  // not owned
+
+  // Insecure content may be permitted for the duration of this render view.
+  bool allow_displaying_insecure_content_;
+  bool allow_running_insecure_content_;
+
+  // A pointer to content setting rules stored by the renderer. Normally, the
+  // |RendererContentSettingRules| object is owned by
+  // |ChromeRenderThreadObserver|. In the tests it is owned by the caller of
+  // |SetContentSettingRules|.
+  const RendererContentSettingRules* content_setting_rules_;
+
+  // Stores if images, scripts, and plugins have actually been blocked.
+  std::map<ContentSettingsType, bool> content_blocked_;
 
   // Caches the result of AllowStorage.
   typedef std::pair<GURL, bool> StoragePermissionsKey;
@@ -112,9 +140,17 @@ class ContentSettingsClient
   // Caches the result of AllowScript.
   std::map<blink::WebFrame*, bool> cached_script_permissions_;
 
-  DISALLOW_COPY_AND_ASSIGN(ContentSettingsClient);
+  std::set<std::string> temporarily_allowed_plugins_;
+  bool is_interstitial_page_;
+
+  int current_request_id_;
+  typedef std::map<int, blink::WebContentSettingCallbacks> PermissionRequestMap;
+  PermissionRequestMap permission_requests_;
+
+  // If true, IsWhitelistedForContentSettings will always return true.
+  const bool should_whitelist_;
+
+  DISALLOW_COPY_AND_ASSIGN(ContentSettingsObserver);
 };
 
-}  // namespace atom
-
-#endif  // ATOM_RENDERER_CONTENT_SETTINGS_CLIENT_H_
+#endif  // CHROME_RENDERER_CONTENT_SETTINGS_OBSERVER_H_

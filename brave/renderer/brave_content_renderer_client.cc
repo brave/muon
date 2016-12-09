@@ -1,12 +1,12 @@
-// Copyright (c) 2013 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "brave/renderer/brave_content_renderer_client.h"
 
-#include "atom/renderer/content_settings_client.h"
 #include "atom/renderer/content_settings_manager.h"
 #include "brave/renderer/printing/brave_print_web_view_helper_delegate.h"
+#include "chrome/renderer/content_settings_observer.h"
 #include "chrome/renderer/pepper/pepper_helper.h"
 #include "content/public/renderer/render_thread.h"
 #include "components/autofill/content/renderer/autofill_agent.h"
@@ -88,6 +88,16 @@ void BraveContentRendererClient::RunScriptsAtDocumentEnd(
       RunScriptsAtDocumentEnd(render_frame);
 #endif
 }
+  ContentSettingsObserver* content_settings = new ContentSettingsObserver(
+      render_frame, ext_dispatcher, should_whitelist_for_content_settings);
+  if (chrome_observer_.get()) {
+    content_settings->SetContentSettingRules(
+        chrome_observer_->content_setting_rules());
+  }
+
+  if (content_settings_manager_) {
+    content_settings->SetContentSettingsManager(content_settings_manager_);
+  }
 
 bool BraveContentRendererClient::AllowPopup() {
 #if defined(ENABLE_EXTENSIONS)
