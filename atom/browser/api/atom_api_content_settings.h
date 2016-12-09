@@ -30,7 +30,8 @@ class ContentSettings : public mate::TrackableObject<ContentSettings> {
                              v8::Local<v8::FunctionTemplate> prototype);
 
  protected:
-  ContentSettings(v8::Isolate* isolate, content::BrowserContext* browser_context);
+  ContentSettings(v8::Isolate* isolate,
+      content::BrowserContext* browser_context);
   ~ContentSettings() override;
 
   bool ClearForOneType(ContentSettingsType content_type);
@@ -41,6 +42,7 @@ class ContentSettings : public mate::TrackableObject<ContentSettings> {
   bool SetContentSetting(mate::Arguments* args);
 
   Profile* profile();
+
  private:
   content::BrowserContext* browser_context_;  // not owned
 

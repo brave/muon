@@ -161,7 +161,8 @@ void Menu::MenuDestroyed() {
   if (!is_destroyed_) {
     is_destroyed_ = true;
     FOR_EACH_OBSERVER(MenuObserver, observers_, MenuDestroyed());
-    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
+    base::ThreadTaskRunnerHandle::Get()->PostTask(
+        FROM_HERE, GetDestroyClosure());
   }
 }
 

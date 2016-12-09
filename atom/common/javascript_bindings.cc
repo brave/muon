@@ -6,9 +6,9 @@
 
 #include <vector>
 #include "atom/common/api/api_messages.h"
+#include "atom/common/api/atom_api_key_weak_map.h"
 #include "atom/common/api/remote_callback_freer.h"
 #include "atom/common/api/remote_object_freer.h"
-#include "atom/common/api/atom_api_key_weak_map.h"
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"

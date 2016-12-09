@@ -55,7 +55,8 @@ KeyedService* AtomExtensionSystemSharedFactory::BuildServiceInstanceFor(
   return new AtomExtensionSystem::Shared(static_cast<Profile*>(context));
 }
 
-content::BrowserContext* AtomExtensionSystemSharedFactory::GetBrowserContextToUse(
+content::BrowserContext*
+AtomExtensionSystemSharedFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
   // Redirected in incognito.
   return ExtensionsBrowserClient::Get()->GetOriginalContext(context);

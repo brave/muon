@@ -6,6 +6,7 @@
 #define ATOM_BROWSER_API_ATOM_API_IMPORTER_H_
 
 #include <map>
+#include <memory>
 #include <string>
 
 #include "atom/browser/api/event_emitter.h"

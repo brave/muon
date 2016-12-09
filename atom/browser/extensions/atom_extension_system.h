@@ -5,7 +5,9 @@
 #ifndef ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSION_SYSTEM_H_
 #define ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSION_SYSTEM_H_
 
+#include <memory>
 #include <string>
+
 #include "base/memory/weak_ptr.h"
 #include "brave/browser/brave_browser_context.h"
 #include "content/public/browser/notification_observer.h"

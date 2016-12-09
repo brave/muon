@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include <string>
+
 #include "base/macros.h"
 #include "extensions/browser/api/execute_code_function.h"
 #include "extensions/browser/extension_function.h"
@@ -35,6 +37,7 @@ class TabViewInternalGetTabIDFunction
   ~TabViewInternalGetTabIDFunction() override;
   ResponseAction Run() override;
 
+ private:
   DISALLOW_COPY_AND_ASSIGN(TabViewInternalGetTabIDFunction);
 };
 

@@ -5,10 +5,10 @@
 #ifndef ATOM_APP_ATOM_CONTENT_CLIENT_H_
 #define ATOM_APP_ATOM_CONTENT_CLIENT_H_
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "brightray/common/content_client.h"
 #include "chrome/common/origin_trials/chrome_origin_trial_policy.h"

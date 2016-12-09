@@ -4,6 +4,7 @@
 
 #include "brave/renderer/extensions/web_frame_bindings.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -15,7 +16,6 @@
 #include "extensions/renderer/guest_view/extensions_guest_view_container.h"
 #include "extensions/renderer/script_context.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
-#include "third_party/WebKit/public/web/WebView.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebScriptExecutionCallback.h"
 #include "third_party/WebKit/public/web/WebScriptSource.h"
@@ -78,7 +78,7 @@ void WebFrameBindings::Invalidate() {
 void WebFrameBindings::RegisterElementResizeCallback(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
   // There are two parameters.
-  CHECK(args.Length() == 2);
+  CHECK_EQ(args.Length(), 2);
   // Element Instance ID.
   CHECK(args[0]->IsInt32());
   // Callback function.
@@ -87,8 +87,9 @@ void WebFrameBindings::RegisterElementResizeCallback(
   int element_instance_id = args[0]->Int32Value();
   // An element instance ID uniquely identifies a ExtensionsGuestViewContainer
   // within a RenderView.
-  auto* guest_view_container = static_cast<extensions::ExtensionsGuestViewContainer*>(
-      guest_view::GuestViewContainer::FromID(element_instance_id));
+  auto* guest_view_container =
+      static_cast<extensions::ExtensionsGuestViewContainer*>(
+          guest_view::GuestViewContainer::FromID(element_instance_id));
   if (!guest_view_container)
     return;
 
@@ -100,7 +101,6 @@ void WebFrameBindings::RegisterElementResizeCallback(
 
 void WebFrameBindings::RegisterEmbedderCustomElement(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
-
   CHECK(args.Length() >= 1 &&
         args[0]->IsString());
 
@@ -112,7 +112,6 @@ void WebFrameBindings::RegisterEmbedderCustomElement(
   args.GetReturnValue().Set(
     context()->web_frame()->
         document().registerEmbedderCustomElement(name, options, c));
-
 }
 
 void WebFrameBindings::SetSpellCheckProvider(

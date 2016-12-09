@@ -4,7 +4,9 @@
 
 #include "atom/browser/api/atom_api_app.h"
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "atom/browser/api/atom_api_menu.h"
@@ -34,6 +36,7 @@
 #include "base/strings/string_util.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brightray/browser/brightray_paths.h"
+#include "chrome/browser/browser_process.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/component_updater/component_updater_paths.h"
 #include "content/browser/plugin_service_impl.h"
@@ -44,7 +47,6 @@
 #include "content/public/browser/navigation_details.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/render_frame_host.h"
-#include "chrome/browser/browser_process.h"
 #include "content/public/common/content_switches.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
@@ -66,6 +68,7 @@
 #endif
 
 using atom::Browser;
+using content::CertificateRequestResultType;
 
 namespace mate {
 
@@ -330,19 +333,19 @@ struct Converter<Browser::LoginItemSettings> {
 };
 
 template<>
-struct Converter<content::CertificateRequestResultType> {
+struct Converter<CertificateRequestResultType> {
   static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
-                     content::CertificateRequestResultType* out) {
+                     CertificateRequestResultType* out) {
     std::string item_type;
     if (!ConvertFromV8(isolate, val, &item_type))
       return false;
 
     if (item_type == "continue")
-      *out = content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE;
+      *out = content::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE;
     else if (item_type == "cancel")
-      *out = content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL;
+      *out = content::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL;
     else if (item_type == "deny")
-      *out = content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_DENY;
+      *out = content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY;
     else
       return false;
 
@@ -350,18 +353,18 @@ struct Converter<content::CertificateRequestResultType> {
   }
 
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   content::CertificateRequestResultType val) {
+                                   CertificateRequestResultType val) {
     std::string item_type;
     switch (val) {
-      case content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE:
+      case content::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE:
         item_type = "continue";
         break;
 
-      case content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL:
+      case content::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL:
         item_type = "cancel";
         break;
 
-      case content::CertificateRequestResultType::CERTIFICATE_REQUEST_RESULT_TYPE_DENY:
+      case content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY:
         item_type = "deny";
         break;
     }
@@ -503,7 +506,7 @@ App::App(v8::Isolate* isolate) {
   static_cast<brave::BraveContentBrowserClient*>(
     brave::BraveContentBrowserClient::Get())->set_delegate(this);
   Browser::Get()->AddObserver(this);
-  // content::GpuDataManager::GetInstance()->AddObserver(this);
+  content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
   g_browser_process->set_app(this);
 #if defined(ENABLE_EXTENSIONS)
@@ -636,7 +639,7 @@ void App::AllowCertificateError(
     bool overridable,
     bool strict_enforcement,
     bool expired_previous_decision,
-    const base::Callback<void(content::CertificateRequestResultType)>&
+    const base::Callback<void(CertificateRequestResultType)>&
         callback) {
   if (callback.is_null())
     return;
@@ -741,7 +744,7 @@ void App::SetLocale(std::string locale) {
 
 bool App::MakeSingleInstance(
     const ProcessSingleton::NotificationCallback& callback) {
-  base::ThreadRestrictions::SetIOAllowed(true); // ugh electron
+  base::ThreadRestrictions::SetIOAllowed(true);  // TODO(bridiver) ugh electron
   if (process_singleton_.get())
     return false;
 

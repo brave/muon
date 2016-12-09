@@ -2,15 +2,15 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#ifndef CHROME_COMMON_IMPORTER_IMPORTED_COOKIE_ENTRY_H_
-#define CHROME_COMMON_IMPORTER_IMPORTED_COOKIE_ENTRY_H_
+#ifndef BRAVE_COMMON_IMPORTER_IMPORTED_COOKIE_ENTRY_H_
+#define BRAVE_COMMON_IMPORTER_IMPORTED_COOKIE_ENTRY_H_
 
 #include "base/strings/string16.h"
 #include "base/time/time.h"
 
 struct ImportedCookieEntry {
-  ImportedCookieEntry() {};
-  ~ImportedCookieEntry() {};
+  ImportedCookieEntry() {}
+  ~ImportedCookieEntry() {}
 
   base::string16 domain;
 
@@ -29,4 +29,4 @@ struct ImportedCookieEntry {
   bool httponly;
 };
 
-#endif  // CHROME_COMMON_IMPORTER_IMPORTED_COOKIE_ENTRY_H_
+#endif  // BRAVE_COMMON_IMPORTER_IMPORTED_COOKIE_ENTRY_H_

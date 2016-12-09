@@ -5,6 +5,8 @@
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 
 #include <map>
+#include <set>
+
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/common/api/api_messages.h"
 #include "base/command_line.h"
@@ -119,26 +121,6 @@ bool AtomBrowserClientExtensionsPart::ShouldUseProcessPerSite(
 bool AtomBrowserClientExtensionsPart::DoesSiteRequireDedicatedProcess(
     content::BrowserContext* browser_context,
     const GURL& effective_site_url) {
-  if (effective_site_url.SchemeIs(extensions::kExtensionScheme)) {
-    // --isolate-extensions should isolate extensions, except for a) hosted
-    // apps, b) platform apps.
-    // a) Isolating hosted apps is a good idea, but ought to be a separate knob.
-    // b) Sandbox pages in platform app can load web content in iframes;
-    //   isolating the app and the iframe leads to StoragePartition mismatch in
-    //   the two processes.
-    //   TODO(lazyboy): We should deprecate this behaviour and not let web
-    //   content load in platform app's process; see http://crbug.com/615585.
-    if (IsIsolateExtensionsEnabled()) {
-      const Extension* extension =
-          ExtensionRegistry::Get(browser_context)
-              ->enabled_extensions()
-              .GetExtensionOrAppByURL(effective_site_url);
-      if (extension && !extension->is_hosted_app() &&
-          !extension->is_platform_app()) {
-        return true;
-      }
-    }
-  }
   return false;
 }
 
@@ -150,13 +132,6 @@ bool AtomBrowserClientExtensionsPart::ShouldLockToOrigin(
   // scheme for a hosted app would kill processes on legitimate requests for the
   // app's cookies.
   if (effective_site_url.SchemeIs(extensions::kExtensionScheme)) {
-    const Extension* extension =
-        ExtensionRegistry::Get(browser_context)
-            ->enabled_extensions()
-            .GetExtensionOrAppByURL(effective_site_url);
-    if (extension && extension->is_hosted_app())
-      return false;
-
     // http://crbug.com/600441 workaround: Extension process reuse, implemented
     // in ShouldTryToUseExistingProcessHost(), means that extension processes
     // aren't always actually dedicated to a single origin, even in

@@ -2,10 +2,12 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#include "atom/common/api/atom_api_native_image.h"
-
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
+
+#include "atom/common/api/atom_api_native_image.h"
 
 #include "atom/common/asar/asar_util.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
@@ -97,7 +99,7 @@ bool AddImageSkiaRep(gfx::ImageSkia* image,
 bool AddImageSkiaRep(gfx::ImageSkia* image,
                      const base::FilePath& path,
                      double scale_factor) {
-  base::ThreadRestrictions::SetIOAllowed(true); // ugh electron
+  base::ThreadRestrictions::SetIOAllowed(true);   // TODO(bridiver) ugh electron
   std::string file_contents;
   if (!asar::ReadFileToString(path, &file_contents))
     return false;

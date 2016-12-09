@@ -41,7 +41,7 @@ def list_files(directories, filters):
 
 
 def call_cpplint(files):
-  cpplint = os.path.join(SOURCE_ROOT, 'vendor', 'depot_tools', 'cpplint.py')
+  cpplint = os.path.join(SOURCE_ROOT, '..', '..', 'vendor', 'depot_tools', 'cpplint.py')
   execute([sys.executable, cpplint] + files)
 
 

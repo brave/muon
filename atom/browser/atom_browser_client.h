@@ -6,6 +6,7 @@
 #define ATOM_BROWSER_ATOM_BROWSER_CLIENT_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -65,7 +66,8 @@ class AtomBrowserClient : public brightray::BrowserClient,
       bool overridable,
       bool strict_enforcement,
       bool expired_previous_decision,
-      const base::Callback<void(content::CertificateRequestResultType)>& callback) override;
+      const base::Callback<void(
+          content::CertificateRequestResultType)>& callback) override;
   void SelectClientCertificate(
       content::WebContents* web_contents,
       net::SSLCertRequestInfo* cert_request_info,

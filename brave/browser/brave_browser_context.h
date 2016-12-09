@@ -5,8 +5,10 @@
 #ifndef BRAVE_BROWSER_BRAVE_BROWSER_CONTEXT_H_
 #define BRAVE_BROWSER_BRAVE_BROWSER_CONTEXT_H_
 
+#include <memory>
 #include <string>
 #include <vector>
+
 #include "atom/browser/atom_browser_context.h"
 #include "content/public/browser/host_zoom_map.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"

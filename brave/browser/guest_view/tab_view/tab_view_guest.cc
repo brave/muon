@@ -5,7 +5,7 @@
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 
 #include <stddef.h>
-
+#include <string>
 #include <utility>
 
 #include "atom/browser/api/atom_api_web_contents.h"
@@ -239,7 +239,7 @@ TabViewGuest::~TabViewGuest() {
 
 void TabViewGuest::WillAttachToEmbedder() {
   // register the guest for event forwarding
-  api_web_contents_->Emit("ELECTRON_GUEST_VIEW_MANAGER_REGISTER_GUEST", 
+  api_web_contents_->Emit("ELECTRON_GUEST_VIEW_MANAGER_REGISTER_GUEST",
       extensions::TabHelper::IdForTab(web_contents()));
 
   // update the owner window

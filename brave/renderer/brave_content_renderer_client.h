@@ -5,9 +5,17 @@
 #ifndef BRAVE_RENDERER_BRAVE_CONTENT_RENDERER_CLIENT_H_
 #define BRAVE_RENDERER_BRAVE_CONTENT_RENDERER_CLIENT_H_
 
+#include <stddef.h>
+
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
+#include <vector>
 
 #include "chrome/renderer/chrome_content_renderer_client.h"
+
+#include "base/compiler_specific.h"
 
 namespace atom {
 class ContentSettingsManager;
@@ -38,9 +46,9 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
       blink::WebLocalFrame* frame,
       const blink::WebPluginParams& params,
       blink::WebPlugin** plugin) override;
-  unsigned long long VisitedLinkHash(
+  unsigned long long VisitedLinkHash(  // NOLINT
       const char* canonical_url, size_t length) override;
-  bool IsLinkVisited(unsigned long long link_hash) override;
+  bool IsLinkVisited(unsigned long long link_hash) override;  // NOLINT
 
   blink::WebPrescientNetworking* GetPrescientNetworking() override;
 

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "atom/common/atom_version.h"

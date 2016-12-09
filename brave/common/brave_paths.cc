@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <memory>
+
 #include "brave/common/brave_paths.h"
 #include "base/environment.h"
 #include "base/lazy_instance.h"
@@ -10,11 +12,9 @@
 #include "base/nix/xdg_util.h"
 #endif
 #include "base/path_service.h"
-#include "base/files/file_path.h"
 #include "browser/brightray_paths.h"
 #include "build/build_config.h"
 #include "chrome/common/chrome_paths_internal.h"
-#include <memory>
 
 namespace brave {
   bool GetDefaultAppDataDirectory(base::FilePath* result) {
@@ -43,4 +43,4 @@ namespace brave {
     return true;
 #endif
   }
-}
+}  // namespace brave

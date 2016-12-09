@@ -5,6 +5,8 @@
 #ifndef BRAVE_BROWSER_PLUGINS_BRAVE_PLUGIN_SERVICE_FILTER_H_
 #define BRAVE_BROWSER_PLUGINS_BRAVE_PLUGIN_SERVICE_FILTER_H_
 
+#include <string>
+
 #include "base/files/file_path.h"
 #include "base/memory/singleton.h"
 #include "build/build_config.h"
@@ -62,6 +64,7 @@ class BravePluginServiceFilter : public content::PluginServiceFilter {
   // (render_process_id == 0)
   bool CanLoadPlugin(int render_process_id,
                      const base::FilePath& path) override;
+
  private:
   friend struct base::DefaultSingletonTraits<BravePluginServiceFilter>;
 

@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <string>
+
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 
 #include "chrome/browser/plugins/chrome_plugin_service_filter.h"

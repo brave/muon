@@ -4,6 +4,7 @@
 
 #include "atom/browser/common_web_contents_delegate.h"
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -38,9 +39,9 @@
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/security_style_explanation.h"
 #include "content/public/browser/security_style_explanations.h"
-#include "storage/browser/fileapi/isolated_context.h"
 #include "net/ssl/ssl_cipher_suite_names.h"
 #include "net/ssl/ssl_connection_status_flags.h"
+#include "storage/browser/fileapi/isolated_context.h"
 #include "ui/base/l10n/l10n_util.h"
 
 #if defined(ENABLE_EXTENSIONS)

@@ -2,17 +2,18 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include <memory>
+
 #include "atom/browser/extensions/atom_extension_host_delegate.h"
 
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "base/lazy_instance.h"
+#include "content/public/browser/render_frame_host.h"
+#include "content/public/browser/render_view_host.h"
 #include "extensions/browser/extension_host.h"
 #include "extensions/browser/load_monitoring_extension_host_queue.h"
 #include "extensions/browser/process_manager.h"
 #include "extensions/browser/serial_extension_host_queue.h"
-
-#include "content/public/browser/render_frame_host.h"
-#include "content/public/browser/render_view_host.h"
 
 namespace extensions {
 

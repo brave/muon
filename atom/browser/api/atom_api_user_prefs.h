@@ -77,6 +77,7 @@ class UserPrefs : public mate::TrackableObject<UserPrefs> {
   void SetDefaultZoomLevel(double zoom);
 
   Profile* profile();
+
  private:
   content::BrowserContext* browser_context_;  // not owned
 

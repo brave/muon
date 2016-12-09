@@ -5,7 +5,9 @@
 #ifndef ATOM_BROWSER_API_ATOM_API_EXTENSION_H_
 #define ATOM_BROWSER_API_ATOM_API_EXTENSION_H_
 
+#include <memory>
 #include <string>
+
 #include "atom/browser/api/trackable_object.h"
 #include "atom/browser/atom_browser_context.h"
 #include "extensions/browser/extension_registry_observer.h"

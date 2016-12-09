@@ -20,18 +20,18 @@
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
-#include "chrome/common/crash_keys.h"
 #include "chrome/common/chrome_version.h"
+#include "chrome/common/crash_keys.h"
 #include "chrome/common/extensions/extension_process_policy.h"
 #include "chrome/common/secure_origin_whitelist.h"
 #include "content/public/common/content_constants.h"
 #include "content/public/common/pepper_plugin_info.h"
 #include "content/public/common/user_agent.h"
 #include "gpu/config/gpu_info.h"
-#include "widevine_cdm_version.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "url/url_constants.h"
+#include "widevine_cdm_version.h"  // NOLINT
 
 #if defined(ENABLE_EXTENSIONS)
 #include "content/public/common/url_constants.h"
@@ -149,20 +149,5 @@ void AtomContentClient::AddPepperPlugins(
     std::vector<content::PepperPluginInfo>* plugins) {
   AddPepperFlashFromCommandLine(plugins);
 }
-
-// void AtomContentClient::AddServiceWorkerSchemes(
-//     std::set<std::string>* service_worker_schemes) {
-//   std::vector<std::string> schemes;
-//   ConvertStringWithSeparatorToVector(&schemes, ",",
-//                                      switches::kRegisterServiceWorkerSchemes);
-//   if (!schemes.empty()) {
-//     for (const std::string& scheme : schemes)
-//       service_worker_schemes->insert(scheme);
-//   }
-//   service_worker_schemes->insert(url::kFileScheme);
-// #if defined(ENABLE_EXTENSIONS)
-//   service_worker_schemes->insert(extensions::kExtensionScheme);
-// #endif
-// }
 
 }  // namespace atom

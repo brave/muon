@@ -22,19 +22,17 @@
 #include "base/memory/memory_pressure_monitor.h"
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
-#include "browser/media/media_capture_devices_dispatcher.h"
 #include "brightray/browser/brightray_paths.h"
+#include "browser/media/media_capture_devices_dispatcher.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_switches.h"
-#include "v8/include/v8-debug.h"
-
-#include "v8/include/v8.h"
 #include "gin/public/v8_platform.h"
 #include "v8/include/libplatform/libplatform.h"
-
+#include "v8/include/v8.h"
+#include "v8/include/v8-debug.h"
 
 #if defined(USE_X11)
 #include "chrome/browser/ui/libgtk2ui/gtk2_util.h"

@@ -5,6 +5,7 @@
 #include "brave/browser/brave_javascript_dialog_manager.h"
 
 #include <algorithm>
+#include <string>
 #include <utility>
 
 #include "base/bind.h"
@@ -46,7 +47,7 @@ struct Converter<brave::JavaScriptDialogExtraData*> {
   }
 };
 
-}
+}  // namespace mate
 
 namespace brave {
 
@@ -308,7 +309,9 @@ void BraveJavaScriptDialogManager::ResetDialogState(
   javascript_dialog_extra_data_.erase(web_contents);
 }
 
-std::string BraveJavaScriptDialogManager::GetEventName(content::JavaScriptMessageType message_type) {
+std::string
+BraveJavaScriptDialogManager::GetEventName(
+    content::JavaScriptMessageType message_type) {
   switch (message_type) {
     case content::JAVASCRIPT_MESSAGE_TYPE_ALERT: return "window-alert";
     case content::JAVASCRIPT_MESSAGE_TYPE_CONFIRM: return "window-confirm";

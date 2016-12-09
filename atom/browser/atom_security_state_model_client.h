@@ -5,6 +5,8 @@
 #ifndef ATOM_BROWSER_ATOM_SECURITY_STATE_MODEL_CLIENT_H_
 #define ATOM_BROWSER_ATOM_SECURITY_STATE_MODEL_CLIENT_H_
 
+#include <memory>
+
 #include "components/security_state/security_state_model.h"
 #include "components/security_state/security_state_model_client.h"
 #include "content/public/browser/web_contents_user_data.h"

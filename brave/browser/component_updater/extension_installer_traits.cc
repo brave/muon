@@ -5,6 +5,7 @@
 #include "brave/browser/component_updater/extension_installer_traits.h"
 
 #include <string.h>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -83,8 +84,9 @@ void ExtensionInstallerTraits::ComponentReady(
   ready_callback_.Run(install_dir);
 }
 
-bool ExtensionInstallerTraits::SupportsGroupPolicyEnabledComponentUpdates() const {
-  return false; // TODO(bridiver) - true for widevine
+bool
+ExtensionInstallerTraits::SupportsGroupPolicyEnabledComponentUpdates() const {
+  return false;
 }
 
 std::vector<std::string> ExtensionInstallerTraits::GetMimeTypes() const {

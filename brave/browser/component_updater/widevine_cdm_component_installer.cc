@@ -12,6 +12,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -255,11 +257,13 @@ WidevineCdmComponentInstallerTraits::WidevineCdmComponentInstallerTraits(
     const ReadyCallback& ready_callback) : ready_callback_(ready_callback) {
 }
 
-bool WidevineCdmComponentInstallerTraits::SupportsGroupPolicyEnabledComponentUpdates() const {
+bool
+WidevineCdmComponentInstallerTraits::SupportsGroupPolicyEnabledComponentUpdates() const {  // NOLINT
   return true;
 }
 
-std::vector<std::string> WidevineCdmComponentInstallerTraits::GetMimeTypes() const {
+std::vector<std::string>
+WidevineCdmComponentInstallerTraits::GetMimeTypes() const {
   return std::vector<std::string>();
 }
 

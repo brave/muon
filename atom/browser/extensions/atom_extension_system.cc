@@ -2,11 +2,13 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#include "atom/browser/extensions/atom_extension_system.h"
-
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
+
+#include "atom/browser/extensions/atom_extension_system.h"
+
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
@@ -367,7 +369,7 @@ void AtomExtensionSystem::Shared::RegisterContentSettings(
   // host_content_settings_map->RegisterProvider(
   //     HostContentSettingsMap::INTERNAL_EXTENSION_PROVIDER,
   //     std::unique_ptr<content_settings::ObservableProvider>(
-  //         new content_settings::InternalExtensionProvider(browser_context_)));
+  //        new content_settings::InternalExtensionProvider(browser_context_)));
 
   // host_content_settings_map->RegisterProvider(
   //     HostContentSettingsMap::CUSTOM_EXTENSION_PROVIDER,
@@ -376,7 +378,7 @@ void AtomExtensionSystem::Shared::RegisterContentSettings(
   //             extensions::ContentSettingsService::Get(browser_context_)
   //                 ->content_settings_store(),
   //             browser_context_->GetOriginalProfile() != browser_context_)));
-};
+}
 
 void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
       const Extension* extension) {

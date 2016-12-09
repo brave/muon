@@ -2,17 +2,17 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include <memory>
+
 #include "atom/browser/api/atom_api_user_prefs.h"
 
-#include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/native_mate_converters/v8_value_converter.h"
+#include "atom/common/native_mate_converters/value_converter.h"
 #include "base/values.h"
-#include "content/public/browser/browser_thread.h"
 #include "chrome/browser/profiles/profile.h"
-
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/syncable_prefs/pref_service_syncable.h"
-
+#include "content/public/browser/browser_thread.h"
 
 namespace mate {
 

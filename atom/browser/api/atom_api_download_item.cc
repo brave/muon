@@ -80,7 +80,8 @@ void DownloadItem::OnDownloadUpdated(content::DownloadItem* item) {
     Emit("done", item->GetState());
 
     // Destroy the item once item is downloaded.
-    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
+    base::ThreadTaskRunnerHandle::Get()->PostTask(
+        FROM_HERE, GetDestroyClosure());
   } else {
     Emit("updated", item->GetState());
   }

@@ -4,6 +4,7 @@
 
 #include "atom/browser/net/atom_network_delegate.h"
 
+#include <memory>
 #include <utility>
 
 #include "atom/common/native_mate_converters/net_converter.h"

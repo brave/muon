@@ -6,7 +6,9 @@
 #define ATOM_BROWSER_API_ATOM_API_WEB_REQUEST_H_
 
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "atom/browser/api/trackable_object.h"
 #include "atom/browser/net/atom_network_delegate.h"

@@ -62,7 +62,8 @@ int BravePermissionManager::RequestPermission(
     content::RenderFrameHost* render_frame_host,
     const GURL& requesting_origin,
     bool user_gesture,
-      const base::Callback<void(blink::mojom::PermissionStatus)>& response_callback) {
+    const base::Callback<void(
+        blink::mojom::PermissionStatus)>& response_callback) {
   int render_frame_id = MSG_ROUTING_NONE;
   int render_process_id = MSG_ROUTING_NONE;
   GURL url;

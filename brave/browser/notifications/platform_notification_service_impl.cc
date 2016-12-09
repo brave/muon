@@ -4,8 +4,10 @@
 
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 
+#include <memory>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
@@ -131,8 +133,9 @@ void PlatformNotificationServiceImpl::DisplayNotification(
       base::Bind(&RemoveNotification, base::Passed(&notification_proxy));
 
   auto permission_manager = browser_context->GetPermissionManager();
+  // TODO(bridiver) user gesture
   permission_manager->RequestPermission(
-      content::PermissionType::NOTIFICATIONS, NULL, origin, false, // TODO(bridiver) user gesture
+      content::PermissionType::NOTIFICATIONS, NULL, origin, false,
         base::Bind(&OnPermissionResponse, callback));
 }
 

@@ -4,8 +4,10 @@
 
 #include "atom/browser/api/atom_api_extension.h"
 
+#include <memory>
 #include <string>
 #include <vector>
+
 #include "atom/browser/api/atom_api_web_contents.h"
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"

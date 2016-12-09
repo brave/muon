@@ -5,6 +5,8 @@
 #ifndef ATOM_BROWSER_EXTENSIONS_API_ATOM_EXTENSIONS_API_CLIENT_H_
 #define ATOM_BROWSER_EXTENSIONS_API_ATOM_EXTENSIONS_API_CLIENT_H_
 
+#include <memory>
+
 #include "extensions/browser/api/extensions_api_client.h"
 
 namespace extensions {

@@ -2,8 +2,8 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#ifndef CHROME_UTILITY_IMPORTER_CHROME_IMPORTER_H_
-#define CHROME_UTILITY_IMPORTER_CHROME_IMPORTER_H_
+#ifndef BRAVE_UTILITY_IMPORTER_CHROME_IMPORTER_H_
+#define BRAVE_UTILITY_IMPORTER_CHROME_IMPORTER_H_
 
 #include <stdint.h>
 
@@ -72,4 +72,4 @@ class ChromeImporter : public Importer {
   DISALLOW_COPY_AND_ASSIGN(ChromeImporter);
 };
 
-#endif  // CHROME_UTILITY_IMPORTER_CHROME_IMPORTER_H_
+#endif  // BRAVE_UTILITY_IMPORTER_CHROME_IMPORTER_H_

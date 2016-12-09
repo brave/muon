@@ -2,11 +2,13 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#include "atom/browser/atom_browser_client.h"
-
 #if defined(OS_WIN)
 #include <shlobj.h>
 #endif
+
+#include <utility>
+
+#include "atom/browser/atom_browser_client.h"
 
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/api/atom_api_protocol.h"
@@ -26,10 +28,10 @@
 #include "base/stl_util.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
+#include "chrome/browser/plugins/plugin_info_message_filter.h"
 #include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h"
-#include "chrome/browser/plugins/plugin_info_message_filter.h"
 #include "chrome/browser/speech/tts_message_filter.h"
 #include "content/public/browser/browser_ppapi_host.h"
 #include "content/public/browser/client_certificate_delegate.h"
@@ -43,9 +45,8 @@
 #include "net/ssl/ssl_cert_request_info.h"
 #include "ppapi/host/ppapi_host.h"
 #include "ui/base/l10n/l10n_util.h"
-#include "v8/include/v8.h"
-
 #include "v8/include/libplatform/libplatform.h"
+#include "v8/include/v8.h"
 
 #if defined(ENABLE_EXTENSIONS)
 #include "extensions/common/constants.h"
@@ -59,7 +60,7 @@ namespace {
 bool g_suppress_renderer_process_restart = false;
 
 // Custom schemes to be registered to handle service worker.
-std::string g_custom_service_worker_schemes = "";
+std::string g_custom_service_worker_schemes = "";  // NOLINT
 
 // A provider of Geolocation services to override AccessTokenStore.
 class AtomGeolocationDelegate : public device::GeolocationDelegate {
@@ -206,7 +207,8 @@ void AtomBrowserClient::AllowCertificateError(
     bool overridable,
     bool strict_enforcement,
     bool expired_previous_decision,
-    const base::Callback<void(content::CertificateRequestResultType)>& callback) {
+    const base::Callback<void(
+        content::CertificateRequestResultType)>& callback) {
   if (delegate_) {
     delegate_->AllowCertificateError(
         web_contents, cert_error, ssl_info, request_url,

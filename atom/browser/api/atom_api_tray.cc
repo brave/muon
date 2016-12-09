@@ -72,7 +72,8 @@ Tray::Tray(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
 
 Tray::~Tray() {
   // Destroy the native tray in next tick.
-  base::ThreadTaskRunnerHandle::Get()->DeleteSoon(FROM_HERE, tray_icon_.release());
+  base::ThreadTaskRunnerHandle::Get()->DeleteSoon(
+      FROM_HERE, tray_icon_.release());
 }
 
 // static

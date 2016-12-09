@@ -5,6 +5,7 @@
 #ifndef ATOM_APP_ATOM_MAIN_DELEGATE_H_
 #define ATOM_APP_ATOM_MAIN_DELEGATE_H_
 
+#include <memory>
 #include <string>
 
 #include "brightray/common/content_client.h"
@@ -50,6 +51,7 @@ class AtomMainDelegate : public brightray::MainDelegate {
   void OverrideFrameworkBundlePath() override;
 #endif
   void ProcessExiting(const std::string& process_type) override;
+
  private:
 #if defined(OS_MACOSX)
   void SetUpBundleOverrides();

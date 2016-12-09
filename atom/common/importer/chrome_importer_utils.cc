@@ -4,6 +4,7 @@
 
 #include "atom/common/importer/chrome_importer_utils.h"
 
+#include <memory>
 #include <string>
 
 #include "base/files/file_util.h"

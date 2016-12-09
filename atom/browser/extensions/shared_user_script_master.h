@@ -5,6 +5,7 @@
 #ifndef ATOM_BROWSER_EXTENSIONS_SHARED_USER_SCRIPT_MASTER_H_
 #define ATOM_BROWSER_EXTENSIONS_SHARED_USER_SCRIPT_MASTER_H_
 
+#include <memory>
 #include <set>
 
 #include "base/scoped_observer.h"
@@ -42,7 +43,8 @@ class SharedUserScriptMaster : public ExtensionRegistryObserver {
 
   // Gets an extension's scripts' metadata; i.e., gets a list of UserScript
   // objects that contains script info, but not the contents of the scripts.
-  std::unique_ptr<UserScriptList> GetScriptsMetadata(const Extension* extension);
+  std::unique_ptr<UserScriptList> GetScriptsMetadata(
+      const Extension* extension);
 
   // Script loader that handles loading contents of scripts into shared memory
   // and notifying renderers of scripts in shared memory.

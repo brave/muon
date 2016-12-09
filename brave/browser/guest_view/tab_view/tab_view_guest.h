@@ -7,6 +7,9 @@
 
 #include <stdint.h>
 
+#include <map>
+#include <string>
+
 #include "base/macros.h"
 #include "components/guest_view/browser/guest_view.h"
 
@@ -23,6 +26,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   static GuestViewBase* Create(content::WebContents* owner_web_contents);
 
   static const char Type[];
+
  private:
   explicit TabViewGuest(content::WebContents* owner_web_contents);
 
@@ -83,6 +87,6 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   DISALLOW_COPY_AND_ASSIGN(TabViewGuest);
 };
 
-}  // namespace extensions
+}  // namespace brave
 
 #endif  // BRAVE_BROWSER_GUEST_VIEW_TAB_VIEW_TAB_VIEW_GUEST_H_

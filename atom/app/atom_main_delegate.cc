@@ -5,6 +5,7 @@
 #include "atom/app/atom_main_delegate.h"
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -25,10 +26,10 @@
 #include "brightray/browser/brightray_paths.h"
 #include "brightray/common/application_info.h"
 #include "browser/brightray_paths.h"
-#include "chrome/common/crash_keys.h"
 #include "chrome/common/chrome_constants.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
+#include "chrome/common/crash_keys.h"
 #include "chrome/common/logging_chrome.h"
 #include "chrome/common/trace_event_args_whitelist.h"
 #include "components/component_updater/component_updater_paths.h"
@@ -48,7 +49,6 @@
 #include "chrome/browser/downgrade/user_data_downgrade.h"
 #include "chrome/common/child_process_logging.h"
 #include "chrome/common/v8_breakpad_support_win.h"
-#include "components/crash/content/app/crashpad.h"
 #include "sandbox/win/src/sandbox.h"
 #include "ui/base/resource/resource_bundle_win.h"
 #endif
@@ -58,7 +58,6 @@
 #include "chrome/app/chrome_main_mac.h"
 #include "chrome/browser/mac/relauncher.h"
 #include "chrome/common/mac/cfbundle_blocker.h"
-#include "components/crash/content/app/crashpad.h"
 #include "components/crash/core/common/objc_zombie.h"
 #include "ui/base/l10n/l10n_util_mac.h"
 #endif
@@ -171,15 +170,15 @@ base::FilePath InitializeUserDataDir() {
   if (!user_data_dir.empty())
     PathService::OverrideAndCreateIfNeeded(brightray::DIR_USER_DATA,
           user_data_dir, false, true);
-    PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
+
   // TODO(bridiver) Warn and fail early if the process fails
   // to get a user data directory.
   if (!PathService::Get(brightray::DIR_USER_DATA, &user_data_dir)) {
     brave::GetDefaultUserDataDirectory(&user_data_dir);
     PathService::OverrideAndCreateIfNeeded(brightray::DIR_USER_DATA,
             user_data_dir, false, true);
-    PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
   }
+  PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
 
   return user_data_dir;
 }
@@ -309,7 +308,7 @@ void AtomMainDelegate::ZygoteForked() {
     std::string process_type =
         command_line->GetSwitchValueASCII(
             switches::kProcessType);
-    //breakpad::InitCrashReporter(process_type);
+    // breakpad::InitCrashReporter(process_type);
     // Reset the command line for the newly spawned process.
     crash_keys::SetCrashKeysFromCommandLine(*command_line);
   }

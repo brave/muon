@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BRAVE_BROWSER_BRAVE_JAVASCRIPT_DIALOG_MANAGER
-#define BRAVE_BROWSER_BRAVE_JAVASCRIPT_DIALOG_MANAGER
+#ifndef BRAVE_BROWSER_BRAVE_JAVASCRIPT_DIALOG_MANAGER_H_
+#define BRAVE_BROWSER_BRAVE_JAVASCRIPT_DIALOG_MANAGER_H_
 
 #include <map>
 #include <memory>
+#include <string>
 
 #include "base/macros.h"
 #include "base/memory/singleton.h"
@@ -32,7 +33,8 @@ class JavaScriptDialogExtraData {
 class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
  public:
   typedef std::map<void*, JavaScriptDialogExtraData> ExtraDataMap;
-  typedef content::JavaScriptDialogManager::DialogClosedCallback DialogClosedCallback;
+  typedef content::JavaScriptDialogManager::DialogClosedCallback
+      DialogClosedCallback;
   static BraveJavaScriptDialogManager* GetInstance();
 
  private:
@@ -93,4 +95,4 @@ class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
 
 }  // namespace brave
 
-#endif  // BRAVE_BROWSER_BRAVE_JAVASCRIPT_DIALOG_MANAGER
+#endif  // BRAVE_BROWSER_BRAVE_JAVASCRIPT_DIALOG_MANAGER_H_

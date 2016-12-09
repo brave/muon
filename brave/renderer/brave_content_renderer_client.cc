@@ -94,12 +94,12 @@ void BraveContentRendererClient::RenderThreadStarted() {
   }
 }
 
-unsigned long long BraveContentRendererClient::VisitedLinkHash(
+unsigned long long BraveContentRendererClient::VisitedLinkHash(  // NOLINT
     const char* canonical_url, size_t length) {
   return visited_link_slave_->ComputeURLFingerprint(canonical_url, length);
 }
 
-bool BraveContentRendererClient::IsLinkVisited(unsigned long long link_hash) {
+bool BraveContentRendererClient::IsLinkVisited(unsigned long long link_hash) {  // NOLINT
   return visited_link_slave_->IsVisited(link_hash);
 }
 

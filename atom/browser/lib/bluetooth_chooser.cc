@@ -95,7 +95,6 @@ void BluetoothChooser::AddOrUpdateDevice(const std::string& device_id,
                        bool is_gatt_connected,
                        bool is_paired,
                        int signal_strength_level) {
-
   for (auto it = device_list_.begin(); it != device_list_.end(); ++it) {
     if (it->device_id == device_id) {
       if (should_update_name) {
@@ -114,7 +113,7 @@ void BluetoothChooser::AddOrUpdateDevice(const std::string& device_id,
 
   DeviceInfo info = {device_id, device_name, signal_strength_level};
   device_list_.push_back(info);
-};
+}
 
 void BluetoothChooser::RemoveDevice(const std::string& device_id) {
   for (auto it = device_list_.begin(); it != device_list_.end(); ++it) {

@@ -5,6 +5,7 @@
 #include "atom/common/asar/archive.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "atom/common/asar/scoped_temporary_file.h"
@@ -131,7 +132,7 @@ Archive::Archive(const base::FilePath& path)
 }
 
 Archive::~Archive() {
-  base::ThreadRestrictions::SetIOAllowed(true); // ugh electron
+  base::ThreadRestrictions::SetIOAllowed(true);  // TODO(bridiver) ugh electron
 #if defined(OS_WIN)
   if (fd_ != -1) {
     node::close(fd_);

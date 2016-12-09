@@ -5,6 +5,8 @@
 #ifndef BRAVE_RENDERER_EXTENSIONS_WEB_FRAME_BINDINGS_H_
 #define BRAVE_RENDERER_EXTENSIONS_WEB_FRAME_BINDINGS_H_
 
+#include <memory>
+
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"

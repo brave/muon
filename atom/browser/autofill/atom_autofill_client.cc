@@ -22,24 +22,6 @@
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(autofill::AtomAutofillClient);
 
-// stubs TODO - move to separate files
-// #include "net/http/http_request_headers.h"
-// namespace variations {
-// void AppendVariationHeaders(const GURL& url,
-//                             bool incognito,
-//                             bool uma_enabled,
-//                             net::HttpRequestHeaders* headers) {
-// }
-// }
-// #if !defined(OS_LINUX)
-// namespace rappor {
-// void SampleDomainAndRegistryFromGURL(RapporService* rappor_service,
-//                                      const std::string& metric,
-//                                      const GURL& gurl) {}
-// }  // namespace rappor
-// #endif
-// end stubs
-
 namespace mate {
 
 template<>

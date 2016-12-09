@@ -38,4 +38,4 @@ void BraveGuestViewManagerDelegate::RegisterAdditionalGuestViewTypes() {
   // manager->RegisterGuestViewType<extensions::MimeHandlerViewGuest>();
 }
 
-}  // namespace extensions
+}  // namespace brave

@@ -1,3 +1,7 @@
+// Copyright 2015 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "chrome/browser/ui/simple_message_box.h"
 
 #include "base/compiler_specific.h"
@@ -11,7 +15,7 @@ namespace chrome {
 void ShowWarningMessageBox(gfx::NativeWindow parent,
                            const base::string16& title,
                            const base::string16& message) {
-  //TODO(bridiver)
+  // TODO(bridiver)
   // atom:Message...
 }
 

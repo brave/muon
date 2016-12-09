@@ -16,13 +16,7 @@
 #include "third_party/WebKit/public/web/WebElement.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 
-// #if defined(ENABLE_EXTENSIONS)
-// #include "chrome/common/extensions/extension_constants.h"
-// #include "extensions/common/constants.h"
-// #include "extensions/renderer/guest_view/mime_handler_view/mime_handler_view_container.h"
-// #endif  // defined(ENABLE_EXTENSIONS)
-
-BravePrintWebViewHelperDelegate::~BravePrintWebViewHelperDelegate(){
+BravePrintWebViewHelperDelegate::~BravePrintWebViewHelperDelegate() {
 }
 
 bool BravePrintWebViewHelperDelegate::CancelPrerender(
@@ -33,22 +27,6 @@ bool BravePrintWebViewHelperDelegate::CancelPrerender(
 // Return the PDF object element if |frame| is the out of process PDF extension.
 blink::WebElement BravePrintWebViewHelperDelegate::GetPdfElement(
         blink::WebLocalFrame* frame) {
-// #if defined(ENABLE_EXTENSIONS)
-//   GURL url = frame->document().url();
-//   bool inside_print_preview =
-//       url.GetOrigin() == GURL(chrome::kChromeUIPrintURL);
-//   bool inside_pdf_extension = url.SchemeIs(extensions::kExtensionScheme) &&
-//                               url.host() == extension_misc::kPdfExtensionId;
-//   if (inside_print_preview || inside_pdf_extension) {
-//     // <object> with id="plugin" is created in
-//     // chrome/browser/resources/pdf/pdf.js.
-//     auto plugin_element = frame->document().getElementById("plugin");
-//     if (!plugin_element.isNull()) {
-//       return plugin_element;
-//     }
-//     NOTREACHED();
-//   }
-// #endif  // defined(ENABLE_EXTENSIONS)
   return blink::WebElement();
 }
 
@@ -58,23 +36,5 @@ bool BravePrintWebViewHelperDelegate::IsPrintPreviewEnabled() {
 
 bool BravePrintWebViewHelperDelegate::OverridePrint(
     blink::WebLocalFrame* frame) {
-// #if defined(ENABLE_EXTENSIONS)
-//   if (!frame->document().isPluginDocument())
-//     return false;
-
-//   std::vector<extensions::MimeHandlerViewContainer*> mime_handlers =
-//       extensions::MimeHandlerViewContainer::FromRenderFrame(
-//           content::RenderFrame::FromWebFrame(frame));
-//   if (!mime_handlers.empty()) {
-//     // This message is handled in chrome/browser/resources/pdf/pdf.js and
-//     // instructs the PDF plugin to print. This is to make window.print() on a
-//     // PDF plugin document correctly print the PDF. See
-//     // https://crbug.com/448720.
-//     base::DictionaryValue message;
-//     message.SetString("type", "print");
-//     mime_handlers.front()->PostMessageFromValue(message);
-//     return true;
-//   }
-// #endif  // defined(ENABLE_EXTENSIONS)
   return false;
 }

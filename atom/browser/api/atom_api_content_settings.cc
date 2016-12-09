@@ -5,8 +5,8 @@
 #include "atom/browser/api/atom_api_content_settings.h"
 
 #include "atom/common/native_mate_converters/gurl_converter.h"
-#include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/native_mate_converters/v8_value_converter.h"
+#include "atom/common/native_mate_converters/value_converter.h"
 #include "base/values.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -19,7 +19,6 @@ template<>
 struct Converter<ContentSettingsPattern> {
   static bool FromV8(v8::Isolate* isolate,
       v8::Local<v8::Value> val, ContentSettingsPattern* out) {
-
     if (val->IsNull() || val->IsUndefined()) {
       *out = ContentSettingsPattern::Wildcard();
       return true;
@@ -38,7 +37,6 @@ template<>
 struct Converter<ContentSettingsType> {
   static bool FromV8(v8::Isolate* isolate,
       v8::Local<v8::Value> val, ContentSettingsType* out) {
-
     std::string settings_type_string;
     if (!ConvertFromV8(isolate, val, &settings_type_string))
       return false;
@@ -220,7 +218,8 @@ mate::Handle<ContentSettings> ContentSettings::Create(
     v8::Isolate* isolate,
     content::BrowserContext* browser_context) {
   DCHECK(browser_context);
-  return mate::CreateHandle(isolate, new ContentSettings(isolate, browser_context));
+  return mate::CreateHandle(isolate,
+      new ContentSettings(isolate, browser_context));
 }
 
 // static

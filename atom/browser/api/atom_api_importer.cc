@@ -5,6 +5,7 @@
 #include "atom/browser/api/atom_api_importer.h"
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "atom/common/native_mate_converters/callback.h"

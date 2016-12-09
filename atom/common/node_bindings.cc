@@ -2,10 +2,11 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#include "atom/common/node_bindings.h"
-
+#include <memory>
 #include <string>
 #include <vector>
+
+#include "atom/common/node_bindings.h"
 
 #include "atom/common/api/event_emitter_caller.h"
 #include "atom/common/api/locker.h"
@@ -254,8 +255,10 @@ void NodeBindings::UvRunOnce() {
 
 void NodeBindings::WakeupMainThread() {
   DCHECK(message_loop_);
-  message_loop_->task_runner()->PostTask(FROM_HERE, base::Bind(&NodeBindings::UvRunOnce,
-                                                weak_factory_.GetWeakPtr()));
+  message_loop_->task_runner()->PostTask(
+      FROM_HERE,
+      base::Bind(&NodeBindings::UvRunOnce,
+      weak_factory_.GetWeakPtr()));
 }
 
 void NodeBindings::WakeupEmbedThread() {

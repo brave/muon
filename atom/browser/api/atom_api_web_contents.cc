@@ -2,10 +2,12 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#include "atom/browser/api/atom_api_web_contents.h"
-
+#include <memory>
 #include <set>
 #include <string>
+#include <utility>
+
+#include "atom/browser/api/atom_api_web_contents.h"
 
 #include "atom/browser/api/atom_api_debugger.h"
 #include "atom/browser/api/atom_api_session.h"
@@ -367,7 +369,8 @@ WebContents::WebContents(v8::Isolate* isolate,
         DCHECK(opener->IsGuest() && opener->HostWebContents());
 
         if (!tab_view_guest) {
-          tab_view_guest = brave::TabViewGuest::Create(opener->HostWebContents());
+          tab_view_guest = brave::TabViewGuest::Create(
+              opener->HostWebContents());
         }
         tab_view_guest->SetOpener(opener->guest_delegate_);
       }
@@ -425,7 +428,6 @@ WebContents::WebContents(v8::Isolate* isolate,
 WebContents::~WebContents() {
   // The destroy() is called.
   if (managed_web_contents()) {
-
     // The WebContentsDestroyed will not be called automatically because we
     // unsubscribe from webContents before destroying it. So we have to manually
     // call it here to make sure "destroyed" event is emitted.
@@ -720,7 +722,8 @@ void WebContents::RendererResponsive(content::WebContents* source) {
 
 bool WebContents::HandleContextMenu(const content::ContextMenuParams& params) {
 #if defined(ENABLE_PLUGINS)
-    if (params.custom_context.request_id && !params.custom_context.is_pepper_menu) {
+    if (params.custom_context.request_id &&
+        !params.custom_context.is_pepper_menu) {
       Emit("enable-pepper-menu", std::make_pair(params, web_contents()));
       web_contents()->NotifyContextMenuClosed(params.custom_context);
       return true;
@@ -1071,7 +1074,8 @@ void WebContents::WebContentsDestroyed() {
 
   if (managed_web_contents()) {
     managed_web_contents()->SetDelegate(nullptr);
-    static_cast<brightray::InspectableWebContentsImpl*>(managed_web_contents())->WebContentsDestroyed();
+    static_cast<brightray::InspectableWebContentsImpl*>(
+        managed_web_contents())->WebContentsDestroyed();
   }
 
   RenderViewDeleted(web_contents()->GetRenderViewHost());
@@ -1433,7 +1437,8 @@ void WebContents::InspectElement(int x, int y) {
     OpenDevTools(nullptr);
   scoped_refptr<content::DevToolsAgentHost> agent(
     content::DevToolsAgentHost::GetOrCreateFor(web_contents()));
-  agent->InspectElement(static_cast<brightray::InspectableWebContentsImpl*>(managed_web_contents()), x, y);
+  agent->InspectElement(static_cast<brightray::InspectableWebContentsImpl*>(
+      managed_web_contents()), x, y);
 }
 
 void WebContents::InspectServiceWorker() {
@@ -2120,7 +2125,6 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 void WebContents::CreateTab(v8::Isolate* isolate,
     const mate::Dictionary& options,
     base::Callback<void(WebContents*)> callback) {
-
   WebContents* owner;
   if (!options.Get("owner", &owner)) {
     callback.Run(nullptr);

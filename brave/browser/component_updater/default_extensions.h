@@ -44,9 +44,9 @@ const uint8_t kOnePasswordPublicKey[162] = {
   0x93, 0x38, 0xee, 0x3e, 0x79, 0x02, 0x03, 0x01,
   0x00, 0x01
 };
-const std::string kOnePasswordPublicKeyStr(
+const std::string kOnePasswordPublicKeyStr(  // NOLINT
     (const char *)kOnePasswordPublicKey, sizeof(kOnePasswordPublicKey));
-const std::string kOnePasswordId("aomjjhallfgjeglblehebfpbcfeobpgk");
+const std::string kOnePasswordId("aomjjhallfgjeglblehebfpbcfeobpgk");  // NOLINT
 
 // PDFJS
 // Parent repo: https://github.com/diracdeltas/pdf.js
@@ -92,9 +92,9 @@ const uint8_t kPDFJSPublicKey[294] = {
   0x17, 0x61, 0x9b, 0xd3, 0x0d, 0x03, 0x78, 0x60,
   0x13, 0x02, 0x03, 0x01, 0x00, 0x01
 };
-const std::string kPDFJSPublicKeyStr(
+const std::string kPDFJSPublicKeyStr(  // NOLINT
     (const char *)kPDFJSPublicKey, sizeof(kPDFJSPublicKey));
-const std::string kPDFJSId("jdbefljfgobbmcidnmpjamcbhnbphjnb");
+const std::string kPDFJSId("jdbefljfgobbmcidnmpjamcbhnbphjnb");  // NOLINT
 
 // Dashlane
 // Download: https://clients2.google.com/service/update2/crx?response=redirect&prodversion=52.0.2743.116&x=id%3Dfdjamakpfbbddfjaooikfcpapjohcfmg%26uc // NOLINT
@@ -137,9 +137,9 @@ const uint8_t kDashlanePublicKey[294] = {
   0x0c, 0x71, 0x1a, 0x18, 0xb3, 0x3d, 0xb8, 0xe9,
   0x25, 0x02, 0x03, 0x01, 0x00, 0x01
 };
-const std::string kDashlanePublicKeyStr(
+const std::string kDashlanePublicKeyStr(  // NOLINT
     (const char *)kDashlanePublicKey, sizeof(kDashlanePublicKey));
-const std::string kDashlaneId("fdjamakpfbbddfjaooikfcpapjohcfmg");
+const std::string kDashlaneId("fdjamakpfbbddfjaooikfcpapjohcfmg");  // NOLINT
 
 // LastPass
 // Download: https://clients2.google.com/service/update2/crx?response=redirect&prodversion=52.0.2743.116&x=id%3Dhdokiejnpimakedhajhdlcegeplioahd%26uc // NOLINT
@@ -166,9 +166,9 @@ const uint8_t kLastPassPublicKey[162] = {
   0xb4, 0x2d, 0x0d, 0x75, 0xb9, 0x02, 0x03, 0x01,
   0x00, 0x01
 };
-const std::string kLastPassPublicKeyStr(
+const std::string kLastPassPublicKeyStr(  // NOLINT
     (const char *)kLastPassPublicKey, sizeof(kLastPassPublicKey));
-const std::string kLastPassId("hdokiejnpimakedhajhdlcegeplioahd");
+const std::string kLastPassId("hdokiejnpimakedhajhdlcegeplioahd");  // NOLINT
 
 // CRX hash. The extension id is: oimompecagnajdejgnnjijobebaeigek.
 // Widevine
@@ -195,9 +195,9 @@ const uint8_t kWidevinePublicKey[162] = {
   0x04, 0x15, 0x8e, 0x88, 0x19, 0x02, 0x03, 0x01,
   0x00, 0x01
 };
-const std::string kWidevinePublicKeyStr(
+const std::string kWidevinePublicKeyStr(  // NOLINT
     (const char *)kWidevinePublicKey, sizeof(kWidevinePublicKey));
-const std::string kWidevineId("oimompecagnajdejgnnjijobebaeigek");
+const std::string kWidevineId("oimompecagnajdejgnnjijobebaeigek");  // NOLINT
 
 // Pocket
 // Download: https://clients2.google.com/service/update2/crx?response=redirect&prodversion=52.0.2743.116&x=id%3Dniloccemoadcdkdjlinkgdfekeahmflj%26uc // NOLINT
@@ -224,8 +224,8 @@ const uint8_t kPocketPublicKey[162] = {
   0x96, 0x64, 0x35, 0x63, 0xfd, 0x02, 0x03, 0x01,
   0x00, 0x01
 };
-const std::string kPocketPublicKeyStr(
+const std::string kPocketPublicKeyStr(  // NOLINT
     (const char *)kPocketPublicKey, sizeof(kPocketPublicKey));
-const std::string kPocketId("niloccemoadcdkdjlinkgdfekeahmflj");
+const std::string kPocketId("niloccemoadcdkdjlinkgdfekeahmflj");  // NOLINT
 
 #endif  // BRAVE_BROWSER_COMPONENT_UPDATER_DEFAULT_EXTENSIONS_H_

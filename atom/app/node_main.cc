@@ -2,6 +2,9 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include <memory>
+#include <utility>
+
 #include "atom/app/node_main.h"
 
 #include "atom/app/uv_task_runner.h"
@@ -43,8 +46,9 @@ int NodeMain(int argc, char *argv[]) {
     node::Init(&argc, const_cast<const char**>(argv), &exec_argc, &exec_argv);
 
     node::Environment* env = node::CreateEnvironment(
-        node::CreateIsolateData(gin_env.isolate(), loop), gin_env.context(), argc, argv,
-        exec_argc, exec_argv);
+        node::CreateIsolateData(
+          gin_env.isolate(), loop), gin_env.context(), argc, argv,
+          exec_argc, exec_argv);
 
     // Start our custom debugger implementation.
     NodeDebugger node_debugger(gin_env.isolate());

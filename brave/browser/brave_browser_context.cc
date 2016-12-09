@@ -2,6 +2,9 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include <memory>
+#include <utility>
+
 #include "brave/browser/brave_browser_context.h"
 
 #include "atom/browser/net/atom_url_request_job_factory.h"
@@ -100,8 +103,7 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
       partition_(partition),
       ready_(
         new base::WaitableEvent(base::WaitableEvent::ResetPolicy::MANUAL,
-                              base::WaitableEvent::InitialState::NOT_SIGNALED))
-    {
+                            base::WaitableEvent::InitialState::NOT_SIGNALED)) {
   std::string parent_partition;
   if (options.GetString("parent_partition", &parent_partition)) {
     has_parent_ = true;
@@ -567,8 +569,10 @@ scoped_refptr<AtomBrowserContext> AtomBrowserContext::From(
       sequenced_task_runner);
 
   if (profile == profile->GetOriginalProfile() &&
-      !g_browser_process->profile_manager()->GetProfileByPath(profile->GetPath()))
+      !g_browser_process->profile_manager()->GetProfileByPath(
+          profile->GetPath())) {
     g_browser_process->profile_manager()->AddProfile(profile);
+  }
 
   return profile;
 }

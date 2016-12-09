@@ -5,6 +5,7 @@
 #ifndef BRAVE_BROWSER_BRAVE_CONTENT_BROWSER_CLIENT_H_
 #define BRAVE_BROWSER_BRAVE_CONTENT_BROWSER_CLIENT_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 

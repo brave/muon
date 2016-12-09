@@ -4,6 +4,7 @@
 
 #include "brave/utility/importer/chrome_importer.h"
 
+#include <memory>
 #include <string>
 
 #include "base/files/file_util.h"

@@ -6,6 +6,7 @@
 #define BRAVE_BROWSER_COMPONENT_UPDATER_EXTENSION_INSTALLER_TRAITS_H_
 
 #include <stdint.h>
+#include <memory>
 #include <string>
 #include <vector>
 

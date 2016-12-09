@@ -2,6 +2,8 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include <utility>
+
 #include "brave/browser/brave_content_browser_client.h"
 
 #include "atom/browser/web_contents_permission_helper.h"
@@ -170,30 +172,6 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   host->GetStoragePartition()->GetURLRequestContext();
 
   atom::AtomBrowserClient::RenderProcessWillLaunch(host);
-  // host->AddFilter(new ChromeRenderMessageFilter(
-  //     id, profile, host->GetStoragePartition()->GetServiceWorkerContext()));
-#if defined(ENABLE_WEBRTC)
-  // WebRtcLoggingHandlerHost* webrtc_logging_handler_host =
-  //     new WebRtcLoggingHandlerHost(id, profile,
-  //                                  g_browser_process->webrtc_log_uploader());
-  // host->AddFilter(webrtc_logging_handler_host);
-  // host->SetUserData(WebRtcLoggingHandlerHost::kWebRtcLoggingHandlerHostKey,
-  //                   new base::UserDataAdapter<WebRtcLoggingHandlerHost>(
-  //                       webrtc_logging_handler_host));
-
-  // AudioDebugRecordingsHandler* audio_debug_recordings_handler =
-  //     new AudioDebugRecordingsHandler(profile);
-  // host->SetUserData(
-  //     AudioDebugRecordingsHandler::kAudioDebugRecordingsHandlerKey,
-  //     new base::UserDataAdapter<AudioDebugRecordingsHandler>(
-  //         audio_debug_recordings_handler));
-
-  // WebRtcEventLogHandler* webrtc_event_log_handler =
-  //     new WebRtcEventLogHandler(profile);
-  // host->SetUserData(WebRtcEventLogHandler::kWebRtcEventLogHandlerKey,
-  //                   new base::UserDataAdapter<WebRtcEventLogHandler>(
-  //                       webrtc_event_log_handler));
-#endif
 
 #if defined(ENABLE_EXTENSIONS)
   extensions_part_->RenderProcessWillLaunch(host);
@@ -487,7 +465,8 @@ bool BraveContentBrowserClient::DoesSiteRequireDedicatedProcess(
 
 void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
         std::vector<std::string>* additional_allowed_schemes) {
-  AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(additional_allowed_schemes);
+  AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
+      additional_allowed_schemes);
   ContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
       additional_allowed_schemes);
 
@@ -527,8 +506,8 @@ base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
 gpu::GpuChannelEstablishFactory*
 BraveContentBrowserClient::GetGpuChannelEstablishFactory() {
 #if defined(USE_AURA)
-//  if (views::WindowManagerConnection::Exists())
-//    return views::WindowManagerConnection::Get()->gpu_service();
+  if (views::WindowManagerConnection::Exists())
+    return views::WindowManagerConnection::Get()->gpu_service();
 #endif
   return nullptr;
 }
@@ -571,22 +550,6 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
   if (!handle->IsInMainFrame())
     throttles.push_back(new extensions::ExtensionNavigationThrottle(handle));
 #endif
-
-  // TODO(bridiver)
-  // subresource_filter::ContentSubresourceFilterDriverFactory*
-  //     subresource_filter_driver_factory =
-  //         subresource_filter::ContentSubresourceFilterDriverFactory::
-  //             FromWebContents(handle->GetWebContents());
-  // if (subresource_filter_driver_factory && handle->IsInMainFrame() &&
-  //     handle->GetURL().SchemeIsHTTPOrHTTPS()) {
-  //   // TODO(melandory): Activation logic should be moved to the
-  //   // WebContentsObserver, once ReadyToCommitNavigation is available on
-  //   // pre-PlzNavigate world (tracking bug: https://crbug.com/621856).
-  //   throttles.push_back(
-  //       subresource_filter::SubresourceFilterNavigationThrottle::Create(
-  //           handle));
-  // }
-
   return throttles;
 }
 

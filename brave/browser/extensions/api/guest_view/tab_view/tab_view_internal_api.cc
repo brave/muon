@@ -4,6 +4,8 @@
 
 #include "brave/browser/extensions/api/guest_view/tab_view/tab_view_internal_api.h"
 
+#include <string>
+
 #include "atom/browser/extensions/tab_helper.h"
 #include "content/public/browser/render_process_host.h"
 #include "extensions/browser/guest_view/web_view/web_view_constants.h"
