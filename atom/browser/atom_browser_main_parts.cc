@@ -17,6 +17,7 @@
 #include "atom/common/node_includes.h"
 #include "base/allocator/allocator_extension.h"
 #include "base/command_line.h"
+#include "base/feature_list.h"
 #include "base/files/file_util.h"
 #include "base/memory/memory_pressure_monitor.h"
 #include "base/path_service.h"
@@ -27,6 +28,7 @@
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/web_ui_controller_factory.h"
+#include "content/public/common/content_switches.h"
 #include "v8/include/v8-debug.h"
 
 #include "v8/include/v8.h"
@@ -201,6 +203,13 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   std::unique_ptr<base::DictionaryValue> empty_info(new base::DictionaryValue);
   Browser::Get()->DidFinishLaunching(*empty_info);
 #endif
+
+  // we want to allow the app to override the command line before running this
+  auto command_line = base::CommandLine::ForCurrentProcess();
+  // auto feature_list = base::FeatureList::GetInstance();
+  base::FeatureList::InitializeInstance(
+      command_line->GetSwitchValueASCII(switches::kEnableFeatures),
+      command_line->GetSwitchValueASCII(switches::kDisableFeatures));
 }
 
 bool AtomBrowserMainParts::MainMessageLoopRun(int* result_code) {
