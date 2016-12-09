@@ -32,6 +32,7 @@
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/common/content_switches.h"
+#include "extensions/common/extension_messages.h"
 #include "ipc/ipc_message_macros.h"
 #include "native_mate/dictionary.h"
 #include "third_party/skia/include/core/SkRegion.h"
@@ -578,7 +579,7 @@ void NativeWindow::DidFirstVisuallyNonEmptyPaint() {
 bool NativeWindow::OnMessageReceived(const IPC::Message& message) {
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(NativeWindow, message)
-    IPC_MESSAGE_HANDLER(AtomViewHostMsg_UpdateDraggableRegions,
+    IPC_MESSAGE_HANDLER(ExtensionHostMsg_UpdateDraggableRegions,
                         UpdateDraggableRegions)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
@@ -587,7 +588,7 @@ bool NativeWindow::OnMessageReceived(const IPC::Message& message) {
 }
 
 void NativeWindow::UpdateDraggableRegions(
-    const std::vector<DraggableRegion>& regions) {
+    const std::vector<extensions::DraggableRegion>& regions) {
   // Draggable region is not supported for non-frameless window.
   if (has_frame_)
     return;

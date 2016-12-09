@@ -11,7 +11,6 @@
 #include "atom/browser/ui/views/menu_layout.h"
 #include "atom/browser/window_list.h"
 #include "atom/common/color_util.h"
-#include "atom/common/draggable_region.h"
 #include "atom/common/native_mate_converters/image_converter.h"
 #include "atom/common/options_switches.h"
 #include "base/strings/utf_string_conversions.h"
@@ -19,6 +18,7 @@
 #include "brightray/browser/inspectable_web_contents_view.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/native_web_keyboard_event.h"
+#include "extensions/common/draggable_region.h"
 #include "native_mate/dictionary.h"
 #include "ui/aura/window_tree_host.h"
 #include "ui/base/hit_test.h"
@@ -56,6 +56,8 @@
 #include "ui/display/win/screen_win.h"
 #include "ui/views/widget/desktop_aura/desktop_native_widget_aura.h"
 #endif
+
+using extensions::DraggableRegion;
 
 namespace atom {
 

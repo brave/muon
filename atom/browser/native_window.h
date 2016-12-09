@@ -45,9 +45,13 @@ namespace mate {
 class Dictionary;
 }
 
-namespace atom {
-
+namespace extensions {
 struct DraggableRegion;
+}
+
+using extensions::DraggableRegion;
+
+namespace atom {
 
 class NativeWindow : public base::SupportsUserData,
                      public content::WebContentsObserver {
@@ -248,7 +252,7 @@ class NativeWindow : public base::SupportsUserData,
   // Convert draggable regions in raw format to SkRegion format. Caller is
   // responsible for deleting the returned SkRegion instance.
   std::unique_ptr<SkRegion> DraggableRegionsToSkRegion(
-      const std::vector<DraggableRegion>& regions);
+      const std::vector<extensions::DraggableRegion>& regions);
 
   // Converts between content bounds and window bounds.
   virtual gfx::Rect ContentBoundsToWindowBounds(const gfx::Rect& bounds) = 0;
@@ -256,7 +260,7 @@ class NativeWindow : public base::SupportsUserData,
 
   // Called when the window needs to update its draggable region.
   virtual void UpdateDraggableRegions(
-      const std::vector<DraggableRegion>& regions);
+      const std::vector<extensions::DraggableRegion>& regions);
 
   // content::WebContentsObserver:
   void BeforeUnloadDialogCancelled() override;

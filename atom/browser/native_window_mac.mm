@@ -8,7 +8,6 @@
 
 #include "atom/browser/window_list.h"
 #include "atom/common/color_util.h"
-#include "atom/common/draggable_region.h"
 #include "atom/common/options_switches.h"
 #include "base/mac/mac_util.h"
 #include "base/mac/scoped_cftyperef.h"
@@ -20,10 +19,13 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host_view.h"
+#include "extensions/common/draggable_region.h"
 #include "native_mate/dictionary.h"
 #include "skia/ext/skia_utils_mac.h"
 #include "third_party/skia/include/core/SkRegion.h"
 #include "ui/gfx/skia_util.h"
+
+using extensions::DraggableRegion;
 
 namespace {
 

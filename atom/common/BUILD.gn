@@ -93,8 +93,6 @@ source_set("common") {
     "common_message_generator.h",
     # "crash_reporter/crash_reporter.cc",
     # "crash_reporter/crash_reporter.h",
-    "draggable_region.cc",
-    "draggable_region.h",
     "google_api_key.h",
     "importer/chrome_importer_utils.cc",
     "importer/chrome_importer_utils.h",

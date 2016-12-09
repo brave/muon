@@ -18,6 +18,11 @@
 @class AtomNSWindowDelegate;
 @class FullSizeContentView;
 
+namespace extensions {
+struct DraggableRegion;
+}
+using extensions::DraggableRegion;
+
 namespace atom {
 
 class NativeWindowMac : public NativeWindow,
