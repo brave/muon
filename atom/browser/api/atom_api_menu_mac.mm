@@ -28,7 +28,7 @@ void MenuMac::PopupAt(Window* window, int x, int y, int positioning_item) {
     return;
   brightray::InspectableWebContents* web_contents =
       native_window->inspectable_web_contents();
-  if (!web_contents)
+  if (!web_contents || !web_contents->GetWebContents())
     return;
 
   base::scoped_nsobject<AtomMenuController> menu_controller(
