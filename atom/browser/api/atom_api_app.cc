@@ -638,6 +638,9 @@ void App::AllowCertificateError(
     bool expired_previous_decision,
     const base::Callback<void(content::CertificateRequestResultType)>&
         callback) {
+  if (callback.is_null())
+    return;
+
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
   // TODO(bridiver) handle CertificateRequestResultType
