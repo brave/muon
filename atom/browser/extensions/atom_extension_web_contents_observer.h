@@ -30,17 +30,6 @@ class AtomExtensionWebContentsObserver
       content::WebContents* web_contents);
   ~AtomExtensionWebContentsObserver() override;
 
-  bool OnMessageReceived(const IPC::Message& message,
-                         content::RenderFrameHost* render_frame_host) override;
-
-  // Adds a message to the extensions ErrorConsole.
-  void OnDetailedConsoleMessageAdded(
-      content::RenderFrameHost* render_frame_host,
-      const base::string16& message,
-      const base::string16& source,
-      const StackTrace& stack_trace,
-      int32_t severity_level);
-
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionWebContentsObserver);
 };
 
