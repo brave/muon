@@ -202,9 +202,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   mate::Handle<WebContents> Clone(const mate::Dictionary& options);
 
   // Focus.
-  void Focus();
   bool IsFocused() const;
-  void TabTraverse(bool reverse);
   void SetActive(bool active);
 
   // Zoom

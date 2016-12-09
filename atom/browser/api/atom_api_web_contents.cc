@@ -1601,10 +1601,6 @@ void WebContents::CopyImageAt(int x, int y) {
     host->CopyImageAt(x, y);
 }
 
-void WebContents::Focus() {
-  web_contents()->Focus();
-}
-
 #if !defined(OS_MACOSX)
 bool WebContents::IsFocused() const {
   auto view = web_contents()->GetRenderWidgetHostView();
@@ -1692,10 +1688,6 @@ void WebContents::SetTabValues(const base::DictionaryValue& values) {
   return tab_helper->SetTabValues(values);
 }
 #endif
-
-void WebContents::TabTraverse(bool reverse) {
-  web_contents()->FocusThroughTabTraversal(reverse);
-}
 
 bool WebContents::SendIPCMessage(bool all_frames,
                                  const base::string16& channel,
@@ -2002,10 +1994,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("replaceMisspelling", &WebContents::ReplaceMisspelling)
       .SetMethod("findInPage", &WebContents::FindInPage)
       .SetMethod("stopFindInPage", &WebContents::StopFindInPage)
-      .SetMethod("focus", &WebContents::Focus)
       .SetMethod("isFocused", &WebContents::IsFocused)
       .SetMethod("clone", &WebContents::Clone)
-      .SetMethod("tabTraverse", &WebContents::TabTraverse)
       .SetMethod("_send", &WebContents::SendIPCMessage)
       .SetMethod("sendInputEvent", &WebContents::SendInputEvent)
       .SetMethod("startDrag", &WebContents::StartDrag)

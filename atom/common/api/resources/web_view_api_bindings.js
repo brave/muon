@@ -54,7 +54,6 @@ const asyncMethods = [
   'zoomReset',
   'enablePreferredSizeMode',
   'close',
-  'focus',
   'send',
 ]
 
