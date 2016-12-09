@@ -162,6 +162,29 @@ struct Converter<content::SavePageType> {
 };
 
 template<>
+struct Converter<WindowContainerType> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   WindowContainerType val) {
+    std::string type;
+    switch (val) {
+      case WINDOW_CONTAINER_TYPE_NORMAL:
+        type = "normal";
+        break;
+      case WINDOW_CONTAINER_TYPE_BACKGROUND:
+        type = "background";
+        break;
+      case WINDOW_CONTAINER_TYPE_PERSISTENT:
+        type = "persistent";
+        break;
+      default:
+        type = "unknown";
+        break;
+    }
+    return mate::ConvertToV8(isolate, type);
+  }
+};
+
+template<>
 struct Converter<atom::api::WebContents::Type> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
                                    atom::api::WebContents::Type val) {
@@ -431,7 +454,25 @@ bool WebContents::ShouldCreateWebContents(
     const GURL& target_url,
     const std::string& partition_id,
     content::SessionStorageNamespace* session_storage_namespace) {
-  return true;
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env)
+    return false;
+
+  auto event = v8::Local<v8::Object>::Cast(
+      mate::Event::Create(isolate()).ToV8());
+
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "should-create-web-contents",
+                  event,
+                  web_contents,
+                  window_container_type,
+                  frame_name,
+                  target_url,
+                  partition_id);
+
+  return !event->Get(
+      mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
 }
 
 void WebContents::WebContentsCreated(content::WebContents* source_contents,
@@ -504,9 +545,23 @@ void WebContents::AddNewContents(content::WebContents* source,
     options->Set("windowOptions", std::move(window_options));
   }
 
-  // the url will be set in ResumeLoadingCreatedWebContents
-  bool blocked =
-    Emit("new-window", "about:blank", "", disposition, *options);
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env)
+    return false;
+
+  auto event = v8::Local<v8::Object>::Cast(
+      mate::Event::Create(isolate()).ToV8());
+
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "add-new-contents",
+                  event,
+                  source,
+                  new_contents,
+                  disposition,
+                  user_gesture);
+  bool blocked = event->Get(
+      mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
 
   if (was_blocked)
     *was_blocked = blocked;
@@ -517,6 +572,8 @@ void WebContents::AddNewContents(content::WebContents* source,
     } else {
       new_api_contents->DestroyWebContents();
     }
+  } else {
+    Emit("new-window", "about:blank", "", disposition, *options);
   }
 }
 
