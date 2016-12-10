@@ -26,7 +26,6 @@
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/guest_view/browser/guest_view_manager.h"
-#include "components/guest_view/browser/guest_view_manager_delegate.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
@@ -454,18 +453,6 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
           ->CreateJobInterceptorFactory();
 
   user_prefs_registrar_->Init(user_prefs_.get());
-
-#if defined(ENABLE_EXTENSIONS)
-  guest_view::GuestViewManager* guest_view_manager =
-        guest_view::GuestViewManager::FromBrowserContext(this);
-  if (!guest_view_manager) {
-    guest_view::GuestViewManager::CreateWithDelegate(
-        this,
-        extensions::ExtensionsAPIClient::Get()->
-            CreateGuestViewManagerDelegate(this));
-  }
-#endif
-
 #if defined(ENABLE_PLUGINS)
   BravePluginServiceFilter::GetInstance()->RegisterResourceContext(
       this, GetResourceContext());

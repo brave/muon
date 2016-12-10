@@ -44,6 +44,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
+#include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "brave/browser/renderer_preferences_helper.h"
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
@@ -54,6 +55,7 @@
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
+#include "components/guest_view/browser/guest_view_manager_delegate.h"
 #include "components/zoom/page_zoom.h"
 #include "components/zoom/zoom_controller.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
@@ -96,10 +98,11 @@
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/tab_helper.h"
+#include "extensions/browser/api/extensions_api_client.h"
 #endif
 
-
-#include "brave/browser/plugins/brave_plugin_service_filter.h"
+using extensions::ExtensionsAPIClient;
+using guest_view::GuestViewManager;
 
 namespace mate {
 
@@ -357,6 +360,16 @@ WebContents::WebContents(v8::Isolate* isolate,
       : content::WebContents::CreateParams(browser_context));
 
   if (IsGuest()) {
+#if defined(ENABLE_EXTENSIONS)
+    GuestViewManager* guest_view_manager =
+        GuestViewManager::FromBrowserContext(browser_context);
+    if (!guest_view_manager) {
+      GuestViewManager::CreateWithDelegate(
+          browser_context,
+          ExtensionsAPIClient::Get()->CreateGuestViewManagerDelegate(
+              browser_context));
+    }
+#endif
     if (!params.guest_delegate) {
       guest_view::GuestViewBase* tab_view_guest;
       WebContents* embedder;
