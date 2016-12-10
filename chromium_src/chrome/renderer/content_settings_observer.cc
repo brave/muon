@@ -202,7 +202,7 @@ void ContentSettingsObserver::DidBlockContentType(
       settings_type_string = "autoplay";
       break;
   }
-  DidBlockContentType(settings_type_string, UTF16ToUTF8(details));
+  DidBlockContentType(settings_type_string, base::UTF16ToUTF8(details));
 }
 
 void ContentSettingsObserver::DidBlockContentType(

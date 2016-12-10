@@ -2,10 +2,6 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#if defined(OS_WIN)
-#include <shlobj.h>
-#endif
-
 #include <utility>
 
 #include "atom/browser/atom_browser_client.h"
@@ -47,6 +43,11 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "v8/include/libplatform/libplatform.h"
 #include "v8/include/v8.h"
+
+#if defined(OS_WIN)
+#include <Objbase.h>
+#include <shlobj.h>
+#endif
 
 #if defined(ENABLE_EXTENSIONS)
 #include "extensions/common/constants.h"

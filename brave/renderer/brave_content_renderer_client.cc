@@ -30,6 +30,11 @@
 #include "third_party/WebKit/public/web/WebPlugin.h"
 #include "third_party/WebKit/public/web/WebPluginParams.h"
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
+#if defined(OS_WIN)
+#include <Shobjidl.h>
+#include "base/command_line.h"
+#include "atom/common/options_switches.h"
+#endif
 
 #if defined(ENABLE_EXTENSIONS)
 #include "chrome/renderer/extensions/chrome_extensions_renderer_client.h"
@@ -60,7 +65,7 @@ void BraveContentRendererClient::RenderThreadStarted() {
     // Set ApplicationUserModelID in renderer process.
     base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
     base::string16 app_id =
-        command_line->GetSwitchValueNative(switches::kAppUserModelId);
+        command_line->GetSwitchValueNative(atom::switches::kAppUserModelId);
     if (!app_id.empty()) {
       SetCurrentProcessExplicitAppUserModelID(app_id.c_str());
     }
