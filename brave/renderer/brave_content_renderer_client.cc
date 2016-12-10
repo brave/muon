@@ -31,7 +31,7 @@
 #include "third_party/WebKit/public/web/WebPluginParams.h"
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
 #if defined(OS_WIN)
-#include <Shobjidl.h>
+#include <shlobj.h>
 #include "base/command_line.h"
 #include "atom/common/options_switches.h"
 #endif
