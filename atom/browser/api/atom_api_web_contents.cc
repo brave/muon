@@ -563,8 +563,9 @@ void WebContents::AddNewContents(content::WebContents* source,
   }
 
   node::Environment* env = node::Environment::GetCurrent(isolate());
-  if (!env)
-    return false;
+  if (!env) {
+    return;
+  }
 
   auto event = v8::Local<v8::Object>::Cast(
       mate::Event::Create(isolate()).ToV8());
