@@ -39,8 +39,9 @@ namespace {
 
 void CreateProxyResolverFactory(
   net::interfaces::ProxyResolverFactoryRequest request) {
-    mojo::MakeStrongBinding(base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
-                            std::move(request));
+    mojo::MakeStrongBinding(
+      base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
+      std::move(request));
 }
 
 class ResourceUsageReporterImpl : public mojom::ResourceUsageReporter {
@@ -59,7 +60,6 @@ class ResourceUsageReporterImpl : public mojom::ResourceUsageReporter {
     }
     callback.Run(std::move(data));
   }
-
 };
 
 void CreateResourceUsageReporter(
