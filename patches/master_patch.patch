@@ -1,5 +1,5 @@
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018..a3a5b95 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..a3a5b9507dfebf8d010e018ee1a5b11203146a67 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
 @@ -8,15 +8,15 @@ declare_args() {
@@ -27,17 +27,17 @@ index c649018..a3a5b95 100644
 -  branding_path_component = "chromium"
 -}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
-index 0c00e99..e565111 100644
+index 2bb96c75cbeb333f20ab89a7243874fedc99099c..c492f1fd4f573e55bc5ec57387efb4785d37c9e0 100644
 --- a/build/toolchain/mac/BUILD.gn
 +++ b/build/toolchain/mac/BUILD.gn
-@@ -210,13 +210,15 @@ template("mac_toolchain") {
+@@ -216,13 +216,15 @@ template("mac_toolchain") {
      }
 
      tool("alink") {
 +      rspfile = "{{output}}.rsp"
        script =
            rebase_path("//build/toolchain/mac/filter_libtool.py", root_build_dir)
--      command = "rm -f {{output}} && TOOL_VERSION=${tool_versions.filter_libtool} python $script libtool -static {{arflags}} -o {{output}} {{inputs}}"
+-      command = "$env_wrapper rm -f {{output}} && TOOL_VERSION=${tool_versions.filter_libtool} python $script libtool -static {{arflags}} -o {{output}} {{inputs}}"
 +      command = "rm -f {{output}} && TOOL_VERSION=${tool_versions.filter_libtool} python $script libtool -static {{arflags}} -o {{output}} -filelist \"$rspfile\""
        description = "LIBTOOL-STATIC {{output}}"
        outputs = [
@@ -48,12 +48,12 @@ index 0c00e99..e565111 100644
        default_output_extension = ".a"
        output_prefix = "lib"
 diff --git a/build/util/branding.gni b/build/util/branding.gni
-index c38d2a9..d1cd1a1 100644
+index cadd1a3441586bf246b9531dd76ca3977bbe6111..5e5feb8138cffa7eb09a5faa58f8eef3882a128f 100644
 --- a/build/util/branding.gni
 +++ b/build/util/branding.gni
-@@ -19,7 +19,7 @@ _branding_dictionary_template = "full_name = \"@PRODUCT_FULLNAME@\" " +
-                                 "bundle_id = \"@MAC_BUNDLE_ID@\" " +
-                                 "creator_code = \"@MAC_CREATOR_CODE@\" "
+@@ -22,7 +22,7 @@ _branding_dictionary_template =
+     "installer_full_name = \"@PRODUCT_INSTALLER_FULLNAME@\" " +
+     "installer_short_name = \"@PRODUCT_INSTALLER_SHORTNAME@\" "
 
 -_branding_file = "//chrome/app/theme/$branding_path_component/BRANDING"
 +_branding_file = "//chrome/app/theme/brave/BRANDING"
@@ -61,10 +61,10 @@ index c38d2a9..d1cd1a1 100644
                        [
                          "-f",
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 80378a8..903fabb 100644
+index 4cddfe5c49ab1ea9df0be42c62d5555c6b73614e..cb30457fd8185ba09164c916c9ec7567a4492531 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -29,6 +29,8 @@ if (is_android) {
+@@ -31,6 +31,8 @@ if (is_android) {
    import("//build_overrides/v8.gni")
    import("//media/cdm/ppapi/cdm_paths.gni")
    import("//third_party/icu/config.gni")
@@ -72,9 +72,9 @@ index 80378a8..903fabb 100644
 +  chrome_product_short_name = "Google Chrome"
  }
 
- if (is_win) {
+ if (enable_resource_whitelist_generation) {
 diff --git a/chrome/browser/extensions/api/messaging/message_service.cc b/chrome/browser/extensions/api/messaging/message_service.cc
-index 0f8d9d8..e29ec83 100644
+index 5b4c3829bff7839f33c2214405d12a301177a635..41e5e2cd74a45182cb6c76972eeb28809ad21bb3 100644
 --- a/chrome/browser/extensions/api/messaging/message_service.cc
 +++ b/chrome/browser/extensions/api/messaging/message_service.cc
 @@ -8,6 +8,7 @@
@@ -86,7 +86,7 @@ index 0f8d9d8..e29ec83 100644
  #include "base/bind.h"
  #include "base/callback.h"
 @@ -18,7 +19,7 @@
- #include "base/stl_util.h"
+ #include "base/metrics/histogram_macros.h"
  #include "build/build_config.h"
  #include "chrome/browser/extensions/api/messaging/extension_message_port.h"
 -#include "chrome/browser/extensions/api/messaging/incognito_connectability.h"
@@ -94,7 +94,7 @@ index 0f8d9d8..e29ec83 100644
  #include "chrome/browser/extensions/api/messaging/native_message_port.h"
  #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
  #include "chrome/browser/extensions/extension_service.h"
-@@ -332,9 +333,7 @@ void MessageService::OpenChannelToExtension(
+@@ -330,9 +331,7 @@ void MessageService::OpenChannelToExtension(
      // Only the tab id is useful to platform apps for internal use. The
      // unnecessary bits will be stripped out in
      // MessagingBindings::DispatchOnConnect().
@@ -105,7 +105,7 @@ index 0f8d9d8..e29ec83 100644
 
      content::RenderFrameHost* rfh =
          content::RenderFrameHost::FromID(source_process_id, source_routing_id);
-@@ -394,10 +393,10 @@ void MessageService::OpenChannelToExtension(
+@@ -392,10 +391,10 @@ void MessageService::OpenChannelToExtension(
      }
 
      // This check may show a dialog.
@@ -114,17 +114,17 @@ index 0f8d9d8..e29ec83 100644
 -                base::Bind(&MessageService::OnOpenChannelAllowed,
 -                           weak_factory_.GetWeakPtr(), base::Passed(&params)));
 +    // IncognitoConnectability::Get(context)
-+    //     ->Query(target_extension, source_contents, source_url,
-+    //             base::Bind(&MessageService::OnOpenChannelAllowed,
-+    //                        weak_factory_.GetWeakPtr(), base::Passed(&params)));
++    //    ->Query(target_extension, source_contents, source_url,
++    //            base::Bind(&MessageService::OnOpenChannelAllowed,
++    //                       weak_factory_.GetWeakPtr(), base::Passed(&params)));
      return;
    }
 
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
-index 179c44c..5abd0b6 100644
+index 7bc9f77ba3f08bbc9ae86b75e093368a0a052c5b..7efbdb552a074f44f013865463fe279fd15420c7 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
-@@ -61,7 +61,7 @@ void ShowWarningMessageBox(const base::string16& message) {
+@@ -62,7 +62,7 @@ void ShowWarningMessageBox(const base::string16& message) {
    // Block opening dialog from nested task.
    base::AutoReset<bool> auto_reset(&is_dialog_shown, true);
 
@@ -134,7 +134,7 @@ index 179c44c..5abd0b6 100644
 
  }  // namespace
 diff --git a/chrome/browser/renderer_host/chrome_extension_message_filter.cc b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
-index a34a8ac..ac93870 100644
+index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..1c3755e6f0fb9dad2b9a8c11ef11d417175d0c33 100644
 --- a/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 +++ b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 @@ -14,10 +14,10 @@
@@ -198,7 +198,7 @@ index a34a8ac..ac93870 100644
        extension_info_map_(
            extensions::ExtensionSystem::Get(profile)->info_map()) {
    DCHECK_CURRENTLY_ON(BrowserThread::UI);
-@@ -88,12 +89,12 @@ bool ChromeExtensionMessageFilter::OnMessageReceived(
+@@ -90,12 +91,12 @@ bool ChromeExtensionMessageFilter::OnMessageReceived(
      IPC_MESSAGE_HANDLER(ExtensionHostMsg_PostMessage, OnPostMessage)
      IPC_MESSAGE_HANDLER_DELAY_REPLY(ExtensionHostMsg_GetMessageBundle,
                                      OnGetExtMessageBundle)
@@ -217,7 +217,7 @@ index a34a8ac..ac93870 100644
      IPC_MESSAGE_UNHANDLED(handled = false)
    IPC_END_MESSAGE_MAP()
 
-@@ -106,9 +107,9 @@ void ChromeExtensionMessageFilter::OverrideThreadForMessage(
+@@ -108,9 +109,9 @@ void ChromeExtensionMessageFilter::OverrideThreadForMessage(
      case ExtensionHostMsg_OpenMessagePort::ID:
      case ExtensionHostMsg_CloseMessagePort::ID:
      case ExtensionHostMsg_PostMessage::ID:
@@ -230,7 +230,7 @@ index a34a8ac..ac93870 100644
        *thread = BrowserThread::UI;
        break;
      default:
-@@ -279,56 +280,56 @@ void ChromeExtensionMessageFilter::OnGetExtMessageBundleOnBlockingPool(
+@@ -304,56 +305,56 @@ void ChromeExtensionMessageFilter::OnGetExtMessageBundleOnBlockingPool(
    Send(reply_msg);
  }
 
@@ -337,7 +337,7 @@ index a34a8ac..ac93870 100644
 
  void ChromeExtensionMessageFilter::Observe(
      int type,
-@@ -336,7 +337,7 @@ void ChromeExtensionMessageFilter::Observe(
+@@ -361,7 +362,7 @@ void ChromeExtensionMessageFilter::Observe(
      const content::NotificationDetails& details) {
    DCHECK_EQ(chrome::NOTIFICATION_PROFILE_DESTROYED, type);
    profile_ = NULL;
@@ -346,7 +346,7 @@ index a34a8ac..ac93870 100644
  }
 
  bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
-@@ -345,7 +346,8 @@ bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
+@@ -370,7 +371,8 @@ bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
    // conditions (e.g. logging gets disabled but the renderer sends the message
    // before it gets updated), we still need this check here.
    DCHECK_CURRENTLY_ON(BrowserThread::UI);
@@ -359,10 +359,10 @@ index a34a8ac..ac93870 100644
 +  return false;
  }
 diff --git a/chrome/browser/renderer_host/chrome_extension_message_filter.h b/chrome/browser/renderer_host/chrome_extension_message_filter.h
-index 12d09e4..df74bdf 100644
+index ff79393b4f37cf748851ddaaf8ae5962e8011cae..3e0d1459127a73bb5b17f28932fa38625f61555a 100644
 --- a/chrome/browser/renderer_host/chrome_extension_message_filter.h
 +++ b/chrome/browser/renderer_host/chrome_extension_message_filter.h
-@@ -91,18 +91,18 @@ class ChromeExtensionMessageFilter : public content::BrowserMessageFilter,
+@@ -97,18 +97,18 @@ class ChromeExtensionMessageFilter : public content::BrowserMessageFilter,
    void OnGetExtMessageBundleOnBlockingPool(
        const std::string& extension_id,
        IPC::Message* reply_msg);
@@ -394,65 +394,44 @@ index 12d09e4..df74bdf 100644
    // content::NotificationObserver implementation.
    void Observe(int type,
 diff --git a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
-index 2b42f45..c8d6c51 100644
+index 2b42f45645cfba9c2dfe975d9e4c2c8cb96b49bd..fa763e3a2d309dfa088e7d26342736e603c950aa 100644
 --- a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
 +++ b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
-@@ -60,6 +60,7 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
+@@ -60,13 +60,13 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
              host_->GetPpapiHost(), instance, resource, pv_filter));
        }
  #endif
-+#if 0
-       case PpapiHostMsg_OutputProtection_Create::ID: {
-         scoped_refptr<ResourceMessageFilter> output_protection_filter(
-             new chrome::PepperOutputProtectionMessageFilter(host_, instance));
-@@ -67,6 +68,7 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
-             new MessageFilterHost(host_->GetPpapiHost(), instance, resource,
-                                   output_protection_filter));
-       }
-+#endif
+-      case PpapiHostMsg_OutputProtection_Create::ID: {
+-        scoped_refptr<ResourceMessageFilter> output_protection_filter(
+-            new chrome::PepperOutputProtectionMessageFilter(host_, instance));
+-        return std::unique_ptr<ResourceHost>(
+-            new MessageFilterHost(host_->GetPpapiHost(), instance, resource,
+-                                  output_protection_filter));
+-      }
++      // case PpapiHostMsg_OutputProtection_Create::ID: {
++      //   scoped_refptr<ResourceMessageFilter> output_protection_filter(
++      //       new chrome::PepperOutputProtectionMessageFilter(host_, instance));
++      //   return std::unique_ptr<ResourceHost>(
++      //       new MessageFilterHost(host_->GetPpapiHost(), instance, resource,
++      //                             output_protection_filter));
++      // }
      }
    }
 
-diff --git a/chrome/chrome_renderer.gypi b/chrome/chrome_renderer.gypi
-index 1b03a2b..3e55db9 100644
---- a/chrome/chrome_renderer.gypi
-+++ b/chrome/chrome_renderer.gypi
-@@ -19,8 +19,8 @@
-       'renderer/chrome_render_thread_observer.h',
-       'renderer/chrome_render_view_observer.cc',
-       'renderer/chrome_render_view_observer.h',
--      'renderer/content_settings_observer.cc',
--      'renderer/content_settings_observer.h',
-+      # 'renderer/content_settings_observer.cc',
-+      # 'renderer/content_settings_observer.h',
-       'renderer/custom_menu_commands.h',
-       'renderer/instant_restricted_id_cache.h',
-       'renderer/loadtimes_extension_bindings.cc',
-@@ -81,8 +81,8 @@
-       'renderer/extensions/app_bindings.h',
-       'renderer/extensions/automation_internal_custom_bindings.cc',
-       'renderer/extensions/automation_internal_custom_bindings.h',
--      'renderer/extensions/chrome_extensions_dispatcher_delegate.cc',
--      'renderer/extensions/chrome_extensions_dispatcher_delegate.h',
-+      # 'renderer/extensions/chrome_extensions_dispatcher_delegate.cc',
-+      # 'renderer/extensions/chrome_extensions_dispatcher_delegate.h',
-       'renderer/extensions/chrome_extensions_renderer_client.cc',
-       'renderer/extensions/chrome_extensions_renderer_client.h',
-       'renderer/extensions/chrome_v8_extension_handler.cc',
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 4653292..34aee93 100644
+index b96fccca1ecefc60c8c3a87f00d43ee2b3662d62..7bfd38998a8e0c18bec29a7fb76fdae3c79d2c25 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
-@@ -222,6 +222,7 @@ static_library("common") {
-     # Non-Android.
-     sources +=
-         rebase_path(gypi_values.chrome_common_importer_sources, ".", "//chrome")
+@@ -434,6 +434,7 @@ static_library("common") {
+       "importer/safari_importer_utils.h",
+       "importer/safari_importer_utils.mm",
+     ]
 +    include_dirs = [ "//electron" ]
    }
 
    if (is_chromeos) {
 diff --git a/chrome/common/chrome_constants.cc b/chrome/common/chrome_constants.cc
-index 0a96fa2..c6ed25b 100644
+index 0a96fa23db6edb6f24d10280467835d14871952e..c6ed25b46d7337fb54575064076d08664a24b8df 100644
 --- a/chrome/common/chrome_constants.cc
 +++ b/chrome/common/chrome_constants.cc
 @@ -10,11 +10,11 @@
@@ -566,7 +545,7 @@ index 0a96fa2..c6ed25b 100644
      FPL("Chrome_StatusTrayWindow");
  #endif  // defined(OS_WIN)
 diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.mm
-index d0bbbf7..8e96ea5 100644
+index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
 @@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
@@ -581,7 +560,7 @@ index d0bbbf7..8e96ea5 100644
    NSString* outer_app_dir_ns = [NSString stringWithUTF8String:outer_app_dir_c];
 
 diff --git a/chrome/common/chrome_version.h.in b/chrome/common/chrome_version.h.in
-index f0a0bcd..888572f 100644
+index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e453aef4287 100644
 --- a/chrome/common/chrome_version.h.in
 +++ b/chrome/common/chrome_version.h.in
 @@ -22,3 +22,5 @@
@@ -591,7 +570,7 @@ index f0a0bcd..888572f 100644
 +
 +#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
 diff --git a/chrome/common/importer/edge_importer_utils_win.cc b/chrome/common/importer/edge_importer_utils_win.cc
-index c2abd64..fcfa405 100644
+index c2abd64b2d7c5166c1fdbaaf782974cb4bcc5e53..fcfa405727bcc53ac5b205e96ec15259ac184383 100644
 --- a/chrome/common/importer/edge_importer_utils_win.cc
 +++ b/chrome/common/importer/edge_importer_utils_win.cc
 @@ -73,7 +73,8 @@ bool IsEdgeFavoritesLegacyMode() {
@@ -605,7 +584,7 @@ index c2abd64..fcfa405 100644
 
  bool EdgeImporterCanImport() {
 diff --git a/chrome/common/importer/importer_bridge.h b/chrome/common/importer/importer_bridge.h
-index d3fa66b..d2b88d3 100644
+index d3fa66b6ae3e8e1f79bb177718af6b22f43c1671..d2b88d3763746c63bfbedee02ebde90421fe67f3 100644
 --- a/chrome/common/importer/importer_bridge.h
 +++ b/chrome/common/importer/importer_bridge.h
 @@ -24,6 +24,8 @@ namespace autofill {
@@ -627,7 +606,7 @@ index d3fa66b..d2b88d3 100644
    virtual void NotifyStarted() = 0;
 
 diff --git a/chrome/common/importer/importer_data_types.h b/chrome/common/importer/importer_data_types.h
-index be8163f..a91d871 100644
+index be8163f0ada81c484c64364961d65bf51ff67ec6..a91d871e870eba419c97a58522f7423217f81867 100644
 --- a/chrome/common/importer/importer_data_types.h
 +++ b/chrome/common/importer/importer_data_types.h
 @@ -83,6 +83,7 @@ enum VisitSource {
@@ -639,7 +618,7 @@ index be8163f..a91d871 100644
 
  }  // namespace importer
 diff --git a/chrome/common/importer/importer_type.h b/chrome/common/importer/importer_type.h
-index c172f8a..a467f33 100644
+index c172f8a5bc534465ff4d063a52f9bb510b7e36af..437026ae26eec5dce80edb73929a0fbce870cc37 100644
 --- a/chrome/common/importer/importer_type.h
 +++ b/chrome/common/importer/importer_type.h
 @@ -19,6 +19,8 @@ enum ImporterType {
@@ -647,12 +626,12 @@ index c172f8a..a467f33 100644
  #endif
    // Value 1 was the (now deleted) Firefox 2 profile importer.
 +  // We use it for chrome profile now.
-+  TYPE_CHROME         = 1,
++  TYPE_CHROME          = 1,
    TYPE_FIREFOX         = 2,
  #if defined(OS_MACOSX)
    TYPE_SAFARI          = 3,
 diff --git a/chrome/common/importer/profile_import_process_messages.h b/chrome/common/importer/profile_import_process_messages.h
-index e53c171..3579ced 100644
+index e53c17127a95b29c22a5c7987bd63574cc83351e..3579cede6d79ef36421821a6b69a81facb586578 100644
 --- a/chrome/common/importer/profile_import_process_messages.h
 +++ b/chrome/common/importer/profile_import_process_messages.h
 @@ -8,6 +8,7 @@
@@ -677,7 +656,7 @@ index e53c171..3579ced 100644
  IPC_MESSAGE_CONTROL1(ProfileImportProcessHostMsg_NotifyIE7PasswordInfo,
                       importer::ImporterIE7PasswordInfo) // password_info
 diff --git a/chrome/common/importer/profile_import_process_param_traits_macros.h b/chrome/common/importer/profile_import_process_param_traits_macros.h
-index 8e8b0c6..5a22e10 100644
+index 8e8b0c656dfbf809f41f7d5cf46c498de95097e3..5a22e10ddfe619c6d66424c1264f0974cc85950a 100644
 --- a/chrome/common/importer/profile_import_process_param_traits_macros.h
 +++ b/chrome/common/importer/profile_import_process_param_traits_macros.h
 @@ -13,6 +13,7 @@
@@ -707,7 +686,7 @@ index 8e8b0c6..5a22e10 100644
  IPC_STRUCT_TRAITS_BEGIN(importer::ImporterIE7PasswordInfo)
    IPC_STRUCT_TRAITS_MEMBER(url_hash)
 diff --git a/chrome/common/mac/app_mode_chrome_locator.mm b/chrome/common/mac/app_mode_chrome_locator.mm
-index efd272e..051851c 100644
+index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b359624d55e525 100644
 --- a/chrome/common/mac/app_mode_chrome_locator.mm
 +++ b/chrome/common/mac/app_mode_chrome_locator.mm
 @@ -80,6 +80,7 @@ bool GetChromeBundleInfo(const base::FilePath& chrome_bundle,
@@ -718,66 +697,93 @@ index efd272e..051851c 100644
      @"Google Chrome": @"Google Chrome",
      @"Google Chrome Canary": @"Google Chrome",
    };
+diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
+index 8e576d9936d9ed49155c158a4351965718774930..29380033be363e9155f65adcf1ad2deafd444826 100644
+--- a/chrome/renderer/BUILD.gn
++++ b/chrome/renderer/BUILD.gn
+@@ -34,8 +34,8 @@ static_library("renderer") {
+     "chrome_render_thread_observer.h",
+     "chrome_render_view_observer.cc",
+     "chrome_render_view_observer.h",
+-    "content_settings_observer.cc",
+-    "content_settings_observer.h",
++    # "content_settings_observer.cc",
++    # "content_settings_observer.h",
+     "custom_menu_commands.h",
+     "instant_restricted_id_cache.h",
+     "loadtimes_extension_bindings.cc",
+@@ -215,8 +215,8 @@ static_library("renderer") {
+       "extensions/app_bindings.h",
+       "extensions/automation_internal_custom_bindings.cc",
+       "extensions/automation_internal_custom_bindings.h",
+-      "extensions/chrome_extensions_dispatcher_delegate.cc",
+-      "extensions/chrome_extensions_dispatcher_delegate.h",
++      # "extensions/chrome_extensions_dispatcher_delegate.cc",
++      # "extensions/chrome_extensions_dispatcher_delegate.h",
+       "extensions/chrome_extensions_renderer_client.cc",
+       "extensions/chrome_extensions_renderer_client.h",
+       "extensions/chrome_v8_extension_handler.cc",
 diff --git a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc b/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
-index c1e2d1a..dad5de2 100644
+index 12d432198186daf817c0b903af985b05ce17cda2..8b819a4f8de63109e4740e7c29b54f624739ba09 100644
 --- a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
 +++ b/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
-@@ -81,9 +81,11 @@ ChromeRendererPepperHostFactory::CreateResourceHost(
+@@ -81,9 +81,9 @@ ChromeRendererPepperHostFactory::CreateResourceHost(
          }
          break;
        }
-+#if 0
-       case PpapiHostMsg_FlashDRM_Create::ID:
-         return base::WrapUnique(
-             new PepperFlashDRMRendererHost(host_, instance, resource));
-+#endif
+-      case PpapiHostMsg_FlashDRM_Create::ID:
+-        return base::MakeUnique<PepperFlashDRMRendererHost>(host_, instance,
+-                                                            resource);
++      // case PpapiHostMsg_FlashDRM_Create::ID:
++      //   return base::MakeUnique<PepperFlashDRMRendererHost>(host_, instance,
++      //                                                       resource);
      }
    }
 
-@@ -96,7 +98,7 @@ ChromeRendererPepperHostFactory::CreateResourceHost(
-       }
-     }
-   }
--
-+#if 0
-   // Permissions for the following interfaces will be checked at the
+@@ -100,11 +100,11 @@ ChromeRendererPepperHostFactory::CreateResourceHost(
    // time of the corresponding instance's method calls.  Currently these
    // interfaces are available only for whitelisted apps which may not have
-@@ -106,6 +108,6 @@ ChromeRendererPepperHostFactory::CreateResourceHost(
-       return base::WrapUnique(new PepperUMAHost(host_, instance, resource));
-     }
-   }
--
-+#endif
+   // access to the other private interfaces.
+-  switch (message.type()) {
+-    case PpapiHostMsg_UMA_Create::ID: {
+-      return base::MakeUnique<PepperUMAHost>(host_, instance, resource);
+-    }
+-  }
++  // switch (message.type()) {
++  //   case PpapiHostMsg_UMA_Create::ID: {
++  //     return base::MakeUnique<PepperUMAHost>(host_, instance, resource);
++  //   }
++  // }
+
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 36693be..a7cee74 100644
+index 47d5578b31eb04538d7adf7fb2df5e44fadd56f8..88759c7d2432a4c460c28baa6a78e93a8071347f 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
-@@ -642,7 +642,7 @@ if (!is_android) {
+@@ -789,7 +789,7 @@ if (!is_android) {
        }
      }  # enable_notifications
 
 -    if (!use_aura || is_chromeos) {
 +    if (toolkit_views && (!use_aura || is_chromeos)) {
-       sources -=
-           [ "../../ui/views/corewm/desktop_capture_controller_unittest.cc" ]
+       sources -= [ "//ui/views/corewm/desktop_capture_controller_unittest.cc" ]
      }
+   }
 diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
-index 2f5c4f4..30e83e8 100644
+index 46866bebe4604eb884915cbe6b1c1f900299c42f..487de0be58ea26519d8b8a846feb80e2327c9f97 100644
 --- a/chrome/utility/BUILD.gn
 +++ b/chrome/utility/BUILD.gn
-@@ -57,6 +57,7 @@ static_library("utility") {
+@@ -93,6 +93,7 @@ static_library("utility") {
+       "//chrome/common:mojo_bindings",
+       "//net:net_utility_services",
      ]
-     sources +=
-         rebase_path(gypi_values.chrome_utility_importer_sources, ".", "..")
 +    include_dirs = [ "//electron" ]
    }
 
    if (enable_extensions) {
 diff --git a/chrome/utility/importer/external_process_importer_bridge.cc b/chrome/utility/importer/external_process_importer_bridge.cc
-index d1e4cda..a808253 100644
+index d1e4cda7fce1e12c91a543d3f502c7eaf2ad3375..512738fc726bf62c8cf42ad5ac7292e9f410c082 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.cc
 +++ b/chrome/utility/importer/external_process_importer_bridge.cc
 @@ -27,6 +27,7 @@ const int kNumBookmarksToSend = 100;
@@ -797,9 +803,9 @@ index d1e4cda..a808253 100644
 +  Send(new ProfileImportProcessHostMsg_NotifyCookiesImportStart(
 +      cookies.size()));
 +
-+  // |cookies_left| is required for the checks below as Windows has a
-+  // Debug bounds-check which prevents pushing an iterator beyond its end()
-+  // (i.e., |it + 2 < s.end()| crashes in debug mode if |i + 1 == s.end()|).
++  |cookies_left| is required for the checks below as Windows has a
++  Debug bounds-check which prevents pushing an iterator beyond its end()
++  (i.e., |it + 2 < s.end()| crashes in debug mode if |i + 1 == s.end()|).
 +  int cookies_left = cookies.end() - cookies.begin();
 +  for (std::vector<ImportedCookieEntry>::const_iterator it =
 +           cookies.begin(); it < cookies.end();) {
@@ -820,7 +826,7 @@ index d1e4cda..a808253 100644
    Send(new ProfileImportProcessHostMsg_Import_Started());
  }
 diff --git a/chrome/utility/importer/external_process_importer_bridge.h b/chrome/utility/importer/external_process_importer_bridge.h
-index 0a22e7e..2b75e70 100644
+index 0a22e7e50f69be187e50467b60547ed4382dd5b5..2b75e704bf783ecd0702bd79022f3562021989ba 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.h
 +++ b/chrome/utility/importer/external_process_importer_bridge.h
 @@ -76,6 +76,8 @@ class ExternalProcessImporterBridge : public ImporterBridge {
@@ -833,7 +839,7 @@ index 0a22e7e..2b75e70 100644
    void NotifyItemStarted(importer::ImportItem item) override;
    void NotifyItemEnded(importer::ImportItem item) override;
 diff --git a/chrome/utility/importer/firefox_importer.cc b/chrome/utility/importer/firefox_importer.cc
-index e487c92..0bc2770 100644
+index e487c92e507e10b1c7c63930d045b68a66899d29..af795e1885bafd8e156966eeeeb14d2d331c54da 100644
 --- a/chrome/utility/importer/firefox_importer.cc
 +++ b/chrome/utility/importer/firefox_importer.cc
 @@ -15,6 +15,7 @@
@@ -907,29 +913,25 @@ index e487c92..0bc2770 100644
  void FirefoxImporter::GetSearchEnginesXMLDataFromJSON(
      std::vector<std::string>* search_engine_data) {
    // search-metadata.json contains keywords for search engines. This
-@@ -651,11 +701,18 @@ void FirefoxImporter::LoadRootNodeID(sql::Connection* db,
+@@ -651,11 +701,12 @@ void FirefoxImporter::LoadRootNodeID(sql::Connection* db,
                                        int* toolbar_folder_id,
                                        int* menu_folder_id,
                                        int* unsorted_folder_id) {
-+  /*
-   static const char kToolbarFolderName[] = "toolbar";
-   static const char kMenuFolderName[] = "menu";
-   static const char kUnsortedFolderName[] = "unfiled";
--
--  const char query[] = "SELECT root_name, folder_id FROM moz_bookmarks_roots";
-+  */
+-  static const char kToolbarFolderName[] = "toolbar";
+-  static const char kMenuFolderName[] = "menu";
+-  static const char kUnsortedFolderName[] = "unfiled";
 +  static const char kToolbarFolderName[] = "Bookmarks Toolbar";
 +  static const char kMenuFolderName[] = "Bookmarks Menu";
 +  static const char kUnsortedFolderName[] = "Other Bookmarks";
-+
-+  // const char query[] = "SELECT root_name, folder_id FROM moz_bookmarks_roots";
+
+-  const char query[] = "SELECT root_name, folder_id FROM moz_bookmarks_roots";
 +  const char query[] = "SELECT b.title, b.id FROM moz_bookmarks b "
 +                       "WHERE b.type = 2";
    sql::Statement s(db->GetUniqueStatement(query));
 
    while (s.Step()) {
 diff --git a/chrome/utility/importer/firefox_importer.h b/chrome/utility/importer/firefox_importer.h
-index 28bf603..3b10bba 100644
+index 28bf603c89fe983d30e920775c4be6c44b8f0486..3b10bbab15da061659e7a36290d8dc3eca52b76b 100644
 --- a/chrome/utility/importer/firefox_importer.h
 +++ b/chrome/utility/importer/firefox_importer.h
 @@ -51,6 +51,7 @@ class FirefoxImporter : public Importer {
@@ -941,17 +943,17 @@ index 28bf603..3b10bba 100644
    void GetSearchEnginesXMLDataFromJSON(
        std::vector<std::string>* search_engine_data);
 diff --git a/chrome/utility/importer/importer_creator.cc b/chrome/utility/importer/importer_creator.cc
-index 2bef627..6cdf479 100644
+index 2bef627aa890484a3fb75fa9bd04b2994f997305..90214ae7659f57971f66119bede4bd7dd34a30f3 100644
 --- a/chrome/utility/importer/importer_creator.cc
 +++ b/chrome/utility/importer/importer_creator.cc
-@@ -6,6 +6,7 @@
+@@ -5,6 +5,7 @@
+ #include "chrome/utility/importer/importer_creator.h"
 
  #include "base/logging.h"
- #include "build/build_config.h"
 +#include "brave/utility/importer/chrome_importer.h"
+ #include "build/build_config.h"
  #include "chrome/utility/importer/bookmarks_file_importer.h"
  #include "chrome/utility/importer/firefox_importer.h"
-
 @@ -43,6 +44,8 @@ scoped_refptr<Importer> CreateImporterByType(ImporterType type) {
      case TYPE_SAFARI:
        return new SafariImporter(base::mac::GetUserLibraryPath());
@@ -961,25 +963,8 @@ index 2bef627..6cdf479 100644
      default:
        NOTREACHED();
        return nullptr;
-diff --git a/chrome/version.gni b/chrome/version.gni
-index a29cb8d..7f65522 100644
---- a/chrome/version.gni
-+++ b/chrome/version.gni
-@@ -71,11 +71,7 @@ template("process_version") {
-
-     lastchange_path = "//build/util/LASTCHANGE"
-     version_path = "//chrome/VERSION"
--    if (is_chrome_branded) {
--      branding_path = "//chrome/app/theme/google_chrome/BRANDING"
--    } else {
--      branding_path = "//chrome/app/theme/chromium/BRANDING"
--    }
-+    branding_path = "//chrome/app/theme/$branding_path_component/BRANDING"
-
-     inputs = [
-       version_path,
 diff --git a/components/guest_view/browser/guest_view_base.h b/components/guest_view/browser/guest_view_base.h
-index 320a5e4..06162d7 100644
+index 320a5e4d50b269831aeb861b657a7c3d3f4646df..06162d72bfa8058d16ea25142d3ecb8e182546cb 100644
 --- a/components/guest_view/browser/guest_view_base.h
 +++ b/components/guest_view/browser/guest_view_base.h
 @@ -334,7 +334,7 @@ class GuestViewBase : public content::BrowserPluginGuestDelegate,
@@ -992,7 +977,7 @@ index 320a5e4..06162d7 100644
    void DidDetach() final;
    content::WebContents* GetOwnerWebContents() const final;
 diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
-index a019144..1d2a3a1 100644
+index a0191448ccf9f0654177ec5efb8603723bb1b022..1d2a3a144f83d16c91b0d15cb5e0e17e1714e575 100644
 --- a/components/printing/common/print_messages.h
 +++ b/components/printing/common/print_messages.h
 @@ -218,7 +218,6 @@ IPC_STRUCT_TRAITS_BEGIN(PrintMsg_PrintPages_Params)
@@ -1054,10 +1039,10 @@ index a019144..1d2a3a1 100644
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
                      int /* document cookie */)
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
-index 01bb5f0..9584584 100644
+index a8e866010eec06dfa0690ae2391ff42f0dc42b20..dba86f4d8fe828a931801f8e716bd0587ff8607b 100644
 --- a/content/app/content_main_runner.cc
 +++ b/content/app/content_main_runner.cc
-@@ -231,7 +231,7 @@ void CommonSubprocessInit(const std::string& process_type) {
+@@ -227,7 +227,7 @@ void CommonSubprocessInit(const std::string& process_type) {
    setlocale(LC_NUMERIC, "C");
  #endif
 
@@ -1067,7 +1052,7 @@ index 01bb5f0..9584584 100644
    // holes so it should never be enabled for official builds.
    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
 diff --git a/content/browser/accessibility/browser_accessibility_cocoa.mm b/content/browser/accessibility/browser_accessibility_cocoa.mm
-index 6c7d156..0325b27 100644
+index cca823d03b6b15222eb5c886e226b062133b4a63..3f4bcdaac71177fdec669087a41c766724f7405e 100644
 --- a/content/browser/accessibility/browser_accessibility_cocoa.mm
 +++ b/content/browser/accessibility/browser_accessibility_cocoa.mm
 @@ -104,6 +104,7 @@ struct AXTextMarkerData {
@@ -1077,8 +1062,8 @@ index 6c7d156..0325b27 100644
 +#ifndef MAS_BUILD
  extern "C" {
 
- // See http://openradar.appspot.com/9896491. This SPI has been tested on 10.5,
-@@ -309,6 +310,7 @@ NSAttributedString* GetAttributedTextForTextMarkerRange(
+ // The following are private accessibility APIs required for cursor navigation
+@@ -304,6 +305,7 @@ NSAttributedString* GetAttributedTextForTextMarkerRange(
    AddMisspelledTextAttributes(text_only_objects, attributed_text);
    return [attributed_text attributedSubstringFromRange:range];
  }
@@ -1086,7 +1071,7 @@ index 6c7d156..0325b27 100644
 
  // Returns an autoreleased copy of the AXNodeData's attribute.
  NSString* NSStringForStringAttribute(
-@@ -544,7 +546,9 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -539,7 +541,9 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
        {NSAccessibilityDisclosedRowsAttribute, @"disclosedRows"},
        {NSAccessibilityDropEffectsAttribute, @"dropEffects"},
        {NSAccessibilityEnabledAttribute, @"enabled"},
@@ -1096,7 +1081,7 @@ index 6c7d156..0325b27 100644
        {NSAccessibilityExpandedAttribute, @"expanded"},
        {NSAccessibilityFocusedAttribute, @"focused"},
        {NSAccessibilityGrabbedAttribute, @"grabbed"},
-@@ -572,13 +576,17 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -567,13 +571,17 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
        {NSAccessibilityRowsAttribute, @"rows"},
        // TODO(aboxhall): expose
        // NSAccessibilityServesAsTitleForUIElementsAttribute
@@ -1114,18 +1099,18 @@ index 6c7d156..0325b27 100644
        {NSAccessibilitySizeAttribute, @"size"},
        {NSAccessibilitySortDirectionAttribute, @"sortDirection"},
        {NSAccessibilitySubroleAttribute, @"subrole"},
-@@ -617,8 +625,10 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
- }
-
+@@ -614,8 +622,10 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
  - (void)detach {
+   if (!browserAccessibility_)
+     return;
 +#ifndef MAS_BUILD
-   if (browserAccessibility_)
-     NSAccessibilityUnregisterUniqueIdForUIElement(self);
+   NSAccessibilityPostNotification(
+       self, NSAccessibilityUIElementDestroyedNotification);
 +#endif
    browserAccessibility_ = nullptr;
  }
 
-@@ -909,6 +919,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -897,6 +907,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
        !GetState(browserAccessibility_, ui::AX_STATE_DISABLED)];
  }
 
@@ -1133,7 +1118,7 @@ index 6c7d156..0325b27 100644
  // Returns a text marker that points to the last character in the document that
  // can be selected with VoiceOver.
  - (id)endTextMarker {
-@@ -937,6 +948,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -925,6 +936,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
                            last_text_object->GetText().length(),
                            ui::AX_TEXT_AFFINITY_DOWNSTREAM);
  }
@@ -1141,7 +1126,7 @@ index 6c7d156..0325b27 100644
 
  - (NSNumber*)expanded {
    if (![self instanceActive])
-@@ -1590,6 +1602,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1607,6 +1619,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    return [NSValue valueWithRange:NSMakeRange(selStart, selLength)];
  }
 
@@ -1149,7 +1134,7 @@ index 6c7d156..0325b27 100644
  - (id)selectedTextMarkerRange {
    if (![self instanceActive])
      return nil;
-@@ -1620,6 +1633,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1637,6 +1650,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    return CreateTextMarkerRange(*anchorObject, anchorOffset, anchorAffinity,
                                 *focusObject, focusOffset, focusAffinity);
  }
@@ -1157,7 +1142,7 @@ index 6c7d156..0325b27 100644
 
  - (NSValue*)size {
    if (![self instanceActive])
-@@ -1652,6 +1666,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1669,6 +1683,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    return nil;
  }
 
@@ -1165,7 +1150,7 @@ index 6c7d156..0325b27 100644
  // Returns a text marker that points to the first character in the document that
  // can be selected with VoiceOver.
  - (id)startTextMarker {
-@@ -1678,6 +1693,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1695,6 +1710,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
 
    return CreateTextMarker(*first_text_object, 0, ui::AX_TEXT_AFFINITY_UPSTREAM);
  }
@@ -1173,7 +1158,7 @@ index 6c7d156..0325b27 100644
 
  // Returns a subrole based upon the role.
  - (NSString*) subrole {
-@@ -1950,10 +1966,12 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1967,10 +1983,12 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    NSString* value = base::SysUTF16ToNSString(browserAccessibility_->GetValue());
    NSMutableAttributedString* attributedValue =
        [[[NSMutableAttributedString alloc] initWithString:value] autorelease];
@@ -1186,7 +1171,7 @@ index 6c7d156..0325b27 100644
    return [attributedValue attributedSubstringFromRange:range];
  }
 
-@@ -2074,6 +2092,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2091,6 +2109,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
      return nil;
    }
 
@@ -1194,7 +1179,7 @@ index 6c7d156..0325b27 100644
    if ([attribute isEqualToString:@"AXUIElementForTextMarker"]) {
      BrowserAccessibility* object;
      int offset;
-@@ -2256,6 +2275,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2273,6 +2292,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
      NSString* text = GetTextForTextMarkerRange(parameter);
      return [NSNumber numberWithInt:[text length]];
    }
@@ -1202,7 +1187,7 @@ index 6c7d156..0325b27 100644
 
    if ([attribute isEqualToString:
        NSAccessibilityBoundsForRangeParameterizedAttribute]) {
-@@ -2293,6 +2313,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2310,6 +2330,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
      return nil;
    }
 
@@ -1210,7 +1195,7 @@ index 6c7d156..0325b27 100644
    if ([attribute isEqualToString:
             NSAccessibilityLineTextMarkerRangeForTextMarkerParameterizedAttribute]) {
      BrowserAccessibility* object;
-@@ -2310,6 +2331,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2327,6 +2348,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
          *object, startOffset, ui::AX_TEXT_AFFINITY_UPSTREAM,
          *object, endOffset, ui::AX_TEXT_AFFINITY_DOWNSTREAM);
    }
@@ -1219,10 +1204,10 @@ index 6c7d156..0325b27 100644
    if ([attribute isEqualToString:
             NSAccessibilityBoundsForTextMarkerRangeParameterizedAttribute]) {
 diff --git a/content/browser/accessibility/browser_accessibility_manager_mac.mm b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-index 77ce72f..c8c80e5 100644
+index 076568758f1b1ef1fe7d0ac53fdda0f0130b800f..037c6426f21edc16b3b5a7a4bf665084686390e7 100644
 --- a/content/browser/accessibility/browser_accessibility_manager_mac.mm
 +++ b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-@@ -83,8 +83,10 @@ NSString* const NSAccessibilityTextSelectionGranularity =
+@@ -93,8 +93,10 @@ NSString* const NSAccessibilityTextSelectionGranularity =
      @"AXTextSelectionGranularity";
  NSString* const NSAccessibilityTextSelectionChangedFocus =
      @"AXTextSelectionChangedFocus";
@@ -1233,23 +1218,22 @@ index 77ce72f..c8c80e5 100644
  NSString* const NSAccessibilityTextChangeElement = @"AXTextChangeElement";
  NSString* const NSAccessibilityTextEditType = @"AXTextEditType";
  NSString* const NSAccessibilityTextChangeValue = @"AXTextChangeValue";
-@@ -432,9 +434,10 @@ NSDictionary* BrowserAccessibilityManagerMac::
+@@ -427,8 +429,10 @@ NSDictionary* BrowserAccessibilityManagerMac::
      focus_object = focus_object->GetClosestPlatformObject();
      auto native_focus_object = ToBrowserAccessibilityCocoa(focus_object);
      if (native_focus_object && [native_focus_object instanceActive]) {
 +#ifndef MAS_BUILD
        [user_info setObject:native_focus_object
                      forKey:NSAccessibilityTextChangeElement];
--
 +#endif
+
        id selected_text = [native_focus_object selectedTextMarkerRange];
        if (selected_text) {
-         [user_info setObject:selected_text
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
-index 07dc9d5..f3938d2 100644
+index fbe7febe82112b8c2aacb52acd712f518fb767d8..d05b2cf07ef82c98eecee715a49209ed27a43cd7 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
 +++ b/content/browser/frame_host/render_frame_message_filter.cc
-@@ -481,7 +481,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
+@@ -490,7 +490,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
    PluginServiceFilter* filter = PluginServiceImpl::GetInstance()->GetFilter();
    std::vector<WebPluginInfo> plugins;
 
@@ -1259,7 +1243,7 @@ index 07dc9d5..f3938d2 100644
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
    // the filter might mutate it.
 diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-index 92d3617..6004636 100644
+index 92d3617594e49f5c9b6a392d3dde935c02548159..6004636d53feff66cd39a67c920a5ba85f76ffef 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 @@ -21,7 +21,7 @@
@@ -1272,7 +1256,7 @@ index 92d3617..6004636 100644
 
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 825941f..ccd932f 100644
+index c81f211e3a5205e6f96f712e7474a290b7b20e5b..d578c032c72b1c791b6518f7ab52988d3171f81e 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -137,6 +137,11 @@ RenderWidgetHostViewMac* GetRenderWidgetHostViewToUse(
@@ -1287,17 +1271,16 @@ index 825941f..ccd932f 100644
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -469,7 +474,9 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
+@@ -463,7 +468,7 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
-+#if 0
-   [background_layer_ setBackgroundColor:CGColorGetConstantColor(kCGColorWhite)];
-+#endif
+-  [background_layer_ setBackgroundColor:CGColorGetConstantColor(kCGColorWhite)];
++  // [background_layer_ setBackgroundColor:CGColorGetConstantColor(kCGColorWhite)];
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
 
-@@ -1737,6 +1744,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1793,6 +1798,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
 
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1307,23 +1290,28 @@ index 825941f..ccd932f 100644
    return [self acceptsMouseEventsWhenInactive];
  }
 
-@@ -1878,6 +1888,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
-   if (EventIsReservedBySystem(theEvent))
-     return NO;
-
-+#if 0
-   // If we return |NO| from this function, cocoa will send the key event to
-   // the menu and only if the menu does not process the event to |keyDown:|. We
-   // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -1891,6 +1902,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
-     DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
-     return NO;
-   }
-+#endif
+@@ -1940,13 +1948,13 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+   // we need to return |YES| for all events that might be swallowed by the menu.
+   // We do not return |YES| for every keypress because we don't get |keyDown:|
+   // events for keys that we handle this way.
+-  NSUInteger modifierFlags = [theEvent modifierFlags];
+-  if ((modifierFlags & NSCommandKeyMask) == 0) {
+-    // Make sure the menu does not contain key equivalents that don't
+-    // contain cmd.
+-    DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
+-    return NO;
+-  }
++  // NSUInteger modifierFlags = [theEvent modifierFlags];
++  // if ((modifierFlags & NSCommandKeyMask) == 0) {
++  //   // Make sure the menu does not contain key equivalents that don't
++  //   // contain cmd.
++  //   DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
++  //   return NO;
++  // }
 
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -1938,8 +1950,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1994,8 +2002,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
 
@@ -1335,7 +1323,7 @@ index 825941f..ccd932f 100644
 
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2639,6 +2652,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2721,6 +2730,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1346,7 +1334,7 @@ index 825941f..ccd932f 100644
    return ([event type] == NSKeyDown &&
               !([event modifierFlags] & NSCommandKeyMask)) ? YES : NO;
  }
-@@ -2795,9 +2812,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2877,9 +2890,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // Since this implementation doesn't have to wait any IPC calls, this doesn't
  // make any key-typing jank. --hbono 7/23/09
  //
@@ -1358,7 +1346,7 @@ index 825941f..ccd932f 100644
 
  - (NSArray *)validAttributesForMarkedText {
    // This code is just copied from WebKit except renaming variables.
-@@ -2806,7 +2825,9 @@ extern NSString *NSTextInputReplacementRangeAttributeName;
+@@ -2888,7 +2903,9 @@ extern NSString *NSTextInputReplacementRangeAttributeName;
          NSUnderlineStyleAttributeName,
          NSUnderlineColorAttributeName,
          NSMarkedClauseSegmentAttributeName,
@@ -1369,10 +1357,10 @@ index 825941f..ccd932f 100644
    }
    return validAttributesForMarkedText_.get();
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index b0451e4..20a8374 100644
+index ae86bc72695d9b6acd1667d4e66c92f590e7fe56..fded654959eed18c979309b970ec08fa0e9e4c45 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1994,7 +1994,7 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2020,7 +2020,7 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || route_id == MSG_ROUTING_NONE);
 
    scoped_refptr<SiteInstance> site_instance =
@@ -1382,7 +1370,7 @@ index b0451e4..20a8374 100644
            : source_site_instance;
 
 diff --git a/content/child/child_process.cc b/content/child/child_process.cc
-index 2763ee03..ffc1792 100644
+index 2763ee03cffdb0b12d5934091b9c31f7bad6ff39..ffc179200c288e4e3b5292a79bce9e909f36e7c5 100644
 --- a/content/child/child_process.cc
 +++ b/content/child/child_process.cc
 @@ -123,7 +123,7 @@ void ChildProcess::WaitForDebugger(const std::string& label) {
@@ -1395,28 +1383,26 @@ index 2763ee03..ffc1792 100644
    title += " ";
    title += label;  // makes attaching to process easier
 diff --git a/content/common/dom_storage/dom_storage_map.cc b/content/common/dom_storage/dom_storage_map.cc
-index 71368bd..047054f 100644
+index 71368bdd55039ddc76278e7b5706e30517ab8aae..526ce5d8a08002af28762ae54a9280ce3f9d96d7 100644
 --- a/content/common/dom_storage/dom_storage_map.cc
 +++ b/content/common/dom_storage/dom_storage_map.cc
-@@ -64,10 +64,12 @@ bool DOMStorageMap::SetItem(
-   size_t new_item_size = size_of_item(key, value);
-   size_t new_bytes_used = bytes_used_ - old_item_size + new_item_size;
+@@ -66,8 +66,8 @@ bool DOMStorageMap::SetItem(
 
-+#if 0
    // Only check quota if the size is increasing, this allows
    // shrinking changes to pre-existing files that are over budget.
-   if (new_item_size > old_item_size && new_bytes_used > quota_)
-     return false;
-+#endif
+-  if (new_item_size > old_item_size && new_bytes_used > quota_)
+-    return false;
++  // if (new_item_size > old_item_size && new_bytes_used > quota_)
++  //   return false;
 
    values_[key] = base::NullableString16(value, false);
    ResetKeyIterator();
 diff --git a/content/public/browser/resource_request_details.cc b/content/public/browser/resource_request_details.cc
-index bc7de5a..8aabacd 100644
+index 0e790b688417f077815ab588406bd67738cdb4a3..0b5140a416ff1017c96c44ff223ea61871d7b4b9 100644
 --- a/content/public/browser/resource_request_details.cc
 +++ b/content/public/browser/resource_request_details.cc
 @@ -22,6 +22,10 @@ ResourceRequestDetails::ResourceRequestDetails(const net::URLRequest* request,
-       ssl_cert_id(cert_id),
+       has_certificate(has_certificate),
        ssl_cert_status(request->ssl_info().cert_status),
        socket_address(request->GetSocketAddress()) {
 +  if (request->response_info().headers.get())
@@ -1427,7 +1413,7 @@ index bc7de5a..8aabacd 100644
    resource_type = info->GetResourceType();
    http_response_code =
 diff --git a/content/public/browser/resource_request_details.h b/content/public/browser/resource_request_details.h
-index 5b859ae..35669e12 100644
+index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d425b2490 100644
 --- a/content/public/browser/resource_request_details.h
 +++ b/content/public/browser/resource_request_details.h
 @@ -10,6 +10,7 @@
@@ -1447,7 +1433,7 @@ index 5b859ae..35669e12 100644
 
  // Details about a redirection of a resource request.
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index ed9dafb..7dddb8a 100644
+index d8eb0bb7eca1f5b9f71fa7b5745fb06ce544a46c..f7a05615bf162e9daea098e9def74c32d9bbce65 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
 @@ -448,8 +448,8 @@ blink::WebInputEventResult BrowserPlugin::handleInputEvent(
@@ -1462,10 +1448,10 @@ index ed9dafb..7dddb8a 100644
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
 diff --git a/content/renderer/render_thread_impl.cc b/content/renderer/render_thread_impl.cc
-index 5b02de2..da5fdba 100644
+index cd415a0e6a122b2a6c5d8bb6098d86b10f045928..b32b8646fe1a255471a2eff592ee26224dc98e7c 100644
 --- a/content/renderer/render_thread_impl.cc
 +++ b/content/renderer/render_thread_impl.cc
-@@ -746,12 +746,13 @@ void RenderThreadImpl::Init(
+@@ -772,12 +772,12 @@ void RenderThreadImpl::Init(
        switches::kEnableGpuMemoryBufferCompositorResources);
 
  #if defined(OS_MACOSX)
@@ -1481,15 +1467,14 @@ index 5b02de2..da5fdba 100644
 +  // Boolean value = CFPreferencesGetAppBooleanValue(
 +  //     key, kCFPreferencesCurrentApplication, &key_exists);
 +  // is_elastic_overscroll_enabled_ = !key_exists || value;
-+  is_elastic_overscroll_enabled_ = true;
  #else
    is_elastic_overscroll_enabled_ = false;
  #endif
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 9b060a8..0d8caf1 100644
+index e2412b7f78bc253966a3459cbfc450242105f623..f5737b5e42eca63348bfe246b5535a391b811aea 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
-@@ -200,7 +200,10 @@
+@@ -171,7 +171,10 @@
      {
        "internal": true,
        "channel": "stable",
@@ -1501,7 +1486,7 @@ index 9b060a8..0d8caf1 100644
      }, {
        "internal": true,
        "channel": "trunk",
-@@ -471,6 +474,7 @@
+@@ -442,6 +445,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
@@ -1509,7 +1494,7 @@ index 9b060a8..0d8caf1 100644
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://oobe/*"
-@@ -489,6 +493,13 @@
+@@ -460,6 +464,13 @@
        "chrome://media-router/*",
        "chrome://oobe/*"
      ]
@@ -1523,7 +1508,7 @@ index 9b060a8..0d8caf1 100644
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -497,6 +508,7 @@
+@@ -468,6 +479,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
@@ -1532,7 +1517,7 @@ index 9b060a8..0d8caf1 100644
        "chrome://media-router/*",
        "chrome://oobe/*"
 diff --git a/extensions/renderer/resources/guest_view/guest_view_container.js b/extensions/renderer/resources/guest_view/guest_view_container.js
-index 8cfc8cb..606282f 100644
+index 8cfc8cb441afa19109e320c0a6405f79e9878a85..606282f28dfea8b9104c3f9d0bbd4c859baaed46 100644
 --- a/extensions/renderer/resources/guest_view/guest_view_container.js
 +++ b/extensions/renderer/resources/guest_view/guest_view_container.js
 @@ -26,6 +26,7 @@ function GuestViewContainer(element, viewType) {
@@ -1554,7 +1539,7 @@ index 8cfc8cb..606282f 100644
 
    proto.attachedCallback = function() {
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
-index cb7913b..7bc5de6 100644
+index aa2fdb6d66e9136695518474c52c53402774ffba..f13fc886147bc33bcaaca9d156768abffe762f0a 100644
 --- a/net/http/http_util.cc
 +++ b/net/http/http_util.cc
 @@ -57,8 +57,8 @@ static size_t FindStringEnd(const std::string& line, size_t start, char delim) {
@@ -1569,10 +1554,10 @@ index cb7913b..7bc5de6 100644
  }
 
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
-index b93ff45..79748cda 100644
+index 8681a659954ce351b5d572dd2ed8649e9f49cf2c..3d7aea2f5d57aaf145e5e7e4bb24774b274b4f7b 100644
 --- a/net/url_request/url_request_job.h
 +++ b/net/url_request/url_request_job.h
-@@ -284,6 +284,7 @@ class NET_EXPORT URLRequestJob : public base::PowerObserver {
+@@ -277,6 +277,7 @@ class NET_EXPORT URLRequestJob : public base::PowerObserver {
    void OnCallToDelegate();
    void OnCallToDelegateComplete();
 
@@ -1581,105 +1566,99 @@ index b93ff45..79748cda 100644
    // |buf_size| bytes into |buf|.
    // Possible return values:
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
-index e436a07..872df7f 100644
+index 6bfee912323849e8a0ef3aac93819a8100dceaae..137eb06d63dded403a8522beb7bee377cbe65e01 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 +++ b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
-@@ -30,6 +30,10 @@ public:
-     {
-         return create(WTF::ArrayBuffer::create(contents));
-     }
-+    static DOMArrayBuffer* createExternal(void* source, unsigned byteLength)
-+    {
-+        return new DOMArrayBuffer(source, byteLength);
-+    }
+@@ -28,6 +28,9 @@ class CORE_EXPORT DOMArrayBuffer final : public DOMArrayBufferBase {
+   static DOMArrayBuffer* create(WTF::ArrayBufferContents& contents) {
+     return create(WTF::ArrayBuffer::create(contents));
+   }
++  static DOMArrayBuffer* createExternal(void* source, unsigned byteLength) {
++    return new DOMArrayBuffer(source, byteLength);
++  }
 
-     // Only for use by XMLHttpRequest::responseArrayBuffer and
-     // Internals::serializeObject.
-@@ -54,6 +58,10 @@ private:
-         : DOMArrayBufferBase(buffer)
-     {
-     }
-+    DOMArrayBuffer(void* source, unsigned byteLength)
-+        : DOMArrayBufferBase(source, byteLength)
-+    {
-+    }
+   // Only for use by XMLHttpRequest::responseArrayBuffer and
+   // Internals::serializeObject.
+@@ -50,6 +53,8 @@ class CORE_EXPORT DOMArrayBuffer final : public DOMArrayBufferBase {
+  private:
+   explicit DOMArrayBuffer(PassRefPtr<WTF::ArrayBuffer> buffer)
+       : DOMArrayBufferBase(std::move(buffer)) {}
++  DOMArrayBuffer(void* source, unsigned byteLength)
++    : DOMArrayBufferBase(source, byteLength) {}
  };
 
- } // namespace blink
+ }  // namespace blink
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h b/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h
-index b969516..d465623 100644
+index 74738dade2b75b3659e21f2cf97f4a3cfd0d477e..9e52867430f515747cac039fdbd7e8a7d388afcc 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h
 +++ b/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h
-@@ -19,9 +19,24 @@ public:
-     const WTF::ArrayBuffer* buffer() const { return m_buffer.get(); }
-     WTF::ArrayBuffer* buffer() { return m_buffer.get(); }
+@@ -21,9 +21,24 @@ class CORE_EXPORT DOMArrayBufferBase
+   const WTF::ArrayBuffer* buffer() const { return m_buffer.get(); }
+   WTF::ArrayBuffer* buffer() { return m_buffer.get(); }
 
--    const void* data() const { return buffer()->data(); }
--    void* data() { return buffer()->data(); }
--    unsigned byteLength() const { return buffer()->byteLength(); }
-+    const void* data() const {
-+      if (m_isExternal)
-+          return m_source;
-+      else
-+          return buffer()->data();
-+    }
-+    void* data() {
-+        if (m_isExternal)
-+            return m_source;
-+        else
-+            return buffer()->data();
-+    }
-+    unsigned byteLength() const {
-+        if (m_isExternal)
-+            return m_byteLength;
-+        else
-+            return buffer()->byteLength();
-+    }
-     bool transfer(WTF::ArrayBufferContents& result) { return buffer()->transfer(result); }
-     bool shareContentsWith(WTF::ArrayBufferContents& result) { return buffer()->shareContentsWith(result); }
-     bool isNeutered() const { return buffer()->isNeutered(); }
-@@ -37,12 +52,25 @@ public:
+-  const void* data() const { return buffer()->data(); }
+-  void* data() { return buffer()->data(); }
+-  unsigned byteLength() const { return buffer()->byteLength(); }
++  const void* data() const {
++    if (m_isExternal)
++      return m_source;
++    else
++      return buffer()->data();
++  }
++  void* data() {
++    if (m_isExternal)
++      return m_source;
++    else
++      return buffer()->data();
++  }
++  unsigned byteLength() const {
++    if (m_isExternal)
++      return m_byteLength;
++    else
++      return buffer()->byteLength();
++  }
+   bool transfer(WTF::ArrayBufferContents& result) {
+     return buffer()->transfer(result);
+   }
+@@ -43,11 +58,22 @@ class CORE_EXPORT DOMArrayBufferBase
 
- protected:
-     explicit DOMArrayBufferBase(PassRefPtr<WTF::ArrayBuffer> buffer)
--        : m_buffer(buffer)
-+        : m_buffer(buffer),
-+          m_isExternal(false),
-+          m_source(nullptr),
-+          m_byteLength(0)
-     {
-         DCHECK(m_buffer);
-     }
-+    DOMArrayBufferBase(void* source, unsigned byteLength)
-+        : m_buffer(WTF::ArrayBuffer::create(source, byteLength)),
-+          m_isExternal(true),
-+          m_source(source),
-+          m_byteLength(byteLength)
-+    {
-+    }
+  protected:
+   explicit DOMArrayBufferBase(PassRefPtr<WTF::ArrayBuffer> buffer)
+-      : m_buffer(buffer) {
++      : m_buffer(buffer),
++      m_isExternal(false),
++      m_source(nullptr),
++      m_byteLength(0) {
+     DCHECK(m_buffer);
+   }
++  DOMArrayBufferBase(void* source, unsigned byteLength)
++    : m_buffer(WTF::ArrayBuffer::create(source, byteLength)),
++    m_isExternal(true),
++    m_source(source),
++    m_byteLength(byteLength) {}
 
-     RefPtr<WTF::ArrayBuffer> m_buffer;
-+    bool m_isExternal;
-+    void* m_source;
-+    unsigned m_byteLength;
+   RefPtr<WTF::ArrayBuffer> m_buffer;
++  bool m_isExternal;
++  void* m_source;
++  unsigned m_byteLength;
  };
 
- } // namespace blink
+ }  // namespace blink
 diff --git a/third_party/WebKit/Source/core/editing/EditingBehavior.h b/third_party/WebKit/Source/core/editing/EditingBehavior.h
-index 2c4cce6..d8df6d9 100644
+index 3f098ef2b9b425d2964ab563ce1bbfc56ad2fd22..01f1ad4e97783ce1c835a665cbe5b7b2279af8c8 100644
 --- a/third_party/WebKit/Source/core/editing/EditingBehavior.h
 +++ b/third_party/WebKit/Source/core/editing/EditingBehavior.h
-@@ -74,7 +74,7 @@ public:
-     // On Mac and Windows, pressing backspace (when it isn't handled otherwise) should navigate back.
-     bool shouldNavigateBackOnBackspace() const
-     {
--        return m_type != EditingUnixBehavior && m_type != EditingAndroidBehavior;
-+        return false;
-     }
+@@ -85,7 +85,7 @@ class CORE_EXPORT EditingBehavior {
+   // On Mac and Windows, pressing backspace (when it isn't handled otherwise)
+   // should navigate back.
+   bool shouldNavigateBackOnBackspace() const {
+-    return m_type != EditingUnixBehavior && m_type != EditingAndroidBehavior;
++    return false;
+   }
 
-     // On Mac, selecting backwards by word/line from the middle of a word/line, and then going
+   // On Mac, selecting backwards by word/line from the middle of a word/line,
 diff --git a/third_party/WebKit/Source/core/fileapi/File.idl b/third_party/WebKit/Source/core/fileapi/File.idl
-index 8277597..8aca099 100644
+index 82775974231274e6639751139f5c7bc9bbfaad25..8aca09939d20cc48cfa85c507fdea17ccfdbe5fb 100644
 --- a/third_party/WebKit/Source/core/fileapi/File.idl
 +++ b/third_party/WebKit/Source/core/fileapi/File.idl
 @@ -34,6 +34,7 @@
@@ -1691,38 +1670,39 @@ index 8277597..8aca099 100644
 
      // Non-standard APIs
 diff --git a/third_party/WebKit/Source/web/WebArrayBuffer.cpp b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
-index 471ce6a..29b0bbd 100644
+index 271ec5391d8a9a478f36da58f1b539963cf39724..0862919869273aabdccf102a3875c378ce75c269 100644
 --- a/third_party/WebKit/Source/web/WebArrayBuffer.cpp
 +++ b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
-@@ -39,6 +39,11 @@ WebArrayBuffer WebArrayBuffer::create(unsigned numElements, unsigned elementByte
-     return WebArrayBuffer(DOMArrayBuffer::create(numElements, elementByteSize));
+@@ -39,6 +39,11 @@ WebArrayBuffer WebArrayBuffer::create(unsigned numElements,
+   return WebArrayBuffer(DOMArrayBuffer::create(numElements, elementByteSize));
  }
 
-+WebArrayBuffer WebArrayBuffer::createExternal(void* source, unsigned byteLength)
-+{
-+    return WebArrayBuffer(DOMArrayBuffer::createExternal(source, byteLength));
++WebArrayBuffer WebArrayBuffer::createExternal(void* source,
++                                              unsigned byteLength) {
++  return WebArrayBuffer(DOMArrayBuffer::createExternal(source, byteLength));
 +}
 +
- void WebArrayBuffer::reset()
- {
-     m_private.reset();
+ void WebArrayBuffer::reset() {
+   m_private.reset();
+ }
 diff --git a/third_party/WebKit/public/web/WebArrayBuffer.h b/third_party/WebKit/public/web/WebArrayBuffer.h
-index 668bbfd..85a6c28 100644
+index 6acdddff8c59f63214fb6267a562f6ac8a2b5296..7a1097d9538981c6b8f8928796dba0b1a91c7c52 100644
 --- a/third_party/WebKit/public/web/WebArrayBuffer.h
 +++ b/third_party/WebKit/public/web/WebArrayBuffer.h
-@@ -51,6 +51,7 @@ public:
-     }
+@@ -51,6 +51,8 @@ class WebArrayBuffer {
 
-     BLINK_EXPORT static WebArrayBuffer create(unsigned numElements, unsigned elementByteSize);
-+    BLINK_EXPORT static WebArrayBuffer createExternal(void* source, unsigned byteLength);
+   BLINK_EXPORT static WebArrayBuffer create(unsigned numElements,
+                                             unsigned elementByteSize);
++  BLINK_EXPORT static WebArrayBuffer createExternal(void* source,
++                                                    unsigned byteLength);
 
-     BLINK_EXPORT void reset();
-     BLINK_EXPORT void assign(const WebArrayBuffer&);
+   BLINK_EXPORT void reset();
+   BLINK_EXPORT void assign(const WebArrayBuffer&);
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
-index e5fdb29..55a8b13 100644
+index a6c45e06cf636a60696f854523f1e0d72e49d51f..95d41173ee64686586ff9baa85bc203ac03335cb 100644
 --- a/third_party/widevine/cdm/BUILD.gn
 +++ b/third_party/widevine/cdm/BUILD.gn
-@@ -96,9 +96,9 @@ if (widevine_cdm_binary_files != []) {
+@@ -95,9 +95,9 @@ if (widevine_cdm_binary_files != []) {
      if (is_mac) {
        ldflags = [
          # Not to strip important symbols by -Wl,-dead_strip.
@@ -1735,20 +1715,3 @@ index e5fdb29..55a8b13 100644
        ]
        #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
      } else if (is_posix && !is_mac) {
-diff --git a/ui/base/BUILD.gn b/ui/base/BUILD.gn
-index 5accf0e..1b93b7b 100644
---- a/ui/base/BUILD.gn
-+++ b/ui/base/BUILD.gn
-@@ -560,8 +560,12 @@ component("base") {
-       "dragdrop/drop_target_event.h",
-       "dragdrop/os_exchange_data.cc",
-       "dragdrop/os_exchange_data.h",
-+      "dragdrop/os_exchange_data_provider_builder_mac.h",
-+      "dragdrop/os_exchange_data_provider_builder_mac.mm",
-       "dragdrop/os_exchange_data_provider_factory.cc",
-       "dragdrop/os_exchange_data_provider_factory.h",
-+      "dragdrop/os_exchange_data_provider_mac.h",
-+      "dragdrop/os_exchange_data_provider_mac.mm",
-       "nine_image_painter_factory.cc",
-       "nine_image_painter_factory.h",
-     ]

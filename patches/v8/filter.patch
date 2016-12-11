@@ -1,5 +1,5 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index dcefe37..c234e79 100644
+index 06870b6039f2b0465d1da931a1e15c967158cbe3..3f59637ef82ccd5797a5e3afedbb65591adfe1fb 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -45,7 +45,7 @@ declare_args() {
@@ -11,7 +11,7 @@ index dcefe37..c234e79 100644
 
    # Enable slow dchecks.
    v8_enable_slow_dchecks = false
-@@ -98,6 +98,7 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
+@@ -106,6 +106,7 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
  v8_random_seed = "314159265"
  v8_toolset_for_shell = "host"
 
@@ -19,7 +19,7 @@ index dcefe37..c234e79 100644
  ###############################################################################
  # Configurations
  #
-@@ -106,6 +107,14 @@ config("internal_config") {
+@@ -114,6 +115,14 @@ config("internal_config") {
 
    include_dirs = [ "." ]
 
@@ -32,9 +32,9 @@ index dcefe37..c234e79 100644
 +  }
 +
    if (is_component_build) {
-     defines = [
-       "V8_SHARED",
-@@ -133,12 +142,20 @@ config("libsampler_config") {
+     defines = [ "BUILDING_V8_SHARED" ]
+   }
+@@ -138,6 +147,13 @@ config("libsampler_config") {
  # This config should only be applied to code using V8 and not any V8 code
  # itself.
  config("external_config") {
@@ -46,16 +46,9 @@ index dcefe37..c234e79 100644
 +  }
 +
    if (is_component_build) {
-     defines = [
-       "V8_SHARED",
-       "USING_V8_SHARED",
-     ]
+     defines = [ "USING_V8_SHARED" ]
    }
-+
-   include_dirs = [ "include" ]
-   libs = []
-   if (is_android && current_toolchain != host_toolchain) {
-@@ -726,6 +743,9 @@ source_set("v8_maybe_snapshot") {
+@@ -742,6 +758,9 @@ source_set("v8_maybe_snapshot") {
  }
 
  v8_source_set("v8_nosnapshot") {
@@ -65,7 +58,7 @@ index dcefe37..c234e79 100644
    visibility = [ ":*" ]  # Only targets in this file can depend on this.
 
    deps = [
-@@ -748,6 +768,9 @@ v8_source_set("v8_nosnapshot") {
+@@ -764,6 +783,9 @@ v8_source_set("v8_nosnapshot") {
  }
 
  v8_source_set("v8_snapshot") {
@@ -75,7 +68,7 @@ index dcefe37..c234e79 100644
    # Only targets in this file and the top-level visibility target can
    # depend on this.
    visibility = [
-@@ -781,6 +804,10 @@ v8_source_set("v8_snapshot") {
+@@ -797,6 +819,10 @@ v8_source_set("v8_snapshot") {
 
  if (v8_use_external_startup_data) {
    v8_source_set("v8_external_snapshot") {
@@ -86,7 +79,7 @@ index dcefe37..c234e79 100644
      visibility = [ ":*" ]  # Only targets in this file can depend on this.
 
      deps = [
-@@ -805,6 +832,10 @@ if (v8_use_external_startup_data) {
+@@ -821,6 +847,10 @@ if (v8_use_external_startup_data) {
  }
 
  v8_source_set("v8_base") {
@@ -97,7 +90,7 @@ index dcefe37..c234e79 100644
    visibility = [ ":*" ]  # Only targets in this file can depend on this.
 
    sources = [
-@@ -1986,8 +2017,10 @@ v8_source_set("v8_base") {
+@@ -2122,8 +2152,10 @@ v8_source_set("v8_base") {
      ":v8_libsampler",
    ]
 
@@ -110,7 +103,7 @@ index dcefe37..c234e79 100644
 
    if (is_win) {
      # TODO(jschuh): crbug.com/167187 fix size_t to int truncations.
-@@ -2001,8 +2034,8 @@ v8_source_set("v8_base") {
+@@ -2137,8 +2169,8 @@ v8_source_set("v8_base") {
      }
    } else {
      sources -= [
@@ -121,7 +114,7 @@ index dcefe37..c234e79 100644
      ]
    }
 
-@@ -2013,6 +2046,10 @@ v8_source_set("v8_base") {
+@@ -2153,6 +2185,10 @@ v8_source_set("v8_base") {
  }
 
  v8_source_set("v8_libbase") {
@@ -132,7 +125,7 @@ index dcefe37..c234e79 100644
    visibility = [ ":*" ]  # Only targets in this file can depend on this.
 
    sources = [
-@@ -2146,6 +2183,10 @@ v8_source_set("v8_libbase") {
+@@ -2286,6 +2322,10 @@ v8_source_set("v8_libbase") {
  }
 
  v8_source_set("v8_libplatform") {
@@ -143,7 +136,7 @@ index dcefe37..c234e79 100644
    sources = [
      "//base/trace_event/common/trace_event_common.h",
      "include/libplatform/libplatform.h",
-@@ -2175,6 +2216,10 @@ v8_source_set("v8_libplatform") {
+@@ -2315,6 +2355,10 @@ v8_source_set("v8_libplatform") {
  }
 
  v8_source_set("v8_libsampler") {
@@ -155,27 +148,18 @@ index dcefe37..c234e79 100644
      "src/libsampler/sampler.cc",
      "src/libsampler/sampler.h",
 diff --git a/src/snapshot/mksnapshot.cc b/src/snapshot/mksnapshot.cc
-index f4362e5..e048e26 100644
+index f4362e5077e1231e2e57ccaf06ccc9769ebaae61..98c6a8db9a888628a3d912279d26e61930c97521 100644
 --- a/src/snapshot/mksnapshot.cc
 +++ b/src/snapshot/mksnapshot.cc
-@@ -5,7 +5,7 @@
- #include <errno.h>
+@@ -6,6 +6,7 @@
  #include <signal.h>
  #include <stdio.h>
--
+
 +#ifndef SUPPRESS_V8_SNAPSHOT
  #include "include/libplatform/libplatform.h"
  #include "src/assembler.h"
  #include "src/base/platform/platform.h"
-@@ -16,7 +16,6 @@
- #include "src/snapshot/startup-serializer.h"
-
- using namespace v8;
--
- class SnapshotWriter {
-  public:
-   SnapshotWriter() : fp_(NULL), startup_blob_file_(NULL) {}
-@@ -133,9 +132,10 @@ char* GetExtraCode(char* filename, const char* description) {
+@@ -133,9 +134,10 @@ char* GetExtraCode(char* filename, const char* description) {
    fclose(file);
    return chars;
  }
@@ -187,7 +171,7 @@ index f4362e5..e048e26 100644
    // Make mksnapshot runs predictable to create reproducible snapshots.
    i::FLAG_predictable = true;
 
-@@ -180,5 +180,6 @@ int main(int argc, char** argv) {
+@@ -180,5 +182,6 @@ int main(int argc, char** argv) {
    V8::Dispose();
    V8::ShutdownPlatform();
    delete platform;
