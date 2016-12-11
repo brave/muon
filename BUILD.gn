@@ -474,9 +474,15 @@ copy("electron_license_dist_resources") {
     ":generate_chromium_licenses",
   ]
 
-  outputs = [
-    "$electron_dist_dir/{{source_file_part}}"
-  ]
+  if (is_mac) {
+    outputs = [
+      "$root_out_dir/{{source_file_part}}"
+    ]
+  } else {
+    outputs = [
+      "$electron_dist_dir/{{source_file_part}}"
+    ]
+  }
 }
 
 if (target_cpu == "x86") {
@@ -604,9 +610,15 @@ action("create_dist") {
     ]
   }
 
+  if (is_mac) {
+    dist_dir = root_out_dir
+  } else {
+    dist_dir = electron_dist_dir
+  }
+
   file_inputs = []
   foreach(input, inputs) {
-    file_inputs += [ rebase_path(input, electron_dist_dir) ]
+    file_inputs += [ rebase_path(input, dist_dir) ]
   }
 
   dir_inputs = []
@@ -635,7 +647,11 @@ action("create_dist") {
   }
 
   rebase_output = rebase_path(output)
-  rebase_base_dir = rebase_path(electron_dist_dir, root_build_dir)
+  if (is_mac) {
+    rebase_base_dir = rebase_path(root_out_dir)
+  } else {
+    rebase_base_dir = rebase_path(dist_dir, root_out_dir)
+  }
   args = [
     "--base-dir=$rebase_base_dir",
     "--inputs=$file_inputs",
