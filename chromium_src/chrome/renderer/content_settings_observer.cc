@@ -495,28 +495,6 @@ bool ContentSettingsObserver::allowMutationEvents(bool default_value) {
   return allow;
 }
 
-bool ContentSettingsObserver::allowDisplayingInsecureContent(
-    bool allowed_per_settings,
-    const blink::WebURL& resource_url) {
-
-  bool allow = allowed_per_settings;
-  GURL secondary_url(resource_url);
-  if (content_settings_manager_->content_settings()) {
-    allow =
-        content_settings_manager_->GetSetting(
-                                 GetOriginOrURL(render_frame()->GetWebFrame()),
-                                 secondary_url,
-                                 "displayInsecureContent",
-                                 allow) != CONTENT_SETTING_BLOCK;
-  }
-
-  if (allow)
-    DidDisplayInsecureContent(GURL(resource_url));
-  else
-    DidBlockDisplayInsecureContent(GURL(resource_url));
-  return allow;
-}
-
 bool ContentSettingsObserver::allowRunningInsecureContent(
     bool allowed_per_settings,
     const blink::WebSecurityOrigin& origin,
@@ -571,15 +549,6 @@ void ContentSettingsObserver::OnLoadBlockedPlugins(
   temporarily_allowed_plugins_.insert(identifier);
 }
 
-void ContentSettingsObserver::DidDisplayInsecureContent(GURL resource_url) {
-  base::ListValue args;
-  args.AppendString(resource_url.spec());
-
-  auto rv = render_frame()->GetRenderView();
-  rv->Send(new AtomViewHostMsg_Message(rv->GetRoutingID(),
-      base::UTF8ToUTF16("did-display-insecure-content"), args));
-}
-
 void ContentSettingsObserver::DidRunInsecureContent(GURL resouce_url) {
   base::ListValue args;
     args.AppendString(resouce_url.spec());
@@ -587,15 +556,6 @@ void ContentSettingsObserver::DidRunInsecureContent(GURL resouce_url) {
     auto rv = render_frame()->GetRenderView();
     rv->Send(new AtomViewHostMsg_Message(rv->GetRoutingID(),
         base::UTF8ToUTF16("did-run-insecure-content"), args));
-}
-
-void ContentSettingsObserver::DidBlockDisplayInsecureContent(GURL resource_url) {
-  base::ListValue args;
-  args.AppendString(resource_url.spec());
-
-  auto rv = render_frame()->GetRenderView();
-  rv->Send(new AtomViewHostMsg_Message(rv->GetRoutingID(),
-      base::UTF8ToUTF16("did-block-display-insecure-content"), args));
 }
 
 void ContentSettingsObserver::DidBlockRunInsecureContent(GURL resouce_url) {
