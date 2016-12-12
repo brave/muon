@@ -7498,7 +7498,7 @@ index 46866bebe4604eb884915cbe6b1c1f900299c42f..487de0be58ea26519d8b8a846feb80e2
 
    if (enable_extensions) {
 diff --git a/chrome/utility/importer/external_process_importer_bridge.cc b/chrome/utility/importer/external_process_importer_bridge.cc
-index d1e4cda7fce1e12c91a543d3f502c7eaf2ad3375..512738fc726bf62c8cf42ad5ac7292e9f410c082 100644
+index d1e4cda7fce1e12c91a543d3f502c7eaf2ad3375..a8082533383d0ff804e641cb9ac8d2c2847f87eb 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.cc
 +++ b/chrome/utility/importer/external_process_importer_bridge.cc
 @@ -27,6 +27,7 @@ const int kNumBookmarksToSend = 100;
@@ -7518,9 +7518,9 @@ index d1e4cda7fce1e12c91a543d3f502c7eaf2ad3375..512738fc726bf62c8cf42ad5ac7292e9
 +  Send(new ProfileImportProcessHostMsg_NotifyCookiesImportStart(
 +      cookies.size()));
 +
-+  |cookies_left| is required for the checks below as Windows has a
-+  Debug bounds-check which prevents pushing an iterator beyond its end()
-+  (i.e., |it + 2 < s.end()| crashes in debug mode if |i + 1 == s.end()|).
++  // |cookies_left| is required for the checks below as Windows has a
++  // Debug bounds-check which prevents pushing an iterator beyond its end()
++  // (i.e., |it + 2 < s.end()| crashes in debug mode if |i + 1 == s.end()|).
 +  int cookies_left = cookies.end() - cookies.begin();
 +  for (std::vector<ImportedCookieEntry>::const_iterator it =
 +           cookies.begin(); it < cookies.end();) {
