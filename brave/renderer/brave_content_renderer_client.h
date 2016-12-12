@@ -61,7 +61,6 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
   std::unique_ptr<network_hints::PrescientNetworkingDispatcher>
       prescient_networking_dispatcher_;
 
-  std::unique_ptr<visitedlink::VisitedLinkSlave> visited_link_slave_;
   DISALLOW_COPY_AND_ASSIGN(BraveContentRendererClient);
 };
 
