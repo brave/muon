@@ -80,9 +80,7 @@ void BraveContentRendererClient::RenderThreadStarted() {
 
   prescient_networking_dispatcher_.reset(
       new network_hints::PrescientNetworkingDispatcher());
-  visited_link_slave_.reset(new visitedlink::VisitedLinkSlave());
   thread->AddObserver(chrome_observer_.get());
-  thread->AddObserver(visited_link_slave_.get());
 
   std::set<GURL> origins;
   GetSecureOriginWhitelist(&origins);
@@ -101,11 +99,12 @@ void BraveContentRendererClient::RenderThreadStarted() {
 
 unsigned long long BraveContentRendererClient::VisitedLinkHash(  // NOLINT
     const char* canonical_url, size_t length) {
-  return visited_link_slave_->ComputeURLFingerprint(canonical_url, length);
+  return chrome_observer_->visited_link_slave()->ComputeURLFingerprint(
+      canonical_url, length);
 }
 
 bool BraveContentRendererClient::IsLinkVisited(unsigned long long link_hash) {  // NOLINT
-  return visited_link_slave_->IsVisited(link_hash);
+  return chrome_observer_->visited_link_slave()->IsVisited(link_hash);
 }
 
 blink::WebPrescientNetworking*
