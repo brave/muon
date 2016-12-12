@@ -15,6 +15,7 @@
 
 #include <stddef.h>
 
+#include <memory>
 #include <utility>
 
 #include "base/bind.h"
@@ -769,11 +770,11 @@ base::Value* ProtocolHandlerRegistry::EncodeRegisteredHandlers() {
        ++i) {
     for (ProtocolHandlerList::iterator j = i->second.begin();
          j != i->second.end(); ++j) {
-      base::DictionaryValue* encoded = j->Encode();
+      std::unique_ptr<base::DictionaryValue> encoded = j->Encode();
       if (IsDefault(*j)) {
         encoded->Set("default", new base::FundamentalValue(true));
       }
-      protocol_handlers->Append(encoded);
+      protocol_handlers->Append(std::move(encoded));
     }
   }
   return protocol_handlers;
