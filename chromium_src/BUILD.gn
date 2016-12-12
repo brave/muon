@@ -100,7 +100,6 @@ source_set("renderer") {
 
   deps = [
     "//chrome/renderer",
-    "//components/content_settings/content/common",
     "//third_party/WebKit/public:blink_headers",
   ]
 }

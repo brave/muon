@@ -11,7 +11,6 @@
 #include "atom/common/api/api_messages.h"
 #include "atom/renderer/content_settings_manager.h"
 #include "base/strings/utf_string_conversions.h"
-#include "components/content_settings/content/common/content_settings_messages.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_pattern.h"
 #include "content/public/common/url_constants.h"
