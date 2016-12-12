@@ -117,7 +117,6 @@ class ContentSettingsObserver
   atom::ContentSettingsManager* content_settings_manager_;  // not owned
 
   // Insecure content may be permitted for the duration of this render view.
-  bool allow_displaying_insecure_content_;
   bool allow_running_insecure_content_;
 
   // A pointer to content setting rules stored by the renderer. Normally, the
