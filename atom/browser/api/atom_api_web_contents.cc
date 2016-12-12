@@ -79,6 +79,7 @@
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/context_menu_params.h"
+#include "content/public/common/window_container_type.mojom.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/http/http_response_headers.h"
@@ -174,13 +175,13 @@ struct Converter<WindowContainerType> {
                                    WindowContainerType val) {
     std::string type;
     switch (val) {
-      case WINDOW_CONTAINER_TYPE_NORMAL:
+      case content::mojom::WindowContainerType::NORMAL:
         type = "normal";
         break;
-      case WINDOW_CONTAINER_TYPE_BACKGROUND:
+      case content::mojom::WindowContainerType::BACKGROUND:
         type = "background";
         break;
-      case WINDOW_CONTAINER_TYPE_PERSISTENT:
+      case content::mojom::WindowContainerType::PERSISTENT:
         type = "persistent";
         break;
       default:
