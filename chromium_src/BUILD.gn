@@ -269,6 +269,10 @@ source_set("browser") {
 
   if (enable_plugins) {
     sources += [
+      "//chrome/browser/engagement/site_engagement_service.cc",
+      "//chrome/browser/engagement/site_engagement_service.h",
+      "//chrome/browser/engagement/site_engagement_score.cc",
+      "//chrome/browser/engagement/site_engagement_score.h",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h",
       "//chrome/browser/renderer_host/pepper/device_id_fetcher.cc",
@@ -291,6 +295,8 @@ source_set("browser") {
       "//chrome/browser/plugins/plugin_info_message_filter.h",
       "//chrome/browser/plugins/plugin_utils.cc",
       "//chrome/browser/plugins/plugin_utils.h",
+      "//chrome/browser/plugins/plugins_field_trial.cc",
+      "//chrome/browser/plugins/plugins_field_trial.h",
       "//chrome/browser/plugins/plugin_finder.cc",
       "//chrome/browser/plugins/plugin_finder.h",
       "//chrome/browser/plugins/plugin_metadata.cc",
@@ -301,6 +307,8 @@ source_set("browser") {
       "//chrome/browser/plugins/plugin_prefs_factory.h",
       "//chrome/browser/plugins/chrome_plugin_service_filter.cc",
       "//chrome/browser/plugins/chrome_plugin_service_filter.h",
+      "//chrome/browser/ui/webui/site_settings_helper.cc",
+      "//chrome/browser/ui/webui/site_settings_helper.h",
     ]
 
     if (enable_extensions) {
