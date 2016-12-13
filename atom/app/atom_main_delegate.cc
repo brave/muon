@@ -293,9 +293,8 @@ void AtomMainDelegate::PreSandboxStartup() {
     return;
 
 #if defined(OS_LINUX)
-  // always disable the sandbox on linux for now
-  // https://github.com/brave/browser-laptop/issues/715
-  command_line->AppendSwitch(::switches::kNoSandbox);
+  // Disable setuid sandbox
+  command_line->AppendSwitch(::switches::kDisableSetuidSandbox);
 #endif
 }
 
