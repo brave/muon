@@ -53,8 +53,6 @@ source_set("browser") {
     "api/atom_api_power_monitor.h",
     "api/atom_api_power_save_blocker.cc",
     "api/atom_api_power_save_blocker.h",
-    "api/atom_api_render_process_preferences.cc",
-    "api/atom_api_render_process_preferences.h",
     "api/atom_api_protocol.cc",
     "api/atom_api_protocol.h",
     "api/atom_api_screen.cc",
@@ -154,8 +152,6 @@ source_set("browser") {
     "net/url_request_fetch_job.h",
     "relauncher.cc",
     "relauncher.h",
-    "render_process_preferences.cc",
-    "render_process_preferences.h",
     "ui/accelerator_util.cc",
     "ui/accelerator_util.h",
     "ui/atom_menu_model.cc",
@@ -297,7 +293,7 @@ source_set("browser") {
       "ui/x/x_window_utils.cc",
       "ui/x/x_window_utils.h",
     ]
-    
+
     deps +=  [
       "//chrome/browser/ui/libgtk2ui",
       "//electron/build:gtk2",
