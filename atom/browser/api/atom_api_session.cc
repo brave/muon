@@ -311,7 +311,7 @@ void SetProxyInIO(net::URLRequestContextGetter* getter,
   // Refetches and applies the new pac script if provided.
   proxy_service->ForceReloadProxyConfig();
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
-                          base::Bind(&base::DoNothing));
+                          callback);
 }
 
 void SetCertVerifyProcInIO(
@@ -332,7 +332,7 @@ void ClearHostResolverCacheInIO(
     DCHECK_EQ(0u, cache->size());
     if (!callback.is_null())
       BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
-                              base::Bind(&base::DoNothing));
+                              callback);
   }
 }
 
