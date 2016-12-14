@@ -1,5 +1,5 @@
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018..a3a5b95 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..a3a5b9507dfebf8d010e018ee1a5b11203146a67 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
 @@ -8,15 +8,15 @@ declare_args() {
@@ -27,7 +27,7 @@ index c649018..a3a5b95 100644
 -  branding_path_component = "chromium"
 -}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
-index 0c00e99..e565111 100644
+index 0c00e995fffe139ac39badd12790acbad3a78a7a..e5651111ce284f04ce3b5d6157be84c3738e732c 100644
 --- a/build/toolchain/mac/BUILD.gn
 +++ b/build/toolchain/mac/BUILD.gn
 @@ -210,13 +210,15 @@ template("mac_toolchain") {
@@ -48,7 +48,7 @@ index 0c00e99..e565111 100644
        default_output_extension = ".a"
        output_prefix = "lib"
 diff --git a/build/util/branding.gni b/build/util/branding.gni
-index c38d2a9..d1cd1a1 100644
+index c38d2a9fc72c177b5ee8e6bf05471c0758d5a757..d1cd1a1a29db9d7ae563b1b9724900f39a983171 100644
 --- a/build/util/branding.gni
 +++ b/build/util/branding.gni
 @@ -19,7 +19,7 @@ _branding_dictionary_template = "full_name = \"@PRODUCT_FULLNAME@\" " +
@@ -61,7 +61,7 @@ index c38d2a9..d1cd1a1 100644
                        [
                          "-f",
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 80378a8..903fabb 100644
+index 80378a881bd24ce6efac8491708cf2a6f655c0d7..903fabb981c2c50525aab82703459c6956530da2 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
 @@ -29,6 +29,8 @@ if (is_android) {
@@ -74,7 +74,7 @@ index 80378a8..903fabb 100644
 
  if (is_win) {
 diff --git a/chrome/browser/extensions/api/messaging/message_service.cc b/chrome/browser/extensions/api/messaging/message_service.cc
-index 0f8d9d8..e29ec83 100644
+index 0f8d9d8adcdb6df2b0725d8e0cb7ac1d0c0c66c0..e29ec8366189191c6604b5b8e730cee0dc963695 100644
 --- a/chrome/browser/extensions/api/messaging/message_service.cc
 +++ b/chrome/browser/extensions/api/messaging/message_service.cc
 @@ -8,6 +8,7 @@
@@ -121,7 +121,7 @@ index 0f8d9d8..e29ec83 100644
    }
 
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
-index 179c44c..5abd0b6 100644
+index 179c44c04e70496a4ae6a1086a50349cda216255..5abd0b6bbf598b003eaaf9535bb3bffeb05da7a4 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
 @@ -61,7 +61,7 @@ void ShowWarningMessageBox(const base::string16& message) {
@@ -134,7 +134,7 @@ index 179c44c..5abd0b6 100644
 
  }  // namespace
 diff --git a/chrome/browser/renderer_host/chrome_extension_message_filter.cc b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
-index a34a8ac..ac93870 100644
+index a34a8ac157eb10b35ce6136272eb67af6f47071c..ac93870882521795c6b9c36845315d981c00d1f4 100644
 --- a/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 +++ b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 @@ -14,10 +14,10 @@
@@ -359,7 +359,7 @@ index a34a8ac..ac93870 100644
 +  return false;
  }
 diff --git a/chrome/browser/renderer_host/chrome_extension_message_filter.h b/chrome/browser/renderer_host/chrome_extension_message_filter.h
-index 12d09e4..df74bdf 100644
+index 12d09e41a2b2f7692e69a5bd74881fd5566d78b9..df74bdf648fb3ca118e0e3fbb9bc3535645accb2 100644
 --- a/chrome/browser/renderer_host/chrome_extension_message_filter.h
 +++ b/chrome/browser/renderer_host/chrome_extension_message_filter.h
 @@ -91,18 +91,18 @@ class ChromeExtensionMessageFilter : public content::BrowserMessageFilter,
@@ -394,7 +394,7 @@ index 12d09e4..df74bdf 100644
    // content::NotificationObserver implementation.
    void Observe(int type,
 diff --git a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
-index 2b42f45..c8d6c51 100644
+index 2b42f45645cfba9c2dfe975d9e4c2c8cb96b49bd..c8d6c5166fa1e8759672e8ee72e988a8adc94247 100644
 --- a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
 +++ b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
 @@ -60,6 +60,7 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
@@ -414,7 +414,7 @@ index 2b42f45..c8d6c51 100644
    }
 
 diff --git a/chrome/chrome_renderer.gypi b/chrome/chrome_renderer.gypi
-index 1b03a2b..3e55db9 100644
+index 1b03a2ba47ec1a58ea09db55e38075bfc0ee7c23..3e55db9ba3957f24a6051cbb394f1ce19e933aed 100644
 --- a/chrome/chrome_renderer.gypi
 +++ b/chrome/chrome_renderer.gypi
 @@ -19,8 +19,8 @@
@@ -440,7 +440,7 @@ index 1b03a2b..3e55db9 100644
        'renderer/extensions/chrome_extensions_renderer_client.h',
        'renderer/extensions/chrome_v8_extension_handler.cc',
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 4653292..34aee93 100644
+index 465329222acc7fd4fe9b911d0a157ed921ac169d..34aee9385c01e57068b25adfd34b6f6aafcb0715 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
 @@ -222,6 +222,7 @@ static_library("common") {
@@ -452,7 +452,7 @@ index 4653292..34aee93 100644
 
    if (is_chromeos) {
 diff --git a/chrome/common/chrome_constants.cc b/chrome/common/chrome_constants.cc
-index 0a96fa2..c6ed25b 100644
+index 0a96fa23db6edb6f24d10280467835d14871952e..c6ed25b46d7337fb54575064076d08664a24b8df 100644
 --- a/chrome/common/chrome_constants.cc
 +++ b/chrome/common/chrome_constants.cc
 @@ -10,11 +10,11 @@
@@ -566,7 +566,7 @@ index 0a96fa2..c6ed25b 100644
      FPL("Chrome_StatusTrayWindow");
  #endif  // defined(OS_WIN)
 diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.mm
-index d0bbbf7..8e96ea5 100644
+index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
 @@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
@@ -581,7 +581,7 @@ index d0bbbf7..8e96ea5 100644
    NSString* outer_app_dir_ns = [NSString stringWithUTF8String:outer_app_dir_c];
 
 diff --git a/chrome/common/chrome_version.h.in b/chrome/common/chrome_version.h.in
-index f0a0bcd..888572f 100644
+index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e453aef4287 100644
 --- a/chrome/common/chrome_version.h.in
 +++ b/chrome/common/chrome_version.h.in
 @@ -22,3 +22,5 @@
@@ -591,7 +591,7 @@ index f0a0bcd..888572f 100644
 +
 +#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
 diff --git a/chrome/common/importer/edge_importer_utils_win.cc b/chrome/common/importer/edge_importer_utils_win.cc
-index c2abd64..fcfa405 100644
+index c2abd64b2d7c5166c1fdbaaf782974cb4bcc5e53..fcfa405727bcc53ac5b205e96ec15259ac184383 100644
 --- a/chrome/common/importer/edge_importer_utils_win.cc
 +++ b/chrome/common/importer/edge_importer_utils_win.cc
 @@ -73,7 +73,8 @@ bool IsEdgeFavoritesLegacyMode() {
@@ -605,7 +605,7 @@ index c2abd64..fcfa405 100644
 
  bool EdgeImporterCanImport() {
 diff --git a/chrome/common/importer/importer_bridge.h b/chrome/common/importer/importer_bridge.h
-index d3fa66b..d2b88d3 100644
+index d3fa66b6ae3e8e1f79bb177718af6b22f43c1671..d2b88d3763746c63bfbedee02ebde90421fe67f3 100644
 --- a/chrome/common/importer/importer_bridge.h
 +++ b/chrome/common/importer/importer_bridge.h
 @@ -24,6 +24,8 @@ namespace autofill {
@@ -627,7 +627,7 @@ index d3fa66b..d2b88d3 100644
    virtual void NotifyStarted() = 0;
 
 diff --git a/chrome/common/importer/importer_data_types.h b/chrome/common/importer/importer_data_types.h
-index be8163f..a91d871 100644
+index be8163f0ada81c484c64364961d65bf51ff67ec6..a91d871e870eba419c97a58522f7423217f81867 100644
 --- a/chrome/common/importer/importer_data_types.h
 +++ b/chrome/common/importer/importer_data_types.h
 @@ -83,6 +83,7 @@ enum VisitSource {
@@ -639,7 +639,7 @@ index be8163f..a91d871 100644
 
  }  // namespace importer
 diff --git a/chrome/common/importer/importer_type.h b/chrome/common/importer/importer_type.h
-index c172f8a..a467f33 100644
+index c172f8a5bc534465ff4d063a52f9bb510b7e36af..a467f339d012e749ae0625eb004c1614f300a3a1 100644
 --- a/chrome/common/importer/importer_type.h
 +++ b/chrome/common/importer/importer_type.h
 @@ -19,6 +19,8 @@ enum ImporterType {
@@ -652,7 +652,7 @@ index c172f8a..a467f33 100644
  #if defined(OS_MACOSX)
    TYPE_SAFARI          = 3,
 diff --git a/chrome/common/importer/profile_import_process_messages.h b/chrome/common/importer/profile_import_process_messages.h
-index e53c171..3579ced 100644
+index e53c17127a95b29c22a5c7987bd63574cc83351e..3579cede6d79ef36421821a6b69a81facb586578 100644
 --- a/chrome/common/importer/profile_import_process_messages.h
 +++ b/chrome/common/importer/profile_import_process_messages.h
 @@ -8,6 +8,7 @@
@@ -677,7 +677,7 @@ index e53c171..3579ced 100644
  IPC_MESSAGE_CONTROL1(ProfileImportProcessHostMsg_NotifyIE7PasswordInfo,
                       importer::ImporterIE7PasswordInfo) // password_info
 diff --git a/chrome/common/importer/profile_import_process_param_traits_macros.h b/chrome/common/importer/profile_import_process_param_traits_macros.h
-index 8e8b0c6..5a22e10 100644
+index 8e8b0c656dfbf809f41f7d5cf46c498de95097e3..5a22e10ddfe619c6d66424c1264f0974cc85950a 100644
 --- a/chrome/common/importer/profile_import_process_param_traits_macros.h
 +++ b/chrome/common/importer/profile_import_process_param_traits_macros.h
 @@ -13,6 +13,7 @@
@@ -707,7 +707,7 @@ index 8e8b0c6..5a22e10 100644
  IPC_STRUCT_TRAITS_BEGIN(importer::ImporterIE7PasswordInfo)
    IPC_STRUCT_TRAITS_MEMBER(url_hash)
 diff --git a/chrome/common/mac/app_mode_chrome_locator.mm b/chrome/common/mac/app_mode_chrome_locator.mm
-index efd272e..051851c 100644
+index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b359624d55e525 100644
 --- a/chrome/common/mac/app_mode_chrome_locator.mm
 +++ b/chrome/common/mac/app_mode_chrome_locator.mm
 @@ -80,6 +80,7 @@ bool GetChromeBundleInfo(const base::FilePath& chrome_bundle,
@@ -719,7 +719,7 @@ index efd272e..051851c 100644
      @"Google Chrome Canary": @"Google Chrome",
    };
 diff --git a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc b/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
-index c1e2d1a..dad5de2 100644
+index c1e2d1a09751ff3f01cc44171a4156560367e57e..dad5de26b5e761652fbc7d355a00296127559aca 100644
 --- a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
 +++ b/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
 @@ -81,9 +81,11 @@ ChromeRendererPepperHostFactory::CreateResourceHost(
@@ -752,7 +752,7 @@ index c1e2d1a..dad5de2 100644
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 36693be..a7cee74 100644
+index 36693bef5c8c29231f17f40b71b16e3c6b1855b1..a7cee7446353c38cc0cd343d36d9f3a52afcbd06 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -642,7 +642,7 @@ if (!is_android) {
@@ -765,7 +765,7 @@ index 36693be..a7cee74 100644
            [ "../../ui/views/corewm/desktop_capture_controller_unittest.cc" ]
      }
 diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
-index 2f5c4f4..30e83e8 100644
+index 2f5c4f45202c7258ba925eae1fd42bda9b69c413..30e83e8ea2ada5cfac17b3ca387fd9ada392d5f7 100644
 --- a/chrome/utility/BUILD.gn
 +++ b/chrome/utility/BUILD.gn
 @@ -57,6 +57,7 @@ static_library("utility") {
@@ -777,7 +777,7 @@ index 2f5c4f4..30e83e8 100644
 
    if (enable_extensions) {
 diff --git a/chrome/utility/importer/external_process_importer_bridge.cc b/chrome/utility/importer/external_process_importer_bridge.cc
-index d1e4cda..a808253 100644
+index d1e4cda7fce1e12c91a543d3f502c7eaf2ad3375..a8082533383d0ff804e641cb9ac8d2c2847f87eb 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.cc
 +++ b/chrome/utility/importer/external_process_importer_bridge.cc
 @@ -27,6 +27,7 @@ const int kNumBookmarksToSend = 100;
@@ -820,7 +820,7 @@ index d1e4cda..a808253 100644
    Send(new ProfileImportProcessHostMsg_Import_Started());
  }
 diff --git a/chrome/utility/importer/external_process_importer_bridge.h b/chrome/utility/importer/external_process_importer_bridge.h
-index 0a22e7e..2b75e70 100644
+index 0a22e7e50f69be187e50467b60547ed4382dd5b5..2b75e704bf783ecd0702bd79022f3562021989ba 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.h
 +++ b/chrome/utility/importer/external_process_importer_bridge.h
 @@ -76,6 +76,8 @@ class ExternalProcessImporterBridge : public ImporterBridge {
@@ -833,7 +833,7 @@ index 0a22e7e..2b75e70 100644
    void NotifyItemStarted(importer::ImportItem item) override;
    void NotifyItemEnded(importer::ImportItem item) override;
 diff --git a/chrome/utility/importer/firefox_importer.cc b/chrome/utility/importer/firefox_importer.cc
-index e487c92..0bc2770 100644
+index e487c92e507e10b1c7c63930d045b68a66899d29..0bc2770f93d976f38d3b764f56c7d258a7e423c8 100644
 --- a/chrome/utility/importer/firefox_importer.cc
 +++ b/chrome/utility/importer/firefox_importer.cc
 @@ -15,6 +15,7 @@
@@ -929,7 +929,7 @@ index e487c92..0bc2770 100644
 
    while (s.Step()) {
 diff --git a/chrome/utility/importer/firefox_importer.h b/chrome/utility/importer/firefox_importer.h
-index 28bf603..3b10bba 100644
+index 28bf603c89fe983d30e920775c4be6c44b8f0486..3b10bbab15da061659e7a36290d8dc3eca52b76b 100644
 --- a/chrome/utility/importer/firefox_importer.h
 +++ b/chrome/utility/importer/firefox_importer.h
 @@ -51,6 +51,7 @@ class FirefoxImporter : public Importer {
@@ -941,7 +941,7 @@ index 28bf603..3b10bba 100644
    void GetSearchEnginesXMLDataFromJSON(
        std::vector<std::string>* search_engine_data);
 diff --git a/chrome/utility/importer/importer_creator.cc b/chrome/utility/importer/importer_creator.cc
-index 2bef627..6cdf479 100644
+index 2bef627aa890484a3fb75fa9bd04b2994f997305..6cdf479c733c3a546c8fc54bdb29d4bec031f2e1 100644
 --- a/chrome/utility/importer/importer_creator.cc
 +++ b/chrome/utility/importer/importer_creator.cc
 @@ -6,6 +6,7 @@
@@ -962,7 +962,7 @@ index 2bef627..6cdf479 100644
        NOTREACHED();
        return nullptr;
 diff --git a/chrome/version.gni b/chrome/version.gni
-index a29cb8d..7f65522 100644
+index a29cb8d372ec3c18f2976864b4df4dcc3b20c8eb..7f6552279e19cadefbfa3839881cafcefeb08041 100644
 --- a/chrome/version.gni
 +++ b/chrome/version.gni
 @@ -71,11 +71,7 @@ template("process_version") {
@@ -979,7 +979,7 @@ index a29cb8d..7f65522 100644
      inputs = [
        version_path,
 diff --git a/components/guest_view/browser/guest_view_base.h b/components/guest_view/browser/guest_view_base.h
-index 320a5e4..06162d7 100644
+index 320a5e4d50b269831aeb861b657a7c3d3f4646df..06162d72bfa8058d16ea25142d3ecb8e182546cb 100644
 --- a/components/guest_view/browser/guest_view_base.h
 +++ b/components/guest_view/browser/guest_view_base.h
 @@ -334,7 +334,7 @@ class GuestViewBase : public content::BrowserPluginGuestDelegate,
@@ -992,7 +992,7 @@ index 320a5e4..06162d7 100644
    void DidDetach() final;
    content::WebContents* GetOwnerWebContents() const final;
 diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
-index a019144..1d2a3a1 100644
+index a0191448ccf9f0654177ec5efb8603723bb1b022..1d2a3a144f83d16c91b0d15cb5e0e17e1714e575 100644
 --- a/components/printing/common/print_messages.h
 +++ b/components/printing/common/print_messages.h
 @@ -218,7 +218,6 @@ IPC_STRUCT_TRAITS_BEGIN(PrintMsg_PrintPages_Params)
@@ -1054,7 +1054,7 @@ index a019144..1d2a3a1 100644
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
                      int /* document cookie */)
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
-index 01bb5f0..9584584 100644
+index 01bb5f00f42ce6a9499708f7a53c5766054c62fc..9584584ed6215ec4169932dad103c124416f0134 100644
 --- a/content/app/content_main_runner.cc
 +++ b/content/app/content_main_runner.cc
 @@ -231,7 +231,7 @@ void CommonSubprocessInit(const std::string& process_type) {
@@ -1067,7 +1067,7 @@ index 01bb5f0..9584584 100644
    // holes so it should never be enabled for official builds.
    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
 diff --git a/content/browser/accessibility/browser_accessibility_cocoa.mm b/content/browser/accessibility/browser_accessibility_cocoa.mm
-index 6c7d156..0325b27 100644
+index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8f6831802 100644
 --- a/content/browser/accessibility/browser_accessibility_cocoa.mm
 +++ b/content/browser/accessibility/browser_accessibility_cocoa.mm
 @@ -104,6 +104,7 @@ struct AXTextMarkerData {
@@ -1219,7 +1219,7 @@ index 6c7d156..0325b27 100644
    if ([attribute isEqualToString:
             NSAccessibilityBoundsForTextMarkerRangeParameterizedAttribute]) {
 diff --git a/content/browser/accessibility/browser_accessibility_manager_mac.mm b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-index 77ce72f..c8c80e5 100644
+index 77ce72f4df5882ac45c0533656d8cbfffcdd961b..c8c80e50494f3ae4531f494000ddad45fd639649 100644
 --- a/content/browser/accessibility/browser_accessibility_manager_mac.mm
 +++ b/content/browser/accessibility/browser_accessibility_manager_mac.mm
 @@ -83,8 +83,10 @@ NSString* const NSAccessibilityTextSelectionGranularity =
@@ -1246,7 +1246,7 @@ index 77ce72f..c8c80e5 100644
        if (selected_text) {
          [user_info setObject:selected_text
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
-index 07dc9d5..f3938d2 100644
+index 07dc9d561d4bb0e4a574b6d3bf4f142e9392980f..f3938d2e7b1db605e00de8dd657ce1192ca2d33c 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
 +++ b/content/browser/frame_host/render_frame_message_filter.cc
 @@ -481,7 +481,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
@@ -1259,7 +1259,7 @@ index 07dc9d5..f3938d2 100644
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
    // the filter might mutate it.
 diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-index 92d3617..6004636 100644
+index 92d3617594e49f5c9b6a392d3dde935c02548159..6004636d53feff66cd39a67c920a5ba85f76ffef 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 @@ -21,7 +21,7 @@
@@ -1272,7 +1272,7 @@ index 92d3617..6004636 100644
 
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 825941f..ccd932f 100644
+index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd60743143746191 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -137,6 +137,11 @@ RenderWidgetHostViewMac* GetRenderWidgetHostViewToUse(
@@ -1369,7 +1369,7 @@ index 825941f..ccd932f 100644
    }
    return validAttributesForMarkedText_.get();
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index b0451e4..20a8374 100644
+index b0451e40f4173d05937d95246d502a7a8412ea18..20a8374a84c55c4c2bbf337928a8b6576b7d1dd4 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1994,7 +1994,7 @@ void WebContentsImpl::CreateNewWindow(
@@ -1382,7 +1382,7 @@ index b0451e4..20a8374 100644
            : source_site_instance;
 
 diff --git a/content/child/child_process.cc b/content/child/child_process.cc
-index 2763ee03..ffc1792 100644
+index 2763ee03cffdb0b12d5934091b9c31f7bad6ff39..ffc179200c288e4e3b5292a79bce9e909f36e7c5 100644
 --- a/content/child/child_process.cc
 +++ b/content/child/child_process.cc
 @@ -123,7 +123,7 @@ void ChildProcess::WaitForDebugger(const std::string& label) {
@@ -1395,7 +1395,7 @@ index 2763ee03..ffc1792 100644
    title += " ";
    title += label;  // makes attaching to process easier
 diff --git a/content/common/dom_storage/dom_storage_map.cc b/content/common/dom_storage/dom_storage_map.cc
-index 71368bd..047054f 100644
+index 71368bdd55039ddc76278e7b5706e30517ab8aae..047054f366cafbd723affd26680310b087f4436f 100644
 --- a/content/common/dom_storage/dom_storage_map.cc
 +++ b/content/common/dom_storage/dom_storage_map.cc
 @@ -64,10 +64,12 @@ bool DOMStorageMap::SetItem(
@@ -1412,7 +1412,7 @@ index 71368bd..047054f 100644
    values_[key] = base::NullableString16(value, false);
    ResetKeyIterator();
 diff --git a/content/public/browser/resource_request_details.cc b/content/public/browser/resource_request_details.cc
-index bc7de5a..8aabacd 100644
+index bc7de5a293abd1641d16445039d56363a71897e2..8aabacddb0b5e84956dc3789f24c4c70fc925330 100644
 --- a/content/public/browser/resource_request_details.cc
 +++ b/content/public/browser/resource_request_details.cc
 @@ -22,6 +22,10 @@ ResourceRequestDetails::ResourceRequestDetails(const net::URLRequest* request,
@@ -1427,7 +1427,7 @@ index bc7de5a..8aabacd 100644
    resource_type = info->GetResourceType();
    http_response_code =
 diff --git a/content/public/browser/resource_request_details.h b/content/public/browser/resource_request_details.h
-index 5b859ae..35669e12 100644
+index 5b859aeb8538af35aaf47539e236aeba6994bc5a..35669e12f56a9ec4acda87786577afb7a743b648 100644
 --- a/content/public/browser/resource_request_details.h
 +++ b/content/public/browser/resource_request_details.h
 @@ -10,6 +10,7 @@
@@ -1447,7 +1447,7 @@ index 5b859ae..35669e12 100644
 
  // Details about a redirection of a resource request.
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index ed9dafb..7dddb8a 100644
+index ed9dafb029dd572b18cc6a88673e264d0e75f381..7dddb8a872d11e10143dd210db635f0663b298c2 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
 @@ -448,8 +448,8 @@ blink::WebInputEventResult BrowserPlugin::handleInputEvent(
@@ -1462,7 +1462,7 @@ index ed9dafb..7dddb8a 100644
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
 diff --git a/content/renderer/render_thread_impl.cc b/content/renderer/render_thread_impl.cc
-index 5b02de2..da5fdba 100644
+index 5b02de25eb6229dece6c31cec0427fa2dea56565..da5fdbae9e54df2ac7531501e541b8bee945b94c 100644
 --- a/content/renderer/render_thread_impl.cc
 +++ b/content/renderer/render_thread_impl.cc
 @@ -746,12 +746,13 @@ void RenderThreadImpl::Init(
@@ -1486,7 +1486,7 @@ index 5b02de2..da5fdba 100644
    is_elastic_overscroll_enabled_ = false;
  #endif
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 9b060a8..0d8caf1 100644
+index 9b060a8313a2472463413bab6cccebcb23a48dc4..2df8144ca7398778216dab2454ae74b10001d187 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -200,7 +200,10 @@
@@ -1532,7 +1532,7 @@ index 9b060a8..0d8caf1 100644
        "chrome://media-router/*",
        "chrome://oobe/*"
 diff --git a/extensions/renderer/resources/guest_view/guest_view_container.js b/extensions/renderer/resources/guest_view/guest_view_container.js
-index 8cfc8cb..606282f 100644
+index 8cfc8cb441afa19109e320c0a6405f79e9878a85..606282f28dfea8b9104c3f9d0bbd4c859baaed46 100644
 --- a/extensions/renderer/resources/guest_view/guest_view_container.js
 +++ b/extensions/renderer/resources/guest_view/guest_view_container.js
 @@ -26,6 +26,7 @@ function GuestViewContainer(element, viewType) {
@@ -1554,7 +1554,7 @@ index 8cfc8cb..606282f 100644
 
    proto.attachedCallback = function() {
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
-index cb7913b..7bc5de6 100644
+index cb7913b0a05f54ea405f4da4b2ca050db72814d3..7bc5de612ef4c9eaaf1c2335f40e38fc0a5f89b0 100644
 --- a/net/http/http_util.cc
 +++ b/net/http/http_util.cc
 @@ -57,8 +57,8 @@ static size_t FindStringEnd(const std::string& line, size_t start, char delim) {
@@ -1568,8 +1568,47 @@ index cb7913b..7bc5de6 100644
    return SimplifyUrlForRequest(url).spec();
  }
 
+diff --git a/net/quic/chromium/crypto/proof_verifier_chromium.cc b/net/quic/chromium/crypto/proof_verifier_chromium.cc
+index d42dba8acc9b73b894580ad83d543158a8374b3d..8feda8d4215f77031b29b04bbd57d6c25faa6815 100644
+--- a/net/quic/chromium/crypto/proof_verifier_chromium.cc
++++ b/net/quic/chromium/crypto/proof_verifier_chromium.cc
+@@ -426,6 +426,8 @@ int ProofVerifierChromium::Job::DoVerifyCertComplete(int result) {
+     int ct_result = OK;
+     if (verify_details_->ct_verify_result.cert_policy_compliance !=
+             ct::CertPolicyCompliance::CERT_POLICY_COMPLIES_VIA_SCTS &&
++        verify_details_->ct_verify_result.cert_policy_compliance !=
++            ct::CertPolicyCompliance::CERT_POLICY_BUILD_NOT_TIMELY &&
+         transport_security_state_->ShouldRequireCT(
+             hostname_, cert_verify_result.verified_cert.get(),
+             cert_verify_result.public_key_hashes)) {
+diff --git a/net/socket/ssl_client_socket_impl.cc b/net/socket/ssl_client_socket_impl.cc
+index ac4b8337253ab9c3e9fb0c066642b97d74d3763f..03d81912abb557dee7db038e2f85bfd238543211 100644
+--- a/net/socket/ssl_client_socket_impl.cc
++++ b/net/socket/ssl_client_socket_impl.cc
+@@ -1838,6 +1838,8 @@ int SSLClientSocketImpl::VerifyCT() {
+
+   if (ct_verify_result_.cert_policy_compliance !=
+           ct::CertPolicyCompliance::CERT_POLICY_COMPLIES_VIA_SCTS &&
++      ct_verify_result_.cert_policy_compliance !=
++          ct::CertPolicyCompliance::CERT_POLICY_BUILD_NOT_TIMELY &&
+       transport_security_state_->ShouldRequireCT(
+           host_and_port_.host(), server_cert_verify_result_.verified_cert.get(),
+           server_cert_verify_result_.public_key_hashes)) {
+diff --git a/net/spdy/spdy_session.cc b/net/spdy/spdy_session.cc
+index d07e16da7cf8e92ab5f22c5162fc54f50aa818a3..7d2bbc5f8c895a22054eb1155a21e0abf1b113c8 100644
+--- a/net/spdy/spdy_session.cc
++++ b/net/spdy/spdy_session.cc
+@@ -611,6 +611,8 @@ bool SpdySession::CanPool(TransportSecurityState* transport_security_state,
+
+   if (ssl_info.ct_cert_policy_compliance !=
+           ct::CertPolicyCompliance::CERT_POLICY_COMPLIES_VIA_SCTS &&
++      ssl_info.ct_cert_policy_compliance !=
++          ct::CertPolicyCompliance::CERT_POLICY_BUILD_NOT_TIMELY &&
+       transport_security_state->ShouldRequireCT(
+           new_hostname, ssl_info.cert.get(), ssl_info.public_key_hashes)) {
+     return false;
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
-index b93ff45..79748cda 100644
+index b93ff45d633c9330beaeb77f4772d3d8d5486245..79748cdaa5ff73ccadaecccbb88c4f9fdd0b8594 100644
 --- a/net/url_request/url_request_job.h
 +++ b/net/url_request/url_request_job.h
 @@ -284,6 +284,7 @@ class NET_EXPORT URLRequestJob : public base::PowerObserver {
@@ -1581,7 +1620,7 @@ index b93ff45..79748cda 100644
    // |buf_size| bytes into |buf|.
    // Possible return values:
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
-index e436a07..872df7f 100644
+index e436a079e835ad465a5262249f0a402d58e25f02..872df7f2c47de00abc32a95f7564172090b75527 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 +++ b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 @@ -30,6 +30,10 @@ public:
@@ -1607,7 +1646,7 @@ index e436a07..872df7f 100644
 
  } // namespace blink
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h b/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h
-index b969516..d465623 100644
+index b9695166f57ff213ac15b0a95f31ce089db87d48..d465623f45235424b6110a3e7c17b7109db8cf9d 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h
 +++ b/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h
 @@ -19,9 +19,24 @@ public:
@@ -1666,7 +1705,7 @@ index b969516..d465623 100644
 
  } // namespace blink
 diff --git a/third_party/WebKit/Source/core/editing/EditingBehavior.h b/third_party/WebKit/Source/core/editing/EditingBehavior.h
-index 2c4cce6..d8df6d9 100644
+index 2c4cce669da7c51861fd3292a45cd1589a5034b2..d8df6d90693256029cd85dc2c39695d047236f8c 100644
 --- a/third_party/WebKit/Source/core/editing/EditingBehavior.h
 +++ b/third_party/WebKit/Source/core/editing/EditingBehavior.h
 @@ -74,7 +74,7 @@ public:
@@ -1679,7 +1718,7 @@ index 2c4cce6..d8df6d9 100644
 
      // On Mac, selecting backwards by word/line from the middle of a word/line, and then going
 diff --git a/third_party/WebKit/Source/core/fileapi/File.idl b/third_party/WebKit/Source/core/fileapi/File.idl
-index 8277597..8aca099 100644
+index 82775974231274e6639751139f5c7bc9bbfaad25..8aca09939d20cc48cfa85c507fdea17ccfdbe5fb 100644
 --- a/third_party/WebKit/Source/core/fileapi/File.idl
 +++ b/third_party/WebKit/Source/core/fileapi/File.idl
 @@ -34,6 +34,7 @@
@@ -1691,7 +1730,7 @@ index 8277597..8aca099 100644
 
      // Non-standard APIs
 diff --git a/third_party/WebKit/Source/web/WebArrayBuffer.cpp b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
-index 471ce6a..29b0bbd 100644
+index 471ce6a5c66f6a7240732a12596746ef239a48e1..29b0bbdff9dfe9d0e1d1fb943b36bb98a7bea385 100644
 --- a/third_party/WebKit/Source/web/WebArrayBuffer.cpp
 +++ b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
 @@ -39,6 +39,11 @@ WebArrayBuffer WebArrayBuffer::create(unsigned numElements, unsigned elementByte
@@ -1707,7 +1746,7 @@ index 471ce6a..29b0bbd 100644
  {
      m_private.reset();
 diff --git a/third_party/WebKit/public/web/WebArrayBuffer.h b/third_party/WebKit/public/web/WebArrayBuffer.h
-index 668bbfd..85a6c28 100644
+index 668bbfdbe72ebe2607e67785d267d03a6434dda5..85a6c28349001aebd7538eae21213668022acd24 100644
 --- a/third_party/WebKit/public/web/WebArrayBuffer.h
 +++ b/third_party/WebKit/public/web/WebArrayBuffer.h
 @@ -51,6 +51,7 @@ public:
@@ -1719,7 +1758,7 @@ index 668bbfd..85a6c28 100644
      BLINK_EXPORT void reset();
      BLINK_EXPORT void assign(const WebArrayBuffer&);
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
-index e5fdb29..55a8b13 100644
+index e5fdb29e858fec1137a2182c18db6304279b4c24..55a8b13ebd85cc6be206368eb6292be062fe47ac 100644
 --- a/third_party/widevine/cdm/BUILD.gn
 +++ b/third_party/widevine/cdm/BUILD.gn
 @@ -96,9 +96,9 @@ if (widevine_cdm_binary_files != []) {
@@ -1736,7 +1775,7 @@ index e5fdb29..55a8b13 100644
        #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
      } else if (is_posix && !is_mac) {
 diff --git a/ui/base/BUILD.gn b/ui/base/BUILD.gn
-index 5accf0e..1b93b7b 100644
+index 5accf0ee26e177d3b5ce8cb347a5d6214ca846ee..1b93b7b839a51abf3ca7f9a5ece4d4a751046f46 100644
 --- a/ui/base/BUILD.gn
 +++ b/ui/base/BUILD.gn
 @@ -560,8 +560,12 @@ component("base") {
