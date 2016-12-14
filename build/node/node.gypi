@@ -56,7 +56,7 @@
       }
     },
     'target_conditions': [
-      ['_target_name in ["libuv", "http_parser", "boringssl", "openssl-cli", "cares", "node", "zlib"]', {
+      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib"]', {
         'msvs_disabled_warnings': [
           4003,  # not enough actual parameters for macro 'V'
           4013,  # 'free' undefined; assuming extern returning int
