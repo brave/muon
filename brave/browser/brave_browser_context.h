@@ -1,5 +1,5 @@
-// Copyright (c) 2013 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #ifndef BRAVE_BROWSER_BRAVE_BROWSER_CONTEXT_H_
@@ -43,6 +43,8 @@ class BraveBrowserContext : public Profile {
   std::unique_ptr<content::ZoomLevelDelegate> CreateZoomLevelDelegate(
       const base::FilePath& partition_path) override;
 
+  static scoped_refptr<atom::AtomBrowserContext> FromPartition(
+    const std::string& partition, const base::DictionaryValue& options);
 
   static BraveBrowserContext*
       FromBrowserContext(content::BrowserContext* browser_context);
@@ -91,6 +93,7 @@ class BraveBrowserContext : public Profile {
     return user_prefs_registrar_.get(); }
 
   const std::string& partition() const { return partition_; }
+  std::string partition_with_prefix();
   base::WaitableEvent* ready() { return ready_.get(); }
 
   void AddOverlayPref(const std::string name) override {

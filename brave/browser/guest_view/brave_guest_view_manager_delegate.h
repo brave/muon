@@ -23,6 +23,7 @@ class BraveGuestViewManagerDelegate
   explicit BraveGuestViewManagerDelegate(content::BrowserContext* context);
   ~BraveGuestViewManagerDelegate() override;
   void RegisterAdditionalGuestViewTypes() override;
+  bool IsGuestAvailableToContext(guest_view::GuestViewBase* guest) override;
 
  private:
   content::BrowserContext* const context_;

@@ -12,10 +12,8 @@ var ipc = require('ipc_utils')
 var lastError = require('lastError');
 var chrome = requireNative('chrome').GetChrome();
 
-let id = 0
-
 const query = function (queryInfo, cb) {
-  var responseId = ++id
+  var responseId = ipc.guid()
   ipc.once('chrome-tabs-query-response-' + responseId, cb)
   ipc.send('chrome-tabs-query', responseId, queryInfo)
 }
@@ -115,7 +113,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('query', function (queryInfo, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     query(queryInfo, function (evt, tab, error) {
       if (error) {
         lastError.run('tabs.query', error, '', () => { cb(null) })
@@ -142,7 +140,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('get', function (tabId, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-tabs-get-response-' + responseId, function (evt, tab, error) {
       if (error) {
         lastError.run('tabs.get', error, '', () => { cb(null) })
@@ -154,7 +152,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('getCurrent', function (cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-tabs-get-current-response-' + responseId, function (evt, tab, error) {
       if (error) {
         lastError.run('tabs.getCurrent', error, '', () => { cb(null) })
@@ -166,7 +164,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('update', function (tabId, updateProperties, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     cb && ipc.once('chrome-tabs-update-response-' + responseId, function (evt, tab, error) {
       if (error) {
         lastError.run('tabs.update', error, '', () => { cb(null) })
@@ -178,7 +176,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('remove', function (tabIds, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     cb && ipc.once('chrome-tabs-remove-response-' + responseId, function (evt, error) {
       if (error) {
         lastError.run('tabs.remove', error, '', cb)
@@ -190,10 +188,10 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('create', function (createProperties, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     cb && ipc.once('chrome-tabs-create-response-' + responseId, function (evt, tab, error) {
       if (error) {
-        lastError.run('tabs.remove', error, '', () => { cb(null) })
+        lastError.run('tabs.create', error, '', () => { cb(null) })
       } else {
         cb(tab)
       }
@@ -202,7 +200,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('executeScript', function (tabId, details, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     tabId = tabId || -2
     cb && ipc.once('chrome-tabs-execute-script-response-' + responseId, function (evt, error, on_url, results) {
       if (error) {

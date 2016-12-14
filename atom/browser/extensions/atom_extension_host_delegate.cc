@@ -8,6 +8,7 @@
 
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "base/lazy_instance.h"
+#include "brave/browser/brave_javascript_dialog_manager.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "extensions/browser/extension_host.h"
@@ -48,8 +49,7 @@ void AtomExtensionHostDelegate::OnRenderViewCreatedForBackgroundPage(
 
 content::JavaScriptDialogManager*
 AtomExtensionHostDelegate::GetJavaScriptDialogManager() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return brave::BraveJavaScriptDialogManager::GetInstance();
 }
 
 void AtomExtensionHostDelegate::CreateTab(content::WebContents* web_contents,

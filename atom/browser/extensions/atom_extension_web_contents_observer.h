@@ -1,5 +1,5 @@
-// Copyright (c) 2014 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #ifndef ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSION_WEB_CONTENTS_OBSERVER_H_
@@ -9,13 +9,11 @@
 
 #include "base/compiler_specific.h"
 #include "base/macros.h"
-#include "base/strings/string16.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "extensions/browser/extension_web_contents_observer.h"
-#include "extensions/common/stack_frame.h"
 
 namespace content {
-class RenderFrameHost;
+class RenderViewHost;
 }
 
 namespace extensions {
@@ -29,6 +27,8 @@ class AtomExtensionWebContentsObserver
   explicit AtomExtensionWebContentsObserver(
       content::WebContents* web_contents);
   ~AtomExtensionWebContentsObserver() override;
+
+  void RenderViewCreated(content::RenderViewHost* render_view_host);
 
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionWebContentsObserver);
 };

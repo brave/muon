@@ -246,10 +246,9 @@ InspectableWebContentsImpl::InspectableWebContentsImpl(
 }
 
 InspectableWebContentsImpl::~InspectableWebContentsImpl() {
-  if (web_contents_) {
-    CloseContents(web_contents_);
-    delete web_contents_;
-  }
+  view_.reset(nullptr);
+  Observe(nullptr);
+  web_contents_ = nullptr;
 }
 
 InspectableWebContentsView* InspectableWebContentsImpl::GetView() {
@@ -282,9 +281,6 @@ void InspectableWebContentsImpl::SetDockState(const std::string& state) {
 }
 
 void InspectableWebContentsImpl::ShowDevTools() {
-  if (!view_)
-    return;
-
   // Show devtools only after it has done loading, this is to make sure the
   // SetIsDocked is called *BEFORE* ShowDevTools.
   if (!devtools_web_contents_) {
@@ -645,8 +641,14 @@ void InspectableWebContentsImpl::RenderFrameHostChanged(
 }
 
 void InspectableWebContentsImpl::WebContentsDestroyed() {
-  CloseContents(web_contents_);
-  web_contents_ = nullptr;
+  frontend_loaded_ = false;
+  Detach();
+
+  for (const auto& pair : pending_requests_)
+    delete pair.first;
+
+  if (view_ && view_->GetDelegate())
+    view_->GetDelegate()->DevToolsClosed();
 }
 
 bool InspectableWebContentsImpl::AddMessageToConsole(
@@ -682,15 +684,7 @@ void InspectableWebContentsImpl::HandleKeyboardEvent(
 }
 
 void InspectableWebContentsImpl::CloseContents(content::WebContents* source) {
-  Observe(nullptr);
-  frontend_loaded_ = false;
-  Detach();
-
-  for (const auto& pair : pending_requests_)
-    delete pair.first;
-
   CloseDevTools();
-  view_.reset();
 }
 
 content::ColorChooser* InspectableWebContentsImpl::OpenColorChooser(

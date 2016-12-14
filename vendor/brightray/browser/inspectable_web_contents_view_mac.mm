@@ -33,8 +33,7 @@ void InspectableWebContentsViewMac::ShowDevTools() {
 }
 
 void InspectableWebContentsViewMac::CloseDevTools() {
-  if (IsDevToolsViewShowing())
-    [view_ setDevToolsVisible:NO];
+  [view_ setDevToolsVisible:NO];
 }
 
 bool InspectableWebContentsViewMac::IsDevToolsViewShowing() {

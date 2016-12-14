@@ -3,26 +3,26 @@ index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -45,7 +45,7 @@ declare_args() {
-
+ 
    # Enable ECMAScript Internationalization API. Enabling this feature will
    # add a dependency on the ICU library.
 -  v8_enable_i18n_support = true
 +  v8_enable_i18n_support = is_component_build
-
+ 
    # Enable slow dchecks.
    v8_enable_slow_dchecks = false
 @@ -98,6 +98,7 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
  v8_random_seed = "314159265"
  v8_toolset_for_shell = "host"
-
+ 
 +suppress_v8 = !is_component_build
  ###############################################################################
  # Configurations
  #
 @@ -106,6 +107,14 @@ config("internal_config") {
-
+ 
    include_dirs = [ "." ]
-
+ 
 +  if (suppress_v8) {
 +    defines = [
 +      "SUPPRESS_V8_SNAPSHOT",
@@ -57,17 +57,17 @@ index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c
    if (is_android && current_toolchain != host_toolchain) {
 @@ -726,6 +743,9 @@ source_set("v8_maybe_snapshot") {
  }
-
+ 
  v8_source_set("v8_nosnapshot") {
 +  if (suppress_v8) {
 +    set_sources_assignment_filter(["*"])
 +  }
    visibility = [ ":*" ]  # Only targets in this file can depend on this.
-
+ 
    deps = [
 @@ -748,6 +768,9 @@ v8_source_set("v8_nosnapshot") {
  }
-
+ 
  v8_source_set("v8_snapshot") {
 +  if (suppress_v8) {
 +    set_sources_assignment_filter(["*"])
@@ -76,7 +76,7 @@ index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c
    # depend on this.
    visibility = [
 @@ -781,6 +804,10 @@ v8_source_set("v8_snapshot") {
-
+ 
  if (v8_use_external_startup_data) {
    v8_source_set("v8_external_snapshot") {
 +    if (suppress_v8) {
@@ -84,30 +84,30 @@ index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c
 +    }
 +
      visibility = [ ":*" ]  # Only targets in this file can depend on this.
-
+ 
      deps = [
 @@ -805,6 +832,10 @@ if (v8_use_external_startup_data) {
  }
-
+ 
  v8_source_set("v8_base") {
 +  if (suppress_v8) {
 +    set_sources_assignment_filter(["*"])
 +  }
 +
    visibility = [ ":*" ]  # Only targets in this file can depend on this.
-
+ 
    sources = [
 @@ -1986,8 +2017,10 @@ v8_source_set("v8_base") {
      ":v8_libsampler",
    ]
-
+ 
 -  sources += [ v8_generated_peephole_source ]
 -  deps += [ ":run_mkpeephole" ]
 +  if (!suppress_v8) {
 +    sources += [ v8_generated_peephole_source ]
 +    deps += [ ":run_mkpeephole" ]
 +  }
-
+ 
    if (is_win) {
      # TODO(jschuh): crbug.com/167187 fix size_t to int truncations.
 @@ -2001,8 +2034,8 @@ v8_source_set("v8_base") {
@@ -120,21 +120,21 @@ index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c
 +      # "src/i18n.h",
      ]
    }
-
+ 
 @@ -2013,6 +2046,10 @@ v8_source_set("v8_base") {
  }
-
+ 
  v8_source_set("v8_libbase") {
 +  if (suppress_v8) {
 +    set_sources_assignment_filter(["*"])
 +  }
 +
    visibility = [ ":*" ]  # Only targets in this file can depend on this.
-
+ 
    sources = [
 @@ -2146,6 +2183,10 @@ v8_source_set("v8_libbase") {
  }
-
+ 
  v8_source_set("v8_libplatform") {
 +  if (suppress_v8) {
 +    set_sources_assignment_filter(["*"])
@@ -145,7 +145,7 @@ index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c
      "include/libplatform/libplatform.h",
 @@ -2175,6 +2216,10 @@ v8_source_set("v8_libplatform") {
  }
-
+ 
  v8_source_set("v8_libsampler") {
 +  if (suppress_v8) {
 +    set_sources_assignment_filter(["*"])
@@ -169,7 +169,7 @@ index f4362e5077e1231e2e57ccaf06ccc9769ebaae61..e048e26d768e358a9097f35afe60585d
  #include "src/base/platform/platform.h"
 @@ -16,7 +16,6 @@
  #include "src/snapshot/startup-serializer.h"
-
+ 
  using namespace v8;
 -
  class SnapshotWriter {
@@ -181,12 +181,12 @@ index f4362e5077e1231e2e57ccaf06ccc9769ebaae61..e048e26d768e358a9097f35afe60585d
  }
 -
 +#endif
-
+ 
  int main(int argc, char** argv) {
 +#ifndef SUPPRESS_V8_SNAPSHOT
    // Make mksnapshot runs predictable to create reproducible snapshots.
    i::FLAG_predictable = true;
-
+ 
 @@ -180,5 +180,6 @@ int main(int argc, char** argv) {
    V8::Dispose();
    V8::ShutdownPlatform();

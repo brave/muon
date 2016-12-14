@@ -40,11 +40,18 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   content::WebContents* OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) override;
+  void LoadURLWithParams(
+      const GURL& url,
+      const content::Referrer& referrer,
+      ui::PageTransition transition_type,
+      bool force_navigation);
+  void NavigateGuest(const std::string& src, bool force_navigation);
 
+
+  void ApplyAttributes(const base::DictionaryValue& params);
 
   // GuestViewBase implementation.
-  content::WebContents* CreateNewGuestWindow(
-      const content::WebContents::CreateParams& create_params) override;
+  void GuestDestroyed() final;
   void CreateWebContents(
     const base::DictionaryValue& create_params,
     const WebContentsCreatedCallback& callback) final;
@@ -61,7 +68,13 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void WillDestroy() final;
   void DidInitialize(const base::DictionaryValue& create_params) final;
 
-  atom::api::WebContents* api_web_contents_;
+  // WebContentsObserver implementation.
+  void DidCommitProvisionalLoadForFrame(
+      content::RenderFrameHost* render_frame_host,
+      const GURL& url,
+      ui::PageTransition transition_type) final;
+
+  atom::api::WebContents* api_web_contents_;  // not owned
 
   // Stores the window name of the main frame of the guest.
   std::string name_;

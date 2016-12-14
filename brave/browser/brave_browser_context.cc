@@ -1,5 +1,5 @@
-// Copyright (c) 2013 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include <memory>
@@ -26,6 +26,8 @@
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/guest_view/browser/guest_view_manager.h"
+#include "components/guest_view/browser/guest_view_manager_delegate.h"
+#include "components/guest_view/common/guest_view_constants.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
@@ -85,6 +87,9 @@ void NotifyOTRProfileDestroyedOnIOThread(void* original_profile,
 #endif
 
 namespace brave {
+
+const char kPersistPrefix[] = "persist:";
+const int kPersistPrefixLength = 8;
 
 void DatabaseErrorCallback(sql::InitStatus init_status,
                            const std::string& diagnostics) {
@@ -234,10 +239,14 @@ BraveBrowserContext* BraveBrowserContext::otr_context() {
 
 content::BrowserPluginGuestManager* BraveBrowserContext::GetGuestManager() {
 #if defined(ENABLE_EXTENSIONS)
-  return guest_view::GuestViewManager::FromBrowserContext(this);
-#else
-  return NULL;
+  if (!guest_view::GuestViewManager::FromBrowserContext(this)) {
+    guest_view::GuestViewManager::CreateWithDelegate(
+        this,
+        extensions::ExtensionsAPIClient::Get()->CreateGuestViewManagerDelegate(
+            this));
+  }
 #endif
+  return guest_view::GuestViewManager::FromBrowserContext(this);
 }
 
 void BraveBrowserContext::TrackZoomLevelsFromParent() {
@@ -485,6 +494,30 @@ BraveBrowserContext::GetAutofillWebdataService() {
 
 base::FilePath BraveBrowserContext::GetPath() const {
   return brightray::BrowserContext::GetPath();
+}
+
+std::string BraveBrowserContext::partition_with_prefix() {
+  if (!IsOffTheRecord())
+    return kPersistPrefix + partition();
+  return partition();
+}
+
+scoped_refptr<atom::AtomBrowserContext> BraveBrowserContext::FromPartition(
+    const std::string& partition, const base::DictionaryValue& options) {
+  scoped_refptr<atom::AtomBrowserContext> browser_context;
+  if (partition.empty()) {
+    return atom::AtomBrowserContext::From("", false, options);
+  }
+
+  if (base::StartsWith(
+      partition, kPersistPrefix, base::CompareCase::SENSITIVE)) {
+    std::string name = partition.substr(kPersistPrefixLength);
+    return atom::AtomBrowserContext::From(
+        name == "default" ? "" : name, false, options);
+  } else {
+    return atom::AtomBrowserContext::From(
+        partition == "default" ? "" : partition, true, options);
+  }
 }
 
 }  // namespace brave

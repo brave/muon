@@ -29,6 +29,11 @@ BraveGuestViewManagerDelegate::BraveGuestViewManagerDelegate(
 BraveGuestViewManagerDelegate::~BraveGuestViewManagerDelegate() {
 }
 
+bool BraveGuestViewManagerDelegate::IsGuestAvailableToContext(
+    guest_view::GuestViewBase* guest) {
+  return true;
+}
+
 void BraveGuestViewManagerDelegate::RegisterAdditionalGuestViewTypes() {
   GuestViewManager* manager = GuestViewManager::FromBrowserContext(context_);
   manager->RegisterGuestViewType<TabViewGuest>();

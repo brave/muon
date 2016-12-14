@@ -191,9 +191,11 @@ using namespace brightray;
   auto inspectable_web_contents = inspectableWebContentsView_->inspectable_web_contents();
   if (!inspectable_web_contents)
     return;
+
   auto webContents = inspectable_web_contents->GetWebContents();
   if (!webContents)
     return;
+
   auto webContentsView = webContents->GetNativeView();
   if (!webContentsView)
     return;
@@ -224,9 +226,7 @@ using namespace brightray;
 #pragma mark - NSWindowDelegate
 
 - (void)windowWillClose:(NSNotification*)notification {
-  if (inspectableWebContentsView_->inspectable_web_contents()) {
-    inspectableWebContentsView_->inspectable_web_contents()->CloseDevTools();
-  }
+  inspectableWebContentsView_->inspectable_web_contents()->CloseDevTools();
 }
 
 - (void)windowDidBecomeMain:(NSNotification*)notification {

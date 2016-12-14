@@ -190,8 +190,6 @@ namespace api {
 
 namespace {
 
-const char kPersistPrefix[] = "persist:";
-
 // Referenced session objects.
 std::map<uint32_t, v8::Global<v8::Object>> g_sessions;
 
@@ -369,6 +367,11 @@ Session::~Session() {
   content::BrowserContext::GetDownloadManager(browser_context())->
       RemoveObserver(this);
   g_sessions.erase(weak_map_id());
+}
+
+std::string Session::Partition() {
+  return static_cast<brave::BraveBrowserContext*>(
+      browser_context_.get())->partition_with_prefix();
 }
 
 void Session::OnDownloadCreated(content::DownloadManager* manager,
@@ -626,25 +629,16 @@ mate::Handle<Session> Session::CreateFrom(
 mate::Handle<Session> Session::FromPartition(
     v8::Isolate* isolate, const std::string& partition,
     const base::DictionaryValue& options) {
-  scoped_refptr<AtomBrowserContext> browser_context;
-  if (partition.empty()) {
-    browser_context = AtomBrowserContext::From("", false, options);
-  } else if (base::StartsWith(partition, kPersistPrefix,
-                              base::CompareCase::SENSITIVE)) {
-    std::string name = partition.substr(8);
-    browser_context = AtomBrowserContext::From(
-        name == "default" ? "" : name, false, options);
-  } else {
-    browser_context = AtomBrowserContext::From(
-        partition == "default" ? "" : partition, true, options);
-  }
+  scoped_refptr<AtomBrowserContext> browser_context =
+      brave::BraveBrowserContext::FromPartition(partition, options);
+
   DCHECK(browser_context.get());
   // TODO(bridiver) - this is a huge hack to deal with sync call
   ScopedAllowWaitForLegacyWebViewApi wait_allowed;
   static_cast<brave::BraveBrowserContext*>(
       browser_context.get())->ready()->Wait();
-  return CreateFrom(isolate,
-                    static_cast<AtomBrowserContext*>(browser_context.get()));
+
+  return CreateFrom(isolate, browser_context.get());
 }
 
 // static
@@ -672,6 +666,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getUserAgent", &Session::GetUserAgent)
       .SetMethod("setEnableBrotli", &Session::SetEnableBrotli)
       .SetMethod("equal", &Session::Equal)
+      .SetProperty("partition", &Session::Partition)
       .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)
       .SetProperty("cookies", &Session::Cookies)

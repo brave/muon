@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "brave/browser/guest_view/tab_view/tab_view_guest.h"
-
 #include <stddef.h>
+
+#include <memory>
 #include <string>
 #include <utility>
+
+#include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 
 #include "atom/browser/api/atom_api_web_contents.h"
 #include "atom/browser/api/atom_api_session.h"
@@ -17,9 +19,11 @@
 #include "components/guest_view/browser/guest_view_event.h"
 #include "components/guest_view/browser/guest_view_manager.h"
 #include "components/guest_view/common/guest_view_constants.h"
+#include "extensions/browser/guest_view/web_view/web_view_constants.h"
 
 #include "atom/browser/native_window.h"
 #include "atom/browser/web_contents_preferences.h"
+#include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
@@ -54,13 +58,22 @@ bool TabViewGuest::CanRunInDetachedState() const {
   return true;
 }
 
+void TabViewGuest::GuestDestroyed() {
+  if (api_web_contents_) {
+    api_web_contents_->guest_delegate_ = nullptr;
+  }
+}
+
 void TabViewGuest::WebContentsCreated(WebContents* source_contents,
                                       int opener_render_frame_id,
                                       const std::string& frame_name,
                                       const GURL& target_url,
                                       WebContents* new_contents) {
+  CHECK_EQ(source_contents, web_contents());
+
   auto* guest = TabViewGuest::FromWebContents(new_contents);
   CHECK(guest);
+
   guest->SetOpener(this);
   guest->name_ = frame_name;
   pending_new_windows_.insert(
@@ -94,79 +107,104 @@ WebContents* TabViewGuest::OpenURLFromTab(
   return web_contents();
 }
 
+void TabViewGuest::LoadURLWithParams(
+    const GURL& url,
+    const content::Referrer& referrer,
+    ui::PageTransition transition_type,
+    bool force_navigation) {
+  if (!force_navigation && (src_ == url))
+    return;
+
+  GURL validated_url(url);
+
+  content::NavigationController::LoadURLParams load_url_params(validated_url);
+  load_url_params.referrer = referrer;
+  load_url_params.transition_type = transition_type;
+  // TODO(bridiver) - handle user agent override
+  // if (is_overriding_user_agent_) {
+  //   load_url_params.override_user_agent =
+  //       content::NavigationController::UA_OVERRIDE_TRUE;
+  // }
+  GuestViewBase::LoadURLWithParams(load_url_params);
+
+  src_ = validated_url;
+}
+
+void TabViewGuest::NavigateGuest(const std::string& src,
+                                 bool force_navigation) {
+  if (src.empty())
+    return;
+
+  LoadURLWithParams(GURL(src), content::Referrer(),
+      ui::PAGE_TRANSITION_AUTO_TOPLEVEL, force_navigation);
+}
+
+void TabViewGuest::DidCommitProvisionalLoadForFrame(
+    content::RenderFrameHost* render_frame_host,
+    const GURL& url,
+    ui::PageTransition transition_type) {
+  if (!render_frame_host->GetParent()) {
+    src_ = web_contents()->GetURL();
+  }
+
+  std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+  args->SetString(guest_view::kUrl, src_.spec());
+  args->SetBoolean(guest_view::kIsTopLevel, (!render_frame_host->GetParent() &&
+                    transition_type == ui::PAGE_TRANSITION_AUTO_TOPLEVEL));
+  args->SetInteger(webview::kInternalCurrentEntryIndex,
+                   web_contents()->GetController().GetCurrentEntryIndex());
+  args->SetInteger(webview::kInternalEntryCount,
+                   web_contents()->GetController().GetEntryCount());
+  args->SetInteger(webview::kInternalProcessId,
+                   web_contents()->GetRenderProcessHost()->GetID());
+  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+      webview::kEventLoadCommit, std::move(args)));
+
+  // find_helper_.CancelAllFindSessions();
+}
+
 void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
   api_web_contents_ = atom::api::WebContents::CreateFrom(isolate,
-      web_contents()).get();
+      web_contents(), atom::api::WebContents::Type::WEB_VIEW).get();
+  api_web_contents_->guest_delegate_ = this;
   web_contents()->SetDelegate(api_web_contents_);
+
+  ApplyAttributes(create_params);
 }
-
-content::WebContents* TabViewGuest::CreateNewGuestWindow(
-    const content::WebContents::CreateParams& create_params) {
-  v8::Isolate* isolate = api_web_contents_->isolate();
-  v8::HandleScope handle_scope(isolate);
-
-  content::WebContents::CreateParams params(create_params);
-  // window options will come from features that needs to be passed through
-  mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
-  options.Set("isGuest", true);
-
-  if (params.browser_context) {
-    auto session = atom::api::Session::CreateFrom(isolate,
-            Profile::FromBrowserContext(params.browser_context));
-    options.Set("session", session);
-  }
-
-  auto guest = Create(owner_web_contents());
-  params.guest_delegate = guest;
-
-  mate::Handle<atom::api::WebContents> new_api_web_contents =
-      atom::api::WebContents::CreateWithParams(isolate, options, params);
-  content::WebContents* guest_web_contents =
-      new_api_web_contents->GetWebContents();
-  guest->InitWithWebContents(base::DictionaryValue(), guest_web_contents);
-
-  return guest_web_contents;
-}
-
 
 void TabViewGuest::CreateWebContents(
-    const base::DictionaryValue& create_params,
+    const base::DictionaryValue& params,
     const WebContentsCreatedCallback& callback) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
-  // window options will come from features that needs to be passed through
-  mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
-  options.Set("isGuest", true);
+  mate::Handle<atom::api::Session> session;
+
   std::string partition;
-  create_params.GetString("partition", &partition);
-  std::string src;
-  create_params.GetString("src", &src);
-  options.Set("delayedLoadUrl", src);
+  if (params.GetString("partition", &partition)) {
+    session = atom::api::Session::FromPartition(isolate, partition);
+  } else {
+    session = atom::api::Session::FromPartition(isolate, "");
+  }
+  content::WebContents::CreateParams create_params(session->browser_context());
+  create_params.guest_delegate = this;
 
-  auto session = atom::api::Session::FromPartition(isolate, partition);
-  options.Set("session", session);
-
-  auto site_instance = content::SiteInstance::CreateForURL(
-        session->browser_context(), GURL(src));
-  auto browser_context = session->browser_context();
-  content::WebContents::CreateParams
-      params(browser_context, site_instance);
-  params.guest_delegate = this;
+  mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
   mate::Handle<atom::api::WebContents> new_api_web_contents =
-      atom::api::WebContents::CreateWithParams(isolate, options, params);
-  content::WebContents* web_contents = new_api_web_contents->GetWebContents();
+      atom::api::WebContents::CreateWithParams(isolate, options, create_params);
 
+  content::WebContents* web_contents = new_api_web_contents->web_contents();
   callback.Run(web_contents);
 }
 
-void TabViewGuest::DidAttachToEmbedder() {
-  api_web_contents_->Emit("did-attach");
-
+void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
+  bool is_pending_new_window = false;
   if (GetOpener()) {
     // We need to do a navigation here if the target URL has changed between
     // the time the WebContents was created and the time it was attached.
@@ -175,17 +213,34 @@ void TabViewGuest::DidAttachToEmbedder() {
     auto it = GetOpener()->pending_new_windows_.find(this);
     if (it != GetOpener()->pending_new_windows_.end()) {
       const NewWindowInfo& new_window_info = it->second;
-      if (new_window_info.changed || !web_contents()->HasOpener()) {
-        content::OpenURLParams params(
-          new_window_info.url, content::Referrer(), CURRENT_TAB,
-          ui::PAGE_TRANSITION_LINK, false);
-        api_web_contents_->OpenURLFromTab(web_contents(), params);
-      }
+      if (new_window_info.changed || !web_contents()->HasOpener())
+        NavigateGuest(new_window_info.url.spec(), false /* force_navigation */);
+
       // Once a new guest is attached to the DOM of the embedder page, then the
       // lifetime of the new guest is no longer managed by the opener guest.
       GetOpener()->pending_new_windows_.erase(this);
+      is_pending_new_window = true;
     }
   }
+
+  // handle navigation for src attribute changes
+  if (!is_pending_new_window) {
+    std::string src;
+    if (params.GetString("src", &src)) {
+      src_ = GURL(src);
+    }
+    if (attached()) {
+      NavigateGuest(src_.spec(), true /* force_navigation */);
+    }
+  }
+}
+
+void TabViewGuest::DidAttachToEmbedder() {
+  DCHECK(api_web_contents_);
+  api_web_contents_->Emit("did-attach");
+
+  ApplyAttributes(*attach_params());
+
   api_web_contents_->ResumeLoadingCreatedWebContents();
   web_contents()->WasHidden();
   web_contents()->WasShown();
@@ -205,7 +260,7 @@ int TabViewGuest::GetTaskPrefix() const {
 }
 
 void TabViewGuest::GuestReady() {
-  // we don't use guest only processes
+  // we don't use guest only processes and don't want those limitations
   CHECK(!web_contents()->GetRenderProcessHost()->IsForGuestsOnly());
 
   web_contents()
@@ -216,14 +271,17 @@ void TabViewGuest::GuestReady() {
 }
 
 void TabViewGuest::WillDestroy() {
-  api_web_contents_->WebContentsDestroyed();
+  if (api_web_contents_)
+    api_web_contents_->WebContentsDestroyed();
+  api_web_contents_ = nullptr;
 }
 
 void TabViewGuest::GuestSizeChangedDueToAutoSize(const gfx::Size& old_size,
                                                  const gfx::Size& new_size) {
-  api_web_contents_->Emit("size-changed",
-                          old_size.width(), old_size.height(),
-                          new_size.width(), new_size.height());
+  if (api_web_contents_)
+    api_web_contents_->Emit("size-changed",
+                            old_size.width(), old_size.height(),
+                            new_size.width(), new_size.height());
 }
 
 bool TabViewGuest::IsAutoSizeSupported() const {
@@ -231,23 +289,26 @@ bool TabViewGuest::IsAutoSizeSupported() const {
 }
 
 TabViewGuest::TabViewGuest(WebContents* owner_web_contents)
-    : GuestView<TabViewGuest>(owner_web_contents) {
+    : GuestView<TabViewGuest>(owner_web_contents),
+      api_web_contents_(nullptr) {
 }
 
 TabViewGuest::~TabViewGuest() {
 }
 
 void TabViewGuest::WillAttachToEmbedder() {
-  // register the guest for event forwarding
-  api_web_contents_->Emit("ELECTRON_GUEST_VIEW_MANAGER_REGISTER_GUEST",
-      extensions::TabHelper::IdForTab(web_contents()));
+  DCHECK(api_web_contents_);
+  api_web_contents_->Emit("will-attach", owner_web_contents());
 
   // update the owner window
+  atom::NativeWindow* owner_window = nullptr;
   auto relay = atom::NativeWindowRelay::FromWebContents(
-      embedder_web_contents());
-  if (relay) {
-    api_web_contents_->SetOwnerWindow(relay->window.get());
-  }
+      owner_web_contents());
+  if (relay)
+    owner_window = relay->window.get();
+
+  if (owner_window)
+    api_web_contents_->SetOwnerWindow(web_contents(), owner_window);
 }
 
 }  // namespace brave

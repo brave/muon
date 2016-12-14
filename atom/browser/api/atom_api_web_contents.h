@@ -103,29 +103,30 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static mate::Handle<WebContents> FromTabID(
     v8::Isolate* isolate, int tab_id);
 
-  // Create from an existing WebContents.
+  static void CreateTab(mate::Arguments* args);
+
   static mate::Handle<WebContents> CreateFrom(
       v8::Isolate* isolate, content::WebContents* web_contents);
 
-  static void CreateTab(v8::Isolate* isolate,
-      const mate::Dictionary& options,
-      base::Callback<void(WebContents*)> callback);
+  static mate::Handle<WebContents> CreateFrom(
+      v8::Isolate* isolate, content::WebContents* web_contents, Type type);
 
   // Create a new WebContents.
   static mate::Handle<WebContents> Create(
       v8::Isolate* isolate, const mate::Dictionary& options);
 
-  // Create a new WebContents with CreateParams
   static mate::Handle<WebContents> CreateWithParams(
-      v8::Isolate* isolate,
-      const mate::Dictionary& options,
-      const content::WebContents::CreateParams& params);
+      v8::Isolate* isolate, const mate::Dictionary& options,
+      const content::WebContents::CreateParams& create_params);
 
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
+  void DestroyWebContents();
+
   int GetID() const;
   Type GetType() const;
+  int GetGuestInstanceId() const;
   bool Equal(const WebContents* web_contents) const;
   void LoadURL(const GURL& url, const mate::Dictionary& options);
   void Reload(bool ignore_cache);
@@ -262,13 +263,22 @@ class WebContents : public mate::TrackableObject<WebContents>,
   v8::Local<v8::Value> Debugger(v8::Isolate* isolate);
 
  protected:
-  WebContents(v8::Isolate* isolate, content::WebContents* web_contents);
+  WebContents(v8::Isolate* isolate,
+        content::WebContents* web_contents, Type type);
+  WebContents(v8::Isolate* isolate, const mate::Dictionary& options);
   WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
-              const content::WebContents::CreateParams* create_params = NULL);
+      const content::WebContents::CreateParams& create_params);
   ~WebContents();
 
+  void CreateWebContents(v8::Isolate* isolate,
+      const mate::Dictionary& options,
+      const content::WebContents::CreateParams& create_params);
+  void CompleteInit(v8::Isolate* isolate,
+      content::WebContents *web_contents,
+      const mate::Dictionary& options);
+
   void OnTabCreated(const mate::Dictionary& options,
-      base::Callback<void(WebContents*)> callback,
+      base::Callback<void(content::WebContents*)> callback,
       content::WebContents* tab);
   void AuthorizePlugin(mate::Arguments* args);
 
@@ -433,21 +443,12 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // Request id used for findInPage request.
   uint32_t request_id_;
 
-  // When a new tab is created asynchronously, stores the LoadURLParams
-  // needed to continue loading the page once the tab is ready.
-  std::unique_ptr<content::NavigationController::LoadURLParams>
-    delayed_load_url_params_;
-
   // Whether to enable devtools.
   bool enable_devtools_;
 
   bool is_being_destroyed_;
 
   guest_view::GuestViewBase* guest_delegate_;  // not owned
-
-  // When a new tab is created asynchronously, stores the OpenURLParams needed
-  // to continue loading the page once the tab is ready.
-  std::unique_ptr<content::OpenURLParams> delayed_open_url_params_;
 
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
   DISALLOW_COPY_AND_ASSIGN(WebContents);

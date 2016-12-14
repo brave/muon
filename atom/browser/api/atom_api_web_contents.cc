@@ -42,6 +42,7 @@
 #include "atom/common/options_switches.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_browser_context.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
@@ -55,7 +56,6 @@
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
-#include "components/guest_view/browser/guest_view_manager_delegate.h"
 #include "components/zoom/page_zoom.h"
 #include "components/zoom/zoom_controller.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
@@ -303,121 +303,109 @@ void OnCapturePageDone(base::Callback<void(const gfx::Image&)> callback,
 }  // namespace
 
 WebContents::WebContents(v8::Isolate* isolate,
-                         content::WebContents* web_contents)
+                         content::WebContents* web_contents,
+                         Type type)
     : content::WebContentsObserver(web_contents),
-      type_(REMOTE),
+      type_(type),
       request_id_(0),
       enable_devtools_(true),
       is_being_destroyed_(false),
       guest_delegate_(nullptr) {
-  web_contents->SetUserAgentOverride(GetBrowserContext()->GetUserAgent());
-
-  Init(isolate);
-  AttachAsUserData(web_contents);
+  if (type == REMOTE) {
+    web_contents->SetUserAgentOverride(GetBrowserContext()->GetUserAgent());
+    Init(isolate);
+    AttachAsUserData(web_contents);
+  } else {
+    const mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
+    auto session = Session::CreateFrom(isolate, GetBrowserContext());
+    session_.Reset(isolate, session.ToV8());
+    CompleteInit(isolate, web_contents, options);
+  }
 }
 
-WebContents::WebContents(v8::Isolate* isolate,
-                         const mate::Dictionary& options,
-                         const content::WebContents::CreateParams*
-                             create_params)
+WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
+    const content::WebContents::CreateParams& create_params)
+  : type_(BROWSER_WINDOW),
+    request_id_(0),
+    enable_devtools_(true),
+    is_being_destroyed_(false),
+    guest_delegate_(nullptr) {
+  CreateWebContents(isolate, options, create_params);
+}
+
+WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options)
     : type_(BROWSER_WINDOW),
       request_id_(0),
       enable_devtools_(true),
       is_being_destroyed_(false),
       guest_delegate_(nullptr) {
-  // Read options.
-  // FIXME(zcbenz): We should read "type" parameter for better design, but
-  // on Windows we have encountered a compiler bug that if we read "type"
-  // from |options| and then set |type_|, a memory corruption will happen
-  // and Electron will soon crash.
-  // Remvoe this after we upgraded to use VS 2015 Update 3.
-  bool b = false;
-  if (options.Get("isGuest", &b) && b)
-    type_ = WEB_VIEW;
-  else if (options.Get("isBackgroundPage", &b) && b)
-    type_ = BACKGROUND_PAGE;
-
-  // Whether to enable DevTools.
-  options.Get("devTools", &enable_devtools_);
+  mate::Handle<api::Session> session;
 
   // Obtain the session.
   std::string partition;
-  mate::Handle<api::Session> session;
-  if (options.Get("session", &session)) {
+  if (options.Get("partition", &session)) {
   } else if (options.Get("partition", &partition)) {
     session = Session::FromPartition(isolate, partition);
   } else {
     // Use the default session if not specified.
     session = Session::FromPartition(isolate, "");
   }
+  content::WebContents::CreateParams create_params(session->browser_context());
+  CreateWebContents(isolate, options, create_params);
+}
+
+WebContents::~WebContents() {
+  // The WebContentsDestroyed will not be called automatically because we
+  // unsubscribe from webContents before destroying it. So we have to manually
+  // call it here to make sure "destroyed" event is emitted.
+  WebContentsDestroyed();
+}
+
+void WebContents::CreateWebContents(v8::Isolate* isolate,
+    const mate::Dictionary& options,
+    const content::WebContents::CreateParams& create_params) {
+  content::WebContents::CreateParams params(create_params);
+  content::BrowserContext* browser_context = params.browser_context;
+
+  auto session = Session::CreateFrom(isolate,
+      static_cast<brave::BraveBrowserContext*>(params.browser_context));
   session_.Reset(isolate, session.ToV8());
 
-  content::WebContents* web_contents;
-  content::BrowserContext* browser_context = session->browser_context();
-
-  content::WebContents::CreateParams params(create_params
-      ? *create_params
-      : content::WebContents::CreateParams(browser_context));
-
-  if (IsGuest()) {
-#if defined(ENABLE_EXTENSIONS)
-    GuestViewManager* guest_view_manager =
-        GuestViewManager::FromBrowserContext(browser_context);
-    if (!guest_view_manager) {
-      GuestViewManager::CreateWithDelegate(
-          browser_context,
-          ExtensionsAPIClient::Get()->CreateGuestViewManagerDelegate(
-              browser_context));
-    }
-#endif
-    if (!params.guest_delegate) {
-      guest_view::GuestViewBase* tab_view_guest;
-      WebContents* embedder;
-      if (options.Get("embedder", &embedder)) {
-        tab_view_guest = brave::TabViewGuest::Create(embedder->web_contents());
-      }
-
-      WebContents* opener;
-      if (options.Get("opener", &opener)) {
-        DCHECK(opener->IsGuest() && opener->HostWebContents());
-
-        if (!tab_view_guest) {
-          tab_view_guest = brave::TabViewGuest::Create(
-              opener->HostWebContents());
-        }
-        tab_view_guest->SetOpener(opener->guest_delegate_);
-      }
-
-      DCHECK(tab_view_guest);
-      params.guest_delegate = tab_view_guest;
-    }
-    guest_delegate_ =
-        static_cast<guest_view::GuestViewBase*>(params.guest_delegate);
-  }
-  web_contents = content::WebContents::Create(params);
-
-  std::string delayed_load_url;
-  if (options.Get("delayedLoadUrl", &delayed_load_url)) {
-    delayed_open_url_params_.reset(
-        new content::OpenURLParams(
-          GURL(delayed_load_url), content::Referrer(), CURRENT_TAB,
-          ui::PAGE_TRANSITION_AUTO_TOPLEVEL, false));
+  bool b = false;
+  if (params.guest_delegate) {
+    type_ = WEB_VIEW;
   }
 
+  content::WebContents* web_contents = content::WebContents::Create(params);
+  CompleteInit(isolate, web_contents, options);
+}
+
+void WebContents::CompleteInit(v8::Isolate* isolate,
+    content::WebContents *web_contents,
+    const mate::Dictionary& options) {
   Observe(web_contents);
-  InitWithWebContents(web_contents, session->browser_context());
+
+  InitWithWebContents(web_contents, GetBrowserContext());
 
   managed_web_contents()->GetView()->SetDelegate(this);
 
   // Save the preferences in C++.
   new WebContentsPreferences(web_contents, options);
 
-  // Initialize zoom
-  zoom::ZoomController::CreateForWebContents(web_contents);
   // Intialize permission helper.
   WebContentsPermissionHelper::CreateForWebContents(web_contents);
   // Intialize security state client.
   AtomSecurityStateModelClient::CreateForWebContents(web_contents);
+
+  web_contents->SetUserAgentOverride(GetBrowserContext()->GetUserAgent());
+
+  // Intialize permission helper.
+  WebContentsPermissionHelper::CreateForWebContents(web_contents);
+  // Intialize security state client.
+  AtomSecurityStateModelClient::CreateForWebContents(web_contents);
+
+  // Initialize zoom
+  zoom::ZoomController::CreateForWebContents(web_contents);
   brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
   // Initialize autofill client
   autofill::AtomAutofillClient::CreateForWebContents(web_contents);
@@ -429,23 +417,12 @@ WebContents::WebContents(v8::Isolate* isolate,
       autofill::AtomAutofillClient::FromWebContents(web_contents),
       locale,
       autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
-  web_contents->SetUserAgentOverride(GetBrowserContext()->GetUserAgent());
 
   Init(isolate);
   AttachAsUserData(web_contents);
 
   memory_pressure_listener_.reset(new base::MemoryPressureListener(
       base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
-}
-
-WebContents::~WebContents() {
-  // The destroy() is called.
-  if (managed_web_contents()) {
-    // The WebContentsDestroyed will not be called automatically because we
-    // unsubscribe from webContents before destroying it. So we have to manually
-    // call it here to make sure "destroyed" event is emitted.
-    WebContentsDestroyed();
-  }
 }
 
 bool WebContents::AddMessageToConsole(content::WebContents* source,
@@ -497,24 +474,13 @@ void WebContents::WebContentsCreated(content::WebContents* source_contents,
                                 const std::string& frame_name,
                                 const GURL& target_url,
                                 content::WebContents* new_contents) {
-  ProtocolHandlerRegistry* registry =
-      ProtocolHandlerRegistryFactory::GetForBrowserContext(GetBrowserContext());
-  GURL translated_url = registry->TranslateUrl(target_url);
-
   if (guest_delegate_) {
     guest_delegate_->WebContentsCreated(source_contents,
                                         opener_render_frame_id,
                                         frame_name,
-                                        translated_url,
+                                        target_url,
                                         new_contents);
   }
-
-  v8::Locker locker(isolate());
-  v8::HandleScope handle_scope(isolate());
-
-  content::NavigationController::LoadURLParams load_url_params(translated_url);
-  CreateFrom(isolate(), new_contents)->delayed_load_url_params_.reset(
-    new content::NavigationController::LoadURLParams(load_url_params));
 }
 
 void WebContents::AddNewContents(content::WebContents* source,
@@ -523,43 +489,8 @@ void WebContents::AddNewContents(content::WebContents* source,
                     const gfx::Rect& initial_rect,
                     bool user_gesture,
                     bool* was_blocked) {
-  v8::Locker locker(isolate());
-  v8::HandleScope handle_scope(isolate());
-
-  auto source_api_contents = CreateFrom(isolate(), source);
-  auto new_api_contents = CreateFrom(isolate(), new_contents);
-
-  if (source_api_contents->GetType() == BACKGROUND_PAGE) {
+  if (Extension::IsBackgroundPageWebContents(source)) {
     user_gesture = true;
-  }
-
-  std::unique_ptr<base::DictionaryValue> options(new base::DictionaryValue);
-  options->SetString("openerUrl", source_api_contents->GetURL().spec());
-  options->SetInteger("openerTabId", source_api_contents->GetID());
-  options->SetBoolean("userGesture", user_gesture);
-
-  auto url_params = new_api_contents->delayed_load_url_params_.get();
-  if (url_params) {
-    options->SetString("delayedLoadUrl", url_params->url.spec());
-    new_api_contents->
-        delayed_load_url_params_.reset(nullptr);
-  }
-
-  brave::TabViewGuest* guest =
-        brave::TabViewGuest::FromWebContents(new_contents);
-  if (guest) {
-    options->SetInteger(atom::options::kGuestInstanceID,
-        guest->guest_instance_id());
-  }
-
-  if (disposition == NEW_POPUP || disposition == NEW_WINDOW) {
-    std::unique_ptr<base::DictionaryValue> window_options(
-                                                    new base::DictionaryValue);
-    window_options->SetInteger("height", initial_rect.height());
-    window_options->SetInteger("width", initial_rect.width());
-    window_options->SetInteger("x", initial_rect.x());
-    window_options->SetInteger("y", initial_rect.y());
-    options->Set("windowOptions", std::move(window_options));
   }
 
   node::Environment* env = node::Environment::GetCurrent(isolate());
@@ -577,6 +508,7 @@ void WebContents::AddNewContents(content::WebContents* source,
                   source,
                   new_contents,
                   disposition,
+                  initial_rect,
                   user_gesture);
   bool blocked = event->Get(
       mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
@@ -585,13 +517,7 @@ void WebContents::AddNewContents(content::WebContents* source,
     *was_blocked = blocked;
 
   if (blocked) {
-    if (guest) {
-      guest->Destroy();
-    } else {
-      new_api_contents->DestroyWebContents();
-    }
-  } else {
-    Emit("new-window", "about:blank", "", disposition, *options);
+    delete new_contents;
   }
 }
 
@@ -624,17 +550,8 @@ void WebContents::AutofillPopupHidden() {
 content::WebContents* WebContents::OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) {
-  ProtocolHandlerRegistry* registry =
-    ProtocolHandlerRegistryFactory::GetForBrowserContext(GetBrowserContext());
-  GURL translated_url = registry->TranslateUrl(params.url);
-
-  if (params.disposition != CURRENT_TAB) {
-    Emit("new-window", translated_url, "", params.disposition);
-    return nullptr;
-  }
-
-  if (guest_delegate_ && !guest_delegate_->OpenURLFromTab(source, params))
-    return nullptr;
+  if (guest_delegate_)
+    return guest_delegate_->OpenURLFromTab(source, params);
 
   CommonWebContentsDelegate::OpenURLFromTab(source, params);
 
@@ -1023,6 +940,11 @@ void WebContents::DevToolsFocused() {
 void WebContents::DevToolsOpened() {
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
+
+  if (!managed_web_contents() ||
+      !managed_web_contents()->GetDevToolsWebContents())
+    return;
+
   auto handle = WebContents::CreateFrom(
       isolate(), managed_web_contents()->GetDevToolsWebContents());
   devtools_web_contents_.Reset(isolate(), handle.ToV8());
@@ -1062,6 +984,14 @@ bool WebContents::OnMessageReceived(const IPC::Message& message) {
   return handled;
 }
 
+void WebContents::DestroyWebContents() {
+  if (guest_delegate_) {
+    guest_delegate_->Destroy();
+  } else {
+    delete web_contents();
+  }
+}
+
 // There are three ways of destroying a webContents:
 // 1. call webContents.destroy();
 // 2. garbage collection;
@@ -1080,28 +1010,14 @@ void WebContents::WebContentsDestroyed() {
 
   is_being_destroyed_ = true;
 
-  // For webview we need to tell content module to do some cleanup work before
-  // destroying it.
-  if (type_ == WEB_VIEW && guest_delegate_)
-    guest_delegate_->Destroy();
-  guest_delegate_ = nullptr;
+  CommonWebContentsDelegate::DestroyWebContents();
 
-  if (managed_web_contents()) {
-    managed_web_contents()->SetDelegate(nullptr);
-    static_cast<brightray::InspectableWebContentsImpl*>(
-        managed_web_contents())->WebContentsDestroyed();
-  }
-
-  RenderViewDeleted(web_contents()->GetRenderViewHost());
-
-  memory_pressure_listener_.reset();
   // clear out fullscreen state
   if (CommonWebContentsDelegate::IsFullscreenForTabOrPending(web_contents())) {
     ExitFullscreenModeForTab(web_contents());
   }
 
-  if (g_browser_process->IsShuttingDown())
-    return;
+  memory_pressure_listener_.reset();
 
   // This event is only for internal use, which is emitted when WebContents is
   // being destroyed.
@@ -1142,6 +1058,16 @@ WebContents::Type WebContents::GetType() const {
   return type_;
 }
 
+int WebContents::GetGuestInstanceId() const {
+  brave::TabViewGuest* guest =
+        brave::TabViewGuest::FromWebContents(web_contents());
+  if (guest) {
+    return guest->guest_instance_id();
+  } else {
+    return -1;
+  }
+}
+
 bool WebContents::Equal(const WebContents* web_contents) const {
   return ID() == web_contents->ID();
 }
@@ -1156,16 +1082,7 @@ void WebContents::Reload(bool ignore_cache) {
 }
 
 void WebContents::ResumeLoadingCreatedWebContents() {
-  if (delayed_open_url_params_.get()) {
-    if (delayed_open_url_params_->url ==
-        web_contents()->GetLastCommittedURL()) {
-      web_contents()->GetController().LoadIfNecessary();
-    } else {
-      OpenURLFromTab(web_contents(), *delayed_open_url_params_.get());
-    }
-    delayed_open_url_params_.reset(nullptr);
-  }
-  GetWebContents()->ResumeLoadingCreatedWebContents();
+  web_contents()->ResumeLoadingCreatedWebContents();
 }
 
 void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
@@ -1197,20 +1114,6 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   params.transition_type = ui::PAGE_TRANSITION_TYPED;
   params.override_user_agent = content::NavigationController::UA_OVERRIDE_TRUE;
   web_contents()->GetController().LoadURLWithParams(params);
-
-  // Set the background color of RenderWidgetHostView.
-  // We have to call it right after LoadURL because the RenderViewHost is only
-  // created after loading a page.
-  const auto view = web_contents()->GetRenderWidgetHostView();
-  WebContentsPreferences* web_preferences =
-      WebContentsPreferences::FromWebContents(web_contents());
-  std::string color_name;
-  if (web_preferences->web_preferences()->GetString(options::kBackgroundColor,
-                                                    &color_name)) {
-    view->SetBackgroundColor(ParseHexColor(color_name));
-  } else {
-    view->SetBackgroundColor(SK_ColorTRANSPARENT);
-  }
 }
 
 void WebContents::DownloadURL(const GURL& url) {
@@ -1657,15 +1560,10 @@ mate::Handle<WebContents> WebContents::Clone(const mate::Dictionary& options) {
     cloneOptions.Set("session", session);
   }
 
-  GURL delayed_load_url;
-  if (!cloneOptions.Get("delayedLoadUrl", &delayed_load_url)) {
-    cloneOptions.Set("delayedLoadUrl", GetURL());
-  }
-
   content::WebContents::CreateParams create_params(
       session->browser_context(),
       web_contents()->GetSiteInstance());
-  auto clone = new WebContents(isolate(), cloneOptions, &create_params);
+  auto clone = new WebContents(isolate(), cloneOptions, create_params);
   clone->web_contents()->GetController().CopyStateFrom(
       web_contents()->GetController());
 
@@ -1931,9 +1829,8 @@ v8::Local<v8::Value> WebContents::Session(v8::Isolate* isolate) {
 }
 
 content::WebContents* WebContents::HostWebContents() {
-  if (guest_delegate_ && guest_delegate_->attached()) {
+  if (guest_delegate_)
     return guest_delegate_->embedder_web_contents();
-  }
   return nullptr;
 }
 
@@ -2065,6 +1962,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
       .SetProperty("session", &WebContents::Session)
+      .SetProperty("guestInstanceId", &WebContents::GetGuestInstanceId)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
       .SetProperty("devToolsWebContents", &WebContents::DevToolsWebContents)
       .SetProperty("debugger", &WebContents::Debugger);
@@ -2094,80 +1992,80 @@ mate::Handle<WebContents> WebContents::FromTabID(v8::Isolate* isolate,
       extensions::TabHelper::GetTabById(tab_id));
 }
 
-// static
-mate::Handle<WebContents> WebContents::CreateFrom(
-    v8::Isolate* isolate, content::WebContents* web_contents) {
-  if (!web_contents)
-    return mate::Handle<WebContents>();
-
-  // We have an existing WebContents object in JS.
-  auto existing = TrackableObject::FromWrappedClass(isolate, web_contents);
-  if (existing)
-    return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
-
-  // Otherwise create a new WebContents wrapper object.
-  return mate::CreateHandle(isolate, new WebContents(isolate, web_contents));
-}
-
 void WebContents::OnTabCreated(const mate::Dictionary& options,
-    base::Callback<void(WebContents*)> callback,
+    base::Callback<void(content::WebContents*)> callback,
     content::WebContents* tab) {
-  std::string src = "about:blank";
-  options.Get("src", &src);
+  bool active = true;
+  options.Get("active", &active);
 
-  WebContentsCreated(web_contents(),
-                            -1,
-                            "",
-                            GURL(src),
-                            tab);
+  bool user_gesture = false;
+  options.Get("userGesture", &user_gesture);
 
   bool was_blocked = false;
   AddNewContents(web_contents(),
                     tab,
-                    NEW_FOREGROUND_TAB,
+                    active ? NEW_FOREGROUND_TAB : NEW_BACKGROUND_TAB,
                     gfx::Rect(),
-                    true,
+                    user_gesture,
                     &was_blocked);
 
   if (was_blocked)
     callback.Run(nullptr);
   else
-    callback.Run(WebContents::CreateFrom(isolate(), tab).get());
+    callback.Run(tab);
 }
 
 // static
-void WebContents::CreateTab(v8::Isolate* isolate,
-    const mate::Dictionary& options,
-    base::Callback<void(WebContents*)> callback) {
-  WebContents* owner;
-  if (!options.Get("owner", &owner)) {
-    callback.Run(nullptr);
+void WebContents::CreateTab(mate::Arguments* args) {
+  std::string error;
+
+  if (args->Length() != 4) {
+    args->ThrowError("Wrong number of arguments");
     return;
   }
 
-  std::string partition;
-  mate::Handle<api::Session> session;
-  if (options.Get("partition", &partition)) {
-    session = Session::FromPartition(isolate, partition);
-  } else {
-    session = Session::FromPartition(isolate, "");
+  WebContents* owner;
+  if (!args->GetNext(&owner)) {
+    args->ThrowError("`owner` is a required field");
+    return;
   }
-  auto guest_view_manager = guest_view::GuestViewManager::FromBrowserContext(
-      session->browser_context());
 
-  // if (!guest_view_manager) {
-  //   guest_view_manager = GuestViewManager::CreateWithDelegate(
-  //       session->browser_context(),
-  //       ExtensionsAPIClient::Get()->CreateGuestViewManagerDelegate(
-  //           session->browser_context()));
-  // }
+  WebContents* opener;
+  if (!args->GetNext(&opener)) {
+    args->ThrowError("`opener` is a required field");
+    return;
+  }
 
-  std::string src = "about:blank";
-  options.Get("src", &src);
+  mate::Dictionary options;
+  if (!args->GetNext(&options)) {
+    args->ThrowError("`options` is a required field");
+    return;
+  }
+
+  base::Callback<void(content::WebContents*)> callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback` is a required field");
+    return;
+  }
+
+  auto browser_context = owner->GetBrowserContext();
+
+  auto guest_view_manager =
+      static_cast<GuestViewManager*>(browser_context->GetGuestManager());
+
+  if (!guest_view_manager) {
+    args->ThrowError("No guest view manager");
+    return;
+  }
 
   base::DictionaryValue create_params;
-  create_params.SetString("partition", partition);
-  create_params.SetString("src", src);
+  std::string src;
+  if (options.Get("src", &src) || options.Get("url", &src)) {
+    create_params.SetString("src", src);
+  }
+  create_params.SetString("partition",
+      static_cast<brave::BraveBrowserContext*>(
+            opener->GetBrowserContext())->partition());
 
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
       owner->web_contents(),
@@ -2177,18 +2075,48 @@ void WebContents::CreateTab(v8::Isolate* isolate,
 }
 
 // static
+mate::Handle<WebContents> WebContents::CreateFrom(
+    v8::Isolate* isolate, content::WebContents* web_contents) {
+  if (!web_contents) {
+    return mate::Handle<WebContents>();
+  }
+  // We have an existing WebContents object in JS.
+  auto existing = TrackableObject::FromWrappedClass(isolate, web_contents);
+  if (existing)
+    return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
+
+  // Otherwise create a new WebContents wrapper object.
+  return mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
+        REMOTE));
+}
+
+mate::Handle<WebContents> WebContents::CreateFrom(
+    v8::Isolate* isolate, content::WebContents* web_contents, Type type) {
+  if (!web_contents) {
+    return mate::Handle<WebContents>();
+  }
+
+  // We have an existing WebContents object in JS.
+  auto existing = TrackableObject::FromWrappedClass(isolate, web_contents);
+  if (existing)
+    return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
+
+  // Otherwise create a new WebContents wrapper object.
+  return mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
+        type));
+}
+
+// static
 mate::Handle<WebContents> WebContents::Create(
     v8::Isolate* isolate, const mate::Dictionary& options) {
   return mate::CreateHandle(isolate, new WebContents(isolate, options));
 }
 
-// static
 mate::Handle<WebContents> WebContents::CreateWithParams(
-    v8::Isolate* isolate,
-    const mate::Dictionary& options,
-    const content::WebContents::CreateParams& params) {
+    v8::Isolate* isolate, const mate::Dictionary& options,
+    const content::WebContents::CreateParams& create_params) {
   return mate::CreateHandle(isolate,
-                                  new WebContents(isolate, options, &params));
+      new WebContents(isolate, options, create_params));
 }
 
 }  // namespace api
@@ -2205,7 +2133,7 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   mate::Dictionary dict(isolate, exports);
   dict.Set("WebContents", WebContents::GetConstructor(isolate)->GetFunction());
   dict.SetMethod("create", &WebContents::Create);
-  dict.SetMethod("_createTab", &WebContents::CreateTab);
+  dict.SetMethod("createTab", &WebContents::CreateTab);
   dict.SetMethod("fromTabID", &WebContents::FromTabID);
   dict.SetMethod("fromId", &mate::TrackableObject<WebContents>::FromWeakMapID);
   dict.SetMethod("getAllWebContents",
