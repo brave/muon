@@ -148,12 +148,7 @@ URLRequestContextGetter::URLRequestContextGetter(
       io_loop_->task_runner(), file_loop_->task_runner());
 }
 
-URLRequestContextGetter::~URLRequestContextGetter() {
-  // NotifyContextShuttingDown() must have been called.
-  DCHECK(!network_delegate_.get());
-  DCHECK(!url_request_context_.get());
-  DCHECK(!storage_.get());
-}
+URLRequestContextGetter::~URLRequestContextGetter() {}
 
 void URLRequestContextGetter::NotifyContextShuttingDown() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
@@ -164,14 +159,14 @@ void URLRequestContextGetter::NotifyContextShuttingDown() {
     net::SetURLRequestContextForNSSHttpIO(NULL);
   #endif
 
-  network_delegate_.reset();
-  url_request_context_.reset();
-  storage_.reset();
-
   net::URLRequestContextGetter::NotifyContextShuttingDown();
 }
 
 net::HostResolver* URLRequestContextGetter::host_resolver() {
+  if (shutting_down_) {
+    return NULL;
+  }
+
   return url_request_context_->host_resolver();
 }
 
