@@ -246,6 +246,7 @@ InspectableWebContentsImpl::InspectableWebContentsImpl(
 }
 
 InspectableWebContentsImpl::~InspectableWebContentsImpl() {
+  WebContentsDestroyed();
   view_.reset(nullptr);
   Observe(nullptr);
   web_contents_ = nullptr;
