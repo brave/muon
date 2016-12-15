@@ -59,12 +59,17 @@ const asyncMethods = [
 ]
 
 const syncMethods = [
+  'getEntryCount',
+  'getCurrentEntryIndex',
+  'getURLAtIndex',
+  'getTitleAtIndex',
+  'getId',
+  'isFocused',
   'getZoomPercent',
   'getURL',
   'canGoBack',
   'canGoForward',
   'getWebRTCIPHandlingPolicy',
-  'getWebContents',
   'isDevToolsOpened',
   'getPreferredSize',
 ]
