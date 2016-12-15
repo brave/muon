@@ -201,7 +201,7 @@
           }],
         ],
       }],
-      ['_target_name=="boringssl"', {
+      ['_target_name=="openssl"', {
         'xcode_settings': {
           'DEAD_CODE_STRIPPING': 'YES',  # -Wl,-dead_strip
           'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES',

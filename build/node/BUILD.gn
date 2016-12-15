@@ -30,7 +30,6 @@ source_set("node") {
   public_deps = [
     ":build_node",
     "//v8:v8",
-    "//third_party/boringssl:boringssl",
   ]
 }
 
