@@ -550,12 +550,29 @@ void WebContents::AutofillPopupHidden() {
 content::WebContents* WebContents::OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) {
-  if (guest_delegate_)
-    return guest_delegate_->OpenURLFromTab(source, params);
+  if (guest_delegate_ && !guest_delegate_->OpenURLFromTab(source, params))
+    return nullptr;
 
-  CommonWebContentsDelegate::OpenURLFromTab(source, params);
+  if (params.disposition == CURRENT_TAB) {
+    CommonWebContentsDelegate::OpenURLFromTab(source, params);
+    return source;
+  }
 
-  return source;
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env)
+    return nullptr;
+
+  auto event = v8::Local<v8::Object>::Cast(
+      mate::Event::Create(isolate()).ToV8());
+
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "open-url-from-tab",
+                  event,
+                  source,
+                  params.url);
+
+  return nullptr;
 }
 
 void WebContents::BeforeUnloadFired(content::WebContents* tab,
@@ -1597,6 +1614,9 @@ void WebContents::Clone(mate::Arguments* args) {
 void WebContents::SetActive(bool active) {
   if (Emit("set-active", active))
     return;
+
+  if (active)
+    web_contents()->WasShown();
 
 #if defined(ENABLE_EXTENSIONS)
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());

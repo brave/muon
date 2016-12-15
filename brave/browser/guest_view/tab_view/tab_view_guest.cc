@@ -99,8 +99,8 @@ WebContents* TabViewGuest::OpenURLFromTab(
       NewWindowInfo new_window_info(params.url, info.name);
       new_window_info.changed = new_window_info.url != info.url;
       it->second = new_window_info;
+      return nullptr;
     }
-    return nullptr;
   }
 
   // let the api_web_contents navigate
@@ -238,18 +238,18 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
+  api_web_contents_->ResumeLoadingCreatedWebContents();
+
   web_contents()->WasHidden();
   web_contents()->WasShown();
 
-  api_web_contents_->Emit("did-attach");
-
   ApplyAttributes(*attach_params());
-
-  api_web_contents_->ResumeLoadingCreatedWebContents();
 
   if (web_contents()->GetController().IsInitialNavigation()) {
     web_contents()->GetController().LoadIfNecessary();
   }
+
+  api_web_contents_->Emit("did-attach");
 }
 
 bool TabViewGuest::ZoomPropagatesFromEmbedderToGuest() const {
