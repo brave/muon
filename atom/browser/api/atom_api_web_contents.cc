@@ -2030,9 +2030,9 @@ void WebContents::CreateTab(mate::Arguments* args) {
     return;
   }
 
-  WebContents* opener;
-  if (!args->GetNext(&opener)) {
-    args->ThrowError("`opener` is a required field");
+  mate::Handle<api::Session> session;
+  if (!args->GetNext(&session)) {
+    args->ThrowError("`session` is a required field");
     return;
   }
 
@@ -2048,7 +2048,7 @@ void WebContents::CreateTab(mate::Arguments* args) {
     return;
   }
 
-  auto browser_context = owner->GetBrowserContext();
+  auto browser_context = session->browser_context();
 
   auto guest_view_manager =
       static_cast<GuestViewManager*>(browser_context->GetGuestManager());
@@ -2065,7 +2065,7 @@ void WebContents::CreateTab(mate::Arguments* args) {
   }
   create_params.SetString("partition",
       static_cast<brave::BraveBrowserContext*>(
-            opener->GetBrowserContext())->partition());
+            browser_context)->partition());
 
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
       owner->web_contents(),
