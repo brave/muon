@@ -19,6 +19,7 @@
 #include "content/public/browser/child_process_security_policy.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
+#include "ui/message_center/message_center.h"
 
 #if defined(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
@@ -58,14 +59,20 @@ BrowserProcess::BrowserProcess()
 
   extension_event_router_forwarder_ = new extensions::EventRouterForwarder;
 
-  extensions::ExtensionsClient::Set(new extensions::ChromeExtensionsClient());
+  extensions::ExtensionsClient::Set(
+      extensions::ChromeExtensionsClient::GetInstance());
   extensions_browser_client_.reset(
       new extensions::AtomExtensionsBrowserClient());
   extensions::ExtensionsBrowserClient::Set(extensions_browser_client_.get());
 #endif
+
+  message_center::MessageCenter::Initialize();
 }
 
 BrowserProcess::~BrowserProcess() {
+#if defined(ENABLE_EXTENSIONS)
+  extensions::ExtensionsBrowserClient::Set(nullptr);
+#endif
   g_browser_process = NULL;
 }
 
@@ -128,6 +135,10 @@ BrowserProcess::extension_event_router_forwarder() {
 void BrowserProcess::StartTearDown() {
   tearing_down_ = true;
   print_job_manager_->Shutdown();
+
+  profile_manager_.reset();
+
+  message_center::MessageCenter::Shutdown();
 }
 
 std::string BrowserProcess::GetApplicationLocale() {

@@ -216,10 +216,10 @@ bool BraveBrowserContext::HasParentContext() {
 }
 
 BraveBrowserContext* BraveBrowserContext::original_context() {
-  if (!IsOffTheRecord() && !HasParentContext()) {
-    return this;
+  if (original_context_) {
+    return original_context_.get();
   }
-  return original_context_.get();;
+  return this;
 }
 
 BraveBrowserContext* BraveBrowserContext::otr_context() {

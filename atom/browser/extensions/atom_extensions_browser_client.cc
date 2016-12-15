@@ -306,7 +306,11 @@ content::BrowserContext* AtomExtensionsBrowserClient::GetOriginalContext(
 
 bool AtomExtensionsBrowserClient::IsGuestSession(
     content::BrowserContext* context) const {
-  return false;
+  // return true for sub-contexts so the process manager original context
+  // will match the extension registry context
+  auto original_context =
+      static_cast<brave::BraveBrowserContext*>(context)->original_context();
+  return !context->IsOffTheRecord() && (context != original_context);
 }
 
 // static
