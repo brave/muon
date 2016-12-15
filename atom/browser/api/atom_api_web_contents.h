@@ -122,6 +122,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
+  void Clone(mate::Arguments* args);
+
   void DestroyWebContents();
 
   int GetID() const;
@@ -201,7 +203,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void StopFindInPage(content::StopFindAction action);
   void ShowDefinitionForSelection();
   void CopyImageAt(int x, int y);
-  mate::Handle<WebContents> Clone(const mate::Dictionary& options);
 
   // Focus.
   bool IsFocused() const;
@@ -280,6 +281,11 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void OnTabCreated(const mate::Dictionary& options,
       base::Callback<void(content::WebContents*)> callback,
       content::WebContents* tab);
+
+  void OnCloneCreated(const mate::Dictionary& options,
+      base::Callback<void(content::WebContents*)> callback,
+      content::WebContents* clone);
+
   void AuthorizePlugin(mate::Arguments* args);
 
   // content::WebContentsDelegate:

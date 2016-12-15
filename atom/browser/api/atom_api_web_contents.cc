@@ -1538,43 +1538,60 @@ bool WebContents::IsFocused() const {
 }
 #endif
 
-mate::Handle<WebContents> WebContents::Clone(const mate::Dictionary& options) {
+void WebContents::OnCloneCreated(const mate::Dictionary& options,
+    base::Callback<void(content::WebContents*)> callback,
+    content::WebContents* clone) {
+
+  clone->GetController().CopyStateFrom(web_contents()->GetController());
+}
+
+void WebContents::Clone(mate::Arguments* args) {
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
 
-  mate::Dictionary cloneOptions(options);
+  mate::Dictionary options;
 
-  int guest_instance_id = -1;
-  if (IsGuest()) {
-    cloneOptions.Set("isGuest", true);
-    // cloneOptions.Set("embedder", embedder_);
-    // guest_instance_id = guest_delegate_->GetNextInstanceId();
-    // cloneOptions.Set(options::kGuestInstanceID, guest_instance_id);
+  if (!args->PeekNext()->IsFunction()) {
+    if (!args->GetNext(&options)) {
+      args->ThrowError("Invalid argument `options`");
+      return;
+    }
+  } else {
+    options = mate::Dictionary::CreateEmpty(isolate());
   }
 
-  mate::Handle<api::Session> session;
-  if (!cloneOptions.Get("session", &session)) {
-    session = atom::api::Session::CreateFrom(isolate(),
-        static_cast<AtomBrowserContext*>(
-            web_contents()->GetBrowserContext()));
-    cloneOptions.Set("session", session);
+  base::Callback<void(content::WebContents*)> callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback` is a required field");
+    return;
   }
 
-  content::WebContents::CreateParams create_params(
-      session->browser_context(),
-      web_contents()->GetSiteInstance());
-  auto clone = new WebContents(isolate(), cloneOptions, create_params);
-  clone->web_contents()->GetController().CopyStateFrom(
-      web_contents()->GetController());
+  if (!IsGuest()) {
+    callback.Run(nullptr);
+    return;
+  }
 
-  auto handle = mate::CreateHandle(
-      isolate(), clone);
+  base::DictionaryValue create_params;
+  create_params.SetString("partition",
+      static_cast<brave::BraveBrowserContext*>(
+          GetBrowserContext())->partition());
 
-  // if (IsGuest()) {
-  //   guest_delegate_->RegisterGuest(handle, guest_instance_id);
-  // }
+  auto guest_view_manager =
+      static_cast<GuestViewManager*>(GetBrowserContext()->GetGuestManager());
 
-  return handle;
+  if (!guest_view_manager) {
+    callback.Run(nullptr);
+    return;
+  }
+
+  options.Set("userGesture", true);
+
+  guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
+      HostWebContents(),
+      create_params,
+      base::Bind(&WebContents::OnTabCreated, base::Unretained(this), options,
+        base::Bind(&WebContents::OnCloneCreated, base::Unretained(this),
+            options, callback)));
 }
 
 void WebContents::SetActive(bool active) {
@@ -1911,7 +1928,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("findInPage", &WebContents::FindInPage)
       .SetMethod("stopFindInPage", &WebContents::StopFindInPage)
       .SetMethod("isFocused", &WebContents::IsFocused)
-      .SetMethod("clone", &WebContents::Clone)
+      .SetMethod("_clone", &WebContents::Clone)
       .SetMethod("_send", &WebContents::SendIPCMessage)
       .SetMethod("sendInputEvent", &WebContents::SendInputEvent)
       .SetMethod("startDrag", &WebContents::StartDrag)
@@ -2017,8 +2034,6 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
 // static
 void WebContents::CreateTab(mate::Arguments* args) {
-  std::string error;
-
   if (args->Length() != 4) {
     args->ThrowError("Wrong number of arguments");
     return;

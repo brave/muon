@@ -237,13 +237,19 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
+
+  web_contents()->WasHidden();
+  web_contents()->WasShown();
+
   api_web_contents_->Emit("did-attach");
 
   ApplyAttributes(*attach_params());
 
   api_web_contents_->ResumeLoadingCreatedWebContents();
-  web_contents()->WasHidden();
-  web_contents()->WasShown();
+
+  if (web_contents()->GetController().IsInitialNavigation()) {
+    web_contents()->GetController().LoadIfNecessary();
+  }
 }
 
 bool TabViewGuest::ZoomPropagatesFromEmbedderToGuest() const {
