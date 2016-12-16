@@ -86,7 +86,6 @@ void OverrideLinuxAppDataPath(base::FilePath & path) {
 
   if (brave::GetDefaultUserDataDirectory(&path))
     PathService::Override(DIR_APP_DATA, path);
-  return;
 }
 
 int BrowserX11ErrorHandler(Display* d, XErrorEvent* error) {
