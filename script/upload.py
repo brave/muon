@@ -12,7 +12,7 @@ import tempfile
 from io import StringIO
 from lib.config import PLATFORM, DIST_URL, get_target_arch, get_chromedriver_version, \
                        get_env_var, s3_config, get_zip_name, product_name, project_name, \
-                       SOURCE_ROOT, DIST_DIR, get_electron_version
+                       SOURCE_ROOT, dist_dir, get_electron_version
 from lib.util import execute, parse_version, scoped_cwd, s3put
 
 from lib.github import GitHub
@@ -66,18 +66,18 @@ def main():
     return
 
   # Upload Electron with GitHub Releases API.
-  upload_electron(github, release, os.path.join(DIST_DIR, DIST_NAME))
-  # upload_electron(github, release, os.path.join(DIST_DIR, SYMBOLS_NAME))
+  upload_electron(github, release, os.path.join(dist_dir(), DIST_NAME))
+  # upload_electron(github, release, os.path.join(dist_dir(), SYMBOLS_NAME))
   # if PLATFORM == 'darwin':
-  #   upload_electron(github, release, os.path.join(DIST_DIR, DSYM_NAME))
+  #   upload_electron(github, release, os.path.join(dist_dir(), DSYM_NAME))
   # elif PLATFORM == 'win32':
-  #   upload_electron(github, release, os.path.join(DIST_DIR, PDB_NAME))
+  #   upload_electron(github, release, os.path.join(dist_dir(), PDB_NAME))
 
   # Upload chromedriver and mksnapshot.
   chromedriver = get_zip_name('chromedriver', get_chromedriver_version())
-  upload_electron(github, release, os.path.join(DIST_DIR, chromedriver))
+  upload_electron(github, release, os.path.join(dist_dir(), chromedriver))
     # mksnapshot = get_zip_name('mksnapshot', get_electron_version())
-    # upload_electron(github, release, os.path.join(DIST_DIR, mksnapshot))
+    # upload_electron(github, release, os.path.join(dist_dir(), mksnapshot))
 
   # if PLATFORM == 'win32' and not tag_exists:
   #   # Upload PDBs to Windows symbol server.
@@ -113,7 +113,7 @@ def dist_newer_than_head():
     try:
       head_time = subprocess.check_output(['git', 'log', '--pretty=format:%at',
                                            '-n', '1']).strip()
-      dist_time = os.path.getmtime(os.path.join(DIST_DIR, DIST_NAME))
+      dist_time = os.path.getmtime(os.path.join(dist_dir(), DIST_NAME))
     except OSError as e:
       if e.errno != errno.ENOENT:
         raise
