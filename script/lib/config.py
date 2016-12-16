@@ -24,7 +24,7 @@ def dist_dir():
   return os.path.join(output_dir(), 'dist')
 
 def output_dir():
-  return get_target_arch() == 'x64' ? os.path.join(CHROMIUM_ROOT, 'out', 'Release') : os.path.join(CHROMIUM_ROOT, 'out', 'x86', 'Release')
+  return if (get_target_arch() == 'x64') os.path.join(CHROMIUM_ROOT, 'out', 'Release') else os.path.join(CHROMIUM_ROOT, 'out', 'x86', 'Release')
 
 def electron_package():
   pjson = os.path.join(SOURCE_ROOT, 'package.json')
