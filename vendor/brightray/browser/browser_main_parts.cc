@@ -80,17 +80,13 @@ bool g_in_x11_io_error_handler = false;
 // Number of seconds to wait for UI thread to get an IO error if we get it on
 // the background thread.
 const int kWaitForUIThreadSeconds = 10;
-
-bool OverrideLinuxAppDataPath() {
-  base::FilePath path;
+void OverrideLinuxAppDataPath(base::FilePath & path) {
   if (PathService::Get(DIR_APP_DATA, &path))
-    return true;
+    return;
 
-  if (brave::GetDefaultUserDataDirectory(&path)) {
+  if (brave::GetDefaultUserDataDirectory(&path))
     PathService::Override(DIR_APP_DATA, path);
-    return true;
-  }
-  return false;
+  return;
 }
 
 int BrowserX11ErrorHandler(Display* d, XErrorEvent* error) {
@@ -169,7 +165,9 @@ void BrowserMainParts::PreEarlyInitialization() {
 
 #if defined(USE_X11)
   views::LinuxUI::SetInstance(BuildGtk2UI());
-  if (OverrideLinuxAppDataPath()) {
+  base::FilePath path = base::FilePath();
+  OverrideLinuxAppDataPath(path);
+  if (path.empty()) {
     LOG(ERROR) << "Could not set linux app data path";
   }
 
