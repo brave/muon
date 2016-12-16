@@ -12,11 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),
                              "build"))
 import gn_helpers
 
-from lib.config import PLATFORM, SOURCE_ROOT, DIST_DIR, OUT_DIR, \
-                       get_target_arch, get_zip_name, \
-                       project_name, get_electron_version
-from lib.util import scoped_cwd, make_zip, \
-                     execute
+from lib.util import scoped_cwd, make_zip
 
 
 def main():

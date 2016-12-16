@@ -15,12 +15,16 @@ PLATFORM = {
 
 SOURCE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 CHROMIUM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-OUT_DIR = os.path.join(CHROMIUM_ROOT, 'out', 'Release')
-DIST_DIR = os.path.join(OUT_DIR, 'dist')
 DIST_URL = 'http://brave-laptop-binaries.s3.amazonaws.com/atom-shell/dist/'
 
 verbose_mode = False
 
+
+def dist_dir():
+  return os.path.join(output_dir(), 'dist')
+
+def output_dir():
+  return get_target_arch() == 'x64' ? os.path.join(CHROMIUM_ROOT, 'out', 'Release') : os.path.join(CHROMIUM_ROOT, 'out', 'x86', 'Release')
 
 def electron_package():
   pjson = os.path.join(SOURCE_ROOT, 'package.json')
