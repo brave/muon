@@ -4,7 +4,7 @@ const remote = require('remote')
 const WebViewInternal = {
   getWebContents: function (instanceId, cb) {
     if (!instanceId) {
-      return
+      cb()
     }
 
     TabViewInternal.getTabID(instanceId, (tabID) => {

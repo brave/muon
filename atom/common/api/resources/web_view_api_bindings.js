@@ -4,12 +4,11 @@
 
 // This module implements the public-facing API functions for the <webview> tag.
 
-const WebViewInternal = require('webViewInternal').WebViewInternal;
+const GuestViewInternal = require('guest-view-internal').GuestViewInternal
 const TabViewInternal = require('tabViewInternal').TabViewInternal;
+const WebViewInternal = require('webViewInternal').WebViewInternal;
 const WebViewImpl = require('webView').WebViewImpl;
 const remote = require('remote')
-const webFrameNatives = requireNative('webFrame')
-const GuestViewInternal = require('guest-view-internal').GuestViewInternal
 
 const asyncMethods = [
   'loadURL',
@@ -79,17 +78,6 @@ var WEB_VIEW_API_METHODS = [
   // Returns Chrome's internal process ID for the guest web page's current
   // process.
   'getProcessId',
-
-  // Gets the current zoom factor.
-  'getZoom',
-
-  // Gets the current zoom mode of the webview.
-  'getZoomMode',
-
-  // Changes the zoom factor of the page.
-  'setZoom',
-
-  'executeJavaScript',
 ].concat(asyncMethods).concat(syncMethods)
 
 asyncMethods.forEach((method) => {
@@ -115,16 +103,6 @@ syncMethods.forEach((method) => {
   }
 })
 
-// GuestViewContainer.prototype.weakWrapper = function(func) {
-//   var viewInstanceId = this.viewInstanceId;
-//   return function() {
-//     var view = GuestViewInternalNatives.GetViewFromID(viewInstanceId);
-//     if (view) {
-//       return $Function.apply(func, view, $Array.slice(arguments));
-//     }
-//   };
-// };
-
 // -----------------------------------------------------------------------------
 // Custom API method implementations.
 WebViewImpl.prototype.getTabID = function (instanceId, cb) {
@@ -136,10 +114,6 @@ WebViewImpl.prototype.getTabID = function (instanceId, cb) {
   } else {
     cb(this.tabID)
   }
-}
-
-WebViewImpl.prototype.executeJavaScript = function (code) {
-  return webFrameNatives.executeJavaScript(code)
 }
 
 const attachWindow = WebViewImpl.prototype.attachWindow$
@@ -172,23 +146,11 @@ WebViewImpl.prototype.getWebContents = function (cb) {
 }
 
 WebViewImpl.prototype.getProcessId = function() {
-  return this.processId;
-};
-
-WebViewImpl.prototype.setZoom = function(zoomFactor, callback) {
-  if (!this.guest.getId()) {
-    this.cachedZoomFactor = zoomFactor;
-    return false;
-  }
-  this.cachedZoomFactor = 1;
-  WebViewInternal.setZoom(this.guest.getId(), zoomFactor, callback);
-  return true;
-};
+  return this.processId
+}
 
 // -----------------------------------------------------------------------------
 
 WebViewImpl.getApiMethods = function() {
   return WEB_VIEW_API_METHODS;
 };
-
-// WebViewImpl.setupElement(WebViewImpl.prototype)
