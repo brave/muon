@@ -5,6 +5,7 @@
 #include "atom/browser/atom_browser_main_parts.h"
 
 #include "atom/browser/api/trackable_object.h"
+#include "atom/browser/atom_access_token_store.h"
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/bridge_task_runner.h"
@@ -29,6 +30,8 @@
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_switches.h"
+#include "device/geolocation/geolocation_delegate.h"
+#include "device/geolocation/geolocation_provider.h"
 #include "gin/public/v8_platform.h"
 #include "v8/include/libplatform/libplatform.h"
 #include "v8/include/v8.h"
@@ -40,6 +43,22 @@
 #endif
 
 namespace atom {
+
+// A provider of Geolocation services to override AccessTokenStore.
+class AtomGeolocationDelegate : public device::GeolocationDelegate {
+ public:
+  AtomGeolocationDelegate() = default;
+
+  scoped_refptr<device::AccessTokenStore> CreateAccessTokenStore() final {
+    return new AtomAccessTokenStore();
+  }
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(AtomGeolocationDelegate);
+};
+
+void Noop(scoped_refptr<content::SiteInstance>) {
+}
 
 template<typename T>
 void Erase(T* container, typename T::iterator iter) {
@@ -107,6 +126,9 @@ int AtomBrowserMainParts::PreCreateThreads() {
 
   // Force MediaCaptureDevicesDispatcher to be created on UI thread.
   brightray::MediaCaptureDevicesDispatcher::GetInstance();
+
+  device::GeolocationProvider::SetGeolocationDelegate(
+      new AtomGeolocationDelegate());
 
   return BrowserMainParts::PreCreateThreads();
 }

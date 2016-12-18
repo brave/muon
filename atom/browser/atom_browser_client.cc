@@ -8,7 +8,6 @@
 
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/api/atom_api_protocol.h"
-#include "atom/browser/atom_access_token_store.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/atom_quota_permission_context.h"
@@ -37,7 +36,6 @@
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/web_preferences.h"
-#include "device/geolocation/geolocation_delegate.h"
 #include "net/ssl/ssl_cert_request_info.h"
 #include "ppapi/host/ppapi_host.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -62,22 +60,6 @@ bool g_suppress_renderer_process_restart = false;
 
 // Custom schemes to be registered to handle service worker.
 std::string g_custom_service_worker_schemes = "";  // NOLINT
-
-// A provider of Geolocation services to override AccessTokenStore.
-class AtomGeolocationDelegate : public device::GeolocationDelegate {
- public:
-  AtomGeolocationDelegate() = default;
-
-  scoped_refptr<device::AccessTokenStore> CreateAccessTokenStore() final {
-    return new AtomAccessTokenStore();
-  }
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(AtomGeolocationDelegate);
-};
-
-void Noop(scoped_refptr<content::SiteInstance>) {
-}
 
 }  // namespace
 
