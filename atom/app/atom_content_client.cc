@@ -87,8 +87,7 @@ std::string AtomContentClient::GetProduct() const {
 
 std::string AtomContentClient::GetUserAgent() const {
   return content::BuildUserAgentFromProduct(
-      "Chrome/" CHROME_VERSION_STRING " "
-      PRODUCT_SHORTNAME_STRING "/" ATOM_VERSION_STRING);
+      "Chrome/" CHROME_VERSION_STRING);
 }
 
 bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {

@@ -80,21 +80,11 @@ var WEB_VIEW_API_METHODS = [
   // process.
   'getProcessId',
 
-  // Returns the user agent string used by the webview for guest page requests.
-  'getUserAgent',
-
   // Gets the current zoom factor.
   'getZoom',
 
   // Gets the current zoom mode of the webview.
   'getZoomMode',
-
-  // Indicates whether or not the webview's user agent string has been
-  // overridden.
-  'isUserAgentOverridden',
-
-  // Override the user agent string used by the webview for guest page requests.
-  'setUserAgentOverride',
 
   // Changes the zoom factor of the page.
   'setZoom',
@@ -183,27 +173,6 @@ WebViewImpl.prototype.getWebContents = function (cb) {
 
 WebViewImpl.prototype.getProcessId = function() {
   return this.processId;
-};
-
-WebViewImpl.prototype.getUserAgent = function() {
-  return this.userAgentOverride || navigator.userAgent;
-};
-
-WebViewImpl.prototype.isUserAgentOverridden = function() {
-  return !!this.userAgentOverride &&
-      this.userAgentOverride != navigator.userAgent;
-};
-
-WebViewImpl.prototype.setUserAgentOverride = function(userAgentOverride) {
-  this.userAgentOverride = userAgentOverride;
-  if (!this.guest.getId()) {
-    // If we are not attached yet, then we will pick up the user agent on
-    // attachment.
-    return false;
-  }
-  // TODO(bridiver) - FIX THIS!!!
-  // WebViewInternal.overrideUserAgent(this.guest.getId(), userAgentOverride);
-  return true;
 };
 
 WebViewImpl.prototype.setZoom = function(zoomFactor, callback) {
