@@ -57,9 +57,6 @@ class AtomGeolocationDelegate : public device::GeolocationDelegate {
   DISALLOW_COPY_AND_ASSIGN(AtomGeolocationDelegate);
 };
 
-void Noop(scoped_refptr<content::SiteInstance>) {
-}
-
 template<typename T>
 void Erase(T* container, typename T::iterator iter) {
   container->erase(iter);
