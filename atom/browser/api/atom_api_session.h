@@ -74,8 +74,6 @@ class Session: public mate::TrackableObject<Session>,
                                    mate::Arguments* args);
   void ClearHostResolverCache(mate::Arguments* args);
   void AllowNTLMCredentialsForDomains(const std::string& domains);
-  void SetUserAgent(const std::string& user_agent, mate::Arguments* args);
-  std::string GetUserAgent();
   std::string Partition();
   void SetEnableBrotli(bool enabled);
   v8::Local<v8::Value> ContentSettings(v8::Isolate* isolate);

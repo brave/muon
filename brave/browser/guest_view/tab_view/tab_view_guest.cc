@@ -120,11 +120,6 @@ void TabViewGuest::LoadURLWithParams(
   content::NavigationController::LoadURLParams load_url_params(validated_url);
   load_url_params.referrer = referrer;
   load_url_params.transition_type = transition_type;
-  // TODO(bridiver) - handle user agent override
-  // if (is_overriding_user_agent_) {
-  //   load_url_params.override_user_agent =
-  //       content::NavigationController::UA_OVERRIDE_TRUE;
-  // }
   GuestViewBase::LoadURLWithParams(load_url_params);
 
   src_ = validated_url;

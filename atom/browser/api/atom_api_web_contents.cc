@@ -312,7 +312,6 @@ WebContents::WebContents(v8::Isolate* isolate,
       is_being_destroyed_(false),
       guest_delegate_(nullptr) {
   if (type == REMOTE) {
-    web_contents->SetUserAgentOverride(GetBrowserContext()->GetUserAgent());
     Init(isolate);
     AttachAsUserData(web_contents);
   } else {
@@ -396,8 +395,6 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   WebContentsPermissionHelper::CreateForWebContents(web_contents);
   // Intialize security state client.
   AtomSecurityStateModelClient::CreateForWebContents(web_contents);
-
-  web_contents->SetUserAgentOverride(GetBrowserContext()->GetUserAgent());
 
   // Intialize permission helper.
   WebContentsPermissionHelper::CreateForWebContents(web_contents);

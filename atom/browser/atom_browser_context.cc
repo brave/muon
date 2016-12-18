@@ -33,7 +33,6 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/url_constants.h"
-#include "content/public/common/user_agent.h"
 #include "net/ftp/ftp_network_layer.h"
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
@@ -55,14 +54,6 @@ class NoCacheBackend : public net::HttpCache::BackendFactory {
   }
 };
 
-std::string RemoveWhitespace(const std::string& str) {
-  std::string trimmed;
-  if (base::RemoveChars(str, " ", &trimmed))
-    return trimmed;
-  else
-    return str;
-}
-
 }  // namespace
 
 AtomBrowserContext::AtomBrowserContext(
@@ -70,22 +61,6 @@ AtomBrowserContext::AtomBrowserContext(
     const base::DictionaryValue& options)
     : brightray::BrowserContext(partition, in_memory),
       network_delegate_(new AtomNetworkDelegate) {
-  // Construct user agent string.
-  Browser* browser = Browser::Get();
-  std::string name = RemoveWhitespace(browser->GetName());
-  std::string user_agent;
-  if (name == PRODUCT_SHORTNAME_STRING) {
-    user_agent = "Chrome/" CHROME_VERSION_STRING " "
-                 PRODUCT_SHORTNAME_STRING "/" ATOM_VERSION_STRING;
-  } else {
-    user_agent = base::StringPrintf(
-        "%s/%s Chrome/%s " PRODUCT_SHORTNAME_STRING "/" ATOM_VERSION_STRING,
-        name.c_str(),
-        browser->GetVersion().c_str(),
-        CHROME_VERSION_STRING);
-  }
-  user_agent_ = content::BuildUserAgentFromProduct(user_agent);
-
   // Read options.
   use_cache_ = true;
   options.GetBoolean("cache", &use_cache_);
@@ -97,16 +72,8 @@ AtomBrowserContext::AtomBrowserContext(
 AtomBrowserContext::~AtomBrowserContext() {
 }
 
-void AtomBrowserContext::SetUserAgent(const std::string& user_agent) {
-  user_agent_ = user_agent;
-}
-
 net::NetworkDelegate* AtomBrowserContext::CreateNetworkDelegate() {
   return network_delegate_;
-}
-
-std::string AtomBrowserContext::GetUserAgent() {
-  return user_agent_;
 }
 
 std::unique_ptr<net::URLRequestJobFactory>

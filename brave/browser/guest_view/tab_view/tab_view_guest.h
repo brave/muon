@@ -46,8 +46,6 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
       ui::PageTransition transition_type,
       bool force_navigation);
   void NavigateGuest(const std::string& src, bool force_navigation);
-
-
   void ApplyAttributes(const base::DictionaryValue& params);
 
   // GuestViewBase implementation.

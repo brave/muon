@@ -26,11 +26,8 @@ class AtomBrowserContext : public brightray::BrowserContext {
       const std::string& partition, bool in_memory,
       const base::DictionaryValue& options = base::DictionaryValue());
 
-  void SetUserAgent(const std::string& user_agent);
-
   // brightray::URLRequestContextGetter::Delegate:
   net::NetworkDelegate* CreateNetworkDelegate() override;
-  std::string GetUserAgent() override;
   std::unique_ptr<net::URLRequestJobFactory> CreateURLRequestJobFactory(
       content::ProtocolHandlerMap* protocol_handlers) override;
   net::HttpCache::BackendFactory* CreateHttpCacheBackendFactory(
@@ -57,7 +54,6 @@ class AtomBrowserContext : public brightray::BrowserContext {
  private:
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;
   std::unique_ptr<AtomPermissionManager> permission_manager_;
-  std::string user_agent_;
   bool use_cache_;
 
   // Managed by brightray::BrowserContext.

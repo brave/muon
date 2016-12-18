@@ -115,15 +115,6 @@ uint32_t GetQuotaMask(const std::vector<std::string>& quota_types) {
   return quota_mask;
 }
 
-void SetUserAgentInIO(scoped_refptr<net::URLRequestContextGetter> getter,
-                      const std::string& accept_lang,
-                      const std::string& user_agent) {
-  getter->GetURLRequestContext()->set_http_user_agent_settings(
-      new net::StaticHttpUserAgentSettings(
-          net::HttpUtil::GenerateAcceptLanguageHeader(accept_lang),
-          user_agent));
-}
-
 void SetEnableBrotliInIO(scoped_refptr<net::URLRequestContextGetter> getter,
                          bool enabled) {
   getter->GetURLRequestContext()->set_enable_brotli(enabled);
@@ -512,25 +503,6 @@ void Session::AllowNTLMCredentialsForDomains(const std::string& domains) {
                  domains));
 }
 
-void Session::SetUserAgent(const std::string& user_agent,
-                           mate::Arguments* args) {
-  browser_context_->SetUserAgent(user_agent);
-
-  std::string accept_lang = static_cast<brave::BraveContentBrowserClient*>(
-      brave::BraveContentBrowserClient::Get())->
-          GetAcceptLangs(browser_context());
-  args->GetNext(&accept_lang);
-
-  auto getter = browser_context_->GetRequestContext();
-  getter->GetNetworkTaskRunner()->PostTask(
-      FROM_HERE,
-      base::Bind(&SetUserAgentInIO, getter, accept_lang, user_agent));
-}
-
-std::string Session::GetUserAgent() {
-  return browser_context_->GetUserAgent();
-}
-
 void Session::SetEnableBrotli(bool enabled) {
   auto getter = browser_context_->GetRequestContext();
   getter->GetNetworkTaskRunner()->PostTask(
@@ -662,8 +634,6 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("clearHostResolverCache", &Session::ClearHostResolverCache)
       .SetMethod("allowNTLMCredentialsForDomains",
                  &Session::AllowNTLMCredentialsForDomains)
-      .SetMethod("setUserAgent", &Session::SetUserAgent)
-      .SetMethod("getUserAgent", &Session::GetUserAgent)
       .SetMethod("setEnableBrotli", &Session::SetEnableBrotli)
       .SetMethod("equal", &Session::Equal)
       .SetProperty("partition", &Session::Partition)
