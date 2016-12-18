@@ -222,6 +222,9 @@ void TabHelper::ExecuteScript(
   bool match_about_blank = false;
   options->GetBoolean("matchAboutBlank", &match_about_blank);
 
+  bool main_world = false;
+  options->GetBoolean("mainWorld", &main_world);
+
   extensions::UserScript::RunLocation run_at =
     extensions::UserScript::UNDEFINED;
   std::string run_at_string = "undefined";
@@ -243,7 +246,8 @@ void TabHelper::ExecuteScript(
       match_about_blank ? extensions::ScriptExecutor::MATCH_ABOUT_BLANK
                         : extensions::ScriptExecutor::DONT_MATCH_ABOUT_BLANK,
       run_at,
-      extensions::ScriptExecutor::ISOLATED_WORLD,
+      main_world ? extensions::ScriptExecutor::MAIN_WORLD :
+                   extensions::ScriptExecutor::ISOLATED_WORLD,
       extensions::ScriptExecutor::DEFAULT_PROCESS,
       GURL(),  // No webview src.
       file_url,  // No file url.
