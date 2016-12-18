@@ -1779,10 +1779,10 @@ index 668bbfdbe72ebe2607e67785d267d03a6434dda5..85a6c28349001aebd7538eae21213668
      BLINK_EXPORT void reset();
      BLINK_EXPORT void assign(const WebArrayBuffer&);
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
-index e5fdb29e858fec1137a2182c18db6304279b4c24..55a8b13ebd85cc6be206368eb6292be062fe47ac 100644
+index e5fdb29e858fec1137a2182c18db6304279b4c24..8a860a334c2204a890ba73de9eacc2ba8ae8bb91 100644
 --- a/third_party/widevine/cdm/BUILD.gn
 +++ b/third_party/widevine/cdm/BUILD.gn
-@@ -96,9 +96,9 @@ if (widevine_cdm_binary_files != []) {
+@@ -96,9 +96,10 @@ if (widevine_cdm_binary_files != []) {
      if (is_mac) {
        ldflags = [
          # Not to strip important symbols by -Wl,-dead_strip.
@@ -1792,6 +1792,7 @@ index e5fdb29e858fec1137a2182c18db6304279b4c24..55a8b13ebd85cc6be206368eb6292be0
 +        # "-Wl,-exported_symbol,_PPP_GetInterface",
 +        # "-Wl,-exported_symbol,_PPP_InitializeModule",
 +        # "-Wl,-exported_symbol,_PPP_ShutdownModule",
++        "-Wl,-install_name,@loader_path/libwidevinecdm.dylib"
        ]
        #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
      } else if (is_posix && !is_mac) {
