@@ -11,7 +11,7 @@ source_set("node") {
   sources = [
     "api/atom_api_asar.cc",
     "api/atom_api_clipboard.cc",
-    # "api/atom_api_crash_reporter.cc",
+    "api/atom_api_crash_reporter.cc",
     "api/atom_api_key_weak_map.h",
     "api/atom_api_native_image.cc",
     "api/atom_api_native_image.h",
@@ -91,8 +91,8 @@ source_set("common") {
     "color_util.h",
     "common_message_generator.cc",
     "common_message_generator.h",
-    # "crash_reporter/crash_reporter.cc",
-    # "crash_reporter/crash_reporter.h",
+    "crash_reporter/crash_reporter.cc",
+    "crash_reporter/crash_reporter.h",
     "google_api_key.h",
     "importer/chrome_importer_utils.cc",
     "importer/chrome_importer_utils.h",
@@ -124,10 +124,14 @@ source_set("common") {
   ]
 
   if (is_mac) {
+    deps += [
+      "//third_party/crashpad/crashpad/client"
+    ]
+
     sources += [
       "api/atom_api_native_image_mac.mm",
-      # "crash_reporter/crash_reporter_mac.h",
-      # "crash_reporter/crash_reporter_mac.mm",
+      "crash_reporter/crash_reporter_mac.h",
+      "crash_reporter/crash_reporter_mac.mm",
       "importer/chrome_importer_utils_mac.mm",
       "node_bindings_mac.cc",
       "node_bindings_mac.h",
@@ -147,10 +151,10 @@ source_set("common") {
 
   if (is_linux) {
     sources += [
-      # "crash_reporter/crash_reporter_linux.cc",
-      # "crash_reporter/crash_reporter_linux.h",
-      # "crash_reporter/linux/crash_dump_handler.cc",
-      # "crash_reporter/linux/crash_dump_handler.h",
+      "crash_reporter/crash_reporter_linux.cc",
+      "crash_reporter/crash_reporter_linux.h",
+      "crash_reporter/linux/crash_dump_handler.cc",
+      "crash_reporter/linux/crash_dump_handler.h",
       "importer/chrome_importer_utils_linux.cc",
       "linux/application_info.cc",
       "node_bindings_linux.cc",
@@ -161,12 +165,12 @@ source_set("common") {
 
   if (is_win) {
     sources += [
-      # "crash_reporter/crash_reporter_win.cc",
-      # "crash_reporter/crash_reporter_win.h",
-      # "crash_reporter/win/crash_service.cc",
-      # "crash_reporter/win/crash_service.h",
-      # "crash_reporter/win/crash_service_main.cc",
-      # "crash_reporter/win/crash_service_main.h",
+      "crash_reporter/crash_reporter_win.cc",
+      "crash_reporter/crash_reporter_win.h",
+      "crash_reporter/win/crash_service.cc",
+      "crash_reporter/win/crash_service.h",
+      "crash_reporter/win/crash_service_main.cc",
+      "crash_reporter/win/crash_service_main.h",
       "importer/chrome_importer_utils_win.cc",
       "node_bindings_win.cc",
       "node_bindings_win.h",
