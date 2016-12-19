@@ -18,6 +18,7 @@
 #include "base/memory/singleton.h"
 #include "base/process/memory.h"
 #include "base/strings/stringprintf.h"
+#include "chrome/common/chrome_version.h"
 #include "vendor/breakpad/src/client/linux/handler/exception_handler.h"
 #include "vendor/breakpad/src/common/linux/linux_libc_support.h"
 
@@ -64,7 +65,7 @@ void CrashReporterLinux::InitBreakpad(const std::string& product_name,
                                       bool skip_system_crash_handler) {
   EnableCrashDumping(product_name);
 
-  crash_keys_.SetKeyValue("prod", ATOM_PRODUCT_NAME);
+  crash_keys_.SetKeyValue("prod", PRODUCT_SHORTNAME_STRING);
   crash_keys_.SetKeyValue("ver", version.c_str());
   upload_url_ = submit_url;
 
