@@ -497,9 +497,14 @@ base::FilePath BraveBrowserContext::GetPath() const {
 }
 
 std::string BraveBrowserContext::partition_with_prefix() {
-  if (!IsOffTheRecord())
-    return kPersistPrefix + partition();
-  return partition();
+  std::string canonical_partition(partition());
+  if (canonical_partition.empty())
+    canonical_partition = "default";
+
+  if (IsOffTheRecord())
+    return canonical_partition;
+
+  return kPersistPrefix + canonical_partition;
 }
 
 scoped_refptr<atom::AtomBrowserContext> BraveBrowserContext::FromPartition(
