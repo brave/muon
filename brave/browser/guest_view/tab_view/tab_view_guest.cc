@@ -208,12 +208,16 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
     auto it = GetOpener()->pending_new_windows_.find(this);
     if (it != GetOpener()->pending_new_windows_.end()) {
       const NewWindowInfo& new_window_info = it->second;
-      if (new_window_info.changed || !web_contents()->HasOpener())
-        NavigateGuest(new_window_info.url.spec(), false /* force_navigation */);
+      if (attached()) {
+        if (new_window_info.changed || !web_contents()->HasOpener()) {
+          NavigateGuest(
+              new_window_info.url.spec(), false /* force_navigation */);
+        }
 
-      // Once a new guest is attached to the DOM of the embedder page, then the
-      // lifetime of the new guest is no longer managed by the opener guest.
-      GetOpener()->pending_new_windows_.erase(this);
+        // Once a new guest is attached to the DOM of the embedder page the
+        // lifetime of the new guest is no longer managed by the opener guest.
+        GetOpener()->pending_new_windows_.erase(this);
+      }
       is_pending_new_window = true;
     }
   }
@@ -275,6 +279,9 @@ void TabViewGuest::WillDestroy() {
   if (api_web_contents_)
     api_web_contents_->WebContentsDestroyed();
   api_web_contents_ = nullptr;
+
+  if (!attached() && GetOpener())
+    GetOpener()->pending_new_windows_.erase(this);
 }
 
 void TabViewGuest::GuestSizeChangedDueToAutoSize(const gfx::Size& old_size,
