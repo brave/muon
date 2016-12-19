@@ -24,7 +24,6 @@
 
 #include "atom/common/node_includes.h"
 
-#include "atom/common/asar/asar_util.h"
 using content::BrowserThread;
 
 // Force all builtin modules to be referenced so they can actually run their
@@ -34,16 +33,16 @@ using content::BrowserThread;
   void (*fp_register_ ## name)(void) = _register_ ## name
 // Electron's builtin modules.
 REFERENCE_MODULE(atom_browser_app);
-// REFERENCE_MODULE(atom_browser_auto_updater);
+REFERENCE_MODULE(atom_browser_auto_updater);
 REFERENCE_MODULE(atom_browser_component_updater);
 REFERENCE_MODULE(atom_browser_content_tracing);
 REFERENCE_MODULE(atom_browser_dialog);
-// REFERENCE_MODULE(atom_browser_debugger);
+REFERENCE_MODULE(atom_browser_debugger);
 #if defined(ENABLE_WEBRTC)
 REFERENCE_MODULE(atom_browser_desktop_capturer);
 #endif
 REFERENCE_MODULE(atom_browser_download_item);
-// REFERENCE_MODULE(atom_browser_importer);
+REFERENCE_MODULE(atom_browser_importer);
 REFERENCE_MODULE(atom_browser_menu);
 REFERENCE_MODULE(atom_browser_power_monitor);
 REFERENCE_MODULE(atom_browser_power_save_blocker);
