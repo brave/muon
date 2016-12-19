@@ -14,10 +14,11 @@
 #include "base/strings/string_piece.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/sys_string_conversions.h"
-#include "vendor/crashpad/client/crash_report_database.h"
-#include "vendor/crashpad/client/crashpad_client.h"
-#include "vendor/crashpad/client/crashpad_info.h"
-#include "vendor/crashpad/client/settings.h"
+#include "chrome/common/chrome_version.h"
+#include "third_party/crashpad/crashpad/client/crash_report_database.h"
+#include "third_party/crashpad/crashpad/client/crashpad_client.h"
+#include "third_party/crashpad/crashpad/client/crashpad_info.h"
+#include "third_party/crashpad/crashpad/client/settings.h"
 
 namespace crash_reporter {
 
@@ -44,7 +45,7 @@ void CrashReporterMac::InitBreakpad(const std::string& product_name,
     @autoreleasepool {
       base::FilePath framework_bundle_path = base::mac::FrameworkBundlePath();
       base::FilePath handler_path =
-          framework_bundle_path.Append("Resources").Append("crashpad_handler");
+          framework_bundle_path.Append("Helpers").Append("crashpad_handler");
 
       crashpad::CrashpadClient crashpad_client;
       if (crashpad_client.StartHandler(handler_path, database_path,
@@ -67,7 +68,7 @@ void CrashReporterMac::InitBreakpad(const std::string& product_name,
   simple_string_dictionary_.reset(new crashpad::SimpleStringDictionary());
   crashpad_info->set_simple_annotations(simple_string_dictionary_.get());
 
-  SetCrashKeyValue("prod", CHROMIUM_SHORT_NAME);
+  SetCrashKeyValue("prod", PRODUCT_SHORTNAME_STRING);
   SetCrashKeyValue("process_type", is_browser_ ? "browser" : "renderer");
   SetCrashKeyValue("ver", version);
 

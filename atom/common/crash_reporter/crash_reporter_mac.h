@@ -12,7 +12,7 @@
 #include "atom/common/crash_reporter/crash_reporter.h"
 #include "base/compiler_specific.h"
 #include "base/strings/string_piece.h"
-#include "vendor/crashpad/client/simple_string_dictionary.h"
+#include "third_party/crashpad/crashpad/client/simple_string_dictionary.h"
 
 namespace base {
 template <typename T> struct DefaultSingletonTraits;
