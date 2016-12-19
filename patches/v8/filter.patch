@@ -1,5 +1,5 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c2c6e026d 100644
+index dcefe3706b84c1f726256a6053e60134953a014d..794abe164d911861a1a91180f1ec33cf405790bd 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -45,7 +45,7 @@ declare_args() {
@@ -55,6 +55,30 @@ index dcefe3706b84c1f726256a6053e60134953a014d..8cb4535042c80783aa592827869a4d7c
    include_dirs = [ "include" ]
    libs = []
    if (is_android && current_toolchain != host_toolchain) {
+@@ -149,9 +166,9 @@ config("external_config") {
+ # This config should only be applied to code that needs to be explicitly
+ # aware of whether we are using startup data or not.
+ config("external_startup_data") {
+-  if (v8_use_external_startup_data) {
++#  if (v8_use_external_startup_data) {
+     defines = [ "V8_USE_EXTERNAL_STARTUP_DATA" ]
+-  }
++#  }
+ }
+ 
+ config("features") {
+@@ -186,9 +203,9 @@ config("features") {
+   if (v8_enable_handle_zapping) {
+     defines += [ "ENABLE_HANDLE_ZAPPING" ]
+   }
+-  if (v8_use_external_startup_data) {
++#  if (v8_use_external_startup_data) {
+     defines += [ "V8_USE_EXTERNAL_STARTUP_DATA" ]
+-  }
++#  }
+ }
+ 
+ config("toolchain") {
 @@ -726,6 +743,9 @@ source_set("v8_maybe_snapshot") {
  }
  

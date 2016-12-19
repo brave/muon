@@ -32,10 +32,10 @@
     'uv_use_dtrace': 'false',
     'V8_BASE': '',
     'v8_postmortem_support': 'false',
-    'v8_enable_i18n_support': 0,
     'v8_inspector': 'false',
     'library': 'static_library',
     'msvs_use_common_release': 0,
+    'icu_small': 'false',
   },
   'target_defaults': {
     'default_configuration': 'Release',

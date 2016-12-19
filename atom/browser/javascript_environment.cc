@@ -7,6 +7,7 @@
 #include <string>
 
 #include "base/command_line.h"
+#include "base/i18n/icu_util.h"
 #include "base/message_loop/message_loop.h"
 #include "content/public/common/content_switches.h"
 #include "gin/array_buffer.h"
@@ -40,6 +41,10 @@ bool JavascriptEnvironment::Initialize() {
   if (!js_flags.empty())
     v8::V8::SetFlagsFromString(js_flags.c_str(), js_flags.size());
 
+  base::i18n::InitializeICU();
+
+  gin::V8Initializer::LoadV8Snapshot();
+  gin::V8Initializer::LoadV8Natives();
   gin::IsolateHolder::Initialize(gin::IsolateHolder::kNonStrictMode,
                                  gin::IsolateHolder::kStableV8Extras,
                                  gin::ArrayBufferAllocator::SharedInstance());
