@@ -35,6 +35,7 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
+#include "content/public/browser/site_instance.h"
 #include "native_mate/dictionary.h"
 
 using content::RenderFrameHost;
@@ -76,8 +77,15 @@ void TabViewGuest::WebContentsCreated(WebContents* source_contents,
 
   guest->SetOpener(this);
   guest->name_ = frame_name;
-  pending_new_windows_.insert(
-      std::make_pair(guest, NewWindowInfo(target_url, frame_name)));
+
+  NewWindowInfo new_window_info(target_url, frame_name);
+  // if the site instance has changed the old window won't be able to
+  // load the url so let ApplyAttributes handle it
+  auto new_site_instance = content::SiteInstance::CreateForURL(
+      new_contents->GetBrowserContext(), target_url);
+  new_window_info.changed =
+      source_contents->GetSiteInstance() != new_site_instance;
+  pending_new_windows_.insert(std::make_pair(guest, new_window_info));
 }
 
 WebContents* TabViewGuest::OpenURLFromTab(
@@ -97,7 +105,7 @@ WebContents* TabViewGuest::OpenURLFromTab(
         return nullptr;
       const NewWindowInfo& info = it->second;
       NewWindowInfo new_window_info(params.url, info.name);
-      new_window_info.changed = new_window_info.url != info.url;
+      new_window_info.changed = info.changed || new_window_info.url != info.url;
       it->second = new_window_info;
       return nullptr;
     }
