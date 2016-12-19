@@ -1557,6 +1557,7 @@ void WebContents::OnCloneCreated(const mate::Dictionary& options,
     content::WebContents* clone) {
 
   clone->GetController().CopyStateFrom(web_contents()->GetController());
+  callback.Run(clone);
 }
 
 void WebContents::Clone(mate::Arguments* args) {
@@ -1603,8 +1604,8 @@ void WebContents::Clone(mate::Arguments* args) {
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
       HostWebContents(),
       create_params,
-      base::Bind(&WebContents::OnTabCreated, base::Unretained(this), options,
-        base::Bind(&WebContents::OnCloneCreated, base::Unretained(this),
+      base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
+        base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
             options, callback)));
 }
 
