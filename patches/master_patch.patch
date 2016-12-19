@@ -1390,9 +1390,18 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    }
    return validAttributesForMarkedText_.get();
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index b0451e40f4173d05937d95246d502a7a8412ea18..20a8374a84c55c4c2bbf337928a8b6576b7d1dd4 100644
+index b0451e40f4173d05937d95246d502a7a8412ea18..d77bf162171d92e946cd6cf310beebbd24333464 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
+@@ -1508,7 +1508,7 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
+   // This is set before initializing the render manager since
+   // RenderFrameHostManager::Init calls back into us via its delegate to ask if
+   // it should be hidden.
+-  should_normally_be_visible_ = !params.initially_hidden;
++  should_normally_be_visible_ = true; // !params.initially_hidden;
+ 
+   // The routing ids must either all be set or all be unset.
+   DCHECK((params.routing_id == MSG_ROUTING_NONE &&
 @@ -1994,7 +1994,7 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || route_id == MSG_ROUTING_NONE);
  
