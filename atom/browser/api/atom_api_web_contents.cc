@@ -567,7 +567,8 @@ content::WebContents* WebContents::OpenURLFromTab(
                   "open-url-from-tab",
                   event,
                   source,
-                  params.url);
+                  params.url,
+                  params.disposition);
 
   return nullptr;
 }
