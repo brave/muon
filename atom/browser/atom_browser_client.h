@@ -38,9 +38,6 @@ class AtomBrowserClient : public brightray::BrowserClient,
   // Returns the WebContents for pending render processes.
   content::WebContents* GetWebContentsFromProcessID(int process_id);
 
-  // Don't force renderer process to restart for once.
-  static void SuppressRendererProcessRestartForOnce();
-
   // Custom schemes to be registered to handle service worker.
   static void SetCustomServiceWorkerSchemes(
       const std::vector<std::string>& schemes);
