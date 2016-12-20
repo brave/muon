@@ -10,6 +10,7 @@
 #include "base/files/file_util.h"
 #include "base/logging.h"
 #include "base/strings/string_util.h"
+#include "chrome/common/chrome_version.h"
 
 namespace crash_service {
 
@@ -81,7 +82,8 @@ int Main(const wchar_t* cmd) {
                                                  NULL);
   cmd_line.AppendSwitch("no-window");
   cmd_line.AppendSwitchASCII("max-reports", "128");
-  cmd_line.AppendSwitchASCII("reporter", CHROMIUM_SHORT_NAME "-crash-service");
+  cmd_line.AppendSwitchASCII(
+      "reporter", PRODUCT_SHORTNAME_STRING "-crash-service");
   cmd_line.AppendSwitchNative("pipe-name", pipe_name);
 
   breakpad::CrashService crash_service;
