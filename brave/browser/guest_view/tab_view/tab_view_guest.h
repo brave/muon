@@ -77,6 +77,8 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   // Stores the window name of the main frame of the guest.
   std::string name_;
 
+  bool clone_;
+
   // Stores the src URL of the WebView.
   GURL src_;
 
