@@ -1587,7 +1587,7 @@ void WebContents::Clone(mate::Arguments* args) {
   base::DictionaryValue create_params;
   create_params.SetString("partition",
       static_cast<brave::BraveBrowserContext*>(
-          GetBrowserContext())->partition());
+          GetBrowserContext())->partition_with_prefix());
 
   create_params.SetBoolean("clone", true);
 
@@ -2098,7 +2098,7 @@ void WebContents::CreateTab(mate::Arguments* args) {
   }
   create_params.SetString("partition",
       static_cast<brave::BraveBrowserContext*>(
-            browser_context)->partition());
+            browser_context)->partition_with_prefix());
 
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
       owner->web_contents(),
