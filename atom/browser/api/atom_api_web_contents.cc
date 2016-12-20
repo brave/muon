@@ -1087,7 +1087,6 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 }
 
 void WebContents::Reload(bool ignore_cache) {
-  atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
   web_contents()->UserGestureDone();
   if (ignore_cache)
     web_contents()->GetController().ReloadBypassingCache(true);
@@ -1174,27 +1173,23 @@ void WebContents::Stop() {
 
 void WebContents::GoBack() {
   if (web_contents()->GetController().CanGoBack()) {
-    atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
     web_contents()->GetController().GoBack();
   }
 }
 
 void WebContents::GoForward() {
   if (web_contents()->GetController().CanGoForward()) {
-    atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
     web_contents()->GetController().GoForward();
   }
 }
 
 void WebContents::GoToOffset(int offset) {
   if (web_contents()->GetController().CanGoToOffset(offset)) {
-    atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
     web_contents()->GetController().GoToOffset(offset);
   }
 }
 
 void WebContents::GoToIndex(int index) {
-  atom::AtomBrowserClient::SuppressRendererProcessRestartForOnce();
   web_contents()->GetController().GoToIndex(index);
 }
 

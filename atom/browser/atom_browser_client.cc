@@ -55,18 +55,10 @@ namespace atom {
 
 namespace {
 
-// Next navigation should not restart renderer process.
-bool g_suppress_renderer_process_restart = false;
-
 // Custom schemes to be registered to handle service worker.
 std::string g_custom_service_worker_schemes = "";  // NOLINT
 
 }  // namespace
-
-// static
-void AtomBrowserClient::SuppressRendererProcessRestartForOnce() {
-  g_suppress_renderer_process_restart = true;
-}
 
 void AtomBrowserClient::SetCustomServiceWorkerSchemes(
     const std::vector<std::string>& schemes) {
