@@ -11,6 +11,7 @@
    'v8_libraries': '["v8", "v8_snapshot", "v8_nosnapshot", "v8_external_snapshot", "v8_base", "v8_libbase", "v8_libplatform"]',
    'v8_use_snapshot': 'true',
    'v8_use_external_startup_data': 1,
+   'icu_libraries': '["icui18n", "icuuc"]',
  },
  'target_defaults': {
    'msvs_disabled_warnings': [
@@ -37,14 +38,14 @@
      # Use C++11 library.
      'CLANG_CXX_LIBRARY': 'libc++',  # -stdlib=libc++
    },
-   'defines!': [
-     'U_STATIC_IMPLEMENTATION',
-   ],
    'target_conditions': [
      ['_type=="static_library" and _toolset=="target" and OS=="linux"', {
        'standalone_static_library': 1,
      }],
-     ['_target_name in <(v8_libraries)', {
+     ['_target_name in <(icu_libraries)', {
+      'type': 'static_library',
+     }],
+     ['_target_name in <(v8_libraries) + <(icu_libraries)', {
        'xcode_settings': {
          'DEAD_CODE_STRIPPING': 'NO',  # -Wl,-dead_strip
          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'NO',
