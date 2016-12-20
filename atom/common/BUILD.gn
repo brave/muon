@@ -161,6 +161,10 @@ source_set("common") {
       "node_bindings_linux.h",
       "platform_util_linux.cc",
     ]
+
+    deps += [
+      "//breakpad:client",
+    ]
   }
 
   if (is_win) {
@@ -175,6 +179,11 @@ source_set("common") {
       "node_bindings_win.cc",
       "node_bindings_win.h",
       "platform_util_win.cc",
+    ]
+
+    deps += [
+      "//breakpad:breakpad_handler",
+      "//breakpad:breakpad_sender",
     ]
   }
 
