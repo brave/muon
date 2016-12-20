@@ -40,8 +40,8 @@ executable("electron_app") {
 
   deps = [
     ":electron_exe_version",
+    ":electron_manifest",
     "//build/config/sanitizers:deps",
-    "//build/win:default_exe_manifest",
     "//electron/build/node:node_resources",
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
@@ -106,6 +106,18 @@ executable("electron_app") {
   if (use_aura) {
     deps += [ "//ui/compositor" ]
   }
+}
+
+dpi_aware_manifest = "//remoting/host/win/dpi_aware.manifest"
+
+windows_manifest("electron_manifest") {
+  sources = [
+    as_invoker_manifest,
+    common_controls_manifest,
+    default_compatibility_manifest,
+    dpi_aware_manifest,
+  ]
+  type = "exe"
 }
 
 process_version("electron_exe_version") {
