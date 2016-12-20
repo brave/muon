@@ -227,17 +227,26 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         GetOpener()->pending_new_windows_.erase(this);
       }
       is_pending_new_window = true;
+    } else if (attached() && clone_) {
+      clone_ = false;
+      web_contents()->GetController().CopyStateFrom(
+          GetOpener()->web_contents()->GetController());
     }
   }
 
   // handle navigation for src attribute changes
   if (!is_pending_new_window) {
-    std::string src;
-    if (params.GetString("src", &src)) {
-      src_ = GURL(src);
-    }
-    if (attached()) {
-      NavigateGuest(src_.spec(), true /* force_navigation */);
+    bool clone = false;
+    if (params.GetBoolean("clone", &clone) && clone) {
+      clone_ = true;
+    } else {
+      std::string src;
+      if (params.GetString("src", &src)) {
+        src_ = GURL(src);
+      }
+      if (attached()) {
+        NavigateGuest(src_.spec(), true);
+      }
     }
   }
 }
@@ -306,7 +315,8 @@ bool TabViewGuest::IsAutoSizeSupported() const {
 
 TabViewGuest::TabViewGuest(WebContents* owner_web_contents)
     : GuestView<TabViewGuest>(owner_web_contents),
-      api_web_contents_(nullptr) {
+      api_web_contents_(nullptr),
+      clone_(false) {
 }
 
 TabViewGuest::~TabViewGuest() {

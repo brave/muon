@@ -1550,8 +1550,10 @@ bool WebContents::IsFocused() const {
 void WebContents::OnCloneCreated(const mate::Dictionary& options,
     base::Callback<void(content::WebContents*)> callback,
     content::WebContents* clone) {
-
-  clone->GetController().CopyStateFrom(web_contents()->GetController());
+  brave::TabViewGuest* guest = brave::TabViewGuest::FromWebContents(clone);
+  if (guest_delegate_) {
+    guest->SetOpener(static_cast<brave::TabViewGuest*>(guest_delegate_));
+  }
   callback.Run(clone);
 }
 
@@ -1585,6 +1587,8 @@ void WebContents::Clone(mate::Arguments* args) {
   create_params.SetString("partition",
       static_cast<brave::BraveBrowserContext*>(
           GetBrowserContext())->partition());
+
+  create_params.SetBoolean("clone", true);
 
   auto guest_view_manager =
       static_cast<GuestViewManager*>(GetBrowserContext()->GetGuestManager());
