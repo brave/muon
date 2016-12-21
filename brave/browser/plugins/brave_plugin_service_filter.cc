@@ -67,7 +67,7 @@ bool BravePluginServiceFilter::IsPluginAvailable(
     const GURL& policy_url,
     content::WebPluginInfo* plugin) {
   if (url == GURL() && policy_url == GURL()) {
-    return CanLoadPlugin(render_process_id, plugin->path);
+    return true;
   } else {
     return ChromePluginServiceFilter::GetInstance()->IsPluginAvailable(
         render_process_id, render_frame_id, context, url, policy_url, plugin);
