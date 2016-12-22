@@ -54,7 +54,6 @@ const asyncMethods = [
   'enablePreferredSizeMode',
   'close',
   'send',
-  'clone',
 ]
 
 const syncMethods = [
