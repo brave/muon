@@ -2030,6 +2030,20 @@ mate::Handle<WebContents> WebContents::FromTabID(v8::Isolate* isolate,
 void WebContents::OnTabCreated(const mate::Dictionary& options,
     base::Callback<void(content::WebContents*)> callback,
     content::WebContents* tab) {
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env) {
+    return;
+  }
+
+  auto event = v8::Local<v8::Object>::Cast(
+      mate::Event::Create(isolate()).ToV8());
+
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "on-tab-created",
+                  tab,
+                  options);
+
   bool active = true;
   options.Get("active", &active);
 
