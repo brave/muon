@@ -1117,8 +1117,11 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
                                         blink::WebReferrerPolicyDefault);
 
   std::string user_agent;
-  if (options.Get("userAgent", &user_agent))
+  if (options.Get("userAgent", &user_agent)) {
     web_contents()->SetUserAgentOverride(user_agent);
+    params.override_user_agent =
+        content::NavigationController::UA_OVERRIDE_TRUE;
+  }
 
   std::string extra_headers;
   if (options.Get("extraHeaders", &extra_headers))
@@ -1126,7 +1129,6 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
 
   web_contents()->UserGestureDone();
   params.transition_type = ui::PAGE_TRANSITION_TYPED;
-  params.override_user_agent = content::NavigationController::UA_OVERRIDE_TRUE;
   web_contents()->GetController().LoadURLWithParams(params);
 }
 
