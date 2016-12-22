@@ -339,11 +339,10 @@ int AtomMainDelegate::RunProcess(
   #endif
 
   #if defined(OS_MACOSX)
-      { switches::kRelauncherProcess,
-        relauncher::RelauncherMain },
-        // mac_relauncher::internal::RelauncherMain },
+      { switches::kRelauncherProcess, relauncher::RelauncherMain },
+  #else
+      { kRelauncherProcess, relauncher::RelauncherMain },
   #endif
-      { "<invalid>", NULL },  // To avoid constant array of size 0
     };
 
     for (size_t i = 0; i < arraysize(kMainFunctions); ++i) {
