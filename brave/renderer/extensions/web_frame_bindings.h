@@ -30,6 +30,11 @@ class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
   void RegisterEmbedderCustomElement(
     const v8::FunctionCallbackInfo<v8::Value>& args);
   void SetSpellCheckProvider(const v8::FunctionCallbackInfo<v8::Value>& args);
+
+  void SetZoomLevel(const v8::FunctionCallbackInfo<v8::Value>& args);
+  void SetZoomLevelLimits(const v8::FunctionCallbackInfo<v8::Value>& args);
+  void SetPageScaleLimits(const v8::FunctionCallbackInfo<v8::Value>& args);
+
   void SetGlobal(const v8::FunctionCallbackInfo<v8::Value>& args);
   void ExecuteJavaScript(const v8::FunctionCallbackInfo<v8::Value>& args);
   void Invalidate() override;

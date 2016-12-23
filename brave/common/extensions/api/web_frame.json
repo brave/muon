@@ -46,6 +46,47 @@
         ]
       },
       {
+        "name": "setZoomLevel",
+        "nocompile": true,
+        "type": "function",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "level"
+          }
+        ]
+      },
+      {
+        "name": "setZoomLevelLimits",
+        "nocompile": true,
+        "type": "function",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "minimumLevel"
+          },
+          {
+            "type": "number",
+            "name": "maximumLevel"
+          }
+        ]
+      },
+      {
+        "name": "setPageScaleLimits",
+        "nocompile": true,
+        "type": "function",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "minScale"
+          },
+          {
+            "type": "number",
+            "name": "maxScale"
+          }
+        ]
+      },
+      {
         "name": "executeJavaScript",
         "nocompile": true,
         "type": "function",
