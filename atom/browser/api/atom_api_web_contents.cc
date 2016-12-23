@@ -1535,6 +1535,10 @@ void WebContents::CopyImageAt(int x, int y) {
     host->CopyImageAt(x, y);
 }
 
+void WebContents::Focus() {
+  web_contents()->Focus();
+}
+
 #if !defined(OS_MACOSX)
 bool WebContents::IsFocused() const {
   auto view = web_contents()->GetRenderWidgetHostView();
@@ -1956,6 +1960,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("replaceMisspelling", &WebContents::ReplaceMisspelling)
       .SetMethod("findInPage", &WebContents::FindInPage)
       .SetMethod("stopFindInPage", &WebContents::StopFindInPage)
+      .SetMethod("focus", &WebContents::Focus)
       .SetMethod("isFocused", &WebContents::IsFocused)
       .SetMethod("_clone", &WebContents::Clone)
       .SetMethod("_send", &WebContents::SendIPCMessage)

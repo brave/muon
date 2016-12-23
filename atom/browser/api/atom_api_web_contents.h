@@ -205,6 +205,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void CopyImageAt(int x, int y);
 
   // Focus.
+  void Focus();
   bool IsFocused() const;
   void SetActive(bool active);
   void SetTabIndex(int index);
