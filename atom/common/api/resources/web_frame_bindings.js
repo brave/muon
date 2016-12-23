@@ -17,6 +17,18 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
   apiFunctions.setHandleRequest('setSpellCheckProvider', function(lang, autoCorrectEnabled, spellCheckProvider) {
     return webFrameNatives.setSpellCheckProvider(lang, autoCorrectEnabled, spellCheckProvider)
   })
+
+  apiFunctions.setHandleRequest('setZoomLevel', function(level) {
+    return webFrameNatives.setZoomLevel(level)
+  })
+
+  apiFunctions.setHandleRequest('setZoomLevelLimits', function(minimumLevel, maximumLevel) {
+    return webFrameNatives.setZoomLevelLimits(minimumLevel, maximumLevel)
+  })
+
+  apiFunctions.setHandleRequest('setPageScaleLimits', function(minScale, maxScale) {
+    return webFrameNatives.setPageScaleLimits(minScale, maxScale)
+  })
 })
 
 exports.$set('binding', binding.generate())

@@ -51,6 +51,18 @@ WebFrameBindings::WebFrameBindings(extensions::ScriptContext* context)
       base::Bind(&WebFrameBindings::SetSpellCheckProvider,
           base::Unretained(this)));
   RouteFunction(
+      "setZoomLevel",
+      base::Bind(&WebFrameBindings::SetZoomLevel,
+          base::Unretained(this)));
+  RouteFunction(
+      "setZoomLevelLimits",
+      base::Bind(&WebFrameBindings::SetZoomLevelLimits,
+          base::Unretained(this)));
+  RouteFunction(
+      "setPageScaleLimits",
+      base::Bind(&WebFrameBindings::SetPageScaleLimits,
+          base::Unretained(this)));
+  RouteFunction(
       "setGlobal",
       base::Bind(&WebFrameBindings::SetGlobal, base::Unretained(this)));
   RouteFunction(
@@ -148,7 +160,6 @@ void WebFrameBindings::ExecuteJavaScript(
       callback.release());
 }
 
-
 void WebFrameBindings::SetGlobal(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Isolate* isolate = GetIsolate();
@@ -183,10 +194,13 @@ void WebFrameBindings::SetGlobal(
   }
 }
 
-// double WebFrame::SetZoomLevel(double level) {
-//   double ret = web_frame_->view()->setZoomLevel(level);
-//   return ret;
-// }
+void WebFrameBindings::SetZoomLevel(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  CHECK_EQ(args.Length(), 1);
+  CHECK(args[0]->IsInt32());
+  double level = args[0].As<v8::Number>()->Value();
+  context()->web_frame()->view()->setZoomLevel(level);
+}
 
 // double WebFrame::GetZoomLevel() const {
 //   return web_frame_->view()->zoomLevel();
@@ -201,9 +215,15 @@ void WebFrameBindings::SetGlobal(
 //   return blink::WebView::zoomLevelToZoomFactor(GetZoomLevel());
 // }
 
-// void WebFrame::SetZoomLevelLimits(double min_level, double max_level) {
-//   web_frame_->view()->zoomLimitsChanged(min_level, max_level);
-// }
+void WebFrameBindings::SetZoomLevelLimits(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  CHECK_EQ(args.Length(), 2);
+  CHECK(args[0]->IsInt32());
+  CHECK(args[1]->IsInt32());
+  float min_level = args[0].As<v8::Number>()->Value();
+  float max_level = args[1].As<v8::Number>()->Value();
+  context()->web_frame()->view()->zoomLimitsChanged(min_level, max_level);
+}
 
 // float WebFrame::GetPageScaleFactor() {
 //   return web_frame_->view()->pageScaleFactor();
@@ -213,10 +233,17 @@ void WebFrameBindings::SetGlobal(
 //   web_frame_->view()->setPageScaleFactor(factor);
 // }
 
-// void WebFrame::SetPageScaleLimits(float min_scale, float max_scale) {
-//   web_frame_->view()->setDefaultPageScaleLimits(min_scale, max_scale);
-//   web_frame_->view()->setIgnoreViewportTagScaleLimits(true);
-// }
+void WebFrameBindings::SetPageScaleLimits(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  CHECK_EQ(args.Length(), 2);
+  CHECK(args[0]->IsInt32());
+  CHECK(args[1]->IsInt32());
+  auto web_frame = context()->web_frame();
+  float min_scale = args[0].As<v8::Number>()->Value();
+  float max_scale = args[1].As<v8::Number>()->Value();
+  web_frame->view()->setDefaultPageScaleLimits(min_scale, max_scale);
+  web_frame->view()->setIgnoreViewportTagScaleLimits(true);
+}
 
 // float WebFrame::GetTextZoomFactor() {
 //   return web_frame_->view()->textZoomFactor();
