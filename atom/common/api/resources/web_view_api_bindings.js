@@ -45,6 +45,7 @@ const asyncMethods = [
   'showDefinitionForSelection',
   'capturePage',
   'setActive',
+  'setTabIndex',
   'setWebRTCIPHandlingPolicy',
   'executeScriptInTab',
   'setZoomLevel',

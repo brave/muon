@@ -1625,6 +1625,17 @@ void WebContents::SetActive(bool active) {
 #endif
 }
 
+void WebContents::SetTabIndex(int index) {
+  if (Emit("set-tab-index", index))
+    return;
+
+#if defined(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetTabIndex(index);
+#endif
+}
+
 #if defined(ENABLE_EXTENSIONS)
 bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
@@ -1973,6 +1984,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetProperty("id", &WebContents::ID)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
+      .SetMethod("setTabIndex", &WebContents::SetTabIndex)
       .SetMethod("setWebRTCIPHandlingPolicy",
                   &WebContents::SetWebRTCIPHandlingPolicy)
       .SetMethod("getWebRTCIPHandlingPolicy",
