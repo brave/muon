@@ -60,6 +60,8 @@ class TabHelper : public content::WebContentsObserver,
 
   // Set this tab as the active tab in its window
   void SetActive(bool active);
+  // Set the tab's index in its window
+  void SetTabIndex(int index);
 
   void SetTabValues(const base::DictionaryValue& values);
   base::DictionaryValue* getTabValues() {
@@ -124,6 +126,9 @@ class TabHelper : public content::WebContentsObserver,
 
   std::unique_ptr<base::DictionaryValue> values_;
   std::unique_ptr<ScriptExecutor> script_executor_;
+
+  // Index of the tab within the window
+  int index_ = -1;
 
   DISALLOW_COPY_AND_ASSIGN(TabHelper);
 };

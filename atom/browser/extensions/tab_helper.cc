@@ -82,6 +82,10 @@ void TabHelper::SetActive(bool active) {
     active_tab_map_[window_id_] = -1;
 }
 
+void TabHelper::SetTabIndex(int index) {
+  index_ = index;
+}
+
 void TabHelper::SetTabValues(const base::DictionaryValue& values) {
   values_->MergeDictionary(&values);
 }
@@ -307,8 +311,8 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetBoolean(keys::kDiscardedKey, false);
   result->SetBoolean(keys::kAutoDiscardableKey, false);
   result->SetBoolean(keys::kHighlightedKey, active);
-  // TODO(bridiver) - set index value
-  result->SetInteger(keys::kIndexKey, 0);
+  if (tab_helper->index_ != -1)
+    result->SetInteger(keys::kIndexKey, tab_helper->index_);
   // TODO(bridiver) - set pinned value
   result->SetBoolean(keys::kPinnedKey, false);
   result->SetBoolean(keys::kSelectedKey, active);
