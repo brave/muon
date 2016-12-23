@@ -311,8 +311,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetBoolean(keys::kDiscardedKey, false);
   result->SetBoolean(keys::kAutoDiscardableKey, false);
   result->SetBoolean(keys::kHighlightedKey, active);
-  if (tab_helper->index_ != -1)
-    result->SetInteger(keys::kIndexKey, tab_helper->index_);
+  result->SetInteger(keys::kIndexKey, tab_helper->index_);
   // TODO(bridiver) - set pinned value
   result->SetBoolean(keys::kPinnedKey, false);
   result->SetBoolean(keys::kSelectedKey, active);
