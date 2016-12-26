@@ -217,6 +217,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void Focus();
   bool IsFocused() const;
   void SetActive(bool active);
+  void SetPinned(bool pinned);
   void SetTabIndex(int index);
 
   // Zoom

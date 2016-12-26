@@ -83,6 +83,8 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   // Stores the src URL of the WebView.
   GURL src_;
 
+  bool should_nav_from_src_;
+
   // Tracks the name, and target URL of the new window. Once the first
   // navigation commits, we no longer track this information.
   struct NewWindowInfo {

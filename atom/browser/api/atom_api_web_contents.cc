@@ -1734,6 +1734,16 @@ void WebContents::SetActive(bool active) {
   Emit("set-active", active);
 }
 
+void WebContents::SetPinned(bool pinned) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetPinned(pinned);
+#endif
+
+  Emit("set-pinned", pinned);
+}
+
 void WebContents::SetTabIndex(int index) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
@@ -2111,6 +2121,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetProperty("id", &WebContents::ID)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
+      .SetMethod("setPinned", &WebContents::SetPinned)
       .SetMethod("setTabIndex", &WebContents::SetTabIndex)
       .SetMethod("setWebRTCIPHandlingPolicy",
                   &WebContents::SetWebRTCIPHandlingPolicy)
@@ -2196,6 +2207,11 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   int opener_tab_id = -1;
   options.Get("openerTabId", &opener_tab_id);
 
+  bool pinned = false;
+  if (options.Get("pinned", &pinned)) {
+    SetPinned(pinned);
+  }
+
   content::WebContents* source = nullptr;
   if (opener_tab_id != -1) {
     source = extensions::TabHelper::GetTabById(opener_tab_id);
@@ -2273,6 +2289,10 @@ void WebContents::CreateTab(mate::Arguments* args) {
     create_params.SetString("parent_partition",
         browser_context->original_context()->partition_with_prefix());
   }
+
+  bool pinned = false;
+  options.Get("pinned", &pinned);
+  create_params.SetBoolean("pinned", pinned);
 
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
       owner->web_contents(),

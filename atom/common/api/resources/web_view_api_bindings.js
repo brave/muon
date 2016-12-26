@@ -8,7 +8,10 @@ const GuestViewInternal = require('guest-view-internal').GuestViewInternal
 const TabViewInternal = require('tabViewInternal').TabViewInternal;
 const WebViewInternal = require('webViewInternal').WebViewInternal;
 const WebViewImpl = require('webView').WebViewImpl;
+const GuestViewImpl = require('guestView').GuestViewImpl
 const remote = require('remote')
+const GuestViewContainer = require('guestViewContainer').GuestViewContainer;
+const GuestView = require('guestView').GuestView;
 
 const asyncMethods = [
   'loadURL',
@@ -68,7 +71,8 @@ const syncMethods = [
 ]
 
 var WEB_VIEW_API_METHODS = [
-  'setGuestInstanceId',
+  'attachGuest',
+  'detachGuest',
   // Returns Chrome's internal process ID for the guest web page's current
   // process.
   'getProcessId',
@@ -113,9 +117,23 @@ WebViewImpl.prototype.getTabID = function (instanceId, cb) {
 
 const attachWindow = WebViewImpl.prototype.attachWindow$
 WebViewImpl.prototype.attachWindow$ = function(opt_guestInstanceId) {
-  let attached = attachWindow.bind(this)(opt_guestInstanceId)
+  if (this.guest.getId() === opt_guestInstanceId && this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    console.log('ID is the same so bailing', opt_guestInstanceId)
+    return
+  }
   // preload the webcontents and tabID
   const guestInstanceId = opt_guestInstanceId || this.guest.getId()
+
+  console.log('web_view_api_bindings.js attachGuest!', guestInstanceId, 'guest state:', this.guest.getState())
+  // TODO: Should be destroying this not detaching
+  if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    console.log('calling detach!')
+    this.guest.detach();
+  }
+  console.log('creating new GuestView!')
+  this.guest = new GuestView('webview', guestInstanceId);
+
+  const attached = GuestViewContainer.prototype.attachWindow$.call(this);
 
   WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
     // cache webContents_
@@ -126,17 +144,35 @@ WebViewImpl.prototype.attachWindow$ = function(opt_guestInstanceId) {
     this.tabID = tabID
     GuestViewInternal.registerEvents(this, tabID)
   })
-
   return attached
 }
 
-WebViewImpl.prototype.setGuestInstanceId = function (guestInstanceId) {
-  return this.attachWindow$(guestInstanceId)
+WebViewImpl.prototype.detachGuest = function () {
+  console.log('detachGuest1', this.guest.getState())
+  if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    console.log('detachGuest2')
+    this.guest.detach()
+  }
+  this.guest = new GuestView('webview')
+  console.log('detachGuest3')
+  // TODO: Can try: this.createGuest()
 }
 
 WebViewImpl.prototype.getProcessId = function() {
   return this.processId
 }
+
+WebViewImpl.prototype.attachGuest = function(guestInstanceId) {
+
+  return this.attachWindow$(guestInstanceId)
+
+};
+
+GuestView.prototype.getState = function() {
+  var internal = privates(this).internal;
+  return internal.state
+}
+
 
 // -----------------------------------------------------------------------------
 
