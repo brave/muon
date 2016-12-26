@@ -60,6 +60,8 @@ class TabHelper : public content::WebContentsObserver,
 
   // Set this tab as the active tab in its window
   void SetActive(bool active);
+  // Set whether or not the tab is pinned
+  void SetPinned(bool pinned);
   // Set the tab's index in its window
   void SetTabIndex(int index);
 
@@ -127,6 +129,8 @@ class TabHelper : public content::WebContentsObserver,
   std::unique_ptr<base::DictionaryValue> values_;
   std::unique_ptr<ScriptExecutor> script_executor_;
 
+  // Whether or not the tab is pinned
+  bool pinned_ = false;
   // Index of the tab within the window
   int index_ = -1;
 

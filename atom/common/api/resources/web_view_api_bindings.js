@@ -9,6 +9,8 @@ const TabViewInternal = require('tabViewInternal').TabViewInternal;
 const WebViewInternal = require('webViewInternal').WebViewInternal;
 const WebViewImpl = require('webView').WebViewImpl;
 const remote = require('remote')
+const GuestViewContainer = require('guestViewContainer').GuestViewContainer;
+const GuestView = require('guestView').GuestView;
 
 const asyncMethods = [
   'loadURL',
@@ -74,7 +76,8 @@ const syncMethods = [
 ]
 
 var WEB_VIEW_API_METHODS = [
-  'setGuestInstanceId',
+  'attachGuest',
+  'detachGuest',
   // Returns Chrome's internal process ID for the guest web page's current
   // process.
   'getProcessId',
@@ -129,8 +132,8 @@ WebViewImpl.prototype.attachWindow$ = function(opt_guestInstanceId) {
   return attached
 }
 
-WebViewImpl.prototype.setGuestInstanceId = function (guestInstanceId) {
-  return this.attachWindow$(guestInstanceId)
+WebViewImpl.prototype.detachGuest = function () {
+  this.guest.detach()
 }
 
 WebViewImpl.prototype.getWebContents = function (cb) {
@@ -148,6 +151,15 @@ WebViewImpl.prototype.getWebContents = function (cb) {
 WebViewImpl.prototype.getProcessId = function() {
   return this.processId
 }
+
+WebViewImpl.prototype.attachGuest = function(guestInstanceId) {
+  if (this.guest.getId() !== guestInstanceId) {
+     // this.guest.destroy();
+     //this.guest = new GuestView('webview', guestInstanceId);
+     //this.guest.detach();
+  }
+  return GuestViewContainer.prototype.attachWindow$.call(this);
+};
 
 // -----------------------------------------------------------------------------
 

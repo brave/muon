@@ -11,6 +11,7 @@
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
@@ -30,6 +31,7 @@ DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
 
 namespace keys {
 const char kIdKey[] = "id";
+const char kGuestInstanceIdKey[] = "guestInstanceId";
 const char kActiveKey[] = "active";
 const char kIncognitoKey[] = "incognito";
 const char kWindowIdKey[] = "windowId";
@@ -84,6 +86,10 @@ void TabHelper::SetActive(bool active) {
 
 void TabHelper::SetTabIndex(int index) {
   index_ = index;
+}
+
+void TabHelper::SetPinned(bool pinned) {
+  pinned_ = pinned;
 }
 
 void TabHelper::SetTabValues(const base::DictionaryValue& values) {
@@ -299,6 +305,14 @@ base::DictionaryValue* TabHelper::CreateTabValue(
       tab_helper->getTabValues()->CreateDeepCopy());
 
   result->SetInteger(keys::kIdKey, tab_id);
+
+  int32_t guestInstanceId = -1;
+  brave::TabViewGuest* guest =
+    brave::TabViewGuest::FromWebContents(contents);
+  if (guest) {
+    guestInstanceId = guest->guest_instance_id();
+  }
+  result->SetInteger(keys::kGuestInstanceIdKey, guestInstanceId);
   result->SetInteger(keys::kWindowIdKey, window_id);
   result->SetBoolean(keys::kIncognitoKey,
                      contents->GetBrowserContext()->IsOffTheRecord());
@@ -312,8 +326,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetBoolean(keys::kAutoDiscardableKey, false);
   result->SetBoolean(keys::kHighlightedKey, active);
   result->SetInteger(keys::kIndexKey, tab_helper->index_);
-  // TODO(bridiver) - set pinned value
-  result->SetBoolean(keys::kPinnedKey, false);
+  result->SetBoolean(keys::kPinnedKey, tab_helper->pinned_);
   result->SetBoolean(keys::kSelectedKey, active);
 
   return result.release();
