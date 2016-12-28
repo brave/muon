@@ -167,8 +167,8 @@ NativeWindowViews::NativeWindowViews(
 
   if (enable_larger_than_screen())
     // We need to set a default maximum window size here otherwise Windows
-    // will not allow us to resize the window larger than scree.
-    // Setting directly to INT_MAX somehow doesn't work, so we just devide
+    // will not allow us to resize the window larger than screen.
+    // Setting directly to INT_MAX somehow doesn't work, so we just divide
     // by 10, which should still be large enough.
     SetContentSizeConstraints(extensions::SizeConstraints(
         gfx::Size(), gfx::Size(INT_MAX / 10, INT_MAX / 10)));
@@ -201,6 +201,19 @@ NativeWindowViews::NativeWindowViews(
     params.activatable = views::Widget::InitParams::ACTIVATABLE_NO;
 
 #if defined(OS_WIN)
+  /** Registers handlers used to:
+   *  - listen for windows events via PreHandleMSG
+   *    - events include WM_GETOBJECT / WM_COMMAND / WM_SIZE / WM_MOVING / WM_MOVE
+   *    - \see src/electron/atom/browser/native_window_views_win.cc
+   *  - override the client area inset
+   *    - used to force border of 0 for frameless windows
+   *    - \see src/electron/atom/browser/ui/win/atom_desktop_window_tree_host_win.cc
+   *
+   *  Important things to note:
+   *  - views::Widget is located in Chromium at src/ui/views/widget/widget.cc
+   *  - Widget acts as a proxy for DesktopNativeWidgetAura (it passes calls through)
+   *  - DesktopNativeWidgetAura then calls AtomDesktopWindowTreeHostWin as needed
+   */
   if (parent)
     params.parent = parent->GetNativeWindow();
 
