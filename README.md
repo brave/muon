@@ -36,7 +36,7 @@ You can also [see our wiki](https://github.com/brave/browser-laptop-bootstrap/wi
 
 ## Quick Start
 
-Clone and run the [`muon-quick`](https://github.com/jonathansampson/muon-quick)
+Clone and run the [`muon-quick`](https://github.com/brave/muon-quick)
 repository to see a minimal Muon app in action.
 
 ## Community
