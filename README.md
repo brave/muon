@@ -19,7 +19,7 @@ Some of Muons goals include:
 Muon is a fork of the [Electron](https://github.com/electron/electron/) framework
 which is currently used in the [Brave](https://brave.com) web browser.
 
-Follow [@brave][https://twitter.com/brave] on Twitter for important
+Follow [@brave](https://twitter.com/brave) on Twitter for important
 announcements.
 
 ## Downloads
