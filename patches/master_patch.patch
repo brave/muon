@@ -121,7 +121,7 @@ index 0f8d9d8adcdb6df2b0725d8e0cb7ac1d0c0c66c0..e29ec8366189191c6604b5b8e730cee0
    }
  
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
-index 179c44c04e70496a4ae6a1086a50349cda216255..5abd0b6bbf598b003eaaf9535bb3bffeb05da7a4 100644
+index 6e89f92315616645fce1e953401a76b17a1ca0f6..52d2d611fe6bb489ab625ffb553e498ac4f30471 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
 @@ -61,7 +61,7 @@ void ShowWarningMessageBox(const base::string16& message) {
@@ -569,7 +569,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
+@@ -41,7 +41,9 @@
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -1074,6 +1074,434 @@ index a0191448ccf9f0654177ec5efb8603723bb1b022..1d2a3a144f83d16c91b0d15cb5e0e17e
  // Tell the browser print preview was cancelled.
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
                      int /* document cookie */)
+diff --git a/components/printing/renderer/print_web_view_helper.cc b/components/printing/renderer/print_web_view_helper.cc
+index 7fa310fbb04278eb36ee355b8e1e7079046d808b..ec6dd7201bc5c5c7defa09cc3ec51e743dbb4d8a 100644
+--- a/components/printing/renderer/print_web_view_helper.cc
++++ b/components/printing/renderer/print_web_view_helper.cc
+@@ -302,7 +302,6 @@ bool PrintingNodeOrPdfFrame(const blink::WebLocalFrame* frame,
+   return plugin && plugin->supportsPaginatedPrint();
+ }
+ 
+-#if defined(ENABLE_PRINT_PREVIEW)
+ // Returns true if the current destination printer is PRINT_TO_PDF.
+ bool IsPrintToPdfRequested(const base::DictionaryValue& job_settings) {
+   bool print_to_pdf = false;
+@@ -324,7 +323,6 @@ bool PrintingFrameHasPageSizeStyle(blink::WebLocalFrame* frame,
+   }
+   return frame_has_custom_page_size_style;
+ }
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ // Disable scaling when either:
+ // - The PDF specifies disabling scaling.
+@@ -378,7 +376,6 @@ MarginType GetMarginsForPdf(blink::WebLocalFrame* frame,
+ }
+ #endif
+ 
+-#if defined(ENABLE_PRINT_PREVIEW)
+ bool FitToPageEnabled(const base::DictionaryValue& job_settings) {
+   bool fit_to_paper_size = false;
+   if (!job_settings.GetBoolean(kSettingFitToPageEnabled, &fit_to_paper_size)) {
+@@ -421,7 +418,6 @@ blink::WebPrintScalingOption GetPrintScalingOption(
+   }
+   return blink::WebPrintScalingOptionFitToPrintableArea;
+ }
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ PrintMsg_Print_Params CalculatePrintParamsForCss(
+     blink::WebLocalFrame* frame,
+@@ -941,9 +937,9 @@ bool PrintWebViewHelper::OnMessageReceived(const IPC::Message& message) {
+ #endif
+ #if defined(ENABLE_PRINT_PREVIEW)
+     IPC_MESSAGE_HANDLER(PrintMsg_InitiatePrintPreview, OnInitiatePrintPreview)
++#endif  // defined(ENABLE_PRINT_PREVIEW)
+     IPC_MESSAGE_HANDLER(PrintMsg_PrintPreview, OnPrintPreview)
+     IPC_MESSAGE_HANDLER(PrintMsg_PrintingDone, OnPrintingDone)
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+     IPC_MESSAGE_HANDLER(PrintMsg_SetScriptedPrintingBlocked,
+                         SetScriptedPrintBlocked)
+     IPC_MESSAGE_UNHANDLED(handled = false)
+@@ -975,8 +971,6 @@ bool PrintWebViewHelper::GetPrintFrame(blink::WebLocalFrame** frame) {
+ 
+ #if defined(ENABLE_BASIC_PRINTING)
+ void PrintWebViewHelper::OnPrintPages() {
+-  if (ipc_nesting_level_> 1)
+-    return;
+   blink::WebLocalFrame* frame;
+   if (!GetPrintFrame(&frame))
+     return;
+@@ -1088,61 +1082,29 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
+   ignore_css_margins_ = (margins_type != DEFAULT_MARGINS);
+ }
+ 
+-#if defined(ENABLE_PRINT_PREVIEW)
+ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+-  if (ipc_nesting_level_ > 1)
+-    return;
+-
+-  print_preview_context_.OnPrintPreview();
+-
+-  UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
+-                            PREVIEW_EVENT_REQUESTED, PREVIEW_EVENT_MAX);
+-
+-  if (!print_preview_context_.source_frame()) {
+-    DidFinishPrinting(FAIL_PREVIEW);
+-    return;
+-  }
++  blink::WebLocalFrame* frame;
++  if (GetPrintFrame(&frame)) {
++    print_preview_context_.InitWithFrame(frame);
++    if (!print_preview_context_.source_frame()) {
++      DidFinishPrinting(FAIL_PREVIEW);
++      return;
++    }
+ 
+-  if (!UpdatePrintSettings(print_preview_context_.source_frame(),
++    if (!UpdatePrintSettings(print_preview_context_.source_frame(),
+                            print_preview_context_.source_node(), settings)) {
+-    if (print_preview_context_.last_error() != PREVIEW_ERROR_BAD_SETTING) {
+-      Send(new PrintHostMsg_PrintPreviewInvalidPrinterSettings(
+-          routing_id(), print_pages_params_
+-                            ? print_pages_params_->params.document_cookie
+-                            : 0));
+-      notify_browser_of_print_failure_ = false;  // Already sent.
++      DidFinishPrinting(FAIL_PREVIEW);
++      return;
+     }
+-    DidFinishPrinting(FAIL_PREVIEW);
+-    return;
+-  }
+-
+-  // Set the options from document if we are previewing a pdf and send a
+-  // message to browser.
+-  if (print_pages_params_->params.is_first_request &&
+-      !print_preview_context_.IsModifiable()) {
+-    PrintHostMsg_SetOptionsFromDocument_Params options;
+-    if (SetOptionsFromPdfDocument(&options))
+-      Send(new PrintHostMsg_SetOptionsFromDocument(routing_id(), options));
+-  }
+-
+-  is_print_ready_metafile_sent_ = false;
+-
+-  // PDF printer device supports alpha blending.
+-  print_pages_params_->params.supports_alpha_blend = true;
+-
+-  bool generate_draft_pages = false;
+-  if (!settings.GetBoolean(kSettingGenerateDraftData, &generate_draft_pages)) {
+-    NOTREACHED();
++    is_print_ready_metafile_sent_ = false;
++    PrepareFrameForPreviewDocument();
+   }
+-  print_preview_context_.set_generate_draft_pages(generate_draft_pages);
+-
+-  PrepareFrameForPreviewDocument();
+ }
+ 
+ void PrintWebViewHelper::PrepareFrameForPreviewDocument() {
+   reset_prep_frame_view_ = false;
+ 
+-  if (!print_pages_params_ || CheckForCancel()) {
++  if (!print_pages_params_) {
+     DidFinishPrinting(FAIL_PREVIEW);
+     return;
+   }
+@@ -1173,12 +1135,9 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
+ }
+ 
+ bool PrintWebViewHelper::CreatePreviewDocument() {
+-  if (!print_pages_params_ || CheckForCancel())
++  if (!print_pages_params_)
+     return false;
+ 
+-  UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
+-                            PREVIEW_EVENT_CREATE_DOCUMENT, PREVIEW_EVENT_MAX);
+-
+   const PrintMsg_Print_Params& print_params = print_pages_params_->params;
+   const std::vector<int>& pages = print_pages_params_->pages;
+ 
+@@ -1187,47 +1146,12 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+     return false;
+   }
+ 
+-  PageSizeMargins default_page_layout;
+-  ComputePageLayoutInPointsForCss(print_preview_context_.prepared_frame(), 0,
+-                                  print_params, ignore_css_margins_, NULL,
+-                                  &default_page_layout);
+-
+-  bool has_page_size_style =
+-      PrintingFrameHasPageSizeStyle(print_preview_context_.prepared_frame(),
+-                                    print_preview_context_.total_page_count());
+-  int dpi = GetDPI(&print_params);
+-
+-  gfx::Rect printable_area_in_points(
+-      ConvertUnit(print_params.printable_area.x(), dpi, kPointsPerInch),
+-      ConvertUnit(print_params.printable_area.y(), dpi, kPointsPerInch),
+-      ConvertUnit(print_params.printable_area.width(), dpi, kPointsPerInch),
+-      ConvertUnit(print_params.printable_area.height(), dpi, kPointsPerInch));
+-
+-  // Margins: Send default page layout to browser process.
+-  Send(new PrintHostMsg_DidGetDefaultPageLayout(routing_id(),
+-                                                default_page_layout,
+-                                                printable_area_in_points,
+-                                                has_page_size_style));
+-
+-  PrintHostMsg_DidGetPreviewPageCount_Params params;
+-  params.page_count = print_preview_context_.total_page_count();
+-  params.is_modifiable = print_preview_context_.IsModifiable();
+-  params.document_cookie = print_params.document_cookie;
+-  params.preview_request_id = print_params.preview_request_id;
+-  params.clear_preview_data = print_preview_context_.generate_draft_pages();
+-  Send(new PrintHostMsg_DidGetPreviewPageCount(routing_id(), params));
+-  if (CheckForCancel())
+-    return false;
+-
+   while (!print_preview_context_.IsFinalPageRendered()) {
+     int page_number = print_preview_context_.GetNextPageNumber();
+     DCHECK_GE(page_number, 0);
+     if (!RenderPreviewPage(page_number, print_params))
+       return false;
+ 
+-    if (CheckForCancel())
+-      return false;
+-
+     // We must call PrepareFrameAndViewForPrint::FinishPrinting() (by way of
+     // print_preview_context_.AllPagesRendered()) before calling
+     // FinalizePrintReadyDocument() when printing a PDF because the plugin
+@@ -1249,7 +1173,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+   return true;
+ }
+ 
+-#if !defined(OS_MACOSX) && defined(ENABLE_PRINT_PREVIEW)
++#if !defined(OS_MACOSX)
+ bool PrintWebViewHelper::RenderPreviewPage(
+     int page_number,
+     const PrintMsg_Print_Params& print_params) {
+@@ -1279,7 +1203,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
+   }
+   return PreviewPageRendered(page_number, draft_metafile.get());
+ }
+-#endif  // !defined(OS_MACOSX) && defined(ENABLE_PRINT_PREVIEW)
++#endif  // !defined(OS_MACOSX)
+ 
+ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
+   DCHECK(!is_print_ready_metafile_sent_);
+@@ -1309,11 +1233,8 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
+   Send(new PrintHostMsg_MetafileReadyForPrinting(routing_id(), preview_params));
+   return true;
+ }
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ void PrintWebViewHelper::OnPrintingDone(bool success) {
+-  if (ipc_nesting_level_ > 1)
+-    return;
+   notify_browser_of_print_failure_ = false;
+   if (!success)
+     LOG(ERROR) << "Failure in OnPrintingDone";
+@@ -1439,19 +1360,13 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
+       }
+       break;
+ 
+-#if defined(ENABLE_PRINT_PREVIEW)
+     case FAIL_PREVIEW:
+-      int cookie =
+-          print_pages_params_ ? print_pages_params_->params.document_cookie : 0;
+-      if (notify_browser_of_print_failure_) {
+-        LOG(ERROR) << "CreatePreviewDocument failed";
+-        Send(new PrintHostMsg_PrintPreviewFailed(routing_id(), cookie));
+-      } else {
+-        Send(new PrintHostMsg_PrintPreviewCancelled(routing_id(), cookie));
++      LOG(ERROR) << "PREVIEW FAILED.";
++      if (print_pages_params_) {
++        Send(new PrintHostMsg_PrintPreviewFailed(routing_id(),
++                 print_pages_params_->params.document_cookie));
+       }
+-      print_preview_context_.Failed(notify_browser_of_print_failure_);
+       break;
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+   }
+   prep_frame_view_.reset();
+   print_pages_params_.reset();
+@@ -1614,6 +1529,7 @@ bool PrintWebViewHelper::SetOptionsFromPdfDocument(
+   }
+   return true;
+ }
++#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ bool PrintWebViewHelper::UpdatePrintSettings(
+     blink::WebLocalFrame* frame,
+@@ -1656,27 +1572,13 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+     return false;
+   }
+ 
+-  if (!job_settings->GetInteger(kPreviewUIID, &settings.params.preview_ui_id)) {
+-    NOTREACHED();
+-    print_preview_context_.set_error(PREVIEW_ERROR_BAD_SETTING);
+-    return false;
+-  }
+-
+   if (!print_for_preview_) {
+-    // Validate expected print preview settings.
+-    if (!job_settings->GetInteger(kPreviewRequestID,
+-                                  &settings.params.preview_request_id) ||
+-        !job_settings->GetBoolean(kIsFirstRequest,
+-                                  &settings.params.is_first_request)) {
+-      NOTREACHED();
+-      print_preview_context_.set_error(PREVIEW_ERROR_BAD_SETTING);
+-      return false;
+-    }
+-
+-    settings.params.print_to_pdf = IsPrintToPdfRequested(*job_settings);
++    job_settings->GetInteger(kPreviewRequestID,
++        &settings.params.preview_request_id);
++    settings.params.print_to_pdf = true;
+     UpdateFrameMarginsCssInfo(*job_settings);
+-    settings.params.print_scaling_option = GetPrintScalingOption(
+-        frame, node, source_is_html, *job_settings, settings.params);
++    settings.params.print_scaling_option =
++      blink::WebPrintScalingOptionSourceSize;
+   }
+ 
+   SetPrintPagesParams(settings);
+@@ -1684,15 +1586,11 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+   if (!PrintMsg_Print_Params_IsValid(settings.params)) {
+     if (!print_for_preview_)
+       print_preview_context_.set_error(PREVIEW_ERROR_INVALID_PRINTER_SETTINGS);
+-    else
+-      Send(new PrintHostMsg_ShowInvalidPrinterSettingsError(routing_id()));
+-
+     return false;
+   }
+ 
+   return true;
+ }
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ #if defined(ENABLE_BASIC_PRINTING)
+ bool PrintWebViewHelper::GetPrintSettingsFromUser(blink::WebLocalFrame* frame,
+@@ -1943,6 +1841,7 @@ bool PrintWebViewHelper::CheckForCancel() {
+     notify_browser_of_print_failure_ = false;
+   return cancel;
+ }
++#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
+                                              PdfMetafileSkia* metafile) {
+@@ -1964,23 +1863,8 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
+     return false;
+   }
+ 
+-  PrintHostMsg_DidPreviewPage_Params preview_page_params;
+-  // Get the size of the resulting metafile.
+-  if (!CopyMetafileDataToSharedMem(
+-          *metafile, &(preview_page_params.metafile_data_handle))) {
+-    LOG(ERROR) << "CopyMetafileDataToSharedMem failed";
+-    print_preview_context_.set_error(PREVIEW_ERROR_METAFILE_COPY_FAILED);
+-    return false;
+-  }
+-  preview_page_params.data_size = metafile->GetDataSize();
+-  preview_page_params.page_number = page_number;
+-  preview_page_params.preview_request_id =
+-      print_pages_params_->params.preview_request_id;
+-
+-  Send(new PrintHostMsg_DidPreviewPage(routing_id(), preview_page_params));
+   return true;
+ }
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ PrintWebViewHelper::PrintPreviewContext::PrintPreviewContext()
+     : total_page_count_(0),
+diff --git a/components/printing/renderer/print_web_view_helper.h b/components/printing/renderer/print_web_view_helper.h
+index dd8d24d5b42458d47c615562d768d84f8d291e8f..b66d0180d9a9b948a582bfd765a208329398992e 100644
+--- a/components/printing/renderer/print_web_view_helper.h
++++ b/components/printing/renderer/print_web_view_helper.h
+@@ -138,9 +138,7 @@ class PrintWebViewHelper
+     OK,
+     FAIL_PRINT_INIT,
+     FAIL_PRINT,
+-#if defined(ENABLE_PRINT_PREVIEW)
+     FAIL_PREVIEW,
+-#endif
+   };
+ 
+   enum PrintPreviewErrorBuckets {
+@@ -177,8 +175,8 @@ class PrintWebViewHelper
+ #endif  // defined(ENABLE_BASIC_PRINTING)
+ #if defined(ENABLE_PRINT_PREVIEW)
+   void OnInitiatePrintPreview(bool selection_only);
+-  void OnPrintPreview(const base::DictionaryValue& settings);
+ #endif  // defined(ENABLE_PRINT_PREVIEW)
++  void OnPrintPreview(const base::DictionaryValue& settings);
+   void OnPrintingDone(bool success);
+ 
+   // Get |page_size| and |content_area| information from
+@@ -191,7 +189,6 @@ class PrintWebViewHelper
+   // Update |ignore_css_margins_| based on settings.
+   void UpdateFrameMarginsCssInfo(const base::DictionaryValue& settings);
+ 
+-#if defined(ENABLE_PRINT_PREVIEW)
+   // Prepare frame for creating preview document.
+   void PrepareFrameForPreviewDocument();
+ 
+@@ -208,7 +205,6 @@ class PrintWebViewHelper
+ 
+   // Finalize the print ready preview document.
+   bool FinalizePrintReadyDocument();
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+   // Enable/Disable window.print calls.  If |blocked| is true window.print
+   // calls will silently fail.  Call with |blocked| set to false to reenable.
+@@ -241,6 +237,7 @@ class PrintWebViewHelper
+   // Set options for print preset from source PDF document.
+   bool SetOptionsFromPdfDocument(
+       PrintHostMsg_SetOptionsFromDocument_Params* options);
++#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+   // Update the current print settings with new |passed_job_settings|.
+   // |passed_job_settings| dictionary contains print job details such as printer
+@@ -248,7 +245,6 @@ class PrintWebViewHelper
+   bool UpdatePrintSettings(blink::WebLocalFrame* frame,
+                            const blink::WebNode& node,
+                            const base::DictionaryValue& passed_job_settings);
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+   // Get final print settings from the user.
+   // Return false if the user cancels or on error.
+@@ -350,6 +346,7 @@ class PrintWebViewHelper
+   void ShowScriptedPrintPreview();
+ 
+   void RequestPrintPreview(PrintPreviewRequestType type);
++#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+   // Checks whether print preview should continue or not.
+   // Returns true if canceling, false if continuing.
+@@ -361,7 +358,6 @@ class PrintWebViewHelper
+   // |metafile| is the rendered page. Otherwise |metafile| is NULL.
+   // Returns true if print preview should continue, false on failure.
+   bool PreviewPageRendered(int page_number, PdfMetafileSkia* metafile);
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+   void SetPrintPagesParams(const PrintMsg_PrintPages_Params& settings);
+ 
+diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/components/printing/renderer/print_web_view_helper_mac.mm
+index 0b134745863bb1d6a520aacf601527f94cb14c61..86d74195e694f13c183592c43b3f37408c57bd8c 100644
+--- a/components/printing/renderer/print_web_view_helper_mac.mm
++++ b/components/printing/renderer/print_web_view_helper_mac.mm
+@@ -68,7 +68,6 @@
+   Send(new PrintHostMsg_DidPrintPage(routing_id(), page_params));
+ }
+ 
+-#if defined(ENABLE_PRINT_PREVIEW)
+ bool PrintWebViewHelper::RenderPreviewPage(
+     int page_number,
+     const PrintMsg_Print_Params& print_params) {
+@@ -105,7 +104,6 @@
+   }
+   return PreviewPageRendered(page_number, draft_metafile.get());
+ }
+-#endif  // defined(ENABLE_PRINT_PREVIEW)
+ 
+ void PrintWebViewHelper::RenderPage(const PrintMsg_Print_Params& params,
+                                     int page_number,
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
 index 01bb5f00f42ce6a9499708f7a53c5766054c62fc..9584584ed6215ec4169932dad103c124416f0134 100644
 --- a/content/app/content_main_runner.cc
@@ -1091,7 +1519,7 @@ diff --git a/content/browser/accessibility/browser_accessibility_cocoa.mm b/cont
 index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8f6831802 100644
 --- a/content/browser/accessibility/browser_accessibility_cocoa.mm
 +++ b/content/browser/accessibility/browser_accessibility_cocoa.mm
-@@ -104,6 +104,7 @@ struct AXTextMarkerData {
+@@ -104,6 +104,7 @@
  // VoiceOver uses -1 to mean "no limit" for AXResultsLimit.
  const int kAXResultsLimitNoLimit = -1;
  
@@ -1099,7 +1527,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  extern "C" {
  
  // See http://openradar.appspot.com/9896491. This SPI has been tested on 10.5,
-@@ -309,6 +310,7 @@ NSAttributedString* GetAttributedTextForTextMarkerRange(
+@@ -309,6 +310,7 @@ void AddMisspelledTextAttributes(
    AddMisspelledTextAttributes(text_only_objects, attributed_text);
    return [attributed_text attributedSubstringFromRange:range];
  }
@@ -1107,7 +1535,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  // Returns an autoreleased copy of the AXNodeData's attribute.
  NSString* NSStringForStringAttribute(
-@@ -544,7 +546,9 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -544,7 +546,9 @@ + (void)initialize {
        {NSAccessibilityDisclosedRowsAttribute, @"disclosedRows"},
        {NSAccessibilityDropEffectsAttribute, @"dropEffects"},
        {NSAccessibilityEnabledAttribute, @"enabled"},
@@ -1117,7 +1545,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
        {NSAccessibilityExpandedAttribute, @"expanded"},
        {NSAccessibilityFocusedAttribute, @"focused"},
        {NSAccessibilityGrabbedAttribute, @"grabbed"},
-@@ -572,13 +576,17 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -572,13 +576,17 @@ + (void)initialize {
        {NSAccessibilityRowsAttribute, @"rows"},
        // TODO(aboxhall): expose
        // NSAccessibilityServesAsTitleForUIElementsAttribute
@@ -1135,7 +1563,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
        {NSAccessibilitySizeAttribute, @"size"},
        {NSAccessibilitySortDirectionAttribute, @"sortDirection"},
        {NSAccessibilitySubroleAttribute, @"subrole"},
-@@ -617,8 +625,10 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -617,8 +625,10 @@ - (instancetype)initWithObject:(BrowserAccessibility*)accessibility {
  }
  
  - (void)detach {
@@ -1146,7 +1574,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    browserAccessibility_ = nullptr;
  }
  
-@@ -909,6 +919,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -909,6 +919,7 @@ - (NSNumber*)enabled {
        !GetState(browserAccessibility_, ui::AX_STATE_DISABLED)];
  }
  
@@ -1154,7 +1582,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  // Returns a text marker that points to the last character in the document that
  // can be selected with VoiceOver.
  - (id)endTextMarker {
-@@ -937,6 +948,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -937,6 +948,7 @@ - (id)endTextMarker {
                            last_text_object->GetText().length(),
                            ui::AX_TEXT_AFFINITY_DOWNSTREAM);
  }
@@ -1162,7 +1590,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  - (NSNumber*)expanded {
    if (![self instanceActive])
-@@ -1590,6 +1602,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1590,6 +1602,7 @@ - (NSValue*)selectedTextRange {
    return [NSValue valueWithRange:NSMakeRange(selStart, selLength)];
  }
  
@@ -1170,7 +1598,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  - (id)selectedTextMarkerRange {
    if (![self instanceActive])
      return nil;
-@@ -1620,6 +1633,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1620,6 +1633,7 @@ - (id)selectedTextMarkerRange {
    return CreateTextMarkerRange(*anchorObject, anchorOffset, anchorAffinity,
                                 *focusObject, focusOffset, focusAffinity);
  }
@@ -1178,7 +1606,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  - (NSValue*)size {
    if (![self instanceActive])
-@@ -1652,6 +1666,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1652,6 +1666,7 @@ - (NSString*)sortDirection {
    return nil;
  }
  
@@ -1186,7 +1614,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  // Returns a text marker that points to the first character in the document that
  // can be selected with VoiceOver.
  - (id)startTextMarker {
-@@ -1678,6 +1693,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1678,6 +1693,7 @@ - (id)startTextMarker {
  
    return CreateTextMarker(*first_text_object, 0, ui::AX_TEXT_AFFINITY_UPSTREAM);
  }
@@ -1194,7 +1622,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  // Returns a subrole based upon the role.
  - (NSString*) subrole {
-@@ -1950,10 +1966,12 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -1950,10 +1966,12 @@ - (NSAttributedString*)attributedValueForRange:(NSRange)range {
    NSString* value = base::SysUTF16ToNSString(browserAccessibility_->GetValue());
    NSMutableAttributedString* attributedValue =
        [[[NSMutableAttributedString alloc] initWithString:value] autorelease];
@@ -1207,7 +1635,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    return [attributedValue attributedSubstringFromRange:range];
  }
  
-@@ -2074,6 +2092,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2074,6 +2092,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
      return nil;
    }
  
@@ -1215,7 +1643,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    if ([attribute isEqualToString:@"AXUIElementForTextMarker"]) {
      BrowserAccessibility* object;
      int offset;
-@@ -2256,6 +2275,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2256,6 +2275,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
      NSString* text = GetTextForTextMarkerRange(parameter);
      return [NSNumber numberWithInt:[text length]];
    }
@@ -1223,7 +1651,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
    if ([attribute isEqualToString:
        NSAccessibilityBoundsForRangeParameterizedAttribute]) {
-@@ -2293,6 +2313,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2293,6 +2313,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
      return nil;
    }
  
@@ -1231,7 +1659,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    if ([attribute isEqualToString:
             NSAccessibilityLineTextMarkerRangeForTextMarkerParameterizedAttribute]) {
      BrowserAccessibility* object;
-@@ -2310,6 +2331,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
+@@ -2310,6 +2331,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
          *object, startOffset, ui::AX_TEXT_AFFINITY_UPSTREAM,
          *object, endOffset, ui::AX_TEXT_AFFINITY_DOWNSTREAM);
    }
@@ -1243,7 +1671,7 @@ diff --git a/content/browser/accessibility/browser_accessibility_manager_mac.mm 
 index 77ce72f4df5882ac45c0533656d8cbfffcdd961b..c8c80e50494f3ae4531f494000ddad45fd639649 100644
 --- a/content/browser/accessibility/browser_accessibility_manager_mac.mm
 +++ b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-@@ -83,8 +83,10 @@ NSString* const NSAccessibilityTextSelectionGranularity =
+@@ -83,8 +83,10 @@
      @"AXTextSelectionGranularity";
  NSString* const NSAccessibilityTextSelectionChangedFocus =
      @"AXTextSelectionChangedFocus";
@@ -1254,7 +1682,7 @@ index 77ce72f4df5882ac45c0533656d8cbfffcdd961b..c8c80e50494f3ae4531f494000ddad45
  NSString* const NSAccessibilityTextChangeElement = @"AXTextChangeElement";
  NSString* const NSAccessibilityTextEditType = @"AXTextEditType";
  NSString* const NSAccessibilityTextChangeValue = @"AXTextChangeValue";
-@@ -432,9 +434,10 @@ NSDictionary* BrowserAccessibilityManagerMac::
+@@ -432,9 +434,10 @@
      focus_object = focus_object->GetClosestPlatformObject();
      auto native_focus_object = ToBrowserAccessibilityCocoa(focus_object);
      if (native_focus_object && [native_focus_object instanceActive]) {
@@ -1283,7 +1711,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 92d3617594e49f5c9b6a392d3dde935c02548159..6004636d53feff66cd39a67c920a5ba85f76ffef 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@
+@@ -21,7 +21,7 @@ @interface SyntheticPinchEvent : NSObject
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1296,7 +1724,7 @@ diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/cont
 index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd60743143746191 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -137,6 +137,11 @@ RenderWidgetHostViewMac* GetRenderWidgetHostViewToUse(
+@@ -137,6 +137,11 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
  
  }  // namespace
  
@@ -1308,7 +1736,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -469,7 +474,9 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
+@@ -469,7 +474,9 @@ float FlipYFromRectToScreen(float y, float rect_height) {
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
@@ -1318,7 +1746,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1737,6 +1744,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1737,6 +1744,9 @@ - (BOOL)acceptsMouseEventsWhenInactive {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1328,7 +1756,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    return [self acceptsMouseEventsWhenInactive];
  }
  
-@@ -1878,6 +1888,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1878,6 +1888,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1336,7 +1764,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -1891,6 +1902,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1891,6 +1902,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1344,7 +1772,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -1938,8 +1950,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1938,8 +1950,9 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1356,7 +1784,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2639,6 +2652,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2639,6 +2652,10 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1367,7 +1795,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    return ([event type] == NSKeyDown &&
               !([event modifierFlags] & NSCommandKeyMask)) ? YES : NO;
  }
-@@ -2795,9 +2812,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2795,9 +2812,11 @@ - (id)accessibilityFocusedUIElement {
  // Since this implementation doesn't have to wait any IPC calls, this doesn't
  // make any key-typing jank. --hbono 7/23/09
  //
@@ -1379,7 +1807,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  
  - (NSArray *)validAttributesForMarkedText {
    // This code is just copied from WebKit except renaming variables.
-@@ -2806,7 +2825,9 @@ extern NSString *NSTextInputReplacementRangeAttributeName;
+@@ -2806,7 +2825,9 @@ - (NSArray *)validAttributesForMarkedText {
          NSUnderlineStyleAttributeName,
          NSUnderlineColorAttributeName,
          NSMarkedClauseSegmentAttributeName,
@@ -1597,7 +2025,7 @@ index cb7913b0a05f54ea405f4da4b2ca050db72814d3..7bc5de612ef4c9eaaf1c2335f40e38fc
 +  //                           url.SchemeIsWSOrWSS()));
    return SimplifyUrlForRequest(url).spec();
  }
-
+ 
 diff --git a/net/quic/chromium/crypto/proof_verifier_chromium.cc b/net/quic/chromium/crypto/proof_verifier_chromium.cc
 index d42dba8acc9b73b894580ad83d543158a8374b3d..8feda8d4215f77031b29b04bbd57d6c25faa6815 100644
 --- a/net/quic/chromium/crypto/proof_verifier_chromium.cc
@@ -1616,7 +2044,7 @@ index ac4b8337253ab9c3e9fb0c066642b97d74d3763f..03d81912abb557dee7db038e2f85bfd2
 --- a/net/socket/ssl_client_socket_impl.cc
 +++ b/net/socket/ssl_client_socket_impl.cc
 @@ -1838,6 +1838,8 @@ int SSLClientSocketImpl::VerifyCT() {
-
+ 
    if (ct_verify_result_.cert_policy_compliance !=
            ct::CertPolicyCompliance::CERT_POLICY_COMPLIES_VIA_SCTS &&
 +      ct_verify_result_.cert_policy_compliance !=
@@ -1629,7 +2057,7 @@ index d07e16da7cf8e92ab5f22c5162fc54f50aa818a3..7d2bbc5f8c895a22054eb1155a21e0ab
 --- a/net/spdy/spdy_session.cc
 +++ b/net/spdy/spdy_session.cc
 @@ -611,6 +611,8 @@ bool SpdySession::CanPool(TransportSecurityState* transport_security_state,
-
+ 
    if (ssl_info.ct_cert_policy_compliance !=
            ct::CertPolicyCompliance::CERT_POLICY_COMPLIES_VIA_SCTS &&
 +      ssl_info.ct_cert_policy_compliance !=
