@@ -18,7 +18,7 @@ from lib.util import execute, parse_version, scoped_cwd, s3put
 from lib.github import GitHub
 
 
-ELECTRON_REPO = "brave/electron"
+ELECTRON_REPO = "brave/muon"
 
 DIST_NAME = get_zip_name(project_name(), get_electron_version())
 SYMBOLS_NAME = get_zip_name(project_name(), get_electron_version(), 'symbols')
