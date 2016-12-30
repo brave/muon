@@ -157,7 +157,7 @@ base::FilePath InitializeUserDataDir() {
       command_line->GetSwitchValuePath(switches::kUserDataDir);
     if (!user_data_dir.empty() && !user_data_dir.IsAbsolute()) {
       base::FilePath app_data_dir;
-      PathService::Get(brightray::DIR_APP_DATA, &app_data_dir);
+      brave::GetDefaultAppDataDirectory(&app_data_dir);
       user_data_dir = app_data_dir.Append(user_data_dir);
     }
   }
