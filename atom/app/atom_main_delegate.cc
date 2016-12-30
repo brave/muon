@@ -148,6 +148,7 @@ base::FilePath InitializeUserDataDir() {
       base::IsStringUTF8(user_data_dir_string)) {
     user_data_dir = base::FilePath::FromUTF8Unsafe(user_data_dir_string);
     command_line->AppendSwitchPath(switches::kUserDataDir, user_data_dir);
+    LOG(ERROR) << "---1" << user_data_dir_string.c_str();
   }
 
   // next check the user-data-dir switch
@@ -155,30 +156,38 @@ base::FilePath InitializeUserDataDir() {
       command_line->HasSwitch(switches::kUserDataDir)) {
     user_data_dir =
       command_line->GetSwitchValuePath(switches::kUserDataDir);
+    LOG(ERROR) << "---2" << user_data_dir.value().c_str();
     if (!user_data_dir.empty() && !user_data_dir.IsAbsolute()) {
       base::FilePath app_data_dir;
       PathService::Get(brightray::DIR_APP_DATA, &app_data_dir);
       user_data_dir = app_data_dir.Append(user_data_dir);
+      LOG(ERROR) << "---3" << user_data_dir.value().c_str();
     }
   }
 
+  LOG(ERROR) << "---4" << user_data_dir.value().c_str();
   // On Windows, trailing separators leave Chrome in a bad state.
   // See crbug.com/464616.
   if (user_data_dir.EndsWithSeparator())
     user_data_dir = user_data_dir.StripTrailingSeparators();
 
-  if (!user_data_dir.empty())
+  if (!user_data_dir.empty()) {
     PathService::OverrideAndCreateIfNeeded(brightray::DIR_USER_DATA,
           user_data_dir, false, true);
+    LOG(ERROR) << "---5" << user_data_dir.value().c_str();
+  }
 
+  LOG(ERROR) << "---6" << user_data_dir.value().c_str();
   // TODO(bridiver) Warn and fail early if the process fails
   // to get a user data directory.
   if (!PathService::Get(brightray::DIR_USER_DATA, &user_data_dir)) {
     brave::GetDefaultUserDataDirectory(&user_data_dir);
     PathService::OverrideAndCreateIfNeeded(brightray::DIR_USER_DATA,
             user_data_dir, false, true);
+    LOG(ERROR) << "---7" << user_data_dir.value().c_str();
   }
   PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
+  LOG(ERROR) << "---8" << user_data_dir.value().c_str();
 
   return user_data_dir;
 }
