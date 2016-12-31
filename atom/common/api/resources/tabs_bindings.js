@@ -18,6 +18,21 @@ const query = function (queryInfo, cb) {
   ipc.send('chrome-tabs-query', responseId, queryInfo)
 }
 
+// TODO(bridiver) - remove this workaround when ExtensionHostDelegate::CreateTab
+// works correctly
+window.open = function(url, name, specs, replace) {
+  if (name !== undefined) {
+    throw new Error('name of window.open is not supported yet')
+  }
+  if (specs !== undefined) {
+    throw new Error('specs of window.open is not supported yet')
+  }
+  if (replace !== undefined) {
+    throw new Error('replace of window.open is not supported yet')
+  }
+  return window.chrome.tabs.create({url: url})
+}
+
 binding.registerCustomHook(function(bindingsAPI, extensionId) {
   var apiFunctions = bindingsAPI.apiFunctions
   var tabs = bindingsAPI.compiledApi;
