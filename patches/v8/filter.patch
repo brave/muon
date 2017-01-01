@@ -1,16 +1,7 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index dcefe3706b84c1f726256a6053e60134953a014d..794abe164d911861a1a91180f1ec33cf405790bd 100644
+index dcefe37..457ed20 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -45,7 +45,7 @@ declare_args() {
- 
-   # Enable ECMAScript Internationalization API. Enabling this feature will
-   # add a dependency on the ICU library.
--  v8_enable_i18n_support = true
-+  v8_enable_i18n_support = is_component_build
- 
-   # Enable slow dchecks.
-   v8_enable_slow_dchecks = false
 @@ -98,6 +98,7 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
  v8_random_seed = "314159265"
  v8_toolset_for_shell = "host"
@@ -179,7 +170,7 @@ index dcefe3706b84c1f726256a6053e60134953a014d..794abe164d911861a1a91180f1ec33cf
      "src/libsampler/sampler.cc",
      "src/libsampler/sampler.h",
 diff --git a/src/snapshot/mksnapshot.cc b/src/snapshot/mksnapshot.cc
-index f4362e5077e1231e2e57ccaf06ccc9769ebaae61..e048e26d768e358a9097f35afe60585de2cde50d 100644
+index f4362e5..e048e26 100644
 --- a/src/snapshot/mksnapshot.cc
 +++ b/src/snapshot/mksnapshot.cc
 @@ -5,7 +5,7 @@
