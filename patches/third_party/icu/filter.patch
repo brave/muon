@@ -1,0 +1,49 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index 1dd7c61d5368a643cb9d8cc489f8833cd796cb5f..6a7b287db3357cdaaff4d822002cc4a8b26f4b44 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -3,6 +3,7 @@
+ # found in the LICENSE file.
+ 
+ import("//third_party/icu/config.gni")
++import("//build/config/chrome_build.gni")
+ 
+ if (is_android) {
+   import("//build/config/android/rules.gni")
+@@ -39,7 +40,9 @@ config("icu_config") {
+   ]
+ 
+   if (!is_component_build) {
++    if (!muon_build) {
+     defines += [ "U_STATIC_IMPLEMENTATION" ]
++    }
+   }
+ 
+   include_dirs = [
+@@ -122,6 +125,21 @@ config("icu_code") {
+   }
+ }
+ 
++if (muon_build) {
++  group("icui18n") {
++    public_deps = [ "//electron/build/node" ]
++    public_configs = [ ":icu_config" ]
++  }
++
++  group("icuuc") {
++    public_deps = [ "//electron/build/node" ]
++    public_configs = [ ":icu_config" ]
++  }
++
++  group("icudata") {
++    public_deps = [ "//electron/build/node:build_node" ]
++  }
++} else {
+ component("icui18n") {
+   # find  source/i18n -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
+   # sort | sed 's/^\(.*\)$/    "\1",/'
+@@ -1054,3 +1072,4 @@ if (icu_use_data_file) {
+     }
+   }
+ }
++}

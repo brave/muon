@@ -41,10 +41,10 @@ bool JavascriptEnvironment::Initialize() {
   if (!js_flags.empty())
     v8::V8::SetFlagsFromString(js_flags.c_str(), js_flags.size());
 
-  base::i18n::InitializeICU();
+  // base::i18n::InitializeICU();
 
-  gin::V8Initializer::LoadV8Snapshot();
-  gin::V8Initializer::LoadV8Natives();
+  // gin::V8Initializer::LoadV8Snapshot();
+  // gin::V8Initializer::LoadV8Natives();
   gin::IsolateHolder::Initialize(gin::IsolateHolder::kNonStrictMode,
                                  gin::IsolateHolder::kStableV8Extras,
                                  gin::ArrayBufferAllocator::SharedInstance());

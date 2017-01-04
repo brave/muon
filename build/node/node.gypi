@@ -137,10 +137,6 @@
         ],
       }],
       ['_target_name=="node"', {
-        'include_dirs': [
-          '../v8',
-          '../v8/include',
-        ],
         'cflags!': [
           '-fvisibility=hidden',
           '-fdata-sections',
@@ -192,10 +188,25 @@
             ],
             # Node is using networking API but linking with this itself.
             'libraries': [ '-lwinmm.lib' ],
+            'variables': {
+              'reference_symbols': [
+                'udata_setCommonData_56',
+                'u_errorName_56',
+                'ubidi_setPara_56',
+                'ucsdet_getName_56',
+                'uidna_openUTS46_56',
+                'ulocdata_close_56',
+                'unorm_normalize_56',
+                'uregex_matches_56',
+                'uspoof_open_56',
+                'usearch_setPattern_56',
+                '?createInstance@Transliterator@icu_56@@SAPEAV12@AEBVUnicodeString@2@W4UTransDirection@@AEAW4UErrorCode@@@Z',
+                '??0MeasureFormat@icu_56@@QEAA@AEBVLocale@1@W4UMeasureFormatWidth@@AEAW4UErrorCode@@@Z',
+              ],
+            },
             'msvs_settings': {
               'VCLinkerTool': {
-                'EnableCOMDATFolding': '1', # disable
-                'OptimizeReferences': '1', # disable
+                'ForceSymbolReferences': [ '<@(reference_symbols)' ],
               },
             },
           }],

@@ -3,14 +3,14 @@
    'icu_path': '../../../third_party/icu',
    'icu_use_data_file_flag': 1,
    # Using libc++ requires building for >= 10.7.
-   'mac_deployment_target': '10.8',
+   # 'mac_deployment_target': '10.8',
    # Use the standard way of linking with msvc runtime.
-   'win_use_allocator_shim': 0,
+   # 'win_use_allocator_shim': 0,
    'v8_enable_i18n_support': 1,
    # The V8 libraries.
    'v8_libraries': '["v8", "v8_snapshot", "v8_nosnapshot", "v8_external_snapshot", "v8_base", "v8_libbase", "v8_libplatform"]',
-   'v8_use_snapshot': 'true',
-   'v8_use_external_startup_data': 1,
+   # 'v8_use_snapshot': 'true',
+   # 'v8_use_external_startup_data': 1,
    'icu_libraries': '["icui18n", "icuuc"]',
  },
  'target_defaults': {
@@ -38,12 +38,20 @@
      # Use C++11 library.
      'CLANG_CXX_LIBRARY': 'libc++',  # -stdlib=libc++
    },
+   'defines': [
+     'U_COMBINED_IMPLEMENTATION',
+     # Defining "U_COMBINED_IMPLEMENTATION" will add "explicit" for some
+     # constructors, make sure it doesn' happen.
+     'UNISTR_FROM_CHAR_EXPLICIT=',
+     'UNISTR_FROM_STRING_EXPLICIT=',
+     'U_NO_DEFAULT_INCLUDE_UTF_HEADERS=0',
+   ],
+   'defines!': [
+     'U_STATIC_IMPLEMENTATION',
+   ],
    'target_conditions': [
      ['_type=="static_library" and _toolset=="target" and OS=="linux"', {
        'standalone_static_library': 1,
-     }],
-     ['_target_name in <(icu_libraries)', {
-      'type': 'static_library',
      }],
      ['_target_name in <(v8_libraries) + <(icu_libraries)', {
        'xcode_settings': {

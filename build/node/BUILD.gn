@@ -1,11 +1,19 @@
 import("//v8/gni/v8.gni")
 
-config("node_external_config") {
+config("build_config") {
   defines = [
     "NODE_WANT_INTERNALS=1",
     "NODE_SHARED_MODE",
   ]
 
+  include_dirs = [
+    "//v8",
+    "//v8/include",
+
+  ]
+}
+
+config("node_external_config") {
   if (is_linux) {
     ldflags =
         [ rebase_path("$root_out_dir/lib/libnode.so",
@@ -15,21 +23,19 @@ config("node_external_config") {
         [ rebase_path("$root_out_dir/node.dll.lib",
                       root_build_dir) ]
   } else if (is_mac) {
-    ldflags =
-        [ rebase_path("$root_out_dir/libnode.dylib",
-                      root_build_dir) ]
+    ldflags = [
+      rebase_path("$root_out_dir/libnode.dylib", root_build_dir),
+    ]
   }
 }
 
 source_set("node") {
   public_configs = [
     ":node_external_config",
-    "//electron/build:electron_config",
   ]
 
   public_deps = [
     ":build_node",
-    "//v8:v8",
   ]
 }
 
@@ -74,18 +80,29 @@ if (is_mac) {
 }
 
 action("build_node") {
+  public_configs = [
+    ":build_config",
+  ]
+
   # dummy script - these are actually produced separately through gyp
   script = "//electron/tools/node_gyp_build.py"
 
+  outputs = [
+    "$root_out_dir/natives_blob.bin",
+    "$root_out_dir/snapshot_blob.bin",
+    "$root_out_dir/icudtl.dat",
+  ]
   if (is_mac) {
-    outputs = [ "$root_out_dir/libnode.dylib" ]
+    outputs += [
+      "$root_out_dir/libnode.dylib",
+    ]
   } else if (is_win) {
-    outputs = [ 
+    outputs += [
       "$root_out_dir/node.dll",
       "$root_out_dir/node.dll.lib",
     ]
   } else if (is_linux) {
-    outputs = [ "$root_out_dir/lib/libnode.so" ]
+    outputs += [ "$root_out_dir/lib/libnode.so" ]
   }
 }
 
