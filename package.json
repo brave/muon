@@ -35,7 +35,6 @@
     "lint-py": "python ./script/pylint.py",
     "lint-docs": "standard-markdown docs",
     "preinstall": "node -e 'process.exit(0)'",
-    "repl": "python ./script/start.py --interactive",
     "test": "python ./script/test.py"
   }
 }
