@@ -27,8 +27,6 @@
   ],
   "private": true,
   "scripts": {
-    "bootstrap": "python ./script/bootstrap.py",
-    "clean": "python ./script/clean.py",
     "coverage": "npm run instrument-code-coverage && npm test -- --use-instrumented-asar",
     "instrument-code-coverage": "electabul instrument --input-path ./lib --output-path ./out/coverage/electron.asar",
     "lint": "npm run lint-cpp && npm run lint-docs",
@@ -37,12 +35,6 @@
     "lint-py": "python ./script/pylint.py",
     "lint-docs": "standard-markdown docs",
     "preinstall": "node -e 'process.exit(0)'",
-    "repl": "python ./script/start.py --interactive",
-    "start": "python ./script/start.py",
-    "cibuild-windows": "rm -Rf node_mdules && python ./script/cibuild --target_arch=x64",
-    "cibuild-windows-ia32": "rm -Rf node_mdules && python ./script/cibuild --target_arch=ia32",
-    "test": "python ./script/test.py",
-    "libchromium-build": "python ../libchromiumcontent/script/bootstrap && python ../libchromiumcontent/script/update && python ../libchromiumcontent/script/build && python ../libchromiumcontent/script/create-dist --no_zip",
-    "libchromium-bootstrap": "python ./script/bootstrap.py -v --libcc_source_path ../libchromiumcontent/dist/main/src --libcc_shared_library_path ../libchromiumcontent/dist/main/shared_library --libcc_static_library_path ../libchromiumcontent/dist/main/static_library"
+    "test": "python ./script/test.py"
   }
 }
