@@ -2250,3 +2250,16 @@ index 5accf0ee26e177d3b5ce8cb347a5d6214ca846ee..1b93b7b839a51abf3ca7f9a5ece4d4a7
        "nine_image_painter_factory.cc",
        "nine_image_painter_factory.h",
      ]
+diff --git a/build/compiler_version.py b/build/compiler_version.py
+index 8db0108110963c9077695b26aacaab9ac4c72fe7..763b603dbbe3553e60bb458c0dabb327dbf46b72 100755
+--- a/build/compiler_version.py
++++ b/build/compiler_version.py
+@@ -72,7 +72,7 @@ def GetVersion(compiler, tool):
+     if pipe.returncode:
+       raise subprocess.CalledProcessError(pipe.returncode, compiler)
+ 
+-    parsed_output = version_re.match(tool_output)
++    parsed_output = version_re.search(tool_output)
+     result = parsed_output.group(1) + parsed_output.group(2)
+     compiler_version_cache[cache_key] = result
+     return result
