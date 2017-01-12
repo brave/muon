@@ -1,5 +1,5 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 1dd7c61d5368a643cb9d8cc489f8833cd796cb5f..6a7b287db3357cdaaff4d822002cc4a8b26f4b44 100644
+index 1dd7c61d5368a643cb9d8cc489f8833cd796cb5f..d62050a4de380e5dc2d9915322456f6edfd134a6 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -3,6 +3,7 @@
@@ -10,20 +10,12 @@ index 1dd7c61d5368a643cb9d8cc489f8833cd796cb5f..6a7b287db3357cdaaff4d822002cc4a8
  
  if (is_android) {
    import("//build/config/android/rules.gni")
-@@ -39,7 +40,9 @@ config("icu_config") {
-   ]
- 
-   if (!is_component_build) {
-+    if (!muon_build) {
-     defines += [ "U_STATIC_IMPLEMENTATION" ]
-+    }
-   }
- 
-   include_dirs = [
-@@ -122,6 +125,21 @@ config("icu_code") {
-   }
+@@ -12,6 +13,33 @@ if (is_mac) {
+   import("//build/config/sanitizers/sanitizers.gni")
  }
  
++icui18n_name = "icui18n"
++icuuc_name = "icuuc"
 +if (muon_build) {
 +  group("icui18n") {
 +    public_deps = [ "//electron/build/node" ]
@@ -38,11 +30,66 @@ index 1dd7c61d5368a643cb9d8cc489f8833cd796cb5f..6a7b287db3357cdaaff4d822002cc4a8
 +  group("icudata") {
 +    public_deps = [ "//electron/build/node:build_node" ]
 +  }
-+} else {
- component("icui18n") {
++
++  group("icu_chrome") {
++    public_deps = [
++      ":icui18n_chrome",
++      ":icuuc_chrome",
++    ]
++  }
++  icui18n_name = "icui18n_chrome"
++  icuuc_name = "icuuc_chrome"
++}
++
+ # Meta target that includes both icuuc and icui18n. Most targets want both.
+ # You can depend on the individually if you need to.
+ group("icu") {
+@@ -39,7 +67,9 @@ config("icu_config") {
+   ]
+ 
+   if (!is_component_build) {
++    if (!muon_build) {
+     defines += [ "U_STATIC_IMPLEMENTATION" ]
++    }
+   }
+ 
+   include_dirs = [
+@@ -122,7 +152,7 @@ config("icu_code") {
+   }
+ }
+ 
+-component("icui18n") {
++component(icui18n_name) {
    # find  source/i18n -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
    # sort | sed 's/^\(.*\)$/    "\1",/'
-@@ -1054,3 +1072,4 @@ if (icu_use_data_file) {
+   sources = [
+@@ -554,7 +584,7 @@ component("icui18n") {
+ 
+   defines = [ "U_I18N_IMPLEMENTATION" ]
+   deps = [
+-    ":icuuc",
++    ":$icuuc_name",
+   ]
+ 
+   # ICU uses RTTI, replace the default "no rtti" config.
+@@ -579,7 +609,7 @@ component("icui18n") {
+   }
+ }
+ 
+-component("icuuc") {
++component(icuuc_name) {
+   # find  source/common -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
+   # sort | sed 's/^\(.*\)$/    "\1",/'
+   sources = [
+@@ -990,6 +1020,7 @@ if (is_android && enable_java_templates) {
+   }
+ }
+ 
++if (!muon_build) {
+ # TODO(GYP): Gyp has considerations here for QNX and for the host toolchain
+ #  that have not been ported over.
+ if (is_android) {
+@@ -1054,3 +1085,4 @@ if (icu_use_data_file) {
      }
    }
  }

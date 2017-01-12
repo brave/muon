@@ -1,8 +1,16 @@
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..e28969349e35c4bdb48c0693ce7604b269a22ca0 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..101ad73be637bdef19d1f7bfb7e0f1ed97b4596a 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
-@@ -8,15 +8,17 @@ declare_args() {
+@@ -2,21 +2,23 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//electron/build/muon.gni")
++
+ declare_args() {
+   # Select the desired branding flavor. False means normal Chromium branding,
+   # true means official Google Chrome branding (requires extra Google-internal
    # resources).
    is_chrome_branded = false
  
@@ -17,16 +25,15 @@ index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..e28969349e35c4bdb48c0693ce7604b2
    # Break chrome.dll into multple pieces based on process type. Only available
    # on Windows.
    is_multi_dll_chrome = is_win && !is_component_build
--}
- 
+ }
+-
 -# Refers to the subdirectory for branding in various places including
 -# chrome/app/theme.
 -if (is_chrome_branded) {
 -  branding_path_component = "google_chrome"
 -} else {
 -  branding_path_component = "chromium"
-+  muon_build = false
- }
+-}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
 index 0c00e995fffe139ac39badd12790acbad3a78a7a..e5651111ce284f04ce3b5d6157be84c3738e732c 100644
 --- a/build/toolchain/mac/BUILD.gn
@@ -440,6 +447,19 @@ index 1b03a2ba47ec1a58ea09db55e38075bfc0ee7c23..3e55db9ba3957f24a6051cbb394f1ce1
        'renderer/extensions/chrome_extensions_renderer_client.cc',
        'renderer/extensions/chrome_extensions_renderer_client.h',
        'renderer/extensions/chrome_v8_extension_handler.cc',
+diff --git a/chrome/chrome_tests.gni b/chrome/chrome_tests.gni
+index f8f9976ace90ed24367f10cdfdd64f87b6c6586a..678a2d9e1fe76c65c2704fc3a9a52e3d859166ed 100644
+--- a/chrome/chrome_tests.gni
++++ b/chrome/chrome_tests.gni
+@@ -2,6 +2,8 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//electron/build/muon.gni")
++
+ # This file loads the chrome_tests variables which is then shared between
+ # all BUILD.gn files that need it.
+ chrome_tests_gypi_values = exec_script("//build/gypi_to_gn.py",
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 465329222acc7fd4fe9b911d0a157ed921ac169d..34aee9385c01e57068b25adfd34b6f6aafcb0715 100644
 --- a/chrome/common/BUILD.gn
@@ -765,6 +785,20 @@ index 36693bef5c8c29231f17f40b71b16e3c6b1855b1..a7cee7446353c38cc0cd343d36d9f3a5
        sources -=
            [ "../../ui/views/corewm/desktop_capture_controller_unittest.cc" ]
      }
+diff --git a/chrome/test/chromedriver/BUILD.gn b/chrome/test/chromedriver/BUILD.gn
+index 990b6c31a26efbe3ed4e70df89cc736ec3b29f39..e407fbf569b06ca2721c5eccf350f68d0ee8ff09 100644
+--- a/chrome/test/chromedriver/BUILD.gn
++++ b/chrome/test/chromedriver/BUILD.gn
+@@ -193,6 +193,9 @@ executable("chromedriver") {
+     "//build/config/sanitizers:deps",
+     "//build/win:default_exe_manifest",
+   ]
++  if (muon_build) {
++    deps += [ "//third_party/icu:icu_chrome" ]
++  }
+ }
+ 
+ test("chromedriver_unittests") {
 diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
 index 2f5c4f45202c7258ba925eae1fd42bda9b69c413..30e83e8ea2ada5cfac17b3ca387fd9ada392d5f7 100644
 --- a/chrome/utility/BUILD.gn
@@ -2107,48 +2141,51 @@ index eb095bc5777a6b05bc6ad1ef4ef64393dfdf0592..72eefb12d24bef531684a3f486a8e36f
        _generated_files += [ rebase_path("//remoting/resources/chromoting.ico") ]
  
 diff --git a/services/shell/standalone/BUILD.gn b/services/shell/standalone/BUILD.gn
-index fb55a656a2d0f9f897225d5651603dfa5bac05bc..47c63aeb45fe222d8dd53fd16ca8768d909d4a5c 100644
+index fb55a656a2d0f9f897225d5651603dfa5bac05bc..7363616430e5b4be887a9171be68116b6c419b45 100644
 --- a/services/shell/standalone/BUILD.gn
 +++ b/services/shell/standalone/BUILD.gn
-@@ -6,6 +6,8 @@ import("//services/shell/public/cpp/service.gni")
+@@ -6,6 +6,7 @@ import("//services/shell/public/cpp/service.gni")
  import("//mojo/public/tools/bindings/mojom.gni")
  import("//testing/test.gni")
  
 +# workaround for icu linking errors on windows
-+if (muon_build) { group("standalone") {} } else {
  executable("standalone") {
    output_name = "mojo_runner"
    sources = [
-@@ -18,6 +20,7 @@ executable("standalone") {
+@@ -17,6 +18,10 @@ executable("standalone") {
+     "//build/config/sanitizers:deps",
      "//build/win:default_exe_manifest",
    ]
++
++  if (muon_build) {
++    deps += [ "//third_party/icu:icu_chrome" ]
++  }
  }
-+}
  
  source_set("lib") {
-   sources = [
 diff --git a/services/tracing/BUILD.gn b/services/tracing/BUILD.gn
-index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..3c8517cb748e2368058bd363d20c10d7a833aa1c 100644
+index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..8965f5164f5e16829565d20b004290ce4a7e7f8a 100644
 --- a/services/tracing/BUILD.gn
 +++ b/services/tracing/BUILD.gn
-@@ -5,6 +5,8 @@
+@@ -5,6 +5,7 @@
  import("//services/shell/public/cpp/service.gni")
  import("//services/shell/public/service_manifest.gni")
  
 +# workaround for icu linking errors on windows
-+if (muon_build) { group("tracing") {} } else {
  service("tracing") {
    sources = [
      "main.cc",
-@@ -27,7 +29,7 @@ service_manifest("manifest") {
-   name = "tracing"
-   source = "manifest.json"
+@@ -21,6 +22,10 @@ service("tracing") {
+   data_deps = [
+     ":manifest",
+   ]
++
++  if (muon_build) {
++    deps += [ "//third_party/icu:icu_chrome" ]
++  }
  }
--
-+}
- source_set("lib") {
-   sources = [
-     "data_sink.cc",
+ 
+ service_manifest("manifest") {
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 index e436a079e835ad465a5262249f0a402d58e25f02..872df7f2c47de00abc32a95f7564172090b75527 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
@@ -2260,16 +2297,17 @@ index 82775974231274e6639751139f5c7bc9bbfaad25..8aca09939d20cc48cfa85c507fdea17c
  
      // Non-standard APIs
 diff --git a/third_party/WebKit/Source/platform/BUILD.gn b/third_party/WebKit/Source/platform/BUILD.gn
-index ce25028fe74fa15fe3f9a24dd4188a6407dc7602..67b7f7a9776f16fd9ba2d99185da643982a1ee66 100644
+index ce25028fe74fa15fe3f9a24dd4188a6407dc7602..fa828ce95c5d4c220355f4cfca8a71e207e3303c 100644
 --- a/third_party/WebKit/Source/platform/BUILD.gn
 +++ b/third_party/WebKit/Source/platform/BUILD.gn
-@@ -186,6 +186,10 @@ executable("character_data_generator") {
+@@ -186,6 +186,11 @@ executable("character_data_generator") {
      "//build/win:default_exe_manifest",
      "//third_party/icu",
    ]
 +
-+  if (is_mac) {
-+    ldflags = [ "-Wl,-rpath,@loader_path/.", ]
++  if (muon_build) {
++    deps -= [ "//third_party/icu" ]
++    deps += [ "//third_party/icu:icu_chrome" ]
 +  }
  }
  
