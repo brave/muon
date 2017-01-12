@@ -1043,6 +1043,21 @@ index a29cb8d372ec3c18f2976864b4df4dcc3b20c8eb..7f6552279e19cadefbfa3839881cafce
  
      inputs = [
        version_path,
+diff --git a/components/font_service/BUILD.gn b/components/font_service/BUILD.gn
+index 73a5c84500d0d8d6b29d7a3346981370e25edec8..96cb3c3829d919f17606a7e4b273365fd5cee081 100644
+--- a/components/font_service/BUILD.gn
++++ b/components/font_service/BUILD.gn
+@@ -38,6 +38,10 @@ service("font_service") {
+     "//services/shell/public/cpp",
+   ]
+ 
++  if (muon_build) {
++    deps += [ "//third_party/icu:icu_chrome" ]
++  }
++
+   data_deps = [
+     ":manifest",
+   ]
 diff --git a/components/guest_view/browser/guest_view_manager.cc b/components/guest_view/browser/guest_view_manager.cc
 index 1734c762657e9ae169d5d621fc0c84cd8fbe7d26..3a5b7e7896c127960f97a2ce41fd4733651a7a6f 100644
 --- a/components/guest_view/browser/guest_view_manager.cc
@@ -2183,13 +2198,15 @@ index f415b8ad7a51f1d879dfc56cd3217f31b90ba23f..1ffbff28cd55a361986e7db8e860c04c
  # GYP version: mojo/mojo_base.gyp:mojo_application_base
  group("cpp") {
    public_deps = [
-@@ -68,6 +70,10 @@ if (!is_ios) {
+@@ -68,6 +70,12 @@ if (!is_ios) {
        "//base:i18n",
        "//mojo/public/c/system",
      ]
 +
 +    if (muon_build) {
 +      deps -= [ "//base:i18n" ]
++      deps += [ "//base:i18n_without_icu" ]
++      configs += [ "//third_party/icu:icu_config" ]
 +    }
    }
  
