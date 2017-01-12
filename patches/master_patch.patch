@@ -1,3 +1,33 @@
+diff --git a/base/BUILD.gn b/base/BUILD.gn
+index fc8f29fb9b0de02b6047678cba2fb592d6852f00..806f24e5149fe3467adde8a9fa5c2fdbd69ccb90 100644
+--- a/base/BUILD.gn
++++ b/base/BUILD.gn
+@@ -1501,7 +1501,14 @@ static_library("base_static") {
+   }
+ }
+ 
+-component("i18n") {
++group("i18n") {
++  public_deps = [
++    ":i18n_without_icu",
++    "//third_party/icu",
++  ]
++}
++
++component("i18n_without_icu") {
+   output_name = "base_i18n"
+   sources = [
+     "i18n/base_i18n_export.h",
+@@ -1548,8 +1555,8 @@ component("i18n") {
+   configs += [ "//build/config/compiler:wexit_time_destructors" ]
+   public_deps = [
+     "//third_party/ced",
+-    "//third_party/icu",
+   ]
++  configs += [ "//third_party/icu:icu_config" ]
+   deps = [
+     ":base",
+     "//base/third_party/dynamic_annotations",
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
 index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..101ad73be637bdef19d1f7bfb7e0f1ed97b4596a 100644
 --- a/build/config/chrome_build.gni
@@ -2153,13 +2183,17 @@ index f415b8ad7a51f1d879dfc56cd3217f31b90ba23f..1ffbff28cd55a361986e7db8e860c04c
  # GYP version: mojo/mojo_base.gyp:mojo_application_base
  group("cpp") {
    public_deps = [
-@@ -68,6 +70,10 @@ if (!is_ios) {
+@@ -68,6 +70,14 @@ if (!is_ios) {
        "//base:i18n",
        "//mojo/public/c/system",
      ]
 +
 +    if (muon_build) {
-+      deps += [ "//third_party/icu:icu_chrome" ]
++      deps -= [ "//base:i18n" ]
++      deps += [
++        "//third_party/icu:icu_chrome",
++        "//base:i18n_without_icu",
++      ]
 +    }
    }
  
@@ -2197,7 +2231,7 @@ index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..6343541674bf63f121f4ebc9959a3071
  
 +# workaround for icu linking errors on windows
 +# TODO(bridiver) - get this to work with icu_chrome
-+if (muon_build) { group("tracing") {} } else {
++# if (muon_build) { group("tracing") {} } else {
  service("tracing") {
    sources = [
      "main.cc",
@@ -2205,7 +2239,7 @@ index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..6343541674bf63f121f4ebc9959a3071
      "//services/tracing/public/interfaces",
    ]
  }
-+}
++# }
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 index e436a079e835ad465a5262249f0a402d58e25f02..872df7f2c47de00abc32a95f7564172090b75527 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
