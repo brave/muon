@@ -2140,21 +2140,20 @@ index eb095bc5777a6b05bc6ad1ef4ef64393dfdf0592..72eefb12d24bef531684a3f486a8e36f
        _generated_files = rebase_path(inputs, root_build_dir)
        _generated_files += [ rebase_path("//remoting/resources/chromoting.ico") ]
  
-diff --git a/services/shell/public/cpp/BUILD.gn b/services/shell/public/cpp/BUILD.gn
-index f415b8ad7a51f1d879dfc56cd3217f31b90ba23f..38ff4d7b310dee5ed627aa59aa936785948abce2 100644
---- a/services/shell/public/cpp/BUILD.gn
-+++ b/services/shell/public/cpp/BUILD.gn
-@@ -68,6 +68,10 @@ if (!is_ios) {
-       "//base:i18n",
-       "//mojo/public/c/system",
-     ]
-+
+diff --git a/services/shell/public/cpp/service.gni b/services/shell/public/cpp/service.gni
+index 23162f98d92022198673b2dde983f88662864b00..2efcd24638794093e3219207deb8332de4356359 100644
+--- a/services/shell/public/cpp/service.gni
++++ b/services/shell/public/cpp/service.gni
+@@ -129,6 +129,9 @@ template("service") {
+     if (defined(invoker.testonly)) {
+       testonly = invoker.testonly
+     }
 +    if (muon_build) {
 +      deps += [ "//third_party/icu:icu_chrome" ]
 +    }
    }
  
-   static_library("service_test_support") {
+   copy(final_target_name) {
 diff --git a/services/shell/standalone/BUILD.gn b/services/shell/standalone/BUILD.gn
 index fb55a656a2d0f9f897225d5651603dfa5bac05bc..7363616430e5b4be887a9171be68116b6c419b45 100644
 --- a/services/shell/standalone/BUILD.gn
