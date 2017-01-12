@@ -2140,6 +2140,21 @@ index eb095bc5777a6b05bc6ad1ef4ef64393dfdf0592..72eefb12d24bef531684a3f486a8e36f
        _generated_files = rebase_path(inputs, root_build_dir)
        _generated_files += [ rebase_path("//remoting/resources/chromoting.ico") ]
  
+diff --git a/services/shell/public/cpp/BUILD.gn b/services/shell/public/cpp/BUILD.gn
+index f415b8ad7a51f1d879dfc56cd3217f31b90ba23f..38ff4d7b310dee5ed627aa59aa936785948abce2 100644
+--- a/services/shell/public/cpp/BUILD.gn
++++ b/services/shell/public/cpp/BUILD.gn
+@@ -68,6 +68,10 @@ if (!is_ios) {
+       "//base:i18n",
+       "//mojo/public/c/system",
+     ]
++
++    if (muon_build) {
++      deps += [ "//third_party/icu:icu_chrome" ]
++    }
+   }
+ 
+   static_library("service_test_support") {
 diff --git a/services/shell/standalone/BUILD.gn b/services/shell/standalone/BUILD.gn
 index fb55a656a2d0f9f897225d5651603dfa5bac05bc..7363616430e5b4be887a9171be68116b6c419b45 100644
 --- a/services/shell/standalone/BUILD.gn
@@ -2164,7 +2179,7 @@ index fb55a656a2d0f9f897225d5651603dfa5bac05bc..7363616430e5b4be887a9171be68116b
  
  source_set("lib") {
 diff --git a/services/tracing/BUILD.gn b/services/tracing/BUILD.gn
-index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..8965f5164f5e16829565d20b004290ce4a7e7f8a 100644
+index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..95753b02f2f73d90279c69ca9130992e734b9175 100644
 --- a/services/tracing/BUILD.gn
 +++ b/services/tracing/BUILD.gn
 @@ -5,6 +5,7 @@
@@ -2175,17 +2190,6 @@ index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..8965f5164f5e16829565d20b004290ce
  service("tracing") {
    sources = [
      "main.cc",
-@@ -21,6 +22,10 @@ service("tracing") {
-   data_deps = [
-     ":manifest",
-   ]
-+
-+  if (muon_build) {
-+    deps += [ "//third_party/icu:icu_chrome" ]
-+  }
- }
- 
- service_manifest("manifest") {
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 index e436a079e835ad465a5262249f0a402d58e25f02..872df7f2c47de00abc32a95f7564172090b75527 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
