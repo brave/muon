@@ -2140,20 +2140,30 @@ index eb095bc5777a6b05bc6ad1ef4ef64393dfdf0592..72eefb12d24bef531684a3f486a8e36f
        _generated_files = rebase_path(inputs, root_build_dir)
        _generated_files += [ rebase_path("//remoting/resources/chromoting.ico") ]
  
-diff --git a/services/shell/public/cpp/service.gni b/services/shell/public/cpp/service.gni
-index 23162f98d92022198673b2dde983f88662864b00..2efcd24638794093e3219207deb8332de4356359 100644
---- a/services/shell/public/cpp/service.gni
-+++ b/services/shell/public/cpp/service.gni
-@@ -129,6 +129,9 @@ template("service") {
-     if (defined(invoker.testonly)) {
-       testonly = invoker.testonly
-     }
+diff --git a/services/shell/public/cpp/BUILD.gn b/services/shell/public/cpp/BUILD.gn
+index f415b8ad7a51f1d879dfc56cd3217f31b90ba23f..1ffbff28cd55a361986e7db8e860c04c2a381ebb 100644
+--- a/services/shell/public/cpp/BUILD.gn
++++ b/services/shell/public/cpp/BUILD.gn
+@@ -2,6 +2,8 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//electron/build/muon.gni")
++
+ # GYP version: mojo/mojo_base.gyp:mojo_application_base
+ group("cpp") {
+   public_deps = [
+@@ -68,6 +70,10 @@ if (!is_ios) {
+       "//base:i18n",
+       "//mojo/public/c/system",
+     ]
++
 +    if (muon_build) {
 +      deps += [ "//third_party/icu:icu_chrome" ]
 +    }
    }
  
-   copy(final_target_name) {
+   static_library("service_test_support") {
 diff --git a/services/shell/standalone/BUILD.gn b/services/shell/standalone/BUILD.gn
 index fb55a656a2d0f9f897225d5651603dfa5bac05bc..7363616430e5b4be887a9171be68116b6c419b45 100644
 --- a/services/shell/standalone/BUILD.gn
@@ -2178,17 +2188,24 @@ index fb55a656a2d0f9f897225d5651603dfa5bac05bc..7363616430e5b4be887a9171be68116b
  
  source_set("lib") {
 diff --git a/services/tracing/BUILD.gn b/services/tracing/BUILD.gn
-index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..95753b02f2f73d90279c69ca9130992e734b9175 100644
+index f002ab60b88a8c8f2c9d1676eaba37e12b84ebbe..6343541674bf63f121f4ebc9959a3071f02b281a 100644
 --- a/services/tracing/BUILD.gn
 +++ b/services/tracing/BUILD.gn
-@@ -5,6 +5,7 @@
+@@ -5,6 +5,9 @@
  import("//services/shell/public/cpp/service.gni")
  import("//services/shell/public/service_manifest.gni")
  
 +# workaround for icu linking errors on windows
++# TODO(bridiver) - get this to work with icu_chrome
++if (muon_build) { group("tracing") {} } else {
  service("tracing") {
    sources = [
      "main.cc",
+@@ -45,3 +48,4 @@ source_set("lib") {
+     "//services/tracing/public/interfaces",
+   ]
+ }
++}
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 index e436a079e835ad465a5262249f0a402d58e25f02..872df7f2c47de00abc32a95f7564172090b75527 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
