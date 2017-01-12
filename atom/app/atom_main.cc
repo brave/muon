@@ -93,8 +93,8 @@ int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE, wchar_t* cmd, int) {
     }
   }
 
-  if (isenvset("electron_internal_crash_service")) {
-    return crash_service::main(cmd);
+  if (IsEnvSet("ELECTRON_INTERNAL_CRASH_SERVICE")) {
+    return crash_service::Main(cmd);
   }
 
   sandbox::SandboxInterfaceInfo sandbox_info = {0};
