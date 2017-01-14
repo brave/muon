@@ -73,7 +73,6 @@ executable("electron_app") {
   ldflags = [
     "/DELAYLOAD:dbghelp.dll",
     "/DELAYLOAD:uxtheme.dll",
-    "/DELAYLOAD:ole32.dll",
     "/DELAYLOAD:oleaut32.dll",
     "/DELAYLOAD:comdlg32.dll",
     "/DELAYLOAD:crypt32.dll",
