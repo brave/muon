@@ -593,7 +593,7 @@ if (!is_mac) {
       }
     }
     outputs = [
-      "$electron_dist_dir/locales/l{{source_file_part}}",
+      "$electron_dist_dir/locales/{{source_file_part}}",
     ]
   }
 }
