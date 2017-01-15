@@ -110,7 +110,15 @@ void SpellCheckClient::SpellCheckText(
 
   base::string16 in_word(text);
   text_iterator_.SetText(in_word.c_str(), in_word.size());
-  while (text_iterator_.GetNextWord(&word, &word_start, &word_length)) {
+  SpellcheckWordIterator::WordIteratorStatus status;
+  while (true) {
+    status = text_iterator_.GetNextWord(&word, &word_start, &word_length);
+    if (status == SpellcheckWordIterator::IS_END_OF_TEXT) {
+      return;
+    } else if (status == SpellcheckWordIterator::IS_SKIPPABLE) {
+      continue;
+    }
+
     // Found a word (or a contraction) that the spellchecker can check the
     // spelling of.
     if (SpellCheckWord(word))
@@ -171,7 +179,14 @@ bool SpellCheckClient::IsValidContraction(const base::string16& contraction) {
   int word_start;
   int word_length;
 
-  while (contraction_iterator_.GetNextWord(&word, &word_start, &word_length)) {
+  while (true) {
+    SpellcheckWordIterator::WordIteratorStatus status =
+        contraction_iterator_.GetNextWord(&word, &word_start, &word_length);
+    if (status == SpellcheckWordIterator::IS_END_OF_TEXT) {
+      return true;
+    } else if (status == SpellcheckWordIterator::IS_SKIPPABLE) {
+      return true;
+    }
     if (!SpellCheckWord(word))
       return false;
   }
