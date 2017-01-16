@@ -30,6 +30,7 @@
 #include "extensions/renderer/resource_bundle_source_map.h"
 #include "extensions/renderer/v8_helpers.h"
 #include "gin/converter.h"
+#include "vendor/node/src/node_version.h"
 #if defined(OS_WIN)
 #include "base/win/windows_version.h"
 #endif
@@ -61,6 +62,9 @@ v8::Local<v8::Value> GetOrCreateProcess(ScriptContext* context) {
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
         ToV8StringUnsafe(context->isolate(), "type"),
         ToV8StringUnsafe(context->isolate(), "renderer"));
+    gin::SetProperty(context->isolate(), process.As<v8::Object>(),
+        ToV8StringUnsafe(context->isolate(), "version"),
+        ToV8StringUnsafe(context->isolate(), NODE_VERSION_STRING));
     gin::SetProperty(context->isolate(), process.As<v8::Object>(),
         ToV8StringUnsafe(context->isolate(), "platform"),
         ToV8StringUnsafe(context->isolate(), kPlatform));
