@@ -815,20 +815,6 @@ index 36693bef5c8c29231f17f40b71b16e3c6b1855b1..a7cee7446353c38cc0cd343d36d9f3a5
        sources -=
            [ "../../ui/views/corewm/desktop_capture_controller_unittest.cc" ]
      }
-diff --git a/chrome/test/chromedriver/BUILD.gn b/chrome/test/chromedriver/BUILD.gn
-index 990b6c31a26efbe3ed4e70df89cc736ec3b29f39..e407fbf569b06ca2721c5eccf350f68d0ee8ff09 100644
---- a/chrome/test/chromedriver/BUILD.gn
-+++ b/chrome/test/chromedriver/BUILD.gn
-@@ -193,6 +193,9 @@ executable("chromedriver") {
-     "//build/config/sanitizers:deps",
-     "//build/win:default_exe_manifest",
-   ]
-+  if (muon_build) {
-+    deps += [ "//third_party/icu:icu_chrome" ]
-+  }
- }
- 
- test("chromedriver_unittests") {
 diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
 index 2f5c4f45202c7258ba925eae1fd42bda9b69c413..30e83e8ea2ada5cfac17b3ca387fd9ada392d5f7 100644
 --- a/chrome/utility/BUILD.gn

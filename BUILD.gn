@@ -489,15 +489,9 @@ copy("electron_license_dist_resources") {
     ":generate_chromium_licenses",
   ]
 
-  if (is_mac) {
-    outputs = [
-      "$root_out_dir/{{source_file_part}}"
-    ]
-  } else {
-    outputs = [
-      "$electron_dist_dir/{{source_file_part}}"
-    ]
-  }
+  outputs = [
+    "$electron_dist_dir/{{source_file_part}}"
+  ]
 }
 
 if (target_cpu == "x86") {
@@ -511,31 +505,57 @@ if (is_win) {
   chromedriver = "$chromedriver.exe"
 }
 
-chromedriver_version = "2.23"
+if (muon_build) {
+  chromedriver_version = "2.23"
 
-copy("electron_chromedriver_dist_resources") {
-  sources = [
-    "$root_out_dir/$chromedriver",
-  ]
+  action("build_chromedriver") {
+    # dummy script - this is built separately
+    script = "//electron/tools/noop.py"
 
-  deps = [
-    "//chrome/test/chromedriver:chromedriver",
-  ]
+    outputs = [ "$root_out_dir/../Chromedriver/muon_$chromedriver"]
+  }
 
-  outputs = [
-    "$electron_dist_dir/{{source_file_part}}"
-  ]
-}
+  copy("electron_chromedriver_dist_resources") {
+    sources = [
+      "$root_out_dir/../Chromedriver/muon_$chromedriver",
+    ]
 
-zip("chromedriver_zip") {
-  inputs = get_target_outputs(":electron_chromedriver_dist_resources")
-  inputs += get_target_outputs(":electron_license_dist_resources")
-  base_dir = electron_dist_dir
-  output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_arch.zip"
-  deps = [
-    ":electron_chromedriver_dist_resources",
-    ":electron_license_dist_resources",
-  ]
+    outputs = [
+      "$electron_dist_dir/$chromedriver"
+    ]
+
+    deps = [ ":build_chromedriver" ]
+  }
+
+  zip("chromedriver_zip") {
+    inputs = get_target_outputs(":electron_chromedriver_dist_resources")
+    inputs += get_target_outputs(":electron_license_dist_resources")
+    output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_arch.zip"
+
+    base_dir = electron_dist_dir
+
+    deps = [
+      ":electron_chromedriver_dist_resources",
+      ":electron_license_dist_resources",
+    ]
+  }
+} else {
+  group("build_chromedriver") {
+    deps = [ ":rename_chromedriver" ]
+  }
+
+  # rename the file to avoid a conflict in create_dist
+  copy("rename_chromedriver") {
+    sources = [
+      "$root_out_dir/$chromedriver",
+    ]
+
+    outputs = [
+      "$root_out_dir/muon_$chromedriver"
+    ]
+
+    deps = [ "//chrome/test/chromedriver:chromedriver" ]
+  }
 }
 
 if (!is_mac) {
@@ -569,7 +589,6 @@ copy("electron_dist_resources") {
   deps += [
     ":electron",
     ":generate_version",
-    "//chrome/test/chromedriver:chromedriver",
   ]
 
   outputs = [
@@ -625,11 +644,7 @@ action("create_dist") {
     ]
   }
 
-  if (is_mac) {
-    dist_dir = root_out_dir
-  } else {
-    dist_dir = electron_dist_dir
-  }
+  dist_dir = electron_dist_dir
 
   file_inputs = []
   foreach(input, inputs) {
@@ -650,8 +665,11 @@ action("create_dist") {
   deps = [
     ":electron_license_dist_resources",
     "app/$current_os:dist_resources",
-    ":chromedriver_zip"
   ]
+
+  if (muon_build) {
+    deps += [ ":chromedriver_zip" ]
+  }
 
   if (!is_mac) {
     deps += [

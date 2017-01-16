@@ -87,11 +87,16 @@ action("build_node") {
   # dummy script - these are actually produced separately through gyp
   script = "//electron/tools/node_gyp_build.py"
 
-  outputs = [
-    "$root_out_dir/natives_blob.bin",
-    "$root_out_dir/snapshot_blob.bin",
-    "$root_out_dir/icudtl.dat",
-  ]
+  outputs = []
+
+  if (muon_build) {
+    outputs += [
+      "$root_out_dir/natives_blob.bin",
+      "$root_out_dir/snapshot_blob.bin",
+      "$root_out_dir/icudtl.dat",
+    ]
+  }
+
   if (is_mac) {
     outputs += [
       "$root_out_dir/libnode.dylib",
