@@ -188,6 +188,8 @@ class Protocol : public mate::TrackableObject<Protocol> {
   const base::ListValue* GetNavigatorHandlers();
   void UnregisterNavigatorHandler(const std::string& scheme,
       const std::string& spec);
+  void RegisterNavigatorHandler(const std::string& scheme,
+      const std::string& spec);
   bool IsNavigatorProtocolHandled(const std::string &scheme);
 
   // Convert error code to JS exception and call the callback.

@@ -191,6 +191,16 @@ void Protocol::UnregisterNavigatorHandler(const std::string& scheme,
   registry->RemoveHandler(handler);
 }
 
+void Protocol::RegisterNavigatorHandler(const std::string& scheme,
+                                        const std::string& spec) {
+  ProtocolHandler handler =
+      ProtocolHandler::CreateProtocolHandler(scheme, GURL(spec));
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          browser_context_);
+  registry->OnAcceptRegisterProtocolHandler(handler);
+}
+
 bool Protocol::IsNavigatorProtocolHandled(const std::string& scheme) {
   ProtocolHandlerRegistry* registry =
       ProtocolHandlerRegistryFactory::GetForBrowserContext(
@@ -269,6 +279,8 @@ void Protocol::BuildPrototype(
                  &Protocol::IsNavigatorProtocolHandled)
       .SetMethod("getNavigatorHandlers",
                  &Protocol::GetNavigatorHandlers)
+      .SetMethod("registerNavigatorHandler",
+                 &Protocol::RegisterNavigatorHandler)
       .SetMethod("unregisterNavigatorHandler",
                  &Protocol::UnregisterNavigatorHandler);
 }
