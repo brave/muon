@@ -620,7 +620,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@
+@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -1552,7 +1552,7 @@ diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/compone
 index 0b134745863bb1d6a520aacf601527f94cb14c61..86d74195e694f13c183592c43b3f37408c57bd8c 100644
 --- a/components/printing/renderer/print_web_view_helper_mac.mm
 +++ b/components/printing/renderer/print_web_view_helper_mac.mm
-@@ -68,7 +68,6 @@
+@@ -68,7 +68,6 @@ void PrintWebViewHelper::PrintPageInternal(
    Send(new PrintHostMsg_DidPrintPage(routing_id(), page_params));
  }
  
@@ -1560,7 +1560,7 @@ index 0b134745863bb1d6a520aacf601527f94cb14c61..86d74195e694f13c183592c43b3f3740
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -105,7 +104,6 @@
+@@ -105,7 +104,6 @@ bool PrintWebViewHelper::RenderPreviewPage(
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1585,7 +1585,7 @@ diff --git a/content/browser/accessibility/browser_accessibility_cocoa.mm b/cont
 index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8f6831802 100644
 --- a/content/browser/accessibility/browser_accessibility_cocoa.mm
 +++ b/content/browser/accessibility/browser_accessibility_cocoa.mm
-@@ -104,6 +104,7 @@
+@@ -104,6 +104,7 @@ struct AXTextMarkerData {
  // VoiceOver uses -1 to mean "no limit" for AXResultsLimit.
  const int kAXResultsLimitNoLimit = -1;
  
@@ -1593,7 +1593,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  extern "C" {
  
  // See http://openradar.appspot.com/9896491. This SPI has been tested on 10.5,
-@@ -309,6 +310,7 @@ void AddMisspelledTextAttributes(
+@@ -309,6 +310,7 @@ NSAttributedString* GetAttributedTextForTextMarkerRange(
    AddMisspelledTextAttributes(text_only_objects, attributed_text);
    return [attributed_text attributedSubstringFromRange:range];
  }
@@ -1601,7 +1601,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  // Returns an autoreleased copy of the AXNodeData's attribute.
  NSString* NSStringForStringAttribute(
-@@ -544,7 +546,9 @@ + (void)initialize {
+@@ -544,7 +546,9 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
        {NSAccessibilityDisclosedRowsAttribute, @"disclosedRows"},
        {NSAccessibilityDropEffectsAttribute, @"dropEffects"},
        {NSAccessibilityEnabledAttribute, @"enabled"},
@@ -1611,7 +1611,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
        {NSAccessibilityExpandedAttribute, @"expanded"},
        {NSAccessibilityFocusedAttribute, @"focused"},
        {NSAccessibilityGrabbedAttribute, @"grabbed"},
-@@ -572,13 +576,17 @@ + (void)initialize {
+@@ -572,13 +576,17 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
        {NSAccessibilityRowsAttribute, @"rows"},
        // TODO(aboxhall): expose
        // NSAccessibilityServesAsTitleForUIElementsAttribute
@@ -1629,7 +1629,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
        {NSAccessibilitySizeAttribute, @"size"},
        {NSAccessibilitySortDirectionAttribute, @"sortDirection"},
        {NSAccessibilitySubroleAttribute, @"subrole"},
-@@ -617,8 +625,10 @@ - (instancetype)initWithObject:(BrowserAccessibility*)accessibility {
+@@ -617,8 +625,10 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
  }
  
  - (void)detach {
@@ -1640,7 +1640,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    browserAccessibility_ = nullptr;
  }
  
-@@ -909,6 +919,7 @@ - (NSNumber*)enabled {
+@@ -909,6 +919,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
        !GetState(browserAccessibility_, ui::AX_STATE_DISABLED)];
  }
  
@@ -1648,7 +1648,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  // Returns a text marker that points to the last character in the document that
  // can be selected with VoiceOver.
  - (id)endTextMarker {
-@@ -937,6 +948,7 @@ - (id)endTextMarker {
+@@ -937,6 +948,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
                            last_text_object->GetText().length(),
                            ui::AX_TEXT_AFFINITY_DOWNSTREAM);
  }
@@ -1656,7 +1656,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  - (NSNumber*)expanded {
    if (![self instanceActive])
-@@ -1590,6 +1602,7 @@ - (NSValue*)selectedTextRange {
+@@ -1590,6 +1602,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    return [NSValue valueWithRange:NSMakeRange(selStart, selLength)];
  }
  
@@ -1664,7 +1664,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  - (id)selectedTextMarkerRange {
    if (![self instanceActive])
      return nil;
-@@ -1620,6 +1633,7 @@ - (id)selectedTextMarkerRange {
+@@ -1620,6 +1633,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    return CreateTextMarkerRange(*anchorObject, anchorOffset, anchorAffinity,
                                 *focusObject, focusOffset, focusAffinity);
  }
@@ -1672,7 +1672,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  - (NSValue*)size {
    if (![self instanceActive])
-@@ -1652,6 +1666,7 @@ - (NSString*)sortDirection {
+@@ -1652,6 +1666,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    return nil;
  }
  
@@ -1680,7 +1680,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  // Returns a text marker that points to the first character in the document that
  // can be selected with VoiceOver.
  - (id)startTextMarker {
-@@ -1678,6 +1693,7 @@ - (id)startTextMarker {
+@@ -1678,6 +1693,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
  
    return CreateTextMarker(*first_text_object, 0, ui::AX_TEXT_AFFINITY_UPSTREAM);
  }
@@ -1688,7 +1688,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
  // Returns a subrole based upon the role.
  - (NSString*) subrole {
-@@ -1950,10 +1966,12 @@ - (NSAttributedString*)attributedValueForRange:(NSRange)range {
+@@ -1950,10 +1966,12 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
    NSString* value = base::SysUTF16ToNSString(browserAccessibility_->GetValue());
    NSMutableAttributedString* attributedValue =
        [[[NSMutableAttributedString alloc] initWithString:value] autorelease];
@@ -1701,7 +1701,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    return [attributedValue attributedSubstringFromRange:range];
  }
  
-@@ -2074,6 +2092,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
+@@ -2074,6 +2092,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
      return nil;
    }
  
@@ -1709,7 +1709,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    if ([attribute isEqualToString:@"AXUIElementForTextMarker"]) {
      BrowserAccessibility* object;
      int offset;
-@@ -2256,6 +2275,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
+@@ -2256,6 +2275,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
      NSString* text = GetTextForTextMarkerRange(parameter);
      return [NSNumber numberWithInt:[text length]];
    }
@@ -1717,7 +1717,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
  
    if ([attribute isEqualToString:
        NSAccessibilityBoundsForRangeParameterizedAttribute]) {
-@@ -2293,6 +2313,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
+@@ -2293,6 +2313,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
      return nil;
    }
  
@@ -1725,7 +1725,7 @@ index 6c7d1564febc820c4d27fcb43f2e5e7cba06abf5..0325b274988ed37566d3783661331ab8
    if ([attribute isEqualToString:
             NSAccessibilityLineTextMarkerRangeForTextMarkerParameterizedAttribute]) {
      BrowserAccessibility* object;
-@@ -2310,6 +2331,7 @@ - (id)accessibilityAttributeValue:(NSString*)attribute
+@@ -2310,6 +2331,7 @@ NSString* const NSAccessibilityRequiredAttribute = @"AXRequired";
          *object, startOffset, ui::AX_TEXT_AFFINITY_UPSTREAM,
          *object, endOffset, ui::AX_TEXT_AFFINITY_DOWNSTREAM);
    }
@@ -1737,7 +1737,7 @@ diff --git a/content/browser/accessibility/browser_accessibility_manager_mac.mm 
 index 77ce72f4df5882ac45c0533656d8cbfffcdd961b..c8c80e50494f3ae4531f494000ddad45fd639649 100644
 --- a/content/browser/accessibility/browser_accessibility_manager_mac.mm
 +++ b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-@@ -83,8 +83,10 @@
+@@ -83,8 +83,10 @@ NSString* const NSAccessibilityTextSelectionGranularity =
      @"AXTextSelectionGranularity";
  NSString* const NSAccessibilityTextSelectionChangedFocus =
      @"AXTextSelectionChangedFocus";
@@ -1748,7 +1748,7 @@ index 77ce72f4df5882ac45c0533656d8cbfffcdd961b..c8c80e50494f3ae4531f494000ddad45
  NSString* const NSAccessibilityTextChangeElement = @"AXTextChangeElement";
  NSString* const NSAccessibilityTextEditType = @"AXTextEditType";
  NSString* const NSAccessibilityTextChangeValue = @"AXTextChangeValue";
-@@ -432,9 +434,10 @@
+@@ -432,9 +434,10 @@ NSDictionary* BrowserAccessibilityManagerMac::
      focus_object = focus_object->GetClosestPlatformObject();
      auto native_focus_object = ToBrowserAccessibilityCocoa(focus_object);
      if (native_focus_object && [native_focus_object instanceActive]) {
@@ -1777,7 +1777,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 92d3617594e49f5c9b6a392d3dde935c02548159..6004636d53feff66cd39a67c920a5ba85f76ffef 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@ @interface SyntheticPinchEvent : NSObject
+@@ -21,7 +21,7 @@
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1790,7 +1790,7 @@ diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/cont
 index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd60743143746191 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -137,6 +137,11 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
+@@ -137,6 +137,11 @@ RenderWidgetHostViewMac* GetRenderWidgetHostViewToUse(
  
  }  // namespace
  
@@ -1802,7 +1802,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -469,7 +474,9 @@ float FlipYFromRectToScreen(float y, float rect_height) {
+@@ -469,7 +474,9 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
@@ -1812,7 +1812,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1737,6 +1744,9 @@ - (BOOL)acceptsMouseEventsWhenInactive {
+@@ -1737,6 +1744,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1822,7 +1822,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    return [self acceptsMouseEventsWhenInactive];
  }
  
-@@ -1878,6 +1888,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
+@@ -1878,6 +1888,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1830,7 +1830,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -1891,6 +1902,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
+@@ -1891,6 +1902,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1838,7 +1838,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -1938,8 +1950,9 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+@@ -1938,8 +1950,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1850,7 +1850,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2639,6 +2652,10 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
+@@ -2639,6 +2652,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1861,7 +1861,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
    return ([event type] == NSKeyDown &&
               !([event modifierFlags] & NSCommandKeyMask)) ? YES : NO;
  }
-@@ -2795,9 +2812,11 @@ - (id)accessibilityFocusedUIElement {
+@@ -2795,9 +2812,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // Since this implementation doesn't have to wait any IPC calls, this doesn't
  // make any key-typing jank. --hbono 7/23/09
  //
@@ -1873,7 +1873,7 @@ index 825941faac0fe866a88e925dbe2ebae691cea699..ccd932f467fd67760b1f5496dd607431
  
  - (NSArray *)validAttributesForMarkedText {
    // This code is just copied from WebKit except renaming variables.
-@@ -2806,7 +2825,9 @@ - (NSArray *)validAttributesForMarkedText {
+@@ -2806,7 +2825,9 @@ extern NSString *NSTextInputReplacementRangeAttributeName;
          NSUnderlineStyleAttributeName,
          NSUnderlineColorAttributeName,
          NSMarkedClauseSegmentAttributeName,
@@ -2172,7 +2172,7 @@ index eb095bc5777a6b05bc6ad1ef4ef64393dfdf0592..72eefb12d24bef531684a3f486a8e36f
        _generated_files += [ rebase_path("//remoting/resources/chromoting.ico") ]
  
 diff --git a/services/shell/public/cpp/BUILD.gn b/services/shell/public/cpp/BUILD.gn
-index f415b8ad7a51f1d879dfc56cd3217f31b90ba23f..1ffbff28cd55a361986e7db8e860c04c2a381ebb 100644
+index f415b8ad7a51f1d879dfc56cd3217f31b90ba23f..b6ef435d0ba430b73f0a288b504e149baca3f40b 100644
 --- a/services/shell/public/cpp/BUILD.gn
 +++ b/services/shell/public/cpp/BUILD.gn
 @@ -2,6 +2,8 @@
