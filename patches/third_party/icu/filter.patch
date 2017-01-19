@@ -1,19 +1,19 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 1dd7c61d5368a643cb9d8cc489f8833cd796cb5f..8e0ca7264c8485d111ba68c1cdb894563c77c483 100644
+index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5b1b2a537 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -3,6 +3,7 @@
  # found in the LICENSE file.
- 
+
  import("//third_party/icu/config.gni")
 +import("//build/config/chrome_build.gni")
- 
+
  if (is_android) {
    import("//build/config/android/rules.gni")
 @@ -12,6 +13,43 @@ if (is_mac) {
    import("//build/config/sanitizers/sanitizers.gni")
  }
- 
+
 +icui18n_name = "icui18n"
 +icuuc_name = "icuuc"
 +if (muon_build) {
@@ -54,54 +54,54 @@ index 1dd7c61d5368a643cb9d8cc489f8833cd796cb5f..8e0ca7264c8485d111ba68c1cdb89456
  # Meta target that includes both icuuc and icui18n. Most targets want both.
  # You can depend on the individually if you need to.
  group("icu") {
-@@ -38,9 +76,11 @@ config("icu_config") {
-     "U_NOEXCEPT=",
+@@ -33,9 +71,11 @@ config("icu_config") {
+     "U_ENABLE_DYLOAD=0",
    ]
- 
+
 +  if (!muon_build) {
    if (!is_component_build) {
      defines += [ "U_STATIC_IMPLEMENTATION" ]
    }
 +  }
- 
+
    include_dirs = [
      "source/common",
-@@ -122,7 +162,7 @@ config("icu_code") {
+@@ -96,7 +136,7 @@ config("icu_code") {
    }
  }
- 
+
 -component("icui18n") {
 +component(icui18n_name) {
    # find  source/i18n -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
    # sort | sed 's/^\(.*\)$/    "\1",/'
    sources = [
-@@ -554,7 +594,7 @@ component("icui18n") {
- 
+@@ -521,7 +561,7 @@ component("icui18n") {
+
    defines = [ "U_I18N_IMPLEMENTATION" ]
    deps = [
 -    ":icuuc",
 +    ":$icuuc_name",
    ]
- 
+
    # ICU uses RTTI, replace the default "no rtti" config.
-@@ -579,7 +619,7 @@ component("icui18n") {
+@@ -546,7 +586,7 @@ component("icui18n") {
    }
  }
- 
+
 -component("icuuc") {
 +component(icuuc_name) {
    # find  source/common -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
    # sort | sed 's/^\(.*\)$/    "\1",/'
    sources = [
-@@ -990,6 +1030,7 @@ if (is_android && enable_java_templates) {
+@@ -967,6 +1007,7 @@ if (is_android && enable_java_templates) {
    }
  }
- 
+
 +if (!muon_build) {
  # TODO(GYP): Gyp has considerations here for QNX and for the host toolchain
  #  that have not been ported over.
  if (is_android) {
-@@ -1054,3 +1095,4 @@ if (icu_use_data_file) {
+@@ -1032,3 +1073,4 @@ if (icu_use_data_file) {
      }
    }
  }
