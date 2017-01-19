@@ -1,5 +1,6 @@
 import("//build/config/ui.gni")
 import("//build/config/features.gni")
+import("//extensions/features/features.gni")
 
 source_set("browser") {
   public_configs = [
@@ -14,7 +15,8 @@ source_set("browser") {
   public_deps = [
     "//electron/vendor/brightray:browser",
     "//ui/events",
-    "//components/security_state",
+    "//components/security_state/content",
+    "//components/security_state/core",
     "//components/autofill/content/browser:browser",
     "//third_party/protobuf:protobuf_lite",
     "//third_party/WebKit/public:blink_headers",

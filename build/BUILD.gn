@@ -1,7 +1,6 @@
 import("//build/config/chrome_build.gni")
 import("//build/config/compiler/compiler.gni")
 import("//build/util/branding.gni")
-import("//chrome/version.gni")
 
 if (is_linux) {
   import("//build/config/linux/pkg_config.gni")

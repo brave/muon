@@ -2,6 +2,9 @@ import("//build/buildflag_header.gni")
 import("//build/config/chrome_build.gni")
 import("//build/config/compiler/compiler.gni")
 import("//build/config/features.gni")
+import("//extensions/features/features.gni")
+import("//printing/features/features.gni")
+
 
 source_set("browser") {
   configs += [
@@ -46,12 +49,9 @@ source_set("browser") {
     "//components/autofill/content/browser:risk_proto",
     "//components/autofill/content/browser",
     "//components/autofill/core/browser",
-    "//components/devtools_discovery",
-    "//components/devtools_http_handler",
     "//components/resources",
     "//components/subresource_filter/content/browser",
     "//components/subresource_filter/core/browser",
-    "//components/syncable_prefs",
     "//device/usb/mojo",
     "//device/usb/public/interfaces",
     "//gpu/config",

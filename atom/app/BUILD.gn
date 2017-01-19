@@ -24,7 +24,7 @@ source_set("app") {
   }
 
   deps = [
-    "//third_party/widevine/cdm:version_h",
+    "//third_party/widevine/cdm:headers",
     "//third_party/kasko",
   ]
 }
