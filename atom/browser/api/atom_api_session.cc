@@ -299,7 +299,8 @@ void SetProxyInIO(net::URLRequestContextGetter* getter,
       new net::ProxyConfigServiceFixed(config)));
   // Refetches and applies the new pac script if provided.
   proxy_service->ForceReloadProxyConfig();
-  BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, base::Bind(&base::DoNothing));
+  BrowserThread::PostTask(
+      BrowserThread::UI, FROM_HERE, base::Bind(&base::DoNothing));
 }
 
 void SetCertVerifyProcInIO(
