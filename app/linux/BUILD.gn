@@ -66,7 +66,7 @@ copy("dist_resources") {
   sources = [
     "$root_out_dir/libnode.so",
   ]
-  
+
   outputs = [
     "$electron_dist_dir/{{source_file_part}}",
   ]
@@ -74,7 +74,7 @@ copy("dist_resources") {
   deps = [
     "//electron/build/node:node_resources",
     "//electron/app/linux:strip_and_dump_brave_symbols",
-    "//electron/app/linux:strip_and_dump_chromedriver_symbols"
+    # "//electron/app/linux:strip_and_dump_chromedriver_symbols"
   ]
 }
 
@@ -106,29 +106,29 @@ action("strip_and_dump_brave_symbols") {
 }
 
 
-action("strip_and_dump_chromedriver_symbols") {
-  script = "//build/linux/dump_app_syms.py"
-  dump_syms_label = "//breakpad:dump_syms($host_toolchain)"
-  dump_syms_binary =
-          get_label_info(dump_syms_label, "root_out_dir") + "/" + "dump_syms"
+# action("strip_and_dump_chromedriver_symbols") {
+#   script = "//build/linux/dump_app_syms.py"
+#   dump_syms_label = "//breakpad:dump_syms($host_toolchain)"
+#   dump_syms_binary =
+#           get_label_info(dump_syms_label, "root_out_dir") + "/" + "dump_syms"
 
-  chromedriver_binary = "$root_out_dir/chromedriver"
-  if (current_cpu == "x86") {
-  # Use "ia32" instead of "x86" for GYP compat.
-    chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.ia32"
-  } else {
-    chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.$current_cpu"
-  }
+#   chromedriver_binary = "$root_out_dir/chromedriver"
+#   if (current_cpu == "x86") {
+#   # Use "ia32" instead of "x86" for GYP compat.
+#     chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.ia32"
+#   } else {
+#     chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.$current_cpu"
+#   }
 
-  inputs = [ chromedriver_binary, dump_syms_binary ]
-  outputs = [ chromedriver_symbol_file ]
+#   inputs = [ chromedriver_binary, dump_syms_binary ]
+#   outputs = [ chromedriver_symbol_file ]
 
-  args = [
-    "./" + rebase_path(dump_syms_binary, root_build_dir),
-    "1",  # strip_binary = true
-    rebase_path(chromedriver_binary, root_build_dir),
-    rebase_path(chromedriver_symbol_file, root_build_dir),
-  ]
+#   args = [
+#     "./" + rebase_path(dump_syms_binary, root_build_dir),
+#     "1",  # strip_binary = true
+#     rebase_path(chromedriver_binary, root_build_dir),
+#     rebase_path(chromedriver_symbol_file, root_build_dir),
+#   ]
 
-  deps = [ "//chrome/test/chromedriver:chromedriver", dump_syms_label, ]
-}
+#   deps = [ "//chrome/test/chromedriver:chromedriver", dump_syms_label, ]
+# }
