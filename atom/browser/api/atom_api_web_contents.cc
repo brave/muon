@@ -2071,7 +2071,9 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   bool was_blocked = false;
   AddNewContents(web_contents(),
                     tab,
-                    active ? WindowOpenDisposition::NEW_FOREGROUND_TAB : WindowOpenDisposition::NEW_BACKGROUND_TAB,
+                    active ?
+                      WindowOpenDisposition::NEW_FOREGROUND_TAB :
+                      WindowOpenDisposition::NEW_BACKGROUND_TAB,
                     gfx::Rect(),
                     user_gesture,
                     &was_blocked);

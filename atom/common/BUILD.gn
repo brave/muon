@@ -113,7 +113,6 @@ source_set("common") {
   public_deps = [
     ":node",
     "//chrome/common",
-    "//components/autofill/content/common",
     "//components/autofill/core/common",
   ]
 
@@ -121,8 +120,6 @@ source_set("common") {
     "//base",
     "//base:base_static",
     "//base:i18n",
-    "//components/autofill/content/common",
-    "//components/autofill/core/common",
   ]
 
   if (is_mac) {
