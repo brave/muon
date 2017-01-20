@@ -15,6 +15,7 @@
 
 #include "base/macros.h"
 #include "base/threading/thread_checker.h"
+#include "extensions/features/features.h"
 #include "net/log/net_log.h"
 
 namespace atom {
@@ -27,7 +28,7 @@ namespace component_updater {
 class ComponentUpdateService;
 }
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 namespace extensions {
 class EventRouterForwarder;
 class ExtensionsBrowserClient;
@@ -74,7 +75,7 @@ class BrowserProcess {
   component_updater::ComponentUpdateService* brave_component_updater();
   component_updater::ComponentUpdateService* component_updater();
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::EventRouterForwarder* extension_event_router_forwarder();
 #endif
 
@@ -84,7 +85,7 @@ class BrowserProcess {
   void CreateProfileManager();
 
   std::unique_ptr<printing::PrintJobManager> print_job_manager_;
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   scoped_refptr<extensions::EventRouterForwarder>
       extension_event_router_forwarder_;
   std::unique_ptr<extensions::ExtensionsBrowserClient> extensions_browser_client_;

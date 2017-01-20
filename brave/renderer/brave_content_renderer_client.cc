@@ -24,6 +24,7 @@
 #include "components/printing/renderer/print_web_view_helper.h"
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
+#include "extensions/features/features.h"
 #include "third_party/WebKit/public/platform/URLConversion.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
@@ -36,7 +37,7 @@
 #include "atom/common/options_switches.h"
 #endif
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/renderer/extensions/chrome_extensions_renderer_client.h"
 #endif
 
@@ -74,7 +75,7 @@ void BraveContentRendererClient::RenderThreadStarted() {
   chrome_observer_.reset(new ChromeRenderThreadObserver());
   web_cache_impl_.reset(new web_cache::WebCacheImpl());
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   ChromeExtensionsRendererClient::GetInstance()->RenderThreadStarted();
 #endif
 
@@ -117,7 +118,7 @@ void BraveContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
   bool should_whitelist_for_content_settings = false;
   extensions::Dispatcher* ext_dispatcher = NULL;
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   ext_dispatcher =
       ChromeExtensionsRendererClient::GetInstance()->extension_dispatcher();
 #endif
@@ -132,7 +133,7 @@ void BraveContentRendererClient::RenderFrameCreated(
     content_settings->SetContentSettingsManager(content_settings_manager_);
   }
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   ChromeExtensionsRendererClient::GetInstance()->RenderFrameCreated(
       render_frame);
 #endif
@@ -153,7 +154,7 @@ void BraveContentRendererClient::RenderFrameCreated(
 
 void BraveContentRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   ChromeExtensionsRendererClient::GetInstance()->RenderViewCreated(render_view);
 #endif
 #if defined(ENABLE_PRINTING)

@@ -42,11 +42,12 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/dom_storage_context.h"
 #include "content/public/browser/storage_partition.h"
+#include "extensions/features/features.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
 #include "net/url_request/url_request_context.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 #include "atom/browser/extensions/atom_extensions_network_delegate.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
@@ -68,7 +69,7 @@
 using content::BrowserThread;
 using content::HostZoomMap;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 namespace {
 
 void NotifyOTRProfileCreatedOnIOThread(void* original_profile,
@@ -124,7 +125,7 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
   if (original_context_) {
     TrackZoomLevelsFromParent();
   }
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (IsOffTheRecord()) {
     BrowserThread::PostTask(
         BrowserThread::IO, FROM_HERE,
@@ -156,7 +157,7 @@ BraveBrowserContext::~BraveBrowserContext() {
     auto user_prefs = user_prefs::UserPrefs::Get(this);
     if (user_prefs)
       user_prefs->ClearMutableValues();
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
     ExtensionPrefValueMapFactory::GetForBrowserContext(
         original_context_.get())->ClearAllIncognitoSessionOnlyPreferences();
 #endif
@@ -178,7 +179,7 @@ BraveBrowserContext::~BraveBrowserContext() {
       DestroyBrowserContextServices(this);
 
   if (IsOffTheRecord()) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(&NotifyOTRProfileDestroyedOnIOThread,
@@ -238,7 +239,7 @@ BraveBrowserContext* BraveBrowserContext::otr_context() {
 }
 
 content::BrowserPluginGuestManager* BraveBrowserContext::GetGuestManager() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!guest_view::GuestViewManager::FromBrowserContext(this)) {
     guest_view::GuestViewManager::CreateWithDelegate(
         this,
@@ -334,7 +335,7 @@ BraveBrowserContext::CreateURLRequestJobFactory(
     content::ProtocolHandlerMap* protocol_handlers) {
   std::unique_ptr<net::URLRequestJobFactory> job_factory =
       AtomBrowserContext::CreateURLRequestJobFactory(protocol_handlers);
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::InfoMap* extension_info_map =
       extensions::AtomExtensionSystemFactory::GetInstance()->
         GetForBrowserContext(this)->info_map();
@@ -351,7 +352,7 @@ BraveBrowserContext::CreateURLRequestJobFactory(
 void BraveBrowserContext::CreateProfilePrefs(
     scoped_refptr<base::SequencedTaskRunner> task_runner) {
   InitPrefs(task_runner);
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   PrefStore* extension_prefs = new ExtensionPrefStore(
       ExtensionPrefValueMapFactory::GetForBrowserContext(original_context()),
       IsOffTheRecord());
@@ -395,7 +396,7 @@ void BraveBrowserContext::CreateProfilePrefs(
     ProtocolHandlerRegistry::RegisterProfilePrefs(pref_registry_.get());
     HostContentSettingsMap::RegisterProfilePrefs(pref_registry_.get());
     autofill::AutofillManager::RegisterProfilePrefs(pref_registry_.get());
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions::AtomBrowserClientExtensionsPart::RegisterProfilePrefs(
         pref_registry_.get());
     extensions::ExtensionPrefs::RegisterProfilePrefs(pref_registry_.get());
@@ -437,7 +438,7 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
           ->CreateJobInterceptorFactory();
 
   if (!IsOffTheRecord() && !HasParentContext()) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
 #endif
     content::BrowserContext::GetDefaultStoragePartition(this)->

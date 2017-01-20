@@ -7,10 +7,11 @@
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "extensions/features/features.h"
 #if defined(ENABLE_PLUGINS)
 #include "chrome/browser/plugins/plugin_prefs_factory.h"
 #endif
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "extensions/browser/api/alarms/alarm_manager.h"
 #include "extensions/browser/api/api_resource_manager.h"
@@ -37,7 +38,7 @@
 namespace atom {
 
 void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   // keep AtomExtensionsBrowserClient::RegisterExtensionFunctions in sync
   extensions::AlarmManager::GetFactoryInstance();
   extensions::ApiResourceManager<extensions::ResumableTCPServerSocket>::

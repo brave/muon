@@ -95,7 +95,7 @@
 
 #include "atom/common/node_includes.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "extensions/browser/api/extensions_api_client.h"
@@ -1060,7 +1060,7 @@ void WebContents::NavigationEntryCommitted(
 }
 
 int WebContents::GetID() const {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::TabHelper::IdForTab(web_contents());
 #else
   return web_contents()->GetRenderProcessHost()->GetID();
@@ -1068,7 +1068,7 @@ int WebContents::GetID() const {
 }
 
 WebContents::Type WebContents::GetType() const {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (Extension::IsBackgroundPage(this))
     return BACKGROUND_PAGE;
 #endif
@@ -1621,7 +1621,7 @@ void WebContents::SetActive(bool active) {
   if (active)
     web_contents()->WasShown();
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper)
     tab_helper->SetActive(active);
@@ -1631,7 +1631,7 @@ void WebContents::SetActive(bool active) {
 }
 
 void WebContents::SetTabIndex(int index) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper)
     tab_helper->SetTabIndex(index);
@@ -1640,7 +1640,7 @@ void WebContents::SetTabIndex(int index) {
   Emit("set-tab-index", index);
 }
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (!tab_helper)
@@ -2013,7 +2013,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
                   &WebContents::EnablePreferredSizeMode)
       .SetMethod("authorizePlugin",
                   &WebContents::AuthorizePlugin)
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
       .SetMethod("setTabValues", &WebContents::SetTabValues)
 #endif

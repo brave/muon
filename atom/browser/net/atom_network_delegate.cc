@@ -12,9 +12,10 @@
 #include "base/strings/string_util.h"
 #include "brightray/browser/net/devtools_network_transaction.h"
 #include "content/public/browser/browser_thread.h"
+#include "extensions/features/features.h"
 #include "net/url_request/url_request.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/browser/extension_api_frame_id_map.h"
 #endif
 
@@ -75,7 +76,7 @@ bool MatchesFilterCondition(net::URLRequest* request,
 }
 
 int GetTabId(net::URLRequest* request) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   int render_frame_id = -1;
   int render_process_id = -1;
   int tab_id = -1;

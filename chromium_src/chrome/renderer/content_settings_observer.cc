@@ -18,6 +18,7 @@
 #include "content/public/renderer/document_state.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_view.h"
+#include "extensions/features/features.h"
 #include "third_party/WebKit/public/platform/URLConversion.h"
 #include "third_party/WebKit/public/platform/WebContentSettingCallbacks.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
@@ -29,7 +30,7 @@
 #include "third_party/WebKit/public/web/WebView.h"
 #include "url/url_constants.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/common/constants.h"
 #include "extensions/common/extension.h"
 #include "extensions/common/permissions/api_permission.h"
@@ -444,7 +445,7 @@ bool ContentSettingsObserver::allowStorage(bool local) {
 
 bool ContentSettingsObserver::allowReadFromClipboard(bool default_value) {
   bool allowed = default_value;
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::ScriptContext* current_context =
       extension_dispatcher_->script_context_set().GetCurrent();
   if (current_context) {
@@ -457,7 +458,7 @@ bool ContentSettingsObserver::allowReadFromClipboard(bool default_value) {
 
 bool ContentSettingsObserver::allowWriteToClipboard(bool default_value) {
   bool allowed = default_value;
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   // All blessed extension pages could historically write to the clipboard, so
   // preserve that for compatibility.
   extensions::ScriptContext* current_context =
@@ -647,7 +648,7 @@ bool ContentSettingsObserver::IsWhitelistedForContentSettings(
   if (base::EqualsASCII(protocol, content::kChromeDevToolsScheme))
     return true;  // DevTools UI elements should still work.
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (base::EqualsASCII(protocol, extensions::kExtensionScheme))
     return true;
 #endif

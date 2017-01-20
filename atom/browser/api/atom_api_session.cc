@@ -42,6 +42,7 @@
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/storage_partition.h"
+#include "extensions/features/features.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/base/load_flags.h"
@@ -56,7 +57,7 @@
 #include "net/url_request/url_request_context_getter.h"
 #include "ui/base/l10n/l10n_util.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/api/atom_api_extension.h"
 #include "extensions/browser/extensions_browser_client.h"
 #endif
@@ -562,7 +563,7 @@ v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
 }
 
 v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (extensions_.IsEmpty()) {
     auto handle = atom::api::Extension::Create(isolate, browser_context());
     extensions_.Reset(isolate, handle.ToV8());
@@ -572,7 +573,7 @@ v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
 }
 
 bool Session::Equal(Session* session) const {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::ExtensionsBrowserClient::Get()->IsSameContext(
                                         browser_context(),
                                         session->browser_context());

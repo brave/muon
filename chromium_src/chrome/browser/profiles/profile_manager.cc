@@ -86,13 +86,14 @@
 // #include "content/public/browser/notification_service.h"
 #include "content/public/browser/user_metrics.h"
 #include "content/public/common/content_switches.h"
+// #include "extensions/features/features.h"
 // #include "net/http/http_transaction_factory.h"
 // #include "net/url_request/url_request_context.h"
 // #include "net/url_request/url_request_context_getter.h"
 // #include "net/url_request/url_request_job.h"
 // #include "ui/base/l10n/l10n_util.h"
 
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 // #include "chrome/browser/extensions/extension_service.h"
 // #include "extensions/browser/extension_registry.h"
 // #include "extensions/browser/extension_system.h"

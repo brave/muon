@@ -10,13 +10,14 @@
 #include <vector>
 
 #include "atom/browser/atom_browser_client.h"
+#include "extensions/features/features.h"
 
 namespace content {
 class PlatformNotificationService;
 class NavigationHandle;
 }
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 namespace extensions {
 class AtomBrowserClientExtensionsPart;
 }
@@ -118,7 +119,7 @@ void RegisterOutOfProcessServices(OutOfProcessServiceMap* apps) override;
 
 
  private:
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   std::unique_ptr<extensions::AtomBrowserClientExtensionsPart> extensions_part_;
 #endif
 

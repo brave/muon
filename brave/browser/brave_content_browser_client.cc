@@ -37,7 +37,7 @@
 #include "services/shell/public/cpp/interface_registry.h"
 #include "ui/base/l10n/l10n_util.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 #include "extensions/browser/extension_navigation_throttle.h"
 #include "extensions/browser/extension_util.h"
@@ -70,7 +70,7 @@ void SetApplicationLocaleOnIOThread(const std::string& locale) {
 }  // namespace
 
 BraveContentBrowserClient::BraveContentBrowserClient() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_.reset(new AtomBrowserClientExtensionsPart);
 #endif
 }
@@ -83,7 +83,7 @@ std::string BraveContentBrowserClient::GetStoragePartitionIdForSite(
     const GURL& site) {
   std::string partition_id;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (site.SchemeIs(extensions::kExtensionScheme) &&
            extensions::util::SiteHasIsolatedStorage(site, browser_context))
     partition_id = site.spec();
@@ -116,7 +116,7 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
   partition_name->clear();
   *in_memory = false;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (site.SchemeIs(extensions::kExtensionScheme)) {
     // If |can_be_default| is false, the caller is stating that the |site|
     // should be parsed as if it had isolated storage. In particular it is
@@ -173,7 +173,7 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
 
   atom::AtomBrowserClient::RenderProcessWillLaunch(host);
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_->RenderProcessWillLaunch(host);
 #endif
 
@@ -189,7 +189,7 @@ GURL BraveContentBrowserClient::GetEffectiveURL(
   if (!profile)
     return url;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return AtomBrowserClientExtensionsPart::GetEffectiveURL(
       profile, url);
 #else
@@ -200,7 +200,7 @@ GURL BraveContentBrowserClient::GetEffectiveURL(
 bool BraveContentBrowserClient::ShouldLockToOrigin(
     content::BrowserContext* browser_context,
     const GURL& effective_site_url) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   // Disable origin lock if this is an extension/app that applies effective URL
   // mappings.
   if (!AtomBrowserClientExtensionsPart::ShouldLockToOrigin(
@@ -221,7 +221,7 @@ bool BraveContentBrowserClient::IsSuitableHost(
   if (!profile)
     return true;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return AtomBrowserClientExtensionsPart::IsSuitableHost(
       profile, process_host, site_url);
 #else
@@ -235,7 +235,7 @@ bool BraveContentBrowserClient::ShouldTryToUseExistingProcessHost(
   if (!url.is_valid())
     return false;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   Profile* profile = Profile::FromBrowserContext(browser_context);
   return AtomBrowserClientExtensionsPart::
       ShouldTryToUseExistingProcessHost(
@@ -247,7 +247,7 @@ bool BraveContentBrowserClient::ShouldTryToUseExistingProcessHost(
 
 void BraveContentBrowserClient::BrowserURLHandlerCreated(
     content::BrowserURLHandler* handler) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_->BrowserURLHandlerCreated(handler);
 #endif
 }
@@ -269,7 +269,7 @@ std::string BraveContentBrowserClient::GetApplicationLocale() {
 
 void BraveContentBrowserClient::SetApplicationLocale(std::string locale) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   AtomBrowserClientExtensionsPart::SetApplicationLocale(locale);
 #endif
   // This object is guaranteed to outlive all threads so we don't have to
@@ -315,7 +315,7 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
         content::RenderProcessHost::FromID(child_process_id);
 
     if (process) {
-      #if defined(ENABLE_EXTENSIONS)
+      #if BUILDFLAG(ENABLE_EXTENSIONS)
         extensions_part_->AppendExtraRendererCommandLineSwitches(
               command_line, process, process->GetBrowserContext());
       #endif
@@ -328,7 +328,7 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
       autofill::switches::kEnableSuggestionsWithSubstringMatch,
       autofill::switches::kIgnoreAutocompleteOffForAutofill,
       autofill::switches::kLocalHeuristicsOnlyForPasswordGeneration,
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
       extensions::switches::kAllowHTTPBackgroundPage,
       extensions::switches::kAllowLegacyExtensionManifests,
       extensions::switches::kEnableAppWindowControls,
@@ -342,7 +342,7 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
     command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
                                    arraysize(kSwitchNames));
   } else if (process_type == switches::kUtilityProcess) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
     static const char* const kSwitchNames[] = {
       extensions::switches::kAllowHTTPBackgroundPage,
       extensions::switches::kEnableExperimentalExtensionApis,
@@ -408,7 +408,7 @@ void BraveContentBrowserClient::OverrideWebkitPrefs(
   // Custom preferences of guest page.
   auto web_contents = content::WebContents::FromRenderViewHost(host);
   atom::WebContentsPreferences::OverrideWebkitPrefs(web_contents, prefs);
-  #if defined(ENABLE_EXTENSIONS)
+  #if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions_part_->OverrideWebkitPrefs(host, prefs);
   #endif
 }
@@ -422,7 +422,7 @@ void BraveContentBrowserClient::SiteInstanceGotProcess(
   if (!browser_context)
     return;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_->SiteInstanceGotProcess(site_instance);
 #endif
 }
@@ -432,7 +432,7 @@ void BraveContentBrowserClient::SiteInstanceDeleting(
   if (!site_instance->HasProcess())
     return;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_->SiteInstanceDeleting(site_instance);
 #endif
 }
@@ -443,7 +443,7 @@ bool BraveContentBrowserClient::ShouldUseProcessPerSite(
   if (!profile)
     return false;
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return AtomBrowserClientExtensionsPart::ShouldUseProcessPerSite(
       profile, effective_url);
 #else
@@ -454,7 +454,7 @@ bool BraveContentBrowserClient::ShouldUseProcessPerSite(
 bool BraveContentBrowserClient::DoesSiteRequireDedicatedProcess(
     content::BrowserContext* browser_context,
     const GURL& effective_site_url) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (AtomBrowserClientExtensionsPart::DoesSiteRequireDedicatedProcess(
           browser_context, effective_site_url)) {
     return true;
@@ -473,7 +473,7 @@ void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
   additional_allowed_schemes->push_back(content::kChromeDevToolsScheme);
   additional_allowed_schemes->push_back(content::kChromeUIScheme);
 
-  #if defined(ENABLE_EXTENSIONS)
+  #if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions_part_->
         GetAdditionalAllowedSchemesForFileSystem(additional_allowed_schemes);
   #endif
@@ -486,7 +486,7 @@ void BraveContentBrowserClient::GetAdditionalWebUISchemes(
 bool BraveContentBrowserClient::ShouldAllowOpenURL(
     content::SiteInstance* site_instance, const GURL& url) {
   GURL from_url = site_instance->GetSiteURL();
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   bool result;
   if (AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
       site_instance, from_url, url, &result))
@@ -533,7 +533,7 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
     content::SiteInstance* site_instance,
     const GURL& current_url,
     const GURL& new_url) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return AtomBrowserClientExtensionsPart::
       ShouldSwapBrowsingInstancesForNavigation(
           site_instance, current_url, new_url);
@@ -546,7 +546,7 @@ ScopedVector<content::NavigationThrottle>
 BraveContentBrowserClient::CreateThrottlesForNavigation(
     content::NavigationHandle* handle) {
   ScopedVector<content::NavigationThrottle> throttles;
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!handle->IsInMainFrame())
     throttles.push_back(new extensions::ExtensionNavigationThrottle(handle));
 #endif
