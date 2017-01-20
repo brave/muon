@@ -157,7 +157,7 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
 // }
 
 void BraveContentBrowserClient::RegisterRenderFrameMojoInterfaces(
-    shell::InterfaceRegistry* registry,
+    service_manager::InterfaceRegistry* registry,
     content::RenderFrameHost* render_frame_host) {
   registry->AddInterface(
       base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver,

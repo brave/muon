@@ -34,9 +34,11 @@ class AtomContentUtilityClient : public content::ContentUtilityClient {
 
   void UtilityThreadStarted() override;
   bool OnMessageReceived(const IPC::Message& message) override;
-  void ExposeInterfacesToBrowser(shell::InterfaceRegistry* registry) override;
+  void ExposeInterfacesToBrowser(
+      service_manager::InterfaceRegistry* registry) override;
 
   static void PreSandboxStartup();
+
  private:
   void OnStartupPing();
 
