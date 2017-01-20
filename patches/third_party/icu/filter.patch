@@ -4,16 +4,16 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
 +++ b/BUILD.gn
 @@ -3,6 +3,7 @@
  # found in the LICENSE file.
-
+ 
  import("//third_party/icu/config.gni")
 +import("//build/config/chrome_build.gni")
-
+ 
  if (is_android) {
    import("//build/config/android/rules.gni")
 @@ -12,6 +13,43 @@ if (is_mac) {
    import("//build/config/sanitizers/sanitizers.gni")
  }
-
+ 
 +icui18n_name = "icui18n"
 +icuuc_name = "icuuc"
 +if (muon_build) {
@@ -57,37 +57,37 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
 @@ -33,9 +71,11 @@ config("icu_config") {
      "U_ENABLE_DYLOAD=0",
    ]
-
+ 
 +  if (!muon_build) {
    if (!is_component_build) {
      defines += [ "U_STATIC_IMPLEMENTATION" ]
    }
 +  }
-
+ 
    include_dirs = [
      "source/common",
 @@ -96,7 +136,7 @@ config("icu_code") {
    }
  }
-
+ 
 -component("icui18n") {
 +component(icui18n_name) {
    # find  source/i18n -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
    # sort | sed 's/^\(.*\)$/    "\1",/'
    sources = [
 @@ -521,7 +561,7 @@ component("icui18n") {
-
+ 
    defines = [ "U_I18N_IMPLEMENTATION" ]
    deps = [
 -    ":icuuc",
 +    ":$icuuc_name",
    ]
-
+ 
    # ICU uses RTTI, replace the default "no rtti" config.
 @@ -546,7 +586,7 @@ component("icui18n") {
    }
  }
-
+ 
 -component("icuuc") {
 +component(icuuc_name) {
    # find  source/common -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
@@ -96,7 +96,7 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
 @@ -967,6 +1007,7 @@ if (is_android && enable_java_templates) {
    }
  }
-
+ 
 +if (!muon_build) {
  # TODO(GYP): Gyp has considerations here for QNX and for the host toolchain
  #  that have not been ported over.
