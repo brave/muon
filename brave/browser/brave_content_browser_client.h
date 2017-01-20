@@ -36,7 +36,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
  protected:
   // content::ContentBrowserClient:
   void RegisterRenderFrameMojoInterfaces(
-      shell::InterfaceRegistry* registry,
+      service_manager::InterfaceRegistry* registry,
       content::RenderFrameHost* render_frame_host) override;
   void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
   void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
