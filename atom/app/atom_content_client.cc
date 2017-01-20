@@ -27,13 +27,14 @@
 #include "content/public/common/content_constants.h"
 #include "content/public/common/pepper_plugin_info.h"
 #include "content/public/common/user_agent.h"
+#include "extensions/features/features.h"
 #include "gpu/config/gpu_info.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "url/url_constants.h"
 #include "widevine_cdm_version.h"  // NOLINT
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "content/public/common/url_constants.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/features/feature_util.h"
@@ -91,7 +92,7 @@ std::string AtomContentClient::GetUserAgent() const {
 }
 
 bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::IsIsolateExtensionsEnabled();
 #else
   return false;
@@ -121,7 +122,7 @@ void AtomContentClient::AddSecureSchemesAndOrigins(
 
 void AtomContentClient::AddServiceWorkerSchemes(
     std::set<std::string>* schemes) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   if (extensions::feature_util::ExtensionServiceWorkersEnabled())
     schemes->insert(extensions::kExtensionScheme);
 #endif
@@ -129,7 +130,7 @@ void AtomContentClient::AddServiceWorkerSchemes(
 
 bool AtomContentClient::AllowScriptExtensionForServiceWorker(
     const GURL& script_url) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   return script_url.SchemeIs(extensions::kExtensionScheme) ||
          script_url.SchemeIs(extensions::kExtensionResourceScheme);
 #else
