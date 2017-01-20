@@ -12,12 +12,13 @@
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "base/files/file_path.h"
 #include "content/public/browser/browser_thread.h"
+#include "extensions/features/features.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/url_request/url_request_context.h"
 #include "v8/include/v8.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/browser/api/web_request/web_request_api_helpers.h"
 #endif
 
@@ -193,7 +194,7 @@ void WebRequest::SetListener(Method method, Event type, mate::Arguments* args) {
 }
 
 void WebRequest::HandleBehaviorChanged() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extension_web_request_api_helpers::ClearCacheOnNavigation();
 #endif
 }

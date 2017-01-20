@@ -21,7 +21,7 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/message_center/message_center.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
 #include "chrome/common/extensions/chrome_extensions_client.h"
@@ -51,7 +51,7 @@ BrowserProcess::BrowserProcess()
   ui::InitIdleMonitor();
 #endif
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
       extensions::kExtensionScheme);
   content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
@@ -70,7 +70,7 @@ BrowserProcess::BrowserProcess()
 }
 
 BrowserProcess::~BrowserProcess() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::ExtensionsBrowserClient::Set(nullptr);
 #endif
   g_browser_process = NULL;

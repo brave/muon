@@ -16,6 +16,7 @@
 #include "chrome/utility/utility_message_handler.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/utility/utility_thread.h"
+#include "extensions/features/features.h"
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
@@ -23,7 +24,7 @@
 #include "net/proxy/proxy_resolver_v8.h"
 #include "services/shell/public/cpp/interface_registry.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/common/extensions/chrome_extensions_client.h"
 #include "extensions/utility/utility_handler.h"
 #endif
@@ -87,7 +88,7 @@ AtomContentUtilityClient::~AtomContentUtilityClient() {
 }
 
 void AtomContentUtilityClient::UtilityThreadStarted() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::UtilityHandler::UtilityThreadStarted();
 #endif
 }
@@ -137,7 +138,7 @@ void AtomContentUtilityClient::ExposeInterfacesToBrowser(
 
 // static
 void AtomContentUtilityClient::PreSandboxStartup() {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::ExtensionsClient::Set(
       extensions::ChromeExtensionsClient::GetInstance());
 #endif

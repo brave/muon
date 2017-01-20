@@ -37,6 +37,7 @@
 #include "components/crash/content/app/crashpad.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/common/constants.h"
+#include "extensions/features/features.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_switches.h"
@@ -68,7 +69,7 @@
 #include "chrome/app/chrome_crash_reporter_client.h"
 #endif
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/renderer/brave_content_renderer_client.h"
 #endif

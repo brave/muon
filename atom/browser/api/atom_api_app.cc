@@ -48,6 +48,7 @@
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/common/content_switches.h"
+#include "extensions/features/features.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/ssl/ssl_cert_request_info.h"
@@ -61,7 +62,7 @@
 #include "base/strings/utf_string_conversions.h"
 #endif
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/api/atom_api_extension.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "content/public/browser/notification_types.h"
@@ -509,7 +510,7 @@ App::App(v8::Isolate* isolate) {
   content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
   g_browser_process->set_app(this);
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   registrar_.Add(this,
                  content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED,
                  content::NotificationService::AllBrowserContextsAndSources());
@@ -530,7 +531,7 @@ void App::Observe(
       auto browser_context = web_contents->GetBrowserContext();
       auto url = web_contents->GetURL();
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC
       if (Extension::IsBackgroundPageUrl(url, browser_context)) {

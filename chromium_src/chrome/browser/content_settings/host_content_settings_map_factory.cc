@@ -13,8 +13,9 @@
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/syncable_prefs/pref_service_syncable.h"
 #include "content/public/browser/browser_thread.h"
+#include "extensions/features/features.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "extensions/browser/extension_system.h"
 #include "extensions/browser/extension_system_provider.h"
@@ -25,7 +26,7 @@ HostContentSettingsMapFactory::HostContentSettingsMapFactory()
     : RefcountedBrowserContextKeyedServiceFactory(
         "HostContentSettingsMap",
         BrowserContextDependencyManager::GetInstance()) {
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   DependsOn(
       extensions::ExtensionsBrowserClient::Get()->GetExtensionSystemFactory());
 #endif
@@ -73,14 +74,14 @@ scoped_refptr<RefcountedKeyedService>
                    settings_map->GetWeakPtr(), true /* after_sync */));
   }
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   ExtensionService *ext_service =
       extensions::ExtensionSystem::Get(profile)->extension_service();
   // This may be null in testing or when the extenion_service hasn't been
   // initialized, in which case it will be registered then.
   if (ext_service)
     ext_service->RegisterContentSettings(settings_map.get());
-#endif // defined(ENABLE_EXTENSIONS)
+#endif // BUILDFLAG(ENABLE_EXTENSIONS)
   return settings_map;
 }
 

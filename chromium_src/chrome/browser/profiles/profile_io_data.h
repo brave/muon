@@ -28,6 +28,7 @@
 #include "components/prefs/pref_member.h"
 #include "content/public/browser/content_browser_client.h"
 #include "content/public/browser/resource_context.h"
+#include "extensions/features/features.h"
 #include "net/cert/ct_verifier.h"
 #include "net/cookies/cookie_monster.h"
 #include "net/http/http_cache.h"
@@ -297,7 +298,7 @@ class ProfileIOData {
 //     scoped_refptr<HostContentSettingsMap> host_content_settings_map;
 //     scoped_refptr<net::SSLConfigService> ssl_config_service;
 //     scoped_refptr<net::CookieMonsterDelegate> cookie_monster_delegate;
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //     scoped_refptr<extensions::InfoMap> extension_info_map;
 // #endif
 //     std::unique_ptr<chrome_browser_net::ResourcePrefetchPredictorObserver>
@@ -537,7 +538,7 @@ class ProfileIOData {
 //   mutable std::unique_ptr<policy::PolicyHeaderIOHelper> policy_header_helper_;
 
 //   // Pointed to by URLRequestContext.
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   mutable scoped_refptr<extensions::InfoMap> extension_info_map_;
 // #endif
 //   mutable std::unique_ptr<net::ChannelIDService> channel_id_service_;
@@ -591,7 +592,7 @@ class ProfileIOData {
 //       supervised_user_url_filter_;
 // #endif
 
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   // Is NULL if switches::kDisableExtensionsHttpThrottling is on.
 //   mutable std::unique_ptr<extensions::ExtensionThrottleManager>
 //       extension_throttle_manager_;

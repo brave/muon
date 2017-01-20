@@ -18,6 +18,7 @@
 #include "content/common/view_messages.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/common/favicon_url.h"
+#include "extensions/features/features.h"
 #include "native_mate/handle.h"
 #include "ui/gfx/image/image.h"
 
@@ -222,7 +223,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void ZoomReset();
   int GetZoomPercent();
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   bool ExecuteScriptInTab(mate::Arguments* args);
   void SetTabValues(const base::DictionaryValue& values);
 #endif

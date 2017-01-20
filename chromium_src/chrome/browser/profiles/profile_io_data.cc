@@ -105,7 +105,7 @@
 #include "net/url_request/url_request_interceptor.h"
 #include "net/url_request/url_request_job_factory_impl.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 // #include "chrome/browser/extensions/extension_cookie_monster_delegate.h"
 // #include "chrome/browser/extensions/extension_resource_protocols.h"
 #include "extensions/browser/extension_protocols.h"
@@ -396,7 +396,7 @@
 //       HostContentSettingsMapFactory::GetForProfile(profile);
 //   params->ssl_config_service = profile->GetSSLConfigService();
 
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   params->extension_info_map =
 //       extensions::ExtensionSystem::Get(profile)->info_map();
 //   params->cookie_monster_delegate = new ExtensionCookieMonsterDelegate(profile);
@@ -718,7 +718,7 @@ bool ProfileIOData::IsHandledProtocol(const std::string& scheme) {
     url::kFileScheme,
     content::kChromeDevToolsScheme,
     // dom_distiller::kDomDistillerScheme,
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions::kExtensionScheme,
     extensions::kExtensionResourceScheme,
 #endif
@@ -834,7 +834,7 @@ void ProfileIOData::InstallProtocolHandlers(
 
 // extensions::InfoMap* ProfileIOData::GetExtensionInfoMap() const {
 //   DCHECK(initialized_) << "ExtensionSystem not initialized";
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   return extension_info_map_.get();
 // #else
 //   return nullptr;
@@ -844,7 +844,7 @@ void ProfileIOData::InstallProtocolHandlers(
 // extensions::ExtensionThrottleManager*
 // ProfileIOData::GetExtensionThrottleManager() const {
 //   DCHECK(initialized_) << "ExtensionSystem not initialized";
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   return extension_throttle_manager_.get();
 // #else
 //   return nullptr;
@@ -1024,13 +1024,13 @@ void ProfileIOData::InstallProtocolHandlers(
 
 //   std::unique_ptr<ChromeNetworkDelegate> network_delegate(
 //       new ChromeNetworkDelegate(
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //           io_thread_globals->extension_event_router_forwarder.get(),
 // #else
 //           NULL,
 // #endif
 //           &enable_referrers_, io_thread->GetMetricsDataUseForwarder()));
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   network_delegate->set_extension_info_map(
 //       profile_params_->extension_info_map.get());
 //   if (!command_line.HasSwitch(switches::kDisableExtensionsHttpThrottling)) {
@@ -1081,7 +1081,7 @@ void ProfileIOData::InstallProtocolHandlers(
 //   // Take ownership over these parameters.
 //   cookie_settings_ = profile_params_->cookie_settings;
 //   host_content_settings_map_ = profile_params_->host_content_settings_map;
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   extension_info_map_ = profile_params_->extension_info_map;
 // #endif
 
@@ -1174,7 +1174,7 @@ void ProfileIOData::InstallProtocolHandlers(
 //                   base::SequencedWorkerPool::SKIP_ON_SHUTDOWN))));
 //   DCHECK(set_protocol);
 
-// #if defined(ENABLE_EXTENSIONS)
+// #if BUILDFLAG(ENABLE_EXTENSIONS)
 //   DCHECK(extension_info_map_.get());
 //   // Check only for incognito (and not Chrome OS guest mode GUEST_PROFILE).
 //   bool is_incognito = profile_type() == Profile::INCOGNITO_PROFILE;
