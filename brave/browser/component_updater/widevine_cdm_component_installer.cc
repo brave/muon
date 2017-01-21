@@ -221,8 +221,9 @@ class WidevineCdmComponentInstallerTraits
   bool SupportsGroupPolicyEnabledComponentUpdates() const override;
   std::vector<std::string> GetMimeTypes() const override;
   bool RequiresNetworkEncryption() const override;
-  bool OnCustomInstall(const base::DictionaryValue& manifest,
-                               const base::FilePath& install_dir) override;
+  update_client::CrxInstaller::Result OnCustomInstall(
+    const base::DictionaryValue& manifest,
+    const base::FilePath& install_dir) override;
   bool VerifyInstallation(
       const base::DictionaryValue& manifest,
       const base::FilePath& install_dir) const override;
@@ -271,10 +272,11 @@ bool WidevineCdmComponentInstallerTraits::RequiresNetworkEncryption() const {
   return false;
 }
 
-bool WidevineCdmComponentInstallerTraits::OnCustomInstall(
+update_client::CrxInstaller::Result
+WidevineCdmComponentInstallerTraits::OnCustomInstall(
     const base::DictionaryValue& manifest,
     const base::FilePath& install_dir) {
-  return true;
+  return update_client::CrxInstaller::Result(0);  // Nothing custom here.
 }
 
 // Once the CDM is ready, check the CDM adapter.
