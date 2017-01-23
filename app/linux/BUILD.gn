@@ -73,20 +73,48 @@ copy("dist_resources") {
 
   deps = [
     "//electron/build/node:node_resources",
-    "//electron/app/linux:strip_and_dump_brave_symbols",
-    # "//electron/app/linux:strip_and_dump_chromedriver_symbols"
   ]
 }
 
-action("strip_and_dump_brave_symbols") {
+action("generate_breakpad_symbols") {
+  symbols_dir = "$electron_dist_dir/$electron_project_name.breakpad.syms"
+  outputs = [
+    symbols_dir
+  ]
+
+  deps = [
+    ":electron_app",
+  ]
+
+  start = [ electron_project_name ]
+
+  script = "//electron/tools/posix/generate_breakpad_symbols.py"
+  args = [
+    "--symbols-dir=" + rebase_path(symbols_dir),
+    "--jobs=16",
+    "--build-dir=" + rebase_path(root_out_dir),
+    "--binary=$start",
+    "--libchromiumcontent-dir=" + rebase_path("//"),
+    "--clear",
+  ]
+
+  deps += [ "//breakpad:dump_syms" ]
+}
+
+action("strip_and_dump_symbols") {
   script = "//build/linux/dump_app_syms.py"
 
   dump_syms_label = "//breakpad:dump_syms($host_toolchain)"
   dump_syms_binary =
           get_label_info(dump_syms_label, "root_out_dir") + "/" + "dump_syms"
 
-  deps = [ ":electron_app", dump_syms_label ]
-  brave_binary = "$root_out_dir/brave"
+  deps = [
+    "//electron:electron_dist_resources",
+    # TODO(bridiver) - resolve duplicate symbol generation
+    ":generate_breakpad_symbols",
+    dump_syms_label,
+  ]
+  brave_binary = "$electron_dist_dir/brave"
   if (current_cpu == "x86") {
   # Use "ia32" instead of "x86" for GYP compat.
     brave_symbol_file = "$root_out_dir/brave.breakpad.ia32"
@@ -105,30 +133,47 @@ action("strip_and_dump_brave_symbols") {
   ]
 }
 
+group("symbol_dist_resources") {
+  public_deps = [
+    ":generate_breakpad_symbols",
+    ":strip_and_dump_symbols",
+  ]
+}
 
-# action("strip_and_dump_chromedriver_symbols") {
-#   script = "//build/linux/dump_app_syms.py"
-#   dump_syms_label = "//breakpad:dump_syms($host_toolchain)"
-#   dump_syms_binary =
-#           get_label_info(dump_syms_label, "root_out_dir") + "/" + "dump_syms"
+if (muon_build) {
+  group("chromedriver_dist_resources") {
+    deps = [
+      ":strip_and_dump_chromedriver_symbols"
+    ]
+  }
 
-#   chromedriver_binary = "$root_out_dir/chromedriver"
-#   if (current_cpu == "x86") {
-#   # Use "ia32" instead of "x86" for GYP compat.
-#     chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.ia32"
-#   } else {
-#     chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.$current_cpu"
-#   }
+  action("strip_and_dump_chromedriver_symbols") {
+    script = "//build/linux/dump_app_syms.py"
+    dump_syms_label = "//breakpad:dump_syms($host_toolchain)"
+    dump_syms_binary =
+            get_label_info(dump_syms_label, "root_out_dir") + "/" + "dump_syms"
 
-#   inputs = [ chromedriver_binary, dump_syms_binary ]
-#   outputs = [ chromedriver_symbol_file ]
+    chromedriver_binary = "$electron_dist_dir/chromedriver"
+    if (current_cpu == "x86") {
+    # Use "ia32" instead of "x86" for GYP compat.
+      chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.ia32"
+    } else {
+      chromedriver_symbol_file = "$root_out_dir/chromedriver.breakpad.$current_cpu"
+    }
 
-#   args = [
-#     "./" + rebase_path(dump_syms_binary, root_build_dir),
-#     "1",  # strip_binary = true
-#     rebase_path(chromedriver_binary, root_build_dir),
-#     rebase_path(chromedriver_symbol_file, root_build_dir),
-#   ]
+    inputs = [ chromedriver_binary, dump_syms_binary ]
+    outputs = [ chromedriver_symbol_file ]
 
-#   deps = [ "//chrome/test/chromedriver:chromedriver", dump_syms_label, ]
-# }
+    args = [
+      "./" + rebase_path(dump_syms_binary, root_build_dir),
+      "1",  # strip_binary = true
+      rebase_path(chromedriver_binary, root_build_dir),
+      rebase_path(chromedriver_symbol_file, root_build_dir),
+    ]
+
+    deps = [
+      dump_syms_label,
+      "//electron:electron_chromedriver_dist_resources",
+    ]
+  }
+}

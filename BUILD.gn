@@ -535,6 +535,7 @@ if (muon_build) {
     base_dir = electron_dist_dir
 
     deps = [
+      "app/$current_os:chromedriver_dist_resources",
       ":electron_chromedriver_dist_resources",
       ":electron_license_dist_resources",
     ]
@@ -617,6 +618,38 @@ if (!is_mac) {
   }
 }
 
+action("create_symbols_dist") {
+  output = "$electron_dist_dir/$electron_project_name-v$electron_version-$electron_platform-$target_arch-symbols.zip"
+
+  script = "//electron/script/create-dist.py"
+
+  # inputs = get_target_outputs(":electron_chromedriver_dist_resources")
+  inputs = get_target_outputs(":electron_license_dist_resources")
+  dir_inputs = [ "$electron_project_name.breakpad.syms" ]
+
+  file_inputs = []
+  foreach(input, inputs) {
+    file_inputs += [ rebase_path(input, electron_dist_dir) ]
+  }
+
+  rebase_output = rebase_path(output)
+  rebase_base_dir = rebase_path(electron_dist_dir)
+
+  args = [
+    "--base-dir=$rebase_base_dir",
+    "--inputs=$file_inputs",
+    "--dir-inputs=$dir_inputs",
+    "--output=$rebase_output",
+  ]
+
+  outputs = [ output ]
+
+  deps = [
+    "app/$current_os:symbol_dist_resources",
+    ":electron_license_dist_resources",
+  ]
+}
+
 action("create_dist") {
   output = "$electron_dist_dir/$electron_project_name-v$electron_version-$electron_platform-$target_arch.zip"
 
@@ -663,6 +696,7 @@ action("create_dist") {
   ]
 
   deps = [
+    ":create_symbols_dist",
     ":electron_license_dist_resources",
     "app/$current_os:dist_resources",
   ]

@@ -18,8 +18,8 @@ import threading
 
 
 CONCURRENT_TASKS=4
-SOURCE_ROOT=os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-DUMP_SYMS=os.path.join(SOURCE_ROOT, 'vendor', 'breakpad', 'dump_syms.exe')
+SOURCE_ROOT=os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+DUMP_SYMS=os.path.join(SOURCE_ROOT, 'breakpad', 'src', 'tools', 'windows', 'binaries', 'dump_syms.exe')
 
 
 def GetCommandOutput(command):

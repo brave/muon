@@ -67,7 +67,7 @@ def main():
 
   # Upload Electron with GitHub Releases API.
   upload_electron(github, release, os.path.join(dist_dir(), DIST_NAME))
-  # upload_electron(github, release, os.path.join(dist_dir(), SYMBOLS_NAME))
+  upload_electron(github, release, os.path.join(dist_dir(), SYMBOLS_NAME))
   # if PLATFORM == 'darwin':
   #   upload_electron(github, release, os.path.join(dist_dir(), DSYM_NAME))
   # elif PLATFORM == 'win32':
@@ -76,8 +76,8 @@ def main():
   # Upload chromedriver and mksnapshot.
   chromedriver = get_zip_name('chromedriver', get_chromedriver_version())
   upload_electron(github, release, os.path.join(dist_dir(), chromedriver))
-    # mksnapshot = get_zip_name('mksnapshot', get_electron_version())
-    # upload_electron(github, release, os.path.join(dist_dir(), mksnapshot))
+  # mksnapshot = get_zip_name('mksnapshot', get_electron_version())
+  # upload_electron(github, release, os.path.join(dist_dir(), mksnapshot))
 
   # if PLATFORM == 'win32' and not tag_exists:
   #   # Upload PDBs to Windows symbol server.

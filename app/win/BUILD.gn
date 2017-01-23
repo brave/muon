@@ -147,6 +147,29 @@ copy("external_binaries") {
   ]
 }
 
+action("generate_breakpad_symbols") {
+  symbols_dir = "$electron_dist_dir/$electron_project_name.breakpad.syms"
+  outputs = [
+    symbols_dir
+  ]
+
+  args = [
+    "--symbols-dir=" + rebase_path(symbols_dir),
+    "--jobs=16",
+    rebase_path(root_out_dir)
+  ]
+
+  deps = [
+    ":electron_app",
+  ]
+
+  script = "//electron/tools/win/generate_breakpad_symbols.py"
+}
+
+group("symbol_dist_resources") {
+  public_deps = [ ":generate_breakpad_symbols" ]
+}
+
 copy("dist_resources") {
   sources = [
     # "$root_out_dir/$widevine_cdm_path",
@@ -170,4 +193,6 @@ copy("dist_resources") {
     "//third_party/angle:libGLESv2",
   ]
 }
+
+group("chromedriver_dist_resources") {}
 
