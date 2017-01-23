@@ -20,6 +20,10 @@ import subprocess
 import sys
 import threading
 
+sys.path.append(os.path.join(os.path.dirname(__file__),
+                             os.pardir, os.pardir, os.pardir,
+                             "build"))
+import gn_helpers
 
 CONCURRENT_TASKS=4
 
@@ -70,6 +74,9 @@ def GetDSYMBundle(options, binary_path):
   search_dirs = [options.build_dir, options.libchromiumcontent_dir]
   if filename.endswith(('.dylib', '.framework', '.app')):
     for directory in search_dirs:
+      dsym_path = os.path.join(directory, os.path.splitext(filename)[0]) + '.dSYM'
+      if os.path.exists(dsym_path):
+        return dsym_path
       dsym_path = os.path.join(directory, filename) + '.dSYM'
       if os.path.exists(dsym_path):
         return dsym_path
@@ -253,20 +260,21 @@ def main():
     print "Required option --binary missing."
     return 1
 
-  if not os.access(options.binary, os.X_OK):
-    print "Cannot find %s." % options.binary
-    return 1
-
   if options.clear:
     try:
       shutil.rmtree(options.symbols_dir)
     except:
       pass
 
+  binary = []
+  if options.binary:
+    parser = gn_helpers.GNValueParser(options.binary)
+    binary = parser.ParseList()
+
   # Build the transitive closure of all dependencies.
-  binaries = set([options.binary])
-  queue = [options.binary]
-  exe_path = os.path.dirname(options.binary)
+  binaries = set(binary)
+  queue = binary
+  exe_path = os.path.dirname(binary[0])
   while queue:
     deps = GetSharedLibraryDependencies(options, queue.pop(0), exe_path)
     new_deps = set(deps) - binaries

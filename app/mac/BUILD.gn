@@ -354,12 +354,17 @@ mac_xib_bundle_data("electron_xibs") {
   ]
 }
 
-group("dist_resources") {
-  deps = [
+group("dist_resources") {}
+
+group("symbol_dist_resources") {
+  public_deps = [
     ":electron_dump_syms",
     ":electron_dsym_archive",
+    ":generate_breakpad_symbols",
   ]
 }
+
+group("chromedriver_dist_resources") {}
 
 # This list must be updated with the two targets' deps list below, and
 # the list of _dsyms in :electron_dsym_archive.
@@ -369,6 +374,42 @@ _electron_symbols_sources = [
   "$root_out_dir/$chrome_product_full_name.app/Contents/MacOS/$chrome_product_full_name",
   "$root_out_dir/crashpad_handler",
 ]
+
+action("generate_breakpad_symbols") {
+  symbols_dir = "$electron_dist_dir/$electron_project_name.breakpad.syms"
+  outputs = [
+    symbols_dir
+  ]
+
+  sources = _electron_symbols_sources
+
+  binaries = []
+  foreach(_source, sources) {
+    binaries += [ rebase_path(_source) ]
+  }
+
+  deps = [
+    ":electron_app",
+  ]
+
+  script = "//electron/tools/posix/generate_breakpad_symbols.py"
+  args = [
+    "--symbols-dir=" + rebase_path(symbols_dir),
+    "--jobs=16",
+    "--build-dir=" + rebase_path(root_out_dir),
+    "--binary=$binaries",
+    "--libchromiumcontent-dir=" + rebase_path("//"),
+    "--clear",
+  ]
+
+  deps += [
+    ":electron_app",
+    ":electron_framework",
+    ":electron_helper_app",
+    "//breakpad:dump_syms",
+    "//third_party/crashpad/crashpad/handler:crashpad_handler",
+  ]
+}
 
 # It is possible to run dump_syms on unstripped products without dSYMs,
 # but doing so isn't logical and won't happen in practice.
