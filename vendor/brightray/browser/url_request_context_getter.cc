@@ -307,6 +307,10 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         url_request_context_.get(), &network_session_params);
     network_session_params.ignore_certificate_errors = false;
 
+    // disable quic until webrequest filtering is added
+    // https://github.com/brave/browser-laptop/issues/6831
+    network_session_params.enable_quic = false;
+
     // --disable-http2
     if (command_line.HasSwitch(switches::kDisableHttp2)) {
       network_session_params.enable_http2 = false;
