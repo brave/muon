@@ -830,7 +830,7 @@ void WebContents::DidFinishLoad(content::RenderFrameHost* render_frame_host,
   Emit("did-frame-finish-load", is_main_frame);
 
   if (is_main_frame)
-    Emit("did-finish-load");
+    Emit("did-finish-load", validated_url);
 }
 
 void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
