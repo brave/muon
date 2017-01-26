@@ -436,6 +436,11 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
 #if defined(ENABLE_EXTENSIONS)
     extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
 #endif
+
+    protocol_handler_interceptor_ =
+        ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
+            ->CreateJobInterceptorFactory();
+
     content::BrowserContext::GetDefaultStoragePartition(this)->
         GetDOMStorageContext()->SetSaveSessionStorageOnDisk();
 
@@ -456,10 +461,6 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
         base::Bind(&DatabaseErrorCallback));
     autofill_data_->Init();
   }
-
-  protocol_handler_interceptor_ =
-        ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
-          ->CreateJobInterceptorFactory();
 
   user_prefs_registrar_->Init(user_prefs_.get());
 #if defined(ENABLE_PLUGINS)
