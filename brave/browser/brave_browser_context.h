@@ -20,7 +20,7 @@
 
 class PrefChangeRegistrar;
 
-namespace syncable_prefs {
+namespace sync_preferences {
 class PrefServiceSyncable;
 }
 
@@ -82,10 +82,11 @@ class BraveBrowserContext : public Profile {
   user_prefs::PrefRegistrySyncable* pref_registry() const override {
     return pref_registry_.get(); }
 
-  syncable_prefs::PrefServiceSyncable* user_prefs() const {
+  sync_preferences::PrefServiceSyncable* user_prefs() const {
     return user_prefs_.get(); }
 
-  syncable_prefs::PrefServiceSyncable* GetPrefs() { return user_prefs_.get(); }
+  sync_preferences::PrefServiceSyncable* GetPrefs() {
+    return user_prefs_.get(); }
 
   // const PrefService* GetPrefs() const override;
 
@@ -112,7 +113,7 @@ class BraveBrowserContext : public Profile {
   void UpdateDefaultZoomLevel();
 
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
-  std::unique_ptr<syncable_prefs::PrefServiceSyncable> user_prefs_;
+  std::unique_ptr<sync_preferences::PrefServiceSyncable> user_prefs_;
   std::unique_ptr<PrefChangeRegistrar> user_prefs_registrar_;
   std::vector<const char*> overlay_pref_names_;
 
