@@ -796,7 +796,8 @@ void WebContents::PluginCrashed(const base::FilePath& plugin_path,
   Emit("plugin-crashed", info.name, info.version);
 }
 
-void WebContents::MediaStartedPlaying(const MediaPlayerId& id) {
+void WebContents::MediaStartedPlaying(const MediaPlayerInfo& media_info,
+                                      const MediaPlayerId& id) {
   Emit("media-started-playing");
 }
 
