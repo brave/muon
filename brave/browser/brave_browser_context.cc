@@ -432,6 +432,10 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
   BrowserContextDependencyManager::GetInstance()->
       CreateBrowserContextServices(this);
 
+  protocol_handler_interceptor_ =
+        ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
+          ->CreateJobInterceptorFactory();
+
   if (!IsOffTheRecord() && !HasParentContext()) {
 #if defined(ENABLE_EXTENSIONS)
     extensions::ExtensionSystem::Get(this)->InitForRegularProfile(true);
@@ -456,10 +460,6 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
         base::Bind(&DatabaseErrorCallback));
     autofill_data_->Init();
   }
-
-  protocol_handler_interceptor_ =
-        ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
-          ->CreateJobInterceptorFactory();
 
   user_prefs_registrar_->Init(user_prefs_.get());
 #if defined(ENABLE_PLUGINS)
