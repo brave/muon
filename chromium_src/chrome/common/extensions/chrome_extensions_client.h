@@ -45,7 +45,7 @@ class ChromeExtensionsClient : public ExtensionsClient {
   bool ShouldSuppressFatalErrors() const override;
   void RecordDidSuppressFatalError() override;
   std::string GetWebstoreBaseURL() const override;
-  std::string GetWebstoreUpdateURL() const override;
+  const GURL& GetWebstoreUpdateURL() const override;
   bool IsBlacklistUpdateURL(const GURL& url) const override;
   std::set<base::FilePath> GetBrowserImagePaths(
     const Extension* extension);
