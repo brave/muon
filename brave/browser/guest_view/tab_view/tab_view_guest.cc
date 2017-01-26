@@ -38,6 +38,11 @@
 #include "content/public/browser/site_instance.h"
 #include "native_mate/dictionary.h"
 
+#if defined(ENABLE_EXTENSIONS)
+#include "atom/browser/extensions/atom_browser_client_extensions_part.h"
+using extensions::AtomBrowserClientExtensionsPart;
+#endif
+
 using content::RenderFrameHost;
 using content::RenderProcessHost;
 using content::WebContents;
@@ -79,13 +84,16 @@ void TabViewGuest::WebContentsCreated(WebContents* source_contents,
   guest->name_ = frame_name;
 
   NewWindowInfo new_window_info(target_url, frame_name);
-  // if the site instance has changed the old window won't be able to
+#if defined(ENABLE_EXTENSIONS)
+  // if the browser instance changes the old window won't be able to
   // load the url so let ApplyAttributes handle it
-  auto new_site_instance =
-      new_contents->GetSiteInstance()->GetRelatedSiteInstance(target_url);
-  new_window_info.changed =
-      !source_contents->GetSiteInstance()->IsRelatedSiteInstance(
-            new_site_instance.get());
+  bool changed =
+      AtomBrowserClientExtensionsPart::ShouldSwapBrowsingInstancesForNavigation(
+          source_contents->GetSiteInstance(),
+          source_contents->GetURL(),
+          target_url);
+  new_window_info.changed = changed;
+#endif
   pending_new_windows_.insert(std::make_pair(guest, new_window_info));
 }
 
