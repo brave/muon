@@ -653,7 +653,7 @@ void InspectableWebContentsImpl::WebContentsDestroyed() {
     view_->GetDelegate()->DevToolsClosed();
 }
 
-bool InspectableWebContentsImpl::AddMessageToConsole(
+bool InspectableWebContentsImpl::DidAddMessageToConsole(
     content::WebContents* source,
     int32_t level,
     const base::string16& message,

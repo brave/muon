@@ -422,11 +422,11 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
       base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
 }
 
-bool WebContents::AddMessageToConsole(content::WebContents* source,
-                                      int32_t level,
-                                      const base::string16& message,
-                                      int32_t line_no,
-                                      const base::string16& source_id) {
+bool WebContents::DidAddMessageToConsole(content::WebContents* source,
+                                         int32_t level,
+                                         const base::string16& message,
+                                         int32_t line_no,
+                                         const base::string16& source_id) {
   if (type_ == BROWSER_WINDOW) {
     return false;
   } else {
