@@ -20,7 +20,7 @@ BravePrintWebViewHelperDelegate::~BravePrintWebViewHelperDelegate() {
 }
 
 bool BravePrintWebViewHelperDelegate::CancelPrerender(
-    content::RenderView* render_view, int routing_id) {
+    content::RenderFrame* render_frame) {
   return false;
 }
 
