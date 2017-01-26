@@ -104,12 +104,12 @@ DevToolsManagerDelegate::~DevToolsManagerDelegate() {
 
 void DevToolsManagerDelegate::DevToolsAgentHostAttached(
     content::DevToolsAgentHost* agent_host) {
-  handler_->DevToolsAgentHostAttached(agent_host, true);
+  handler_->DevToolsAgentStateChanged(agent_host, true);
 }
 
 void DevToolsManagerDelegate::DevToolsAgentHostDetached(
     content::DevToolsAgentHost* agent_host) {
-  handler_->DevToolsAgentHostAttached(agent_host, false);
+  handler_->DevToolsAgentStateChanged(agent_host, false);
 }
 
 base::DictionaryValue* DevToolsManagerDelegate::HandleCommand(
