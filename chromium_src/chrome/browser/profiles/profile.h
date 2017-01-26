@@ -13,7 +13,7 @@
 #include "base/logging.h"
 #include "base/macros.h"
 #include "build/build_config.h"
-#include "components/syncable_prefs/pref_service_syncable.h"
+#include "components/sync_preferences/pref_service_syncable.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/content_browser_client.h"
 
@@ -93,7 +93,7 @@ class Profile : public atom::AtomBrowserContext {
   // storage partition.
   double GetDefaultZoomLevelForProfile();
 
-  virtual syncable_prefs::PrefServiceSyncable* GetPrefs() = 0;
+  virtual sync_preferences::PrefServiceSyncable* GetPrefs() = 0;
 
   virtual user_prefs::PrefRegistrySyncable* pref_registry() const = 0;
 

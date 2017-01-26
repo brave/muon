@@ -32,8 +32,8 @@
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
 #include "components/pref_registry/pref_registry_syncable.h"
-#include "components/syncable_prefs/pref_service_syncable.h"
-#include "components/syncable_prefs/pref_service_syncable_factory.h"
+#include "components/sync_preferences/pref_service_syncable.h"
+#include "components/sync_preferences/pref_service_syncable_factory.h"
 #include "components/user_prefs/user_prefs.h"
 #include "components/zoom/zoom_event_manager.h"
 #include "components/webdata/common/webdata_constants.h"
@@ -411,7 +411,7 @@ void BraveBrowserContext::CreateProfilePrefs(
         new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
 
     // prepare factory
-    syncable_prefs::PrefServiceSyncableFactory factory;
+    sync_preferences::PrefServiceSyncableFactory factory;
     factory.set_async(async);
     factory.set_extension_prefs(extension_prefs);
     factory.set_user_prefs(pref_store);
