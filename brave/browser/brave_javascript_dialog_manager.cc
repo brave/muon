@@ -349,8 +349,10 @@ base::string16 BraveJavaScriptDialogManager::GetTitle(
           : IDS_JAVASCRIPT_MESSAGEBOX_TITLE_NONSTANDARD_URL_IFRAME);
 }
 
-void BraveJavaScriptDialogManager::CancelActiveAndPendingDialogs(
-    content::WebContents* web_contents) {
+void BraveJavaScriptDialogManager::CancelDialogs(
+    content::WebContents* web_contents,
+    bool suppress_callbacks,
+    bool reset_state) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   if (!isolate)
     return;

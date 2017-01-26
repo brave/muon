@@ -57,8 +57,9 @@ class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
   bool HandleJavaScriptDialog(content::WebContents* web_contents,
                               bool accept,
                               const base::string16* prompt_override) override;
-  void CancelActiveAndPendingDialogs(
-      content::WebContents* web_contents) override;
+  void CancelDialogs(content::WebContents* web_contents,
+                     bool suppress_callbacks,
+                     bool reset_state) override;
   void ResetDialogState(content::WebContents* web_contents) override;
 
   std::string GetEventName(content::JavaScriptMessageType message_type);
