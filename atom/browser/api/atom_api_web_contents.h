@@ -416,7 +416,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
                      base::ProcessId plugin_pid) override;
   void MediaStartedPlaying(const MediaPlayerInfo& media_info,
                            const MediaPlayerId& id) override;
-  void MediaStoppedPlaying(const MediaPlayerId& id) override;
+  void MediaStoppedPlaying(const MediaPlayerInfo& media_info,
+                           const MediaPlayerId& id) override;
   void DidChangeThemeColor(SkColor theme_color) override;
 
   // brightray::InspectableWebContentsDelegate:
