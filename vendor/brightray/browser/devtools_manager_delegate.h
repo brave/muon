@@ -8,22 +8,23 @@
 #include "base/macros.h"
 #include "base/compiler_specific.h"
 #include "content/browser/devtools/devtools_http_handler.h"
+#include "content/public/browser/devtools_agent_host_observer.h"
 #include "content/public/browser/devtools_manager_delegate.h"
 
 namespace brightray {
 
 class DevToolsNetworkProtocolHandler;
 
-class DevToolsManagerDelegate : public content::DevToolsManagerDelegate {
+class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
+                                public content::DevToolsAgentHostObserver {
  public:
 
   DevToolsManagerDelegate();
   virtual ~DevToolsManagerDelegate();
 
+ private:
   // DevToolsManagerDelegate implementation.
   void Inspect(content::DevToolsAgentHost* agent_host) override {}
-  void DevToolsAgentStateChanged(content::DevToolsAgentHost* agent_host,
-                                 bool attached) override;
   base::DictionaryValue* HandleCommand(content::DevToolsAgentHost* agent_host,
                                        base::DictionaryValue* command) override;
   std::string GetTargetType(content::RenderFrameHost* host) override
@@ -37,7 +38,12 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate {
   std::string GetFrontendResource(const std::string& path) override
     {return std::string();}
 
- private:
+  // content::DevToolsAgentHostObserver overrides.
+  void DevToolsAgentHostAttached(
+    content::DevToolsAgentHost* agent_host) override;
+  void DevToolsAgentHostDetached(
+    content::DevToolsAgentHost* agent_host) override;
+
   std::unique_ptr<DevToolsNetworkProtocolHandler> handler_;
 
   DISALLOW_COPY_AND_ASSIGN(DevToolsManagerDelegate);
