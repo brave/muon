@@ -412,7 +412,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
       const std::vector<content::FaviconURL>& urls) override;
   void PluginCrashed(const base::FilePath& plugin_path,
                      base::ProcessId plugin_pid) override;
-  void MediaStartedPlaying(const MediaPlayerId& id) override;
+  void MediaStartedPlaying(const MediaPlayerInfo& media_info,
+                           const MediaPlayerId& id) override;
   void MediaStoppedPlaying(const MediaPlayerId& id) override;
   void DidChangeThemeColor(SkColor theme_color) override;
 
