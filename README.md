@@ -39,6 +39,13 @@ You can also [see our wiki](https://github.com/brave/browser-laptop-bootstrap/wi
 Clone and run the [`muon-quick`](https://github.com/brave/muon-quick)
 repository to see a minimal Muon app in action.
 
+## Versions
+
+The version numbers for Muon will be major.minor.patch
+Major version changes are for breaking api changes
+Minor version changes are for chromium major version changes
+Patch version changes are for everything else
+
 ## Community
 
 You can ask questions and interact with the community in the following
