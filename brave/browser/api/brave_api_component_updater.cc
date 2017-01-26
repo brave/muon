@@ -14,13 +14,11 @@
 
 #include "atom/common/node_includes.h"
 
-void Noop(int error) {}
-
 void ComponentsUI::OnDemandUpdate(
     component_updater::ComponentUpdateService* cus,
     const std::string& component_id) {
   cus->GetOnDemandUpdater().OnDemandUpdate(component_id,
-      base::Bind(Noop));
+      component_updater::Callback());
 }
 
 bool
