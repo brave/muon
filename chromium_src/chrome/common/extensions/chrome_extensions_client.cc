@@ -194,8 +194,8 @@ std::string ChromeExtensionsClient::GetWebstoreBaseURL() const {
 }
 
 const GURL& ChromeExtensionsClient::GetWebstoreUpdateURL() const {
-  const GURL& url = GURL(chrome::kExtensionInvalidRequestURL);
-  return url;
+  webstore_update_url_ = GURL(chrome::kExtensionInvalidRequestURL);
+  return webstore_update_url_;
 }
 
 bool ChromeExtensionsClient::IsBlacklistUpdateURL(const GURL& url) const {
