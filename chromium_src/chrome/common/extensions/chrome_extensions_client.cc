@@ -28,11 +28,13 @@
 #include "extensions/common/common_manifest_handlers.h"
 #include "extensions/common/extension_api.h"
 #include "extensions/common/extension_urls.h"
+#include "extensions/common/extensions_aliases.h"
 #include "extensions/common/features/api_feature.h"
 #include "extensions/common/features/behavior_feature.h"
 #include "extensions/common/features/json_feature_provider_source.h"
 #include "extensions/common/features/manifest_feature.h"
 #include "extensions/common/features/permission_feature.h"
+#include "chrome/common/extensions/chrome_aliases.h"
 #include "extensions/common/features/simple_feature.h"
 #include "extensions/common/manifest_handler.h"
 #include "extensions/common/permissions/permission_message_provider.h"
@@ -76,8 +78,10 @@ void ChromeExtensionsClient::Initialize() {
   }
 
   // Set up permissions.
-  PermissionsInfo::GetInstance()->AddProvider(chrome_api_permissions_);
-  PermissionsInfo::GetInstance()->AddProvider(extensions_api_permissions_);
+  PermissionsInfo::GetInstance()->AddProvider(chrome_api_permissions_,
+                                              GetChromePermissionAliases());
+  PermissionsInfo::GetInstance()->AddProvider(extensions_api_permissions_,
+                                              GetExtensionsPermissionAliases());
 }
 
 const PermissionMessageProvider&
@@ -190,7 +194,8 @@ std::string ChromeExtensionsClient::GetWebstoreBaseURL() const {
 }
 
 const GURL& ChromeExtensionsClient::GetWebstoreUpdateURL() const {
-  return GURL(chrome::kExtensionInvalidRequestURL);
+  const GURL& url = GURL(chrome::kExtensionInvalidRequestURL);
+  return url;
 }
 
 bool ChromeExtensionsClient::IsBlacklistUpdateURL(const GURL& url) const {
