@@ -803,7 +803,8 @@ void WebContents::MediaStartedPlaying(const MediaPlayerInfo& media_info,
   Emit("media-started-playing");
 }
 
-void WebContents::MediaStoppedPlaying(const MediaPlayerId& id) {
+void WebContents::MediaStoppedPlaying(const MediaPlayerInfo& media_info,
+                                      const MediaPlayerId& id) {
   Emit("media-paused");
 }
 
