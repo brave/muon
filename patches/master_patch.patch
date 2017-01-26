@@ -785,7 +785,7 @@ index 0a22e7e50f69be187e50467b60547ed4382dd5b5..2b75e704bf783ecd0702bd79022f3562
    void NotifyItemStarted(importer::ImportItem item) override;
    void NotifyItemEnded(importer::ImportItem item) override;
 diff --git a/chrome/utility/importer/firefox_importer.cc b/chrome/utility/importer/firefox_importer.cc
-index 8c46d371c475ba8cbc6d3999f521db8584989bdd..765a0fb3d5c0642d782b1ce7b185ffd721d56145 100644
+index 8c46d371c475ba8cbc6d3999f521db8584989bdd..c89a8c9cc4da1fb6681ba9c7259e8c305d1728ae 100644
 --- a/chrome/utility/importer/firefox_importer.cc
 +++ b/chrome/utility/importer/firefox_importer.cc
 @@ -15,6 +15,7 @@
@@ -859,18 +859,16 @@ index 8c46d371c475ba8cbc6d3999f521db8584989bdd..765a0fb3d5c0642d782b1ce7b185ffd7
  void FirefoxImporter::GetSearchEnginesXMLData(
      std::vector<std::string>* search_engine_data) {
    base::FilePath file = source_path_.AppendASCII("search.sqlite");
-@@ -647,11 +697,14 @@ void FirefoxImporter::LoadRootNodeID(sql::Connection* db,
+@@ -647,11 +697,12 @@ void FirefoxImporter::LoadRootNodeID(sql::Connection* db,
                                        int* toolbar_folder_id,
                                        int* menu_folder_id,
                                        int* unsorted_folder_id) {
 -  static const char kToolbarFolderName[] = "toolbar";
 -  static const char kMenuFolderName[] = "menu";
 -  static const char kUnsortedFolderName[] = "unfiled";
-+  // static const char kToolbarFolderName[] = "toolbar";
-+  // static const char kMenuFolderName[] = "menu";
-+  // static const char kUnsortedFolderName[] = "unfiled";
-+
-+  // const char query[] = "SELECT root_name, folder_id FROM moz_bookmarks_roots";
++  static const char kToolbarFolderName[] = "Bookmarks Toolbar";
++  static const char kMenuFolderName[] = "Bookmarks Menu";
++  static const char kUnsortedFolderName[] = "Other Bookmarks";
 +  const char query[] = "SELECT b.title, b.id FROM moz_bookmarks b "
 +                       "WHERE b.type = 2";
  
