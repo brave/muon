@@ -84,8 +84,8 @@
 #include "net/http/http_response_headers.h"
 #include "net/url_request/url_request_context.h"
 #include "printing/print_settings.h"
+#include "third_party/WebKit/public/platform/WebInputEvent.h"
 #include "third_party/WebKit/public/web/WebFindOptions.h"
-#include "third_party/WebKit/public/web/WebInputEvent.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/display/screen.h"
 
