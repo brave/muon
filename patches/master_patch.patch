@@ -1194,7 +1194,7 @@ index d569350255fc98759f0de7ce89f7cd3374f98c42..622e91da371b5ca367dbe78c3c64f6b9
    is_elastic_overscroll_enabled_ = false;
  #endif
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 5380a15a5e340fb2e79b95d93053db5e51838c87..882cb9b74d8f33aba67b3b8d30df65fb37a72ad9 100644
+index 5380a15a5e340fb2e79b95d93053db5e51838c87..1b523535cf810839f72af54efc249917597a851d 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -493,6 +493,7 @@
@@ -1214,7 +1214,7 @@ index 5380a15a5e340fb2e79b95d93053db5e51838c87..882cb9b74d8f33aba67b3b8d30df65fb
 +    "channel": "stable",
 +    "contexts": ["webui"],
 +    "matches": [
-+      "chrome://brave/*",
++      "chrome://brave/*"
 +    ]
    }],
    "webViewRequest": [{
