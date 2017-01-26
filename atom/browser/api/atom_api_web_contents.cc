@@ -225,21 +225,21 @@ struct Converter<atom::api::WebContents::Type> {
 };
 
 template<>
-struct Converter<content::SecurityStyle> {
+struct Converter<blink::WebSecurityStyle> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   content::SecurityStyle val) {
+                                   blink::WebSecurityStyle val) {
     std::string type;
     switch (val) {
-      case content::SECURITY_STYLE_UNAUTHENTICATED:
+      case blink::WebSecurityStyleUnauthenticated:
         type = "insecure";
         break;
-      case content::SECURITY_STYLE_AUTHENTICATION_BROKEN:
+      case blink::WebSecurityStyleAuthenticationBroken:
         type = "broken";
         break;
-      case content::SECURITY_STYLE_WARNING:
+      case blink::WebSecurityStyleWarning:
         type = "warning";
         break;
-      case content::SECURITY_STYLE_AUTHENTICATED:
+      case blink::WebSecurityStyleAuthenticated:
         type = "secure";
         break;
       default:
@@ -250,18 +250,18 @@ struct Converter<content::SecurityStyle> {
   }
 
   static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
-                     content::SecurityStyle* out) {
+                     blink::WebSecurityStyle* out) {
     std::string type;
     if (!ConvertFromV8(isolate, val, &type))
       return false;
     if (type == "insecure") {
-      *out = content::SECURITY_STYLE_UNAUTHENTICATED;
+      *out = blink::WebSecurityStyleUnauthenticated;
     } else if (type == "broken") {
-      *out = content::SECURITY_STYLE_AUTHENTICATION_BROKEN;
+      *out = blink::WebSecurityStyleAuthenticationBroken;
     } else if (type == "warning") {
-      *out = content::SECURITY_STYLE_WARNING;
+      *out = blink::WebSecurityStyleWarning;
     } else if (type == "secure") {
-      *out = content::SECURITY_STYLE_AUTHENTICATED;
+      *out = blink::WebSecurityStyleAuthenticated;
     } else {
       return false;
     }
@@ -914,7 +914,7 @@ void WebContents::DidFinishNavigation(
 }
 
 void WebContents::SecurityStyleChanged(
-    content::SecurityStyle security_style,
+    blink::WebSecurityStyle security_style,
     const content::SecurityStyleExplanations& explanations) {
     if (explanations.displayed_mixed_content &&
         security_style == content::SECURITY_STYLE_UNAUTHENTICATED) {

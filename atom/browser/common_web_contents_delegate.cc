@@ -167,23 +167,23 @@ bool IsDevToolsFileSystemAdded(
   return file_system_paths.find(file_system_path) != file_system_paths.end();
 }
 
-content::SecurityStyle SecurityLevelToSecurityStyle(
+blink::WebSecurityStyle SecurityLevelToSecurityStyle(
     SecurityStateModel::SecurityLevel security_level) {
   switch (security_level) {
     case SecurityStateModel::NONE:
     case SecurityStateModel::HTTP_SHOW_WARNING:
-      return content::SECURITY_STYLE_UNAUTHENTICATED;
+      return blink::WebSecurityStyleUnauthenticated;
     case SecurityStateModel::SECURITY_WARNING:
     case SecurityStateModel::SECURE_WITH_POLICY_INSTALLED_CERT:
-      return content::SECURITY_STYLE_WARNING;
+      return blink::WebSecurityStyleWarning;
     case SecurityStateModel::EV_SECURE:
     case SecurityStateModel::SECURE:
-      return content::SECURITY_STYLE_AUTHENTICATED;
+      return blink::WebSecurityStyleAuthenticated;
     case SecurityStateModel::DANGEROUS:
-      return content::SECURITY_STYLE_AUTHENTICATION_BROKEN;
+      return blink::WebSecurityStyleAuthenticationBroken;
   }
 
-  return content::SECURITY_STYLE_UNKNOWN;
+  return blink::WebSecurityStyleUnknown;
 }
 
 void AddConnectionExplanation(
@@ -479,7 +479,7 @@ bool CommonWebContentsDelegate::IsFullscreenForTabOrPending(
   return html_fullscreen_;
 }
 
-content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
+blink::WebSecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
     content::WebContents* web_contents,
     content::SecurityStyleExplanations* security_style_explanations) {
   auto model_client =
@@ -487,7 +487,7 @@ content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
   security_state::SecurityStateModel::SecurityInfo security_info;
   model_client->GetSecurityInfo(&security_info);
 
-  const content::SecurityStyle security_style =
+  const blink::WebSecurityStyle security_style =
       SecurityLevelToSecurityStyle(security_info.security_level);
 
   security_style_explanations->ran_insecure_content_style =

@@ -19,17 +19,17 @@ namespace atom {
 namespace {
 
 SecurityStateModel::SecurityLevel GetSecurityLevelForSecurityStyle(
-    content::SecurityStyle style) {
+    blink::WebSecurityStyle style) {
   switch (style) {
-    case content::SECURITY_STYLE_UNKNOWN:
+    case blink::WebSecurityStyleUnknown:
       return SecurityStateModel::NONE;
-    case content::SECURITY_STYLE_UNAUTHENTICATED:
+    case blink::WebSecurityStyleUnauthenticated:
       return SecurityStateModel::NONE;
-    case content::SECURITY_STYLE_AUTHENTICATION_BROKEN:
+    case blink::WebSecurityStyleAuthenticationBroken:
       return SecurityStateModel::DANGEROUS;
-    case content::SECURITY_STYLE_WARNING:
+    case blink::WebSecurityStyleWarning:
       return SecurityStateModel::SECURITY_WARNING;
-    case content::SECURITY_STYLE_AUTHENTICATED:
+    case blink::WebSecurityStyleAuthenticated:
       return SecurityStateModel::SECURE;
   }
   return SecurityStateModel::NONE;
@@ -75,7 +75,7 @@ void AtomSecurityStateModelClient::GetVisibleSecurityState(
   content::NavigationEntry* entry =
       web_contents_->GetController().GetVisibleEntry();
   if (!entry ||
-      entry->GetSSL().security_style == content::SECURITY_STYLE_UNKNOWN) {
+      entry->GetSSL().security_style == blink::WebSecurityStyleUnknown) {
     *state = SecurityStateModel::VisibleSecurityState();
     return;
   }
