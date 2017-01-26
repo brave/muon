@@ -81,10 +81,11 @@ void TabViewGuest::WebContentsCreated(WebContents* source_contents,
   NewWindowInfo new_window_info(target_url, frame_name);
   // if the site instance has changed the old window won't be able to
   // load the url so let ApplyAttributes handle it
-  auto new_site_instance = content::SiteInstance::CreateForURL(
-      new_contents->GetBrowserContext(), target_url);
+  auto new_site_instance =
+      new_contents->GetSiteInstance()->GetRelatedSiteInstance(target_url);
   new_window_info.changed =
-      source_contents->GetSiteInstance() != new_site_instance;
+      !source_contents->GetSiteInstance()->IsRelatedSiteInstance(
+            new_site_instance.get());
   pending_new_windows_.insert(std::make_pair(guest, new_window_info));
 }
 
