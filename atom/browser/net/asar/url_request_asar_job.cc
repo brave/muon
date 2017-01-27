@@ -5,6 +5,7 @@
 #include "atom/browser/net/asar/url_request_asar_job.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "atom/common/asar/archive.h"
@@ -21,7 +22,8 @@
 #include "net/base/load_flags.h"
 #include "net/base/mime_util.h"
 #include "net/base/net_errors.h"
-#include "net/filter/filter.h"
+#include "net/filter/gzip_source_stream.h"
+#include "net/filter/source_stream.h"
 #include "net/http/http_util.h"
 #include "net/url_request/url_request_status.h"
 
@@ -179,10 +181,12 @@ bool URLRequestAsarJob::IsRedirectResponse(GURL* location,
 #endif
 }
 
-std::unique_ptr<net::Filter> URLRequestAsarJob::SetupFilter() const {
-  // Bug 9936 - .svgz files needs to be decompressed.
-  return base::LowerCaseEqualsASCII(file_path_.Extension(), ".svgz")
-      ? net::Filter::GZipFactory() : nullptr;
+std::unique_ptr<SourceStream> URLRequestAsarJob::SetUpSourceStream() {
+  std::unique_ptr<SourceStream> source = URLRequestJob::SetUpSourceStream();
+  if (!base::LowerCaseEqualsASCII(file_path_.Extension(), ".svgz"))
+    return source;
+
+  return GzipSourceStream::Create(std::move(source), SourceStream::TYPE_GZIP);
 }
 
 bool URLRequestAsarJob::GetMimeType(std::string* mime_type) const {
