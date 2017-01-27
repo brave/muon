@@ -34,7 +34,7 @@
 #include "content/public/common/url_constants.h"
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
-#include "services/shell/public/cpp/interface_registry.h"
+#include "services/service_manager/public/cpp/interface_registry.h"
 #include "ui/base/l10n/l10n_util.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -45,7 +45,7 @@
 #endif
 
 #if defined(USE_AURA)
-#include "services/shell/runner/common/client_util.h"
+#include "services/service_manager/runner/common/client_util.h"
 #include "services/ui/public/cpp/gpu_service.h"
 #include "ui/views/mus/window_manager_connection.h"
 #endif
