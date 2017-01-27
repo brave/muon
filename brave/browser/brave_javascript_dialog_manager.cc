@@ -287,28 +287,6 @@ bool BraveJavaScriptDialogManager::HandleJavaScriptDialog(
   }
 }
 
-void BraveJavaScriptDialogManager::ResetDialogState(
-    content::WebContents* web_contents) {
-  v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  if (!isolate)
-    return;
-
-  node::Environment* env = node::Environment::GetCurrent(isolate);
-  if (!env)
-    return;
-
-  gin::TryCatch try_catch(isolate);
-  mate::EmitEvent(isolate,
-      env->process_object(),
-      "reset-javascript-dialog",
-      web_contents);
-  if (try_catch.HasCaught()) {
-    LOG(ERROR) << "Uncaught exception: " << try_catch.GetStackTrace();
-  }
-
-  javascript_dialog_extra_data_.erase(web_contents);
-}
-
 std::string
 BraveJavaScriptDialogManager::GetEventName(
     content::JavaScriptMessageType message_type) {
