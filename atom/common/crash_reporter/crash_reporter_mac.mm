@@ -41,6 +41,7 @@ void CrashReporterMac::InitBreakpad(const std::string& product_name,
 
   std::string dump_dir = "/tmp/" + product_name + " Crashes";
   base::FilePath database_path(dump_dir);
+  base::FilePath metrics_path(dump_dir);
   if (is_browser_) {
     @autoreleasepool {
       base::FilePath framework_bundle_path = base::mac::FrameworkBundlePath();
@@ -48,13 +49,13 @@ void CrashReporterMac::InitBreakpad(const std::string& product_name,
           framework_bundle_path.Append("Helpers").Append("crashpad_handler");
 
       crashpad::CrashpadClient crashpad_client;
-      if (crashpad_client.StartHandler(handler_path, database_path,
-                                       submit_url,
-                                       StringMap(),
-                                       std::vector<std::string>(),
-                                       true)) {
-        crashpad_client.UseHandler();
-      }
+      crashpad_client.StartHandler(handler_path, database_path,
+                                   metrics_path,
+                                   submit_url,
+                                   StringMap(),
+                                   std::vector<std::string>(),
+                                   true,
+                                   false);
     }  // @autoreleasepool
   }
 
