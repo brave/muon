@@ -142,8 +142,8 @@ source_set("browser") {
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
     # TODO(bridiver) - maybe use chrome?
-    # "chrome/browser/media/media_capture_devices_dispatcher.cc",
-    # "chrome/browser/media/media_capture_devices_dispatcher.h",
+    # "chrome/browser/media/webrtc/media_capture_devices_dispatcher.cc",
+    # "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
 
     "chrome/browser/importer/external_process_importer_client.cc",
     "chrome/browser/importer/external_process_importer_client.h",
@@ -258,10 +258,10 @@ source_set("browser") {
 
   if (enable_webrtc) {
     sources += [
-      "chrome/browser/media/desktop_media_list.h",
-      "chrome/browser/media/desktop_media_list_observer.h",
-      "chrome/browser/media/native_desktop_media_list.cc",
-      "chrome/browser/media/native_desktop_media_list.h",
+      "chrome/browser/media/webrtc/desktop_media_list.h",
+      "chrome/browser/media/webrtc/desktop_media_list_observer.h",
+      "chrome/browser/media/webrtc/native_desktop_media_list.cc",
+      "chrome/browser/media/webrtc/native_desktop_media_list.h",
     ]
 
     public_deps += [
