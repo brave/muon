@@ -181,12 +181,14 @@ bool URLRequestAsarJob::IsRedirectResponse(GURL* location,
 #endif
 }
 
-std::unique_ptr<SourceStream> URLRequestAsarJob::SetUpSourceStream() {
-  std::unique_ptr<SourceStream> source = URLRequestJob::SetUpSourceStream();
+std::unique_ptr<net::SourceStream> URLRequestAsarJob::SetUpSourceStream() {
+  std::unique_ptr<net::SourceStream> source =
+    URLRequestJob::SetUpSourceStream();
   if (!base::LowerCaseEqualsASCII(file_path_.Extension(), ".svgz"))
     return source;
 
-  return GzipSourceStream::Create(std::move(source), SourceStream::TYPE_GZIP);
+  return net::GzipSourceStream::Create(std::move(source),
+                                       net::SourceStream::TYPE_GZIP);
 }
 
 bool URLRequestAsarJob::GetMimeType(std::string* mime_type) const {
