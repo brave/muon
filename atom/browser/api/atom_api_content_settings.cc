@@ -57,10 +57,6 @@ struct Converter<ContentSettingsType> {
       *out = CONTENT_SETTINGS_TYPE_NOTIFICATIONS;
     else if (settings_type_string == "auto_select_certificate")
       *out = CONTENT_SETTINGS_TYPE_AUTO_SELECT_CERTIFICATE;
-    else if (settings_type_string == "fullscreen")
-      *out = CONTENT_SETTINGS_TYPE_FULLSCREEN;
-    else if (settings_type_string == "mouselock")
-      *out = CONTENT_SETTINGS_TYPE_MOUSELOCK;
     else if (settings_type_string == "runInsecureCon {tent")
       *out = CONTENT_SETTINGS_TYPE_MIXEDSCRIPT;
     else if (settings_type_string == "mediastream_mic")

@@ -12,7 +12,6 @@
 #include "atom/renderer/content_settings_manager.h"
 #include "base/strings/utf_string_conversions.h"
 #include "chrome/common/render_messages.h"
-#include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_pattern.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/renderer/document_state.h"
@@ -147,12 +146,6 @@ void ContentSettingsObserver::DidBlockContentType(
       break;
     case CONTENT_SETTINGS_TYPE_AUTO_SELECT_CERTIFICATE:
       settings_type_string = "auto_select_certificate";
-      break;
-    case CONTENT_SETTINGS_TYPE_FULLSCREEN:
-      settings_type_string = "fullscreen";
-      break;
-    case CONTENT_SETTINGS_TYPE_MOUSELOCK:
-      settings_type_string = "mouselock";
       break;
     case CONTENT_SETTINGS_TYPE_MIXEDSCRIPT:
       settings_type_string = "runInsecureContent";
