@@ -160,7 +160,8 @@ bool Menu::IsVisibleAt(int index) const {
 void Menu::MenuDestroyed() {
   if (!is_destroyed_) {
     is_destroyed_ = true;
-    FOR_EACH_OBSERVER(MenuObserver, observers_, MenuDestroyed());
+    for (MenuObserver& observer : observers_)
+      observer.MenuDestroyed();
     base::ThreadTaskRunnerHandle::Get()->PostTask(
         FROM_HERE, GetDestroyClosure());
   }

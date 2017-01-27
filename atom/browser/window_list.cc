@@ -33,8 +33,8 @@ void WindowList::AddWindow(NativeWindow* window) {
   WindowVector& windows = GetInstance()->windows_;
   windows.push_back(window);
 
-  FOR_EACH_OBSERVER(WindowListObserver, observers_.Get(),
-                    OnWindowAdded(window));
+  for (TrayIconObserver& observer : observers_)
+    observer.OnWindowAdded(window);
 }
 
 // static
@@ -43,18 +43,18 @@ void WindowList::RemoveWindow(NativeWindow* window) {
   windows.erase(std::remove(windows.begin(), windows.end(), window),
                 windows.end());
 
-  FOR_EACH_OBSERVER(WindowListObserver, observers_.Get(),
-                    OnWindowRemoved(window));
+  for (TrayIconObserver& observer : observers_)
+    observer.OnWindowRemoved(window);
 
   if (windows.size() == 0)
-    FOR_EACH_OBSERVER(WindowListObserver, observers_.Get(),
-                      OnWindowAllClosed());
+    for (TrayIconObserver& observer : observers_)
+      observer.OnWindowAllClosed();
 }
 
 // static
 void WindowList::WindowCloseCancelled(NativeWindow* window) {
-  FOR_EACH_OBSERVER(WindowListObserver, observers_.Get(),
-                    OnWindowCloseCancelled(window));
+  for (TrayIconObserver& observer : observers_)
+    observer.OnWindowCloseCancelled(window);
 }
 
 // static
