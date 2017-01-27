@@ -95,8 +95,8 @@ void URLRequestFetchJob::BeforeStartInUI(
     // We have to create the URLRequestContextGetter on UI thread.
     url_request_context_getter_ = new brightray::URLRequestContextGetter(
         this, nullptr, nullptr, base::FilePath(), true,
-        BrowserThread::UnsafeGetMessageLoopForThread(BrowserThread::IO),
-        BrowserThread::UnsafeGetMessageLoopForThread(BrowserThread::FILE),
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
         nullptr, content::URLRequestInterceptorScopedVector());
   }
 }
