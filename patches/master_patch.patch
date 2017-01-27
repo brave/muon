@@ -384,7 +384,7 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
 +  return false;
  }
 diff --git a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
-index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..a26732df39d3d34041d10513f436a1a4464ea844 100644
+index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..563610d3575b85ba75a02de7eb2739f5d53058c7 100644
 --- a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
 +++ b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
 @@ -58,6 +58,7 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
@@ -395,14 +395,14 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..a26732df39d3d34041d10513f436a1a4
        case PpapiHostMsg_OutputProtection_Create::ID: {
          scoped_refptr<ResourceMessageFilter> output_protection_filter(
              new chrome::PepperOutputProtectionMessageFilter(host_, instance));
-@@ -66,6 +67,7 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
+@@ -65,6 +66,7 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
+             new MessageFilterHost(host_->GetPpapiHost(), instance, resource,
                                    output_protection_filter));
        }
-     }
 +#endif
+     }
    }
  
-   // Flash interfaces.
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 443a67cee597410b5ebd304c4d59e1927b925605..241c3070a0852eca908c7e0a0c64fd439d4a360d 100644
 --- a/chrome/common/BUILD.gn
