@@ -8,8 +8,8 @@
 #include <memory>
 
 #include "atom/browser/api/event_emitter.h"
-#include "chrome/browser/media/desktop_media_list_observer.h"
-#include "chrome/browser/media/native_desktop_media_list.h"
+#include "chrome/browser/media/webrtc/desktop_media_list_observer.h"
+#include "chrome/browser/media/webrtc/native_desktop_media_list.h"
 #include "native_mate/handle.h"
 
 namespace atom {
