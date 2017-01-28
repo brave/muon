@@ -398,11 +398,6 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   // Intialize security state client.
   SecurityStateTabHelper::CreateForWebContents(web_contents);
 
-  // Intialize permission helper.
-  WebContentsPermissionHelper::CreateForWebContents(web_contents);
-  // Intialize security state client.
-  SecurityStateTabHelper::CreateForWebContents(web_contents);
-
   // Initialize zoom
   zoom::ZoomController::CreateForWebContents(web_contents);
   brave::RendererPreferencesHelper::CreateForWebContents(web_contents);

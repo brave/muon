@@ -52,6 +52,7 @@ source_set("browser") {
     "//components/resources",
     "//components/subresource_filter/content/browser",
     "//components/subresource_filter/core/browser",
+    "//components/sync_preferences",
     "//device/usb/mojo",
     "//device/usb/public/interfaces",
     "//gpu/config",
