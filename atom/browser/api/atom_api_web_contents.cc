@@ -53,6 +53,7 @@
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
+#include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
@@ -553,7 +554,7 @@ content::WebContents* WebContents::OpenURLFromTab(
   if (guest_delegate_ && !guest_delegate_->OpenURLFromTab(source, params))
     return nullptr;
 
-  if (params.disposition == CURRENT_TAB) {
+  if (params.disposition == WindowOpenDisposition::CURRENT_TAB) {
     CommonWebContentsDelegate::OpenURLFromTab(source, params);
     return source;
   }
@@ -662,7 +663,7 @@ void WebContents::RendererUnresponsive(
     const content::WebContentsUnresponsiveState& unresponsive_state) {
   Emit("unresponsive");
   if ((type_ == BROWSER_WINDOW) && owner_window())
-    owner_window()->RendererUnresponsive(source, unresponsive_state);
+    owner_window()->RendererUnresponsive(source);
 }
 
 void WebContents::RendererResponsive(content::WebContents* source) {
@@ -922,7 +923,7 @@ void WebContents::SecurityStyleChanged(
     blink::WebSecurityStyle security_style,
     const content::SecurityStyleExplanations& explanations) {
     if (explanations.displayed_mixed_content &&
-        security_style == content::SECURITY_STYLE_UNAUTHENTICATED) {
+        security_style == blink::WebSecurityStyleUnauthenticated) {
       Emit("security-style-changed", "passive-mixed-content");
     } else {
       Emit("security-style-changed", security_style);
@@ -1430,7 +1431,7 @@ void WebContents::Print(mate::Arguments* args) {
   }
 
   printing::PrintViewManagerBasic::FromWebContents(web_contents())->
-       PrintNow();
+       PrintNow(printing::GetFrameToPrint(web_contents()));
 }
 
 void WebContents::PrintToPDF(const base::DictionaryValue& setting,
