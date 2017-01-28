@@ -17,7 +17,6 @@
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
-#include "atom/browser/atom_security_state_model_client.h"
 #include "atom/browser/autofill/atom_autofill_client.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/lib/bluetooth_chooser.h"
@@ -54,6 +53,7 @@
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
+#include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
 #include "components/zoom/page_zoom.h"
@@ -394,12 +394,12 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   // Intialize permission helper.
   WebContentsPermissionHelper::CreateForWebContents(web_contents);
   // Intialize security state client.
-  AtomSecurityStateModelClient::CreateForWebContents(web_contents);
+  SecurityStateTabHelper::CreateForWebContents(web_contents);
 
   // Intialize permission helper.
   WebContentsPermissionHelper::CreateForWebContents(web_contents);
   // Intialize security state client.
-  AtomSecurityStateModelClient::CreateForWebContents(web_contents);
+  SecurityStateTabHelper::CreateForWebContents(web_contents);
 
   // Initialize zoom
   zoom::ZoomController::CreateForWebContents(web_contents);
