@@ -176,9 +176,8 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
   GURL url(params.url);
 #if defined(ENABLE_PLUGINS)
   ChromeViewHostMsg_GetPluginInfo_Output output;
-  WebString top_origin = frame->top()->getSecurityOrigin().toString();
   render_frame->Send(new ChromeViewHostMsg_GetPluginInfo(
-      render_frame->GetRoutingID(), url, blink::WebStringToGURL(top_origin),
+      render_frame->GetRoutingID(), url, frame->top()->getSecurityOrigin(),
       orig_mime_type, &output));
 
   *plugin = CreatePlugin(render_frame, frame, params, output);

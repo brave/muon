@@ -64,13 +64,14 @@ bool BravePluginServiceFilter::IsPluginAvailable(
     int render_frame_id,
     const void* context,
     const GURL& url,
-    const GURL& policy_url,
+    const url::Origin& main_frame_origin,
     content::WebPluginInfo* plugin) {
-  if (url == GURL() && policy_url == GURL()) {
+  if (url == GURL() && main_frame_origin.GetURL() == GURL()) {
     return true;
   } else {
     return ChromePluginServiceFilter::GetInstance()->IsPluginAvailable(
-        render_process_id, render_frame_id, context, url, policy_url, plugin);
+        render_process_id, render_frame_id, context, url, main_frame_origin,
+        plugin);
   }
 }
 
