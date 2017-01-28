@@ -77,8 +77,8 @@ class URLRequestContextGetter : public net::URLRequestContextGetter {
   NetLog* net_log_;
   base::FilePath base_path_;
   bool in_memory_;
-  scoped_refptr<base::SingleThreadTaskRunner> io_task_runner;
-  scoped_refptr<base::SingleThreadTaskRunner> file_task_runner;
+  scoped_refptr<base::SingleThreadTaskRunner> io_task_runner_;
+  scoped_refptr<base::SingleThreadTaskRunner> file_task_runner_;
 
   std::string user_agent_;
 
