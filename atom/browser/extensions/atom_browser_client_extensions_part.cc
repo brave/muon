@@ -26,6 +26,7 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/site_instance.h"
+#include "content/public/browser/storage_partition.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
 #include "extensions/browser/extension_host.h"
@@ -322,9 +323,9 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
   host->AddFilter(new ExtensionsGuestViewMessageFilter(id, context));
   if (extensions::ExtensionsClient::Get()
           ->ExtensionAPIEnabledInExtensionServiceWorkers()) {
-    host->AddFilter(new ExtensionServiceWorkerMessageFilter(id, context));
+    host->AddFilter(new ExtensionServiceWorkerMessageFilter(
+       id, context, host->GetStoragePartition()->GetServiceWorkerContext()));
   }
-  extension_web_request_api_helpers::SendExtensionWebRequestStatusToHost(host);
 
   auto user_prefs_registrar = context->user_prefs_change_registrar();
   if (!user_prefs_registrar->IsObserved("content_settings")) {
@@ -460,13 +461,6 @@ void AtomBrowserClientExtensionsPart::
   DCHECK(context);
   if (ProcessMap::Get(context)->Contains(process->GetID())) {
     command_line->AppendSwitch(switches::kExtensionProcess);
-#if defined(ENABLE_WEBRTC)
-    command_line->AppendSwitch(::switches::kEnableWebRtcHWH264Encoding);
-#endif
-    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kEnableMojoSerialService)) {
-      command_line->AppendSwitch(switches::kEnableMojoSerialService);
-    }
   }
 }
 
