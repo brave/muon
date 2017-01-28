@@ -26,8 +26,6 @@
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
-#include "components/subresource_filter/content/browser/content_subresource_filter_driver_factory.h"
-#include "components/subresource_filter/content/browser/subresource_filter_navigation_throttle.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_process_host.h"
