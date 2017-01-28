@@ -167,7 +167,7 @@ index 33ada8ce7b315e2bd327883bc682e5527ff0696e..224d459d2eabe16f3073cc1ae6eee42a
  
  }  // namespace
 diff --git a/chrome/browser/renderer_host/chrome_extension_message_filter.cc b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
-index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f7efbe5a6 100644
+index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..1c3755e6f0fb9dad2b9a8c11ef11d417175d0c33 100644
 --- a/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 +++ b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 @@ -14,10 +14,10 @@
@@ -185,7 +185,15 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
  #include "chrome/browser/extensions/api/messaging/message_service.h"
  #include "chrome/browser/profiles/profile.h"
  #include "chrome/browser/profiles/profile_manager.h"
-@@ -40,17 +40,17 @@ const uint32_t kFilteredMessageClasses[] = {
+@@ -25,6 +25,7 @@
+ #include "content/public/browser/notification_service.h"
+ #include "content/public/browser/render_process_host.h"
+ #include "extensions/browser/extension_system.h"
++#include "extensions/browser/info_map.h"
+ #include "extensions/common/api/messaging/message.h"
+ #include "extensions/common/extension_messages.h"
+ #include "extensions/common/file_util.h"
+@@ -40,17 +41,17 @@ const uint32_t kFilteredMessageClasses[] = {
  };
  
  // Logs an action to the extension activity log for the specified profile.
@@ -214,7 +222,7 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
  
  }  // namespace
  
-@@ -61,7 +61,7 @@ ChromeExtensionMessageFilter::ChromeExtensionMessageFilter(
+@@ -61,7 +62,7 @@ ChromeExtensionMessageFilter::ChromeExtensionMessageFilter(
                             arraysize(kFilteredMessageClasses)),
        render_process_id_(render_process_id),
        profile_(profile),
@@ -223,7 +231,7 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
        extension_info_map_(
            extensions::ExtensionSystem::Get(profile)->info_map()) {
    DCHECK_CURRENTLY_ON(BrowserThread::UI);
-@@ -90,12 +90,12 @@ bool ChromeExtensionMessageFilter::OnMessageReceived(
+@@ -90,12 +91,12 @@ bool ChromeExtensionMessageFilter::OnMessageReceived(
      IPC_MESSAGE_HANDLER(ExtensionHostMsg_PostMessage, OnPostMessage)
      IPC_MESSAGE_HANDLER_DELAY_REPLY(ExtensionHostMsg_GetMessageBundle,
                                      OnGetExtMessageBundle)
@@ -242,7 +250,7 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
      IPC_MESSAGE_UNHANDLED(handled = false)
    IPC_END_MESSAGE_MAP()
  
-@@ -108,9 +108,9 @@ void ChromeExtensionMessageFilter::OverrideThreadForMessage(
+@@ -108,9 +109,9 @@ void ChromeExtensionMessageFilter::OverrideThreadForMessage(
      case ExtensionHostMsg_OpenMessagePort::ID:
      case ExtensionHostMsg_CloseMessagePort::ID:
      case ExtensionHostMsg_PostMessage::ID:
@@ -255,7 +263,7 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
        *thread = BrowserThread::UI;
        break;
      default:
-@@ -304,56 +304,56 @@ void ChromeExtensionMessageFilter::OnGetExtMessageBundleOnBlockingPool(
+@@ -304,56 +305,56 @@ void ChromeExtensionMessageFilter::OnGetExtMessageBundleOnBlockingPool(
    Send(reply_msg);
  }
  
@@ -362,7 +370,7 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
  
  void ChromeExtensionMessageFilter::Observe(
      int type,
-@@ -361,7 +361,7 @@ void ChromeExtensionMessageFilter::Observe(
+@@ -361,7 +362,7 @@ void ChromeExtensionMessageFilter::Observe(
      const content::NotificationDetails& details) {
    DCHECK_EQ(chrome::NOTIFICATION_PROFILE_DESTROYED, type);
    profile_ = NULL;
@@ -371,7 +379,7 @@ index 3b1ef45bc0bb4594811b9f068d4d4814e19db217..e0851122f245c0b79759259862a0989f
  }
  
  bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
-@@ -370,7 +370,8 @@ bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
+@@ -370,7 +371,8 @@ bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
    // conditions (e.g. logging gets disabled but the renderer sends the message
    // before it gets updated), we still need this check here.
    DCHECK_CURRENTLY_ON(BrowserThread::UI);
