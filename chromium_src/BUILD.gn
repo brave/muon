@@ -215,6 +215,8 @@ source_set("browser") {
     "//chrome/browser/printing/printer_query.h",
     "//chrome/browser/printing/printing_message_filter.cc",
     "//chrome/browser/printing/printing_message_filter.h",
+    "chrome/browser/ssl/security_state_tab_helper.cc",
+    "chrome/browser/ssl/security_state_tab_helper.h",
     "//chrome/browser/tab_contents/tab_util.cc",
     "//chrome/browser/tab_contents/tab_util.h",
     "//chrome/browser/win/chrome_process_finder.cc",
