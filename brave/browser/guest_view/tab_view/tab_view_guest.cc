@@ -274,7 +274,13 @@ void TabViewGuest::DidAttachToEmbedder() {
     web_contents()->GetController().LoadIfNecessary();
   }
 
-  api_web_contents_->Emit("did-attach");
+#if defined(ENABLE_EXTENSIONS)
+  api_web_contents_->Emit("did-attach",
+      extensions::TabHelper::IdForTab(web_contents()));
+#else
+  api_web_contents_->Emit("did-attach",
+      web_contents()->GetRenderProcessHost()->GetID());
+#endif
 }
 
 bool TabViewGuest::ZoomPropagatesFromEmbedderToGuest() const {
