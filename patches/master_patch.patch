@@ -1077,7 +1077,7 @@ index 3d1e71ae1a04abdcb9680001c86822653254a886..338e971f95bf87b6342ed2942861cbdb
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
                      int /* document cookie */)
 diff --git a/components/printing/renderer/print_web_view_helper.cc b/components/printing/renderer/print_web_view_helper.cc
-index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c327ad5864 100644
+index c72217ae3ca78cde181cc2a18029a1930ad7cd94..229c7dd7bf4ed7a495653616c91edb3cbc03efb8 100644
 --- a/components/printing/renderer/print_web_view_helper.cc
 +++ b/components/printing/renderer/print_web_view_helper.cc
 @@ -321,7 +321,6 @@ bool PrintingNodeOrPdfFrame(const blink::WebLocalFrame* frame,
@@ -1132,7 +1132,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
  
    blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
  
-@@ -1127,61 +1121,30 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
+@@ -1127,16 +1121,9 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
    ignore_css_margins_ = (margins_type != DEFAULT_MARGINS);
  }
  
@@ -1146,20 +1146,14 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
 -  UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
 -                            PREVIEW_EVENT_REQUESTED, PREVIEW_EVENT_MAX);
 -
--  if (!print_preview_context_.source_frame()) {
--    DidFinishPrinting(FAIL_PREVIEW);
--    return;
--  }
 +  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
-+  if (frame) {
-+    print_preview_context_.InitWithFrame(frame);
-+    if (!print_preview_context_.source_frame()) {
-+      DidFinishPrinting(FAIL_PREVIEW);
-+      return;
-+    }
++  print_preview_context_.InitWithFrame(frame);
+   if (!print_preview_context_.source_frame()) {
+     DidFinishPrinting(FAIL_PREVIEW);
+     return;
+@@ -1144,44 +1131,18 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  
--  if (!UpdatePrintSettings(print_preview_context_.source_frame(),
-+    if (!UpdatePrintSettings(print_preview_context_.source_frame(),
+   if (!UpdatePrintSettings(print_preview_context_.source_frame(),
                             print_preview_context_.source_node(), settings)) {
 -    if (print_preview_context_.last_error() != PREVIEW_ERROR_BAD_SETTING) {
 -      Send(new PrintHostMsg_PrintPreviewInvalidPrinterSettings(
@@ -1167,13 +1161,11 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
 -                            ? print_pages_params_->params.document_cookie
 -                            : 0));
 -      notify_browser_of_print_failure_ = false;  // Already sent.
-+      DidFinishPrinting(FAIL_PREVIEW);
-+      return;
-     }
--    DidFinishPrinting(FAIL_PREVIEW);
--    return;
--  }
--
+-    }
+     DidFinishPrinting(FAIL_PREVIEW);
+     return;
+   }
+ 
 -  // Set the options from document if we are previewing a pdf and send a
 -  // message to browser.
 -  if (print_pages_params_->params.is_first_request &&
@@ -1182,8 +1174,8 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
 -    if (SetOptionsFromPdfDocument(&options))
 -      Send(new PrintHostMsg_SetOptionsFromDocument(routing_id(), options));
 -  }
- 
--  is_print_ready_metafile_sent_ = false;
+-
+   is_print_ready_metafile_sent_ = false;
 -
 -  // PDF printer device supports alpha blending.
 -  print_pages_params_->params.supports_alpha_blend = true;
@@ -1191,12 +1183,10 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
 -  bool generate_draft_pages = false;
 -  if (!settings.GetBoolean(kSettingGenerateDraftData, &generate_draft_pages)) {
 -    NOTREACHED();
-+    is_print_ready_metafile_sent_ = false;
-+    PrepareFrameForPreviewDocument();
-   }
+-  }
 -  print_preview_context_.set_generate_draft_pages(generate_draft_pages);
 -
--  PrepareFrameForPreviewDocument();
+   PrepareFrameForPreviewDocument();
  }
  
  void PrintWebViewHelper::PrepareFrameForPreviewDocument() {
@@ -1207,7 +1197,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
      DidFinishPrinting(FAIL_PREVIEW);
      return;
    }
-@@ -1212,12 +1175,9 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
+@@ -1212,12 +1173,9 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
  }
  
  bool PrintWebViewHelper::CreatePreviewDocument() {
@@ -1221,7 +1211,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
    const PrintMsg_Print_Params& print_params = print_pages_params_->params;
    const std::vector<int>& pages = print_pages_params_->pages;
  
-@@ -1226,71 +1186,12 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1226,71 +1184,12 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
      return false;
    }
  
@@ -1293,7 +1283,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
      // We must call PrepareFrameAndViewForPrint::FinishPrinting() (by way of
      // print_preview_context_.AllPagesRendered()) before calling
      // FinalizePrintReadyDocument() when printing a PDF because the plugin
-@@ -1312,7 +1213,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1312,7 +1211,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
    return true;
  }
  
@@ -1302,7 +1292,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -1342,7 +1243,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
+@@ -1342,7 +1241,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1311,7 +1301,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
  
  bool PrintWebViewHelper::FinalizePrintReadyDocument() {
    DCHECK(!is_print_ready_metafile_sent_);
-@@ -1372,11 +1273,8 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
+@@ -1372,11 +1271,8 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
    Send(new PrintHostMsg_MetafileReadyForPrinting(routing_id(), preview_params));
    return true;
  }
@@ -1323,7 +1313,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
    notify_browser_of_print_failure_ = false;
    if (!success)
      LOG(ERROR) << "Failure in OnPrintingDone";
-@@ -1521,19 +1419,13 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
+@@ -1521,19 +1417,13 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
        }
        break;
  
@@ -1347,7 +1337,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
    }
    prep_frame_view_.reset();
    print_pages_params_.reset();
-@@ -1696,6 +1588,7 @@ bool PrintWebViewHelper::SetOptionsFromPdfDocument(
+@@ -1696,6 +1586,7 @@ bool PrintWebViewHelper::SetOptionsFromPdfDocument(
    }
    return true;
  }
@@ -1355,7 +1345,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
  
  bool PrintWebViewHelper::UpdatePrintSettings(
      blink::WebLocalFrame* frame,
-@@ -1738,27 +1631,13 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1738,27 +1629,13 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      return false;
    }
  
@@ -1388,7 +1378,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
    }
  
    SetPrintPagesParams(settings);
-@@ -1766,13 +1645,10 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1766,13 +1643,10 @@ bool PrintWebViewHelper::UpdatePrintSettings(
    if (PrintMsg_Print_Params_IsValid(settings.params))
      return true;
  
@@ -1403,7 +1393,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
  
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
  void PrintWebViewHelper::GetPrintSettingsFromUser(
-@@ -2024,6 +1900,7 @@ bool PrintWebViewHelper::CheckForCancel() {
+@@ -2024,6 +1898,7 @@ bool PrintWebViewHelper::CheckForCancel() {
      notify_browser_of_print_failure_ = false;
    return cancel;
  }
@@ -1411,7 +1401,7 @@ index c72217ae3ca78cde181cc2a18029a1930ad7cd94..ce13ccee0313a79049e7fb2e84d904c3
  
  bool PrintWebViewHelper::PreviewPageRendered(int page_number,
                                               PdfMetafileSkia* metafile) {
-@@ -2045,23 +1922,8 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
+@@ -2045,23 +1920,8 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
      return false;
    }
  
@@ -1812,10 +1802,22 @@ index d569350255fc98759f0de7ce89f7cd3374f98c42..622e91da371b5ca367dbe78c3c64f6b9
    is_elastic_overscroll_enabled_ = false;
  #endif
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 5380a15a5e340fb2e79b95d93053db5e51838c87..1b523535cf810839f72af54efc249917597a851d 100644
+index 5380a15a5e340fb2e79b95d93053db5e51838c87..f00abaacd6edd4b30bef27fe3cea70793e10e244 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
-@@ -493,6 +493,7 @@
+@@ -171,7 +171,10 @@
+     {
+       "internal": true,
+       "channel": "stable",
+-      "contexts": ["blessed_extension"]
++      "contexts": ["blessed_extension", "webui"],
++      "matches": [
++        "chrome://brave/*"
++      ]
+     }, {
+       "internal": true,
+       "channel": "trunk",
+@@ -493,6 +496,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
@@ -1823,7 +1825,7 @@ index 5380a15a5e340fb2e79b95d93053db5e51838c87..1b523535cf810839f72af54efc249917
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://oobe/*"
-@@ -511,6 +512,13 @@
+@@ -511,6 +515,13 @@
        "chrome://media-router/*",
        "chrome://oobe/*"
      ]
@@ -1837,7 +1839,7 @@ index 5380a15a5e340fb2e79b95d93053db5e51838c87..1b523535cf810839f72af54efc249917
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -519,6 +527,7 @@
+@@ -519,6 +530,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
