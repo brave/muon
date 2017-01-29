@@ -151,8 +151,7 @@ void BraveContentRendererClient::RenderFrameCreated(
                     password_generation_agent);
 #if defined(ENABLE_PRINTING)
   new printing::PrintWebViewHelper(
-      render_frame, std::unique_ptr<printing::PrintWebViewHelper::Delegate>(
-                       new BravePrintWebViewHelperDelegate()));
+      render_frame, base::MakeUnique(new BravePrintWebViewHelperDelegate());
 #endif
 }
 
