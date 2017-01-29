@@ -149,17 +149,17 @@ void BraveContentRendererClient::RenderFrameCreated(
       new PasswordGenerationAgent(render_frame, password_autofill_agent);
   new AutofillAgent(render_frame, password_autofill_agent,
                     password_generation_agent);
+#if defined(ENABLE_PRINTING)
+  new printing::PrintWebViewHelper(
+      render_frame, std::unique_ptr<printing::PrintWebViewHelper::Delegate>(
+                       new BravePrintWebViewHelperDelegate()));
+#endif
 }
 
 void BraveContentRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   ChromeExtensionsRendererClient::GetInstance()->RenderViewCreated(render_view);
-#endif
-#if defined(ENABLE_PRINTING)
-  new printing::PrintWebViewHelper(
-      render_view, std::unique_ptr<printing::PrintWebViewHelper::Delegate>(
-                       new BravePrintWebViewHelperDelegate()));
 #endif
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
 }
