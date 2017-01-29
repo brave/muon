@@ -382,9 +382,7 @@ void BraveBrowserContext::CreateProfilePrefs(
     pref_registry_->RegisterDictionaryPref("app_state");
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionDefaultZoomLevel);
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionPerHostZoomLevels);
-#if defined(ENABLE_PRINTING)
     pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);
-#endif
     pref_registry_->RegisterBooleanPref(prefs::kPrintPreviewDisabled, false);
 #if defined(ENABLE_PLUGINS)
     pref_registry_->RegisterBooleanPref(prefs::kPluginsAllowOutdated, false);
