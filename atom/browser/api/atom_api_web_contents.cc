@@ -908,7 +908,8 @@ void WebContents::DidFinishNavigation(
   } else {
     int code = navigation_handle->GetNetErrorCode();
     auto description = net::ErrorToShortString(code);
-    Emit("did-fail-provisional-load", code, description, url, is_main_frame);
+    Emit("did-fail-provisional-load", code, description, url, is_main_frame,
+      web_contents()->GetURL());
   }
 }
 
