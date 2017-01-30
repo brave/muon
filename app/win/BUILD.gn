@@ -119,8 +119,7 @@ windows_manifest("electron_manifest") {
   type = "exe"
 }
 
-process_version("electron_exe_version") {
-  template_file = chrome_version_rc_template
+process_version_rc_template("electron_exe_version") {
   extra_args = [
     "-e", "INTERNAL_NAME=\"${executable_name}_exe\"",
     "-e", "ORIGINAL_FILENAME=\"$electron_exe\"",
