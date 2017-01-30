@@ -11,7 +11,9 @@
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "base/strings/utf_string_conversions.h"
 #include "content/public/browser/browser_context.h"
+#include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
@@ -298,13 +300,15 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   std::unique_ptr<base::DictionaryValue> result(
       tab_helper->getTabValues()->CreateDeepCopy());
 
+  auto entry = contents->GetController().GetLastCommittedEntry();
+
   result->SetInteger(keys::kIdKey, tab_id);
   result->SetInteger(keys::kWindowIdKey, window_id);
   result->SetBoolean(keys::kIncognitoKey,
                      contents->GetBrowserContext()->IsOffTheRecord());
   result->SetBoolean(keys::kActiveKey, active);
   result->SetString(keys::kUrlKey, contents->GetURL().spec());
-  result->SetString(keys::kTitleKey, contents->GetTitle());
+  result->SetString(keys::kTitleKey, entry ? base::UTF16ToUTF8(entry->GetTitle()) : "");
   result->SetString(keys::kStatusKey, contents->IsLoading()
       ? "loading" : "complete");
   result->SetBoolean(keys::kAudibleKey, contents->WasRecentlyAudible());
