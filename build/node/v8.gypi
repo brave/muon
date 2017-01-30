@@ -29,6 +29,8 @@
        4275,
        # 'GetVersionExW': was declared deprecated
        4996,
+       # http://bugs.icu-project.org/trac/ticket/12821
+       4333,  # Right shift by too large amount.
        # result of 32-bit shift implicitly converted to 64 bits
        4334,
    ],
