@@ -14,6 +14,7 @@ import("//build/util/process_version.gni")
 import("//build_overrides/v8.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
 import("//electron/build/config.gni")
+import("//chrome/process_version_rc_template.gni")
 
 executable("electron_app") {
   configs += [

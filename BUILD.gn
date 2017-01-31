@@ -53,7 +53,7 @@ group("electron") {
   }
 
   if (use_aura && (is_win || is_linux)) {
-    data_deps += [ "app:mojo_manifests" ]
+    data_deps += [ "app:service_manifests" ]
   }
 }
 
