@@ -14,6 +14,7 @@ import("//ui/base/ui_features.gni")
 import("//v8/gni/v8.gni")
 import("//chrome/version.gni")
 import("//third_party/icu/config.gni")
+import("//media/cdm/ppapi/cdm_paths.gni")
 import("//electron/build/config.gni")
 
 enable_service_discovery = false
@@ -670,6 +671,7 @@ action("create_dist") {
       "$electron_dist_dir/libEGL.dll",
       "$electron_dist_dir/libGLESv2.dll",
       "$electron_dist_dir/d3dcompiler_47.dll",
+      "$electron_dist_dir/$widevine_cdm_path/widevinecdmadapter.dll",
     ]
   } else if (is_linux) {
     inputs += [
@@ -710,6 +712,11 @@ action("create_dist") {
       ":electron_dist_resources",
       ":electron_app_dist_resources",
       ":electron_locale_dist_resources",
+    ]
+  }
+  if (is_win) {
+    deps += [
+      "app/win:dist_widevine_resources"
     ]
   }
 

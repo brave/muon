@@ -170,9 +170,20 @@ group("symbol_dist_resources") {
   public_deps = [ ":generate_breakpad_symbols" ]
 }
 
+copy("dist_widevine_resources") {
+  sources = [
+    "$root_out_dir/$widevine_cdm_path/widevinecdmadapter.dll",
+  ]
+  outputs = [
+    "$electron_dist_dir/$widevine_cdm_path/{{source_file_part}}"
+  ]
+  public_deps = [
+    ":widevine_cdm_adapter",
+  ]
+}
+
 copy("dist_resources") {
   sources = [
-    # "$root_out_dir/$widevine_cdm_path",
     "$root_out_dir/xinput1_3.dll",
     "$root_out_dir/node.dll",
     "$root_shlib_dir/libEGL.dll",
@@ -186,7 +197,6 @@ copy("dist_resources") {
 
   public_deps = [
     ":external_binaries",
-    ":widevine_cdm_adapter",
     "//electron/build/node:node_resources",
     "//third_party/angle:copy_compiler_dll",
     "//third_party/angle:libEGL",
