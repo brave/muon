@@ -467,11 +467,11 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
       this, GetResourceContext());
 #endif
 
+  ready_->Signal();
   content::NotificationService::current()->Notify(
       chrome::NOTIFICATION_PROFILE_CREATED,
       content::Source<BraveBrowserContext>(this),
       content::NotificationService::NoDetails());
-  ready_->Signal();
 }
 
 content::ResourceContext* BraveBrowserContext::GetResourceContext() {
