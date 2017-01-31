@@ -4,28 +4,35 @@
 
 import("//build/config/ui.gni")
 import("//tools/grit/grit_rule.gni")
+import("//services/service_manager/public/service_manifest.gni")
 
 if (use_aura) {
-  service_manifest("brave_manifest") {
-    type = "exe"
-    name = "brave"
-    source = "mojo/brave_manifest.json"
-    base_manifest = "${root_out_dir}/content_browser_manifest.json"
-    base_deps = [ "//content/public/app:browser_manifest" ]
+  service_manifest("brave_content_browser_manifest") {
+    name = "content_browser"
+      output_name = "brave_content_browser"
+      source = "${root_out_dir}/Packages/content_browser/manifest.json"
+      overlays =
+      [ "//chrome/browser/chrome_content_browser_manifest_overlay.json" ]
+      deps = [
+        "//content/public/app:browser_manifest",
+      ]
   }
 
-  service_manifest("brave_renderer_manifest") {
-    type = "exe"
-    name = "brave_renderer"
-    source = "mojo/brave_renderer_manifest.json"
-    base_manifest = "${root_out_dir}/content_renderer_manifest.json"
-    base_deps = [ "//content/public/app:renderer_manifest" ]
+  service_manifest("brave_content_renderer_manifest") {
+    name = "content_renderer"
+      output_name = "brave_content_renderer"
+      source = "${root_out_dir}/Packages/content_renderer/manifest.json"
+      overlays =
+      [ "//chrome/browser/chrome_content_renderer_manifest_overlay.json" ]
+      deps = [
+        "//content/public/app:renderer_manifest",
+      ]
   }
 
-  group("mojo_manifests") {
+  group("service_manifests") {
     data_deps = [
-      ":brave_manifest",
-      ":brave_renderer_manifest",
+      ":brave_content_browser_manifest",
+      ":brave_content_renderer_manifest",
     ]
   }
 }
