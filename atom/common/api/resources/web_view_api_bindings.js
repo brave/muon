@@ -21,8 +21,6 @@ const asyncMethods = [
   'goToIndex',
   'goToOffset',
   'setUserAgent',
-  'openDevTools',
-  'closeDevTools',
   'inspectElement',
   'setAudioMuted',
   'undo',
