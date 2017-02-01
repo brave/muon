@@ -927,9 +927,9 @@ void WebContents::SecurityStyleChanged(
 void WebContents::TitleWasSet(content::NavigationEntry* entry,
                               bool explicit_set) {
   if (entry)
-    Emit("-page-title-updated", entry->GetTitle(), explicit_set);
+    Emit("page-title-updated", entry->GetTitle(), explicit_set);
   else
-    Emit("-page-title-updated", "", explicit_set);
+    Emit("page-title-updated", "", explicit_set);
 }
 
 void WebContents::DidUpdateFaviconURL(
