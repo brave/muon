@@ -1,3 +1,11 @@
+## Muon specific notice
+The documentation in these directories was originally written for electron.
+Please note that it may contain out of date information. For the latest docs
+regarding Muon, [please see our wiki](https://github.com/brave/browser-laptop-bootstrap/wiki).
+
+
+################
+
 Please make sure that you use the documents that match your Electron version.
 The version number should be a part of the page URL. If it's not, you are
 probably using the documentation of a development branch which may contain API
