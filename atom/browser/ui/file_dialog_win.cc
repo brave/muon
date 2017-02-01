@@ -17,6 +17,7 @@
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "base/threading/thread.h"
 #include "base/win/registry.h"
 #include "third_party/wtl/include/atlapp.h"
@@ -143,7 +144,7 @@ class FileDialog {
 
 struct RunState {
   base::Thread* dialog_thread;
-  base::MessageLoop* ui_message_loop;
+  scoped_refptr<base::SingleThreadTaskRunner> ui_task_runner;
 };
 
 bool CreateDialogThread(RunState* run_state) {
@@ -154,7 +155,7 @@ bool CreateDialogThread(RunState* run_state) {
     return false;
 
   run_state->dialog_thread = thread.release();
-  run_state->ui_message_loop = base::MessageLoop::current();
+  run_state->ui_task_runner = base::ThreadTaskRunnerHandle::Get();
   return true;
 }
 
@@ -169,9 +170,9 @@ void RunOpenDialogInNewThread(const RunState& run_state,
   std::vector<base::FilePath> paths;
   bool result = ShowOpenDialog(parent, title, button_label, default_path,
                                filters, properties, &paths);
-  run_state.ui_message_loop->PostTask(FROM_HERE,
+  run_state.ui_task_runner->PostTask(FROM_HERE,
                                       base::Bind(callback, result, paths));
-  run_state.ui_message_loop->DeleteSoon(FROM_HERE, run_state.dialog_thread);
+  run_state.ui_task_runner->DeleteSoon(FROM_HERE, run_state.dialog_thread);
 }
 
 void RunSaveDialogInNewThread(const RunState& run_state,
@@ -184,9 +185,9 @@ void RunSaveDialogInNewThread(const RunState& run_state,
   base::FilePath path;
   bool result = ShowSaveDialog(parent, title, button_label, default_path,
                                filters, &path);
-  run_state.ui_message_loop->PostTask(FROM_HERE,
+  run_state.ui_task_runner->PostTask(FROM_HERE,
                                       base::Bind(callback, result, path));
-  run_state.ui_message_loop->DeleteSoon(FROM_HERE, run_state.dialog_thread);
+  run_state.ui_task_runner->DeleteSoon(FROM_HERE, run_state.dialog_thread);
 }
 
 }  // namespace
@@ -254,7 +255,7 @@ void ShowOpenDialog(atom::NativeWindow* parent,
     return;
   }
 
-  run_state.dialog_thread->message_loop()->PostTask(
+  run_state.dialog_thread->task_runner()->PostTask(
       FROM_HERE,
       base::Bind(&RunOpenDialogInNewThread, run_state, parent, title,
                  button_label, default_path, filters, properties, callback));
@@ -293,7 +294,7 @@ void ShowSaveDialog(atom::NativeWindow* parent,
     return;
   }
 
-  run_state.dialog_thread->message_loop()->PostTask(
+  run_state.dialog_thread->task_runner()->PostTask(
       FROM_HERE,
       base::Bind(&RunSaveDialogInNewThread, run_state, parent, title,
                  button_label, default_path, filters, callback));
