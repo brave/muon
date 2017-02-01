@@ -100,7 +100,7 @@ void ViewsDelegate::OnBeforeWidgetInit(
 }
 
 
-base::TimeDelta ViewsDelegate::GetDefaultTextfieldObscuredRevealDuration() {
+base::TimeDelta ViewsDelegate::GetTextfieldPasswordRevealDuration() {
   return base::TimeDelta();
 }
 
