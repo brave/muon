@@ -65,10 +65,6 @@ const syncMethods = [
   'isFocused',
   'getZoomPercent',
   'getURL',
-  'canGoBack',
-  'canGoForward',
-  'getWebRTCIPHandlingPolicy',
-  'isDevToolsOpened',
 ]
 
 var WEB_VIEW_API_METHODS = [
