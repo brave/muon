@@ -2068,8 +2068,18 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   bool user_gesture = false;
   options.Get("userGesture", &user_gesture);
 
+  int opener_tab_id = -1;
+  options.Get("openerTabId", &opener_tab_id);
+
+  content::WebContents* source = nullptr;
+  if (opener_tab_id != -1) {
+    source = extensions::TabHelper::GetTabById(opener_tab_id);
+  }
+  if (!source)
+    source = web_contents();
+
   bool was_blocked = false;
-  AddNewContents(web_contents(),
+  AddNewContents(source,
                     tab,
                     active ? NEW_FOREGROUND_TAB : NEW_BACKGROUND_TAB,
                     gfx::Rect(),
