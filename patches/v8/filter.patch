@@ -106,6 +106,19 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..0b678f7dc2dfe58641c7e4a1019b195c
  v8_fuzzer("wasm_data_section_fuzzer") {
  }
 +}
+diff --git a/src/inspector/BUILD.gn b/src/inspector/BUILD.gn
+index 6ebb91ccbc773fd526337a8e851bb4b4b984781b..7cbfef74105bd64f674cf3c5aa02cfb2aa39db6d 100644
+--- a/src/inspector/BUILD.gn
++++ b/src/inspector/BUILD.gn
+@@ -106,7 +106,7 @@ config("inspector_config") {
+       "/wd4996",  # Deprecated function call.
+     ]
+   }
+-  if (is_component_build) {
++  if (is_component_build || muon_build) {
+     defines = [ "BUILDING_V8_SHARED" ]
+   }
+ }
 diff --git a/src/snapshot/mksnapshot.cc b/src/snapshot/mksnapshot.cc
 index f4362e5077e1231e2e57ccaf06ccc9769ebaae61..e048e26d768e358a9097f35afe60585de2cde50d 100644
 --- a/src/snapshot/mksnapshot.cc
