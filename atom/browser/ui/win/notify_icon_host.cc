@@ -87,8 +87,11 @@ NotifyIconHost::~NotifyIconHost() {
     UnregisterClass(MAKEINTATOM(atom_), instance_);
 
   NotifyIcons copied_container(notify_icons_);
-  base::STLDeleteContainerPointers(
-      copied_container.begin(), copied_container.end());
+  for (auto it = copied_container.begin(); it != copied_container.end()) {
+    auto temp = it;
+    ++it;
+    delete *temp;
+  }
 }
 
 NotifyIcon* NotifyIconHost::CreateNotifyIcon() {
