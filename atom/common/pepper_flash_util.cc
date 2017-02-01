@@ -21,9 +21,6 @@ content::PepperPluginInfo CreatePepperFlashInfo(const base::FilePath& path,
   plugin.is_out_of_process = true;
   plugin.name = content::kFlashPluginName;
   plugin.path = path;
-#if defined(OS_WIN)
-  plugin.is_on_local_drive = !base::IsOnNetworkDrive(path);
-#endif
   plugin.permissions = ppapi::PERMISSION_DEV | ppapi::PERMISSION_PRIVATE |
     ppapi::PERMISSION_BYPASS_USER_GESTURE | ppapi::PERMISSION_FLASH;
   plugin.is_external = true;
