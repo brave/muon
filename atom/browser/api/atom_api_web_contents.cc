@@ -1765,8 +1765,13 @@ void WebContents::CapturePage(mate::Arguments* args) {
                              kBGRA_8888_SkColorType);
 }
 
-gfx::Size WebContents::GetPreferredSize() {
-  return web_contents()->GetPreferredSize();
+void WebContents::GetPreferredSize(mate::Arguments* args) {
+  base::Callback<void(gfx::Size)> callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback` is a required field");
+    return;
+  }
+  callback.Run(web_contents()->GetPreferredSize());
 }
 
 void WebContents::OnCursorChange(const content::WebCursor& cursor) {

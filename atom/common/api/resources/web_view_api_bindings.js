@@ -53,6 +53,7 @@ const asyncMethods = [
   'enablePreferredSizeMode',
   'close',
   'send',
+  'getPreferredSize',
 ]
 
 const syncMethods = [
@@ -68,7 +69,6 @@ const syncMethods = [
   'canGoForward',
   'getWebRTCIPHandlingPolicy',
   'isDevToolsOpened',
-  'getPreferredSize',
 ]
 
 var WEB_VIEW_API_METHODS = [
