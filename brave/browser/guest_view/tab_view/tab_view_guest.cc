@@ -40,7 +40,7 @@
 #include "content/public/browser/site_instance.h"
 #include "native_mate/dictionary.h"
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 using extensions::AtomBrowserClientExtensionsPart;
 #endif
@@ -87,7 +87,7 @@ void TabViewGuest::WebContentsCreated(WebContents* source_contents,
   guest->name_ = frame_name;
 
   NewWindowInfo new_window_info(target_url, frame_name);
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   // if the browser instance changes the old window won't be able to
   // load the url so let ApplyAttributes handle it
   bool changed =
@@ -276,7 +276,7 @@ void TabViewGuest::DidAttachToEmbedder() {
     web_contents()->GetController().LoadIfNecessary();
   }
 
-#if defined(ENABLE_EXTENSIONS)
+#if BUILDFLAG(ENABLE_EXTENSIONS)
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
 #else
