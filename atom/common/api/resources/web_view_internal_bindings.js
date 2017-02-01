@@ -9,7 +9,7 @@ const WebViewInternal = {
 
     TabViewInternal.getTabID(instanceId, (tabID) => {
       if (tabID && tabID !== -1) {
-        cb(remote.getWebContents(tabID))
+        remote.getWebContents(tabID, cb)
       } else {
         // TODO(bridiver) - lastError
         console.warn('Could not find tab for guestInstanceId ' + instanceId)

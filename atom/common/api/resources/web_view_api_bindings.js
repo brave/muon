@@ -90,10 +90,11 @@ syncMethods.forEach((method) => {
     if (!this.guest.getId())
       return
 
-    let webContents = this.getWebContents()
-    if (!webContents)
-      throw 'webContents is not available'
-    return webContents[method].apply(this, arguments)
+    if (!this.webContents_) {
+      console.error('webContents is not available for: ' + method)
+    } else {
+      return this.webContents_[method].apply(this, arguments)
+    }
   }
 })
 
@@ -115,28 +116,22 @@ WebViewImpl.prototype.attachWindow$ = function(opt_guestInstanceId) {
   let attached = attachWindow.bind(this)(opt_guestInstanceId)
   // preload the webcontents and tabID
   const guestInstanceId = opt_guestInstanceId || this.guest.getId()
+
+  WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
+    // cache webContents_
+    this.webContents_ = webContents
+  })
   this.getTabID(guestInstanceId, (tabID) => {
+    // cache tabId
     this.tabID = tabID
     GuestViewInternal.registerEvents(this, tabID)
   })
-  this.getWebContents()
+
   return attached
 }
 
 WebViewImpl.prototype.setGuestInstanceId = function (guestInstanceId) {
   return this.attachWindow$(guestInstanceId)
-}
-
-WebViewImpl.prototype.getWebContents = function (cb) {
-  if (!this.webContents_) {
-    WebViewInternal.getWebContents(this.guest.getId(), (webContents) => {
-      this.webContents_ = webContents
-      cb && cb(this.webContents_)
-    })
-  } else {
-    cb && cb(this.webContents_)
-  }
-  return this.webContents_
 }
 
 WebViewImpl.prototype.getProcessId = function() {
