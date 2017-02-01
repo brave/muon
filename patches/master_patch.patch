@@ -83,7 +83,7 @@ index 2bb96c75cbeb333f20ab89a7243874fedc99099c..2eccbefa34bff6a88e2b4a458d62da89
        default_output_extension = ".a"
        output_prefix = "lib"
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index ec0d8ddd0df924fc62690bb0e9c142af429c3a8f..1ab273385d25a5e328dce78b6e4b0707a10cbcac 100644
+index 24e39797b9732dd435f71bf21ead3e80c2c98a50..cef3fc7e07f95b7e7260aed46149e79ee8e9aba3 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
 @@ -34,6 +34,8 @@ if (is_android) {
@@ -760,7 +760,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..8b819a4f8de63109e4740e7c29b54f62
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 522880228bb28f92740206b6113df1f036ea530e..7016c60cc1555ef6b77135e99ce17e8bc798c8bc 100644
+index b0dac272b4e4a7583bd61f41ef9da1a1a874d8c8..6b1817a7187ac45f50b5fe9c7b4bcba2d67f962f 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -800,7 +800,7 @@ if (!is_android) {
@@ -1896,6 +1896,55 @@ index 288644e8124c681e090838d7741644cb4530d785..10486ccde10c71befd53ab64cab65b0c
    // Called to read raw (pre-filtered) data from this Job. Reads at most
    // |buf_size| bytes into |buf|.
    // Possible return values:
+diff --git a/services/service_manager/public/cpp/BUILD.gn b/services/service_manager/public/cpp/BUILD.gn
+index a73de276d9a3ceaf24c889e966dab08bb18616cb..6fde96fa8808fd9e0612d94f3176bc7eed6c4383 100644
+--- a/services/service_manager/public/cpp/BUILD.gn
++++ b/services/service_manager/public/cpp/BUILD.gn
+@@ -2,6 +2,8 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//electron/build/muon.gni")
++
+ group("cpp") {
+   public_deps = [
+     ":sources",
+@@ -67,6 +69,12 @@ if (!is_ios) {
+       "//base:i18n",
+       "//mojo/public/c/system",
+     ]
++
++    if (muon_build) {
++      deps -= [ "//base:i18n" ]
++      deps += [ "//base:i18n_without_icu" ]
++      configs += [ "//third_party/icu:icu_config" ]
++    }
+   }
+ 
+   static_library("service_test_support") {
+diff --git a/services/service_manager/standalone/BUILD.gn b/services/service_manager/standalone/BUILD.gn
+index f7633aff887bc97302ade985d9709768d1e536cf..4c9a31711c0be7cf97c77cc9a80c30e611063682 100644
+--- a/services/service_manager/standalone/BUILD.gn
++++ b/services/service_manager/standalone/BUILD.gn
+@@ -6,6 +6,7 @@ import("//services/service_manager/public/cpp/service.gni")
+ import("//mojo/public/tools/bindings/mojom.gni")
+ import("//testing/test.gni")
+ 
++# workaround for icu linking errors on windows
+ executable("standalone") {
+   output_name = "mojo_runner"
+   sources = [
+@@ -17,6 +18,10 @@ executable("standalone") {
+     "//build/config/sanitizers:deps",
+     "//build/win:default_exe_manifest",
+   ]
++
++  if (muon_build) {
++    deps += [ "//third_party/icu:icu_chrome" ]
++  }
+ }
+ 
+ source_set("lib") {
 diff --git a/services/tracing/BUILD.gn b/services/tracing/BUILD.gn
 index cb51c8728c90f4c67292578c956abbd5a7d67036..b456243c66cb36cf92af22f06eaed3e9f098ee3e 100644
 --- a/services/tracing/BUILD.gn
