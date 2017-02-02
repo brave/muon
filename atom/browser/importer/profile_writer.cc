@@ -143,7 +143,7 @@ void ProfileWriter::AddHistoryPage(const history::URLRows& page,
       history->SetString("url", row.url().possibly_invalid_spec());
       history->SetInteger("visit_count", row.visit_count());
       history->SetInteger("last_visit", row.last_visit().ToDoubleT());
-      history_list.Append(history);
+      history_list.Append(std::unique_ptr<base::DictionaryValue>(history));
     }
     importer_->Emit("add-history-page", history_list,
                     (unsigned int) visit_source);
@@ -297,7 +297,8 @@ void ProfileWriter::AddBookmarks(
         paths->AppendString(path);
       }
       imported_bookmark->Set("path", paths);
-      imported_bookmarks.Append(imported_bookmark);
+      imported_bookmarks.Append(std::unique_ptr<base::DictionaryValue>(
+                                    imported_bookmark));
     }
     importer_->Emit("add-bookmarks", imported_bookmarks, top_level_folder_name);
   }
@@ -328,7 +329,8 @@ void ProfileWriter::AddFavicons(
         urls->AppendString(it->possibly_invalid_spec());
       }
       imported_favicon->Set("urls", urls);
-      imported_favicons.Append(imported_favicon);
+      imported_favicons.Append(std::unique_ptr<base::DictionaryValue>(
+                                  imported_favicon));
     }
     importer_->Emit("add-favicons", imported_favicons);
   }
@@ -467,7 +469,8 @@ void ProfileWriter::AddAutofillFormDataEntries(
         new base::DictionaryValue();
       imported_autofill_entry->SetString("name", autofill_entry.key().name());
       imported_autofill_entry->SetString("value", autofill_entry.key().value());
-      imported_autofill_entries.Append(imported_autofill_entry);
+      imported_autofill_entries.Append(std::unique_ptr<base::DictionaryValue>(
+                                          imported_autofill_entry));
     }
     importer_->Emit("add-autofill-form-data-entries",
                     imported_autofill_entries);
@@ -496,7 +499,7 @@ void ProfileWriter::AddCookies(
       cookie->SetInteger("expiry_date", cookie_entry.expiry_date.ToDoubleT());
       cookie->SetBoolean("secure", cookie_entry.secure);
       cookie->SetBoolean("httponly", cookie_entry.httponly);
-      imported_cookies.Append(cookie);
+      imported_cookies.Append(std::unique_ptr<base::DictionaryValue>(cookie));
     }
     importer_->Emit("add-cookies", imported_cookies);
   }

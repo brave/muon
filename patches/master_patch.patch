@@ -1964,6 +1964,26 @@ index cb51c8728c90f4c67292578c956abbd5a7d67036..b456243c66cb36cf92af22f06eaed3e9
    ]
  }
 +}
+diff --git a/testing/libfuzzer/fuzzers/BUILD.gn b/testing/libfuzzer/fuzzers/BUILD.gn
+index 24973b69dda663f4905f585ccc8f43dd2a087171..5990c5228b7a46f0dc2024ea0e7ccdab54b861de 100644
+--- a/testing/libfuzzer/fuzzers/BUILD.gn
++++ b/testing/libfuzzer/fuzzers/BUILD.gn
+@@ -205,6 +205,7 @@ fuzzer_test("libpng_read_fuzzer") {
+   dict = "dicts/png.dict"
+ }
+ 
++if (!muon_build) {
+ fuzzer_test("v8_script_parser_fuzzer") {
+   sources = []
+   deps = [
+@@ -322,6 +323,7 @@ fuzzer_test("v8_wasm_types_section_fuzzer") {
+   ]
+   libfuzzer_options = [ "max_len=500" ]
+ }
++}
+ 
+ fuzzer_test("third_party_re2_fuzzer") {
+   sources = [
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 index 6bfee912323849e8a0ef3aac93819a8100dceaae..8593ca020a20b1043b23d7e0e607356212d69aa3 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h

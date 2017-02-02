@@ -164,7 +164,8 @@ void Importer::InitializePage() {
     browser_profile->SetBoolean("cookies",
         (browser_services & importer::COOKIES) != 0);
 
-    browser_profiles.Append(browser_profile);
+    browser_profiles.Append(std::unique_ptr<base::DictionaryValue>(
+                                browser_profile));
   }
   Emit("update-supported-browsers", browser_profiles);
 }
