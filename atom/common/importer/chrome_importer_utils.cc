@@ -22,7 +22,7 @@ base::ListValue* GetChromeSourceProfiles(
       base::DictionaryValue* entry = new base::DictionaryValue();
       entry->SetString("id", "Default");
       entry->SetString("name", "Default");
-      profiles->Append(entry);
+      profiles->Append(std::unique_ptr<base::DictionaryValue>(entry));
   } else {
     std::string local_state_content;
     base::ReadFileToString(local_state_path, &local_state_content);
@@ -46,7 +46,7 @@ base::ListValue* GetChromeSourceProfiles(
           base::DictionaryValue* entry = new base::DictionaryValue();
           entry->SetString("id", it.key());
           entry->SetString("name", name);
-          profiles->Append(entry);
+          profiles->Append(std::unique_ptr<base::DictionaryValue>(entry));
         }
       }
     }

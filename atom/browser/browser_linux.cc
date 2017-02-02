@@ -18,7 +18,7 @@
 #include "base/environment.h"
 #include "base/process/launch.h"
 #include "brightray/common/application_info.h"
-#include "chrome/browser/ui/libgtk2ui/unity_service.h"
+#include "chrome/browser/ui/libgtkui/unity_service.h"
 
 const char kXdgSettings[] = "xdg-settings";
 const char kXdgSettingsDefaultBrowser[] = "default-web-browser";

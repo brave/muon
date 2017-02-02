@@ -174,7 +174,7 @@ Protocol::GetNavigatorHandlers() {
                   auto* dict = new base::DictionaryValue();
                   dict->SetString("protocol", handler.protocol());
                   dict->SetString("location", handler.url().spec());
-                  result->Append(dict);
+                  result->Append(std::unique_ptr<base::DictionaryValue>(dict));
                 });
 
 
