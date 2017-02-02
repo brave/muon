@@ -142,6 +142,56 @@ index 5b4c3829bff7839f33c2214405d12a301177a635..ca73f2254cac736e585323ad66e9e70c
      return;
    }
  
+diff --git a/chrome/browser/plugins/chrome_plugin_service_filter.cc b/chrome/browser/plugins/chrome_plugin_service_filter.cc
+index cdb0cc8cad7a5d866b283bd1043f195d0bf236cc..be9a75689131d2c2af8b11648dfc0b5832d1e24d 100644
+--- a/chrome/browser/plugins/chrome_plugin_service_filter.cc
++++ b/chrome/browser/plugins/chrome_plugin_service_filter.cc
+@@ -11,7 +11,7 @@
+ #include "base/strings/utf_string_conversions.h"
+ #include "chrome/browser/chrome_notification_types.h"
+ #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+-#include "chrome/browser/engagement/site_engagement_service.h"
++// #include "chrome/browser/engagement/site_engagement_service.h"
+ #include "chrome/browser/plugins/flash_temporary_permission_tracker.h"
+ #include "chrome/browser/plugins/plugin_finder.h"
+ #include "chrome/browser/plugins/plugin_metadata.h"
+@@ -226,20 +226,20 @@ bool ChromePluginServiceFilter::IsPluginAvailable(
+         settings_map, main_frame_origin, plugin_content_url, &is_managed);
+     flash_setting = PluginsFieldTrial::EffectiveContentSetting(
+         settings_map, CONTENT_SETTINGS_TYPE_PLUGINS, flash_setting);
+-    double engagement = SiteEngagementService::GetScoreFromSettings(
+-        settings_map, main_frame_origin.GetURL());
++    // double engagement = SiteEngagementService::GetScoreFromSettings(
++    //     settings_map, main_frame_origin.GetURL());
+ 
+     if (flash_setting == CONTENT_SETTING_ALLOW) {
+-      UMA_HISTOGRAM_COUNTS_100(kEngagementSettingAllowedHistogram, engagement);
++      // UMA_HISTOGRAM_COUNTS_100(kEngagementSettingAllowedHistogram, engagement);
+       return true;
+     }
+ 
+     if (flash_setting == CONTENT_SETTING_BLOCK) {
+-      UMA_HISTOGRAM_COUNTS_100(kEngagementSettingBlockedHistogram, engagement);
++      // UMA_HISTOGRAM_COUNTS_100(kEngagementSettingBlockedHistogram, engagement);
+       return false;
+     }
+ 
+-    UMA_HISTOGRAM_COUNTS_100(kEngagementNoSettingHistogram, engagement);
++    // UMA_HISTOGRAM_COUNTS_100(kEngagementNoSettingHistogram, engagement);
+ 
+     // If the content setting is being managed by enterprise policy and is an
+     // ASK setting, we check to see if it has been temporarily granted.
+@@ -252,8 +252,8 @@ bool ChromePluginServiceFilter::IsPluginAvailable(
+     // check whether the site meets the engagement cutoff for making Flash
+     // available without a prompt.This should only happen if the setting isn't
+     // being enforced by an enterprise policy.
+-    if (engagement < PluginsFieldTrial::GetSiteEngagementThresholdForFlash())
+-      return false;
++    // if (engagement < PluginsFieldTrial::GetSiteEngagementThresholdForFlash())
++    //   return false;
+   }
+ 
+   return true;
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index 33ada8ce7b315e2bd327883bc682e5527ff0696e..224d459d2eabe16f3073cc1ae6eee42a1b516197 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
