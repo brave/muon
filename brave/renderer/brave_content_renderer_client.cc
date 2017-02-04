@@ -149,9 +149,9 @@ void BraveContentRendererClient::RenderFrameCreated(
       new PasswordGenerationAgent(render_frame, password_autofill_agent);
   new AutofillAgent(render_frame, password_autofill_agent,
                     password_generation_agent);
-#if defined(ENABLE_PRINTING)
+#if BUILDFLAG(ENABLE_PRINTING)
   new printing::PrintWebViewHelper(
-      render_frame, base::MakeUnique(new BravePrintWebViewHelperDelegate());
+      render_frame, base::MakeUnique<BravePrintWebViewHelperDelegate>());
 #endif
 }
 

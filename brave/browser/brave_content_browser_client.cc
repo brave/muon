@@ -26,6 +26,7 @@
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
+#include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_process_host.h"
@@ -159,6 +160,11 @@ void BraveContentBrowserClient::RegisterRenderFrameMojoInterfaces(
     content::RenderFrameHost* render_frame_host) {
   registry->AddInterface(
       base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver,
+                 render_frame_host));
+
+  registry->AddInterface(
+      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
+                     BindPasswordManagerDriver,
                  render_frame_host));
 }
 
