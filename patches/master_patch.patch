@@ -95,6 +95,19 @@ index 24e39797b9732dd435f71bf21ead3e80c2c98a50..cef3fc7e07f95b7e7260aed46149e79e
  }
  
  if (enable_resource_whitelist_generation) {
+diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
+index f1004cbf6dec0f4bdc293ccc272cbbe82b1b3936..7a9f23b38a367ace69f488321e5ce5686b8b0af8 100644
+--- a/chrome/browser/chrome_content_browser_manifest_overlay.json
++++ b/chrome/browser/chrome_content_browser_manifest_overlay.json
+@@ -9,7 +9,7 @@
+           "autofill::mojom::PasswordManagerDriver",
+           "extensions::StashService",
+           "metrics::mojom::LeakDetector",
+-          "rappor::mojom::RapporRecorder",
++          // "rappor::mojom::RapporRecorder",
+           "startup_metric_utils::mojom::StartupMetricHost",
+           "translate::mojom::ContentTranslateDriver"
+         ],
 diff --git a/chrome/browser/extensions/api/messaging/message_service.cc b/chrome/browser/extensions/api/messaging/message_service.cc
 index 5b4c3829bff7839f33c2214405d12a301177a635..ca73f2254cac736e585323ad66e9e70c35756fb6 100644
 --- a/chrome/browser/extensions/api/messaging/message_service.cc
@@ -775,6 +788,60 @@ index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b35962
      @"Google Chrome": @"Google Chrome",
      @"Google Chrome Canary": @"Google Chrome",
    };
+diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
+index 086ff4b38b2786faab9323576f4bfbdd3636dc87..48e2f601586d9d2fa59f45ab176a77d787d21d1b 100644
+--- a/chrome/renderer/chrome_content_renderer_client.cc
++++ b/chrome/renderer/chrome_content_renderer_client.cc
+@@ -1337,19 +1337,19 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
+ #endif
+ }
+ 
+-void ChromeContentRendererClient::RecordRappor(const std::string& metric,
+-                                               const std::string& sample) {
+-  if (!rappor_recorder_)
+-    RenderThread::Get()->GetRemoteInterfaces()->GetInterface(&rappor_recorder_);
+-  rappor_recorder_->RecordRappor(metric, sample);
+-}
+-
+-void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
+-                                                  const GURL& url) {
+-  if (!rappor_recorder_)
+-    RenderThread::Get()->GetRemoteInterfaces()->GetInterface(&rappor_recorder_);
+-  rappor_recorder_->RecordRapporURL(metric, url);
+-}
++// void ChromeContentRendererClient::RecordRappor(const std::string& metric,
++//                                                const std::string& sample) {
++//   if (!rappor_recorder_)
++//     RenderThread::Get()->GetRemoteInterfaces()->GetInterface(&rappor_recorder_);
++//   rappor_recorder_->RecordRappor(metric, sample);
++// }
++
++// void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
++//                                                   const GURL& url) {
++//   if (!rappor_recorder_)
++//     RenderThread::Get()->GetRemoteInterfaces()->GetInterface(&rappor_recorder_);
++//   rappor_recorder_->RecordRapporURL(metric, url);
++// }
+ 
+ void ChromeContentRendererClient::AddImageContextMenuProperties(
+     const WebURLResponse& response,
+diff --git a/chrome/renderer/chrome_content_renderer_client.h b/chrome/renderer/chrome_content_renderer_client.h
+index 4f7bbbbc2eed67563eea118cd95dd09fc8a3a1f9..02bca6a120828041cf25dbe066da9df91f75c782 100644
+--- a/chrome/renderer/chrome_content_renderer_client.h
++++ b/chrome/renderer/chrome_content_renderer_client.h
+@@ -168,9 +168,9 @@ class ChromeContentRendererClient : public content::ContentRendererClient {
+       content::RenderFrame* render_frame,
+       const std::string& mime_type,
+       const GURL& original_url) override;
+-  void RecordRappor(const std::string& metric,
+-                    const std::string& sample) override;
+-  void RecordRapporURL(const std::string& metric, const GURL& url) override;
++  // void RecordRappor(const std::string& metric,
++  //                   const std::string& sample) override;
++  // void RecordRapporURL(const std::string& metric, const GURL& url) override;
+   void AddImageContextMenuProperties(
+       const blink::WebURLResponse& response,
+       std::map<std::string, std::string>* properties) override;
 diff --git a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc b/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
 index 12d432198186daf817c0b903af985b05ce17cda2..8b819a4f8de63109e4740e7c29b54f624739ba09 100644
 --- a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
