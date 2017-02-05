@@ -1777,6 +1777,18 @@ index 71368bdd55039ddc76278e7b5706e30517ab8aae..047054f366cafbd723affd26680310b0
  
    values_[key] = base::NullableString16(value, false);
    ResetKeyIterator();
+diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
+index 836380143bdeb2737bf6fd8b2d5f57ea49125206..48a42d105549e98fea409c9ab113d4bff74a2e4a 100644
+--- a/content/public/app/mojo/content_renderer_manifest.json
++++ b/content/public/app/mojo/content_renderer_manifest.json
+@@ -25,6 +25,7 @@
+     "navigation:frame": {
+       "provides": {
+         "browser": [
++          "autofill::mojom::AutofillAgent",
+           "blink::mojom::AppBannerController",
+           "content::mojom::ImageDownloader",
+           "mojom::MediaDevicesListener"
 diff --git a/content/public/browser/resource_request_details.cc b/content/public/browser/resource_request_details.cc
 index 0e790b688417f077815ab588406bd67738cdb4a3..0b5140a416ff1017c96c44ff223ea61871d7b4b9 100644
 --- a/content/public/browser/resource_request_details.cc
