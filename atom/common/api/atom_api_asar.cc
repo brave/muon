@@ -132,12 +132,12 @@ void InitAsarSupport(v8::Isolate* isolate,
                      v8::Local<v8::Value> require) {
   // Evaluate asar_init.coffee.
   const char* asar_init_native = reinterpret_cast<const char*>(
-      static_cast<const unsigned char*>(node::asar_init_native));
+      static_cast<const unsigned char*>(node::asar_init_name));
   v8::Local<v8::Script> asar_init = v8::Script::Compile(v8::String::NewFromUtf8(
       isolate,
       asar_init_native,
       v8::String::kNormalString,
-      sizeof(node::asar_init_native) -1));
+      sizeof(asar_init_native) -1));
   v8::Local<v8::Value> result = asar_init->Run();
 
   // Initialize asar support.
@@ -145,11 +145,11 @@ void InitAsarSupport(v8::Isolate* isolate,
                       v8::Local<v8::Value>,
                       std::string)> init;
   if (mate::ConvertFromV8(isolate, result, &init)) {
-    const char* asar_native = reinterpret_cast<const char*>(
-        static_cast<const unsigned char*>(node::asar_native));
+    const char* asar_name = reinterpret_cast<const char*>(
+        static_cast<const unsigned char*>(node::asar_name));
     init.Run(process,
              require,
-             std::string(asar_native, sizeof(node::asar_native) - 1));
+             std::string(asar_name, sizeof(node::asar_name) - 1));
   }
 }
 
