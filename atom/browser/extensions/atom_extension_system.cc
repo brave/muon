@@ -258,6 +258,7 @@ void AtomExtensionSystem::Shared::DisableExtension(
       !(disable_reasons & Extension::DISABLE_RELOAD) &&
       !(disable_reasons & Extension::DISABLE_UPDATE_REQUIRED_BY_POLICY) &&
       extension->location() != Manifest::EXTERNAL_COMPONENT &&
+      extension->location() != Manifest::COMPONENT &&
       extension->location() != Manifest::UNPACKED) {
     return;
   }
