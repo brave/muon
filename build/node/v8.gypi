@@ -7,6 +7,7 @@
    # 'mac_deployment_target': '10.8',
    # Use the standard way of linking with msvc runtime.
    # 'win_use_allocator_shim': 0,
+   'v8_enable_inspector': 1,
    'v8_enable_i18n_support': 1,
    # The V8 libraries.
    'v8_libraries': '["v8", "v8_snapshot", "v8_nosnapshot", "v8_external_snapshot", "v8_base", "v8_libbase", "v8_libplatform"]',
@@ -42,6 +43,7 @@
      'CLANG_CXX_LIBRARY': 'libc++',  # -stdlib=libc++
    },
    'defines': [
+     'V8_INSPECTOR_ENABLED',
      'U_COMBINED_IMPLEMENTATION',
      # Defining "U_COMBINED_IMPLEMENTATION" will add "explicit" for some
      # constructors, make sure it doesn' happen.
