@@ -11,7 +11,6 @@
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 
 #include "atom/browser/api/atom_api_web_contents.h"
-#include "atom/browser/api/atom_api_session.h"
 #include "atom/browser/api/event.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/extensions/tab_helper.h"
@@ -198,20 +197,21 @@ void TabViewGuest::CreateWebContents(
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
-  scoped_refptr<atom::AtomBrowserContext> browser_context;
-
-  std::string partition;
-  params.GetString("partition", &partition);
-  base::DictionaryValue partition_options;
-  browser_context =
-      brave::BraveBrowserContext::FromPartition(partition, partition_options);
-  content::WebContents::CreateParams create_params(browser_context.get());
-  create_params.guest_delegate = this;
-
   mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
+  std::string partition;
+  if (params.GetString("partition", &partition)) {
+    options.Set("partition", partition);
+  }
+
+  LOG(ERROR) << "create web contents " << params;
+  std::string parent_partition;
+  if (params.GetString("parent_partition", &partition)) {
+    options.Set("parent_partition", partition);
+  }
+
   mate::Handle<atom::api::WebContents> new_api_web_contents =
-      atom::api::WebContents::CreateWithParams(isolate, options, create_params);
+      atom::api::WebContents::CreateGuest(isolate, options, this);
 
   content::WebContents* web_contents = new_api_web_contents->web_contents();
   callback.Run(web_contents);

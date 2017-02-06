@@ -123,9 +123,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static mate::Handle<WebContents> Create(
       v8::Isolate* isolate, const mate::Dictionary& options);
 
-  static mate::Handle<WebContents> CreateWithParams(
-      v8::Isolate* isolate, const mate::Dictionary& options,
-      const content::WebContents::CreateParams& create_params);
+  static mate::Handle<WebContents> CreateGuest(
+      v8::Isolate* isolate,
+      const mate::Dictionary& options,
+      guest_view::GuestViewBase* guest_delegate);
 
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
@@ -276,9 +277,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
  protected:
   WebContents(v8::Isolate* isolate,
         content::WebContents* web_contents, Type type);
-  WebContents(v8::Isolate* isolate, const mate::Dictionary& options);
   WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
-      const content::WebContents::CreateParams& create_params);
+        guest_view::GuestViewBase* guest_delegate);
   ~WebContents();
 
   void CreateWebContents(v8::Isolate* isolate,
