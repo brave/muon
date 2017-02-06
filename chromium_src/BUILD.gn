@@ -67,15 +67,20 @@ source_set("common") {
   ]
 
   sources = []
+  deps = []
 
   if (enable_extensions) {
     sources += [
       "chrome/common/extensions/chrome_extensions_client.cc",
       "chrome/common/extensions/chrome_extensions_client.h",
     ]
+
+    deps += [
+      "//electron/brave/common/extensions/api"
+    ]
   }
 
-  deps = [
+  deps += [
     "//chrome/common",
   ]
 }
