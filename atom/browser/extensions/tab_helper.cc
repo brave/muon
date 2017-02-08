@@ -309,7 +309,8 @@ base::DictionaryValue* TabHelper::CreateTabValue(
                      contents->GetBrowserContext()->IsOffTheRecord());
   result->SetBoolean(keys::kActiveKey, active);
   result->SetString(keys::kUrlKey, contents->GetURL().spec());
-  result->SetString(keys::kTitleKey, entry ? base::UTF16ToUTF8(entry->GetTitle()) : "");
+  result->SetString(keys::kTitleKey,
+                    entry ? base::UTF16ToUTF8(entry->GetTitle()) : "");
   result->SetString(keys::kStatusKey, contents->IsLoading()
       ? "loading" : "complete");
   result->SetBoolean(keys::kAudibleKey, contents->WasRecentlyAudible());
