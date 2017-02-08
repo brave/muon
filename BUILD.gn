@@ -499,7 +499,7 @@ if (is_win) {
 }
 
 if (muon_build) {
-  chromedriver_version = "2.23"
+  chromedriver_version = "2.25"
 
   action("build_chromedriver") {
     # dummy script - this is built separately
