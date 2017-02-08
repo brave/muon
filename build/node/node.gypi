@@ -175,7 +175,9 @@
               '_CRT_NONSTDC_NO_DEPRECATE',
               # Make sure the STL doesn't try to use exceptions
               '_HAS_EXCEPTIONS=0',
-              'BUILDING_V8_SHARED=1',
+              'BUILDING_V8_SHARED',
+              'BUILDING_V8_BASE_SHARED',
+              'BUILDING_V8_PLATFORM_SHARED',
               'BUILDING_UV_SHARED=1',
             ],
             # Fix passing fd across modules, see |osfhandle.h| for more.

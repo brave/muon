@@ -1,8 +1,17 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d9ca96820 100644
+index 8587356ddcca34cdcad716ba7395666ec7ce4380..990e120c81ffe09a11d9c31cb36826a732abb90a 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -101,8 +101,10 @@ if (v8_enable_disassembler == "") {
+@@ -18,6 +18,8 @@ import("//build_overrides/v8.gni")
+ 
+ import("snapshot_toolchain.gni")
+ 
++import("//electron/build/muon.gni")
++
+ declare_args() {
+   # Print to stdout on Android.
+   v8_android_log_stdout = false
+@@ -101,8 +103,10 @@ if (v8_enable_disassembler == "") {
  # snapshots.
  is_target_simulator = target_cpu != v8_target_cpu
  
@@ -13,28 +22,29 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d
  v8_toolset_for_shell = "host"
  
  ###############################################################################
-@@ -113,6 +115,13 @@ config("internal_config") {
- 
-   include_dirs = [ "." ]
- 
-+  if (muon_build) {
-+    defines = [
-+      "SUPPRESS_V8_SNAPSHOT",
-+      "BUILDING_V8_SHARED",
-+    ]
-+  }
-+
-   if (is_component_build) {
-     defines = [ "BUILDING_V8_SHARED" ]
+@@ -127,14 +131,14 @@ config("internal_config_base") {
+ # This config should be applied to code using the libplatform.
+ config("libplatform_config") {
+   include_dirs = [ "include" ]
+-  if (is_component_build) {
++  if (is_component_build || muon_build) {
+     defines = [ "USING_V8_PLATFORM_SHARED" ]
    }
-@@ -151,12 +160,19 @@ config("libsampler_config") {
+ }
+ 
+ # This config should be applied to code using the libbase.
+ config("libbase_config") {
+-  if (is_component_build) {
++  if (is_component_build || muon_build) {
+     defines = [ "USING_V8_BASE_SHARED" ]
+   }
+   libs = []
+@@ -151,12 +155,16 @@ config("libsampler_config") {
  # This config should only be applied to code using V8 and not any V8 code
  # itself.
  config("external_config") {
-+  if (muon_build) {
-+    defines = [ "USING_V8_SHARED" ]
-+  }
-   if (is_component_build) {
+-  if (is_component_build) {
++  if (is_component_build || muon_build) {
      defines = [ "USING_V8_SHARED" ]
    }
    include_dirs = [ "include" ]
@@ -48,7 +58,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d
    }
  }
  
-@@ -386,6 +402,39 @@ config("toolchain") {
+@@ -386,6 +394,35 @@ config("toolchain") {
    }
  }
  
@@ -68,12 +78,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d
 +    public_deps = [ "//electron/build/node:build_node" ]
 +    public_configs = [ ":libplatform_config" ]
 +  }
-+  group("d8") {
-+    defines = []
-+    if (v8_enable_inspector_override) {
-+      defines += [ "V8_INSPECTOR_ENABLED" ]
-+    }
-+  }
++  group("d8") {}
 +  group("postmortem-metadata") {}
 +  group("gn_all") {}
 +  group("wasm_asmjs_fuzzer") {}
@@ -82,13 +87,14 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d
 +  group("regexp_fuzzer") {}
 +  group("wasm_fuzzer") {}
 +  group("v8_libbase") {
++    public_deps = [ "//electron/build/node:build_node" ]
 +    public_configs = [ ":libbase_config" ]
 +  }
 +} else {
  ###############################################################################
  # Actions
  #
-@@ -2465,13 +2514,14 @@ v8_executable("mkpeephole") {
+@@ -2465,13 +2502,14 @@ v8_executable("mkpeephole") {
  ###############################################################################
  # Public targets
  #
@@ -104,7 +110,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d
  group("gn_all") {
    testonly = true
  
-@@ -2653,6 +2703,7 @@ v8_executable("v8_parser_shell") {
+@@ -2653,6 +2691,7 @@ v8_executable("v8_parser_shell") {
      deps += [ "//third_party/icu" ]
    }
  }
@@ -112,7 +118,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d
  
  if (want_v8_shell) {
    v8_executable("v8_shell") {
-@@ -2681,6 +2732,7 @@ if (want_v8_shell) {
+@@ -2681,6 +2720,7 @@ if (want_v8_shell) {
    }
  }
  
@@ -120,7 +126,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..9a27694c9ed548c4a92161b522a4f44d
  template("v8_fuzzer") {
    name = target_name
    forward_variables_from(invoker, "*")
-@@ -3001,3 +3053,4 @@ v8_source_set("wasm_data_section_fuzzer") {
+@@ -3001,3 +3041,4 @@ v8_source_set("wasm_data_section_fuzzer") {
  
  v8_fuzzer("wasm_data_section_fuzzer") {
  }

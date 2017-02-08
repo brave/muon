@@ -43,7 +43,6 @@
      'CLANG_CXX_LIBRARY': 'libc++',  # -stdlib=libc++
    },
    'defines': [
-     'V8_INSPECTOR_ENABLED',
      'U_COMBINED_IMPLEMENTATION',
      # Defining "U_COMBINED_IMPLEMENTATION" will add "explicit" for some
      # constructors, make sure it doesn' happen.
@@ -79,8 +78,9 @@
      }],
      ['_target_name in <(v8_libraries) + ["mksnapshot"]', {
        'defines': [
-         'V8_SHARED',
-         'BUILDING_V8_SHARED',
+          'BUILDING_V8_SHARED',
+          'BUILDING_V8_BASE_SHARED',
+          'BUILDING_V8_PLATFORM_SHARED',
        ],
      }],
    ],
