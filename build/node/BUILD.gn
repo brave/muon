@@ -14,6 +14,8 @@ config("build_config") {
 }
 
 config("node_external_config") {
+  defines = [ "USING_V8_SHARED" ]
+
   if (is_linux) {
     ldflags =
         [ rebase_path("$root_out_dir/lib/libnode.so",

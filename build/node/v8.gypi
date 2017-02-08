@@ -79,8 +79,6 @@
      ['_target_name in <(v8_libraries) + ["mksnapshot"]', {
        'defines': [
           'BUILDING_V8_SHARED',
-          'BUILDING_V8_BASE_SHARED',
-          'BUILDING_V8_PLATFORM_SHARED',
        ],
      }],
    ],
