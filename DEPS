@@ -3,7 +3,7 @@ include_rules = []
 use_relative_paths = True
 
 deps = {
-  "vendor/node": "https://github.com/brave/node.git@53ede113b2cee3da55287b39110b19ecb3bf884c",
+  "vendor/node": "https://github.com/brave/node.git@38df32deb6bd2446ff8e5da01dfe11b6bc861dec",
   "vendor/native_mate": "https://github.com/zcbenz/native-mate.git@b5e5de626c6a57e44c7e6448d8bbaaac475d493c",
   "vendor/requests": "https://github.com/kennethreitz/requests@e4d59bedfd3c7f4f254f4f5d036587bcd8152458",
   "vendor/boto": "https://github.com/boto/boto@f7574aa6cc2c819430c1f05e9a1a1a666ef8169b",
