@@ -62,7 +62,8 @@ source_set("node") {
   ]
 
   deps = [
-    "//third_party/WebKit/public:blink",
+    "//third_party/WebKit/public:blink_headers",
+    "//third_party/WebKit/public:mojo_bindings",
   ]
 }
 
