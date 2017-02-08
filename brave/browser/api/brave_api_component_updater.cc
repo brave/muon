@@ -132,7 +132,10 @@ void ComponentUpdater::RegisterComponent(const std::string& component_id) {
   } else if (component_id == kEnpassId) {
     RegisterComponentForUpdate(
         kEnpassPublicKeyStr, registered_callback, ready_callback);
-  } else if (component_id == kWidevineId) {
+  } else if (component_id == kBitwardenId) {
+    RegisterComponentForUpdate(
+        kBitwardenPublicKeyStr, registered_callback, ready_callback);
+  }  else if (component_id == kWidevineId) {
     brave::RegisterWidevineCdmComponent(
         g_browser_process->component_updater(),
         registered_callback, ready_callback);
