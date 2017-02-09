@@ -95,6 +95,23 @@ CreateSocketFactory() {
 
 // DevToolsManagerDelegate ---------------------------------------------------
 
+// static
+void DevToolsManagerDelegate::StartHttpHandler() {
+  std::string frontend_url;
+  content::DevToolsAgentHost::StartRemoteDebuggingServer(
+      CreateSocketFactory(),
+      frontend_url,
+      base::FilePath(),
+      base::FilePath(),
+      std::string(),
+      GetBrightrayUserAgent());
+}
+
+// static
+void DevToolsManagerDelegate::StopHttpHandler() {
+  content::DevToolsAgentHost::StopRemoteDebuggingServer();
+}
+
 DevToolsManagerDelegate::DevToolsManagerDelegate()
     : handler_(new DevToolsNetworkProtocolHandler) {
 }

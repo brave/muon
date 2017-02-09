@@ -217,7 +217,7 @@ void BrowserMainParts::PreMainMessageLoopRun() {
   // --remote-debugging-port
   auto command_line = base::CommandLine::ForCurrentProcess();
   if (command_line->HasSwitch(switches::kRemoteDebuggingPort)) {
-    // DevToolsManagerDelegate::CreateHttpHandler();
+    DevToolsManagerDelegate::StartHttpHandler();
   }
 }
 
@@ -240,6 +240,7 @@ void BrowserMainParts::PostMainMessageLoopRun() {
   // process of terminating, this can cause errors.
   ui::SetX11ErrorHandlers(X11EmptyErrorHandler, X11EmptyIOErrorHandler);
 #endif
+  DevToolsManagerDelegate::StopHttpHandler();
 }
 
 int BrowserMainParts::PreCreateThreads() {

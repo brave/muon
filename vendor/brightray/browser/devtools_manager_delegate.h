@@ -18,6 +18,8 @@ class DevToolsNetworkProtocolHandler;
 class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
                                 public content::DevToolsAgentHostObserver {
  public:
+  static void StartHttpHandler();
+  static void StopHttpHandler();
 
   DevToolsManagerDelegate();
   virtual ~DevToolsManagerDelegate();
