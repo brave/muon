@@ -511,10 +511,6 @@ void WebContents::AddNewContents(content::WebContents* source,
 
   if (was_blocked)
     *was_blocked = blocked;
-
-  if (blocked) {
-    delete new_contents;
-  }
 }
 
 bool WebContents::ShouldResumeRequestsForCreatedWindow() {
@@ -2095,10 +2091,12 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
                     user_gesture,
                     &was_blocked);
 
-  if (was_blocked)
+  if (was_blocked) {
     callback.Run(nullptr);
-  else
+    delete tab;
+  } else {
     callback.Run(tab);
+  }
 }
 
 // static
