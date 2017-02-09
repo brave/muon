@@ -1,12 +1,12 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 8587356ddcca34cdcad716ba7395666ec7ce4380..ac1d6547fe91164c4606d0b799aec084eca38b33 100644
+index 8587356ddcca34cdcad716ba7395666ec7ce4380..c2e966de9f9aeeac4b6d1c30bba508a3a4eb2a9e 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -618,8 +618,9 @@ if (v8_use_external_startup_data) {
        "$target_gen_dir/libraries_experimental_extras.bin",
      ]
  
-+    public_deps = [ "//electron/build/node:build_node" ]
++    public_deps = [ "//electron/build/node" ]
      outputs = [
 -      "$root_out_dir/natives_blob.bin",
 +      "$root_out_dir/muon_natives_blob.bin",
@@ -22,69 +22,26 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..ac1d6547fe91164c4606d0b799aec084
      args += [
        "--startup_blob",
        rebase_path("$root_out_dir/snapshot_blob.bin", root_build_dir),
-@@ -755,7 +756,8 @@ action("v8_dump_build_config") {
- source_set("v8_maybe_snapshot") {
-   if (v8_use_snapshot && v8_use_external_startup_data) {
-     public_deps = [
--      ":v8_external_snapshot",
-+      # ":v8_external_snapshot",
-+      "//electron/build/node:build_node",
+@@ -2524,8 +2525,7 @@ if (is_component_build) {
      ]
-   } else if (v8_use_snapshot) {
+ 
      public_deps = [
-@@ -851,6 +853,8 @@ if (v8_use_external_startup_data) {
- v8_source_set("v8_base") {
-   visibility = [ ":*" ]  # Only targets in this file can depend on this.
- 
-+  public_configs = [ "//electron/build/node:node_external_config" ]
-+
-   sources = [
-     "//base/trace_event/common/trace_event_common.h",
- 
-@@ -2528,6 +2532,11 @@ if (is_component_build) {
-       ":v8_maybe_snapshot",
+-      ":v8_base",
+-      ":v8_maybe_snapshot",
++      "//electron/build/node",
      ]
      public_configs = [ ":external_config" ]
-+    public_configs += [ "//electron/build/node:node_external_config" ]
-+
-+    if (v8_enable_inspector_override) {
-+      deps += [ "src/inspector:inspector" ]
-+    }
    }
- }
+diff --git a/src/inspector/inspector.gyp b/src/inspector/inspector.gyp
+index 6246f0ac0e7edfbe2272a577a648dcf08f868bb1..8dd41a110f63cb25f7bf3abfa9b42a3a910e78e0 100644
+--- a/src/inspector/inspector.gyp
++++ b/src/inspector/inspector.gyp
+@@ -4,7 +4,7 @@
  
-diff --git a/gni/v8.gni b/gni/v8.gni
-index 3759572b935157e65237443c84ef456c508c2010..906bbe44b7262b54b4fe870c14a7c6bb453d1fe3 100644
---- a/gni/v8.gni
-+++ b/gni/v8.gni
-@@ -83,7 +83,7 @@ if (is_posix && v8_enable_backtrace) {
- 
- # All templates should be kept in sync.
- template("v8_source_set") {
--  source_set(target_name) {
-+  loadable_module(target_name) {
-     forward_variables_from(invoker, "*", [ "configs" ])
-     configs += invoker.configs
-     configs -= v8_remove_configs
-@@ -113,7 +113,7 @@ template("v8_executable") {
- }
- 
- template("v8_component") {
--  component(target_name) {
-+  source_set(target_name) {
-     forward_variables_from(invoker, "*", [ "configs" ])
-     configs += invoker.configs
-     configs -= v8_remove_configs
-diff --git a/src/inspector/BUILD.gn b/src/inspector/BUILD.gn
-index 6ebb91ccbc773fd526337a8e851bb4b4b984781b..0237046e97aedc29856beb8233d69ea9ae7c9d53 100644
---- a/src/inspector/BUILD.gn
-+++ b/src/inspector/BUILD.gn
-@@ -111,7 +111,7 @@ config("inspector_config") {
-   }
- }
- 
--v8_source_set("inspector") {
-+v8_component("inspector") {
-   deps = [
-     ":inspector_debugger_script",
-     ":inspector_injected_script",
+ {
+   'variables': {
+-    'protocol_path': '<(PRODUCT_DIR)/../../third_party/inspector_protocol',
++    'protocol_path': '<(PRODUCT_DIR)/../../v8/third_party/inspector_protocol',
+   },
+   'includes': [
+     'inspector.gypi',
