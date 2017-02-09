@@ -86,7 +86,6 @@ mac_framework_bundle("electron_framework") {
   output_name = chrome_framework_name
 
   configs += [
-    "//electron/build/node:node_external_config",
     "//build/config/compiler:wexit_time_destructors",
     ":external_binaries_config"
   ]

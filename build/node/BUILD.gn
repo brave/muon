@@ -4,6 +4,9 @@ config("build_config") {
   defines = [
     "NODE_WANT_INTERNALS=1",
     "NODE_SHARED_MODE",
+    "USING_V8_SHARED",
+    "USING_V8_BASE_SHARED",
+    "USING_V8_PLATFORM_SHARED",
   ]
 
   include_dirs = [
