@@ -1,43 +1,67 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 8587356ddcca34cdcad716ba7395666ec7ce4380..c2e966de9f9aeeac4b6d1c30bba508a3a4eb2a9e 100644
+index 8587356ddcca34cdcad716ba7395666ec7ce4380..ad3e31e8ae859c0b02a57b6d2867ae4afa5d7834 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -618,8 +618,9 @@ if (v8_use_external_startup_data) {
-       "$target_gen_dir/libraries_experimental_extras.bin",
+@@ -105,6 +105,13 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
+ v8_random_seed = "314159265"
+ v8_toolset_for_shell = "host"
+ 
++natives_blob = "natives_blob"
++snapshot_blob = "snapshot_blob"
++if (muon_build) {
++  natives_blob = "dummy_natives_blob"
++  snapshot_blob = "dummy_snapshot_blob"
++}
++
+ ###############################################################################
+ # Configurations
+ #
+@@ -619,7 +626,7 @@ if (v8_use_external_startup_data) {
      ]
-
-+    public_deps = [ "//electron/build/node" ]
+ 
      outputs = [
 -      "$root_out_dir/natives_blob.bin",
-+      "$root_out_dir/muon_natives_blob.bin",
++      "$root_out_dir/$natives_blob.bin",
      ]
-
+ 
      script = "tools/concatenate-files.py"
-@@ -690,7 +691,7 @@ action("run_mksnapshot") {
+@@ -690,10 +697,10 @@ action("run_mksnapshot") {
    }
-
+ 
    if (v8_use_external_startup_data) {
 -    outputs += [ "$root_out_dir/snapshot_blob.bin" ]
-+    outputs += [ "$root_out_dir/muon_snapshot_blob.bin" ]
++    outputs += [ "$root_out_dir/$snapshot_blob.bin" ]
      args += [
        "--startup_blob",
-       rebase_path("$root_out_dir/snapshot_blob.bin", root_build_dir),
-@@ -2524,8 +2525,7 @@ if (is_component_build) {
+-      rebase_path("$root_out_dir/snapshot_blob.bin", root_build_dir),
++      rebase_path("$root_out_dir/$snapshot_blob.bin", root_build_dir),
      ]
-
-     public_deps = [
--      ":v8_base",
--      ":v8_maybe_snapshot",
-+      "//electron/build/node",
+   }
+ 
+@@ -2527,6 +2534,17 @@ if (is_component_build) {
+       ":v8_base",
+       ":v8_maybe_snapshot",
      ]
++
++    if (muon_build) {
++      public_deps -= [
++        ":v8_base",
++        ":v8_maybe_snapshot",
++      ]
++      public_deps += [
++        "//electron/build/node",
++      ]
++    }
++
      public_configs = [ ":external_config" ]
    }
+ }
 diff --git a/src/inspector/inspector.gyp b/src/inspector/inspector.gyp
 index 6246f0ac0e7edfbe2272a577a648dcf08f868bb1..8dd41a110f63cb25f7bf3abfa9b42a3a910e78e0 100644
 --- a/src/inspector/inspector.gyp
 +++ b/src/inspector/inspector.gyp
 @@ -4,7 +4,7 @@
-
+ 
  {
    'variables': {
 -    'protocol_path': '<(PRODUCT_DIR)/../../third_party/inspector_protocol',
