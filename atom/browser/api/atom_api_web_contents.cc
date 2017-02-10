@@ -513,7 +513,12 @@ void WebContents::AddNewContents(content::WebContents* source,
     *was_blocked = blocked;
 
   if (blocked) {
-    delete new_contents;
+    auto guest = brave::TabViewGuest::FromWebContents(new_contents);
+    if (guest) {
+      guest->Destroy();
+    } else {
+      delete new_contents;
+    }
   }
 }
 
