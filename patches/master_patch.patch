@@ -1700,7 +1700,7 @@ index 92d3617594e49f5c9b6a392d3dde935c02548159..6004636d53feff66cd39a67c920a5ba8
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 93d929c4f2bd147cc3937c7b8f40fd02521ac4b2..27c72c3e387d0c478a93109776186328bb7f65ff 100644
+index 93d929c4f2bd147cc3937c7b8f40fd02521ac4b2..cc9bedd66927dc6ef829def316cb4a6450ed7a79 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -138,6 +138,11 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1769,6 +1769,26 @@ index 93d929c4f2bd147cc3937c7b8f40fd02521ac4b2..27c72c3e387d0c478a93109776186328
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
+@@ -2404,14 +2413,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+   // do so. For this reason, for now, we accept this non-ideal way of fixing the
+   // point offset manually from the view bounds. This should be revisited when
+   // fixing issues in TextInputClientMac (https://crbug.com/643233).
+-  gfx::Rect root_box = renderWidgetHostView_->GetViewBounds();
+-  gfx::Rect view_box = widgetHost->GetView()->GetViewBounds();
++  // gfx::Rect root_box = renderWidgetHostView_->GetViewBounds();
++  // gfx::Rect view_box = widgetHost->GetView()->GetViewBounds();
+ 
+   TextInputClientMac::GetInstance()->GetStringFromRange(
+       widgetHost, range, ^(NSAttributedString* string, NSPoint baselinePoint) {
+-        baselinePoint.x += view_box.origin().x() - root_box.origin().x();
+-        baselinePoint.y +=
+-            root_box.bottom_left().y() - view_box.bottom_left().y();
++        // baselinePoint.x += view_box.origin().x() - root_box.origin().x();
++        // baselinePoint.y +=
++        //     root_box.bottom_left().y() - view_box.bottom_left().y();
+         [self showLookUpDictionaryOverlayInternal:string
+                                     baselinePoint:baselinePoint
+                                        targetView:targetView];
 @@ -2790,6 +2799,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
