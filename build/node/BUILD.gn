@@ -12,7 +12,8 @@ config("build_config") {
   include_dirs = [
     "//v8",
     "//v8/include",
-
+    root_gen_dir,
+    "$root_gen_dir/include",
   ]
 }
 

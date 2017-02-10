@@ -1,6 +1,7 @@
 {
   'includes': [ 'v8.gypi' ],
   'variables': {
+    'win_release_RuntimeLibrary': '2',
     'clang_use_chrome_plugins': 0,
     'openssl_fips': '',
     'openssl_no_asm': 1,
@@ -184,6 +185,10 @@
             ],
             'include_dirs': [
               '../../atom/node',
+              '../../../v8',
+              '../../../v8/include',
+              '<(SHARED_INTERMEDIATE_DIR)',
+              '<(SHARED_INTERMEDIATE_DIR)/include',
             ],
             # Node is using networking API but linking with this itself.
             'libraries': [ '-lwinmm.lib' ],
