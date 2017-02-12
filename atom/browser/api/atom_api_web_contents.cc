@@ -1033,12 +1033,12 @@ void WebContents::WebContentsDestroyed() {
 
   is_being_destroyed_ = true;
 
-  CommonWebContentsDelegate::DestroyWebContents();
-
   // clear out fullscreen state
   if (CommonWebContentsDelegate::IsFullscreenForTabOrPending(web_contents())) {
-    ExitFullscreenModeForTab(web_contents());
+    ExitFullscreenModeForTab(nullptr);
   }
+
+  CommonWebContentsDelegate::DestroyWebContents();
 
   memory_pressure_listener_.reset();
 

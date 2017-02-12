@@ -385,7 +385,8 @@ void CommonWebContentsDelegate::ExitFullscreenModeForTab(
     return;
   SetHtmlApiFullscreen(false);
   owner_window_->NotifyWindowLeaveHtmlFullScreen();
-  source->GetRenderViewHost()->GetWidget()->WasResized();
+  if (source)
+    source->GetRenderViewHost()->GetWidget()->WasResized();
 }
 
 bool CommonWebContentsDelegate::IsFullscreenForTabOrPending(
