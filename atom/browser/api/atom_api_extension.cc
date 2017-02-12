@@ -167,6 +167,9 @@ void Extension::NotifyLoadOnUIThread(
 
 void Extension::NotifyErrorOnUIThread(const std::string& error) {
   node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env)
+    return;
+
   mate::EmitEvent(isolate(),
                 env->process_object(),
                 "extension-load-error",
@@ -216,6 +219,9 @@ void Extension::OnExtensionReady(content::BrowserContext* browser_context,
   auto manifest = extension->manifest()->value()->CreateDeepCopy();
   install_info.Set("manifest", mate::ConvertToV8(isolate(), *manifest));
   node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env)
+    return;
+
   mate::EmitEvent(isolate(),
                   env->process_object(),
                   "EXTENSION_READY_INTERNAL",
@@ -226,6 +232,9 @@ void Extension::OnExtensionUnloaded(content::BrowserContext* browser_context,
                             const extensions::Extension* extension,
                             extensions::UnloadedExtensionInfo::Reason reason) {
   node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env)
+    return;
+
   mate::EmitEvent(isolate(),
                   env->process_object(),
                   "extension-unloaded",
