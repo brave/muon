@@ -64,7 +64,7 @@ index 6246f0ac0e7edfbe2272a577a648dcf08f868bb1..8dd41a110f63cb25f7bf3abfa9b42a3a
  
  {
    'variables': {
--    'protocol_path': '<(PRODUCT_DIR)/../../third_party/inspector_protocol',
+-    'protocol_path': '../../third_party/inspector_protocol',
 +    'protocol_path': '<(PRODUCT_DIR)/../../v8/third_party/inspector_protocol',
    },
    'includes': [
