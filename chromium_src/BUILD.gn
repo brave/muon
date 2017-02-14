@@ -76,7 +76,7 @@ source_set("common") {
     ]
 
     deps += [
-      "//electron/brave/common/extensions/api"
+      "//electron/brave/common/extensions/api:extensions_features"
     ]
   }
 
