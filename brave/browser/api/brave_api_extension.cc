@@ -1,19 +1,18 @@
-// Copyright (c) 2015 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 Brave authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "atom/browser/api/atom_api_extension.h"
+#include "brave/browser/api/brave_api_extension.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "atom/browser/api/atom_api_web_contents.h"
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"
-#include "atom/common/native_mate_converters/file_path_converter.h"
-#include "atom/common/native_mate_converters/string16_converter.h"
-#include "atom/common/native_mate_converters/value_converter.h"
+#include "atom/common/api/event_emitter_caller.h"
+#include "brave/common/converters/file_path_converter.h"
+#include "brave/common/converters/value_converter.h"
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
 #include "base/strings/string_util.h"
@@ -23,6 +22,7 @@
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/child/v8_value_converter.h"
 #include "content/public/common/url_constants.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
@@ -32,10 +32,11 @@
 #include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/background_info.h"
 #include "extensions/common/one_shot_event.h"
-#include "native_mate/converter.h"
-#include "native_mate/dictionary.h"
+#include "gin/dictionary.h"
 
-namespace mate {
+using content::V8ValueConverter;
+
+namespace gin {
 
 template<>
 struct Converter<extensions::Manifest::Location> {
@@ -71,7 +72,7 @@ struct Converter<extensions::Manifest::Location> {
   }
 };
 
-}  // namespace mate
+}  // namespace gin
 
 namespace {
 
@@ -99,14 +100,39 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
 
 }  // namespace
 
-namespace atom {
+namespace brave {
 
 namespace api {
 
+// Extension ===================================================================
+
+gin::WrapperInfo Extension::kWrapperInfo = { gin::kEmbedderNativeGin };
+
+// static
+gin::Handle<Extension> Extension::Create(v8::Isolate* isolate,
+    content::BrowserContext* browser_context) {
+  auto original_context = extensions::ExtensionsBrowserClient::Get()->
+        GetOriginalContext(browser_context);
+  return gin::CreateHandle(isolate,
+      new Extension(isolate,
+          static_cast<BraveBrowserContext*>(original_context)));
+}
+
+gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
+                                                        v8::Isolate* isolate) {
+  return gin::Wrappable<Extension>::GetObjectTemplateBuilder(isolate)
+      .SetMethod("load",
+                 base::Bind(&Extension::Load, base::Unretained(this)))
+      .SetMethod("enable",
+                 base::Bind(&Extension::Enable, base::Unretained(this)))
+      .SetMethod("disable",
+                 base::Bind(&Extension::Disable, base::Unretained(this)));
+}
+
 Extension::Extension(v8::Isolate* isolate,
-                 AtomBrowserContext* browser_context)
-    : browser_context_(browser_context) {
-  Init(isolate);
+                 BraveBrowserContext* browser_context)
+    : isolate_(isolate),
+      browser_context_(browser_context) {
   extensions::ExtensionRegistry::Get(browser_context_.get())->AddObserver(this);
 }
 
@@ -116,7 +142,6 @@ Extension::~Extension() {
         RemoveObserver(this);
   }
 }
-
 
 void Extension::LoadOnFILEThread(const base::FilePath path,
     std::unique_ptr<base::DictionaryValue> manifest,
@@ -176,7 +201,7 @@ void Extension::NotifyErrorOnUIThread(const std::string& error) {
                 error);
 }
 
-void Extension::Load(mate::Arguments* args) {
+void Extension::Load(gin::Arguments* args) {
   base::FilePath path;
   args->GetNext(&path);
 
@@ -209,15 +234,18 @@ void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {
 
 void Extension::OnExtensionReady(content::BrowserContext* browser_context,
                                 const extensions::Extension* extension) {
-  mate::Dictionary install_info = mate::Dictionary::CreateEmpty(isolate());
+  gin::Dictionary install_info = gin::Dictionary::CreateEmpty(isolate());
   install_info.Set("name", extension->non_localized_name());
   install_info.Set("id", extension->id());
   install_info.Set("url", extension->url().spec());
   install_info.Set("base_path", extension->path().value());
   install_info.Set("version", extension->VersionString());
   install_info.Set("description", extension->description());
-  auto manifest = extension->manifest()->value()->CreateDeepCopy();
-  install_info.Set("manifest", mate::ConvertToV8(isolate(), *manifest));
+  auto manifest_copy = extension->manifest()->value()->CreateDeepCopy();
+  std::unique_ptr<V8ValueConverter> converter(V8ValueConverter::create());
+  install_info.Set("manifest", converter->ToV8Value(manifest_copy.get(),
+      isolate()->GetCurrentContext()));
+
   node::Environment* env = node::Environment::GetCurrent(isolate());
   if (!env)
     return;
@@ -290,19 +318,6 @@ bool Extension::IsBackgroundPageWebContents(
 }
 
 // static
-bool Extension::IsBackgroundPage(const WebContents* web_contents) {
-  return IsBackgroundPageWebContents(web_contents->web_contents());
-}
-
-// static
-v8::Local<v8::Value> Extension::TabValue(v8::Isolate* isolate,
-                    WebContents* web_contents) {
-  std::unique_ptr<base::DictionaryValue> value(
-      extensions::TabHelper::CreateTabValue(web_contents->web_contents()));
-  return mate::ConvertToV8(isolate, *value);
-}
-
-// static
 bool Extension::HandleURLOverride(GURL* url,
         content::BrowserContext* browser_context) {
   return false;
@@ -313,41 +328,6 @@ bool Extension::HandleURLOverrideReverse(GURL* url,
   return false;
 }
 
-// static
-mate::Handle<Extension> Extension::Create(
-    v8::Isolate* isolate,
-    content::BrowserContext* browser_context) {
-  auto original_context = extensions::ExtensionsBrowserClient::Get()->
-        GetOriginalContext(browser_context);
-  return mate::CreateHandle(isolate,
-      new Extension(isolate,
-          static_cast<AtomBrowserContext*>(original_context)));
-}
-
-// static
-void Extension::BuildPrototype(v8::Isolate* isolate,
-                              v8::Local<v8::FunctionTemplate> prototype) {
-  prototype->SetClassName(mate::StringToV8(isolate, "Extension"));
-  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
-    .SetMethod("load", &Extension::Load)
-    .SetMethod("enable", &Extension::Enable)
-    .SetMethod("disable", &Extension::Disable);
-}
-
 }  // namespace api
 
-}  // namespace atom
-
-namespace {
-
-void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
-                v8::Local<v8::Context> context, void* priv) {
-  v8::Isolate* isolate = context->GetIsolate();
-  mate::Dictionary dict(isolate, exports);
-  dict.SetMethod("tabValue", &atom::api::Extension::TabValue);
-  dict.SetMethod("isBackgroundPage", &atom::api::Extension::IsBackgroundPage);
-}
-
-}  // namespace
-
-NODE_MODULE_CONTEXT_AWARE_BUILTIN(atom_browser_extension, Initialize)
+}  // namespace brave

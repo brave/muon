@@ -7,9 +7,9 @@
 #include <map>
 #include <set>
 
-#include "atom/browser/api/atom_api_extension.h"
 #include "atom/common/api/api_messages.h"
 #include "base/command_line.h"
+#include "brave/browser/api/brave_api_extension.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_manager.h"
@@ -440,10 +440,10 @@ void AtomBrowserClientExtensionsPart::SiteInstanceDeleting(
 
 void AtomBrowserClientExtensionsPart::BrowserURLHandlerCreated(
     BrowserURLHandler* handler) {
-  handler->AddHandlerPair(&atom::api::Extension::HandleURLOverride,
+  handler->AddHandlerPair(&brave::api::Extension::HandleURLOverride,
                           BrowserURLHandler::null_handler());
   handler->AddHandlerPair(BrowserURLHandler::null_handler(),
-                          &atom::api::Extension::HandleURLOverrideReverse);
+                          &brave::api::Extension::HandleURLOverrideReverse);
 }
 
 void AtomBrowserClientExtensionsPart::

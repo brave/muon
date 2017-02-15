@@ -79,6 +79,7 @@
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/child/v8_value_converter.h"
 #include "content/public/common/context_menu_params.h"
 #include "content/public/common/window_container_type.mojom.h"
 #include "native_mate/dictionary.h"
@@ -98,8 +99,8 @@
 #include "atom/common/node_includes.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/tab_helper.h"
+#include "brave/browser/api/brave_api_extension.h"
 #include "extensions/browser/api/extensions_api_client.h"
 #endif
 
@@ -485,7 +486,7 @@ void WebContents::AddNewContents(content::WebContents* source,
                     const gfx::Rect& initial_rect,
                     bool user_gesture,
                     bool* was_blocked) {
-  if (Extension::IsBackgroundPageWebContents(source)) {
+  if (brave::api::Extension::IsBackgroundPageWebContents(source)) {
     user_gesture = true;
   }
 
@@ -1075,7 +1076,7 @@ int WebContents::GetID() const {
 
 WebContents::Type WebContents::GetType() const {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  if (Extension::IsBackgroundPage(this))
+  if (brave::api::Extension::IsBackgroundPageWebContents(web_contents()))
     return BACKGROUND_PAGE;
 #endif
   return type_;
@@ -1877,6 +1878,19 @@ void WebContents::OnMemoryPressure(
   }
 }
 
+bool WebContents::IsBackgroundPage() {
+  return brave::api::Extension::IsBackgroundPageWebContents(web_contents());
+}
+
+v8::Local<v8::Value> WebContents::TabValue() {
+  std::unique_ptr<base::DictionaryValue> value(
+      extensions::TabHelper::CreateTabValue(web_contents()));
+
+  std::unique_ptr<content::V8ValueConverter>
+      converter(content::V8ValueConverter::create());
+  return converter->ToV8Value(value.get(), isolate()->GetCurrentContext());
+}
+
 int32_t WebContents::ID() const {
   return weak_map_id();
 }
@@ -2022,6 +2036,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
       .SetMethod("setTabValues", &WebContents::SetTabValues)
+      .SetMethod("isBackgroundPage", &WebContents::IsBackgroundPage)
+      .SetMethod("tabValue", &WebContents::TabValue)
 #endif
       .SetMethod("close", &WebContents::CloseContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)

@@ -431,6 +431,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void OnMemoryPressure(
       base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level);
 
+  bool IsBackgroundPage();
+  v8::Local<v8::Value> TabValue();
+
  private:
   friend brave::TabViewGuest;
   AtomBrowserContext* GetBrowserContext() const;

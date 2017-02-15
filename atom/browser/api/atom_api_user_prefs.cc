@@ -13,6 +13,7 @@
 #include "components/pref_registry/pref_registry_syncable.h"
 #include "components/sync_preferences/pref_service_syncable.h"
 #include "content/public/browser/browser_thread.h"
+#include "native_mate/object_template_builder.h"
 
 namespace mate {
 

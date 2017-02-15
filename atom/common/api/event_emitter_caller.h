@@ -8,9 +8,23 @@
 #include <vector>
 
 #include "gin/converter.h"
+#include "gin/dictionary.h"
 #include "native_mate/converter.h"
 
 namespace mate {
+
+template<>
+struct Converter<gin::Dictionary> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate, gin::Dictionary val) {
+    return gin::Converter<gin::Dictionary>::ToV8(isolate, val);
+  }
+
+  static bool FromV8(v8::Isolate* isolate,
+                                   v8::Local<v8::Value> val,
+                                   gin::Dictionary* out) {
+    return gin::Converter<gin::Dictionary>::FromV8(isolate, val, out);;
+  }
+};
 
 namespace internal {
 
@@ -44,7 +58,7 @@ v8::Local<v8::Value> EmitEvent(v8::Isolate* isolate,
                                const Args&... args) {
   internal::ValueVector converted_args = {
       gin::StringToV8(isolate, name),
-      ConvertToV8(isolate, args)...,
+      mate::ConvertToV8(isolate, args)...,
   };
   return internal::CallEmitWithArgs(isolate, obj, &converted_args);
 }
