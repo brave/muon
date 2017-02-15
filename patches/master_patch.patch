@@ -2018,6 +2018,37 @@ index 8cfc8cb441afa19109e320c0a6405f79e9878a85..606282f28dfea8b9104c3f9d0bbd4c85
    };
  
    proto.attachedCallback = function() {
+diff --git a/gin/object_template_builder.h b/gin/object_template_builder.h
+index bf0ece1e723ba1a0644961cfd3a01ce3c14c892a..5e7d3dbb9da51a5abb0447bc04c90c9bee6b9324 100644
+--- a/gin/object_template_builder.h
++++ b/gin/object_template_builder.h
+@@ -26,7 +26,7 @@ template<typename T, typename Enable = void>
+ struct CallbackTraits {
+   static v8::Local<v8::FunctionTemplate> CreateTemplate(v8::Isolate* isolate,
+                                                          T callback) {
+-    return CreateFunctionTemplate(isolate, base::Bind(callback));
++    return gin::CreateFunctionTemplate(isolate, base::Bind(callback));
+   }
+   static void SetAsFunctionHandler(v8::Isolate* isolate,
+                                    v8::Local<v8::ObjectTemplate> tmpl,
+@@ -40,7 +40,7 @@ template<typename T>
+ struct CallbackTraits<base::Callback<T> > {
+   static v8::Local<v8::FunctionTemplate> CreateTemplate(
+       v8::Isolate* isolate, const base::Callback<T>& callback) {
+-    return CreateFunctionTemplate(isolate, callback);
++    return gin::CreateFunctionTemplate(isolate, callback);
+   }
+   static void SetAsFunctionHandler(v8::Isolate* isolate,
+                                    v8::Local<v8::ObjectTemplate> tmpl,
+@@ -59,7 +59,7 @@ struct CallbackTraits<
+     typename std::enable_if<std::is_member_function_pointer<T>::value>::type> {
+   static v8::Local<v8::FunctionTemplate> CreateTemplate(v8::Isolate* isolate,
+                                                          T callback) {
+-    return CreateFunctionTemplate(isolate, base::Bind(callback),
++    return gin::CreateFunctionTemplate(isolate, base::Bind(callback),
+                                   HolderIsFirstArgument);
+   }
+   static void SetAsFunctionHandler(v8::Isolate* isolate,
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
 index 99b7192c838d500ce2bec2b783834f0bb94dfd22..ad92a5fbd7967af840fac0e2b6c65bf615b273be 100644
 --- a/net/http/http_util.cc

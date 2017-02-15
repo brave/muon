@@ -63,7 +63,7 @@
 #endif
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "atom/browser/api/atom_api_extension.h"
+#include "brave/browser/api/brave_api_extension.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "content/public/browser/notification_types.h"
 #endif
@@ -534,7 +534,7 @@ void App::Observe(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC
-      if (Extension::IsBackgroundPageUrl(url, browser_context)) {
+      if (brave::api::Extension::IsBackgroundPageUrl(url, browser_context)) {
         WebContents::CreateFrom(isolate(), web_contents);
       }
 #endif

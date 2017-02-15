@@ -9,7 +9,6 @@
 
 #include "atom/browser/extensions/atom_extension_system.h"
 
-#include "atom/browser/api/atom_api_extension.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "atom/browser/extensions/shared_user_script_master.h"

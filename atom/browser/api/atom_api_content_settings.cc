@@ -12,6 +12,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/content_settings/core/common/content_settings_pattern.h"
+#include "native_mate/object_template_builder.h"
 
 namespace mate {
 

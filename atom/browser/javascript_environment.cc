@@ -4,7 +4,10 @@
 
 #include "atom/browser/javascript_environment.h"
 
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "base/command_line.h"
 #include "base/i18n/icu_util.h"
@@ -13,16 +16,77 @@
 #include "gin/array_buffer.h"
 #include "gin/v8_initializer.h"
 
+#include "extensions/common/features/feature.h"
+#include "extensions/renderer/logging_native_handler.h"
+#include "extensions/renderer/module_system.h"
+#include "extensions/renderer/native_handler.h"
+#include "extensions/renderer/resource_bundle_source_map.h"
+#include "extensions/renderer/script_context.h"
+#include "extensions/renderer/utils_native_handler.h"
+#include "ui/base/resource/resource_bundle.h"
+
+using extensions::Feature;
+using extensions::LoggingNativeHandler;
+using extensions::ModuleSystem;
+using extensions::NativeHandler;
+using extensions::ResourceBundleSourceMap;
+using extensions::ScriptContext;
+using extensions::UtilsNativeHandler;
+using ui::ResourceBundle;
+
 namespace atom {
+
+namespace {
+
+std::vector<base::FilePath> GetModuleSearchPaths() {
+  // std::vector<base::FilePath> search_paths(2);
+  // PathService::Get(base::DIR_SOURCE_ROOT, &search_paths[0]);
+  // PathService::Get(base::DIR_EXE, &search_paths[1]);
+  // search_paths[1] = search_paths[1].AppendASCII("gen");
+  // return search_paths;
+  return std::vector<base::FilePath>();
+}
+
+}  // namespace
+
+RunnerDelegate::RunnerDelegate() :
+    gin::ModuleRunnerDelegate(GetModuleSearchPaths()) {
+}
+
+RunnerDelegate::~RunnerDelegate() {}
+
+v8::Local<v8::ObjectTemplate> RunnerDelegate::GetGlobalTemplate(
+      gin::ShellRunner* runner,
+      v8::Isolate* isolate) {
+  return v8::Local<v8::ObjectTemplate>();
+}
 
 JavascriptEnvironment::JavascriptEnvironment()
     : initialized_(Initialize()),
       isolate_(isolate_holder_.isolate()),
-      isolate_scope_(isolate_),
       locker_(isolate_),
-      handle_scope_(isolate_),
-      context_(isolate_, v8::Context::New(isolate_)),
-      context_scope_(v8::Local<v8::Context>::New(isolate_, context_)) {
+      runner_(new gin::ShellRunner(&delegate_, isolate_)),
+      scope_(runner_.get()),
+      source_map_(&ResourceBundle::GetSharedInstance()) {
+  script_context_.reset(new ScriptContext(context(),
+                                   nullptr,  // WebFrame
+                                   nullptr,  // Extension
+                                   Feature::BLESSED_EXTENSION_CONTEXT,
+                                   nullptr,  // Effective Extension
+                                   Feature::BLESSED_EXTENSION_CONTEXT));
+  script_context_->v8_context()->Enter();
+  {
+    std::unique_ptr<extensions::ModuleSystem> module_system(
+        new ModuleSystem(script_context_.get(), &source_map_));
+    script_context_->set_module_system(std::move(module_system));
+  }
+}
+
+JavascriptEnvironment::~JavascriptEnvironment() {
+  if (script_context_.get() && script_context_->is_valid()) {
+    script_context_->v8_context()->Exit();
+    script_context_->Invalidate();
+  }
 }
 
 void JavascriptEnvironment::OnMessageLoopCreated() {

@@ -318,8 +318,6 @@ source_set("browser") {
 
   if (enable_extensions) {
     sources += [
-      "api/atom_api_extension.cc",
-      "api/atom_api_extension.h",
       "extensions/api/atom_extensions_api_client.cc",
       "extensions/api/atom_extensions_api_client.h",
       "extensions/atom_browser_client_extensions_part.cc",

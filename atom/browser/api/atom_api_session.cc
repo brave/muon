@@ -58,7 +58,7 @@
 #include "ui/base/l10n/l10n_util.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "atom/browser/api/atom_api_extension.h"
+#include "brave/browser/api/brave_api_extension.h"
 #include "extensions/browser/extensions_browser_client.h"
 #endif
 
@@ -565,7 +565,7 @@ v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
 v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (extensions_.IsEmpty()) {
-    auto handle = atom::api::Extension::Create(isolate, browser_context());
+    auto handle = brave::api::Extension::Create(isolate, browser_context());
     extensions_.Reset(isolate, handle.ToV8());
   }
 #endif

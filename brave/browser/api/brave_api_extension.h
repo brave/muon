@@ -1,19 +1,20 @@
-// Copyright (c) 2015 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2016 Brave authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ATOM_BROWSER_API_ATOM_API_EXTENSION_H_
-#define ATOM_BROWSER_API_ATOM_API_EXTENSION_H_
+#ifndef BRAVE_BROWSER_API_BRAVE_API_EXTENSION_H_
+#define BRAVE_BROWSER_API_BRAVE_API_EXTENSION_H_
 
 #include <memory>
 #include <string>
 
-#include "atom/browser/api/trackable_object.h"
-#include "atom/browser/atom_browser_context.h"
+#include "brave/browser/brave_browser_context.h"
 #include "extensions/browser/extension_registry_observer.h"
 #include "extensions/common/extension_set.h"
 #include "extensions/common/manifest.h"
-#include "native_mate/handle.h"
+#include "gin/handle.h"
+#include "gin/object_template_builder.h"
+#include "gin/wrappable.h"
 
 namespace base {
 class FilePath;
@@ -27,25 +28,19 @@ namespace extensions {
 class Extension;
 }
 
-namespace mate {
-class Dictionary;
-}
-
-namespace atom {
+namespace brave {
 
 namespace api {
 
-class WebContents;
-
-class Extension : public mate::TrackableObject<Extension>,
-                  public extensions::ExtensionRegistryObserver {
+class Extension : public gin::Wrappable<Extension>,
+                         extensions::ExtensionRegistryObserver {
  public:
-  static mate::Handle<Extension> Create(v8::Isolate* isolate,
-                                    content::BrowserContext* browser_context);
-  // mate::TrackableObject:
-  static void BuildPrototype(v8::Isolate* isolate,
-                             v8::Local<v8::FunctionTemplate> prototype);
+  static gin::WrapperInfo kWrapperInfo;
+  static gin::Handle<Extension> Create(v8::Isolate* isolate,
+                                      content::BrowserContext* browser_context);
 
+  gin::ObjectTemplateBuilder
+      GetObjectTemplateBuilder(v8::Isolate* isolate) override;
   static bool HandleURLOverride(GURL* url,
                                      content::BrowserContext* browser_context);
   static bool HandleURLOverrideReverse(GURL* url,
@@ -54,12 +49,9 @@ class Extension : public mate::TrackableObject<Extension>,
   static bool IsBackgroundPageUrl(GURL url,
                                     content::BrowserContext* browser_context);
   static bool IsBackgroundPageWebContents(content::WebContents* web_contents);
-  static bool IsBackgroundPage(const WebContents* web_contents);
-  static v8::Local<v8::Value> TabValue(v8::Isolate* isolate,
-                                         WebContents* web_contents);
 
  protected:
-  Extension(v8::Isolate* isolate, AtomBrowserContext* browser_context);
+  Extension(v8::Isolate* isolate, BraveBrowserContext* browser_context);
   ~Extension() override;
 
   void NotifyLoadOnUIThread(scoped_refptr<extensions::Extension> extension);
@@ -68,7 +60,7 @@ class Extension : public mate::TrackableObject<Extension>,
       std::unique_ptr<base::DictionaryValue> manifest,
       extensions::Manifest::Location manifest_location,
       int flags);
-  void Load(mate::Arguments* args);
+  void Load(gin::Arguments* args);
   void AddExtension(scoped_refptr<extensions::Extension> extension);
   void OnExtensionReady(content::BrowserContext* browser_context,
                         const extensions::Extension* extension) override;
@@ -79,15 +71,17 @@ class Extension : public mate::TrackableObject<Extension>,
 
   void Disable(const std::string& extension_id);
   void Enable(const std::string& extension_id);
+  v8::Isolate* isolate() { return isolate_; }
 
  private:
-  scoped_refptr<AtomBrowserContext> browser_context_;
+  v8::Isolate* isolate_;  // not owned
+  scoped_refptr<BraveBrowserContext> browser_context_;
 
   DISALLOW_COPY_AND_ASSIGN(Extension);
 };
 
 }  // namespace api
 
-}  // namespace atom
+}  // namespace brave
 
-#endif  // ATOM_BROWSER_API_ATOM_API_EXTENSION_H_
+#endif  // BRAVE_BROWSER_API_BRAVE_API_EXTENSION_H_
