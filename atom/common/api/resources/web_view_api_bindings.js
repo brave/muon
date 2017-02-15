@@ -40,6 +40,7 @@ const asyncMethods = [
   'inspectServiceWorker',
   'print',
   'printToPDF',
+  'showCertificate',
   'showDefinitionForSelection',
   'capturePage',
   'setActive',

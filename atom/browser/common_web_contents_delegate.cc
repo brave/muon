@@ -19,6 +19,7 @@
 #include "base/files/file_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_javascript_dialog_manager.h"
+#include "chrome/browser/certificate_viewer.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
@@ -319,6 +320,17 @@ void CommonWebContentsDelegate::ExitFullscreenModeForTab(
 bool CommonWebContentsDelegate::IsFullscreenForTabOrPending(
     const content::WebContents* source) const {
   return html_fullscreen_;
+}
+
+void CommonWebContentsDelegate::ShowCertificateViewerInDevTools(
+    content::WebContents* web_contents,
+    scoped_refptr<net::X509Certificate> certificate) {
+  // TODO(Anthony): Support linux certificate viewing modal
+#if !defined(OS_LINUX)
+  ::ShowCertificateViewer(web_contents_->GetWebContents(),
+                          owner_window_->GetNativeWindow(),
+                          certificate.get());
+#endif
 }
 
 blink::WebSecurityStyle CommonWebContentsDelegate::GetSecurityStyle(

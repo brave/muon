@@ -81,6 +81,9 @@ class CommonWebContentsDelegate
   void ExitFullscreenModeForTab(content::WebContents* source) override;
   bool IsFullscreenForTabOrPending(
       const content::WebContents* source) const override;
+  void ShowCertificateViewerInDevTools(
+      content::WebContents* web_contents,
+      scoped_refptr<net::X509Certificate> certificate) override;
   blink::WebSecurityStyle GetSecurityStyle(
       content::WebContents* web_contents,
       content::SecurityStyleExplanations* explanations) override;
