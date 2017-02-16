@@ -1276,7 +1276,7 @@ void NativeWindowMac::UninstallView() {
 
 void NativeWindowMac::UpdateDraggableRegionViews(
     const std::vector<DraggableRegion>& regions) {
-  if (has_frame())
+  if (has_frame() || !web_contents())
     return;
 
   // All ControlRegionViews should be added as children of the WebContentsView,
