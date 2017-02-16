@@ -12,6 +12,7 @@
 #include "base/strings/string_util.h"
 #include "brightray/browser/net/devtools_network_transaction.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/websocket_handshake_request_info.h"
 #include "extensions/features/features.h"
 #include "net/url_request/url_request.h"
 
@@ -82,10 +83,22 @@ int GetTabId(net::URLRequest* request) {
   int tab_id = -1;
   extensions::ExtensionApiFrameIdMap::FrameData frame_data;
   if (content::ResourceRequestInfo::GetRenderFrameForRequest(
-          request, &render_process_id, &render_frame_id) &&
-      extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
-          render_process_id, render_frame_id, &frame_data)) {
-    tab_id = frame_data.tab_id;
+          request, &render_process_id, &render_frame_id)) {
+    if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
+            render_process_id, render_frame_id, &frame_data)) {
+      tab_id = frame_data.tab_id;
+    }
+  } else {
+    const content::WebSocketHandshakeRequestInfo* websocket_info =
+      content::WebSocketHandshakeRequestInfo::ForRequest(request);
+    if (websocket_info) {
+      render_frame_id = websocket_info->GetRenderFrameId();
+      render_process_id = websocket_info->GetChildId();
+      if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
+              render_process_id, render_frame_id, &frame_data)) {
+        tab_id = frame_data.tab_id;
+      }
+    }
   }
   return tab_id;
 #else
