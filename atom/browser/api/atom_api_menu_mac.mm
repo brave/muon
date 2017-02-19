@@ -6,24 +6,42 @@
 
 #include "atom/browser/native_window.h"
 #include "atom/browser/unresponsive_suppressor.h"
+#include "base/mac/scoped_sending_event.h"
 #include "base/message_loop/message_loop.h"
 #include "base/strings/sys_string_conversions.h"
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
+#include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
 
 #include "atom/common/node_includes.h"
+
+using content::BrowserThread;
 
 namespace atom {
 
 namespace api {
 
 MenuMac::MenuMac(v8::Isolate* isolate, v8::Local<v8::Object> wrapper)
-    : Menu(isolate, wrapper) {
+    : Menu(isolate, wrapper),
+      weak_factory_(this) {
 }
 
-void MenuMac::PopupAt(Window* window, int x, int y, int positioning_item) {
+void MenuMac::PopupAt(
+    Window* window, int x, int y, int positioning_item) {
   NativeWindow* native_window = window->window();
+  if (!native_window)
+    return;
+
+  auto popup = base::Bind(&MenuMac::PopupOnUI, weak_factory_.GetWeakPtr(),
+                          native_window->GetWeakPtr(), window->ID(), x, y,
+                          positioning_item);
+
+  BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, popup);
+}
+
+void MenuMac::PopupOnUI(const base::WeakPtr<NativeWindow>& native_window,
+                        int32_t window_id, int x, int y, int positioning_item) {
   if (!native_window)
     return;
   brightray::InspectableWebContents* web_contents =
@@ -31,10 +49,12 @@ void MenuMac::PopupAt(Window* window, int x, int y, int positioning_item) {
   if (!web_contents || !web_contents->GetWebContents())
     return;
 
-  base::scoped_nsobject<AtomMenuController> menu_controller(
-      [[AtomMenuController alloc] initWithModel:model_.get()
+  auto close_callback = base::Bind(&MenuMac::ClosePopupAt,
+                                   weak_factory_.GetWeakPtr(), window_id);
+  popup_controllers_[window_id] = base::scoped_nsobject<AtomMenuController>(
+      [[AtomMenuController alloc] initWithModel:model()
                           useDefaultAccelerator:NO]);
-  NSMenu* menu = [menu_controller menu];
+  NSMenu* menu = [popup_controllers_[window_id] menu];
   NSView* view = web_contents->GetWebContents()->GetNativeView();
 
   // Which menu item to show.
@@ -69,11 +89,25 @@ void MenuMac::PopupAt(Window* window, int x, int y, int positioning_item) {
   if (rightmostMenuPoint > screenRight)
     position.x = position.x - [menu size].width;
 
+  [popup_controllers_[window_id] setCloseCallback:close_callback];
+  // Make sure events can be pumped while the menu is up.
+  base::MessageLoop::ScopedNestableTaskAllower allow(
+      base::MessageLoop::current());
+
+  // One of the events that could be pumped is |window.close()|.
+  // User-initiated event-tracking loops protect against this by
+  // setting flags in -[CrApplication sendEvent:], but since
+  // web-content menus are initiated by IPC message the setup has to
+  // be done manually.
+  base::mac::ScopedSendingEvent sendingEventScoper;
+
   // Don't emit unresponsive event when showing menu.
   atom::UnresponsiveSuppressor suppressor;
-
-  // Show the menu.
   [menu popUpMenuPositioningItem:item atLocation:position inView:view];
+}
+
+void MenuMac::ClosePopupAt(int32_t window_id) {
+  popup_controllers_.erase(window_id);
 }
 
 // static
