@@ -83,20 +83,26 @@ index 2bb96c75cbeb333f20ab89a7243874fedc99099c..2eccbefa34bff6a88e2b4a458d62da89
        default_output_extension = ".a"
        output_prefix = "lib"
 diff --git a/build/toolchain/win/BUILD.gn b/build/toolchain/win/BUILD.gn
-index ccc0a9435f6fd2ab5da717e0b13066cdab60cd21..4019aab4f833516cda9eaac1131ba9da1551de1e 100644
+index ccc0a9435f6fd2ab5da717e0b13066cdab60cd21..f5ae6c0893ae841340953f2ead0c95a2a05ff5d3 100644
 --- a/build/toolchain/win/BUILD.gn
 +++ b/build/toolchain/win/BUILD.gn
-@@ -23,7 +23,9 @@ tool_wrapper_path = rebase_path("tool_wrapper.py", root_build_dir)
+@@ -6,6 +6,7 @@ import("//build/config/clang/clang.gni")
+ import("//build/config/compiler/compiler.gni")
+ import("//build/config/sanitizers/sanitizers.gni")
+ import("//build/config/win/visual_studio_version.gni")
++import("//build/toolchain/cc_wrapper.gni")
+ import("//build/toolchain/goma.gni")
+ import("//build/toolchain/toolchain.gni")
+ 
+@@ -23,6 +24,8 @@ tool_wrapper_path = rebase_path("tool_wrapper.py", root_build_dir)
  
  if (use_goma) {
    goma_prefix = "$goma_dir/gomacc.exe "
--} else {
-+} else if (cc_wrapper) {
++} else if (cc_wrapper != "") {
 +  goma_prefix = "$cc_wrapper "
-+} else
+ } else {
    goma_prefix = ""
  }
- 
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
 index 24e39797b9732dd435f71bf21ead3e80c2c98a50..cef3fc7e07f95b7e7260aed46149e79ee8e9aba3 100644
 --- a/chrome/BUILD.gn
