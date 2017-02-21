@@ -5,6 +5,7 @@ source_set("converters") {
 
   sources = [
     "file_path_converter.h",
+    "string16_converter.h",
     "value_converter.cc",
     "value_converter.h",
   ]

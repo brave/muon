@@ -8,6 +8,7 @@
 #include <string>
 
 #include "base/files/file_path.h"
+#include "brave/common/converters/string16_converter.h"
 #include "gin/converter.h"
 
 namespace gin {
