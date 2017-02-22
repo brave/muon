@@ -32,7 +32,7 @@ json_schema_api("api_registration") {
 }
 
 json_features("api_features") {
-  feature_class = "APIFeature"
+  feature_type = "APIFeature"
   provider_class = "BraveAPIFeatureProvider"
   sources = [
     "../../../../../chrome/common/extensions/api/_api_features.json",
@@ -42,7 +42,7 @@ json_features("api_features") {
 }
 
 json_features("permission_features") {
-  feature_class = "PermissionFeature"
+  feature_type = "PermissionFeature"
   provider_class = "BravePermissionFeatureProvider"
   sources = [
     "../../../../../chrome/common/extensions/api/_permission_features.json",
@@ -52,7 +52,7 @@ json_features("permission_features") {
 }
 
 json_features("manifest_features") {
-  feature_class = "ManifestFeature"
+  feature_type = "ManifestFeature"
   provider_class = "BraveManifestFeatureProvider"
   sources = [
     "../../../../../chrome/common/extensions/api/_manifest_features.json",
@@ -62,7 +62,7 @@ json_features("manifest_features") {
 }
 
 json_features("behavior_features") {
-  feature_class = "BehaviorFeature"
+  feature_type = "BehaviorFeature"
   provider_class = "BraveBehaviorFeatureProvider"
   sources = [
     "../../../../../extensions/common/api/_behavior_features.json",
