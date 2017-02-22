@@ -3,6 +3,7 @@ import("//build/config/chrome_build.gni")
 import("//build/config/compiler/compiler.gni")
 import("//build/config/features.gni")
 import("//extensions/features/features.gni")
+import("//ppapi/features/features.gni")
 import("//printing/features/features.gni")
 
 
