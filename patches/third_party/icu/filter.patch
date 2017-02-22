@@ -1,5 +1,5 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5b1b2a537 100644
+index 4e9364b7eabd9bf024632f7df41ae66a436fc632..51630abd9d7f2766042518f35db7f662e0c26f91 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -3,6 +3,7 @@
@@ -66,7 +66,7 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
  
    include_dirs = [
      "source/common",
-@@ -96,7 +136,7 @@ config("icu_code") {
+@@ -100,7 +140,7 @@ config("icu_code") {
    }
  }
  
@@ -75,7 +75,7 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
    # find  source/i18n -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
    # sort | sed 's/^\(.*\)$/    "\1",/'
    sources = [
-@@ -521,7 +561,7 @@ component("icui18n") {
+@@ -525,7 +565,7 @@ component("icui18n") {
  
    defines = [ "U_I18N_IMPLEMENTATION" ]
    deps = [
@@ -84,8 +84,8 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
    ]
  
    # ICU uses RTTI, replace the default "no rtti" config.
-@@ -546,7 +586,7 @@ component("icui18n") {
-   }
+@@ -542,7 +582,7 @@ component("icui18n") {
+   public_configs = [ ":icu_config" ]
  }
  
 -component("icuuc") {
@@ -93,7 +93,7 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
    # find  source/common -maxdepth 1  ! -type d  | egrep  '\.(c|cpp|h)$' |\
    # sort | sed 's/^\(.*\)$/    "\1",/'
    sources = [
-@@ -967,6 +1007,7 @@ if (is_android && enable_java_templates) {
+@@ -963,6 +1003,7 @@ if (is_android && enable_java_templates) {
    }
  }
  
@@ -101,7 +101,7 @@ index ac6b2bb01f73a9d582e1900ef7255d318e001230..aa143dbd0eca92a666d76695b527ffd5
  # TODO(GYP): Gyp has considerations here for QNX and for the host toolchain
  #  that have not been ported over.
  if (is_android) {
-@@ -1032,3 +1073,4 @@ if (icu_use_data_file) {
+@@ -1028,3 +1069,4 @@ if (icu_use_data_file) {
      }
    }
  }

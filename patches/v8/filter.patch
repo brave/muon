@@ -1,8 +1,8 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 8587356ddcca34cdcad716ba7395666ec7ce4380..ad3e31e8ae859c0b02a57b6d2867ae4afa5d7834 100644
+index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..7e8036c1a863ce8ba8c5af9f11c199bb87e4919f 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -105,6 +105,13 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
+@@ -121,6 +121,13 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
  v8_random_seed = "314159265"
  v8_toolset_for_shell = "host"
  
@@ -16,7 +16,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..ad3e31e8ae859c0b02a57b6d2867ae4a
  ###############################################################################
  # Configurations
  #
-@@ -619,7 +626,7 @@ if (v8_use_external_startup_data) {
+@@ -635,7 +642,7 @@ if (v8_use_external_startup_data) {
      ]
  
      outputs = [
@@ -25,7 +25,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..ad3e31e8ae859c0b02a57b6d2867ae4a
      ]
  
      script = "tools/concatenate-files.py"
-@@ -690,10 +697,10 @@ action("run_mksnapshot") {
+@@ -706,10 +713,10 @@ action("run_mksnapshot") {
    }
  
    if (v8_use_external_startup_data) {
@@ -38,11 +38,10 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..ad3e31e8ae859c0b02a57b6d2867ae4a
      ]
    }
  
-@@ -2527,6 +2534,17 @@ if (is_component_build) {
-       ":v8_base",
+@@ -2582,6 +2589,16 @@ if (is_component_build) {
        ":v8_maybe_snapshot",
      ]
-+
+ 
 +    if (muon_build) {
 +      public_deps -= [
 +        ":v8_base",
@@ -56,16 +55,3 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..ad3e31e8ae859c0b02a57b6d2867ae4a
      public_configs = [ ":external_config" ]
    }
  }
-diff --git a/src/inspector/inspector.gyp b/src/inspector/inspector.gyp
-index 6246f0ac0e7edfbe2272a577a648dcf08f868bb1..8dd41a110f63cb25f7bf3abfa9b42a3a910e78e0 100644
---- a/src/inspector/inspector.gyp
-+++ b/src/inspector/inspector.gyp
-@@ -4,7 +4,7 @@
- 
- {
-   'variables': {
--    'protocol_path': '../../third_party/inspector_protocol',
-+    'protocol_path': '<(PRODUCT_DIR)/../../v8/third_party/inspector_protocol',
-   },
-   'includes': [
-     'inspector.gypi',
