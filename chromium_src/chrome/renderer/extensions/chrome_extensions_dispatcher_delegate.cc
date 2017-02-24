@@ -213,8 +213,7 @@ void ChromeExtensionsDispatcherDelegate::PopulateSourceMap(
 }
 
 void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
-    extensions::ScriptContext* context,
-    bool is_within_platform_app) {
+    extensions::ScriptContext* context) {
   extensions::ModuleSystem* module_system = context->module_system();
   extensions::Feature::Context context_type = context->context_type();
 

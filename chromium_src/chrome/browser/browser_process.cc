@@ -30,7 +30,7 @@
 #include "ui/base/resource/resource_bundle.h"
 #endif
 
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "chrome/browser/plugins/plugin_finder.h"
 #include "content/public/browser/plugin_service.h"
@@ -54,8 +54,6 @@ BrowserProcess::BrowserProcess()
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
       extensions::kExtensionScheme);
-  content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
-      extensions::kExtensionResourceScheme);
 
   extension_event_router_forwarder_ = new extensions::EventRouterForwarder;
 
@@ -157,12 +155,12 @@ void BrowserProcess::PreCreateThreads() {
 }
 
 void BrowserProcess::PreMainMessageLoopRun() {
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
   PluginService* plugin_service = PluginService::GetInstance();
   plugin_service->SetFilter(BravePluginServiceFilter::GetInstance());
 
   // Triggers initialization of the singleton instance on UI thread.
   PluginFinder::GetInstance()->Init();
 
-#endif  // defined(ENABLE_PLUGINS)
+#endif  // BUILDFLAG(ENABLE_PLUGINS)
 }

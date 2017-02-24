@@ -2906,9 +2906,6 @@
       ['enable_plugin_installation==1', {
         'defines': ['ENABLE_PLUGIN_INSTALLATION=1'],
       }],
-      ['enable_plugins==1', {
-        'defines': ['ENABLE_PLUGINS=1'],
-      }],
       ['enable_session_service==1', {
         'defines': ['ENABLE_SESSION_SERVICE=1'],
       }],

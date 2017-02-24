@@ -8,7 +8,7 @@
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "extensions/features/features.h"
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
 #include "chrome/browser/plugins/plugin_prefs_factory.h"
 #endif
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -67,7 +67,7 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
 #endif
   CookieSettingsFactory::GetInstance();
   HostContentSettingsMapFactory::GetInstance();
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
   PluginPrefsFactory::GetInstance();
 #endif
   ProtocolHandlerRegistryFactory::GetInstance();

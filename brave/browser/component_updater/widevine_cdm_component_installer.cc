@@ -39,7 +39,7 @@
 #include "components/component_updater/default_component_installer.h"
 #include "components/version_info/version_info.h"
 #include "content/public/browser/browser_thread.h"
-#include "content/public/browser/cdm_service.h"
+#include "content/public/browser/cdm_registry.h"
 #include "content/public/browser/plugin_service.h"
 #include "content/public/common/cdm_info.h"
 #include "content/public/common/pepper_plugin_info.h"
@@ -47,7 +47,7 @@
 #include "third_party/widevine/cdm/widevine_cdm_common.h"
 
 using content::BrowserThread;
-using content::CdmService;
+using content::CdmRegistry;
 using content::PluginService;
 
 namespace brave {
@@ -407,14 +407,14 @@ void WidevineCdmComponentInstallerTraits::RegisterWidevineCdmWithBrave(
   PluginService::GetInstance()->RefreshPlugins();
   PluginService::GetInstance()->PurgePluginListCache(NULL, false);
 
-  // Also register Widevine with the CdmService.
+  // Also register Widevine with the CdmRegistry.
   const base::FilePath cdm_path =
       GetPlatformDirectory(cdm_install_dir)
           .AppendASCII(base::GetNativeLibraryName(kWidevineCdmLibraryName));
   const std::vector<std::string> supported_codecs = base::SplitString(
       codecs, std::string(1, kCdmSupportedCodecsValueDelimiter),
       base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
-  CdmService::GetInstance()->RegisterCdm(content::CdmInfo(
+  CdmRegistry::GetInstance()->RegisterCdm(content::CdmInfo(
       kWidevineCdmType, cdm_version, cdm_path, supported_codecs));
 
   ready_callback_.Run(cdm_install_dir);

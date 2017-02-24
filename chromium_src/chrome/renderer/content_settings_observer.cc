@@ -186,9 +186,6 @@ void ContentSettingsObserver::DidBlockContentType(
     case CONTENT_SETTINGS_TYPE_BLUETOOTH_GUARD:
       settings_type_string = "bluetooth_guard";
       break;
-    case CONTENT_SETTINGS_TYPE_KEYGEN:
-      settings_type_string = "keygen";
-      break;
     case CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC:
       settings_type_string = "background_sync";
       break;

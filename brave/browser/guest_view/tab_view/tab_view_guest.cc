@@ -39,6 +39,7 @@
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/site_instance.h"
 #include "native_mate/dictionary.h"
+#include "ui/base/page_transition_types.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"

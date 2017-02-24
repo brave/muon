@@ -335,7 +335,6 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       extensions::switches::kAllowHTTPBackgroundPage,
       extensions::switches::kAllowLegacyExtensionManifests,
-      extensions::switches::kEnableAppWindowControls,
       extensions::switches::kEnableEmbeddedExtensionOptions,
       extensions::switches::kEnableExperimentalExtensionApis,
       extensions::switches::kExtensionsOnChromeURLs,
@@ -377,6 +376,8 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
 }
 
 bool BraveContentBrowserClient::CanCreateWindow(
+    int opener_render_process_id,
+    int opener_render_frame_id,
     const GURL& opener_url,
     const GURL& opener_top_level_frame_url,
     const GURL& source_origin,
@@ -389,9 +390,6 @@ bool BraveContentBrowserClient::CanCreateWindow(
     bool user_gesture,
     bool opener_suppressed,
     content::ResourceContext* context,
-    int render_process_id,
-    int opener_render_view_id,
-    int opener_render_frame_id,
     bool* no_javascript_access) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
@@ -546,13 +544,14 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
 #endif
 }
 
-ScopedVector<content::NavigationThrottle>
+std::vector<std::unique_ptr<content::NavigationThrottle>>
 BraveContentBrowserClient::CreateThrottlesForNavigation(
     content::NavigationHandle* handle) {
-  ScopedVector<content::NavigationThrottle> throttles;
+  std::vector<std::unique_ptr<content::NavigationThrottle>> throttles;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!handle->IsInMainFrame())
-    throttles.push_back(new extensions::ExtensionNavigationThrottle(handle));
+    throttles.push_back(
+      std::move(extensions::ExtensionNavigationThrottle(handle)));
 #endif
   return throttles;
 }

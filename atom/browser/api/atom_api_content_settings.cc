@@ -84,8 +84,6 @@ struct Converter<ContentSettingsType> {
       *out = CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA;
     else if (settings_type_string == "bluetooth_guard")
       *out = CONTENT_SETTINGS_TYPE_BLUETOOTH_GUARD;
-    else if (settings_type_string == "keygen")
-      *out = CONTENT_SETTINGS_TYPE_KEYGEN;
     else if (settings_type_string == "background_sync")
       *out = CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC;
     else if (settings_type_string == "autoplay")

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "base/callback.h"
+#include "components/spellcheck/renderer/spellcheck.h"
 #include "components/spellcheck/renderer/spellcheck_worditerator.h"
 #include "native_mate/scoped_persistent.h"
 #include "third_party/WebKit/public/web/WebSpellCheckClient.h"
@@ -27,7 +28,7 @@ class SpellCheckClient : public blink::WebSpellCheckClient {
 
  private:
   // blink::WebSpellCheckClient:
-  void spellCheck(
+  void checkSpelling(
       const blink::WebString& text,
       int& misspelledOffset,
       int& misspelledLength,
