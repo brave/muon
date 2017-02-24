@@ -168,7 +168,7 @@ void Extension::LoadOnFILEThread(const base::FilePath path,
 
     if (!extension || !error.empty()) {
       content::BrowserThread::PostTask(
-          content::BrowserThread::FILE, FROM_HERE,
+          content::BrowserThread::UI, FROM_HERE,
           base::Bind(&Extension::NotifyErrorOnUIThread,
               base::Unretained(this), error));
     } else {
