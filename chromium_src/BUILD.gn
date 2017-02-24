@@ -329,8 +329,6 @@ source_set("browser") {
         "chrome/browser/extensions/extension_tab_util.h",
         "//chrome/browser/extensions/api/messaging/extension_message_port.cc",
         "//chrome/browser/extensions/api/messaging/extension_message_port.h",
-        # "//chrome/browser/extensions/api/messaging/incognito_connectability.cc",
-        # "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
         "//chrome/browser/extensions/api/messaging/message_property_provider.cc",
         "//chrome/browser/extensions/api/messaging/message_property_provider.h",
         "//chrome/browser/extensions/api/messaging/message_service.cc",

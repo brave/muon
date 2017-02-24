@@ -130,7 +130,7 @@ index f1004cbf6dec0f4bdc293ccc272cbbe82b1b3936..7a9f23b38a367ace69f488321e5ce568
            "translate::mojom::ContentTranslateDriver"
          ],
 diff --git a/chrome/browser/extensions/api/messaging/message_service.cc b/chrome/browser/extensions/api/messaging/message_service.cc
-index 5b4c3829bff7839f33c2214405d12a301177a635..ca73f2254cac736e585323ad66e9e70c35756fb6 100644
+index 5b4c3829bff7839f33c2214405d12a301177a635..c8ff4e8d3fc4cbc7d6fc28860a4dc8add6e97180 100644
 --- a/chrome/browser/extensions/api/messaging/message_service.cc
 +++ b/chrome/browser/extensions/api/messaging/message_service.cc
 @@ -8,6 +8,7 @@
@@ -141,16 +141,27 @@ index 5b4c3829bff7839f33c2214405d12a301177a635..ca73f2254cac736e585323ad66e9e70c
  #include "base/atomic_sequence_num.h"
  #include "base/bind.h"
  #include "base/callback.h"
-@@ -18,7 +19,7 @@
+@@ -18,7 +19,6 @@
  #include "base/metrics/histogram_macros.h"
  #include "build/build_config.h"
  #include "chrome/browser/extensions/api/messaging/extension_message_port.h"
 -#include "chrome/browser/extensions/api/messaging/incognito_connectability.h"
-+// #include "chrome/browser/extensions/api/messaging/incognito_connectability.h"
  #include "chrome/browser/extensions/api/messaging/native_message_port.h"
  #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
  #include "chrome/browser/extensions/extension_service.h"
-@@ -330,9 +331,7 @@ void MessageService::OpenChannelToExtension(
+@@ -186,6 +186,11 @@ static base::StaticAtomicSequenceNumber g_next_channel_id;
+ static content::RenderProcessHost* GetExtensionProcess(
+     BrowserContext* context,
+     const std::string& extension_id) {
++  auto original = ExtensionsBrowserClient::Get()->GetOriginalContext(context);
++  // Always use the original context for non-private child contexts
++  if (!context->IsOffTheRecord()) {
++    context = original;
++  }
+   scoped_refptr<SiteInstance> site_instance =
+       ProcessManager::Get(context)->GetSiteInstanceForURL(
+           Extension::GetBaseURLFromExtensionId(extension_id));
+@@ -330,9 +335,7 @@ void MessageService::OpenChannelToExtension(
      // Only the tab id is useful to platform apps for internal use. The
      // unnecessary bits will be stripped out in
      // MessagingBindings::DispatchOnConnect().
@@ -161,7 +172,7 @@ index 5b4c3829bff7839f33c2214405d12a301177a635..ca73f2254cac736e585323ad66e9e70c
  
      content::RenderFrameHost* rfh =
          content::RenderFrameHost::FromID(source_process_id, source_routing_id);
-@@ -392,10 +391,10 @@ void MessageService::OpenChannelToExtension(
+@@ -392,10 +395,10 @@ void MessageService::OpenChannelToExtension(
      }
  
      // This check may show a dialog.
