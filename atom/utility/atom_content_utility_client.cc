@@ -46,14 +46,15 @@ void CreateProxyResolverFactory(
         std::move(request));
 }
 
-class ResourceUsageReporterImpl : public mojom::ResourceUsageReporter {
+class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
  public:
   ResourceUsageReporterImpl() {}
   ~ResourceUsageReporterImpl() override {}
 
  private:
   void GetUsageData(const GetUsageDataCallback& callback) override {
-    mojom::ResourceUsageDataPtr data = mojom::ResourceUsageData::New();
+    chrome::mojom::ResourceUsageDataPtr data =
+      chrome::mojom::ResourceUsageData::New();
     size_t total_heap_size = net::ProxyResolverV8::GetTotalHeapSize();
     if (total_heap_size) {
       data->reports_v8_stats = true;
@@ -65,7 +66,7 @@ class ResourceUsageReporterImpl : public mojom::ResourceUsageReporter {
 };
 
 void CreateResourceUsageReporter(
-    mojo::InterfaceRequest<mojom::ResourceUsageReporter> request) {
+    mojo::InterfaceRequest<chrome::mojom::ResourceUsageReporter> request) {
   mojo::MakeStrongBinding(base::MakeUnique<ResourceUsageReporterImpl>(),
                           std::move(request));
 }

@@ -99,40 +99,16 @@ bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
 #endif
 }
 
-void AtomContentClient::AddAdditionalSchemes(
-    std::vector<url::SchemeWithType>* standard_schemes,
-    std::vector<url::SchemeWithType>* referrer_schemes,
-    std::vector<std::string>* savable_schemes) {
-  standard_schemes->push_back(
+void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
+  schemes->standard_schemes.push_back(
     {extensions::kExtensionScheme, url::SCHEME_WITHOUT_PORT});
-  standard_schemes->push_back(
-    {extensions::kExtensionResourceScheme, url::SCHEME_WITHOUT_PORT});
-  savable_schemes->push_back(extensions::kExtensionScheme);
-  savable_schemes->push_back(extensions::kExtensionResourceScheme);
-}
-
-void AtomContentClient::AddSecureSchemesAndOrigins(
-    std::set<std::string>* schemes,
-    std::set<GURL>* origins) {
-  schemes->insert(content::kChromeUIScheme);
-  schemes->insert(extensions::kExtensionScheme);
-  schemes->insert(extensions::kExtensionResourceScheme);
-  GetSecureOriginWhitelist(origins);
-}
-
-void AtomContentClient::AddServiceWorkerSchemes(
-    std::set<std::string>* schemes) {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  if (extensions::feature_util::ExtensionServiceWorkersEnabled())
-    schemes->insert(extensions::kExtensionScheme);
-#endif
+  schemes->savable_schemes.push_back(extensions::kExtensionScheme);
 }
 
 bool AtomContentClient::AllowScriptExtensionForServiceWorker(
     const GURL& script_url) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  return script_url.SchemeIs(extensions::kExtensionScheme) ||
-         script_url.SchemeIs(extensions::kExtensionResourceScheme);
+  return script_url.SchemeIs(extensions::kExtensionScheme);
 #else
   return false;
 #endif

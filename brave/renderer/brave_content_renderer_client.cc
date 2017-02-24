@@ -14,6 +14,8 @@
 #include "chrome/renderer/content_settings_observer.h"
 #include "chrome/renderer/net/net_error_helper.h"
 #include "chrome/renderer/pepper/pepper_helper.h"
+#include "chrome/renderer/plugins/non_loadable_plugin_placeholder.h"
+#include "chrome/renderer/plugins/plugin_uma.h"
 #include "content/public/common/content_constants.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_thread.h"
@@ -21,6 +23,7 @@
 #include "components/autofill/content/renderer/password_autofill_agent.h"
 #include "components/autofill/content/renderer/password_generation_agent.h"
 #include "components/network_hints/renderer/prescient_networking_dispatcher.h"
+#include "components/plugins/renderer/plugin_placeholder.h"
 #include "components/printing/renderer/print_web_view_helper.h"
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
@@ -83,16 +86,12 @@ void BraveContentRendererClient::RenderThreadStarted() {
       new network_hints::PrescientNetworkingDispatcher());
   thread->AddObserver(chrome_observer_.get());
 
-  std::set<GURL> origins;
-  GetSecureOriginWhitelist(&origins);
-  for (const GURL& origin : origins) {
+  for (auto& origin : GetSecureOriginWhitelist()) {
     WebSecurityPolicy::addOriginTrustworthyWhiteList(
         WebSecurityOrigin::create(origin));
   }
 
-  std::set<std::string> schemes;
-  GetSchemesBypassingSecureContextCheckWhitelist(&schemes);
-  for (const std::string& scheme : schemes) {
+  for(auto& scheme : GetSchemesBypassingSecureContextCheckWhitelist()) {
     WebSecurityPolicy::addSchemeToBypassSecureContextWhitelist(
         WebString::fromUTF8(scheme));
   }
@@ -137,7 +136,7 @@ void BraveContentRendererClient::RenderFrameCreated(
       render_frame);
 #endif
 
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
   new PepperHelper(render_frame);
 #endif
 
@@ -173,18 +172,18 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
     return false;
 
   GURL url(params.url);
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
   ChromeViewHostMsg_GetPluginInfo_Output output;
   render_frame->Send(new ChromeViewHostMsg_GetPluginInfo(
       render_frame->GetRoutingID(), url, frame->top()->getSecurityOrigin(),
       orig_mime_type, &output));
 
   *plugin = CreatePlugin(render_frame, frame, params, output);
-#else  // !defined(ENABLE_PLUGINS)
+#else  // !BUILDFLAG(ENABLE_PLUGINS)
   PluginUMAReporter::GetInstance()->ReportPluginMissing(orig_mime_type, url);
   *plugin = NonLoadablePluginPlaceholder::CreateNotSupportedPlugin(
                 render_frame, frame, params)->plugin();
-#endif  // defined(ENABLE_PLUGINS)
+#endif  // BUILDFLAG(ENABLE_PLUGINS)
   return true;
 }
 

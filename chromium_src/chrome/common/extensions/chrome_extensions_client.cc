@@ -13,11 +13,7 @@
 #include "base/values.h"
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
 #include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
-#include "brave/common/extensions/api/api_features.h"  // NOLINT: This file is generated
-#include "brave/common/extensions/api/behavior_features.h"
 #include "brave/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
-#include "brave/common/extensions/api/manifest_features.h"
-#include "brave/common/extensions/api/permission_features.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/extensions/api/extension_action/action_info.h"
 #include "chrome/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
@@ -29,13 +25,8 @@
 #include "extensions/common/extension_api.h"
 #include "extensions/common/extension_urls.h"
 #include "extensions/common/extensions_aliases.h"
-#include "extensions/common/features/api_feature.h"
-#include "extensions/common/features/behavior_feature.h"
 #include "extensions/common/features/json_feature_provider_source.h"
-#include "extensions/common/features/manifest_feature.h"
-#include "extensions/common/features/permission_feature.h"
 #include "chrome/common/extensions/chrome_aliases.h"
-#include "extensions/common/features/simple_feature.h"
 #include "extensions/common/manifest_handler.h"
 #include "extensions/common/permissions/permission_message_provider.h"
 #include "extensions/common/permissions/permissions_info.h"
@@ -53,11 +44,6 @@ const char kExtensionBlocklistUrlPrefix[] =
     "http://www.gstatic.com/chrome/extensions/blacklist";
 const char kExtensionBlocklistHttpsUrlPrefix[] =
     "https://www.gstatic.com/chrome/extensions/blacklist";
-
-template <class FeatureClass>
-SimpleFeature* CreateFeature() {
-  return new FeatureClass;
-}
 
 static base::LazyInstance<ChromeExtensionsClient> g_client =
     LAZY_INSTANCE_INITIALIZER;
@@ -189,8 +175,9 @@ bool ChromeExtensionsClient::ShouldSuppressFatalErrors() const {
 void ChromeExtensionsClient::RecordDidSuppressFatalError() {
 }
 
-std::string ChromeExtensionsClient::GetWebstoreBaseURL() const {
-  return chrome::kExtensionInvalidRequestURL;
+GURL& ChromeExtensionsClient::GetWebstoreBaseURL() const {
+  webstore_update_url_ = GURL(chrome::kExtensionInvalidRequestURL);
+  return webstore_update_url_;
 }
 
 const GURL& ChromeExtensionsClient::GetWebstoreUpdateURL() const {

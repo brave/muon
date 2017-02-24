@@ -507,10 +507,12 @@ bool WebContents::DidAddMessageToConsole(content::WebContents* source,
 
 bool WebContents::ShouldCreateWebContents(
     content::WebContents* web_contents,
+    content::SiteInstance* source_site_instance,
     int32_t route_id,
     int32_t main_frame_route_id,
     int32_t main_frame_widget_route_id,
     WindowContainerType window_container_type,
+    const GURL& opener_url,
     const std::string& frame_name,
     const GURL& target_url,
     const std::string& partition_id,
@@ -746,7 +748,7 @@ void WebContents::RendererResponsive(content::WebContents* source) {
 }
 
 bool WebContents::HandleContextMenu(const content::ContextMenuParams& params) {
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
     if (params.custom_context.request_id &&
         !params.custom_context.is_pepper_menu) {
       Emit("enable-pepper-menu", std::make_pair(params, web_contents()));
@@ -993,9 +995,11 @@ void WebContents::DidFinishNavigation(
   }
 }
 
-void WebContents::SecurityStyleChanged(
-    blink::WebSecurityStyle security_style,
-    const content::SecurityStyleExplanations& explanations) {
+void WebContents::DidChangeVisibleSecurityState() {
+  SecurityStyleExplanations explanations;
+  blink::WebSecurityStyle security_style =
+    web_contents()->GetDelegate()->GetSecurityStyle(
+      web_contents(), &explanations);
     if (explanations.displayed_mixed_content &&
         security_style == blink::WebSecurityStyleUnauthenticated) {
       Emit("security-style-changed", "passive-mixed-content");

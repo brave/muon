@@ -14,6 +14,7 @@
 #include <string>
 
 #include "base/macros.h"
+#include "base/memory/ref_counted.h"
 #include "base/threading/thread_checker.h"
 #include "extensions/features/features.h"
 #include "net/log/net_log.h"

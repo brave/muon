@@ -366,9 +366,9 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
          it != protocol_interceptors_.rend();
          ++it) {
       top_job_factory.reset(new net::URLRequestInterceptingJobFactory(
-          std::move(top_job_factory), base::WrapUnique(*it)));
+          std::move(top_job_factory), std::move(*it)));
     }
-    protocol_interceptors_.weak_clear();
+    protocol_interceptors_.clear();
 
     storage_->set_job_factory(std::move(top_job_factory));
   }

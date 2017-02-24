@@ -61,7 +61,7 @@
 #include "extensions/browser/extensions_browser_client.h"
 #endif
 
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "chrome/browser/pepper_flash_settings_manager.h"
 #endif
@@ -148,7 +148,7 @@ BraveBrowserContext::~BraveBrowserContext() {
   if (user_prefs_registrar_.get())
     user_prefs_registrar_->RemoveAll();
 
-  #if defined(ENABLE_PLUGINS)
+  #if BUILDFLAG(ENABLE_PLUGINS)
     BravePluginServiceFilter::GetInstance()->UnregisterResourceContext(
         GetResourceContext());
   #endif
@@ -384,7 +384,7 @@ void BraveBrowserContext::CreateProfilePrefs(
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionPerHostZoomLevels);
     pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);
     pref_registry_->RegisterBooleanPref(prefs::kPrintPreviewDisabled, false);
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
     pref_registry_->RegisterBooleanPref(prefs::kPluginsAllowOutdated, false);
     pref_registry_->RegisterBooleanPref(prefs::kPluginsAlwaysAuthorize, false);
     PepperFlashSettingsManager::RegisterProfilePrefs(pref_registry_.get());
@@ -461,7 +461,7 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
   }
 
   user_prefs_registrar_->Init(user_prefs_.get());
-#if defined(ENABLE_PLUGINS)
+#if BUILDFLAG(ENABLE_PLUGINS)
   BravePluginServiceFilter::GetInstance()->RegisterResourceContext(
       this, GetResourceContext());
 #endif

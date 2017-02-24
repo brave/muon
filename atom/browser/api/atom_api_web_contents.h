@@ -314,10 +314,12 @@ class WebContents : public mate::TrackableObject<WebContents>,
                               const base::string16& source_id) override;
   bool ShouldCreateWebContents(
       content::WebContents* web_contents,
+      content::SiteInstance* source_site_instance,
       int32_t route_id,
       int32_t main_frame_route_id,
       int32_t main_frame_widget_route_id,
       WindowContainerType window_container_type,
+      const GURL& opener_url,
       const std::string& frame_name,
       const GURL& target_url,
       const std::string& partition_id,
@@ -416,9 +418,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void WebContentsDestroyed() override;
   void NavigationEntryCommitted(
       const content::LoadCommittedDetails& load_details) override;
-  void SecurityStyleChanged(
-      blink::WebSecurityStyle security_style,
-      const content::SecurityStyleExplanations& explanations) override;
+  void DidChangeVisibleSecurityState() override;
   void TitleWasSet(content::NavigationEntry* entry, bool explicit_set) override;
   void DidUpdateFaviconURL(
       const std::vector<content::FaviconURL>& urls) override;

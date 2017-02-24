@@ -13,7 +13,8 @@
 #include "base/strings/utf_string_conversions.h"
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "native_mate/dictionary.h"
-#include "third_party/WebKit/public/platform/WebInputEvent.h"
+#include "third_party/WebKit/public/platform/WebMouseEvent.h"
+#include "third_party/WebKit/public/platform/WebMouseWheelEvent.h"
 #include "third_party/WebKit/public/web/WebCache.h"
 #include "third_party/WebKit/public/web/WebDeviceEmulationParams.h"
 #include "third_party/WebKit/public/web/WebFindOptions.h"
@@ -143,7 +144,7 @@ int GetWebInputEventType(v8::Isolate* isolate, v8::Local<v8::Value> val) {
 
 bool IsSystemKeyEvent(const blink::WebKeyboardEvent& event) {
 #if defined(OS_MACOSX)
-  return event.modifiers & blink::WebInputEvent::MetaKey &&
+  return event.modifiers() & blink::WebInputEvent::MetaKey &&
       event.windowsKeyCode != ui::VKEY_B &&
       event.windowsKeyCode != ui::VKEY_I;
 #else
@@ -157,12 +158,14 @@ bool Converter<blink::WebInputEvent>::FromV8(
   mate::Dictionary dict;
   if (!ConvertFromV8(isolate, val, &dict))
     return false;
-  if (!dict.Get("type", &out->type))
+  blink::WebInputEvent::Type type;
+  if (!dict.Get("type", &type))
     return false;
+  out->setType(type);
   std::vector<blink::WebInputEvent::Modifiers> modifiers;
   if (dict.Get("modifiers", &modifiers))
-    out->modifiers = VectorToBitArray(modifiers);
-  out->timeStampSeconds = base::Time::Now().ToDoubleT();
+    out->setModifiers(VectorToBitArray(modifiers));
+  out->setTimeStampSeconds(base::Time::Now().ToDoubleT());
   return true;
 }
 
@@ -175,7 +178,7 @@ bool Converter<blink::WebKeyboardEvent>::FromV8(
   if (!ConvertFromV8(isolate, val, static_cast<blink::WebInputEvent*>(out)))
     return false;
 
-  if (out->modifiers != 0)
+  if (out->modifiers() != 0)
     out->isSystemKey = IsSystemKeyEvent(*out);
 
   std::string str;
@@ -186,9 +189,9 @@ bool Converter<blink::WebKeyboardEvent>::FromV8(
     return false;
 
   if (shifted)
-    out->modifiers |= blink::WebInputEvent::ShiftKey;
-  if ((out->type == blink::WebInputEvent::Char ||
-       out->type == blink::WebInputEvent::RawKeyDown)) {
+    out->setModifiers(out->modifiers() | blink::WebInputEvent::ShiftKey);
+  if ((out->type() == blink::WebInputEvent::Char ||
+       out->type() == blink::WebInputEvent::RawKeyDown)) {
     // Make sure to not read beyond the buffer in case some bad code doesn't
     // NULL-terminate it (this is called from plugins).
     size_t text_length_cap = blink::WebKeyboardEvent::textLengthCap;
@@ -423,7 +426,7 @@ v8::Local<v8::Value> Converter<blink::WebCache::ResourceTypeStat>::ToV8(
   mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
   dict.Set("count", static_cast<uint32_t>(stat.count));
   dict.Set("size", static_cast<double>(stat.size));
-  dict.Set("liveSize", static_cast<double>(stat.liveSize));
+  dict.Set("liveSize", static_cast<double>(stat.size));
   dict.Set("decodedSize", static_cast<double>(stat.decodedSize));
   return dict.GetHandle();
 }

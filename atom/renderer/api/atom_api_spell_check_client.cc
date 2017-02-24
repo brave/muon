@@ -51,7 +51,7 @@ SpellCheckClient::SpellCheckClient(const std::string& language,
 
 SpellCheckClient::~SpellCheckClient() {}
 
-void SpellCheckClient::spellCheck(
+void SpellCheckClient::checkSpelling(
     const blink::WebString& text,
     int& misspelling_start,
     int& misspelling_len,
