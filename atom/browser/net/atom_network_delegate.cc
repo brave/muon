@@ -48,8 +48,18 @@ const char* ResourceTypeToString(content::ResourceType type) {
 
 namespace {
 
-using ResponseHeadersContainer =
-    std::pair<scoped_refptr<net::HttpResponseHeaders>*, const std::string&>;
+struct ResponseHeadersContainer {
+  scoped_refptr<net::HttpResponseHeaders>* headers;
+  std::string status_line;
+  GURL* new_url;
+
+  ResponseHeadersContainer(scoped_refptr<net::HttpResponseHeaders>* headers,
+            std::string status_line,
+            GURL* new_url)
+        : headers(headers), status_line(status_line), new_url(new_url) {}
+};
+
+
 
 void RunSimpleListener(const AtomNetworkDelegate::SimpleListener& listener,
                        std::unique_ptr<base::DictionaryValue> details) {
@@ -213,9 +223,12 @@ void ReadFromResponseObject(const base::DictionaryValue& response,
   const base::DictionaryValue* dict;
   std::string status_line;
   if (!response.GetString("statusLine", &status_line))
-    status_line = container.second;
+    status_line = container.status_line;
+  std::string url;
+  if (response.GetString("redirectURL", &url))
+    *container.new_url = GURL(url);
   if (response.GetDictionary("responseHeaders", &dict)) {
-    auto headers = container.first;
+    auto headers = container.headers;
     *headers = new net::HttpResponseHeaders("");
     (*headers)->ReplaceStatusLine(status_line);
     for (base::DictionaryValue::Iterator it(*dict);
@@ -317,14 +330,15 @@ int AtomNetworkDelegate::OnHeadersReceived(
     const net::CompletionCallback& callback,
     const net::HttpResponseHeaders* original,
     scoped_refptr<net::HttpResponseHeaders>* override,
-    GURL* allowed) {
+    GURL* new_url) {
   if (!base::ContainsKey(response_listeners_, kOnHeadersReceived))
     return brightray::NetworkDelegate::OnHeadersReceived(
-        request, callback, original, override, allowed);
+        request, callback, original, override, new_url);
 
   return HandleResponseEvent(
       kOnHeadersReceived, request, callback,
-      std::make_pair(override, original->GetStatusLine()), original);
+      ResponseHeadersContainer(override, original->GetStatusLine(), new_url),
+      original);
 }
 
 void AtomNetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
