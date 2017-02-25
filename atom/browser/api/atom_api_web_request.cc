@@ -103,7 +103,7 @@ void WebRequest::OnURLFetchComplete(
 
 void WebRequest::Fetch(mate::Arguments* args) {
   GURL url;
-  if (!args->GetNext(&url)) {
+  if (!args->GetNext(&url) || !url.is_valid()) {
     args->ThrowError("invalid url parameter");
     return;
   }
