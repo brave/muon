@@ -103,6 +103,10 @@ class Profile : public atom::AtomBrowserContext {
     GetAutofillWebdataService() = 0;
 
   virtual PrefChangeRegistrar* user_prefs_change_registrar() const = 0;
+
+  virtual DevToolsNetworkControllerHandle*
+  GetDevToolsNetworkControllerHandle() = 0;
+
  private:
   // bool restored_last_session_;
 

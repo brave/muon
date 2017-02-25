@@ -6,8 +6,8 @@
 
 #include <algorithm>
 
-#include "browser/net/devtools_network_controller_handle.h"
-#include "browser/net/devtools_network_transaction_factory.h"
+#include "chrome/browser/devtools/devtools_network_controller_handle.h"
+#include "chrome/browser/devtools/devtools_network_transaction_factory.h"
 #include "browser/net_log.h"
 #include "browser/network_delegate.h"
 #include "common/switches.h"

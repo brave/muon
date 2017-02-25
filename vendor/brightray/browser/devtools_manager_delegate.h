@@ -7,13 +7,12 @@
 
 #include "base/macros.h"
 #include "base/compiler_specific.h"
+#include "chrome/browser/devtools/devtools_network_protocol_handler.h"
 #include "content/browser/devtools/devtools_http_handler.h"
 #include "content/public/browser/devtools_agent_host_observer.h"
 #include "content/public/browser/devtools_manager_delegate.h"
 
 namespace brightray {
-
-class DevToolsNetworkProtocolHandler;
 
 class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
                                 public content::DevToolsAgentHostObserver {

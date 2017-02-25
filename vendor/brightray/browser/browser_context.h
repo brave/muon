@@ -7,13 +7,12 @@
 
 #include <map>
 
-#include "browser/net/devtools_network_controller_handle.h"
-#include "browser/permission_manager.h"
-#include "browser/url_request_context_getter.h"
-
 #include "base/memory/ref_counted.h"
 #include "base/memory/weak_ptr.h"
+#include "browser/permission_manager.h"
+#include "browser/url_request_context_getter.h"
 #include "content/public/browser/browser_context.h"
+#include "chrome/browser/devtools/devtools_network_controller_handle.h"
 
 class PrefRegistrySimple;
 class PrefService;

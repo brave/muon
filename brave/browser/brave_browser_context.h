@@ -105,6 +105,11 @@ class BraveBrowserContext : public Profile {
 
   base::FilePath GetPath() const override;
 
+  DevToolsNetworkControllerHandle*
+  GetDevToolsNetworkControllerHandle() override {
+    return network_controller_handle();
+  }
+
  private:
   void OnPrefsLoaded(bool success);
   void TrackZoomLevelsFromParent();

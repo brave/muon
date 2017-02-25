@@ -6,6 +6,7 @@
 #define BRIGHTRAY_BROWSER_URL_REQUEST_CONTEXT_GETTER_H_
 
 #include "base/files/file_path.h"
+#include "chrome/browser/devtools/devtools_network_controller_handle.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/content_browser_client.h"
 #include "net/http/http_cache.h"
@@ -28,7 +29,6 @@ class URLRequestJobFactory;
 
 namespace brightray {
 
-class DevToolsNetworkControllerHandle;
 class NetLog;
 
 class URLRequestContextGetter : public net::URLRequestContextGetter {

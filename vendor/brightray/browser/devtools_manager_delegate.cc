@@ -6,8 +6,6 @@
 
 #include <vector>
 
-#include "browser/net/devtools_network_protocol_handler.h"
-
 #include "base/bind.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
