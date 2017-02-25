@@ -1432,8 +1432,7 @@ void WebContents::Print(mate::Arguments* args) {
     return;
   }
 
-  printing::PrintViewManagerBasic::FromWebContents(web_contents())->
-       PrintNow(printing::GetFrameToPrint(web_contents()));
+  printing::StartBasicPrint(web_contents());
 }
 
 void WebContents::PrintToPDF(const base::DictionaryValue& setting,
