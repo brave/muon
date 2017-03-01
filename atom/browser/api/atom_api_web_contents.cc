@@ -1209,7 +1209,9 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
     params.extra_headers = extra_headers;
 
   web_contents()->UserGestureDone();
-  params.transition_type = ui::PAGE_TRANSITION_TYPED;
+  params.transition_type = ui::PAGE_TRANSITION_AUTO_TOPLEVEL;
+  params.is_renderer_initiated = false;
+
   web_contents()->GetController().LoadURLWithParams(params);
 }
 
