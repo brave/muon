@@ -22,6 +22,7 @@
 #include "mojo/public/cpp/bindings/strong_binding.h"
 #include "net/proxy/mojo_proxy_resolver_factory_impl.h"
 #include "net/proxy/proxy_resolver_v8.h"
+#include "printing/features/features.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -29,8 +30,8 @@
 #include "extensions/utility/utility_handler.h"
 #endif
 
-#if defined(ENABLE_PRINT_PREVIEW) || \
-    (defined(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW) || \
+    (BUILDFLAG(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
 #include "chrome/utility/printing_handler.h"
 #endif
 
@@ -78,8 +79,8 @@ AtomContentUtilityClient::AtomContentUtilityClient()
     : filter_messages_(false) {
   handlers_.push_back(new ProfileImportHandler());
 
-#if defined(ENABLE_PRINT_PREVIEW) || \
-    (defined(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW) || \
+    (BUILDFLAG(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
   handlers_.push_back(new printing::PrintingHandler());
 #endif
 }
