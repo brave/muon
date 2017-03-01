@@ -55,6 +55,7 @@
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
+#include "chrome/common/custom_handlers/protocol_handler.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
 #include "components/zoom/page_zoom.h"
@@ -418,6 +419,77 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
 
   memory_pressure_listener_.reset(new base::MemoryPressureListener(
       base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
+}
+
+void WebContents::OnRegisterProtocol(content::BrowserContext* browser_context,
+    const ProtocolHandler &handler,
+    bool allowed) {
+  ProtocolHandlerRegistry* registry =
+    ProtocolHandlerRegistryFactory::GetForBrowserContext(browser_context);
+  if (allowed) {
+    // Ensure the app is invoked in the first place
+    if (!Browser::Get()->
+        IsDefaultProtocolClient(handler.protocol(), nullptr)) {
+      Browser::Get()->SetAsDefaultProtocolClient(
+          handler.protocol(), nullptr);
+    }
+    registry->OnAcceptRegisterProtocolHandler(handler);
+    Session::CreateFrom(isolate(),
+        Profile::FromBrowserContext(browser_context))->
+            Emit("register-navigator-handler",
+                handler.protocol(),
+                handler.url().spec());
+  } else {
+    registry->OnDenyRegisterProtocolHandler(handler);
+  }
+}
+
+void WebContents::RegisterProtocolHandler(
+    content::WebContents* web_contents,
+  const std::string& protocol,
+  const GURL& url,
+  bool user_gesture) {
+  content::BrowserContext* context = web_contents->GetBrowserContext();
+  if (context->IsOffTheRecord())
+      return;
+
+  ProtocolHandler handler =
+      ProtocolHandler::CreateProtocolHandler(protocol, url);
+
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          context);
+  if (registry->IsRegistered(handler))
+      return;
+
+  auto permission_helper =
+      WebContentsPermissionHelper::FromWebContents(web_contents);
+  if (!permission_helper)
+      return;
+
+  auto callback = base::Bind(&WebContents::OnRegisterProtocol,
+      base::Unretained(this), context, handler);
+  permission_helper->RequestProtocolRegistrationPermission(callback,
+      user_gesture);
+}
+
+void WebContents::UnregisterProtocolHandler(
+    content::WebContents* web_contents,
+    const std::string& protocol,
+    const GURL& url,
+    bool user_gesture) {
+  if (Browser::Get()->IsDefaultProtocolClient(protocol, nullptr)) {
+    Browser::Get()->RemoveAsDefaultProtocolClient(protocol, nullptr);
+  }
+  ProtocolHandler handler =
+      ProtocolHandler::CreateProtocolHandler(protocol, url);
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          web_contents->GetBrowserContext());
+  registry->RemoveHandler(handler);
+  Session::CreateFrom(isolate(),
+        Profile::FromBrowserContext(web_contents->GetBrowserContext()))->
+            Emit("unregister-navigator-handler", protocol, url);
 }
 
 bool WebContents::DidAddMessageToConsole(content::WebContents* source,

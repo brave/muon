@@ -22,6 +22,8 @@
 #include "native_mate/handle.h"
 #include "ui/gfx/image/image.h"
 
+class ProtocolHandler;
+
 namespace autofill {
 class AtomAutofillClient;
 }
@@ -297,6 +299,14 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void AuthorizePlugin(mate::Arguments* args);
 
   // content::WebContentsDelegate:
+  void RegisterProtocolHandler(content::WebContents* web_contents,
+                               const std::string& protocol,
+                               const GURL& url,
+                               bool user_gesture) override;
+  void UnregisterProtocolHandler(content::WebContents* web_contents,
+                                 const std::string& protocol,
+                                 const GURL& url,
+                                 bool user_gesture) override;
   bool DidAddMessageToConsole(content::WebContents* source,
                               int32_t level,
                               const base::string16& message,
@@ -427,6 +437,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void DevToolsFocused() override;
   void DevToolsOpened() override;
   void DevToolsClosed() override;
+
+  void OnRegisterProtocol(content::BrowserContext* browser_context,
+      const ProtocolHandler &handler,
+      bool allowed);
 
   void OnMemoryPressure(
       base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level);
