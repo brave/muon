@@ -106,6 +106,7 @@ class NativeWindowMac : public NativeWindow,
   // content::WebContentsObserver:
   void RenderViewHostChanged(content::RenderViewHost* old_host,
                              content::RenderViewHost* new_host) override;
+  void DidFirstPaintAfterLoad(content::RenderWidgetHost* render_widget_host) override;
 
   // Refresh the DraggableRegion views.
   void UpdateDraggableRegionViews() {

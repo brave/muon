@@ -103,31 +103,21 @@ bool ScopedDisableResize::disable_resize_ = false;
    }
 }
 
-- (void)windowDidBecomeMain:(NSNotification*)notification {
+- (void)windowDidBecomeKey:(NSNotification*)notification {
   content::WebContents* web_contents = shell_->web_contents();
   if (!web_contents)
     return;
 
   web_contents->RestoreFocus();
-
-  content::RenderWidgetHostView* rwhv = web_contents->GetRenderWidgetHostView();
-  if (rwhv)
-    rwhv->SetActive(true);
-
   shell_->NotifyWindowFocus();
 }
 
-- (void)windowDidResignMain:(NSNotification*)notification {
+- (void)windowDidResignKey:(NSNotification*)notification {
   content::WebContents* web_contents = shell_->web_contents();
   if (!web_contents)
     return;
 
   web_contents->StoreFocus();
-
-  content::RenderWidgetHostView* rwhv = web_contents->GetRenderWidgetHostView();
-  if (rwhv)
-    rwhv->SetActive(false);
-
   shell_->NotifyWindowBlur();
 }
 
@@ -1163,6 +1153,18 @@ void NativeWindowMac::RenderViewHostChanged(
     content::RenderViewHost* new_host) {
   UnregisterInputEventObserver(old_host);
   RegisterInputEventObserver(new_host);
+}
+
+void NativeWindowMac::DidFirstPaintAfterLoad(
+    content::RenderWidgetHost* render_widget_host) {
+  // windowDidResignMain/windowDidResignKey don't always get called for new
+  // windows on mac. This ensures that background window
+  // RenderWidgetHostViews always start deactivated
+  if (!IsFocused()) {
+    content::RenderWidgetHostView* rwhv = render_widget_host->GetView();
+    if (rwhv)
+      rwhv->SetActive(false);
+  }
 }
 
 std::vector<gfx::Rect> NativeWindowMac::CalculateNonDraggableRegions(
