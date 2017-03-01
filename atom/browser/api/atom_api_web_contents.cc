@@ -1432,7 +1432,13 @@ void WebContents::Print(mate::Arguments* args) {
     return;
   }
 
-  printing::StartBasicPrint(web_contents());
+  content::RenderFrameHost* rfh_to_use =
+    printing::GetFrameToPrint(web_contents());
+  if (!rfh_to_use)
+    return;
+
+  printing::PrintViewManagerBasic::FromWebContents(web_contents())->
+       PrintNow(rfh_to_use);
 }
 
 void WebContents::PrintToPDF(const base::DictionaryValue& setting,
