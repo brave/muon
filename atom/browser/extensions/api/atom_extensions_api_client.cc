@@ -149,13 +149,7 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
       const extensions::Extension* extension,
       int icon_size,
       ExtensionIconSet::MatchType match,
-      bool grayscale,
-      bool* exists) const override {
-    if (exists) {
-      *exists = IconsInfo::GetIconURL(extension, icon_size, match)
-          != GURL::EmptyGURL();
-    }
-
+      bool grayscale) const override {
     GURL icon_url(base::StringPrintf("%s%s/%d/%d%s",
                                      "chrome://extension-icon/",
                                      extension->id().c_str(),

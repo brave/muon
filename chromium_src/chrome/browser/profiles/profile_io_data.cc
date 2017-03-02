@@ -80,7 +80,6 @@
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/resource_context.h"
 #include "content/public/common/url_constants.h"
-#include "net/base/keygen_handler.h"
 #include "net/cert/cert_verifier.h"
 #include "net/cert/multi_log_ct_verifier.h"
 #include "net/cookies/canonical_cookie.h"
@@ -720,7 +719,6 @@ bool ProfileIOData::IsHandledProtocol(const std::string& scheme) {
     // dom_distiller::kDomDistillerScheme,
 #if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions::kExtensionScheme,
-    extensions::kExtensionResourceScheme,
 #endif
     content::kChromeUIScheme,
     url::kDataScheme,

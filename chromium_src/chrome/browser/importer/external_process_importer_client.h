@@ -2,13 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/**
- * This is not a straight copy from chromium src, in particular
- * we add SetCookies.
- * This was originally forked with 52.0.2743.116.  Diff against
- * a version of that file for a full list of changes.
- */
-
 #ifndef CHROME_BROWSER_IMPORTER_EXTERNAL_PROCESS_IMPORTER_CLIENT_H_
 #define CHROME_BROWSER_IMPORTER_EXTERNAL_PROCESS_IMPORTER_CLIENT_H_
 
@@ -26,10 +19,12 @@
 #include "chrome/common/importer/importer_autofill_form_data_entry.h"
 #include "chrome/common/importer/importer_data_types.h"
 #include "chrome/common/importer/importer_url_row.h"
+#include "chrome/common/importer/profile_import.mojom.h"
 #include "components/favicon_base/favicon_usage_data.h"
 #include "components/history/core/browser/history_types.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/utility_process_host_client.h"
+#include "mojo/public/cpp/bindings/binding.h"
 
 class ExternalProcessImporterHost;
 struct ImportedBookmarkEntry;
@@ -56,7 +51,9 @@ struct SearchEngineInfo;
 // This class is the client for the out of process profile importing.  It
 // collects notifications from this process host and feeds data back to the
 // importer host, who actually does the writing.
-class ExternalProcessImporterClient : public content::UtilityProcessHostClient {
+class ExternalProcessImporterClient
+    : public content::UtilityProcessHostClient,
+      public chrome::mojom::ProfileImportObserver {
  public:
   ExternalProcessImporterClient(
       base::WeakPtr<ExternalProcessImporterHost> importer_host,
@@ -74,40 +71,41 @@ class ExternalProcessImporterClient : public content::UtilityProcessHostClient {
   void OnProcessCrashed(int exit_code) override;
   bool OnMessageReceived(const IPC::Message& message) override;
 
-  // Message handlers
-  void OnImportStart();
-  void OnImportFinished(bool succeeded, const std::string& error_msg);
-  void OnImportItemStart(int item);
-  void OnImportItemFinished(int item);
-  void OnHistoryImportStart(size_t total_history_rows_count);
+  // chrome::mojom::ProfileImportObserver:
+  void OnImportStart() override;
+  void OnImportFinished(bool succeeded, const std::string& error_msg) override;
+  void OnImportItemStart(importer::ImportItem item) override;
+  void OnImportItemFinished(importer::ImportItem item) override;
+  void OnHistoryImportStart(uint32_t total_history_rows_count) override;
   void OnHistoryImportGroup(
       const std::vector<ImporterURLRow>& history_rows_group,
-      int visit_source);
-  void OnHomePageImportReady(const GURL& home_page);
+      int visit_source) override;
+  void OnHomePageImportReady(const GURL& home_page) override;
   void OnBookmarksImportStart(const base::string16& first_folder_name,
-                              size_t total_bookmarks_count);
+                              uint32_t total_bookmarks_count) override;
   void OnBookmarksImportGroup(
-      const std::vector<ImportedBookmarkEntry>& bookmarks_group);
-  void OnFaviconsImportStart(size_t total_favicons_count);
+      const std::vector<ImportedBookmarkEntry>& bookmarks_group) override;
+  void OnFaviconsImportStart(uint32_t total_favicons_count) override;
   void OnFaviconsImportGroup(
-      const favicon_base::FaviconUsageDataList& favicons_group);
-  void OnPasswordFormImportReady(const autofill::PasswordForm& form);
+      const favicon_base::FaviconUsageDataList& favicons_group) override;
+  void OnPasswordFormImportReady(const autofill::PasswordForm& form) override;
   void OnKeywordsImportReady(
       const std::vector<importer::SearchEngineInfo>& search_engines,
-      bool unique_on_host_and_path);
+      bool unique_on_host_and_path) override;
   void OnFirefoxSearchEngineDataReceived(
-      const std::vector<std::string> search_engine_data);
+      const std::vector<std::string>& search_engine_data) override;
   void OnAutofillFormDataImportStart(
-      size_t total_autofill_form_data_entry_count);
-  void OnAutofillFormDataImportGroup(const std::vector<
-      ImporterAutofillFormDataEntry>& autofill_form_data_entry_group);
-  void OnCookiesImportStart(size_t total_cookies_count);
+      uint32_t total_autofill_form_data_entry_count) override;
+  void OnAutofillFormDataImportGroup(
+      const std::vector<ImporterAutofillFormDataEntry>&
+          autofill_form_data_entry_group) override;
+  void OnCookiesImportStart(
+      uint32_t total_cookies_count) override;
   void OnCookiesImportGroup(
-      const std::vector<ImportedCookieEntry>& cookies_group);
-#if defined(OS_WIN)
+      const std::vector<ImportedCookieEntry>&
+          cookies_group) override;
   void OnIE7PasswordReceived(
-        const importer::ImporterIE7PasswordInfo& importer_password_info);
-#endif
+      const importer::ImporterIE7PasswordInfo& importer_password_info) override;
 
  protected:
   ~ExternalProcessImporterClient() override;
@@ -116,14 +114,14 @@ class ExternalProcessImporterClient : public content::UtilityProcessHostClient {
   // Notifies the importerhost that import has finished, and calls Release().
   void Cleanup();
 
-  // Cancel import process on IO thread.
-  void CancelImportProcessOnIOThread();
-
-  // Report item completely downloaded on IO thread.
-  void NotifyItemFinishedOnIOThread(importer::ImportItem import_item);
-
   // Creates a new UtilityProcessHost, which launches the import process.
-  void StartProcessOnIOThread(content::BrowserThread::ID thread_id);
+  void StartProcessOnIOThread(content::BrowserThread::ID thread_id,
+                              chrome::mojom::ProfileImportRequest request);
+
+  // The Mojo connections need to be torn down on the same thread that created
+  // them, but the destructor is not guaranteed to be run on that thread so we
+  // tear down the connections explicitly.
+  void CloseMojoHandles();
 
   // These variables store data being collected from the importer until the
   // entire group has been collected and is ready to be written to the profile.
@@ -175,6 +173,12 @@ class ExternalProcessImporterClient : public content::UtilityProcessHostClient {
 
   // True if import process has been cancelled.
   bool cancelled_;
+
+  // Used to start and stop the actual importer running in a different process.
+  chrome::mojom::ProfileImportPtr profile_import_;
+
+  // Used to receive progress updates from the importer.
+  mojo::Binding<chrome::mojom::ProfileImportObserver> binding_;
 
   DISALLOW_COPY_AND_ASSIGN(ExternalProcessImporterClient);
 };

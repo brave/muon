@@ -91,7 +91,7 @@ void BraveContentRendererClient::RenderThreadStarted() {
         WebSecurityOrigin::create(origin));
   }
 
-  for(auto& scheme : GetSchemesBypassingSecureContextCheckWhitelist()) {
+  for (auto& scheme : GetSchemesBypassingSecureContextCheckWhitelist()) {
     WebSecurityPolicy::addSchemeToBypassSecureContextWhitelist(
         WebString::fromUTF8(scheme));
   }

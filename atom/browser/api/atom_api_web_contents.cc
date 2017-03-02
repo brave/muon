@@ -969,8 +969,7 @@ void WebContents::DidStartNavigation(
   auto url = navigation_handle->GetURL();
   bool is_main_frame = navigation_handle->IsInMainFrame();
   bool is_error_page = navigation_handle->IsErrorPage();
-  bool is_src_doc = navigation_handle->IsSrcdoc();
-  Emit("load-start", url, is_main_frame, is_error_page, is_src_doc);
+  Emit("load-start", url, is_main_frame, is_error_page);
 }
 
 void WebContents::DidFinishNavigation(
@@ -997,7 +996,7 @@ void WebContents::DidFinishNavigation(
 }
 
 void WebContents::DidChangeVisibleSecurityState() {
-  SecurityStyleExplanations explanations;
+  content::SecurityStyleExplanations explanations;
   blink::WebSecurityStyle security_style =
     web_contents()->GetDelegate()->GetSecurityStyle(
       web_contents(), &explanations);
@@ -1176,9 +1175,11 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 void WebContents::Reload(bool ignore_cache) {
   web_contents()->UserGestureDone();
   if (ignore_cache)
-    web_contents()->GetController().ReloadBypassingCache(true);
+    web_contents()->GetController().Reload(
+      content::ReloadType::BYPASSING_CACHE,
+      true);
   else
-    web_contents()->GetController().Reload(true);
+    web_contents()->GetController().Reload(content::ReloadType::NORMAL, true);
 }
 
 void WebContents::ResumeLoadingCreatedWebContents() {
@@ -1787,7 +1788,10 @@ void WebContents::SendInputEvent(v8::Isolate* isolate,
       return;
     }
   } else if (blink::WebInputEvent::isKeyboardEventType(type)) {
-    content::NativeWebKeyboardEvent keyboard_event;
+    content::NativeWebKeyboardEvent
+      keyboard_event(blink::WebKeyboardEvent::Undefined,
+                     blink::WebInputEvent::NoModifiers,
+                     base::TimeTicks::Now());
     if (mate::ConvertFromV8(isolate, input_event, &keyboard_event)) {
       host->ForwardKeyboardEvent(keyboard_event);
       return;
