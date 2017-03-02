@@ -5,6 +5,7 @@ import("//extensions/features/features.gni")
 import("//media/media_options.gni")
 import("//ppapi/features/features.gni")
 import("//printing/features/features.gni")
+import("//rlz/features/features.gni")
 
 config("chromium_src_config") {
   include_dirs = [
@@ -374,7 +375,10 @@ source_set("browser") {
         "//chrome/browser/extensions/event_router_forwarder.h",
       ]
 
-      deps += [ "//extensions/browser" ]
+      deps += [
+        "//extensions/browser",
+        "//rlz/features",
+      ]
     }
     if (use_aura) {
       sources += [

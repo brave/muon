@@ -166,7 +166,9 @@ void TabViewGuest::DidCommitProvisionalLoadForFrame(
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   args->SetString(guest_view::kUrl, src_.spec());
   args->SetBoolean(guest_view::kIsTopLevel, (!render_frame_host->GetParent() &&
-                    transition_type == ui::PAGE_TRANSITION_AUTO_TOPLEVEL));
+                    ui::PageTransitionCoreTypeIs(
+                      transition_type,
+                      ui::PAGE_TRANSITION_AUTO_TOPLEVEL)));
   args->SetInteger(webview::kInternalCurrentEntryIndex,
                    web_contents()->GetController().GetCurrentEntryIndex());
   args->SetInteger(webview::kInternalEntryCount,

@@ -14,6 +14,10 @@
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
 #include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
 #include "brave/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
+#include "brave/common/extensions/api/api_features.h"
+#include "brave/common/extensions/api/behavior_features.h"
+#include "brave/common/extensions/api/manifest_features.h"
+#include "brave/common/extensions/api/permission_features.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/extensions/api/extension_action/action_info.h"
 #include "chrome/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
@@ -175,7 +179,7 @@ bool ChromeExtensionsClient::ShouldSuppressFatalErrors() const {
 void ChromeExtensionsClient::RecordDidSuppressFatalError() {
 }
 
-GURL& ChromeExtensionsClient::GetWebstoreBaseURL() const {
+const GURL& ChromeExtensionsClient::GetWebstoreBaseURL() const {
   webstore_update_url_ = GURL(chrome::kExtensionInvalidRequestURL);
   return webstore_update_url_;
 }

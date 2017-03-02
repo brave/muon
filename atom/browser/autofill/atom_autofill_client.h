@@ -51,7 +51,7 @@ class AtomAutofillClient
   PrefService* GetPrefs() override;
   syncer::SyncService* GetSyncService() override;
   IdentityProvider* GetIdentityProvider() override;
-  rappor::RapporService* GetRapporService() override;
+  rappor::RapporServiceImpl* GetRapporServiceImpl() override;
   void ShowAutofillSettings() override;
   void ShowUnmaskPrompt(const CreditCard& card,
                         UnmaskCardReason reason,
@@ -92,6 +92,7 @@ class AtomAutofillClient
       const base::Closure& callback) override {};
   bool ShouldShowSigninPromo() override { return false; };
   void StartSigninFlow() override {};
+  void ShowHttpNotSecureExplanation() override {};
 
 
   // content::WebContentsObserver implementation.

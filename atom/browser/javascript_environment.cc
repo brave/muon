@@ -17,6 +17,7 @@
 #include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
 #include "brave/browser/extensions/path_bindings.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/common/features/feature.h"
 #include "extensions/renderer/logging_native_handler.h"
@@ -111,8 +112,9 @@ base::LazyInstance<V8ExtensionConfigurator>::Leaky g_v8_extension_configurator =
 
 JavascriptEnvironment::JavascriptEnvironment()
     : initialized_(Initialize()),
-      isolate_(isolate_holder_.isolate()),
-      isolate_scope_(isolate_),
+      isolate_holder_(
+        new gin::IsolateHolder(base::ThreadTaskRunnerHandle::Get())),
+      isolate_(isolate_holder_->isolate()),
       locker_(isolate_),
       handle_scope_(isolate_),
       context_holder_(new gin::ContextHolder(isolate_)),
@@ -156,11 +158,11 @@ JavascriptEnvironment::~JavascriptEnvironment() {
 }
 
 void JavascriptEnvironment::OnMessageLoopCreated() {
-  isolate_holder_.AddRunMicrotasksObserver();
+  isolate_holder_->AddRunMicrotasksObserver();
 }
 
 void JavascriptEnvironment::OnMessageLoopDestroying() {
-  isolate_holder_.RemoveRunMicrotasksObserver();
+  isolate_holder_->RemoveRunMicrotasksObserver();
 }
 
 bool JavascriptEnvironment::Initialize() {

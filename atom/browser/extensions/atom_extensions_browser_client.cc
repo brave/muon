@@ -76,7 +76,7 @@ namespace {
 bool IsWhitelistedForIncognito(const extensions::Extension* extension) {
   const extensions::Feature* feature =
       extensions::FeatureProvider::GetBehaviorFeature(
-          extensions::BehaviorFeature::kWhitelistedForIncognito);
+          extensions::behavior_feature::kWhitelistedForIncognito);
   return feature && feature->IsAvailableToExtension(extension).is_available();
 }
 

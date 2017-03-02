@@ -18,6 +18,7 @@
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/render_messages.h"
+#include "chrome/common/renderer_configuration.mojom.h"
 #include "content/public/browser/storage_partition.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/common/autofill_switches.h"
@@ -184,7 +185,9 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   RendererContentSettingRules rules;
   GetRendererContentSettingRules(
     HostContentSettingsMapFactory::GetForProfile(profile), &rules);
-  host->Send(new ChromeViewMsg_SetContentSettingRules(rules));
+  chrome::mojom::RendererConfigurationAssociatedPtr rc_interface;
+  host->GetChannel()->GetRemoteAssociatedInterface(&rc_interface);
+  rc_interface->SetContentSettingRules(rules);
 }
 
 GURL BraveContentBrowserClient::GetEffectiveURL(
@@ -551,7 +554,8 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!handle->IsInMainFrame())
     throttles.push_back(
-      std::move(extensions::ExtensionNavigationThrottle(handle)));
+      base::MakeUnique<content::NavigationThrottle>(
+          extensions::ExtensionNavigationThrottle(handle)));
 #endif
   return throttles;
 }

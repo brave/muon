@@ -110,7 +110,7 @@ IdentityProvider* AtomAutofillClient::GetIdentityProvider() {
   return identity_provider_.get();
 }
 
-rappor::RapporService* AtomAutofillClient::GetRapporService() {
+rappor::RapporServiceImpl* AtomAutofillClient::GetRapporServiceImpl() {
   return nullptr;
 }
 

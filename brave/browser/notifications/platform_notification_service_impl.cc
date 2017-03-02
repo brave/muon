@@ -140,7 +140,7 @@ void PlatformNotificationServiceImpl::DisplayNotification(
         base::Bind(&OnPermissionResponse, callback));
 }
 
-void PlatformNotificationServiceImpl::DisplayNotification(
+void PlatformNotificationServiceImpl::DisplayPersistentNotification(
     content::BrowserContext* browser_context,
     const std::string& notification_id,
     const GURL& service_worker_origin,
@@ -154,7 +154,7 @@ void PlatformNotificationServiceImpl::ClosePersistentNotification(
     const std::string& notification_id) {
 }
 
-bool PlatformNotificationServiceImpl::GetDisplayedPersistentNotifications(
+bool PlatformNotificationServiceImpl::GetDisplayedNotifications(
     content::BrowserContext* browser_context,
     std::set<std::string>* displayed_notifications) {
   return false;
