@@ -18,7 +18,8 @@
 #include "chrome/browser/printing/printer_query.h"
 #include "components/printing/common/print_messages.h"
 #include "content/public/browser/browser_thread.h"
-#include "content/public/browser/render_view_host.h"
+#include "content/public/browser/render_frame_host.h"
+#include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
 #include "printing/page_size_margins.h"
 #include "printing/pdf_metafile_skia.h"
@@ -119,8 +120,16 @@ void PrintPreviewMessageHandler::PrintToPDF(
   options.GetInteger(kPreviewRequestID, &request_id);
   print_to_pdf_callback_map_[request_id] = callback;
 
-  content::RenderViewHost* rvh = web_contents()->GetRenderViewHost();
-  rvh->Send(new PrintMsg_PrintPreview(rvh->GetRoutingID(), options));
+  content::RenderFrameHost* rfh = web_contents()->GetMainFrame();
+
+  if (rfh) {
+    std::unique_ptr<base::DictionaryValue> new_options(options.DeepCopy());
+    new_options->SetInteger(kPreviewInitiatorHostId,
+                        rfh->GetProcess()->GetID());
+    new_options->SetInteger(kPreviewInitiatorRoutingId,
+                        rfh->GetRoutingID());
+    rfh->Send(new PrintMsg_PrintPreview(rfh->GetRoutingID(), *new_options));
+  }
 }
 
 void PrintPreviewMessageHandler::RunPrintToPDFCallback(
