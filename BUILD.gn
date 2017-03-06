@@ -218,7 +218,13 @@ source_set("common") {
   sources = [
     "brave/common/brave_paths.cc",
     "brave/common/brave_paths.h",
+    "brave/common/extensions/asar_source_map.cc",
+    "brave/common/extensions/asar_source_map.h",
     "brave/common/importer/imported_cookie_entry.h",
+    "brave/common/workers/worker_bindings.cc",
+    "brave/common/workers/worker_bindings.h",
+    "brave/common/workers/v8_worker_thread.cc",
+    "brave/common/workers/v8_worker_thread.h",
   ]
 
   deps = [
