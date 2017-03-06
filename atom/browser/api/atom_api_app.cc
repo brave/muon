@@ -35,11 +35,14 @@
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "brave/browser/brave_content_browser_client.h"
+#include "brave/common/workers/v8_worker_thread.h"
+#include "brave/common/workers/worker_bindings.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/component_updater/component_updater_paths.h"
 #include "content/browser/plugin_service_impl.h"
+#include "content/child/worker_thread_registry.h"
 #include "content/public/browser/browser_accessibility_state.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/client_certificate_delegate.h"
@@ -418,6 +421,8 @@ int GetPathConstant(const std::string& name) {
     return chrome::FILE_WIDEVINE_CDM_ADAPTER;
   else if (name == "extensionsDir")
     return component_updater::DIR_COMPONENT_USER;
+  else if (name == "sourceDir")
+    return base::DIR_SOURCE_ROOT;
   else
     return -1;
 }
@@ -573,6 +578,9 @@ void App::OnWindowAllClosed() {
 void App::OnQuit() {
   int exitCode = AtomBrowserMainParts::Get()->GetExitCode();
   Emit("quit", exitCode);
+
+  content::WorkerThreadRegistry::Instance()->PostTaskToAllThreads(
+    base::Bind(&brave::V8WorkerThread::Shutdown));
 
   if (process_singleton_.get()) {
     process_singleton_->Cleanup();
@@ -824,6 +832,39 @@ bool App::IsAccessibilitySupportEnabled() {
   return ax_state->IsAccessibleBrowser();
 }
 
+void App::PostMessage(int worker_id, v8::Local<v8::Value> message) {
+  brave::WorkerBindings::OnMessage(isolate(), worker_id, message);
+}
+
+void App::StopWorker(mate::Arguments* args) {
+  int worker_id;
+  if (!args->GetNext(&worker_id)) {
+    args->ThrowError("`workerId` is a required field");
+    return;
+  }
+
+  content::WorkerThreadRegistry::Instance()->
+      GetTaskRunnerFor(worker_id)->PostTask(
+          FROM_HERE, base::Bind(&brave::V8WorkerThread::Shutdown));
+}
+
+void App::StartWorker(mate::Arguments* args) {
+  std::string module_name;
+  if (!args->GetNext(&module_name)) {
+    args->ThrowError("`module_name` is a required field");
+    return;
+  }
+
+  std::string worker_name = module_name + "_worker";
+  args->GetNext(&worker_name);
+
+  auto worker = new brave::V8WorkerThread(worker_name, this);
+  worker->Start();
+  worker->WaitUntilThreadStarted();
+  worker->Require(module_name);
+  args->Return(worker->GetThreadId());
+}
+
 #if defined(USE_NSS_CERTS)
 void App::ImportCertificate(
     const base::DictionaryValue& options,
@@ -979,6 +1020,9 @@ void App::BuildPrototype(
       .SetMethod("relaunch", &App::Relaunch)
       .SetMethod("isAccessibilitySupportEnabled",
                  &App::IsAccessibilitySupportEnabled)
+      .SetMethod("_postMessage", &App::PostMessage)
+      .SetMethod("_startWorker", &App::StartWorker)
+      .SetMethod("stopWorker", &App::StopWorker)
       .SetMethod("disableHardwareAcceleration",
                  &App::DisableHardwareAcceleration);
 }
