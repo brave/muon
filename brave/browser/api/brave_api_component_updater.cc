@@ -127,6 +127,9 @@ void ComponentUpdater::RegisterComponent(const std::string& component_id) {
   } else if (component_id == kPocketId) {
     RegisterComponentForUpdate(
         kPocketPublicKeyStr, registered_callback, ready_callback);
+  } else if (component_id == kVimiumId) {
+    RegisterComponentForUpdate(
+        kVimiumPublicKeyStr, registered_callback, ready_callback);
   } else if (component_id == kEnpassId) {
     RegisterComponentForUpdate(
         kEnpassPublicKeyStr, registered_callback, ready_callback);
