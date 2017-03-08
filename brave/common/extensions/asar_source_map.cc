@@ -29,17 +29,25 @@ v8::Local<v8::Value> AsarSourceMap::GetSource(
   for (size_t i = 0; i < components.size(); ++i) {
     path = path.AppendASCII(components[i]);
   }
-  path = path.AddExtension(FILE_PATH_LITERAL("js"));
 
   std::string source;
   for (size_t i = 0; i < search_paths_.size(); ++i) {
     base::FilePath archive;
     base::FilePath relative;
+    base::FilePath file = search_paths_[i]
+        .Append(path)
+        .AddExtension(FILE_PATH_LITERAL("js"));
+    base::FilePath module = search_paths_[i]
+        .Append(path)
+        .AppendASCII(FILE_PATH_LITERAL("index"))
+        .AddExtension(FILE_PATH_LITERAL("js"));
+
     if (asar::GetAsarArchivePath(search_paths_[i], &archive, &relative)) {
-      if (!asar::ReadFileToString(search_paths_[i], &source)) {
+      if (!asar::ReadFileToString(file, &source) &&
+          !asar::ReadFileToString(module, &source))
         continue;
-      }
-    } else if (!ReadFileToString(search_paths_[i].Append(path), &source)) {
+    } else if (!ReadFileToString(file, &source) &&
+                !ReadFileToString(module, &source)) {
       continue;
     }
     return gin::StringToV8(isolate, source);
