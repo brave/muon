@@ -34,9 +34,10 @@ v8::Local<v8::Value> AsarSourceMap::GetSource(
   for (size_t i = 0; i < search_paths_.size(); ++i) {
     base::FilePath archive;
     base::FilePath relative;
-    base::FilePath file = search_paths_[i]
-        .Append(path)
-        .AddExtension(FILE_PATH_LITERAL("js"));
+    base::FilePath file = search_paths_[i].Append(path);
+    if (file.Extension() != ".js")
+      file = file.AddExtension(FILE_PATH_LITERAL("js"));
+
     base::FilePath module = search_paths_[i]
         .Append(path)
         .AppendASCII(FILE_PATH_LITERAL("index"))
@@ -46,9 +47,10 @@ v8::Local<v8::Value> AsarSourceMap::GetSource(
       if (!asar::ReadFileToString(file, &source) &&
           !asar::ReadFileToString(module, &source))
         continue;
-    } else if (!ReadFileToString(file, &source) &&
-                !ReadFileToString(module, &source)) {
-      continue;
+    } else {
+      if (!ReadFileToString(file, &source) &&
+          !ReadFileToString(module, &source))
+       continue;
     }
     return gin::StringToV8(isolate, source);
   }
