@@ -116,10 +116,10 @@ index 7a92debbf39a1cd3e9f911971025d0f5b35f2834..6d76992c6b88ba228e927246848f042a
  
  if (enable_resource_whitelist_generation) {
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index 20224cad4705c218cf50a3245251b88792ef13bb..5b62a77a09415b62870d3bcb9bd8dfc1bbfad50c 100644
+index f7f50a0302dc5f0813cdae54beba7647b6eb75ee..49194d0f5115af1d3ccc25897cdf671e637ff24b 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -3451,6 +3451,7 @@ split_static_library("browser") {
+@@ -3453,6 +3453,7 @@ split_static_library("browser") {
        "//device/battery",
        "//net:net_browser_services",
      ]
@@ -1002,7 +1002,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index ee601b90606892619b697e607273a45b0538bcb9..1229f5f98c36da906b5fa40494b7bca01ef459b0 100644
+index 3b52ec1e47e5e37131b165df20529d410461d01c..cc922ee6bcf4caaadb18d8416c08e5ea3e888e7a 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -784,7 +784,7 @@ if (!is_android) {
@@ -2134,7 +2134,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
  - (NSArray *)validAttributesForMarkedText {
    // This code is just copied from WebKit except renaming variables.
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index fbebee60977914ace7ae501836958339faac0382..04694b6ae362a0c3e17b0b5f676c335938f66b34 100644
+index ea0069b7fffabb484b22b62fd04f7fab39a5a9ef..d72beaf6dae1220fc15432dbf8201350b70b2e98 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1527,7 +1527,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -2233,10 +2233,10 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
  
  // Details about a redirection of a resource request.
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index bf00133939ade5f614435343523eec7634106a66..4de94eb8c764df04121940ecf12977a9337079e5 100644
+index 504aeb80a246bef8867feb15425920102923a34d..ad5071bd50a413ceb8c5936dce607623b9e663e8 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
-@@ -455,8 +455,8 @@ blink::WebInputEventResult BrowserPlugin::handleInputEvent(
+@@ -459,8 +459,8 @@ blink::WebInputEventResult BrowserPlugin::handleInputEvent(
  
    if (blink::WebInputEvent::isGestureEventType(event.type())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
@@ -2317,7 +2317,7 @@ index 57c9a2e6a43558e2325a76b5b147a3c7e2b99fd3..5ee029882c5ecf0104f83ee61e4a0ba7
        "chrome://media-router/*",
        "chrome://oobe/*"
 diff --git a/extensions/renderer/resources/guest_view/guest_view_container.js b/extensions/renderer/resources/guest_view/guest_view_container.js
-index 8cfc8cb441afa19109e320c0a6405f79e9878a85..58d3e22a59c65ec1d24ab0db1c4eea77955f3784 100644
+index efec02adb3a64303096e849bd0ec5888fa71499a..37040df9457242cb5907e882137274525b49a233 100644
 --- a/extensions/renderer/resources/guest_view/guest_view_container.js
 +++ b/extensions/renderer/resources/guest_view/guest_view_container.js
 @@ -26,6 +26,7 @@ function GuestViewContainer(element, viewType) {
@@ -2328,7 +2328,7 @@ index 8cfc8cb441afa19109e320c0a6405f79e9878a85..58d3e22a59c65ec1d24ab0db1c4eea77
    shadowRoot.appendChild(privates(this).internalElement);
  
    GuestViewInternalNatives.RegisterView(this.viewInstanceId, this, viewType);
-@@ -203,8 +204,9 @@ function registerInternalElement(viewType) {
+@@ -207,8 +208,9 @@ function registerInternalElement(viewType) {
    proto.createdCallback = function() {
      this.setAttribute('type', 'application/browser-plugin');
      this.setAttribute('id', 'browser-plugin-' + IdGenerator.GetNextId());
@@ -2597,7 +2597,7 @@ index 82775974231274e6639751139f5c7bc9bbfaad25..8aca09939d20cc48cfa85c507fdea17c
  
      // Non-standard APIs
 diff --git a/third_party/WebKit/Source/platform/BUILD.gn b/third_party/WebKit/Source/platform/BUILD.gn
-index 27557791eba847124951792f47629fb81d3030e0..d1e9b1f2e561bfe59687c1abb70a915df2d50e37 100644
+index 8a16dcb4b1d31ba35a2df521763ec9fd77783f43..09b59829d77543425516d0c6c2b0b4f3a741dde4 100644
 --- a/third_party/WebKit/Source/platform/BUILD.gn
 +++ b/third_party/WebKit/Source/platform/BUILD.gn
 @@ -184,8 +184,14 @@ executable("character_data_generator") {
