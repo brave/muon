@@ -100,8 +100,7 @@ bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
 }
 
 void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
-  schemes->standard_schemes.push_back(
-    {extensions::kExtensionScheme, url::SCHEME_WITHOUT_PORT});
+  schemes->standard_schemes.push_back(extensions::kExtensionScheme);
   schemes->savable_schemes.push_back(extensions::kExtensionScheme);
 }
 
