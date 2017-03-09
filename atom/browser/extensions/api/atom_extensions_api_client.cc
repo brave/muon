@@ -176,7 +176,7 @@ AtomExtensionsAPIClient::AtomExtensionsAPIClient() {
 std::unique_ptr<guest_view::GuestViewManagerDelegate>
 AtomExtensionsAPIClient::CreateGuestViewManagerDelegate(
     content::BrowserContext* context) const {
-  return base::WrapUnique(new brave::BraveGuestViewManagerDelegate(context));
+  return base::MakeUnique<brave::BraveGuestViewManagerDelegate>(context);
 }
 
 void AtomExtensionsAPIClient::AttachWebContentsHelpers(

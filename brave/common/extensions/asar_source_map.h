@@ -10,17 +10,17 @@
 
 #include "base/compiler_specific.h"
 #include "base/files/file_path.h"
-#include "extensions/renderer/module_system.h"
+#include "extensions/renderer/source_map.h"
 #include "v8/include/v8.h"
 
 namespace brave {
 
-class AsarSourceMap : public extensions::ModuleSystem::SourceMap {
+class AsarSourceMap : public extensions::SourceMap {
  public:
   explicit AsarSourceMap(const std::vector<base::FilePath>& search_paths);
   ~AsarSourceMap() override;
 
-  v8::Local<v8::Value> GetSource(v8::Isolate* isolate,
+  v8::Local<v8::String> GetSource(v8::Isolate* isolate,
                                  const std::string& name) const override;
   bool Contains(const std::string& name) const override;
 

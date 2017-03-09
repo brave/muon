@@ -115,6 +115,7 @@ JavascriptEnvironment::JavascriptEnvironment()
       isolate_holder_(
         new gin::IsolateHolder(base::ThreadTaskRunnerHandle::Get())),
       isolate_(isolate_holder_->isolate()),
+      isolate_scope_(isolate_),
       locker_(isolate_),
       handle_scope_(isolate_),
       context_holder_(new gin::ContextHolder(isolate_)),

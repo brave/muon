@@ -100,7 +100,7 @@ AsarSourceMap::AsarSourceMap(
 AsarSourceMap::~AsarSourceMap() {
 }
 
-v8::Local<v8::Value> AsarSourceMap::GetSource(
+v8::Local<v8::String> AsarSourceMap::GetSource(
     v8::Isolate* isolate,
     const std::string& name) const {
   std::string source;
@@ -119,7 +119,7 @@ v8::Local<v8::Value> AsarSourceMap::GetSource(
   }
 
   NOTREACHED() << "No module is registered with name \"" << name << "\"";
-  return v8::Undefined(isolate);
+  return v8::Local<v8::String>();
 }
 
 bool AsarSourceMap::Contains(const std::string& name) const {
