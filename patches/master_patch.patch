@@ -1205,7 +1205,7 @@ index 0777cce337ae70b3616fc7d236663c234553a30b..460e441a1e414ab03062f0b64ae92f6b
      ":manifest",
    ]
 diff --git a/components/guest_view/browser/guest_view_manager.cc b/components/guest_view/browser/guest_view_manager.cc
-index 315ea635bfd49e4d1ff029709ff9c39e657d48b8..6a9d2a4698b5c48e8a222541e5f2e78addc801cb 100644
+index 315ea635bfd49e4d1ff029709ff9c39e657d48b8..bdda6074d0f76cfe0d9a8d11fe09ac255a4f9180 100644
 --- a/components/guest_view/browser/guest_view_manager.cc
 +++ b/components/guest_view/browser/guest_view_manager.cc
 @@ -63,6 +63,7 @@ class GuestViewManager::EmbedderRenderProcessHostObserver
@@ -1216,7 +1216,17 @@ index 315ea635bfd49e4d1ff029709ff9c39e657d48b8..6a9d2a4698b5c48e8a222541e5f2e78a
  
  GuestViewManager::GuestViewManager(
      content::BrowserContext* context,
-@@ -95,8 +96,9 @@ GuestViewManager* GuestViewManager::CreateWithDelegate(
+@@ -87,7 +88,8 @@ GuestViewManager* GuestViewManager::CreateWithDelegate(
+     } else {
+       guest_manager = new GuestViewManager(context, std::move(delegate));
+     }
+-    context->SetUserData(kGuestViewManagerKeyName, guest_manager);
++    manager_ = guest_manager;
++    // context->SetUserData(kGuestViewManagerKeyName, guest_manager);
+   }
+   return guest_manager;
+ }
+@@ -95,8 +97,9 @@ GuestViewManager* GuestViewManager::CreateWithDelegate(
  // static
  GuestViewManager* GuestViewManager::FromBrowserContext(
      BrowserContext* context) {
