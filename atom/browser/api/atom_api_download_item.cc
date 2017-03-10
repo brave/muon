@@ -163,6 +163,10 @@ base::FilePath DownloadItem::GetSavePath() const {
   return save_path_;
 }
 
+bool DownloadItem::PromptForSaveLocation() const {
+  return download_item_->GetTargetDisposition() ==
+      content::DownloadItem::TARGET_DISPOSITION_PROMPT;
+}
 // static
 void DownloadItem::BuildPrototype(v8::Isolate* isolate,
                                   v8::Local<v8::FunctionTemplate> prototype) {
@@ -184,7 +188,8 @@ void DownloadItem::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getState", &DownloadItem::GetState)
       .SetMethod("isDone", &DownloadItem::IsDone)
       .SetMethod("setSavePath", &DownloadItem::SetSavePath)
-      .SetMethod("getSavePath", &DownloadItem::GetSavePath);
+      .SetMethod("getSavePath", &DownloadItem::GetSavePath)
+      .SetMethod("promptForSaveLocation", &DownloadItem::PromptForSaveLocation);
 }
 
 // static

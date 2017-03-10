@@ -1215,14 +1215,18 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   web_contents()->GetController().LoadURLWithParams(params);
 }
 
-void WebContents::DownloadURL(const GURL& url) {
+void WebContents::DownloadURL(const GURL& url,
+                              bool prompt_for_location) {
   auto browser_context = web_contents()->GetBrowserContext();
   auto download_manager =
     content::BrowserContext::GetDownloadManager(browser_context);
 
-  download_manager->DownloadUrl(
-      content::DownloadUrlParameters::CreateForWebContentsMainFrame(
-          web_contents(), url));
+  auto params = content::DownloadUrlParameters::CreateForWebContentsMainFrame(
+          web_contents(), url);
+  if (prompt_for_location)
+    params->set_prompt(prompt_for_location);
+
+  download_manager->DownloadUrl(std::move(params));
 }
 
 GURL WebContents::GetURL() const {

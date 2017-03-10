@@ -140,7 +140,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool Equal(const WebContents* web_contents) const;
   void LoadURL(const GURL& url, const mate::Dictionary& options);
   void Reload(bool ignore_cache);
-  void DownloadURL(const GURL& url);
+  void DownloadURL(const GURL& url, bool prompt_for_location = false);
   GURL GetURL() const;
   base::string16 GetTitle() const;
   bool IsInitialBlankNavigation() const;

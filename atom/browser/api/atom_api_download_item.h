@@ -42,6 +42,7 @@ class DownloadItem : public mate::TrackableObject<DownloadItem>,
   bool IsDone() const;
   void SetSavePath(const base::FilePath& path);
   base::FilePath GetSavePath() const;
+  bool PromptForSaveLocation() const;
 
  protected:
   DownloadItem(v8::Isolate* isolate, content::DownloadItem* download_item);
