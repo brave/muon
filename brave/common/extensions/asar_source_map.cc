@@ -11,6 +11,69 @@
 
 namespace brave {
 
+namespace {
+
+bool IsAsarPath(const base::FilePath& path) {
+  base::FilePath archive;
+  base::FilePath relative;
+  return asar::GetAsarArchivePath(path, &archive, &relative);
+}
+
+bool ReadFromPath(
+    base::Callback<bool(const base::FilePath& path, std::string* contents)>,
+    const base::FilePath& file,
+    const base::FilePath& path,
+    std::string* source) {
+  base::FilePath file_path = path.Append(file);
+  if (file_path.Extension() != ".js")
+    file_path = file_path.AddExtension(FILE_PATH_LITERAL("js"));
+
+  base::FilePath module_path1 = path
+      .Append(file)
+      .Append(FILE_PATH_LITERAL("index"))
+      .AddExtension(FILE_PATH_LITERAL("js"));
+
+  base::FilePath module_path2 = path
+      .Append(file)
+      .Append(file)
+      .AddExtension(FILE_PATH_LITERAL("js"));
+
+  return asar::ReadFileToString(file_path, source) ||
+      asar::ReadFileToString(module_path1, source) ||
+      asar::ReadFileToString(module_path2, source);
+}
+
+bool ReadFromSearchPaths(const std::vector<base::FilePath>& search_paths,
+                        const base::FilePath& file_path,
+                        std::string* source) {
+  for (size_t i = 0; i < search_paths.size(); ++i) {
+    if (IsAsarPath(search_paths[i])) {
+      if (!ReadFromPath(base::Bind(&asar::ReadFileToString),
+          file_path, search_paths[i], source))
+        continue;
+    } else {
+      if (!ReadFromPath(base::Bind(&base::ReadFileToString),
+          file_path, search_paths[i], source))
+        continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+const base::FilePath GetFilePath(const std::string& name) {
+  std::vector<std::string> components = base::SplitString(
+      name, "/", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
+
+  base::FilePath path;
+  for (size_t i = 0; i < components.size(); ++i) {
+    path = path.AppendASCII(components[i]);
+  }
+  return path;
+}
+
+}  // namespace
+
 AsarSourceMap::AsarSourceMap(
     const std::vector<base::FilePath>& search_paths)
     : search_paths_(search_paths) {
@@ -22,36 +85,8 @@ AsarSourceMap::~AsarSourceMap() {
 v8::Local<v8::Value> AsarSourceMap::GetSource(
     v8::Isolate* isolate,
     const std::string& name) const {
-  std::vector<std::string> components = base::SplitString(
-      name, "/", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
-
-  base::FilePath path;
-  for (size_t i = 0; i < components.size(); ++i) {
-    path = path.AppendASCII(components[i]);
-  }
-
   std::string source;
-  for (size_t i = 0; i < search_paths_.size(); ++i) {
-    base::FilePath archive;
-    base::FilePath relative;
-    base::FilePath file = search_paths_[i].Append(path);
-    if (file.Extension() != ".js")
-      file = file.AddExtension(FILE_PATH_LITERAL("js"));
-
-    base::FilePath module = search_paths_[i]
-        .Append(path)
-        .AppendASCII(FILE_PATH_LITERAL("index"))
-        .AddExtension(FILE_PATH_LITERAL("js"));
-
-    if (asar::GetAsarArchivePath(search_paths_[i], &archive, &relative)) {
-      if (!asar::ReadFileToString(file, &source) &&
-          !asar::ReadFileToString(module, &source))
-        continue;
-    } else {
-      if (!ReadFileToString(file, &source) &&
-          !ReadFileToString(module, &source))
-       continue;
-    }
+  if (ReadFromSearchPaths(search_paths_, GetFilePath(name), &source)) {
     return gin::StringToV8(isolate, source);
   }
 
@@ -60,8 +95,8 @@ v8::Local<v8::Value> AsarSourceMap::GetSource(
 }
 
 bool AsarSourceMap::Contains(const std::string& name) const {
-  // TODO(bridiver) - fix this
-  return true;
+  std::string source;
+  return ReadFromSearchPaths(search_paths_, GetFilePath(name), &source);
 }
 
 }  // namespace brave
