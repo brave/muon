@@ -15,7 +15,9 @@
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
 #include "components/autofill/core/common/autofill_pref_names.h"
 #include "components/user_prefs/user_prefs.h"
+#include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/render_frame_host.h"
+#include "content/public/browser/ssl_status.h"
 #include "content/public/common/origin_util.h"
 #include "google_apis/gaia/identity_provider.h"
 #include "native_mate/dictionary.h"
@@ -236,8 +238,22 @@ void AtomAutofillClient::OnFirstUserGestureObserved() {
   }
 }
 
-bool AtomAutofillClient::IsContextSecure(const GURL& form_origin) {
-  return content::IsOriginSecure(form_origin);
+bool AtomAutofillClient::IsContextSecure() {
+  content::SSLStatus ssl_status;
+  content::NavigationEntry* navigation_entry =
+      web_contents()->GetController().GetLastCommittedEntry();
+  if (!navigation_entry)
+     return false;
+
+  ssl_status = navigation_entry->GetSSL();
+  // Note: If changing the implementation below, also change
+  // AwAutofillClient::IsContextSecure. See crbug.com/505388
+  return navigation_entry->GetURL().SchemeIsCryptographic() &&
+         ssl_status.certificate &&
+         (!net::IsCertStatusError(ssl_status.cert_status) ||
+          net::IsCertStatusMinorError(ssl_status.cert_status)) &&
+         !(ssl_status.content_status &
+           content::SSLStatus::RAN_INSECURE_CONTENT);
 }
 
 }  // namespace autofill
