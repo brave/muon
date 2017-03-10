@@ -27,7 +27,7 @@ bool ReadFromPath(
     const base::FilePath& path,
     std::string* source) {
   base::FilePath file_path = path.Append(file);
-  if (!file_path.MatchesExtension(".js"))
+  if (!file_path.MatchesExtension(FILE_PATH_LITERAL(".js")))
     file_path = file_path.AddExtension(FILE_PATH_LITERAL("js"));
 
   base::FilePath module_path1 = path
