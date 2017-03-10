@@ -17,13 +17,6 @@
 #include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
 #include "content/public/common/content_switches.h"
-#include "gin/array_buffer.h"
-#include "gin/modules/console.h"
-#include "gin/modules/module_registry.h"
-#include "gin/object_template_builder.h"
-#include "gin/v8_initializer.h"
-#include "mojo/edk/js/threading.h"
-
 #include "extensions/common/features/feature.h"
 #include "extensions/renderer/logging_native_handler.h"
 #include "extensions/renderer/module_system.h"
@@ -31,6 +24,12 @@
 #include "extensions/renderer/resource_bundle_source_map.h"
 #include "extensions/renderer/script_context.h"
 #include "extensions/renderer/utils_native_handler.h"
+#include "gin/array_buffer.h"
+#include "gin/modules/console.h"
+#include "gin/modules/module_registry.h"
+#include "gin/object_template_builder.h"
+#include "gin/v8_initializer.h"
+#include "mojo/edk/js/threading.h"
 #include "ui/base/resource/resource_bundle.h"
 
 
@@ -128,9 +127,9 @@ JavascriptEnvironment::JavascriptEnvironment()
   script_context_.reset(new ScriptContext(context(),
                                    nullptr,  // WebFrame
                                    nullptr,  // Extension
-                                   Feature::BLESSED_EXTENSION_CONTEXT,
+                                   Feature::SERVICE_WORKER_CONTEXT,
                                    nullptr,  // Effective Extension
-                                   Feature::BLESSED_EXTENSION_CONTEXT));
+                                   Feature::SERVICE_WORKER_CONTEXT));
   {
     std::unique_ptr<ModuleSystem> module_system(
         new ModuleSystem(script_context_.get(), &source_map_));

@@ -23,14 +23,29 @@ namespace {
 base::LazyInstance<base::ThreadLocalPointer<V8WorkerThread>>::Leaky worker =
       LAZY_INSTANCE_INITIALIZER;
 
+void NotifyStart(atom::api::App* app, int worker_id) {
+  app->Emit("worker-start", worker_id);
+}
+
+void NotifyStop(atom::api::App* app, int worker_id) {
+  app->Emit("worker-stop", worker_id);
+}
+
+void NotifyError(atom::api::App* app, int worker_id, std::string error) {
+  app->Emit("worker-onerror", worker_id, error);
+}
+
 void Kill(V8WorkerThread* worker) {
   delete worker;
 }
 
 }  // namespace
 
-V8WorkerThread::V8WorkerThread(const std::string& name, atom::api::App* app) :
+V8WorkerThread::V8WorkerThread(const std::string& name,
+                              const std::string& module_name,
+                              atom::api::App* app) :
     base::Thread(name),
+    module_name_(module_name),
     app_(app) {
 }
 
@@ -50,6 +65,11 @@ void V8WorkerThread::Shutdown() {
     return;
 
   worker.Get().Set(nullptr);
+
+  BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
+      base::Bind(&NotifyStop,
+                  base::Unretained(instance->app()),
+                  instance->GetThreadId()));
 
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
                           base::Bind(&Kill, base::Unretained(instance)));
@@ -72,6 +92,11 @@ void V8WorkerThread::Init() {
 void V8WorkerThread::Run(base::RunLoop* run_loop) {
   content::WorkerThreadRegistry::Instance()->DidStartCurrentWorkerThread();
   env()->OnMessageLoopCreated();
+  LoadModule();
+  BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
+      base::Bind(&NotifyStart,
+                  base::Unretained(app()),
+                  GetThreadId()));
   Thread::Run(run_loop);
 }
 
@@ -81,7 +106,6 @@ void V8WorkerThread::CleanUp() {
   memory_pressure_listener_.reset();
   env()->OnMessageLoopDestroying();
   js_env_.reset();
-
   V8WorkerThread::Shutdown();
 }
 
@@ -90,15 +114,19 @@ void V8WorkerThread::OnMemoryPressure(
   env()->isolate()->LowMemoryNotification();
 }
 
-void V8WorkerThread::Require(const std::string& module_name) {
-  task_runner()->PostTask(
-        FROM_HERE, base::Bind(&V8WorkerThread::RequireInThread,
-            base::Unretained(this), module_name));
-}
+void V8WorkerThread::LoadModule() {
+  if (!env()->source_map().Contains(module_name_)) {
+    BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
+        base::Bind(&NotifyError,
+                    base::Unretained(app()),
+                    GetThreadId(),
+                    "No source for require(" + module_name_ + ")"));
+    base::MessageLoop::current()->QuitNow();
+    return;
+  }
 
-void V8WorkerThread::RequireInThread(const std::string module_name) {
   ModuleSystem::NativesEnabledScope natives_enabled(env()->module_system());
-  env()->module_system()->Require(module_name);
+  env()->module_system()->Require(module_name_);
 }
 
 }  // namespace brave

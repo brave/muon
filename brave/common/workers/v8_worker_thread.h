@@ -22,7 +22,8 @@ namespace brave {
 
 class V8WorkerThread : public base::Thread {
  public:
-  explicit V8WorkerThread(const std::string& name, atom::api::App* app);
+  explicit V8WorkerThread(const std::string& name,
+      const std::string& module_name, atom::api::App* app);
   ~V8WorkerThread() override;
 
   static V8WorkerThread* current();
@@ -32,15 +33,16 @@ class V8WorkerThread : public base::Thread {
   void Run(base::RunLoop* run_loop) override;
   void CleanUp() override;
 
-  void Require(const std::string& module_name);
-
   atom::api::App* app() const { return app_; }
   atom::JavascriptEnvironment* env() const { return js_env_.get(); }
+  const std::string& module_name() const { return module_name_; }
+
  private:
-  void RequireInThread(const std::string module_name);
+  void LoadModule();
   void OnMemoryPressure(
     base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level);
 
+  const std::string module_name_;
   atom::api::App* app_;
   std::unique_ptr<atom::JavascriptEnvironment> js_env_;
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;

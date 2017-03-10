@@ -38,6 +38,9 @@ class JavascriptEnvironment {
   v8::Local<v8::Context> context() const {
     return context_holder_->context();
   }
+  const brave::AsarSourceMap& source_map() const {
+    return source_map_;
+  }
 
  private:
   bool Initialize();

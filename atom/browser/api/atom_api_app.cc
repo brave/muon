@@ -858,11 +858,11 @@ void App::StartWorker(mate::Arguments* args) {
   std::string worker_name = module_name + "_worker";
   args->GetNext(&worker_name);
 
-  auto worker = new brave::V8WorkerThread(worker_name, this);
-  worker->Start();
-  worker->WaitUntilThreadStarted();
-  worker->Require(module_name);
-  args->Return(worker->GetThreadId());
+  auto worker = new brave::V8WorkerThread(worker_name, module_name, this);
+  int worker_id = -1;
+  if (worker->Start())
+    worker_id = worker->GetThreadId();
+  args->Return(worker_id);
 }
 
 #if defined(USE_NSS_CERTS)

@@ -87,7 +87,11 @@ v8::Local<v8::Value> AsarSourceMap::GetSource(
     const std::string& name) const {
   std::string source;
   if (ReadFromSearchPaths(search_paths_, GetFilePath(name), &source)) {
-    return gin::StringToV8(isolate, source);
+    return gin::StringToV8(isolate,
+        "const global = this; try { " +
+          source +
+        " } catch (e) { " +
+        "if (global.onerror) { global.onerror(e) } else { throw e } }");
   }
 
   NOTREACHED() << "No module is registered with name \"" << name << "\"";

@@ -5,6 +5,7 @@
 #ifndef BRAVE_COMMON_WORKERS_WORKER_BINDINGS_H_
 #define BRAVE_COMMON_WORKERS_WORKER_BINDINGS_H_
 
+#include <string>
 #include <utility>
 
 #include "base/compiler_specific.h"
@@ -25,9 +26,11 @@ class WorkerBindings : public extensions::ObjectBackedNativeHandler {
                         v8::Local<v8::Value> message);
 
  private:
+  void Close(const v8::FunctionCallbackInfo<v8::Value>& args);
+  void PostMessageOnUIThread(const std::pair<uint8_t*, size_t>& buffer);
   void PostMessage(const v8::FunctionCallbackInfo<v8::Value>& args);
-
-  void Emit(const std::pair<uint8_t*, size_t>& buffer);
+  void OnErrorOnUIThread(const std::string& message);
+  void OnError(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   V8WorkerThread* worker_;
   v8::Local<v8::Function> on_message_;
