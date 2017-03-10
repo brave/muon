@@ -1706,6 +1706,8 @@ void WebContents::Clone(mate::Arguments* args) {
 void WebContents::SetActive(bool active) {
   if (active)
     web_contents()->WasShown();
+  else
+    web_contents()->WasHidden();
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
