@@ -134,7 +134,9 @@ class App : public AtomBrowserClient::Delegate,
   bool Relaunch(mate::Arguments* args);
   void DisableHardwareAcceleration(mate::Arguments* args);
   bool IsAccessibilitySupportEnabled();
-  void PostMessage(int worker_id, v8::Local<v8::Value> message);
+  void PostMessage(int worker_id,
+                  v8::Local<v8::Value> message,
+                  mate::Arguments* args);
   void StartWorker(mate::Arguments* args);
   void StopWorker(mate::Arguments* args);
 #if defined(USE_NSS_CERTS)

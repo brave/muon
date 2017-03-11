@@ -832,8 +832,11 @@ bool App::IsAccessibilitySupportEnabled() {
   return ax_state->IsAccessibleBrowser();
 }
 
-void App::PostMessage(int worker_id, v8::Local<v8::Value> message) {
-  brave::WorkerBindings::OnMessage(isolate(), worker_id, message);
+void App::PostMessage(int worker_id,
+                      v8::Local<v8::Value> message,
+                      mate::Arguments* args) {
+  if (!brave::WorkerBindings::OnMessage(isolate(), worker_id, message))
+    args->ThrowError("Eror serializing message");
 }
 
 void App::StopWorker(mate::Arguments* args) {

@@ -48,6 +48,7 @@ action("lib") {
     "common/api/shell.js",
     "common/init.js",
     "common/reset-search-paths.js",
+    "muon/module_system/commonjs.js",
   ]
 
   if (enable_extensions) {
@@ -88,4 +89,3 @@ action("atom_js2c") {
     args += [ rebase_path(filename, root_build_dir) ]
   }
 }
-

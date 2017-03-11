@@ -21,7 +21,7 @@ class WorkerBindings : public extensions::ObjectBackedNativeHandler {
  public:
   WorkerBindings(extensions::ScriptContext* context, V8WorkerThread* worker);
   ~WorkerBindings() override;
-  static void OnMessage(v8::Isolate* isolate,
+  static bool OnMessage(v8::Isolate* isolate,
                         base::PlatformThreadId thread_id,
                         v8::Local<v8::Value> message);
 
@@ -29,7 +29,7 @@ class WorkerBindings : public extensions::ObjectBackedNativeHandler {
   void Close(const v8::FunctionCallbackInfo<v8::Value>& args);
   void PostMessageOnUIThread(const std::pair<uint8_t*, size_t>& buffer);
   void PostMessage(const v8::FunctionCallbackInfo<v8::Value>& args);
-  void OnErrorOnUIThread(const std::string& message);
+  void OnErrorOnUIThread(const std::string& message, const std::string& stack);
   void OnError(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   V8WorkerThread* worker_;

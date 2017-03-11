@@ -13,6 +13,8 @@ namespace brave {
 
 namespace {
 
+static const char commonjs[] = "muon/module_system/commonjs";
+
 bool IsAsarPath(const base::FilePath& path) {
   base::FilePath archive;
   base::FilePath relative;
@@ -25,7 +27,7 @@ bool ReadFromPath(
     const base::FilePath& path,
     std::string* source) {
   base::FilePath file_path = path.Append(file);
-  if (file_path.Extension() != ".js")
+  if (!file_path.MatchesExtension(".js"))
     file_path = file_path.AddExtension(FILE_PATH_LITERAL("js"));
 
   base::FilePath module_path1 = path
@@ -65,9 +67,23 @@ const base::FilePath GetFilePath(const std::string& name) {
   std::vector<std::string> components = base::SplitString(
       name, "/", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
 
-  base::FilePath path;
+  std::vector<std::string> path_components;
+
+  // normalize the path
   for (size_t i = 0; i < components.size(); ++i) {
-    path = path.AppendASCII(components[i]);
+    if (components[i] == base::FilePath::kCurrentDirectory)
+      continue;
+
+    if (components[i] == base::FilePath::kParentDirectory) {
+      path_components.pop_back();
+    } else {
+      path_components.push_back(components[i]);
+    }
+  }
+
+  base::FilePath path;
+  for (size_t i = 0; i < path_components.size(); ++i) {
+    path = path.AppendASCII(path_components[i]);
   }
   return path;
 }
@@ -87,11 +103,17 @@ v8::Local<v8::Value> AsarSourceMap::GetSource(
     const std::string& name) const {
   std::string source;
   if (ReadFromSearchPaths(search_paths_, GetFilePath(name), &source)) {
-    return gin::StringToV8(isolate,
-        "const global = this; try { " +
-          source +
-        " } catch (e) { " +
-        "if (global.onerror) { global.onerror(e) } else { throw e } }");
+    if (name != commonjs) {
+      source =
+          "const fn = function (require, module, console) { " + source + " };"
+          "require('" +
+            commonjs +
+          "').require(fn, exports, '" +
+          GetFilePath(name).AsUTF8Unsafe() +
+          "', this);";
+    }
+
+    return gin::StringToV8(isolate, source);
   }
 
   NOTREACHED() << "No module is registered with name \"" << name << "\"";

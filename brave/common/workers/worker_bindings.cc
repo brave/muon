@@ -81,6 +81,12 @@ WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
 
   // pathname
   v8::Local<v8::Object> location = v8::Object::New(isolate);
+  SetReadOnlyProperty(v8_context, location,
+      v8::String::NewFromUtf8(isolate, "pathname",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      v8::String::NewFromUtf8(isolate, worker->module_name().c_str(),
+          v8::NewStringType::kNormal).ToLocalChecked());
+
   // read-only props
   SetReadOnlyProperty(v8_context, v8_context->Global(),
       v8::String::NewFromUtf8(isolate, "self",
@@ -116,27 +122,40 @@ WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
 WorkerBindings::~WorkerBindings() {
 }
 
-void WorkerBindings::OnErrorOnUIThread(const std::string& message) {
-  worker_->app()->Emit("worker-onerror", worker_->GetThreadId(), message);
+void WorkerBindings::OnErrorOnUIThread(const std::string& message,
+                                        const std::string& stack) {
+  worker_->app()->Emit(
+      "worker-onerror", worker_->GetThreadId(), message, stack);
 }
 
 void WorkerBindings::OnError(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
 
   std::string message = "Error message not available";
+  std::string stack_trace = "<stack trace unavailable>";
   if (args[0]->IsObject()) {
     v8::Local<v8::Value> msg = args[0].As<v8::Object>()->Get(
         context()->v8_context(),
         v8::String::NewFromUtf8(context()->isolate(), "message",
             v8::NewStringType::kNormal).ToLocalChecked()).ToLocalChecked();
+
     if (msg->IsString())
       message = *v8::String::Utf8Value(msg);
+
+    v8::Local<v8::Value> stack = args[0].As<v8::Object>()->Get(
+        context()->v8_context(),
+        v8::String::NewFromUtf8(context()->isolate(), "stack",
+            v8::NewStringType::kNormal).ToLocalChecked()).ToLocalChecked();
+
+    if (stack->IsString())
+      stack_trace = *v8::String::Utf8Value(stack);
   }
 
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
       base::Bind(&WorkerBindings::OnErrorOnUIThread,
                   base::Unretained(this),
-                  std::move(message)));
+                  std::move(message),
+                  std::move(stack_trace)));
 }
 
 void WorkerBindings::Close(
@@ -194,7 +213,7 @@ void WorkerBindings::PostMessage(
 }
 
 // static
-void WorkerBindings::OnMessage(v8::Isolate* isolate,
+bool WorkerBindings::OnMessage(v8::Isolate* isolate,
                                 base::PlatformThreadId thread_id,
                                 v8::Local<v8::Value> message) {
   v8::ValueSerializer serializer(isolate);

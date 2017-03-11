@@ -14,6 +14,8 @@ static_library("extensions") {
   ]
 
   sources = [
+    "path_bindings.cc",
+    "path_bindings.h",
     "api/guest_view/tab_view/tab_view_internal_api.cc",
     "api/guest_view/tab_view/tab_view_internal_api.h",
     "//extensions/shell/browser/shell_display_info_provider.cc",

@@ -16,6 +16,7 @@
 #include "base/i18n/icu_util.h"
 #include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
+#include "brave/browser/extensions/path_bindings.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/common/features/feature.h"
 #include "extensions/renderer/logging_native_handler.h"
@@ -29,7 +30,6 @@
 #include "gin/modules/module_registry.h"
 #include "gin/object_template_builder.h"
 #include "gin/v8_initializer.h"
-#include "mojo/edk/js/threading.h"
 #include "ui/base/resource/resource_bundle.h"
 
 
@@ -76,6 +76,9 @@ std::vector<base::FilePath> GetModuleSearchPaths() {
     search_paths.push_back(source_root
         .Append(FILE_PATH_LITERAL("node_modules")));
   }
+
+  search_paths.push_back(
+    GetResourcesDir().Append(FILE_PATH_LITERAL("electron.asar")));
 
   return search_paths;
 }
@@ -134,15 +137,15 @@ JavascriptEnvironment::JavascriptEnvironment()
     std::unique_ptr<ModuleSystem> module_system(
         new ModuleSystem(script_context_.get(), &source_map_));
     script_context_->set_module_system(std::move(module_system));
+    script_context_->module_system()->RegisterNativeHandler(
+      "path", std::unique_ptr<extensions::NativeHandler>(
+          new brave::PathBindings(script_context_.get(), &source_map_)));
   }
 
   ModuleRegistry* registry = ModuleRegistry::From(context());
   registry->AddBuiltinModule(isolate(),
       gin::Console::kModuleName,
       gin::Console::GetModule(isolate()));
-  registry->AddBuiltinModule(isolate(),
-      mojo::edk::js::Threading::kModuleName,
-      mojo::edk::js::Threading::GetModule(isolate()));
 }
 
 JavascriptEnvironment::~JavascriptEnvironment() {
