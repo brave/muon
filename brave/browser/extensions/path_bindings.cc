@@ -37,10 +37,11 @@ void PathBindings::Append(
     return;
   }
 
-  std::string base_path_str = *v8::String::Utf8Value(args[0]);
-  std::string append_path_str = *v8::String::Utf8Value(args[1]);
-  base::FilePath base_path(base_path_str);
-  base::FilePath append_path(append_path_str);
+  std::string base_path_str(*v8::String::Utf8Value(args[0]));
+  base::FilePath base_path(base::FilePath::FromUTF8Unsafe(base_path_str));
+
+  std::string append_path_str(*v8::String::Utf8Value(args[1]));
+  base::FilePath append_path(base::FilePath::FromUTF8Unsafe(append_path_str));
 
   args.GetReturnValue().Set(v8::String::NewFromUtf8(
       GetIsolate(), base_path.Append(append_path).AsUTF8Unsafe().c_str()));
@@ -54,8 +55,8 @@ void PathBindings::DirName(
     return;
   }
 
-  std::string path_str = *v8::String::Utf8Value(args[0]);
-  base::FilePath path(path_str);
+  std::string path_str(*v8::String::Utf8Value(args[0]));
+  base::FilePath path(base::FilePath::FromUTF8Unsafe(path_str));
 
   args.GetReturnValue().Set(v8::String::NewFromUtf8(
       GetIsolate(), path.DirName().AsUTF8Unsafe().c_str()));
