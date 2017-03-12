@@ -69,8 +69,6 @@ executable("electron_app") {
     ":widevine_cdm_adapter",
   ]
 
-  libs = [ "uiautomationcore.lib" ]
-
   output_name = executable_name
 
   ldflags = [
