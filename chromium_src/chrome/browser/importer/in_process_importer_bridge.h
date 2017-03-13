@@ -2,13 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/**
- * This is not a straight copy from chromium src, in particular
- * we add SetCookies.
- * This was originally forked with 52.0.2743.116.  Diff against
- * a version of that file for a full list of changes.
- */
-
 #ifndef CHROME_BROWSER_IMPORTER_IN_PROCESS_IMPORTER_BRIDGE_H_
 #define CHROME_BROWSER_IMPORTER_IN_PROCESS_IMPORTER_BRIDGE_H_
 
@@ -24,7 +17,6 @@
 
 class GURL;
 struct ImportedBookmarkEntry;
-struct FaviconUsageData;
 class ExternalProcessImporterHost;
 
 struct ImportedCookieEntry;
@@ -33,7 +25,6 @@ namespace importer {
 #if defined(OS_WIN)
 struct ImporterIE7PasswordInfo;
 #endif
-struct ImporterURlRow;
 struct SearchEngineInfo;
 }
 
