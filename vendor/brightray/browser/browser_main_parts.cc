@@ -163,7 +163,7 @@ void BrowserMainParts::PreEarlyInitialization() {
   base::FeatureList::SetInstance(std::move(feature_list));
 
 #if defined(USE_X11)
-  views::LinuxUI::SetInstance(BuildGtk2UI());
+  views::LinuxUI::SetInstance(BuildGtkUi());
   base::FilePath path = base::FilePath();
   OverrideLinuxAppDataPath(path);
   if (path.empty()) {
