@@ -27,7 +27,7 @@ bool ReadFromPath(
     const base::FilePath& path,
     std::string* source) {
   base::FilePath file_path = path.Append(file);
-  if (!file_path.MatchesExtension(".js"))
+  if (!file_path.MatchesExtension(FILE_PATH_LITERAL(".js")))
     file_path = file_path.AddExtension(FILE_PATH_LITERAL("js"));
 
   base::FilePath module_path1 = path
@@ -67,23 +67,25 @@ const base::FilePath GetFilePath(const std::string& name) {
   std::vector<std::string> components = base::SplitString(
       name, "/", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
 
-  std::vector<std::string> path_components;
+  std::vector<base::FilePath::StringType> path_components;
 
   // normalize the path
   for (size_t i = 0; i < components.size(); ++i) {
-    if (components[i] == base::FilePath::kCurrentDirectory)
+    base::FilePath::StringType component(components[i].begin(), components[i].end());
+
+    if (component == base::FilePath::kCurrentDirectory)
       continue;
 
-    if (components[i] == base::FilePath::kParentDirectory) {
+    if (component == base::FilePath::kParentDirectory) {
       path_components.pop_back();
     } else {
-      path_components.push_back(components[i]);
+      path_components.push_back(component);
     }
   }
 
   base::FilePath path;
   for (size_t i = 0; i < path_components.size(); ++i) {
-    path = path.AppendASCII(path_components[i]);
+    path = path.Append(path_components[i]);
   }
   return path;
 }

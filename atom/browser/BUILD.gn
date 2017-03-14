@@ -250,11 +250,6 @@ source_set("browser") {
     sources += [
       "ui/views/win_frame_view.cc",
       "ui/views/win_frame_view.h",
-    ]
-  }
-
-  if (is_win) {
-    sources += [
       "browser_win.cc",
       "native_window_views_win.cc",
       "relauncher_win.cc",
@@ -274,6 +269,8 @@ source_set("browser") {
       "ui/win/taskbar_host.cc",
       "ui/win/taskbar_host.h",
     ]
+
+    libs = [ "uiautomationcore.lib" ]
   }
 
   if (is_linux) {
