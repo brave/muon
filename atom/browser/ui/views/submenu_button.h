@@ -29,6 +29,8 @@ class SubmenuButton : public views::MenuButton {
   void OnPaint(gfx::Canvas* canvas) override;
 
  private:
+  const gfx::FontList& GetFontList() const;
+
   bool GetUnderlinePosition(const base::string16& text,
                             base::char16* accelerator,
                             int* start, int* end);

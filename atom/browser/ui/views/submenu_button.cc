@@ -9,6 +9,8 @@
 
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "ui/base/default_style.h"
+#include "ui/base/resource/resource_bundle.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/text_utils.h"
 #include "ui/views/controls/button/label_button_border.h"
@@ -50,6 +52,11 @@ SubmenuButton::SubmenuButton(views::ButtonListener* listener,
 }
 
 SubmenuButton::~SubmenuButton() {
+}
+
+const gfx::FontList& SubmenuButton::GetFontList() const {
+  ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+  return rb.GetFontListWithDelta(ui::kLabelFontSizeDelta);
 }
 
 void SubmenuButton::SetAcceleratorVisibility(bool visible) {
