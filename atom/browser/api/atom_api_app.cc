@@ -486,8 +486,7 @@ int ImportIntoCertStore(
 
   if (!cert_path.empty()) {
     if (base::ReadFileToString(base::FilePath(cert_path), &file_data)) {
-      auto module = model->cert_db()->GetPublicModule();
-      rv = model->ImportFromPKCS12(module,
+      rv = model->ImportFromPKCS12(model->cert_db()->GetPublicSlot().get(),
                                    file_data,
                                    password,
                                    true,
