@@ -5,6 +5,8 @@
 #include "brave/common/extensions/asar_source_map.h"
 
 #include "atom/common/asar/asar_util.h"
+#include "base/callback.h"
+#include "base/bind.h"
 #include "base/files/file_util.h"
 #include "base/strings/string_split.h"
 #include "gin/converter.h"
