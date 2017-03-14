@@ -148,7 +148,7 @@ bool IsSystemKeyEvent(const blink::WebKeyboardEvent& event) {
       event.windowsKeyCode != ui::VKEY_B &&
       event.windowsKeyCode != ui::VKEY_I;
 #else
-  return !!(event.modifiers & blink::WebInputEvent::AltKey);
+  return !!(event.modifiers() & blink::WebInputEvent::AltKey);
 #endif
 }
 
@@ -259,7 +259,7 @@ bool Converter<blink::WebMouseWheelEvent>::FromV8(
   bool can_scroll = true;
   if (dict.Get("canScroll", &can_scroll) && !can_scroll) {
     out->hasPreciseScrollingDeltas = false;
-    out->modifiers &= ~blink::WebInputEvent::ControlKey;
+    out->setModifiers(out->modifiers() & (~blink::WebInputEvent::ControlKey));
   }
 #endif
   return true;
