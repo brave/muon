@@ -8,13 +8,15 @@
 
 #include "base/files/file_path.h"
 #include "extensions/renderer/script_context.h"
+#include "extensions/renderer/source_map.h"
 #include "extensions/renderer/v8_helpers.h"
 #include "v8/include/v8.h"
 
 namespace brave {
 
-PathBindings::PathBindings(extensions::ScriptContext* context,
-                          extensions::ModuleSystem::SourceMap* source_map)
+PathBindings::PathBindings(
+        extensions::ScriptContext* context,
+        extensions::SourceMap* source_map)
     : extensions::ObjectBackedNativeHandler(context),
       source_map_(source_map) {
   RouteFunction("append",

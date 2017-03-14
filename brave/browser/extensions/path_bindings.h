@@ -19,7 +19,7 @@ namespace brave {
 class PathBindings : public extensions::ObjectBackedNativeHandler {
  public:
   PathBindings(extensions::ScriptContext* context,
-      extensions::ModuleSystem::SourceMap* source_map);
+      extensions::SourceMap* source_map);
   ~PathBindings() override;
 
  private:
@@ -27,7 +27,7 @@ class PathBindings : public extensions::ObjectBackedNativeHandler {
   void DirName(const v8::FunctionCallbackInfo<v8::Value>& args);
   void Require(const v8::FunctionCallbackInfo<v8::Value>& args);
 
-  const extensions::ModuleSystem::SourceMap* source_map_;
+  const extensions::SourceMap* source_map_;
 
   DISALLOW_COPY_AND_ASSIGN(PathBindings);
 };
