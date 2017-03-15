@@ -137,8 +137,6 @@ source_set("browser") {
     "net/atom_network_delegate.h",
     "net/atom_ssl_config_service.cc",
     "net/atom_ssl_config_service.h",
-    "net/atom_url_request_job_factory.cc",
-    "net/atom_url_request_job_factory.h",
     "net/http_protocol_handler.cc",
     "net/http_protocol_handler.h",
     "net/js_asker.cc",

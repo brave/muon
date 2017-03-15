@@ -7,7 +7,6 @@
 
 #include "brave/browser/brave_browser_context.h"
 
-#include "atom/browser/net/atom_url_request_job_factory.h"
 #include "base/path_service.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
@@ -46,6 +45,7 @@
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
 #include "net/url_request/url_request_context.h"
+#include "net/url_request/url_request_job_factory_impl.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
@@ -339,7 +339,7 @@ BraveBrowserContext::CreateURLRequestJobFactory(
   extensions::InfoMap* extension_info_map =
       extensions::AtomExtensionSystemFactory::GetInstance()->
         GetForBrowserContext(this)->info_map();
-  static_cast<atom::AtomURLRequestJobFactory*>(
+  static_cast<net::URLRequestJobFactoryImpl*>(
       job_factory.get())->SetProtocolHandler(
           extensions::kExtensionScheme,
           extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),

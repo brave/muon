@@ -53,14 +53,6 @@ namespace {
 // List of registered custom standard schemes.
 std::vector<std::string> g_standard_schemes;
 
-// // Clear protocol handlers in IO thread.
-// void ClearJobFactoryInIO(
-//   scoped_refptr<brightray::URLRequestContextGetter> request_context_getter) {
-//   auto job_factory = static_cast<AtomURLRequestJobFactory*>(
-//       request_context_getter->job_factory());
-//   job_factory->Clear();
-// }
-
 }  // namespace
 
 std::vector<std::string> GetStandardSchemes() {
@@ -87,9 +79,6 @@ Protocol::Protocol(v8::Isolate* isolate, AtomBrowserContext* browser_context)
 }
 
 Protocol::~Protocol() {
-  // content::BrowserThread::PostTask(
-  //   content::BrowserThread::IO, FROM_HERE,
-  //   base::Bind(ClearJobFactoryInIO, browser_context_->GetRequestContext()));
 }
 
 void Protocol::RegisterServiceWorkerSchemes(
@@ -113,9 +102,9 @@ void Protocol::UnregisterProtocol(
 Protocol::ProtocolError Protocol::UnregisterProtocolInIO(
     scoped_refptr<brightray::URLRequestContextGetter> request_context_getter,
     const std::string& scheme) {
-  auto job_factory = static_cast<AtomURLRequestJobFactory*>(
+  auto job_factory = static_cast<net::URLRequestJobFactoryImpl*>(
       request_context_getter->job_factory());
-  if (!job_factory->HasProtocolHandler(scheme))
+  if (!job_factory->IsHandledProtocol(scheme))
     return PROTOCOL_NOT_REGISTERED;
   job_factory->SetProtocolHandler(scheme, nullptr);
   return PROTOCOL_OK;
@@ -135,27 +124,6 @@ bool Protocol::IsProtocolHandledInIO(
     scoped_refptr<brightray::URLRequestContextGetter> request_context_getter,
     const std::string& scheme) {
   return request_context_getter->job_factory()->IsHandledProtocol(scheme);
-}
-
-void Protocol::UninterceptProtocol(
-    const std::string& scheme, mate::Arguments* args) {
-  CompletionCallback callback;
-  args->GetNext(&callback);
-  content::BrowserThread::PostTaskAndReplyWithResult(
-      content::BrowserThread::IO, FROM_HERE,
-      base::Bind(&Protocol::UninterceptProtocolInIO,
-          make_scoped_refptr(browser_context_->GetRequestContext()), scheme),
-      base::Bind(&Protocol::OnIOCompleted,
-                 GetWeakPtr(), callback));
-}
-
-// static
-Protocol::ProtocolError Protocol::UninterceptProtocolInIO(
-    scoped_refptr<brightray::URLRequestContextGetter> request_context_getter,
-    const std::string& scheme) {
-  return static_cast<AtomURLRequestJobFactory*>(
-      request_context_getter->job_factory())->UninterceptProtocol(scheme) ?
-          PROTOCOL_OK : PROTOCOL_NOT_INTERCEPTED;
 }
 
 const base::ListValue*
@@ -236,9 +204,9 @@ std::string Protocol::ErrorCodeToString(ProtocolError error) {
   }
 }
 
-AtomURLRequestJobFactory* Protocol::GetJobFactoryInIO() const {
+net::URLRequestJobFactoryImpl* Protocol::GetJobFactoryInIO() const {
   browser_context_->GetRequestContext()->GetURLRequestContext();  // Force init.
-  return static_cast<AtomURLRequestJobFactory*>(
+  return static_cast<net::URLRequestJobFactoryImpl*>(
       static_cast<brightray::URLRequestContextGetter*>(
           browser_context_->GetRequestContext())->job_factory());
 }
@@ -266,15 +234,6 @@ void Protocol::BuildPrototype(
                  &Protocol::RegisterProtocol<URLRequestFetchJob>)
       .SetMethod("unregisterProtocol", &Protocol::UnregisterProtocol)
       .SetMethod("isProtocolHandled", &Protocol::IsProtocolHandled)
-      .SetMethod("interceptStringProtocol",
-                 &Protocol::InterceptProtocol<URLRequestStringJob>)
-      .SetMethod("interceptBufferProtocol",
-                 &Protocol::InterceptProtocol<URLRequestBufferJob>)
-      .SetMethod("interceptFileProtocol",
-                 &Protocol::InterceptProtocol<URLRequestAsyncAsarJob>)
-      .SetMethod("interceptHttpProtocol",
-                 &Protocol::InterceptProtocol<URLRequestFetchJob>)
-      .SetMethod("uninterceptProtocol", &Protocol::UninterceptProtocol)
       .SetMethod("isNavigatorProtocolHandled",
                  &Protocol::IsNavigatorProtocolHandled)
       .SetMethod("getNavigatorHandlers",
