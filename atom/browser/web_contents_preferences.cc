@@ -161,8 +161,6 @@ void WebContentsPreferences::OverrideWebkitPrefs(
     prefs->allow_running_insecure_content = b;
   if (self->web_preferences_.GetBoolean("hyperlinkAuditingEnabled", &b))
     prefs->hyperlink_auditing_enabled = b;
-  if (self->web_preferences_.GetBoolean("touchEnabled", &b))
-    prefs->touch_event_feature_detection_enabled = b;
   const base::DictionaryValue* fonts = nullptr;
   if (self->web_preferences_.GetDictionary("defaultFontFamily", &fonts)) {
     base::string16 font;

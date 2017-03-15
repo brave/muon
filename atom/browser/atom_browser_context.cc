@@ -36,8 +36,8 @@
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
 #include "net/url_request/url_request_context.h"
-#include "net/url_request/url_request_job_factory_impl.h"
 #include "net/url_request/url_request_intercepting_job_factory.h"
+#include "net/url_request/url_request_job_factory_impl.h"
 #include "url/url_constants.h"
 
 using content::BrowserThread;

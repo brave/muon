@@ -82,6 +82,8 @@ void BraveContentRendererClient::RenderThreadStarted() {
   ChromeExtensionsRendererClient::GetInstance()->RenderThreadStarted();
 #endif
 
+  thread->AddObserver(chrome_observer_.get());
+
   prescient_networking_dispatcher_.reset(
       new network_hints::PrescientNetworkingDispatcher());
   thread->AddObserver(chrome_observer_.get());
