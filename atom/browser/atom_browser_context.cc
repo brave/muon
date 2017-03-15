@@ -15,7 +15,6 @@
 #include "atom/browser/net/atom_cert_verifier.h"
 #include "atom/browser/net/atom_network_delegate.h"
 #include "atom/browser/net/atom_ssl_config_service.h"
-#include "atom/browser/net/atom_url_request_job_factory.h"
 #include "atom/browser/net/http_protocol_handler.h"
 #include "atom/common/atom_version.h"
 #include "atom/common/options_switches.h"
@@ -37,10 +36,12 @@
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
 #include "net/url_request/url_request_context.h"
+#include "net/url_request/url_request_job_factory_impl.h"
 #include "net/url_request/url_request_intercepting_job_factory.h"
 #include "url/url_constants.h"
 
 using content::BrowserThread;
+using net::URLRequestJobFactoryImpl;
 
 namespace atom {
 
@@ -79,8 +80,8 @@ net::NetworkDelegate* AtomBrowserContext::CreateNetworkDelegate() {
 std::unique_ptr<net::URLRequestJobFactory>
 AtomBrowserContext::CreateURLRequestJobFactory(
     content::ProtocolHandlerMap* protocol_handlers) {
-  std::unique_ptr<AtomURLRequestJobFactory> job_factory(
-      new AtomURLRequestJobFactory);
+  std::unique_ptr<URLRequestJobFactoryImpl> job_factory(
+      new URLRequestJobFactoryImpl);
 
   for (auto& it : *protocol_handlers) {
     job_factory->SetProtocolHandler(it.first,
