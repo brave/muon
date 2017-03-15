@@ -23,11 +23,10 @@
 #include "base/stl_util.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
-#include "chrome/browser/plugins/plugin_info_message_filter.h"
-#include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h"
 #include "chrome/browser/speech/tts_message_filter.h"
+#include "chrome/common/chrome_switches.h"
 #include "content/public/browser/browser_ppapi_host.h"
 #include "content/public/browser/client_certificate_delegate.h"
 #include "content/public/browser/render_process_host.h"
@@ -35,6 +34,7 @@
 #include "content/public/browser/resource_dispatcher_host.h"
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/common/content_switches.h"
 #include "content/public/common/web_preferences.h"
 #include "extensions/features/features.h"
 #include "net/ssl/ssl_cert_request_info.h"
@@ -50,6 +50,7 @@
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/common/constants.h"
+#include "extensions/common/switches.h"
 #endif
 
 namespace atom {
@@ -81,15 +82,6 @@ content::WebContents* AtomBrowserClient::GetWebContentsFromProcessID(
   // Certain render process will be created with no associated render view,
   // for example: ServiceWorker.
   return WebContentsPreferences::GetWebContentsFromProcessID(process_id);
-}
-
-void AtomBrowserClient::RenderProcessWillLaunch(
-    content::RenderProcessHost* host) {
-  int process_id = host->GetID();
-  Profile* profile = Profile::FromBrowserContext(host->GetBrowserContext());
-  host->AddFilter(new printing::PrintingMessageFilter(process_id, profile));
-  host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
-  host->AddFilter(new PluginInfoMessageFilter(host->GetID(), profile));
 }
 
 content::SpeechRecognitionManagerDelegate*
@@ -126,19 +118,41 @@ std::string AtomBrowserClient::GetApplicationLocale() {
 void AtomBrowserClient::AppendExtraCommandLineSwitches(
     base::CommandLine* command_line,
     int process_id) {
+  const base::CommandLine& browser_command_line =
+      *base::CommandLine::ForCurrentProcess();
+
   std::string process_type = command_line->GetSwitchValueASCII("type");
-  if (process_type != "renderer")
-    return;
 
   // Copy following switches to child process.
   static const char* const kCommonSwitchNames[] = {
     switches::kStandardSchemes,
-    switches::kPpapiFlashPath,
-    switches::kPpapiFlashVersion,
+    ::switches::kUserAgent,
+    ::switches::kUserDataDir,  // Make logs go to the right file.
   };
   command_line->CopySwitchesFrom(
       *base::CommandLine::ForCurrentProcess(),
       kCommonSwitchNames, arraysize(kCommonSwitchNames));
+
+  if (process_type == ::switches::kRendererProcess) {
+    static const char* const kSwitchNames[] = {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+      extensions::switches::kAllowHTTPBackgroundPage,
+      extensions::switches::kAllowLegacyExtensionManifests,
+      extensions::switches::kEnableEmbeddedExtensionOptions,
+      extensions::switches::kEnableExperimentalExtensionApis,
+      extensions::switches::kExtensionsOnChromeURLs,
+      extensions::switches::kIsolateExtensions,
+      extensions::switches::kNativeCrxBindings,
+      extensions::switches::kWhitelistedExtensionID,
+#endif
+      ::switches::kAllowInsecureLocalhost,
+      ::switches::kPpapiFlashArgs,
+      ::switches::kPpapiFlashPath,
+      ::switches::kPpapiFlashVersion,
+    };
+
+    command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
+                                   arraysize(kSwitchNames));
 
   // The registered service worker schemes.
   if (!g_custom_service_worker_schemes.empty())
@@ -160,6 +174,29 @@ void AtomBrowserClient::AppendExtraCommandLineSwitches(
 
   WebContentsPreferences::AppendExtraCommandLineSwitches(
       web_contents, command_line);
+  } else if (process_type == ::switches::kUtilityProcess) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+    static const char* const kSwitchNames[] = {
+      extensions::switches::kAllowHTTPBackgroundPage,
+      extensions::switches::kEnableExperimentalExtensionApis,
+      extensions::switches::kExtensionsOnChromeURLs,
+      extensions::switches::kWhitelistedExtensionID,
+    };
+
+    command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
+                                   arraysize(kSwitchNames));
+#endif
+  } else if (process_type == ::switches::kZygoteProcess) {
+    static const char* const kSwitchNames[] = {
+      // Load (in-process) Pepper plugins in-process in the zygote pre-sandbox.
+      ::switches::kDisableBundledPpapiFlash,
+      ::switches::kPpapiFlashPath,
+      ::switches::kPpapiFlashVersion,
+    };
+
+    command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
+                                   arraysize(kSwitchNames));
+  }
 }
 
 void AtomBrowserClient::DidCreatePpapiPlugin(

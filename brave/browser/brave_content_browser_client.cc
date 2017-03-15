@@ -11,11 +11,15 @@
 #include "base/base_switches.h"
 #include "base/lazy_instance.h"
 #include "base/path_service.h"
+#include "base/strings/utf_string_conversions.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "chrome/browser/plugins/plugin_info_message_filter.h"
+#include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
+#include "chrome/browser/speech/tts_message_filter.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/render_messages.h"
 #include "chrome/common/renderer_configuration.mojom.h"
@@ -34,6 +38,7 @@
 #include "content/public/common/url_constants.h"
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
+#include "services/image_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
 #include "ui/base/l10n/l10n_util.h"
 
@@ -172,10 +177,10 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
     content::RenderProcessHost* host) {
   int id = host->GetID();
   Profile* profile = Profile::FromBrowserContext(host->GetBrowserContext());
-  // initialize request context
-  host->GetStoragePartition()->GetURLRequestContext();
 
-  atom::AtomBrowserClient::RenderProcessWillLaunch(host);
+  host->AddFilter(new printing::PrintingMessageFilter(id, profile));
+  host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
+  host->AddFilter(new PluginInfoMessageFilter(id, profile));
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_->RenderProcessWillLaunch(host);
@@ -526,11 +531,13 @@ void BraveContentBrowserClient::RegisterInProcessServices(
 }
 
 void BraveContentBrowserClient::RegisterOutOfProcessServices(
-      OutOfProcessServiceMap* apps) {
+      OutOfProcessServiceMap* services) {
 #if defined(ENABLE_MOJO_MEDIA_IN_UTILITY_PROCESS)
-  apps->insert(std::make_pair("mojo:media",
+  services->insert(std::make_pair("mojo:media",
                               base::ASCIIToUTF16("Media App")));
 #endif
+  services->insert(std::make_pair(image_decoder::mojom::kServiceName,
+                                  base::ASCIIToUTF16("Image Decoder Service")));
 }
 
 bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(

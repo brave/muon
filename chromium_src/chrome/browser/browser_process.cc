@@ -7,6 +7,7 @@
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/atom_browser_context.h"
 #include "base/command_line.h"
+#include "base/metrics/field_trial.h"
 #include "base/path_service.h"
 #include "base/threading/thread.h"
 #include "base/threading/thread_restrictions.h"
@@ -25,6 +26,7 @@
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
+#include "chrome/common/extensions/extension_process_policy.h"
 #include "chrome/common/extensions/chrome_extensions_client.h"
 #include "extensions/common/constants.h"
 #include "extensions/common/features/feature_provider.h"
@@ -37,6 +39,7 @@
 #include "content/public/browser/plugin_service.h"
 #endif
 
+using content::ChildProcessSecurityPolicy;
 using content::PluginService;
 
 BrowserProcess* g_browser_process = NULL;
@@ -53,9 +56,6 @@ BrowserProcess::BrowserProcess()
 #endif
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  content::ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
-      extensions::kExtensionScheme);
-
   extension_event_router_forwarder_ = new extensions::EventRouterForwarder;
 
   extensions::ExtensionsClient::Set(
@@ -153,6 +153,20 @@ bool BrowserProcess::IsShuttingDown() {
 }
 
 void BrowserProcess::PreCreateThreads() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // Register the chrome-extension scheme to reflect the extension process
+  // model. Controlled by a field trial, so we can't do this earlier.
+  base::FieldTrialList::FindFullName("SiteIsolationExtensions");
+  if (extensions::IsIsolateExtensionsEnabled()) {
+    // chrome-extension:// URLs are safe to request anywhere, but may only
+    // commit (including in iframes) in extension processes.
+    ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeIsolatedScheme(
+        extensions::kExtensionScheme, true);
+  } else {
+    ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
+        extensions::kExtensionScheme);
+  }
+#endif
 }
 
 void BrowserProcess::PreMainMessageLoopRun() {
