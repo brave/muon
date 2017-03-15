@@ -163,6 +163,8 @@ void Window::WillDestroyNativeObject() {
 }
 
 void Window::OnWindowClosed() {
+  Emit("will-close");
+
   api_web_contents_->DestroyWebContents();
 
   RemoveFromWeakMap();
