@@ -51,6 +51,9 @@
 #include "chrome/browser/downgrade/user_data_downgrade.h"
 #include "chrome/child/v8_breakpad_support_win.h"
 #include "chrome/common/child_process_logging.h"
+#include "chrome/install_static/install_details.h"
+#include "chrome/install_static/install_util.h"
+#include "chrome/install_static/product_install_details.h"
 #include "sandbox/win/src/sandbox.h"
 #include "ui/base/resource/resource_bundle_win.h"
 #endif
@@ -297,6 +300,11 @@ void AtomMainDelegate::PreSandboxStartup() {
 #if defined(OS_LINUX)
   // Disable setuid sandbox
   command_line->AppendSwitch(::switches::kDisableSetuidSandbox);
+#endif
+
+#if defined(OS_WIN)
+  install_static::InitializeProductDetailsForPrimaryModule();
+  install_static::InitializeProcessType();
 #endif
 }
 
