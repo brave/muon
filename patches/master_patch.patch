@@ -2447,26 +2447,6 @@ index 63d18d8cea5653c3283114e0e6166fe6b469f1a2..1e71a68ea64bf1b9e6ca3f6699bf8ca6
    data_deps = [
      "//services/tracing",
    ]
-diff --git a/services/tracing/BUILD.gn b/services/tracing/BUILD.gn
-index b384a936251473d47b6ff2962efa77b6243fcdf9..f398b4da2295e00fddceb75d99e99381a5b55a2e 100644
---- a/services/tracing/BUILD.gn
-+++ b/services/tracing/BUILD.gn
-@@ -5,6 +5,10 @@
- import("//services/service_manager/public/cpp/service.gni")
- import("//services/service_manager/public/service_manifest.gni")
- 
-+
-+# workaround for icu linking errors on windows
-+# TODO(bridiver) - get this to work with icu_chrome
-+if (muon_build) { group("tracing") {} } else {
- service("tracing") {
-   sources = [
-     "main.cc",
-@@ -43,3 +47,4 @@ source_set("lib") {
-     "//services/tracing/public/interfaces",
-   ]
- }
-+}
 diff --git a/testing/libfuzzer/fuzzers/BUILD.gn b/testing/libfuzzer/fuzzers/BUILD.gn
 index 9ab09b70d7a0001377ed7800ad5e88c31b38ebdf..79d3b285ba88b547f656eb1d178fbd76f266a6a5 100644
 --- a/testing/libfuzzer/fuzzers/BUILD.gn
