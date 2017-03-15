@@ -50,7 +50,7 @@
 #include "base/debug/close_handle_hook_win.h"
 #include "chrome/browser/downgrade/user_data_downgrade.h"
 #include "chrome/common/child_process_logging.h"
-#include "chrome/common/v8_breakpad_support_win.h"
+#include "chrome/child/v8_breakpad_support_win.h"
 #include "sandbox/win/src/sandbox.h"
 #include "ui/base/resource/resource_bundle_win.h"
 #endif
