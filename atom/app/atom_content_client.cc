@@ -102,6 +102,19 @@ bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
 void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
   schemes->standard_schemes.push_back(extensions::kExtensionScheme);
   schemes->savable_schemes.push_back(extensions::kExtensionScheme);
+  schemes->secure_schemes.push_back(extensions::kExtensionScheme);
+  schemes->secure_origins = GetSecureOriginWhitelist();
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (extensions::feature_util::ExtensionServiceWorkersEnabled())
+    schemes->service_worker_schemes.push_back(extensions::kExtensionScheme);
+
+  // As far as Blink is concerned, they should be allowed to receive CORS
+  // requests. At the Extensions layer, requests will actually be blocked unless
+  // overridden by the web_accessible_resources manifest key.
+  // TODO(kalman): See what happens with a service worker.
+  schemes->cors_enabled_schemes.push_back(extensions::kExtensionScheme);
+#endif
 }
 
 bool AtomContentClient::AllowScriptExtensionForServiceWorker(
