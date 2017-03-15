@@ -29,4 +29,8 @@ source_set("app") {
     "//third_party/widevine/cdm:headers",
     "//third_party/kasko",
   ]
+
+  if (is_win) {
+    deps += [ "//chrome/child" ] # breakpad
+  }
 }
