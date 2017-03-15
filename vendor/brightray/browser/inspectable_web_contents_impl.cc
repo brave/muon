@@ -610,7 +610,7 @@ void InspectableWebContentsImpl::HandleMessageFromDevToolsFrontend(const std::st
 
 void InspectableWebContentsImpl::DispatchProtocolMessage(
     content::DevToolsAgentHost* agent_host, const std::string& message) {
-  if (!frontend_loaded_)
+  if (!frontend_loaded_ || !devtools_web_contents_)
     return;
 
   if (message.length() < kMaxMessageChunkSize) {
