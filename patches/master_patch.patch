@@ -1866,6 +1866,27 @@ index 574053731784ad9ff8fe33c4698fa58c0368b09e..7b5dd2d431e26584a3c7bd2a4ac4d0fa
            ? SiteInstance::CreateForURL(GetBrowserContext(), params.target_url)
            : source_site_instance;
  
+diff --git a/content/browser/zygote_host/zygote_host_impl_linux.cc b/content/browser/zygote_host/zygote_host_impl_linux.cc
+index 38b8cf6b3b584322b5b24022216c43e2928f0c5f..a63c293f4a34d8369151d98069494efc0246fd76 100644
+--- a/content/browser/zygote_host/zygote_host_impl_linux.cc
++++ b/content/browser/zygote_host/zygote_host_impl_linux.cc
+@@ -105,13 +105,9 @@ void ZygoteHostImpl::Init(const base::CommandLine& command_line) {
+     use_suid_sandbox_for_adj_oom_score_ = use_suid_sandbox_;
+   } else {
+     LOG(FATAL)
+-        << "No usable sandbox! Update your kernel or see "
+-           "https://chromium.googlesource.com/chromium/src/+/master/"
+-           "docs/linux_suid_sandbox_development.md for more information on "
+-           "developing with the SUID sandbox. "
+-           "If you want to live dangerously and need an immediate workaround, "
+-           "you can try using --"
+-        << switches::kNoSandbox << ".";
++        << "No usable sandbox! You probably need to enable user namespaces "
++           "in your kernel. See https://github.com/brave/browser-laptop/blob/"
++           "master/docs/linuxInstall.md for more information.";
+   }
+ }
+ 
 diff --git a/content/child/child_process.cc b/content/child/child_process.cc
 index 2763ee03cffdb0b12d5934091b9c31f7bad6ff39..ffc179200c288e4e3b5292a79bce9e909f36e7c5 100644
 --- a/content/child/child_process.cc

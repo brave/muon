@@ -57,7 +57,7 @@ index 8587356ddcca34cdcad716ba7395666ec7ce4380..ad3e31e8ae859c0b02a57b6d2867ae4a
    }
  }
 diff --git a/src/inspector/inspector.gyp b/src/inspector/inspector.gyp
-index 6246f0ac0e7edfbe2272a577a648dcf08f868bb1..8dd41a110f63cb25f7bf3abfa9b42a3a910e78e0 100644
+index c70722f852b60831250b9c91bdf3abf71650425d..9a001e756ef61565cd144da12e63b49964693152 100644
 --- a/src/inspector/inspector.gyp
 +++ b/src/inspector/inspector.gyp
 @@ -4,7 +4,7 @@
