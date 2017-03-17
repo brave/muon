@@ -743,7 +743,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
+@@ -41,7 +41,9 @@
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -1939,7 +1939,7 @@ diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/compone
 index ff49472ba68692cdf09cb4f50de461e94b8c8540..6c6cb01ef34ca6408e49cd603560d2d17d6f36df 100644
 --- a/components/printing/renderer/print_web_view_helper_mac.mm
 +++ b/components/printing/renderer/print_web_view_helper_mac.mm
-@@ -69,7 +69,6 @@ void PrintWebViewHelper::PrintPageInternal(
+@@ -69,7 +69,6 @@
    Send(new PrintHostMsg_DidPrintPage(routing_id(), page_params));
  }
  
@@ -1947,7 +1947,7 @@ index ff49472ba68692cdf09cb4f50de461e94b8c8540..6c6cb01ef34ca6408e49cd603560d2d1
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -106,7 +105,6 @@ bool PrintWebViewHelper::RenderPreviewPage(
+@@ -106,7 +105,6 @@
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1972,7 +1972,7 @@ diff --git a/content/browser/accessibility/browser_accessibility_manager_mac.mm 
 index 076568758f1b1ef1fe7d0ac53fdda0f0130b800f..037c6426f21edc16b3b5a7a4bf665084686390e7 100644
 --- a/content/browser/accessibility/browser_accessibility_manager_mac.mm
 +++ b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-@@ -93,8 +93,10 @@ NSString* const NSAccessibilityTextSelectionGranularity =
+@@ -93,8 +93,10 @@
      @"AXTextSelectionGranularity";
  NSString* const NSAccessibilityTextSelectionChangedFocus =
      @"AXTextSelectionChangedFocus";
@@ -1983,7 +1983,7 @@ index 076568758f1b1ef1fe7d0ac53fdda0f0130b800f..037c6426f21edc16b3b5a7a4bf665084
  NSString* const NSAccessibilityTextChangeElement = @"AXTextChangeElement";
  NSString* const NSAccessibilityTextEditType = @"AXTextEditType";
  NSString* const NSAccessibilityTextChangeValue = @"AXTextChangeValue";
-@@ -427,8 +429,10 @@ NSDictionary* BrowserAccessibilityManagerMac::
+@@ -427,8 +429,10 @@
      focus_object = focus_object->GetClosestPlatformObject();
      auto native_focus_object = ToBrowserAccessibilityCocoa(focus_object);
      if (native_focus_object && [native_focus_object instanceActive]) {
@@ -2011,7 +2011,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index d10bcb69154d389318b6f67ba231dba728f5f1cd..fffbf371e38da48dcb7037bcb9da5505e303bc32 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@
+@@ -21,7 +21,7 @@ @interface SyntheticPinchEvent : NSObject
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -2024,7 +2024,7 @@ diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/cont
 index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454edafb53a7 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -138,6 +138,11 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
+@@ -138,6 +138,11 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
  
  }  // namespace
  
@@ -2036,7 +2036,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -464,7 +469,7 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
+@@ -464,7 +469,7 @@ float FlipYFromRectToScreen(float y, float rect_height) {
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
@@ -2045,7 +2045,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1836,7 +1841,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1836,7 +1841,10 @@ - (BOOL)acceptsMouseEventsWhenInactive {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -2057,7 +2057,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -1983,13 +1991,13 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1983,13 +1991,13 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
    // we need to return |YES| for all events that might be swallowed by the menu.
    // We do not return |YES| for every keypress because we don't get |keyDown:|
    // events for keys that we handle this way.
@@ -2078,7 +2078,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2037,8 +2045,9 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2037,8 +2045,9 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -2090,7 +2090,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2393,14 +2402,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2393,14 +2402,14 @@ - (void)showLookUpDictionaryOverlayFromRange:(NSRange)range
    // do so. For this reason, for now, we accept this non-ideal way of fixing the
    // point offset manually from the view bounds. This should be revisited when
    // fixing issues in TextInputClientMac (https://crbug.com/643233).
@@ -2110,7 +2110,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
          [self showLookUpDictionaryOverlayInternal:string
                                      baselinePoint:baselinePoint
                                         targetView:targetView];
-@@ -2779,6 +2788,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2779,6 +2788,10 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -2121,7 +2121,7 @@ index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454e
    return ([event type] == NSKeyDown &&
               !([event modifierFlags] & NSCommandKeyMask)) ? YES : NO;
  }
-@@ -2935,9 +2948,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2935,9 +2948,11 @@ - (id)accessibilityFocusedUIElement {
  // Since this implementation doesn't have to wait any IPC calls, this doesn't
  // make any key-typing jank. --hbono 7/23/09
  //
@@ -2157,6 +2157,49 @@ index ea0069b7fffabb484b22b62fd04f7fab39a5a9ef..d72beaf6dae1220fc15432dbf8201350
            ? SiteInstance::CreateForURL(GetBrowserContext(), params.target_url)
            : source_site_instance;
  
+diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/browser/web_contents/web_contents_view_mac.mm
+index 1d01ac835dbe810121a24de1a4014f1bd4de4307..ad65af2b0c4b02e11244455eb5a17b858f579fca 100644
+--- a/content/browser/web_contents/web_contents_view_mac.mm
++++ b/content/browser/web_contents/web_contents_view_mac.mm
+@@ -576,6 +576,7 @@ - (void)draggedImage:(NSImage*)anImage
+              endedAt:(NSPoint)screenPoint
+            operation:(NSDragOperation)operation {
+   [dragSource_ endDragAt:screenPoint operation:operation];
++  [dragDest_ endDrag];
+ 
+   // Might as well throw out this object now.
+   dragSource_.reset();
+diff --git a/content/browser/web_contents/web_drag_dest_mac.h b/content/browser/web_contents/web_drag_dest_mac.h
+index da4427bca57814b671c22a900781a77116adc526..56462350c4c9f6590097728a531ec18b36e79ee6 100644
+--- a/content/browser/web_contents/web_drag_dest_mac.h
++++ b/content/browser/web_contents/web_drag_dest_mac.h
+@@ -92,6 +92,9 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
+ // Sets |dragStartProcessID_| and |dragStartViewID_|.
+ - (void)setDragStartTrackersForProcess:(int)processID;
+ 
++// Ends a drag operation
++- (void)endDrag;
++
+ // Returns whether |targetRWH| is a valid RenderWidgetHost to be dragging
+ // over. This enforces that same-page, cross-site drags are not allowed. See
+ // crbug.com/666858.
+diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser/web_contents/web_drag_dest_mac.mm
+index 458b01aaeedaa1d829cdc852a0a93d553d3c3523..b88d5831a2b2a285a7606293b9cb45f08e18956d 100644
+--- a/content/browser/web_contents/web_drag_dest_mac.mm
++++ b/content/browser/web_contents/web_drag_dest_mac.mm
+@@ -330,6 +330,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
+   dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
+ }
+ 
++- (void)endDrag {
++  dragStartProcessID_ = content::ChildProcessHost::kInvalidUniqueID;
++  dragStartViewID_ = content::GlobalRoutingID(
++    content::ChildProcessHost::kInvalidUniqueID, MSG_ROUTING_NONE);
++}
++
+ - (bool)isValidDragTarget:(content::RenderWidgetHostImpl*)targetRWH {
+   return targetRWH->GetProcess()->GetID() == dragStartProcessID_ ||
+          GetRenderViewHostID(webContents_->GetRenderViewHost()) !=
 diff --git a/content/child/child_process.cc b/content/child/child_process.cc
 index 19b28b7c5118efff1e539df86169f824dd1bdd69..e33f8dbb02d6f2bb65cc3ce0819f3a761344d757 100644
 --- a/content/child/child_process.cc
