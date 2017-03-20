@@ -574,6 +574,25 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..0d1f9efcb260f8c943ab24a4c23c14db
      }
    }
  
+diff --git a/chrome/browser/safe_browsing/incident_reporting/binary_integrity_analyzer_win_unittest.cc b/chrome/browser/safe_browsing/incident_reporting/binary_integrity_analyzer_win_unittest.cc
+index 6ff204f8da40fe3a55216b2df8a8b48eb2523343..3520166053098524495d2386f805d13211ec0bd0 100644
+--- a/chrome/browser/safe_browsing/incident_reporting/binary_integrity_analyzer_win_unittest.cc
++++ b/chrome/browser/safe_browsing/incident_reporting/binary_integrity_analyzer_win_unittest.cc
+@@ -27,10 +27,10 @@ namespace safe_browsing {
+ 
+ namespace {
+ 
+-const wchar_t kChromeDll[] = L"chrome.dll";
+-const wchar_t kChromeChildDll[] = L"chrome_child.dll";
+-const wchar_t kChromeElfDll[] = L"chrome_elf.dll";
+-const wchar_t kChromeExe[] = L"chrome.exe";
++const wchar_t kChromeDll[] = L"brave.dll";
++const wchar_t kChromeChildDll[] = L"brave_child.dll";
++const wchar_t kChromeElfDll[] = L"brave_elf.dll";
++const wchar_t kChromeExe[] = L"brave.exe";
+ const wchar_t kSignedBinaryDll[] = L"signed_binary.dll";
+ 
+ // Helper function to erase the content of a binary to make sure the signature
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 18450d2c65684eab413f169a402fa0f25d7b02b9..5d03afed526db8ba98e7bf3cbf2a386408337af5 100644
 --- a/chrome/common/BUILD.gn
