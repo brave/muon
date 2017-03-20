@@ -1,4 +1,6 @@
 source_set("dll") {
+  public_configs = [ "//electron/chromium_src:chromium_src_config" ]
+
   sources = [
     "chrome_main_delegate.cc",
     "chrome_main_delegate.h",
@@ -27,6 +29,8 @@ source_set("dll") {
 }
 
 source_set("exe") {
+  public_configs = [ "//electron/chromium_src:chromium_src_config" ]
+
   sources = []
   deps = []
 
