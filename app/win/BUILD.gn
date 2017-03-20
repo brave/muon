@@ -64,16 +64,6 @@ shared_library("electron_dll") {
   output_name = executable_name
 
   deps = [
-    "//electron/chromium_src/chrome/app:exe",
-  ]
-  sources = [
-    "//base/win/dllmain.cc",
-    "//chrome/app/chrome_main.cc",
-    "//electron/chromium_src/chrome/app/chrome_main_delegate.cc",
-    "//electron/chromium_src/chrome/app/chrome_main_delegate.h",
-  ]
-
-  deps = [
     "//build/config/sanitizers:deps",
     "//electron:browser_dependencies",
     # ":electron_dll_manifest",
