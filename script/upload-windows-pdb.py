@@ -17,7 +17,6 @@ PRODUCT_NAME = electron_gyp()['product_name%']
 
 PDB_LIST = [
   'out\\R\\{0}.exe.pdb'.format(PROJECT_NAME),
-  'out\\R\\node.dll.pdb',
 ]
 
 

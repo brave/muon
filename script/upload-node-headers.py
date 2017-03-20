@@ -8,8 +8,7 @@ import sys
 import tarfile
 
 from lib.config import PLATFORM, output_dir, SOURCE_ROOT, CHROMIUM_ROOT, dist_dir, get_target_arch, s3_config
-from lib.util import execute, safe_mkdir, scoped_cwd, s3put
-
+from lib.util import execute, safe_mkdir, scoped_cwd, s3put, electron_gyp
 
 NODE_DIR  = os.path.join(SOURCE_ROOT, 'vendor', 'node')
 
@@ -120,7 +119,7 @@ def upload_node(bucket, access_key, secret_key, version):
     safe_mkdir(os.path.dirname(iojs_lib))
 
     # Copy atom.lib to node.lib and iojs.lib.
-    atom_lib = os.path.join(output_dir(), 'node.dll.lib')
+    atom_lib = os.path.join(output_dir(), '{0}.dll.lib'.format(electron_gyp()['project_name%']))
     shutil.copy2(atom_lib, node_lib)
     shutil.copy2(atom_lib, iojs_lib)
 

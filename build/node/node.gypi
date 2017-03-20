@@ -9,14 +9,14 @@
     'OPENSSL_PRODUCT': 'libopenssl.a',
     'node_release_urlbase': '',
     'node_byteorder': '<!(node <(DEPTH)/electron/tools/get-endianness.js)',
-    'node_target_type': 'shared_library',
+    'node_target_type': 'static_library',
     'node_install_npm': 'false',
     'node_prefix': '',
-    'node_shared': 'true',
+    'node_shared': 'false',
     'node_shared_cares': 'false',
     'node_shared_http_parser': 'false',
     'node_shared_libuv': 'false',
-    'node_shared_openssl': 'false',
+    'node_shared_openssl': 'true',
     'node_shared_zlib': 'false',
     'node_tag': '',
     'node_use_dtrace': 'false',
@@ -26,7 +26,7 @@
     'node_use_perfctr': 'false',
     'node_use_v8_platform': 'false',
     'node_use_bundled_v8': 'false',
-    'node_use_chromium_v8': 'true',
+    'node_use_boringssl': 'true',
     'node_enable_d8': 'false',
     'uv_library': 'static_library',
     'uv_parent_path': 'vendor/node/deps/uv',
@@ -147,8 +147,15 @@
         'cflags': [
           '-fvisibility=default',
         ],
+        'defines': [
+          'NODE_SHARED_MODE',
+        ],
         'ldflags!': [
           '-Wl,--gc-sections',
+        ],
+        'include_dirs': [
+          '../../../v8',
+          '../../../v8/include',
         ],
         'conditions': [
           ['OS=="mac"', {

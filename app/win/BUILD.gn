@@ -43,7 +43,6 @@ executable("electron_app") {
     ":electron_exe_version",
     ":electron_manifest",
     "//build/config/sanitizers:deps",
-    "//electron/build/node:node_resources",
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
     "//base",
@@ -185,7 +184,6 @@ copy("dist_widevine_resources") {
 copy("dist_resources") {
   sources = [
     "$root_out_dir/xinput1_3.dll",
-    "$root_out_dir/node.dll",
     "$root_shlib_dir/libEGL.dll",
     "$root_shlib_dir/libGLESv2.dll",
     "$root_out_dir/d3dcompiler_47.dll",
@@ -197,7 +195,6 @@ copy("dist_resources") {
 
   public_deps = [
     ":external_binaries",
-    "//electron/build/node:node_resources",
     "//third_party/angle:copy_compiler_dll",
     "//third_party/angle:libEGL",
     "//third_party/angle:libGLESv2",
