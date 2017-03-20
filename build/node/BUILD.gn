@@ -1,10 +1,9 @@
-# config("build_config") {
-#   defines = [
-#     "NODE_WANT_INTERNALS=1",
-#     "NODE_SHARED_MODE",
-#     "OPENSSL_NO_ERR",
-#   ]
-# }
+config("build_config") {
+  defines = [
+    "NODE_WANT_INTERNALS=1",
+    "NODE_SHARED_MODE",
+  ]
+}
 
 source_set("node") {
   lib_dirs = [ root_out_dir ]
@@ -14,6 +13,10 @@ source_set("node") {
     "cares",
     "http_parser",
     "zlib",
+  ]
+
+  public_configs = [
+    ":build_config",
   ]
 
   deps = [
