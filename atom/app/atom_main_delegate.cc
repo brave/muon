@@ -190,7 +190,10 @@ base::FilePath InitializeUserDataDir() {
 
 }  // namespace
 
-AtomMainDelegate::AtomMainDelegate() {
+AtomMainDelegate::AtomMainDelegate()
+    : AtomMainDelegate(base::TimeTicks()) {}
+
+AtomMainDelegate::AtomMainDelegate(base::TimeTicks exe_entry_point_ticks) {
 }
 
 AtomMainDelegate::~AtomMainDelegate() {

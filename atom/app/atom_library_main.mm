@@ -16,12 +16,10 @@
 
 extern "C" {
 __attribute__((visibility("default")))
-int AtomMain(int argc, const char** argv);
+int ChromeMain(int argc, const char** argv);
 }
 
-
-#if defined(OS_MACOSX)
-int AtomMain(int argc, const char* argv[]) {
+int ChromeMain(int argc, const char* argv[]) {
   atom::AtomMainDelegate delegate;
   content::ContentMainParams params(&delegate);
   params.argc = argc;
@@ -29,16 +27,3 @@ int AtomMain(int argc, const char* argv[]) {
   atom::AtomCommandLine::Init(argc, argv);
   return content::ContentMain(params);
 }
-
-// int AtomInitializeICUandStartNode(int argc, char *argv[]) {
-//   base::AtExitManager atexit_manager;
-//   base::mac::ScopedNSAutoreleasePool pool;
-//   base::mac::SetOverrideFrameworkBundlePath(
-//       brightray::MainApplicationBundlePath()
-//           .Append("Contents")
-//           .Append("Frameworks")
-//           .Append(PRODUCT_SHORTNAME_STRING " Framework.framework"));
-//   base::i18n::InitializeICU();
-//   return atom::NodeMain(argc, argv);
-// }
-#endif  // OS_MACOSX

@@ -50,11 +50,8 @@ mac_app_bundle("electron_app") {
     "//build/config/compiler:wexit_time_destructors",
   ]
 
-  sources = [
-    "brave_exe_main_mac.c",
-  ]
-
   deps = [
+    "//electron/chromium_src/chrome/app:exe",
     ":electron_versioned_bundle_data",
     "//electron:electron_app_resources",
     "//build/config/sanitizers:deps",
@@ -196,10 +193,6 @@ mac_app_bundle("electron_helper_app") {
     "CHROMIUM_SHORT_NAME=$chrome_product_short_name",
   ]
 
-  sources = [
-    "brave_exe_main_mac.c",
-  ]
-
   extra_configs = [ "//build/config/compiler:wexit_time_destructors" ]
 
   defines = [ "HELPER_EXECUTABLE" ]
@@ -207,6 +200,7 @@ mac_app_bundle("electron_helper_app") {
   deps = [
     "//build/config/sanitizers:deps",
     "//chrome/common:version_header",
+    "//electron/chromium_src/chrome/app:exe",
   ]
 
   ldflags = []

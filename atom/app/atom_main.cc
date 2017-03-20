@@ -123,11 +123,7 @@ int main(int argc, const char* argv[]) {
 #else  // defined(OS_LINUX)
 
 int main(int argc, const char* argv[]) {
-  // if (IsEnvSet(kRunAsNode)) {
-  //   return AtomInitializeICUandStartNode(argc, const_cast<char**>(argv));
-  // }
-
-  return AtomMain(argc, argv);
+  return ChromeMain(argc, argv);
 }
 
 #endif  // defined(OS_MACOSX)

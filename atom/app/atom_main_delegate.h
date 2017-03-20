@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "base/time/time.h"
 #include "brightray/common/content_client.h"
 #include "brightray/common/main_delegate.h"
 
@@ -22,6 +23,11 @@ base::FilePath GetResourcesPakFilePathByName(const std::string resource_name);
 class AtomMainDelegate : public brightray::MainDelegate {
  public:
   AtomMainDelegate();
+
+  // |exe_entry_point_ticks| is the time at which the main function of the
+  // executable was entered, or null if not available.
+  explicit AtomMainDelegate(base::TimeTicks exe_entry_point_ticks);
+
   ~AtomMainDelegate() override;
 
  protected:

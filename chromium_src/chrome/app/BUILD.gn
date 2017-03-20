@@ -1,0 +1,74 @@
+source_set("dll") {
+  sources = [
+    "chrome_main_delegate.cc",
+    "chrome_main_delegate.h",
+    "//chrome/app/chrome_dll_resource.h",
+    "//chrome/app/chrome_main.cc",
+    # "app/chrome_main_delegate.cc",
+    # "app/chrome_main_delegate.h",
+    # "app/chrome_main_mac.h",
+    # "app/chrome_main_mac.mm",
+  ]
+
+  if (is_win) {
+    sources += [
+      "//base/win/dllmain.cc",
+      "//chrome/app/chrome_exe_main_win.cc",
+      "//chrome/app/chrome_watcher_client_win.cc",
+      "//chrome/app/chrome_watcher_client_win.h",
+      "//chrome/app/chrome_watcher_command_line_win.cc",
+      "//chrome/app/chrome_watcher_command_line_win.h",
+      "//chrome/app/main_dll_loader_win.cc",
+      "//chrome/app/main_dll_loader_win.h",
+      "//chrome/common/crash_keys.cc",
+      "//chrome/common/crash_keys.h",
+    ]
+  }
+}
+
+source_set("exe") {
+  sources = []
+  deps = []
+
+  if (is_mac) {
+    sources += [
+      "chrome_exe_main_mac.c",
+    ]
+  }
+
+  if (is_win) {
+    sources += [
+      "//chrome/app/chrome_exe_main_win.cc",
+      "//chrome/app/chrome_watcher_client_win.cc",
+      "//chrome/app/chrome_watcher_client_win.h",
+      "//chrome/app/chrome_watcher_command_line_win.cc",
+      "//chrome/app/chrome_watcher_command_line_win.h",
+      "//chrome/app/main_dll_loader_win.cc",
+      "//chrome/app/main_dll_loader_win.h",
+      "//chrome/common/crash_keys.cc",
+      "//chrome/common/crash_keys.h",
+    ]
+
+    deps += [
+      "//base",
+      "//breakpad:breakpad_handler",
+      "//breakpad:breakpad_sender",
+      "//chrome/browser:chrome_process_finder",
+      "//chrome/chrome_watcher",
+      "//chrome/chrome_watcher:client",
+      "//chrome/common:constants",
+      "//chrome/common:metrics_constants_util_win",
+      "//chrome:file_pre_reader",
+      "//chrome/install_static:secondary_module",
+      # # "//chrome/installer/util:with_no_strings",
+      "//chrome_elf",
+      "//components/browser_watcher:browser_watcher_client",
+      "//components/crash/content/app:run_as_crashpad_handler",
+      "//components/flags_ui:switches",
+      "//content:sandbox_helper_win",
+      "//content/public/common:static_switches",
+      "//crypto",
+      "//sandbox",
+    ]
+  }
+}

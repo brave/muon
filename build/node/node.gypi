@@ -185,17 +185,9 @@
               '_HAS_EXCEPTIONS=0',
               'BUILDING_UV_SHARED=1',
             ],
-            # Fix passing fd across modules, see |osfhandle.h| for more.
-            'sources': [
-              '../../atom/node/osfhandle.cc',
-              '../../atom/node/osfhandle.h',
-            ],
             'include_dirs': [
-              '../../atom/node',
               '../../../v8',
               '../../../v8/include',
-              '<(SHARED_INTERMEDIATE_DIR)',
-              '<(SHARED_INTERMEDIATE_DIR)/include',
             ],
             # Node is using networking API but linking with this itself.
             'libraries': [ '-lwinmm.lib' ],
