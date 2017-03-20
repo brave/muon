@@ -9,9 +9,10 @@ import("//rlz/features/features.gni")
 
 config("chromium_src_config") {
   include_dirs = [
-    "../..",
     "//electron/chromium_src",
     "//electron",
+    rebase_path(".", "//"),
+    root_gen_dir,
     "$root_gen_dir/chrome",
     "$root_gen_dir/components/strings",
     "//skia/config",

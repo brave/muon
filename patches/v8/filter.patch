@@ -1,0 +1,19 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..3e8a3a1d43084964fb31bd5817213b7427a63dba 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -129,7 +129,13 @@ config("internal_config") {
+ 
+   include_dirs = [ "." ]
+ 
+-  if (is_component_build) {
++  if (is_win) {
++    cflags = [
++      "/wd4275",  # dll export
++    ]
++  }
++
++  if (true) {
+     defines = [ "BUILDING_V8_SHARED" ]
+   }
+ }

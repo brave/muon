@@ -6,14 +6,32 @@ config("build_config") {
 }
 
 source_set("node") {
-  lib_dirs = [ root_out_dir ]
-  libs = [
-    "node",
-    "uv",
-    "cares",
-    "http_parser",
-    "zlib",
+  lib_dirs = [
+    root_out_dir,
+    "$root_out_dir/obj/electron/vendor/node",
+    "$root_out_dir/obj/electron/vendor/node/deps/uv",
+    "$root_out_dir/obj/electron/vendor/node/deps/cares",
+    "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
+    "$root_out_dir/obj/electron/vendor/node/deps/zlib",
   ]
+
+  if (is_win) {
+    libs = [
+      "node.lib",
+      "libuv.lib",
+      "cares.lib",
+      "http_parser.lib",
+      "zlib.lib",
+    ]
+  } else {
+    libs = [
+      "node",
+      "uv",
+      "cares",
+      "http_parser",
+      "zlib",
+    ]
+  }
 
   public_configs = [
     ":build_config",

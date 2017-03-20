@@ -60,6 +60,35 @@ REFERENCE_MODULE(atom_common_native_image);
 REFERENCE_MODULE(atom_common_screen);
 REFERENCE_MODULE(atom_common_shell);
 REFERENCE_MODULE(atom_common_v8_util);
+
+REFERENCE_MODULE(async_wrap);
+REFERENCE_MODULE(cares_wrap);
+REFERENCE_MODULE(fs_event_wrap);
+REFERENCE_MODULE(js_stream);
+REFERENCE_MODULE(buffer);
+REFERENCE_MODULE(config);
+REFERENCE_MODULE(contextify);
+REFERENCE_MODULE(crypto);
+REFERENCE_MODULE(fs);
+REFERENCE_MODULE(http_parser);
+REFERENCE_MODULE(icu);
+REFERENCE_MODULE(os);
+REFERENCE_MODULE(url);
+REFERENCE_MODULE(util);
+REFERENCE_MODULE(v8);
+REFERENCE_MODULE(zlib);
+REFERENCE_MODULE(pipe_wrap);
+REFERENCE_MODULE(process_wrap);
+REFERENCE_MODULE(signal_wrap);
+REFERENCE_MODULE(spawn_sync);
+REFERENCE_MODULE(stream_wrap);
+REFERENCE_MODULE(tcp_wrap);
+REFERENCE_MODULE(timer_wrap);
+REFERENCE_MODULE(tls_wrap);
+REFERENCE_MODULE(tty_wrap);
+REFERENCE_MODULE(udp_wrap);
+REFERENCE_MODULE(uv);
+
 #undef REFERENCE_MODULE
 
 // The "v8::Function::kLineOffsetNotFound" is exported in node.dll, but the

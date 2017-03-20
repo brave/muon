@@ -50,6 +50,10 @@ mac_app_bundle("electron_app") {
     "//build/config/compiler:wexit_time_destructors",
   ]
 
+  sources = [
+    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.c",
+  ]
+
   deps = [
     "//electron/chromium_src/chrome/app:exe",
     ":electron_versioned_bundle_data",
@@ -196,6 +200,10 @@ mac_app_bundle("electron_helper_app") {
   extra_configs = [ "//build/config/compiler:wexit_time_destructors" ]
 
   defines = [ "HELPER_EXECUTABLE" ]
+
+  sources = [
+    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.c",
+  ]
 
   deps = [
     "//build/config/sanitizers:deps",
