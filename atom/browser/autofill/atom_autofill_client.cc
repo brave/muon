@@ -196,7 +196,7 @@ void AtomAutofillClient::UpdateAutofillPopupDataListValues(
 }
 
 void AtomAutofillClient::HideAutofillPopup() {
-  if (api_web_contents_) {
+  if (api_web_contents_ && api_web_contents_->IsFocused()) {
     api_web_contents_->Emit("hide-autofill-popup");
   }
 }
