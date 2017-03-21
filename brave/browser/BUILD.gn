@@ -32,6 +32,7 @@ source_set("browser") {
     "brave_javascript_dialog_manager.cc",
     "brave_permission_manager.h",
     "brave_permission_manager.cc",
+    "certificate_viewer_mac.mm",
     "renderer_preferences_helper.h",
     "renderer_preferences_helper.cc",
   ]

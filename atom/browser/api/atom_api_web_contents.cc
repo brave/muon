@@ -78,6 +78,7 @@
 #include "content/public/browser/security_style_explanations.h"
 #include "content/public/browser/service_worker_context.h"
 #include "content/public/browser/site_instance.h"
+#include "content/public/browser/ssl_status.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/child/v8_value_converter.h"
@@ -1613,6 +1614,15 @@ void WebContents::StopFindInPage(content::StopFindAction action) {
   web_contents()->StopFinding(action);
 }
 
+void WebContents::ShowCertificate() {
+  scoped_refptr<net::X509Certificate> certificate =
+      web_contents()->GetController().GetVisibleEntry()->GetSSL().certificate;
+  if (!certificate)
+    return;
+  web_contents()->GetDelegate()->ShowCertificateViewerInDevTools(
+      web_contents(), certificate);
+}
+
 void WebContents::ShowDefinitionForSelection() {
 #if defined(OS_MACOSX)
   const auto view = web_contents()->GetRenderWidgetHostView();
@@ -2091,6 +2101,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("_printToPDF", &WebContents::PrintToPDF)
       .SetMethod("addWorkSpace", &WebContents::AddWorkSpace)
       .SetMethod("removeWorkSpace", &WebContents::RemoveWorkSpace)
+      .SetMethod("showCertificate",
+                 &WebContents::ShowCertificate)
       .SetMethod("showDefinitionForSelection",
                  &WebContents::ShowDefinitionForSelection)
       .SetMethod("copyImageAt", &WebContents::CopyImageAt)
