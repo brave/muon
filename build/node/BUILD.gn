@@ -6,14 +6,21 @@ config("build_config") {
 }
 
 source_set("node") {
-  lib_dirs = [
-    root_out_dir,
-    "$root_out_dir/obj/electron/vendor/node",
-    "$root_out_dir/obj/electron/vendor/node/deps/uv",
-    "$root_out_dir/obj/electron/vendor/node/deps/cares",
-    "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
-    "$root_out_dir/obj/electron/vendor/node/deps/zlib",
-  ]
+  lib_dirs = []
+
+  if (is_mac) {
+    lib_dirs += [ root_out_dir ]
+  } else if (is_linux) {
+    lib_dirs += [ "$root_out_dir/lib" ]
+  } else if (is_win) {
+    lib_dirs += [
+      "$root_out_dir/obj/electron/vendor/node",
+      "$root_out_dir/obj/electron/vendor/node/deps/uv",
+      "$root_out_dir/obj/electron/vendor/node/deps/cares",
+      "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
+      "$root_out_dir/obj/electron/vendor/node/deps/zlib",
+    ]
+  }
 
   if (is_win) {
     libs = [
@@ -37,7 +44,33 @@ source_set("node") {
     ":build_config",
   ]
 
-  deps = [
+  public_deps = [
+    ":build_node",
     "//third_party/boringssl",
   ]
+}
+
+# Force dependencies to build when node libs are updated
+action("build_node") {
+  # dummy script - these are actually produced separately through gyp
+  script = "//electron/tools/node_gyp_build.py"
+
+  outputs = []
+
+  if (is_mac) {
+    outputs += [
+      "$root_out_dir/libnode.a",
+      "$root_out_dir/libuv.a",
+    ]
+  } else if (is_win) {
+    outputs += [
+      "$root_out_dir/obj/electron/vendor/node/node.lib",
+      "$root_out_dir/obj/electron/vendor/node/deps/libuv.lib",
+    ]
+  } else if (is_linux) {
+    outputs += [
+      "$root_out_dir/lib/libnode.a",
+      "$root_out_dir/lib/libnuv.a",
+    ]
+  }
 }

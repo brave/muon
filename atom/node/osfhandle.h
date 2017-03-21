@@ -7,17 +7,7 @@
 
 #include <windows.h>
 
-// TODO(bridiver) - this is a huge hack to deal with unresolved symbols
-#include "inspector/Debugger.h"  // NOLINT(build/include)
-#include "inspector/Runtime.h"   // NOLINT(build/include)
-#include "inspector/Schema.h"    // NOLINT(build/include)
-#include "v8-inspector.h"        // NOLINT(build/include)
-#include "v8-profiler.h"
-
 namespace node {
-
-// TODO(bridiver) - more of the huge hack
-__declspec(dllexport) void symbol_hack(char* test);
 
 // The _open_osfhandle and _close functions on Windows are provided by the
 // Visual C++ library, so the fd returned by them can only be used in the

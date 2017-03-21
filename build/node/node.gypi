@@ -4,7 +4,7 @@
     'win_release_RuntimeLibrary': '2',
     'clang_use_chrome_plugins': 0,
     'openssl_fips': '',
-    'openssl_no_asm': 1,
+    'openssl_no_asm': 0,
     'use_openssl_def': 0,
     'OPENSSL_PRODUCT': 'libopenssl.a',
     'node_release_urlbase': '',
@@ -57,7 +57,7 @@
       }
     },
     'target_conditions': [
-      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib"]', {
+      ['_target_name in ["libuv", "http_parser", "cares", "node", "zlib"]', {
         'msvs_disabled_warnings': [
           4003,  # not enough actual parameters for macro 'V'
           4013,  # 'free' undefined; assuming extern returning int
@@ -192,63 +192,10 @@
             ],
             'include_dirs': [
               '../../atom/node',
-              '../../../v8',
-              '../../../v8/include',
             ],
             # Node is using networking API but linking with this itself.
             'libraries': [ '-lwinmm.lib' ],
-            'variables': {
-              'conditions': [
-                ['target_arch=="ia32"', {
-                  'reference_symbols': [
-                    '_udata_setCommonData_58',
-                    '_u_errorName_58',
-                    '_ubidi_setPara_58',
-                    '_ucsdet_getName_58',
-                    '_uidna_openUTS46_58',
-                    '_ulocdata_close_58',
-                    '_unorm_normalize_58',
-                    '_uregex_matches_58',
-                    '_uscript_getCode_58',
-                    '_uspoof_open_58',
-                    '_usearch_setPattern_58',
-                    '?createInstance@Transliterator@icu_58@@SAPAV12@ABVUnicodeString@2@W4UTransDirection@@AAW4UErrorCode@@@Z',
-                    '??0MeasureFormat@icu_58@@QAE@ABVLocale@1@W4UMeasureFormatWidth@@AAW4UErrorCode@@@Z',
-                  ],
-                }, {
-                  'reference_symbols': [
-                    'udata_setCommonData_58',
-                    'u_errorName_58',
-                    'ubidi_setPara_58',
-                    'ucsdet_getName_58',
-                    'uidna_openUTS46_58',
-                    'ulocdata_close_58',
-                    'unorm_normalize_58',
-                    'uregex_matches_58',
-                    'uspoof_open_58',
-                    'usearch_setPattern_58',
-                    '?createInstance@Transliterator@icu_58@@SAPEAV12@AEBVUnicodeString@2@W4UTransDirection@@AEAW4UErrorCode@@@Z',
-                    '??0MeasureFormat@icu_58@@QEAA@AEBVLocale@1@W4UMeasureFormatWidth@@AEAW4UErrorCode@@@Z',
-                  ],
-                }]
-              ]
-            },
-            'msvs_settings': {
-              'VCLinkerTool': {
-                'ForceSymbolReferences': [ '<@(reference_symbols)' ],
-              },
-            },
           }],
-        ],
-      }],
-      ['_target_name=="openssl"', {
-        'xcode_settings': {
-          'DEAD_CODE_STRIPPING': 'YES',  # -Wl,-dead_strip
-          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES',
-          'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
-        },
-        'cflags': [
-          '-fvisibility=hidden',
         ],
       }],
       ['_target_name=="libuv"', {
