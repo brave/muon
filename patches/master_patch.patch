@@ -906,6 +906,19 @@ index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b35962
      @"Google Chrome": @"Google Chrome",
      @"Google Chrome Canary": @"Google Chrome",
    };
+diff --git a/chrome/installer/setup/installer_crash_reporter_client.cc b/chrome/installer/setup/installer_crash_reporter_client.cc
+index 44ef73b0405daea79525fb1dde92a8a47299c0b4..53d2b167405cd6766493ef96a9501157d6ddb897 100644
+--- a/chrome/installer/setup/installer_crash_reporter_client.cc
++++ b/chrome/installer/setup/installer_crash_reporter_client.cc
+@@ -147,7 +147,7 @@ bool InstallerCrashReporterClient::ReportingIsEnforcedByPolicy(bool* enabled) {
+       L"SOFTWARE\\Policies\\Google\\Chrome";
+ #else
+   static const wchar_t kRegistryChromePolicyKey[] =
+-      L"SOFTWARE\\Policies\\Chromium";
++      L"SOFTWARE\\Policies\\Brave";
+ #endif
+   static const wchar_t kMetricsReportingEnabled[] = L"MetricsReportingEnabled";
+ 
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
 index f488753f4bbf68bd2b60ac79dcab918593fc5ba2..99e520469e06793eb64ed94519136d9aa53fab1b 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
@@ -2559,9 +2572,18 @@ index 79d3e94f02b24f6defff18716a5cb13f84310e81..52e387c9a54550970b6386538b1e4a5b
    "linux-aarch64/crypto/aes/aesv8-armx64.S",
    "linux-aarch64/crypto/bn/armv8-mont.S",
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index f23085ca0c137bf9ec18f371492d1c7f51487ee7..5bbdeaa8c6386bd163f8e6e7a5341ebe34a00429 100644
+index f23085ca0c137bf9ec18f371492d1c7f51487ee7..f045ee9a38e63839557c5062f65f7cd8e171329f 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
+@@ -12,7 +12,7 @@ import("BUILD.generated_tests.gni")
+ # Config for us and everybody else depending on BoringSSL.
+ config("external_config") {
+   include_dirs = [ "src/include" ]
+-  if (is_component_build) {
++  if (true) {
+     defines = [ "BORINGSSL_SHARED_LIBRARY" ]
+   }
+ }
 @@ -41,7 +41,7 @@ config("no_asm_config") {
    defines = [ "OPENSSL_NO_ASM" ]
  }

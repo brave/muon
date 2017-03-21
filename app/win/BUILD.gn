@@ -55,6 +55,8 @@ executable("electron_app") {
     "/DELAYLOAD:ole32.dll",
     "/DELAYLOAD:oleaut32.dll",
   ]
+
+  configs += [ "//build/config/win:win_msvc_cfg" ]
 }
 
 shared_library("electron_dll") {

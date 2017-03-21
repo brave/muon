@@ -185,7 +185,13 @@
               '_HAS_EXCEPTIONS=0',
               'BUILDING_UV_SHARED=1',
             ],
+            # Fix passing fd across modules, see |osfhandle.h| for more.
+            'sources': [
+              '../../atom/node/osfhandle.cc',
+              '../../atom/node/osfhandle.h',
+            ],
             'include_dirs': [
+              '../../atom/node',
               '../../../v8',
               '../../../v8/include',
             ],

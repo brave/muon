@@ -1,10 +1,11 @@
+import("//build/config/ui.gni")
+
 source_set("dll") {
   public_configs = [ "//electron/chromium_src:chromium_src_config" ]
 
   include_dirs = [
     "//electron/chromium_src",
   ]
-
   configs += [ "//electron/build:electron_config" ]
 
   sources = [
@@ -16,19 +17,29 @@ source_set("dll") {
     # "app/chrome_main_mac.mm",
   ]
 
+  deps = []
+
   if (is_win) {
-    sources += [
-      "//base/win/dllmain.cc",
-      "//chrome/app/chrome_exe_main_win.cc",
-      "//chrome/app/chrome_watcher_client_win.cc",
-      "//chrome/app/chrome_watcher_client_win.h",
-      "//chrome/app/chrome_watcher_command_line_win.cc",
-      "//chrome/app/chrome_watcher_command_line_win.h",
-      "//chrome/app/main_dll_loader_win.cc",
-      "//chrome/app/main_dll_loader_win.h",
-      "//chrome/common/crash_keys.cc",
-      "//chrome/common/crash_keys.h",
+    deps += [
+      "//build/config/sanitizers:deps",
+      "//chrome/common:features",
+      "//chrome/install_static:install_static_util",
+      "//chrome/install_static:secondary_module",
+      "//chrome_elf",
+      "//components/crash/content/app",
+      "//components/policy:generated",
+      "//content/app/resources",
+      "//crypto",
+      "//net:net_resources",
+      "//ppapi/features",
+      "//third_party/cld",
+      "//third_party/wtl",
+      "//ui/views",
     ]
+
+    if (use_aura) {
+      deps += [ "//ui/compositor" ]
+    }
   }
 }
 
@@ -68,7 +79,7 @@ source_set("exe") {
       "//chrome/common:metrics_constants_util_win",
       "//chrome:file_pre_reader",
       "//chrome/install_static:secondary_module",
-      # # "//chrome/installer/util:with_no_strings",
+      "//chrome/installer/util:with_no_strings",
       "//chrome_elf",
       "//components/browser_watcher:browser_watcher_client",
       "//components/crash/content/app:run_as_crashpad_handler",
@@ -78,6 +89,10 @@ source_set("exe") {
       "//crypto",
       "//sandbox",
       "//components/spellcheck:build_features",
+    ]
+
+    data_deps = [
+      "//chrome/app/version_assembly:version_assembly_manifest",
     ]
   }
 }
