@@ -919,6 +919,23 @@ index 44ef73b0405daea79525fb1dde92a8a47299c0b4..53d2b167405cd6766493ef96a9501157
  #endif
    static const wchar_t kMetricsReportingEnabled[] = L"MetricsReportingEnabled";
  
+diff --git a/chrome/installer/util/util_constants.cc b/chrome/installer/util/util_constants.cc
+index 22a5465ce3d1140812b1f6265ae00af884fa644b..d6410e38185e83d7f27a348427a25eb2b984129d 100644
+--- a/chrome/installer/util/util_constants.cc
++++ b/chrome/installer/util/util_constants.cc
+@@ -195,9 +195,9 @@ const char kGoogleUpdateIsMachineEnvVar[] = "GoogleUpdateIsMachine";
+ // TODO(gab): Rename setup.exe itself altogether and use the same binary for
+ // Active Setup.
+ const wchar_t kActiveSetupExe[] = L"chrmstp.exe";
+-const wchar_t kChromeDll[] = L"chrome.dll";
+-const wchar_t kChromeChildDll[] = L"chrome_child.dll";
+-const wchar_t kChromeExe[] = L"chrome.exe";
++const wchar_t kChromeDll[] = L"brave.dll";
++const wchar_t kChromeChildDll[] = L"brave_child.dll";
++const wchar_t kChromeExe[] = L"brave.exe";
+ const wchar_t kChromeNewExe[] = L"new_chrome.exe";
+ const wchar_t kChromeOldExe[] = L"old_chrome.exe";
+ const wchar_t kCmdOnOsUpgrade[] = L"on-os-upgrade";
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
 index f488753f4bbf68bd2b60ac79dcab918593fc5ba2..99e520469e06793eb64ed94519136d9aa53fab1b 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
