@@ -61,6 +61,7 @@ REFERENCE_MODULE(atom_common_screen);
 REFERENCE_MODULE(atom_common_shell);
 REFERENCE_MODULE(atom_common_v8_util);
 
+// Node's builtin modules
 REFERENCE_MODULE(async_wrap);
 REFERENCE_MODULE(cares_wrap);
 REFERENCE_MODULE(fs_event_wrap);
@@ -91,14 +92,6 @@ REFERENCE_MODULE(uv);
 
 #undef REFERENCE_MODULE
 
-// The "v8::Function::kLineOffsetNotFound" is exported in node.dll, but the
-// linker can not find it, could be a bug of VS.
-// #if defined(OS_WIN) && !defined(DEBUG)
-// namespace v8 {
-// const int Function::kLineOffsetNotFound = -1;
-// }
-// #endif
-
 namespace atom {
 
 namespace {
@@ -107,8 +100,9 @@ namespace {
 // returned vector are only guaranteed valid so long as the vector of strings
 // is not modified.
 std::unique_ptr<const char*[]> StringVectorToArgArray(
-    const std::vector<std::string>& vector) {
-  std::unique_ptr<const char*[]> array(new const char*[vector.size()]);
+    const atom::AtomCommandLine::StringVector& vector) {
+  std::unique_ptr<const char*[]>
+      array(new const char*[vector.size()]);
   for (size_t i = 0; i < vector.size(); ++i) {
     array[i] = vector[i].c_str();
   }
@@ -163,12 +157,6 @@ void NodeBindings::Initialize() {
   node::g_standalone_mode = is_browser_;
   node::g_upstream_node_mode = false;
 
-#if defined(OS_LINUX)
-  // Get real command line in renderer process forked by zygote.
-  if (!is_browser_)
-    AtomCommandLine::InitializeFromCommandLine();
-#endif
-
   // Init node.
   // (we assume node::Init would not modify the parameters under embedded mode).
   node::Init(nullptr, nullptr, nullptr, nullptr);
@@ -184,7 +172,7 @@ void NodeBindings::Initialize() {
 
 node::Environment* NodeBindings::CreateEnvironment(
     v8::Handle<v8::Context> context) {
-  auto args = AtomCommandLine::argv();
+  auto args = AtomCommandLine::argv_utf8();
 
   // Feed node the path to initialization script.
   base::FilePath::StringType process_type = is_browser_ ?
@@ -195,12 +183,16 @@ node::Environment* NodeBindings::CreateEnvironment(
                     .Append(process_type)
                     .Append(FILE_PATH_LITERAL("init.js"));
   std::string script_path_str = script_path.AsUTF8Unsafe();
-  args.insert(args.begin() + 1, script_path_str.c_str());
+  args.insert(args.begin() + 1, script_path_str);
 
-  std::unique_ptr<const char*[]> c_argv = StringVectorToArgArray(args);
+  std::unique_ptr<const char*[]> c_argv =
+      StringVectorToArgArray(args);
+
+  char** argv = uv_setup_args(args.size(), const_cast<char**>(c_argv.get()));
+
   node::Environment* env = node::CreateEnvironment(
       node::CreateIsolateData(context->GetIsolate(), uv_default_loop()),
-      context, args.size(), c_argv.get(), 0, nullptr);
+      context, args.size(), argv, 0, nullptr);
 
   // Node uses the deprecated SetAutorunMicrotasks(false) mode, we should switch
   // to use the scoped policy to match blink's behavior.

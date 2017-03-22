@@ -240,10 +240,7 @@ void AtomBrowserClient::SelectClientCertificate(
 }
 
 void AtomBrowserClient::ResourceDispatcherHostCreated() {
-  resource_dispatcher_host_delegate_.reset(
-      new AtomResourceDispatcherHostDelegate);
-  content::ResourceDispatcherHost::Get()->SetDelegate(
-      resource_dispatcher_host_delegate_.get());
+  g_browser_process->ResourceDispatcherHostCreated();
 }
 
 void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(

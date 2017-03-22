@@ -12,6 +12,7 @@
 #include "atom/app/atom_content_client.h"
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/relauncher.h"
+#include "atom/common/atom_command_line.h"
 #include "atom/common/google_api_key.h"
 #include "atom/utility/atom_content_utility_client.h"
 #include "base/base_switches.h"
@@ -200,6 +201,7 @@ AtomMainDelegate::~AtomMainDelegate() {
 }
 
 bool AtomMainDelegate::BasicStartupComplete(int* exit_code) {
+  AtomCommandLine::InitializeFromCommandLine();
   auto command_line = base::CommandLine::ForCurrentProcess();
 
 #if defined(OS_MACOSX)
@@ -313,6 +315,7 @@ void AtomMainDelegate::PreSandboxStartup() {
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 void AtomMainDelegate::ZygoteForked() {
+  AtomCommandLine::InitializeFromCommandLine();
   const base::CommandLine* command_line =
       base::CommandLine::ForCurrentProcess();
   if (command_line->HasSwitch(

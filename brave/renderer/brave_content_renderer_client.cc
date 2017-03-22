@@ -86,7 +86,6 @@ void BraveContentRendererClient::RenderThreadStarted() {
 
   prescient_networking_dispatcher_.reset(
       new network_hints::PrescientNetworkingDispatcher());
-  thread->AddObserver(chrome_observer_.get());
 
   for (auto& origin : GetSecureOriginWhitelist()) {
     WebSecurityPolicy::addOriginTrustworthyWhiteList(

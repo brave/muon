@@ -29,21 +29,44 @@ executable("electron_app") {
     ":external_binaries",
     "//electron:electron_framework_resources",
     "//electron:electron_app_resources",
-    ":widevine_cdm_adapter",
   ]
 
   sources = [
     "//electron/atom/browser/resources/win/atom.rc",
     "//electron/atom/browser/resources/win/resource.h",
     "//electron/app/resources/$electron_icon_dir/atom.ico",
+    "//electron/atom/app/atom_main.cc",
+    "//electron/atom/app/atom_main.h",
   ]
 
   deps = [
-    "//build/config/sanitizers:deps",
     ":electron_exe_version",
     ":electron_manifest",
-    ":electron_dll",
-    "//electron/chromium_src/chrome/app:exe",
+    "//build/config/sanitizers:deps",
+    "//electron:browser_dependencies",
+    "//electron:child_dependencies",
+    "//base",
+    "//breakpad:breakpad_handler",
+    "//breakpad:breakpad_sender",
+    "//chrome/browser:chrome_process_finder",
+    "//chrome/common:constants",
+    "//chrome/install_static:install_static_util",
+    "//components/crash/content/app:run_as_crashpad_handler",
+    "//components/flags_ui:switches",
+    "//content:sandbox_helper_win",
+    "//chrome/common:features",
+    "//third_party/cld",
+    "//components/crash/content/app",
+    "//components/policy:generated",
+    "//content/app/resources",
+    "//net:net_resources",
+    "//third_party/wtl",
+    "//ui/views",
+    "//ui/views/controls/webview",
+    "//content/public/app:both",
+    "//crypto",
+    "//sandbox",
+    ":widevine_cdm_adapter",
   ]
 
   output_name = executable_name
@@ -54,26 +77,6 @@ executable("electron_app") {
     "/DELAYLOAD:uxtheme.dll",
     "/DELAYLOAD:ole32.dll",
     "/DELAYLOAD:oleaut32.dll",
-  ]
-
-  configs += [ "//build/config/win:win_msvc_cfg" ]
-}
-
-shared_library("electron_dll") {
-  configs += [ "//build/config/compiler:wexit_time_destructors" ]
-  defines = []
-
-  output_name = executable_name
-
-  deps = [
-    "//build/config/sanitizers:deps",
-    "//electron:browser_dependencies",
-    # ":electron_dll_manifest",
-    ":electron_dll_version",
-    "//electron/chromium_src/chrome/app:dll",
-  ]
-
-  ldflags = [
     "/DELAYLOAD:comdlg32.dll",
     "/DELAYLOAD:crypt32.dll",
     "/DELAYLOAD:cryptui.dll",
@@ -89,29 +92,18 @@ shared_library("electron_dll") {
     "/DELAYLOAD:winspool.drv",
     "/DELAYLOAD:ws2_32.dll",
     "/DELAYLOAD:wsock32.dll",
+    "/DELAYLOAD:API-MS-WIN-CORE-WINRT-L1-1-0.DLL",
+    "/DELAYLOAD:API-MS-WIN-CORE-WINRT-STRING-L1-1-0.DLL",
   ]
 
-  if (!is_component_build) {
-    # This is a large module that can't do incremental linking in some
-    # cases.
+  if (is_official_build) {
     configs -= [ "//build/config/win:default_incremental_linking" ]
     configs +=
-        [ "//build/config/win:default_large_module_incremental_linking" ]
+        [ "//build/config/win:no_incremental_linking" ]
   }
 
   if (use_aura) {
     deps += [ "//ui/compositor" ]
-  }
-
-  if (is_multi_dll_chrome) {
-    defines += [ "CHROME_MULTIPLE_DLL_BROWSER" ]
-    deps += [ "//content/public/app:browser" ]
-  } else {
-    deps += [
-      "//electron:child_dependencies",
-      "//content/public/app:both",
-      "//pdf",
-    ]
   }
 }
 

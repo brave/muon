@@ -20,10 +20,14 @@
 #include "net/log/net_log.h"
 
 namespace atom {
+
+class AtomResourceDispatcherHostDelegate;
+
 namespace api {
 class App;
 }
-}
+
+}  // namespace atom
 
 namespace component_updater {
 class ComponentUpdateService;
@@ -69,6 +73,7 @@ class BrowserProcess {
   void set_app(atom::api::App* app) { app_ = app; }
   atom::api::App* app() { return app_; }
 
+  void ResourceDispatcherHostCreated();
   metrics::MetricsService* metrics_service() { return NULL; };
   PrefService* local_state();
   ProfileManager* profile_manager();
@@ -99,6 +104,10 @@ class BrowserProcess {
   atom::api::App* app_;  // not owned
 
   net::NetLog net_log_;
+
+  std::unique_ptr<atom::AtomResourceDispatcherHostDelegate>
+      resource_dispatcher_host_delegate_;
+
   std::unique_ptr<component_updater::ComponentUpdateService>
       brave_component_updater_;
   std::unique_ptr<component_updater::ComponentUpdateService>

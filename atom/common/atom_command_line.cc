@@ -5,41 +5,28 @@
 #include "atom/common/atom_command_line.h"
 
 #include "base/command_line.h"
+#include "base/strings/sys_string_conversions.h"
+#include "base/strings/utf_string_conversions.h"
 #include "node/deps/uv/include/uv.h"
+
+using base::CommandLine;
 
 namespace atom {
 
-// static
-std::vector<std::string> AtomCommandLine::argv_;
+CommandLine::StringVector AtomCommandLine::argv_;
+AtomCommandLine::StringVector AtomCommandLine::argv_utf8_;
 
-#if defined(OS_WIN)
-// static
-std::vector<std::wstring> AtomCommandLine::wargv_;
-#endif
-
-// static
-void AtomCommandLine::Init(int argc, const char* const* argv) {
-  // Hack around with the argv pointer. Used for process.title = "blah"
-  char** new_argv = uv_setup_args(argc, const_cast<char**>(argv));
-  for (int i = 0; i < argc; ++i) {
-    argv_.push_back(new_argv[i]);
-  }
-}
-
-#if defined(OS_WIN)
-// static
-void AtomCommandLine::InitW(int argc, const wchar_t* const* argv) {
-  for (int i = 0; i < argc; ++i) {
-    wargv_.push_back(argv[i]);
-  }
-}
-#endif
-
-#if defined(OS_LINUX)
 // static
 void AtomCommandLine::InitializeFromCommandLine() {
-  argv_ = base::CommandLine::ForCurrentProcess()->argv();
-}
+  CommandLine::StringVector argv = CommandLine::ForCurrentProcess()->argv();
+  for (int i = 0; i < argv.size(); ++i) {
+#if defined(OS_WIN)
+    argv_utf8_.push_back(base::SysWideToUTF8(argv[i]));
+#else
+    argv_utf8_.push_back(CommandLine::StringType(argv[i]));
 #endif
+    argv_.push_back(CommandLine::StringType(argv[i]));
+  }
+}
 
 }  // namespace atom
