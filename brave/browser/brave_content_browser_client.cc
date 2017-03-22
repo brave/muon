@@ -391,30 +391,6 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
   }
 }
 
-bool BraveContentBrowserClient::CanCreateWindow(
-    int opener_render_process_id,
-    int opener_render_frame_id,
-    const GURL& opener_url,
-    const GURL& opener_top_level_frame_url,
-    const GURL& source_origin,
-    content::mojom::WindowContainerType container_type,
-    const GURL& target_url,
-    const content::Referrer& referrer,
-    const std::string& frame_name,
-    WindowOpenDisposition disposition,
-    const blink::WebWindowFeatures& features,
-    bool user_gesture,
-    bool opener_suppressed,
-    content::ResourceContext* context,
-    bool* no_javascript_access) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-
-  *no_javascript_access = false;
-
-  // always return true because we'll block popups later
-  return true;
-}
-
 content::PlatformNotificationService*
 BraveContentBrowserClient::GetPlatformNotificationService() {
   return PlatformNotificationServiceImpl::GetInstance();
