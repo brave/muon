@@ -67,11 +67,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void WillDestroy() final;
   void DidInitialize(const base::DictionaryValue& create_params) final;
 
-  // WebContentsObserver implementation.
-  void DidCommitProvisionalLoadForFrame(
-      content::RenderFrameHost* render_frame_host,
-      const GURL& url,
-      ui::PageTransition transition_type) final;
+  void DidFinishNavigation(NavigationHandle* navigation_handle) override;
 
   atom::api::WebContents* api_web_contents_;  // not owned
 

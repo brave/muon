@@ -155,20 +155,22 @@ void TabViewGuest::NavigateGuest(const std::string& src,
       ui::PAGE_TRANSITION_AUTO_TOPLEVEL, force_navigation);
 }
 
-void TabViewGuest::DidCommitProvisionalLoadForFrame(
-    content::RenderFrameHost* render_frame_host,
-    const GURL& url,
-    ui::PageTransition transition_type) {
-  if (!render_frame_host->GetParent()) {
+void TabViewGuest::DidFinishNavigation(
+    content::NavigationHandle* navigation_handle) {
+  if (navigation_handle->IsInMainFrame()) {
+    // For LoadDataWithBaseURL loads, |url| contains the data URL, but the
+    // virtual URL is needed in that case. So use WebContents::GetURL instead.
     src_ = web_contents()->GetURL();
   }
-
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   args->SetString(guest_view::kUrl, src_.spec());
-  args->SetBoolean(guest_view::kIsTopLevel, (!render_frame_host->GetParent() &&
-                    ui::PageTransitionCoreTypeIs(
-                      transition_type,
-                      ui::PAGE_TRANSITION_AUTO_TOPLEVEL)));
+  args->SetBoolean(guest_view::kIsTopLevel, navigation_handle->IsInMainFrame());
+  args->SetString(webview::kInternalBaseURLForDataURL,
+                  web_contents()
+                      ->GetController()
+                      .GetLastCommittedEntry()
+                      ->GetBaseURLForDataURL()
+                      .spec());
   args->SetInteger(webview::kInternalCurrentEntryIndex,
                    web_contents()->GetController().GetCurrentEntryIndex());
   args->SetInteger(webview::kInternalEntryCount,
