@@ -15,7 +15,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "components/url_formatter/elide_url.h"
 #include "content/public/browser/web_contents.h"
-#include "content/public/common/javascript_message_type.h"
+#include "content/public/common/javascript_dialog_type.h"
 #include "gin/converter.h"
 #include "gin/try_catch.h"
 #include "grit/components_strings.h"
@@ -100,7 +100,7 @@ BraveJavaScriptDialogManager::~BraveJavaScriptDialogManager() {
 void BraveJavaScriptDialogManager::RunJavaScriptDialog(
     content::WebContents* web_contents,
     const GURL& origin_url,
-    content::JavaScriptMessageType message_type,
+    content::JavaScriptDialogType message_type,
     const base::string16& message_text,
     const base::string16& default_prompt_text,
     const DialogClosedCallback& callback,
@@ -289,7 +289,7 @@ bool BraveJavaScriptDialogManager::HandleJavaScriptDialog(
 
 std::string
 BraveJavaScriptDialogManager::GetEventName(
-    content::JavaScriptMessageType message_type) {
+    content::JavaScriptDialogType message_type) {
   switch (message_type) {
     case content::JAVASCRIPT_MESSAGE_TYPE_ALERT: return "window-alert";
     case content::JAVASCRIPT_MESSAGE_TYPE_CONFIRM: return "window-confirm";
