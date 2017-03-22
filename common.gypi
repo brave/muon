@@ -1045,9 +1045,6 @@
         }],
       ],
 
-      # Kasko reporting is disabled by default, but may get enabled below.
-      'kasko%': 0,
-
       # Setting this to '0' will cause V8's startup snapshot to be
       # embedded in the binary instead of being a external files.
       'v8_use_external_startup_data%': 1,
@@ -1197,7 +1194,6 @@
     'asan_field_padding%': '<(asan_field_padding)',
     'use_sanitizer_options%': '<(use_sanitizer_options)',
     'syzyasan%': '<(syzyasan)',
-    'kasko%': '<(kasko)',
     'syzygy_optimize%': '<(syzygy_optimize)',
     'lsan%': '<(lsan)',
     'msan%': '<(msan)',
@@ -2003,10 +1999,6 @@
             'win_console_app%': 1,
           }, {
             'win_console_app%': 0,
-          }],
-          # Enable the Kasko reporter for syzyasan builds.
-          ['syzyasan==1', {
-            'kasko': 1,
           }],
           ['component=="shared_library"', {
             # Not enabled for component=static_library because some targets
