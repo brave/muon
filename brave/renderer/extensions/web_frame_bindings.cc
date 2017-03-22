@@ -123,7 +123,8 @@ void WebFrameBindings::RegisterEmbedderCustomElement(
   blink::WebExceptionCode c = 0;
   args.GetReturnValue().Set(
     context()->web_frame()->
-        document().registerEmbedderCustomElement(name, options, c));
+        document().registerEmbedderCustomElement(
+            blink::WebString::fromUTF16(name), options, c));
 }
 
 void WebFrameBindings::SetSpellCheckProvider(
@@ -155,7 +156,7 @@ void WebFrameBindings::ExecuteJavaScript(
   std::unique_ptr<blink::WebScriptExecutionCallback> callback(
       new ScriptExecutionCallback());
   context()->web_frame()->requestExecuteScriptAndReturnValue(
-      blink::WebScriptSource(code),
+      blink::WebScriptSource(blink::WebString::fromUTF16(code)),
       true,
       callback.release());
 }
