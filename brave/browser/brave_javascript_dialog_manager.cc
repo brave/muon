@@ -149,7 +149,7 @@ void BraveJavaScriptDialogManager::RunJavaScriptDialog(
     last_close_time_ = base::TimeTicks();
   }
 
-  bool is_alert = message_type == content::JAVASCRIPT_MESSAGE_TYPE_ALERT;
+  bool is_alert = message_type == content::JAVASCRIPT_DIALOG_TYPE_ALERT;
   base::string16 dialog_title = GetTitle(web_contents, origin_url, is_alert);
 
   LogUMAMessageLengthStats(message_text);
@@ -237,7 +237,7 @@ void BraveJavaScriptDialogManager::RunBeforeUnloadDialog(
   gin::TryCatch try_catch(isolate);
   mate::EmitEvent(isolate,
       env->process_object(),
-      GetEventName(content::JAVASCRIPT_MESSAGE_TYPE_CONFIRM),
+      GetEventName(content::JAVASCRIPT_DIALOG_TYPE_CONFIRM),
       web_contents,
       extra_data,
       title,
@@ -291,9 +291,9 @@ std::string
 BraveJavaScriptDialogManager::GetEventName(
     content::JavaScriptDialogType message_type) {
   switch (message_type) {
-    case content::JAVASCRIPT_MESSAGE_TYPE_ALERT: return "window-alert";
-    case content::JAVASCRIPT_MESSAGE_TYPE_CONFIRM: return "window-confirm";
-    case content::JAVASCRIPT_MESSAGE_TYPE_PROMPT: return "window-prompt";
+    case content::JAVASCRIPT_DIALOG_TYPE_ALERT: return "window-alert";
+    case content::JAVASCRIPT_DIALOG_TYPE_CONFIRM: return "window-confirm";
+    case content::JAVASCRIPT_DIALOG_TYPE_PROMPT: return "window-prompt";
     default: return "unknown";
   }
 }
