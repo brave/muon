@@ -772,7 +772,7 @@ base::Value* ProtocolHandlerRegistry::EncodeRegisteredHandlers() {
          j != i->second.end(); ++j) {
       std::unique_ptr<base::DictionaryValue> encoded = j->Encode();
       if (IsDefault(*j)) {
-        encoded->Set("default", new base::FundamentalValue(true));
+        encoded->Set("default", new base::Value(true));
       }
       protocol_handlers->Append(std::move(encoded));
     }
