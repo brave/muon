@@ -211,8 +211,7 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     }
     storage_->set_cookie_store(std::move(cookie_store));
     storage_->set_channel_id_service(base::WrapUnique(
-        new net::ChannelIDService(new net::DefaultChannelIDStore(nullptr),
-                                  base::WorkerPool::GetTaskRunner(true))));
+        new net::ChannelIDService(new net::DefaultChannelIDStore(nullptr))));
 
     std::string accept_lang = l10n_util::GetApplicationLocale("");
     storage_->set_http_user_agent_settings(base::WrapUnique(
