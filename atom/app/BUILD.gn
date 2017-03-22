@@ -27,6 +27,7 @@ source_set("app") {
     "//content/public/common:interfaces",
     "//components/rappor/public/interfaces",
     "//third_party/widevine/cdm:headers",
+    "//third_party/WebKit/public:mojo_bindings",
   ]
 
   if (is_win) {
