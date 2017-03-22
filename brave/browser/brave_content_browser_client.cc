@@ -40,6 +40,7 @@
 #include "extensions/common/constants.h"
 #include "services/image_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
+#include "third_party/WebKit/public/web/WebWindowFeatures.h"
 #include "ui/base/l10n/l10n_util.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -388,7 +389,7 @@ bool BraveContentBrowserClient::CanCreateWindow(
     const GURL& opener_url,
     const GURL& opener_top_level_frame_url,
     const GURL& source_origin,
-    WindowContainerType container_type,
+    content::mojom::WindowContainerType container_type,
     const GURL& target_url,
     const content::Referrer& referrer,
     const std::string& frame_name,

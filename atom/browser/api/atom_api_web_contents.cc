@@ -173,9 +173,9 @@ struct Converter<content::SavePageType> {
 };
 
 template<>
-struct Converter<WindowContainerType> {
+struct Converter<content::mojom::WindowContainerType> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   WindowContainerType val) {
+                                   content::mojom::WindowContainerType val) {
     std::string type;
     switch (val) {
       case content::mojom::WindowContainerType::NORMAL:
@@ -511,7 +511,7 @@ bool WebContents::ShouldCreateWebContents(
     int32_t route_id,
     int32_t main_frame_route_id,
     int32_t main_frame_widget_route_id,
-    WindowContainerType window_container_type,
+    content::mojom::WindowContainerType window_container_type,
     const GURL& opener_url,
     const std::string& frame_name,
     const GURL& target_url,
