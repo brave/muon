@@ -185,26 +185,11 @@ group("child_dependencies") {
     ":utility",
     "//base",
     "//content/public/child",
-    ":gpu",
     "//third_party/WebKit/public:blink_devtools_frontend_resources",
   ]
   if (use_aura) {
     public_deps += [ "//ui/views/mus" ]
   }
-}
-
-static_library("gpu") {
-  sources = [
-    "//chrome/browser/gpu/gpu_feature_checker.cc",
-    "//chrome/browser/gpu/gpu_feature_checker.h",
-  ]
-
-  deps = [
-    "//content/public/common",
-    "//content/public/gpu",
-    "//gpu/command_buffer/service",
-    "//media",
-  ]
 }
 
 source_set("common") {
