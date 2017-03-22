@@ -28,10 +28,6 @@ bool SpecialStoragePolicy::IsStorageSessionOnly(const GURL& origin) {
   return false;
 }
 
-bool SpecialStoragePolicy::CanQueryDiskSize(const GURL& origin) {
-  return true;
-}
-
 bool SpecialStoragePolicy::HasSessionOnlyOrigins() {
   return false;
 }
