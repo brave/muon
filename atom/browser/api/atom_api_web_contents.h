@@ -204,7 +204,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void PasteAndMatchStyle();
   void Delete();
   void SelectAll();
-  void Unselect();
+  void CollapseSelection();
   void Replace(const base::string16& word);
   void ReplaceMisspelling(const base::string16& word);
   uint32_t FindInPage(mate::Arguments* args);
