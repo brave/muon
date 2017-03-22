@@ -27,7 +27,6 @@ source_set("app") {
     "//content/public/common:interfaces",
     "//components/rappor/public/interfaces",
     "//third_party/widevine/cdm:headers",
-    "//third_party/kasko",
   ]
 
   if (is_win) {
