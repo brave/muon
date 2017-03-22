@@ -1860,10 +1860,10 @@ void WebContents::CapturePage(mate::Arguments* args) {
   if (scale > 1.0f)
     bitmap_size = gfx::ScaleToCeiledSize(view_size, scale);
 
-  host->CopyFromBackingStore(gfx::Rect(rect.origin(), view_size),
-                             bitmap_size,
-                             base::Bind(&OnCapturePageDone, callback),
-                             kBGRA_8888_SkColorType);
+  host->GetView()->CopyFromSurface(gfx::Rect(rect.origin(), view_size),
+      bitmap_size,
+      base::Bind(&OnCapturePageDone, callback),
+      kBGRA_8888_SkColorType);
 }
 
 void WebContents::GetPreferredSize(mate::Arguments* args) {
