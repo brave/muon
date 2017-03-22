@@ -67,7 +67,8 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void WillDestroy() final;
   void DidInitialize(const base::DictionaryValue& create_params) final;
 
-  void DidFinishNavigation(NavigationHandle* navigation_handle) override;
+  void DidFinishNavigation(
+      content::NavigationHandle* navigation_handle) override;
 
   atom::api::WebContents* api_web_contents_;  // not owned
 
