@@ -7,26 +7,22 @@ import("//tools/grit/grit_rule.gni")
 import("//services/service_manager/public/service_manifest.gni")
 
 if (use_aura) {
+  service_manifest("brave_content_browser_manifest_overlay") {
+    source = "//chrome/browser/chrome_content_browser_manifest_overlay.json"
+  }
+
+  service_manifest("brave_content_renderer_manifest_overlay") {
+    source = "//chrome/browser/chrome_content_renderer_manifest_overlay.json"
+  }
+
   service_manifest("brave_content_browser_manifest") {
-    name = "content_browser"
-      output_name = "brave_content_browser"
-      source = "${root_out_dir}/Packages/content_browser/manifest.json"
-      overlays =
-      [ "//chrome/browser/chrome_content_browser_manifest_overlay.json" ]
-      deps = [
-        "//content/public/app:browser_manifest",
-      ]
+    source_manifest = "//content/public/app:browser_manifest"
+    overlays = [ ":brave_content_browser_manifest_overlay" ]
   }
 
   service_manifest("brave_content_renderer_manifest") {
-    name = "content_renderer"
-      output_name = "brave_content_renderer"
-      source = "${root_out_dir}/Packages/content_renderer/manifest.json"
-      overlays =
-      [ "//chrome/browser/chrome_content_renderer_manifest_overlay.json" ]
-      deps = [
-        "//content/public/app:renderer_manifest",
-      ]
+    source_manifest = "//content/public/app:renderer_manifest"
+    overlays = [ ":brave_content_renderer_manifest_overlay" ]
   }
 
   group("service_manifests") {
