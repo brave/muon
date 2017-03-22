@@ -18,7 +18,7 @@
 #include "content/public/common/javascript_dialog_type.h"
 #include "gin/converter.h"
 #include "gin/try_catch.h"
-#include "grit/components_strings.h"
+#include "components/strings/grit/components_strings.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/gfx/font_list.h"
 
@@ -329,7 +329,6 @@ base::string16 BraveJavaScriptDialogManager::GetTitle(
 
 void BraveJavaScriptDialogManager::CancelDialogs(
     content::WebContents* web_contents,
-    bool suppress_callbacks,
     bool reset_state) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   if (!isolate)
