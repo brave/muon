@@ -65,8 +65,8 @@ void SpellCheckClient::checkSpelling(
 }
 
 void SpellCheckClient::requestCheckingOfText(
-    const WebString& textToCheck,
-    WebTextCheckingCompletion* completionCallback) {
+    const blink::WebString& textToCheck,
+    blink::WebTextCheckingCompletion* completionCallback) {
   base::string16 text = textToCheck.utf16();
   if (text.empty() || !HasWordCharacters(text, 0)) {
     completionCallback->didCancelCheckingText();
