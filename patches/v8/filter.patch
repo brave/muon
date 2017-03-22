@@ -1,8 +1,8 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..7e8036c1a863ce8ba8c5af9f11c199bb87e4919f 100644
+index 8895103222b4ee8ebf212d5c3e1e030cf62a4fd5..9a5332f0236ffb98baf287b635b53ffd9f597242 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -121,6 +121,13 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
+@@ -126,6 +126,13 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
  v8_random_seed = "314159265"
  v8_toolset_for_shell = "host"
  
@@ -16,7 +16,7 @@ index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..7e8036c1a863ce8ba8c5af9f11c199bb
  ###############################################################################
  # Configurations
  #
-@@ -635,7 +642,7 @@ if (v8_use_external_startup_data) {
+@@ -637,7 +644,7 @@ if (v8_use_external_startup_data) {
      ]
  
      outputs = [
@@ -25,7 +25,7 @@ index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..7e8036c1a863ce8ba8c5af9f11c199bb
      ]
  
      script = "tools/concatenate-files.py"
-@@ -706,10 +713,10 @@ action("run_mksnapshot") {
+@@ -708,10 +715,10 @@ action("run_mksnapshot") {
    }
  
    if (v8_use_external_startup_data) {
@@ -38,7 +38,7 @@ index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..7e8036c1a863ce8ba8c5af9f11c199bb
      ]
    }
  
-@@ -2582,6 +2589,16 @@ if (is_component_build) {
+@@ -2618,6 +2625,16 @@ if (is_component_build) {
        ":v8_maybe_snapshot",
      ]
  
