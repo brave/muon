@@ -47,6 +47,10 @@ namespace rappor {
 class RapporService;
 }
 
+namespace ukm {
+class UkmService;
+}
+
 class IOThread;
 class PrefService;
 class ProfileManager;
@@ -73,6 +77,7 @@ class BrowserProcess {
   PrefService* local_state();
   ProfileManager* profile_manager();
   rappor::RapporService* rappor_service();
+  ukm::UkmService* ukm_service();
   component_updater::ComponentUpdateService* brave_component_updater();
   component_updater::ComponentUpdateService* component_updater();
 
