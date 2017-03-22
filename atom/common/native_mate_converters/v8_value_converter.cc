@@ -269,13 +269,13 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
     return base::Value::CreateNullValue().release();
 
   if (val->IsBoolean())
-    return new base::FundamentalValue(val->ToBoolean()->Value());
+    return new base::Value(val->ToBoolean()->Value());
 
   if (val->IsInt32())
-    return new base::FundamentalValue(val->ToInt32()->Value());
+    return new base::Value(val->ToInt32()->Value());
 
   if (val->IsNumber())
-    return new base::FundamentalValue(val->ToNumber()->Value());
+    return new base::Value(val->ToNumber()->Value());
 
   if (val->IsString()) {
     v8::String::Utf8Value utf8(val->ToString());

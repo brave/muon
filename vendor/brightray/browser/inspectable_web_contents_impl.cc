@@ -182,9 +182,9 @@ int ResponseWriter::Write(net::IOBuffer* buffer,
     base::Base64Encode(chunk, &chunk);
   }
 
-  base::FundamentalValue* id = new base::FundamentalValue(stream_id_);
+  base::Value* id = new base::Value(stream_id_);
   base::StringValue* chunkValue = new base::StringValue(chunk);
-  base::FundamentalValue* encodedValue = new base::FundamentalValue(encoded);
+  base::Value* encodedValue = new base::Value(encoded);
 
   content::BrowserThread::PostTask(
       content::BrowserThread::UI, FROM_HERE,
@@ -620,7 +620,7 @@ void InspectableWebContentsImpl::DispatchProtocolMessage(
     return;
   }
 
-  base::FundamentalValue total_size(static_cast<int>(message.length()));
+  base::Value total_size(static_cast<int>(message.length()));
   for (size_t pos = 0; pos < message.length(); pos += kMaxMessageChunkSize) {
     base::StringValue message_value(message.substr(pos, kMaxMessageChunkSize));
     CallClientFunction("DevToolsAPI.dispatchMessageChunk",
@@ -759,7 +759,7 @@ void InspectableWebContentsImpl::OnURLFetchComplete(const net::URLFetcher* sourc
 
 void InspectableWebContentsImpl::SendMessageAck(int request_id,
                                                 const base::Value* arg) {
-  base::FundamentalValue id_value(request_id);
+  base::Value id_value(request_id);
   CallClientFunction("DevToolsAPI.embedderMessageAck",
                      &id_value, arg, nullptr);
 }

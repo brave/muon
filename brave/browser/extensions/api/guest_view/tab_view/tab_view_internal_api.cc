@@ -36,5 +36,5 @@ TabViewInternalGetTabIDFunction::~TabViewInternalGetTabIDFunction() {
 ExtensionFunction::ResponseAction TabViewInternalGetTabIDFunction::Run() {
   int tab_id = extensions::TabHelper::IdForTab(guest_->web_contents());
   return RespondNow(
-      OneArgument(base::MakeUnique<base::FundamentalValue>(tab_id)));
+      OneArgument(base::MakeUnique<base::Value>(tab_id)));
 }
