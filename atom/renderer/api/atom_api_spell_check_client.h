@@ -33,11 +33,8 @@ class SpellCheckClient : public blink::WebSpellCheckClient {
       int& misspelledOffset,
       int& misspelledLength,
       blink::WebVector<blink::WebString>* optionalSuggestions) override;
-  void requestCheckingOfText(
-      const blink::WebString& textToCheck,
-      const blink::WebVector<uint32_t>& markersInText,
-      const blink::WebVector<unsigned>& markerOffsets,
-      blink::WebTextCheckingCompletion* completionCallback) override;
+  void requestCheckingOfText(const WebString&,
+      WebTextCheckingCompletion*) override;
   void showSpellingUI(bool show) override;
   bool isShowingSpellingUI() override;
   void updateSpellingUIWithMisspelledWord(
