@@ -38,6 +38,7 @@
 #include "content/public/common/url_constants.h"
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
+#include "gpu/config/gpu_switches.h"
 #include "services/image_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
