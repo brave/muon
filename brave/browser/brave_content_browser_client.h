@@ -50,21 +50,6 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       GetPlatformNotificationService() override;
   void OverrideWebkitPrefs(content::RenderViewHost* host,
       content::WebPreferences* prefs) override;
-  bool CanCreateWindow(int opener_render_process_id,
-                       int opener_render_frame_id,
-                       const GURL& opener_url,
-                       const GURL& opener_top_level_frame_url,
-                       const GURL& source_origin,
-                       content::mojom::WindowContainerType container_type,
-                       const GURL& target_url,
-                       const content::Referrer& referrer,
-                       const std::string& frame_name,
-                       WindowOpenDisposition disposition,
-                       const blink::mojom::WindowFeatures& features,
-                       bool user_gesture,
-                       bool opener_suppressed,
-                       content::ResourceContext* context,
-                       bool* no_javascript_access) override;
   GURL GetEffectiveURL(content::BrowserContext* browser_context,
                        const GURL& url) override;
   bool ShouldUseProcessPerSite(content::BrowserContext* browser_context,
