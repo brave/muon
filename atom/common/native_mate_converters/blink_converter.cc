@@ -15,7 +15,6 @@
 #include "native_mate/dictionary.h"
 #include "third_party/WebKit/public/platform/WebMouseEvent.h"
 #include "third_party/WebKit/public/platform/WebMouseWheelEvent.h"
-#include "third_party/WebKit/public/web/WebCache.h"
 #include "third_party/WebKit/public/web/WebDeviceEmulationParams.h"
 #include "third_party/WebKit/public/web/WebFindOptions.h"
 #include "ui/base/clipboard/clipboard.h"
@@ -418,30 +417,6 @@ v8::Local<v8::Value> MediaFlagsToV8(v8::Isolate* isolate, int mediaFlags) {
   dict.Set("canRotate",
       !!(mediaFlags & blink::WebContextMenuData::MediaCanRotate));
   return mate::ConvertToV8(isolate, dict);
-}
-
-v8::Local<v8::Value> Converter<blink::WebCache::ResourceTypeStat>::ToV8(
-    v8::Isolate* isolate,
-    const blink::WebCache::ResourceTypeStat& stat) {
-  mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
-  dict.Set("count", static_cast<uint32_t>(stat.count));
-  dict.Set("size", static_cast<double>(stat.size));
-  dict.Set("liveSize", static_cast<double>(stat.size));
-  dict.Set("decodedSize", static_cast<double>(stat.decodedSize));
-  return dict.GetHandle();
-}
-
-v8::Local<v8::Value> Converter<blink::WebCache::ResourceTypeStats>::ToV8(
-    v8::Isolate* isolate,
-    const blink::WebCache::ResourceTypeStats& stats) {
-  mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
-  dict.Set("images", stats.images);
-  dict.Set("scripts", stats.scripts);
-  dict.Set("cssStyleSheets", stats.cssStyleSheets);
-  dict.Set("xslStyleSheets", stats.xslStyleSheets);
-  dict.Set("fonts", stats.fonts);
-  dict.Set("other", stats.other);
-  return dict.GetHandle();
 }
 
 }  // namespace mate
