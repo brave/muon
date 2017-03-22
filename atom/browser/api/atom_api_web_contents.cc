@@ -1769,8 +1769,8 @@ void WebContents::SelectAll() {
   web_contents()->SelectAll();
 }
 
-void WebContents::Unselect() {
-  web_contents()->Unselect();
+void WebContents::CollapseSelection() {
+  web_contents()->CollapseSelection();
 }
 
 void WebContents::Replace(const base::string16& word) {
@@ -2282,7 +2282,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("pasteAndMatchStyle", &WebContents::PasteAndMatchStyle)
       .SetMethod("delete", &WebContents::Delete)
       .SetMethod("selectAll", &WebContents::SelectAll)
-      .SetMethod("unselect", &WebContents::Unselect)
+      .SetMethod("collapseSelection", &WebContents::CollapseSelection)
       .SetMethod("replace", &WebContents::Replace)
       .SetMethod("replaceMisspelling", &WebContents::ReplaceMisspelling)
       .SetMethod("findInPage", &WebContents::FindInPage)
