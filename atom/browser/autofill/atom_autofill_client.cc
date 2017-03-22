@@ -9,6 +9,7 @@
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_browser_context.h"
+#include "chrome/browser/browser_process.h"
 #include "components/autofill/content/browser/content_autofill_driver.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/popup_item_ids.h"
@@ -114,6 +115,10 @@ IdentityProvider* AtomAutofillClient::GetIdentityProvider() {
 
 rappor::RapporServiceImpl* AtomAutofillClient::GetRapporServiceImpl() {
   return nullptr;
+}
+
+ukm::UkmService* AtomAutofillClient::GetUkmService() {
+  return g_browser_process->ukm_service();
 }
 
 void AtomAutofillClient::ShowAutofillSettings() {
