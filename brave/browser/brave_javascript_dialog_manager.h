@@ -46,7 +46,7 @@ class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
   // JavaScriptDialogManager:
   void RunJavaScriptDialog(content::WebContents* web_contents,
                            const GURL& origin_url,
-                           content::JavaScriptMessageType message_type,
+                           content::JavaScriptDialogType message_type,
                            const base::string16& message_text,
                            const base::string16& default_prompt_text,
                            const DialogClosedCallback& callback,
@@ -61,7 +61,7 @@ class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
                      bool suppress_callbacks,
                      bool reset_state) override;
 
-  std::string GetEventName(content::JavaScriptMessageType message_type);
+  std::string GetEventName(content::JavaScriptDialogType message_type);
   base::string16 GetTitle(content::WebContents* web_contents,
                           const GURL& origin_url,
                           bool is_alert);
