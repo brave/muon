@@ -450,7 +450,8 @@ class ProcessSingleton::LinuxWatcher
     SocketReader(ProcessSingleton::LinuxWatcher* parent,
                  base::MessageLoop* ui_message_loop,
                  int fd)
-        : parent_(parent),
+        : fd_reader_(FROM_HERE),
+          parent_(parent),
           ui_message_loop_(ui_message_loop),
           fd_(fd),
           bytes_read_(0) {
@@ -509,7 +510,8 @@ class ProcessSingleton::LinuxWatcher
 
   // We expect to only be constructed on the UI thread.
   explicit LinuxWatcher(ProcessSingleton* parent)
-      : ui_message_loop_(base::MessageLoop::current()),
+      : fd_watcher_(FROM_HERE),
+        ui_message_loop_(base::MessageLoop::current()),
         parent_(parent) {
   }
 
