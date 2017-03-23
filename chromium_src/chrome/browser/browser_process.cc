@@ -19,6 +19,7 @@
 #include "components/component_updater/component_updater_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
+#include "content/public/browser/render_process_host.h"
 #include "content/public/browser/resource_dispatcher_host.h"
 #include "ppapi/features/features.h"
 #include "ui/base/idle/idle.h"
@@ -135,6 +136,13 @@ BrowserProcess::extension_event_router_forwarder() {
 
 void BrowserProcess::StartTearDown() {
   tearing_down_ = true;
+
+  for (content::RenderProcessHost::iterator i(
+          content::RenderProcessHost::AllHostsIterator());
+       !i.IsAtEnd(); i.Advance()) {
+    i.GetCurrentValue()->FastShutdownIfPossible();
+  }
+
   print_job_manager_->Shutdown();
 
   profile_manager_.reset();
