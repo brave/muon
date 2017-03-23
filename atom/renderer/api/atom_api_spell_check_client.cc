@@ -144,6 +144,9 @@ bool SpellCheckClient::SpellCheckWord(const base::string16& word_to_check) {
     return true;
 
   v8::HandleScope handle_scope(isolate_);
+  v8::MicrotasksScope microtasks(
+      isolate_, v8::MicrotasksScope::kDoNotRunMicrotasks);
+
   v8::Local<v8::Value> word = mate::ConvertToV8(isolate_, word_to_check);
   v8::TryCatch try_catch(isolate_);
   v8::Local<v8::Value> result = spell_check_.NewHandle()->Call(
