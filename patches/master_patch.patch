@@ -2683,6 +2683,48 @@ index 6acdddff8c59f63214fb6267a562f6ac8a2b5296..7a1097d9538981c6b8f8928796dba0b1
  
    BLINK_EXPORT void reset();
    BLINK_EXPORT void assign(const WebArrayBuffer&);
+diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
+index 79d3e94f02b24f6defff18716a5cb13f84310e81..52e387c9a54550970b6386538b1e4a5b03f35e22 100644
+--- a/third_party/boringssl/BUILD.generated.gni
++++ b/third_party/boringssl/BUILD.generated.gni
+@@ -417,6 +417,24 @@ ssl_sources = [
+   "src/ssl/tls_record.c",
+ ]
+ 
++decrepit_sources = [
++  "src/decrepit/bio/base64_bio.c",
++  "src/decrepit/blowfish/blowfish.c",
++  "src/decrepit/cast/cast.c",
++  "src/decrepit/cast/cast_tables.c",
++  "src/decrepit/des/cfb64ede.c",
++  "src/decrepit/dh/dh_decrepit.c",
++  "src/decrepit/dsa/dsa_decrepit.c",
++  "src/decrepit/evp/dss1.c",
++  "src/decrepit/evp/evp_do_all.c",
++  "src/decrepit/rc4/rc4_decrepit.c",
++  "src/decrepit/ripemd/ripemd.c",
++  "src/decrepit/rsa/rsa_decrepit.c",
++  "src/decrepit/ssl/ssl_decrepit.c",
++  "src/decrepit/x509/x509_decrepit.c",
++  "src/decrepit/xts/xts.c",
++]
++
+ crypto_sources_linux_aarch64 = [
+   "linux-aarch64/crypto/aes/aesv8-armx64.S",
+   "linux-aarch64/crypto/bn/armv8-mont.S",
+diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
+index f23085ca0c137bf9ec18f371492d1c7f51487ee7..5bbdeaa8c6386bd163f8e6e7a5341ebe34a00429 100644
+--- a/third_party/boringssl/BUILD.gn
++++ b/third_party/boringssl/BUILD.gn
+@@ -41,7 +41,7 @@ config("no_asm_config") {
+   defines = [ "OPENSSL_NO_ASM" ]
+ }
+ 
+-all_sources = crypto_sources + ssl_sources
++all_sources = crypto_sources + ssl_sources + decrepit_sources
+ 
+ # Windows' assembly is built with Yasm. The other platforms use the platform
+ # assembler.
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
 index 8b40b1ab1e7ac238cb695cb177fae873e7cf9eb3..2dd34a2c5c10f03374de80fd97ddf296aea5e3a3 100644
 --- a/third_party/widevine/cdm/BUILD.gn

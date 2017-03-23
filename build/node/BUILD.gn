@@ -88,6 +88,10 @@ action("build_node") {
     ":build_config",
   ]
 
+  public_deps = [
+    ":build_node",
+    "//third_party/boringssl",
+  ]
   # dummy script - these are actually produced separately through gyp
   script = "//electron/tools/node_gyp_build.py"
 
