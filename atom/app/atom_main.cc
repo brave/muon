@@ -37,12 +37,14 @@ int ChromeMain(int argc, const char* argv[]);
 
 #if defined(OS_WIN)
 int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE, wchar_t* cmd, int) {
-#elif defined(OS_MACOSX)
+#else  // OS_WIN
+#if defined(OS_MACOSX)
 int ChromeMain(int argc, const char* argv[]) {
-#else
+#else  // OS_MACOSX
 int main(int argc, const char* argv[]) {
 #endif
   char** argv_setup = uv_setup_args(argc, const_cast<char**>(argv));
+#endif  // OS_WIN
   int64_t exe_entry_point_ticks = 0;
 
   atom::AtomMainDelegate chrome_main_delegate(
@@ -64,7 +66,7 @@ int main(int argc, const char* argv[]) {
   params.argc = argc;
   params.argv = argv;
 
-  base::CommandLine::Init(params.argc, argv_setup);
+  base::CommandLine::Init(argc, argv_setup);
 #endif
 
   base::AtExitManager exit_manager;
