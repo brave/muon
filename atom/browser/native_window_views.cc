@@ -803,7 +803,9 @@ void NativeWindowViews::SetHasShadow(bool has_shadow) {
 }
 
 bool NativeWindowViews::HasShadow() {
-  return wm::GetShadowElevation(GetNativeWindow()) != wm::ShadowElevation::NONE;
+  wm::ShadowElevation elevation =
+      GetNativeWindow()->GetProperty(wm::kShadowElevationKey);
+  return elevation != wm::ShadowElevation::NONE;
 }
 
 void NativeWindowViews::SetIgnoreMouseEvents(bool ignore) {
