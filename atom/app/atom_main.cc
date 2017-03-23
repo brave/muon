@@ -8,24 +8,25 @@
 
 #include "atom/app/atom_main_delegate.h"
 #include "atom/app/uv_task_runner.h"
-#include "build/build_config.h"
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/time/time.h"
+#include "build/build_config.h"
 #include "content/public/app/content_main.h"
 
 #if defined(OS_WIN)
 #include <windows.h>  // windows.h must be included first
+
 #include <shellapi.h>
 #include <shellscalingapi.h>
 #include <tchar.h>
 
-#include "content/public/app/sandbox_helper_win.h"
-#include "sandbox/win/src/sandbox_types.h"
 #include "base/win/win_util.h"
 #include "chrome/install_static/install_details.h"
 #include "chrome/install_static/install_util.h"
 #include "chrome/install_static/product_install_details.h"
+#include "content/public/app/sandbox_helper_win.h"
+#include "sandbox/win/src/sandbox_types.h"
 #endif  // defined(OS_WIN)
 
 #if defined(OS_MACOSX)
