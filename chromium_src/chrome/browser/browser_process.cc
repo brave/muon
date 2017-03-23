@@ -6,6 +6,7 @@
 
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/atom_browser_context.h"
+#include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 #include "base/command_line.h"
 #include "base/metrics/field_trial.h"
 #include "base/path_service.h"
@@ -18,6 +19,7 @@
 #include "components/component_updater/component_updater_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
+#include "content/public/browser/resource_dispatcher_host.h"
 #include "ppapi/features/features.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -150,6 +152,13 @@ printing::PrintJobManager* BrowserProcess::print_job_manager() {
 
 bool BrowserProcess::IsShuttingDown() {
   return tearing_down_;
+}
+
+void BrowserProcess::ResourceDispatcherHostCreated() {
+  resource_dispatcher_host_delegate_.reset(
+      new atom::AtomResourceDispatcherHostDelegate);
+  content::ResourceDispatcherHost::Get()->SetDelegate(
+      resource_dispatcher_host_delegate_.get());
 }
 
 void BrowserProcess::PreCreateThreads() {
