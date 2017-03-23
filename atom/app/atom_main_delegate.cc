@@ -431,9 +431,6 @@ void AtomMainDelegate::InitMacCrashReporter(
 void AtomMainDelegate::ProcessExiting(const std::string& process_type) {
   brightray::MainDelegate::ProcessExiting(process_type);
   logging::CleanupChromeLogging();
-#if defined(OS_WIN)
-  base::debug::RemoveHandleHooks();
-#endif
 }
 
 std::unique_ptr<brightray::ContentClient>
