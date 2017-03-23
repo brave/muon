@@ -22,6 +22,10 @@ executable("electron_app") {
     "//electron/build:electron_config",
   ]
 
+  defines = [
+    "MUON_ICON=$electron_icon_dir\\atom.ico"
+  ]
+
   configs -= [ "//build/config/win:console" ]
   configs += [ "//build/config/win:windowed" ]
 
@@ -32,9 +36,8 @@ executable("electron_app") {
   ]
 
   sources = [
-    "//electron/atom/browser/resources/win/atom.rc",
-    "//electron/atom/browser/resources/win/resource.h",
-    "//electron/app/resources/$electron_icon_dir/atom.ico",
+    "//electron/app/resources/muon.rc",
+    "//electron/app/resources/resource.h",
     "//electron/atom/app/atom_main.cc",
     "//electron/atom/app/atom_main.h",
   ]
