@@ -124,6 +124,7 @@ source_set("component_updater_api") {
   ]
 
   deps = [
+    "//electron/build/node",
     "//v8:v8",
     "//third_party/WebKit/public:blink_headers",
   ]
