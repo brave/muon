@@ -1,89 +1,45 @@
-import("//v8/gni/v8.gni")
-
 config("build_config") {
   defines = [
     "NODE_WANT_INTERNALS=1",
     "NODE_SHARED_MODE",
-    "USING_V8_SHARED",
-    "USING_V8_BASE_SHARED",
-    "USING_V8_PLATFORM_SHARED",
   ]
-
-  include_dirs = [
-    "//v8",
-    "//v8/include",
-    root_gen_dir,
-    "$root_gen_dir/include",
-  ]
-}
-
-config("node_external_config") {
-  if (is_linux) {
-    ldflags =
-        [ rebase_path("$root_out_dir/lib/libnode.so",
-                      root_build_dir) ]
-  } else if (is_win) {
-    ldflags =
-        [ rebase_path("$root_out_dir/node.dll.lib",
-                      root_build_dir) ]
-  } else if (is_mac) {
-    ldflags = [
-      rebase_path("$root_out_dir/libnode.dylib", root_build_dir),
-    ]
-  }
 }
 
 source_set("node") {
-  public_configs = [
-    ":node_external_config",
-  ]
+  lib_dirs = []
 
-  public_deps = [
-    ":build_node",
-  ]
-}
-
-if (is_mac) {
-  bundle_data("node_resources") {
-    sources = [
-      "$root_out_dir/libnode.dylib",
-    ]
-    outputs = [
-      "{{bundle_root_dir}}/Libraries/{{source_file_part}}",
-    ]
-    public_deps = [
-      ":node",
+  if (is_mac) {
+    lib_dirs += [ root_out_dir ]
+  } else if (is_linux) {
+    lib_dirs += [ "$root_out_dir/lib" ]
+  } else if (is_win) {
+    lib_dirs += [
+      "$root_out_dir/obj/electron/vendor/node",
+      "$root_out_dir/obj/electron/vendor/node/deps/uv",
+      "$root_out_dir/obj/electron/vendor/node/deps/cares",
+      "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
+      "$root_out_dir/obj/electron/vendor/node/deps/zlib",
     ]
   }
-} else if (is_win) {
-  group("node_resources") {
-    public_configs = [
-      ":node_external_config",
-    ]
 
-    public_deps = [
-      ":node",
+  if (is_win) {
+    libs = [
+      "node.lib",
+      "libuv.lib",
+      "cares.lib",
+      "http_parser.lib",
+      "zlib.lib",
     ]
-  }
-} else if (is_linux) {
-  copy("node_resources") {
-    sources = [ "$root_out_dir/lib/libnode.so" ]
-
-    public_configs = [
-      ":node_external_config",
-    ]
-
-    public_deps = [
-      ":node",
-    ]
-
-    outputs = [
-      "$root_out_dir/{{source_file_part}}",
+  } else {
+    libs = [
+      "node",
+      "uv",
+      "cares",
+      "http_parser",
+      "zlib",
     ]
   }
-}
 
-action("build_node") {
   public_configs = [
     ":build_config",
   ]
@@ -92,49 +48,29 @@ action("build_node") {
     ":build_node",
     "//third_party/boringssl",
   ]
+}
+
+# Force dependencies to build when node libs are updated
+action("build_node") {
   # dummy script - these are actually produced separately through gyp
   script = "//electron/tools/node_gyp_build.py"
 
   outputs = []
 
-  if (muon_build) {
-    outputs += [
-      "$root_out_dir/natives_blob.bin",
-      "$root_out_dir/snapshot_blob.bin",
-      "$root_out_dir/icudtl.dat",
-    ]
-  }
-
   if (is_mac) {
     outputs += [
-      "$root_out_dir/libnode.dylib",
+      "$root_out_dir/libnode.a",
+      "$root_out_dir/libuv.a",
     ]
   } else if (is_win) {
     outputs += [
-      "$root_out_dir/node.dll",
-      "$root_out_dir/node.dll.lib",
+      "$root_out_dir/obj/electron/vendor/node/node.lib",
+      "$root_out_dir/obj/electron/vendor/node/deps/libuv.lib",
     ]
   } else if (is_linux) {
-    outputs += [ "$root_out_dir/lib/libnode.so" ]
+    outputs += [
+      "$root_out_dir/lib/libnode.a",
+      "$root_out_dir/lib/libnuv.a",
+    ]
   }
 }
-
-# TODO(bridiver) this isn't used right now because generating the node target wipes out the electron target
-# action("node_gyp_chromium") {
-#   script = "//build/gyp_chromium"
-#   inputs = [
-#     "//electron/node.gypi",
-#     "//electron/vendor/node/node.gyp",
-#   ]
-#   outputs = [
-#     "$root_out_dir/obj/electron/vendor/node/node.ninja",
-#   ]
-#   args = []
-#   if (is_component_build) {
-#     args += [ "-D", "component=shared_library", ]
-#   }
-#   args += [
-#     "-I", rebase_path("node.gypi", root_build_dir),
-#     rebase_path("vendor/node/node.gyp", root_build_dir),
-#   ]
-# }

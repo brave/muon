@@ -43,7 +43,6 @@ executable("electron_app") {
     ":electron_exe_version",
     ":electron_manifest",
     "//build/config/sanitizers:deps",
-    "//electron/build/node:node_resources",
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
     "//base",
@@ -51,6 +50,7 @@ executable("electron_app") {
     "//breakpad:breakpad_sender",
     "//chrome/browser:chrome_process_finder",
     "//chrome/common:constants",
+    "//chrome/install_static:install_static_util",
     "//components/crash/content/app:run_as_crashpad_handler",
     "//components/flags_ui:switches",
     "//content:sandbox_helper_win",
@@ -73,7 +73,9 @@ executable("electron_app") {
 
   ldflags = [
     "/DELAYLOAD:dbghelp.dll",
+    "/DELAYLOAD:dwmapi.dll",
     "/DELAYLOAD:uxtheme.dll",
+    "/DELAYLOAD:ole32.dll",
     "/DELAYLOAD:oleaut32.dll",
     "/DELAYLOAD:comdlg32.dll",
     "/DELAYLOAD:crypt32.dll",
@@ -90,17 +92,18 @@ executable("electron_app") {
     "/DELAYLOAD:winspool.drv",
     "/DELAYLOAD:ws2_32.dll",
     "/DELAYLOAD:wsock32.dll",
+    "/DELAYLOAD:d3d11.dll",
+    "/DELAYLOAD:d3d9.dll",
+    "/DELAYLOAD:dxva2.dll",
+    "/DELAYLOAD:esent.dll",
     "/DELAYLOAD:API-MS-WIN-CORE-WINRT-L1-1-0.DLL",
     "/DELAYLOAD:API-MS-WIN-CORE-WINRT-STRING-L1-1-0.DLL",
-
   ]
 
-  if (!is_component_build) {
-    # This is a large module that can't do incremental linking in some
-    # cases.
+  if (is_official_build) {
     configs -= [ "//build/config/win:default_incremental_linking" ]
     configs +=
-        [ "//build/config/win:default_large_module_incremental_linking" ]
+        [ "//build/config/win:no_incremental_linking" ]
   }
 
   if (use_aura) {
@@ -123,10 +126,10 @@ windows_manifest("electron_manifest") {
 process_version_rc_template("electron_exe_version") {
   extra_args = [
     "-e", "INTERNAL_NAME=\"${executable_name}_exe\"",
-    "-e", "ORIGINAL_FILENAME=\"$electron_exe\"",
+    "-e", "ORIGINAL_FILENAME=\"$executable_name.exe\"",
   ]
   sources = []
-  output = "$target_gen_dir/electron_exe.rc"
+  output = "$target_gen_dir/electron_exe_version.rc"
 }
 
 group("widevine_cdm_adapter") {
@@ -185,7 +188,6 @@ copy("dist_widevine_resources") {
 copy("dist_resources") {
   sources = [
     "$root_out_dir/xinput1_3.dll",
-    "$root_out_dir/node.dll",
     "$root_shlib_dir/libEGL.dll",
     "$root_shlib_dir/libGLESv2.dll",
     "$root_out_dir/d3dcompiler_47.dll",
@@ -197,7 +199,6 @@ copy("dist_resources") {
 
   public_deps = [
     ":external_binaries",
-    "//electron/build/node:node_resources",
     "//third_party/angle:copy_compiler_dll",
     "//third_party/angle:libEGL",
     "//third_party/angle:libGLESv2",

@@ -1,57 +1,19 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..7e8036c1a863ce8ba8c5af9f11c199bb87e4919f 100644
+index c1fa769dc0b0429d64a3e85a5b8c92864454c42d..3e8a3a1d43084964fb31bd5817213b7427a63dba 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -121,6 +121,13 @@ v8_generated_peephole_source = "$target_gen_dir/bytecode-peephole-table.cc"
- v8_random_seed = "314159265"
- v8_toolset_for_shell = "host"
+@@ -129,7 +129,13 @@ config("internal_config") {
  
-+natives_blob = "natives_blob"
-+snapshot_blob = "snapshot_blob"
-+if (muon_build) {
-+  natives_blob = "dummy_natives_blob"
-+  snapshot_blob = "dummy_snapshot_blob"
-+}
+   include_dirs = [ "." ]
+ 
+-  if (is_component_build) {
++  if (is_win) {
++    cflags = [
++      "/wd4275",  # dll export
++    ]
++  }
 +
- ###############################################################################
- # Configurations
- #
-@@ -635,7 +642,7 @@ if (v8_use_external_startup_data) {
-     ]
- 
-     outputs = [
--      "$root_out_dir/natives_blob.bin",
-+      "$root_out_dir/$natives_blob.bin",
-     ]
- 
-     script = "tools/concatenate-files.py"
-@@ -706,10 +713,10 @@ action("run_mksnapshot") {
-   }
- 
-   if (v8_use_external_startup_data) {
--    outputs += [ "$root_out_dir/snapshot_blob.bin" ]
-+    outputs += [ "$root_out_dir/$snapshot_blob.bin" ]
-     args += [
-       "--startup_blob",
--      rebase_path("$root_out_dir/snapshot_blob.bin", root_build_dir),
-+      rebase_path("$root_out_dir/$snapshot_blob.bin", root_build_dir),
-     ]
-   }
- 
-@@ -2582,6 +2589,16 @@ if (is_component_build) {
-       ":v8_maybe_snapshot",
-     ]
- 
-+    if (muon_build) {
-+      public_deps -= [
-+        ":v8_base",
-+        ":v8_maybe_snapshot",
-+      ]
-+      public_deps += [
-+        "//electron/build/node",
-+      ]
-+    }
-+
-     public_configs = [ ":external_config" ]
++  if (true) {
+     defines = [ "BUILDING_V8_SHARED" ]
    }
  }

@@ -1,47 +1,8 @@
-diff --git a/base/BUILD.gn b/base/BUILD.gn
-index bdecf4a257593cdbce9ab4efba48386d5b23ade0..3e86bba4beb9a55149cc8eeba9e7505657df5582 100644
---- a/base/BUILD.gn
-+++ b/base/BUILD.gn
-@@ -1596,7 +1596,14 @@ static_library("base_static") {
-   }
- }
- 
--component("i18n") {
-+group("i18n") {
-+  public_deps = [
-+    ":i18n_without_icu",
-+    "//third_party/icu",
-+  ]
-+}
-+
-+component("i18n_without_icu") {
-   output_name = "base_i18n"
-   sources = [
-     "i18n/base_i18n_export.h",
-@@ -1645,8 +1652,8 @@ component("i18n") {
-   configs += [ "//build/config/compiler:wexit_time_destructors" ]
-   public_deps = [
-     "//third_party/ced",
--    "//third_party/icu",
-   ]
-+  configs += [ "//third_party/icu:icu_config" ]
-   deps = [
-     ":base",
-     "//base/third_party/dynamic_annotations",
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..85aa0b53ec31929de843356031069fa912b36b6c 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..2cf3e988c452a015c24956dda7cc4292ee56e2e3 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
-@@ -2,6 +2,8 @@
- # Use of this source code is governed by a BSD-style license that can be
- # found in the LICENSE file.
- 
-+import("//electron/build/muon.gni")
-+
- declare_args() {
-   # Select the desired branding flavor. False means normal Chromium branding,
-   # true means official Google Chrome branding (requires extra Google-internal
-@@ -13,10 +15,12 @@ declare_args() {
+@@ -13,10 +13,12 @@ declare_args() {
    is_multi_dll_chrome = is_win && !is_component_build
  }
  
@@ -1189,21 +1150,6 @@ index 2bef627aa890484a3fb75fa9bd04b2994f997305..6cdf479c733c3a546c8fc54bdb29d4be
      default:
        NOTREACHED();
        return nullptr;
-diff --git a/components/font_service/BUILD.gn b/components/font_service/BUILD.gn
-index 0777cce337ae70b3616fc7d236663c234553a30b..460e441a1e414ab03062f0b64ae92f6b115ec906 100644
---- a/components/font_service/BUILD.gn
-+++ b/components/font_service/BUILD.gn
-@@ -38,6 +38,10 @@ service("font_service") {
-     "//services/service_manager/public/cpp",
-   ]
- 
-+  if (muon_build) {
-+    deps += [ "//third_party/icu:icu_chrome" ]
-+  }
-+
-   data_deps = [
-     ":manifest",
-   ]
 diff --git a/components/guest_view/browser/guest_view_manager.cc b/components/guest_view/browser/guest_view_manager.cc
 index 315ea635bfd49e4d1ff029709ff9c39e657d48b8..bdda6074d0f76cfe0d9a8d11fe09ac255a4f9180 100644
 --- a/components/guest_view/browser/guest_view_manager.cc
@@ -2441,75 +2387,6 @@ index 2341999ae5493b1e205343963b41d8cbc68549de..25552307f59d70dbc9484a0edb241c21
    // Called to read raw (pre-filtered) data from this Job. Reads at most
    // |buf_size| bytes into |buf|.
    // Possible return values:
-diff --git a/services/service_manager/public/cpp/BUILD.gn b/services/service_manager/public/cpp/BUILD.gn
-index 2d68cd9fbcdbac1fc832930084e084025d350adb..018ca97bdc7e666d46a889c24bc06bdc44fcfe3c 100644
---- a/services/service_manager/public/cpp/BUILD.gn
-+++ b/services/service_manager/public/cpp/BUILD.gn
-@@ -2,6 +2,8 @@
- # Use of this source code is governed by a BSD-style license that can be
- # found in the LICENSE file.
- 
-+import("//electron/build/muon.gni")
-+
- group("cpp") {
-   public_deps = [
-     ":sources",
-@@ -67,6 +69,12 @@ if (!is_ios) {
-       "//base:i18n",
-       "//mojo/public/c/system",
-     ]
-+
-+    if (muon_build) {
-+      deps -= [ "//base:i18n" ]
-+      deps += [ "//base:i18n_without_icu" ]
-+      configs += [ "//third_party/icu:icu_config" ]
-+    }
-   }
- 
-   static_library("service_test_support") {
-diff --git a/services/service_manager/standalone/BUILD.gn b/services/service_manager/standalone/BUILD.gn
-index 63d18d8cea5653c3283114e0e6166fe6b469f1a2..1e71a68ea64bf1b9e6ca3f6699bf8ca679442d92 100644
---- a/services/service_manager/standalone/BUILD.gn
-+++ b/services/service_manager/standalone/BUILD.gn
-@@ -6,6 +6,7 @@ import("//services/service_manager/public/cpp/service.gni")
- import("//mojo/public/tools/bindings/mojom.gni")
- import("//testing/test.gni")
- 
-+# workaround for icu linking errors on windows
- source_set("standalone") {
-   sources = [
-     "context.cc",
-@@ -31,6 +32,10 @@ source_set("standalone") {
-     "//url",
-   ]
- 
-+  if (muon_build) {
-+    deps += [ "//third_party/icu:icu_chrome" ]
-+  }
-+
-   data_deps = [
-     "//services/tracing",
-   ]
-diff --git a/testing/libfuzzer/fuzzers/BUILD.gn b/testing/libfuzzer/fuzzers/BUILD.gn
-index 9ab09b70d7a0001377ed7800ad5e88c31b38ebdf..79d3b285ba88b547f656eb1d178fbd76f266a6a5 100644
---- a/testing/libfuzzer/fuzzers/BUILD.gn
-+++ b/testing/libfuzzer/fuzzers/BUILD.gn
-@@ -205,6 +205,7 @@ fuzzer_test("libpng_read_fuzzer") {
-   dict = "dicts/png.dict"
- }
- 
-+if (!muon_build) {
- fuzzer_test("v8_script_parser_fuzzer") {
-   sources = []
-   deps = [
-@@ -239,6 +240,7 @@ fuzzer_test("v8_wasm_code_fuzzer") {
-   ]
-   libfuzzer_options = [ "max_len=500" ]
- }
-+}
- 
- fuzzer_test("v8_wasm_call_fuzzer") {
-   sources = []
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h b/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
 index 6bfee912323849e8a0ef3aac93819a8100dceaae..8593ca020a20b1043b23d7e0e607356212d69aa3 100644
 --- a/third_party/WebKit/Source/core/dom/DOMArrayBuffer.h
@@ -2619,25 +2496,6 @@ index 82775974231274e6639751139f5c7bc9bbfaad25..8aca09939d20cc48cfa85c507fdea17c
      readonly attribute long long lastModified;
  
      // Non-standard APIs
-diff --git a/third_party/WebKit/Source/platform/BUILD.gn b/third_party/WebKit/Source/platform/BUILD.gn
-index 8a16dcb4b1d31ba35a2df521763ec9fd77783f43..09b59829d77543425516d0c6c2b0b4f3a741dde4 100644
---- a/third_party/WebKit/Source/platform/BUILD.gn
-+++ b/third_party/WebKit/Source/platform/BUILD.gn
-@@ -184,8 +184,14 @@ executable("character_data_generator") {
-     "//build/win:default_exe_manifest",
-     "//third_party/icu",
-   ]
-+
-+  if (muon_build) {
-+    deps -= [ "//third_party/icu" ]
-+    deps += [ "//third_party/icu:icu_chrome" ]
-+  }
- }
- 
-+
- # This isn't strictly necessary since we can just add the deps to "platform",
- # but it helps to have the targets match the GYP build.
- group("make_platform_generated") {
 diff --git a/third_party/WebKit/Source/web/WebArrayBuffer.cpp b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
 index 271ec5391d8a9a478f36da58f1b539963cf39724..cd0fcf8bec875485097560c9c8231ad013cc0a96 100644
 --- a/third_party/WebKit/Source/web/WebArrayBuffer.cpp

@@ -517,58 +517,32 @@ if (is_win) {
   chromedriver = "$chromedriver.exe"
 }
 
-if (muon_build) {
-  chromedriver_version = "2.25"
+chromedriver_version = "2.25"
 
-  action("build_chromedriver") {
-    # dummy script - this is built separately
-    script = "//electron/tools/noop.py"
+copy("electron_chromedriver_dist_resources") {
+  sources = [
+    "$root_out_dir/../Chromedriver/$chromedriver",
+  ]
 
-    outputs = [ "$root_out_dir/../Chromedriver/muon_$chromedriver"]
-  }
+  outputs = [
+    "$electron_dist_dir/$chromedriver"
+  ]
 
-  copy("electron_chromedriver_dist_resources") {
-    sources = [
-      "$root_out_dir/../Chromedriver/muon_$chromedriver",
-    ]
+  deps = [ "//chrome/test/chromedriver:chromedriver" ]
+}
 
-    outputs = [
-      "$electron_dist_dir/$chromedriver"
-    ]
+zip("chromedriver_zip") {
+  inputs = get_target_outputs(":electron_chromedriver_dist_resources")
+  inputs += get_target_outputs(":electron_license_dist_resources")
+  output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_arch.zip"
 
-    deps = [ ":build_chromedriver" ]
-  }
+  base_dir = electron_dist_dir
 
-  zip("chromedriver_zip") {
-    inputs = get_target_outputs(":electron_chromedriver_dist_resources")
-    inputs += get_target_outputs(":electron_license_dist_resources")
-    output = "$electron_dist_dir/chromedriver-v$chromedriver_version-$electron_platform-$target_arch.zip"
-
-    base_dir = electron_dist_dir
-
-    deps = [
-      "app/$current_os:chromedriver_dist_resources",
-      ":electron_chromedriver_dist_resources",
-      ":electron_license_dist_resources",
-    ]
-  }
-} else {
-  group("build_chromedriver") {
-    deps = [ ":rename_chromedriver" ]
-  }
-
-  # rename the file to avoid a conflict in create_dist
-  copy("rename_chromedriver") {
-    sources = [
-      "$root_out_dir/$chromedriver",
-    ]
-
-    outputs = [
-      "$root_out_dir/muon_$chromedriver"
-    ]
-
-    deps = [ "//chrome/test/chromedriver:chromedriver" ]
-  }
+  deps = [
+    "app/$current_os:chromedriver_dist_resources",
+    ":electron_chromedriver_dist_resources",
+    ":electron_license_dist_resources",
+  ]
 }
 
 if (!is_mac) {
@@ -678,15 +652,10 @@ action("create_dist") {
   if (is_win) {
     inputs += [
       "$electron_dist_dir/xinput1_3.dll",
-      "$electron_dist_dir/node.dll",
       "$electron_dist_dir/libEGL.dll",
       "$electron_dist_dir/libGLESv2.dll",
       "$electron_dist_dir/d3dcompiler_47.dll",
       "$electron_dist_dir/$widevine_cdm_path/widevinecdmadapter.dll",
-    ]
-  } else if (is_linux) {
-    inputs += [
-      "$electron_dist_dir/libnode.so",
     ]
   }
 
@@ -714,9 +683,7 @@ action("create_dist") {
     "app/$current_os:dist_resources",
   ]
 
-  if (muon_build) {
-    deps += [ ":chromedriver_zip" ]
-  }
+  deps += [ ":chromedriver_zip" ]
 
   if (!is_mac) {
     deps += [
