@@ -135,6 +135,29 @@ ProfileManager::ProfileManager(const base::FilePath& user_data_dir)
 }
 
 ProfileManager::~ProfileManager() {
+  // destroy child profiles
+  ProfilesInfoMap::iterator itr = profiles_info_.begin();
+  while (itr != profiles_info_.end()) {
+    if (itr->second->profile->GetOriginalProfile() != itr->second->profile.get()) {
+      delete itr->second.release();
+      profiles_info_.erase(itr++);
+    } else {
+      ++itr;
+    }
+  }
+
+  // destroy parent profiles
+  itr = profiles_info_.begin();
+  while (itr != profiles_info_.end()) {
+    // delete otr profile
+    if (itr->second->profile->HasOffTheRecordProfile())
+      delete itr->second->profile->GetOffTheRecordProfile();
+
+    delete itr->second.release();
+    profiles_info_.erase(itr++);
+  }
+
+  profiles_info_.clear();
 }
 
 // static
@@ -301,6 +324,5 @@ ProfileManager::ProfileInfo::ProfileInfo(
 }
 
 ProfileManager::ProfileInfo::~ProfileInfo() {
-  // TODO(bridiver) - should this even be a unique_ptr right now?
-  profile.release();
+  delete profile.release();
 }

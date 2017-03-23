@@ -114,7 +114,7 @@ class WebRequest : public mate::TrackableObject<WebRequest>,
   void SetListener(Method method, Event type, mate::Arguments* args);
 
  private:
-  scoped_refptr<AtomBrowserContext> browser_context_;
+  AtomBrowserContext* browser_context_;
   std::map<const net::URLFetcher*, FetchCallback> fetchers_;
 
   DISALLOW_COPY_AND_ASSIGN(WebRequest);

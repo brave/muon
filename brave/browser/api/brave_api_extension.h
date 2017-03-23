@@ -75,7 +75,7 @@ class Extension : public gin::Wrappable<Extension>,
 
  private:
   v8::Isolate* isolate_;  // not owned
-  scoped_refptr<BraveBrowserContext> browser_context_;
+  BraveBrowserContext* browser_context_;
 
   DISALLOW_COPY_AND_ASSIGN(Extension);
 };

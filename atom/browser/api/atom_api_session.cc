@@ -365,7 +365,7 @@ Session::~Session() {
 
 std::string Session::Partition() {
   return static_cast<brave::BraveBrowserContext*>(
-      browser_context_.get())->partition_with_prefix();
+      browser_context_)->partition_with_prefix();
 }
 
 void Session::OnDownloadCreated(content::DownloadManager* manager,
@@ -604,16 +604,16 @@ mate::Handle<Session> Session::CreateFrom(
 mate::Handle<Session> Session::FromPartition(
     v8::Isolate* isolate, const std::string& partition,
     const base::DictionaryValue& options) {
-  scoped_refptr<AtomBrowserContext> browser_context =
+  AtomBrowserContext* browser_context =
       brave::BraveBrowserContext::FromPartition(partition, options);
 
-  DCHECK(browser_context.get());
+  DCHECK(browser_context);
   // TODO(bridiver) - this is a huge hack to deal with sync call
   ScopedAllowWaitForLegacyWebViewApi wait_allowed;
   static_cast<brave::BraveBrowserContext*>(
-      browser_context.get())->ready()->Wait();
+      browser_context)->ready()->Wait();
 
-  return CreateFrom(isolate, browser_context.get());
+  return CreateFrom(isolate, browser_context);
 }
 
 // static

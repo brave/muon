@@ -43,7 +43,7 @@ class BraveBrowserContext : public Profile {
   std::unique_ptr<content::ZoomLevelDelegate> CreateZoomLevelDelegate(
       const base::FilePath& partition_path) override;
 
-  static scoped_refptr<atom::AtomBrowserContext> FromPartition(
+  static atom::AtomBrowserContext* FromPartition(
     const std::string& partition, const base::DictionaryValue& options);
 
   static BraveBrowserContext*
@@ -129,7 +129,7 @@ class BraveBrowserContext : public Profile {
   std::unique_ptr<BravePermissionManager> permission_manager_;
 
   bool has_parent_;
-  scoped_refptr<BraveBrowserContext> original_context_;
+  BraveBrowserContext* original_context_;
   BraveBrowserContext* otr_context_;
   const std::string partition_;
   std::unique_ptr<base::WaitableEvent> ready_;

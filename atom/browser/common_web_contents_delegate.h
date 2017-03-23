@@ -153,7 +153,7 @@ class CommonWebContentsDelegate
   scoped_refptr<DevToolsFileSystemIndexer> devtools_file_system_indexer_;
 
   // Make sure BrowserContext is alwasys destroyed after WebContents.
-  scoped_refptr<AtomBrowserContext> browser_context_;
+  AtomBrowserContext* browser_context_;
 
   // The stored InspectableWebContents object.
   // Notice that web_contents_ must be placed after dialog_manager_, so we can

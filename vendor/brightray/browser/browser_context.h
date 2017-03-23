@@ -25,13 +25,12 @@ namespace brightray {
 
 class PermissionManager;
 
-class BrowserContext : public base::RefCounted<BrowserContext>,
-                       public content::BrowserContext,
+class BrowserContext : public content::BrowserContext,
                        public brightray::URLRequestContextGetter::Delegate {
  public:
   // Get the BrowserContext according to its |partition| and |in_memory|,
   // empty pointer when be returned when there is no matching BrowserContext.
-  static scoped_refptr<BrowserContext> Get(
+  static BrowserContext* Get(
       const std::string& partition, bool in_memory);
 
   base::WeakPtr<BrowserContext> GetWeakPtr() {

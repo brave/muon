@@ -201,14 +201,14 @@ void TabViewGuest::CreateWebContents(
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
-  scoped_refptr<atom::AtomBrowserContext> browser_context;
+  atom::AtomBrowserContext* browser_context;
 
   std::string partition;
   params.GetString("partition", &partition);
   base::DictionaryValue partition_options;
   browser_context =
       brave::BraveBrowserContext::FromPartition(partition, partition_options);
-  content::WebContents::CreateParams create_params(browser_context.get());
+  content::WebContents::CreateParams create_params(browser_context);
   create_params.guest_delegate = this;
 
   mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);

@@ -113,12 +113,12 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
   if (options.GetString("parent_partition", &parent_partition)) {
     has_parent_ = true;
     original_context_ = static_cast<BraveBrowserContext*>(
-        atom::AtomBrowserContext::From(parent_partition, false).get());
+        atom::AtomBrowserContext::From(parent_partition, false));
   }
 
   if (in_memory) {
     original_context_ = static_cast<BraveBrowserContext*>(
-        atom::AtomBrowserContext::From(partition, false).get());
+        atom::AtomBrowserContext::From(partition, false));
     original_context_->otr_context_ = this;
   }
   CreateProfilePrefs(task_runner);
@@ -130,7 +130,7 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
     BrowserThread::PostTask(
         BrowserThread::IO, FROM_HERE,
         base::Bind(&NotifyOTRProfileCreatedOnIOThread,
-          base::Unretained(original_context_.get()),
+          base::Unretained(original_context_),
           base::Unretained(this)));
   }
 #endif
@@ -159,7 +159,7 @@ BraveBrowserContext::~BraveBrowserContext() {
       user_prefs->ClearMutableValues();
 #if BUILDFLAG(ENABLE_EXTENSIONS)
     ExtensionPrefValueMapFactory::GetForBrowserContext(
-        original_context_.get())->ClearAllIncognitoSessionOnlyPreferences();
+        original_context_)->ClearAllIncognitoSessionOnlyPreferences();
 #endif
   }
 
@@ -180,10 +180,10 @@ BraveBrowserContext::~BraveBrowserContext() {
 
   if (IsOffTheRecord()) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  BrowserThread::PostTask(
-      BrowserThread::IO, FROM_HERE,
-      base::Bind(&NotifyOTRProfileDestroyedOnIOThread,
-          base::Unretained(original_context_.get()), base::Unretained(this)));
+    BrowserThread::PostTask(
+        BrowserThread::IO, FROM_HERE,
+        base::Bind(&NotifyOTRProfileDestroyedOnIOThread,
+            base::Unretained(original_context_), base::Unretained(this)));
 #endif
   }
 
@@ -218,7 +218,7 @@ bool BraveBrowserContext::HasParentContext() {
 
 BraveBrowserContext* BraveBrowserContext::original_context() {
   if (original_context_) {
-    return original_context_.get();
+    return original_context_;
   }
   return this;
 }
@@ -256,7 +256,7 @@ void BraveBrowserContext::TrackZoomLevelsFromParent() {
   // partitions, e.g. those used by WebViewGuests.
   HostZoomMap* host_zoom_map = HostZoomMap::GetDefaultForBrowserContext(this);
   HostZoomMap* parent_host_zoom_map =
-      HostZoomMap::GetDefaultForBrowserContext(original_context_.get());
+      HostZoomMap::GetDefaultForBrowserContext(original_context_);
   host_zoom_map->CopyFrom(parent_host_zoom_map);
   // Observe parent profile's HostZoomMap changes so they can also be applied
   // to this profile's HostZoomMap.
@@ -506,9 +506,9 @@ std::string BraveBrowserContext::partition_with_prefix() {
   return kPersistPrefix + canonical_partition;
 }
 
-scoped_refptr<atom::AtomBrowserContext> BraveBrowserContext::FromPartition(
+atom::AtomBrowserContext* BraveBrowserContext::FromPartition(
     const std::string& partition, const base::DictionaryValue& options) {
-  scoped_refptr<atom::AtomBrowserContext> browser_context;
+  atom::AtomBrowserContext* browser_context;
   if (partition.empty()) {
     return atom::AtomBrowserContext::From("", false, options);
   }
@@ -564,12 +564,12 @@ void CreateProfileDirectory(base::SequencedTaskRunner* sequenced_task_runner,
 
 // TODO(bridiver) find a better way to do this
 // static
-scoped_refptr<AtomBrowserContext> AtomBrowserContext::From(
+AtomBrowserContext* AtomBrowserContext::From(
     const std::string& partition, bool in_memory,
     const base::DictionaryValue& options) {
   auto browser_context = brightray::BrowserContext::Get(partition, in_memory);
   if (browser_context)
-    return static_cast<AtomBrowserContext*>(browser_context.get());
+    return static_cast<AtomBrowserContext*>(browser_context);
 
   // TODO(bridiver) - pass the path to initialize the browser context
   // TODO(bridiver) - create these with the profile manager
@@ -592,7 +592,7 @@ scoped_refptr<AtomBrowserContext> AtomBrowserContext::From(
   auto profile = new brave::BraveBrowserContext(partition, in_memory, options,
       sequenced_task_runner);
 
-  if (profile == profile->GetOriginalProfile() &&
+  if (!profile->IsOffTheRecord() &&
       !g_browser_process->profile_manager()->GetProfileByPath(
           profile->GetPath())) {
     g_browser_process->profile_manager()->AddProfile(profile);

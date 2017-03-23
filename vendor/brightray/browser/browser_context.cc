@@ -63,11 +63,11 @@ class BrowserContext::ResourceContext : public content::ResourceContext {
 BrowserContext::BrowserContextMap BrowserContext::browser_context_map_;
 
 // static
-scoped_refptr<BrowserContext> BrowserContext::Get(
+BrowserContext* BrowserContext::Get(
     const std::string& partition, bool in_memory) {
   PartitionKey key(partition, in_memory);
-  if (browser_context_map_[key].get())
-    return make_scoped_refptr(browser_context_map_[key].get());
+  if (browser_context_map_[key])
+    return browser_context_map_[key].get();
 
   return nullptr;
 }

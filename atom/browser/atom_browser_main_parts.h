@@ -78,7 +78,7 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   void FreeAppDelegate();
 #endif
 
-  scoped_refptr<brightray::BrowserContext> browser_context_;
+  brightray::BrowserContext* browser_context_;
 
   // A fake BrowserProcess object that used to feed the source code from chrome.
   std::unique_ptr<BrowserProcess> fake_browser_process_;

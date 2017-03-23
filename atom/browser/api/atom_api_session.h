@@ -53,7 +53,7 @@ class Session: public mate::TrackableObject<Session>,
       v8::Isolate* isolate, const std::string& partition,
       const base::DictionaryValue& options = base::DictionaryValue());
 
-  AtomBrowserContext* browser_context() const { return browser_context_.get(); }
+  AtomBrowserContext* browser_context() const { return browser_context_; }
 
   // mate::TrackableObject:
   static void BuildPrototype(v8::Isolate* isolate,
@@ -106,7 +106,7 @@ class Session: public mate::TrackableObject<Session>,
   // The X-DevTools-Emulate-Network-Conditions-Client-Id.
   std::string devtools_network_emulation_client_id_;
 
-  scoped_refptr<AtomBrowserContext> browser_context_;
+  AtomBrowserContext* browser_context_;
 
   DISALLOW_COPY_AND_ASSIGN(Session);
 };

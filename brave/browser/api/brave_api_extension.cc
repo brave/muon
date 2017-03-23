@@ -133,12 +133,12 @@ Extension::Extension(v8::Isolate* isolate,
                  BraveBrowserContext* browser_context)
     : isolate_(isolate),
       browser_context_(browser_context) {
-  extensions::ExtensionRegistry::Get(browser_context_.get())->AddObserver(this);
+  extensions::ExtensionRegistry::Get(browser_context_)->AddObserver(this);
 }
 
 Extension::~Extension() {
-  if (extensions::ExtensionRegistry::Get(browser_context_.get())) {
-    extensions::ExtensionRegistry::Get(browser_context_.get())->
+  if (extensions::ExtensionRegistry::Get(browser_context_)) {
+    extensions::ExtensionRegistry::Get(browser_context_)->
         RemoveObserver(this);
   }
 }
@@ -183,7 +183,7 @@ void Extension::LoadOnFILEThread(const base::FilePath path,
 void Extension::NotifyLoadOnUIThread(
     scoped_refptr<extensions::Extension> extension) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  extensions::ExtensionSystem::Get(browser_context_.get())->ready().Post(
+  extensions::ExtensionSystem::Get(browser_context_)->ready().Post(
         FROM_HERE,
         base::Bind(&Extension::AddExtension,
           // GetWeakPtr()
@@ -227,10 +227,10 @@ void Extension::Load(gin::Arguments* args) {
 
 void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {
   auto extension_service =
-      extensions::ExtensionSystem::Get(browser_context_.get())->
+      extensions::ExtensionSystem::Get(browser_context_)->
           extension_service();
   if (!extensions::ExtensionRegistry::Get(
-        browser_context_.get())->GetInstalledExtension(extension->id())) {
+        browser_context_)->GetInstalledExtension(extension->id())) {
     extension_service->AddExtension(extension.get());
   }
 }
@@ -274,10 +274,10 @@ void Extension::OnExtensionUnloaded(content::BrowserContext* browser_context,
 
 void Extension::Disable(const std::string& extension_id) {
   auto extension_service =
-      extensions::ExtensionSystem::Get(browser_context_.get())->
+      extensions::ExtensionSystem::Get(browser_context_)->
           extension_service();
   if (extension_service && extensions::ExtensionRegistry::Get(
-        browser_context_.get())->GetInstalledExtension(extension_id)) {
+        browser_context_)->GetInstalledExtension(extension_id)) {
     extension_service->DisableExtension(
         extension_id, extensions::Extension::DISABLE_USER_ACTION);
   }
@@ -285,10 +285,10 @@ void Extension::Disable(const std::string& extension_id) {
 
 void Extension::Enable(const std::string& extension_id) {
   auto extension_service =
-      extensions::ExtensionSystem::Get(browser_context_.get())->
+      extensions::ExtensionSystem::Get(browser_context_)->
           extension_service();
   if (extension_service && extensions::ExtensionRegistry::Get(
-        browser_context_.get())->GetInstalledExtension(extension_id)) {
+        browser_context_)->GetInstalledExtension(extension_id)) {
     extension_service->EnableExtension(
         extension_id);
   }
