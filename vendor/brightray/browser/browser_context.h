@@ -71,7 +71,7 @@ class BrowserContext : public base::RefCounted<BrowserContext>,
   }
 
   DevToolsNetworkControllerHandle* network_controller_handle() {
-    return &network_controller_handle_;
+    return network_controller_handle_.get();
   }
 
   void InitPrefs(scoped_refptr<base::SequencedTaskRunner> task_runner);
@@ -119,7 +119,7 @@ class BrowserContext : public base::RefCounted<BrowserContext>,
   base::FilePath path_;
   bool in_memory_;
 
-  DevToolsNetworkControllerHandle network_controller_handle_;
+  std::unique_ptr<DevToolsNetworkControllerHandle> network_controller_handle_;
 
   std::unique_ptr<ResourceContext> resource_context_;
   scoped_refptr<URLRequestContextGetter> url_request_getter_;
