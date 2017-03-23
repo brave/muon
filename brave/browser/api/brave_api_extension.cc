@@ -229,7 +229,10 @@ void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {
   auto extension_service =
       extensions::ExtensionSystem::Get(browser_context_.get())->
           extension_service();
-  extension_service->AddExtension(extension.get());
+  if (!extensions::ExtensionRegistry::Get(
+        browser_context_.get())->GetInstalledExtension(extension->id())) {
+    extension_service->AddExtension(extension.get());
+  }
 }
 
 void Extension::OnExtensionReady(content::BrowserContext* browser_context,
@@ -273,7 +276,8 @@ void Extension::Disable(const std::string& extension_id) {
   auto extension_service =
       extensions::ExtensionSystem::Get(browser_context_.get())->
           extension_service();
-  if (extension_service) {
+  if (extension_service && extensions::ExtensionRegistry::Get(
+        browser_context_.get())->GetInstalledExtension(extension_id)) {
     extension_service->DisableExtension(
         extension_id, extensions::Extension::DISABLE_USER_ACTION);
   }
@@ -283,7 +287,8 @@ void Extension::Enable(const std::string& extension_id) {
   auto extension_service =
       extensions::ExtensionSystem::Get(browser_context_.get())->
           extension_service();
-  if (extension_service) {
+  if (extension_service && extensions::ExtensionRegistry::Get(
+        browser_context_.get())->GetInstalledExtension(extension_id)) {
     extension_service->EnableExtension(
         extension_id);
   }

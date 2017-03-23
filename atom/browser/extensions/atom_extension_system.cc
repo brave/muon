@@ -32,6 +32,7 @@
 #include "extensions/browser/notification_types.h"
 #include "extensions/browser/null_app_sorting.h"
 #include "extensions/browser/quota_service.h"
+#include "extensions/browser/renderer_startup_helper.h"
 #include "extensions/browser/runtime_data.h"
 #include "extensions/browser/service_worker_manager.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
@@ -347,12 +348,12 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
     // installation then threads through the install and pending install flow
     // of this class, and we check when loading installed extensions.
     registry_->AddBlacklisted(extension);
-  // } else if (extension_prefs_->IsExtensionDisabled(extension->id())) {
-    // registry_->AddDisabled(extension);
-    // content::NotificationService::current()->Notify(
-    //     extensions::NOTIFICATION_EXTENSION_UPDATE_DISABLED,
-    //     content::Source<content::BrowserContext>(browser_context_),
-    //     content::Details<const Extension>(extension));
+  } else if (extension_prefs_->IsExtensionDisabled(extension->id())) {
+    registry_->AddDisabled(extension);
+    content::NotificationService::current()->Notify(
+        extensions::NOTIFICATION_EXTENSION_UPDATE_DISABLED,
+        content::Source<Profile>(browser_context_),
+        content::Details<const Extension>(extension));
   } else {
     registry_->AddEnabled(extension);
     NotifyExtensionLoaded(extension);
@@ -389,19 +390,8 @@ void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
         &AtomExtensionSystem::Shared::OnExtensionRegisteredWithRequestContexts,
             AsWeakPtr(), base::RetainedRef(extension)));
 
-  for (content::RenderProcessHost::iterator i(
-          content::RenderProcessHost::AllHostsIterator());
-       !i.IsAtEnd(); i.Advance()) {
-    content::RenderProcessHost* host = i.GetCurrentValue();
-
-    if (extensions::ExtensionsBrowserClient::Get()->
-        IsSameContext(browser_context_, host->GetBrowserContext())) {
-      std::vector<ExtensionMsg_Loaded_Params> loaded_extensions(
-          1, ExtensionMsg_Loaded_Params(extension, false));
-      host->Send(
-          new ExtensionMsg_Loaded(loaded_extensions));
-    }
-  }
+  RendererStartupHelperFactory::GetForBrowserContext(browser_context_)->
+    OnExtensionLoaded(*extension);
 
   // Tell subsystems that use the EXTENSION_LOADED notification about the new
   // extension.
