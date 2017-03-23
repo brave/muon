@@ -7,7 +7,7 @@ import shutil
 import sys
 import tarfile
 
-from lib.config import PLATFORM, output_dir, SOURCE_ROOT, CHROMIUM_ROOT, dist_dir, get_target_arch, s3_config
+from lib.config import PLATFORM, output_dir, SOURCE_ROOT, CHROMIUM_ROOT, dist_dir, get_target_arch, s3_config, project_name
 from lib.util import execute, safe_mkdir, scoped_cwd, s3put
 
 
@@ -111,16 +111,16 @@ def upload_node(bucket, access_key, secret_key, version):
 
   if PLATFORM == 'win32':
     if get_target_arch() != 'x64':
-      node_lib = os.path.join(dist_dir(), 'node.lib')
-      iojs_lib = os.path.join(dist_dir(), 'win-x86', 'iojs.lib')
+      node_lib = os.path.join(dist_dir(), 'node.exe')
+      iojs_lib = os.path.join(dist_dir(), 'win-x86', 'iojs.exe')
     else:
-      node_lib = os.path.join(dist_dir(), 'x64', 'node.lib')
-      iojs_lib = os.path.join(dist_dir(), 'win-x64', 'iojs.lib')
+      node_lib = os.path.join(dist_dir(), 'x64', 'node.exe')
+      iojs_lib = os.path.join(dist_dir(), 'win-x64', 'iojs.exe')
     safe_mkdir(os.path.dirname(node_lib))
     safe_mkdir(os.path.dirname(iojs_lib))
 
     # Copy atom.lib to node.lib and iojs.lib.
-    atom_lib = os.path.join(output_dir(), 'node.dll.lib')
+    atom_lib = os.path.join(output_dir(), '{0}.exe'.format(project_name()))
     shutil.copy2(atom_lib, node_lib)
     shutil.copy2(atom_lib, iojs_lib)
 

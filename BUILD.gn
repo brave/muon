@@ -521,7 +521,7 @@ chromedriver_version = "2.25"
 
 copy("electron_chromedriver_dist_resources") {
   sources = [
-    "$root_out_dir/../Chromedriver/$chromedriver",
+    "$root_out_dir/$chromedriver",
   ]
 
   outputs = [
