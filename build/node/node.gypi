@@ -4,7 +4,7 @@
     'win_release_RuntimeLibrary': '2',
     'clang_use_chrome_plugins': 0,
     'openssl_fips': '',
-    'openssl_no_asm': 1,
+    'openssl_no_asm': 0,
     'use_openssl_def': 0,
     'OPENSSL_PRODUCT': 'libopenssl.a',
     'node_release_urlbase': '',
@@ -16,7 +16,7 @@
     'node_shared_cares': 'false',
     'node_shared_http_parser': 'false',
     'node_shared_libuv': 'false',
-    'node_shared_openssl': 'false',
+    'node_shared_openssl': 'true',
     'node_shared_zlib': 'false',
     'node_tag': '',
     'node_use_dtrace': 'false',
@@ -27,6 +27,7 @@
     'node_use_v8_platform': 'false',
     'node_use_bundled_v8': 'false',
     'node_use_chromium_v8': 'true',
+    'node_use_boringssl': 'true',
     'node_enable_d8': 'false',
     'uv_library': 'static_library',
     'uv_parent_path': 'vendor/node/deps/uv',
@@ -57,7 +58,7 @@
       }
     },
     'target_conditions': [
-      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib"]', {
+      ['_target_name in ["libuv", "http_parser", "cares", "node", "zlib"]', {
         'msvs_disabled_warnings': [
           4003,  # not enough actual parameters for macro 'V'
           4013,  # 'free' undefined; assuming extern returning int
@@ -234,16 +235,6 @@
               },
             },
           }],
-        ],
-      }],
-      ['_target_name=="openssl"', {
-        'xcode_settings': {
-          'DEAD_CODE_STRIPPING': 'YES',  # -Wl,-dead_strip
-          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES',
-          'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
-        },
-        'cflags': [
-          '-fvisibility=hidden',
         ],
       }],
       ['_target_name=="libuv"', {
