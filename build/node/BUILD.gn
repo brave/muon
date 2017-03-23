@@ -8,11 +8,7 @@ config("build_config") {
 source_set("node") {
   lib_dirs = []
 
-  if (is_mac) {
-    lib_dirs += [ root_out_dir ]
-  } else if (is_linux) {
-    lib_dirs += [ "$root_out_dir/lib" ]
-  } else if (is_win) {
+  if (is_win) {
     lib_dirs += [
       "$root_out_dir/obj/electron/vendor/node",
       "$root_out_dir/obj/electron/vendor/node/deps/uv",
@@ -20,6 +16,8 @@ source_set("node") {
       "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
       "$root_out_dir/obj/electron/vendor/node/deps/zlib",
     ]
+  } else {
+    lib_dirs += [ root_out_dir ]
   }
 
   if (is_win) {
