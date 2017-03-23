@@ -188,11 +188,9 @@ node::Environment* NodeBindings::CreateEnvironment(
   std::unique_ptr<const char*[]> c_argv =
       StringVectorToArgArray(args);
 
-  char** argv = uv_setup_args(args.size(), const_cast<char**>(c_argv.get()));
-
   node::Environment* env = node::CreateEnvironment(
       node::CreateIsolateData(context->GetIsolate(), uv_default_loop()),
-      context, args.size(), argv, 0, nullptr);
+      context, args.size(), c_argv.get(), 0, nullptr);
 
   // Node uses the deprecated SetAutorunMicrotasks(false) mode, we should switch
   // to use the scoped policy to match blink's behavior.

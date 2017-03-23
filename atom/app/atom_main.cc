@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "atom/app/atom_main_delegate.h"
+#include "atom/app/uv_task_runner.h"
 #include "build/build_config.h"
 #include "base/at_exit.h"
 #include "base/command_line.h"
@@ -41,6 +42,7 @@ int ChromeMain(int argc, const char* argv[]) {
 #else
 int main(int argc, const char* argv[]) {
 #endif
+  char** argv_setup = uv_setup_args(argc, const_cast<char**>(argv));
   int64_t exe_entry_point_ticks = 0;
 
   atom::AtomMainDelegate chrome_main_delegate(
@@ -62,7 +64,7 @@ int main(int argc, const char* argv[]) {
   params.argc = argc;
   params.argv = argv;
 
-  base::CommandLine::Init(params.argc, params.argv);
+  base::CommandLine::Init(params.argc, argv_setup);
 #endif
 
   base::AtExitManager exit_manager;
