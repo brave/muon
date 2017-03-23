@@ -71,7 +71,8 @@ const base::FilePath GetFilePath(const std::string& name) {
 
   // normalize the path
   for (size_t i = 0; i < components.size(); ++i) {
-    base::FilePath::StringType component(components[i].begin(), components[i].end());
+    base::FilePath::StringType component(components[i].begin(),
+        components[i].end());
 
     if (component == base::FilePath::kCurrentDirectory)
       continue;
