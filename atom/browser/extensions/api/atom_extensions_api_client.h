@@ -9,9 +9,16 @@
 
 #include "extensions/browser/api/extensions_api_client.h"
 
+namespace content {
+class BrowserContext;
+}
+
 namespace extensions {
 
 class ManagementAPIDelegate;
+class SettingsObserver;
+class ValueStoreCache;
+class ValueStoreFactory;
 
 class AtomExtensionsAPIClient : public ExtensionsAPIClient {
  public:
@@ -26,6 +33,13 @@ class AtomExtensionsAPIClient : public ExtensionsAPIClient {
   std::unique_ptr<WebRequestEventRouterDelegate>
       CreateWebRequestEventRouterDelegate() const override;
   ManagementAPIDelegate* CreateManagementAPIDelegate() const override;
+  void AddAdditionalValueStoreCaches(
+      content::BrowserContext* context,
+      const scoped_refptr<ValueStoreFactory>& factory,
+      const scoped_refptr<base::ObserverListThreadSafe<SettingsObserver>>&
+          observers,
+      std::map<settings_namespace::Namespace,
+          ValueStoreCache*>* caches) override;
 };
 
 }  // namespace extensions

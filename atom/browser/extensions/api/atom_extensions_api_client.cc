@@ -13,9 +13,12 @@
 #include "brave/browser/guest_view/brave_guest_view_manager_delegate.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/browser/api/management/management_api_delegate.h"
+#include "extensions/browser/api/storage/local_value_store_cache.h"
+#include "extensions/browser/api/storage/settings_observer.h"
 #include "extensions/browser/api/web_request/web_request_event_details.h"
 #include "extensions/browser/api/web_request/web_request_event_router_delegate.h"
 #include "extensions/browser/requirements_checker.h"
+#include "extensions/browser/value_store/value_store_factory.h"
 #include "extensions/common/manifest_handlers/icons_handler.h"
 
 namespace extensions {
@@ -171,6 +174,17 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
 };
 
 AtomExtensionsAPIClient::AtomExtensionsAPIClient() {
+}
+
+void AtomExtensionsAPIClient::AddAdditionalValueStoreCaches(
+    content::BrowserContext* context,
+    const scoped_refptr<ValueStoreFactory>& factory,
+    const scoped_refptr<base::ObserverListThreadSafe<SettingsObserver>>&
+        observers,
+    std::map<settings_namespace::Namespace, ValueStoreCache*>* caches) {
+  // Add temporary (fake) support for chrome.storage.sync.
+  (*caches)[settings_namespace::SYNC] =
+      new LocalValueStoreCache(factory);
 }
 
 std::unique_ptr<guest_view::GuestViewManagerDelegate>
