@@ -15,6 +15,10 @@
 #include <dlfcn.h>
 #include <glib-object.h>
 
+// Xlib.h:87:16: #define Status int conflicts with Status enum
+// inside /net/url_request/url_request_status.h
+#undef Status
+
 #include "atom/browser/native_window_views.h"
 #include "atom/browser/ui/atom_menu_model.h"
 #include "base/logging.h"
