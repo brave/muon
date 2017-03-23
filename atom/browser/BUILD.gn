@@ -270,6 +270,11 @@ source_set("browser") {
     ]
 
     libs = [ "uiautomationcore.lib" ]
+
+    public_deps += [
+      "//ui/views",
+      "//ui/views/controls/webview",
+    ]
   }
 
   if (is_linux) {

@@ -44,11 +44,7 @@ config("electron_config") {
   ]
 
   defines = [
-    "ATOM_PRODUCT_NAME=\"$chrome_product_short_name\"",
-    "NODE_WANT_INTERNALS=1",
-    "NODE_SHARED_MODE",
-    "V8_SHARED",
-    "USING_V8_SHARED",
+    "ATOM_PRODUCT_NAME=\"$chrome_product_short_name\""
   ]
 
   if (electron_google_api_key != "") {

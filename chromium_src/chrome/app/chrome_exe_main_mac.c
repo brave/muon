@@ -1,8 +1,8 @@
-// Copyright 2015 The Brave Authors. All rights reserved.
+// Copyright 2015 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// The entry point for all Mac Brave processes, including the outer app
+// The entry point for all Mac Chromium processes, including the outer app
 // bundle (browser) and helper app (renderer, plugin, and friends).
 
 #include <dlfcn.h>
@@ -70,16 +70,16 @@ __attribute__((visibility("default"))) int main(int argc, char* argv[]) {
   }
   snprintf(framework_path, framework_path_size, "%s/%s", parent_dir, rel_path);
 
-  void* library = dlopen(framework_path, RTLD_LAZY | RTLD_LOCAL | RTLD_FIRST);
+  void* library = dlopen(framework_path, RTLD_LAZY | RTLD_GLOBAL | RTLD_FIRST);
   if (!library) {
     fprintf(stderr, "dlopen %s: %s\n", framework_path, dlerror());
     abort();
   }
   free(framework_path);
 
-  const ChromeMainPtr chrome_main = dlsym(library, "AtomMain");
+  const ChromeMainPtr chrome_main = dlsym(library, "ChromeMain");
   if (!chrome_main) {
-    fprintf(stderr, "dlsym AtomMain: %s\n", dlerror());
+    fprintf(stderr, "dlsym ChromeMain: %s\n", dlerror());
     abort();
   }
   rv = chrome_main(argc, argv);

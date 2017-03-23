@@ -9,10 +9,10 @@
     'OPENSSL_PRODUCT': 'libopenssl.a',
     'node_release_urlbase': '',
     'node_byteorder': '<!(node <(DEPTH)/electron/tools/get-endianness.js)',
-    'node_target_type': 'shared_library',
+    'node_target_type': 'static_library',
     'node_install_npm': 'false',
     'node_prefix': '',
-    'node_shared': 'true',
+    'node_shared': 'false',
     'node_shared_cares': 'false',
     'node_shared_http_parser': 'false',
     'node_shared_libuv': 'false',
@@ -26,7 +26,6 @@
     'node_use_perfctr': 'false',
     'node_use_v8_platform': 'false',
     'node_use_bundled_v8': 'false',
-    'node_use_chromium_v8': 'true',
     'node_use_boringssl': 'true',
     'node_enable_d8': 'false',
     'uv_library': 'static_library',
@@ -148,8 +147,15 @@
         'cflags': [
           '-fvisibility=default',
         ],
+        'defines': [
+          'NODE_SHARED_MODE',
+        ],
         'ldflags!': [
           '-Wl,--gc-sections',
+        ],
+        'include_dirs': [
+          '../../../v8',
+          '../../../v8/include',
         ],
         'conditions': [
           ['OS=="mac"', {
@@ -186,54 +192,9 @@
             ],
             'include_dirs': [
               '../../atom/node',
-              '../../../v8',
-              '../../../v8/include',
-              '<(SHARED_INTERMEDIATE_DIR)',
-              '<(SHARED_INTERMEDIATE_DIR)/include',
             ],
             # Node is using networking API but linking with this itself.
             'libraries': [ '-lwinmm.lib' ],
-            'variables': {
-              'conditions': [
-                ['target_arch=="ia32"', {
-                  'reference_symbols': [
-                    '_udata_setCommonData_58',
-                    '_u_errorName_58',
-                    '_ubidi_setPara_58',
-                    '_ucsdet_getName_58',
-                    '_uidna_openUTS46_58',
-                    '_ulocdata_close_58',
-                    '_unorm_normalize_58',
-                    '_uregex_matches_58',
-                    '_uscript_getCode_58',
-                    '_uspoof_open_58',
-                    '_usearch_setPattern_58',
-                    '?createInstance@Transliterator@icu_58@@SAPAV12@ABVUnicodeString@2@W4UTransDirection@@AAW4UErrorCode@@@Z',
-                    '??0MeasureFormat@icu_58@@QAE@ABVLocale@1@W4UMeasureFormatWidth@@AAW4UErrorCode@@@Z',
-                  ],
-                }, {
-                  'reference_symbols': [
-                    'udata_setCommonData_58',
-                    'u_errorName_58',
-                    'ubidi_setPara_58',
-                    'ucsdet_getName_58',
-                    'uidna_openUTS46_58',
-                    'ulocdata_close_58',
-                    'unorm_normalize_58',
-                    'uregex_matches_58',
-                    'uspoof_open_58',
-                    'usearch_setPattern_58',
-                    '?createInstance@Transliterator@icu_58@@SAPEAV12@AEBVUnicodeString@2@W4UTransDirection@@AEAW4UErrorCode@@@Z',
-                    '??0MeasureFormat@icu_58@@QEAA@AEBVLocale@1@W4UMeasureFormatWidth@@AEAW4UErrorCode@@@Z',
-                  ],
-                }]
-              ]
-            },
-            'msvs_settings': {
-              'VCLinkerTool': {
-                'ForceSymbolReferences': [ '<@(reference_symbols)' ],
-              },
-            },
           }],
         ],
       }],
