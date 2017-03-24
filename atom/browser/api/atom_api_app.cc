@@ -871,7 +871,7 @@ void App::ImportCertificate(
   if (!certificate_manager_model_) {
     std::unique_ptr<base::DictionaryValue> copy = options.CreateDeepCopy();
     CertificateManagerModel::Create(
-        browser_context.get(),
+        browser_context,
         base::Bind(&App::OnCertificateManagerModelCreated,
                    base::Unretained(this),
                    base::Passed(&copy),
