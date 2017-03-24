@@ -508,7 +508,6 @@ std::string BraveBrowserContext::partition_with_prefix() {
 
 atom::AtomBrowserContext* BraveBrowserContext::FromPartition(
     const std::string& partition, const base::DictionaryValue& options) {
-  atom::AtomBrowserContext* browser_context;
   if (partition.empty()) {
     return atom::AtomBrowserContext::From("", false, options);
   }
