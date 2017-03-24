@@ -15,6 +15,12 @@
       <include name="IDR_BRAVE_IPC_RENDERER_JS" file="renderer\resources\extensions\ipc_renderer_custom_bindings.js" type="BINDATA" />
 
       <include name="IDR_PLUGIN_DB_JSON" file="browser\resources\plugin_metadata\plugins.json" type="BINDATA" />
+
+      <include name="IDR_CHROME_CONTENT_BROWSER_MANIFEST_OVERLAY" file="..\..\chrome\browser\chrome_content_browser_manifest_overlay.json" type="BINDATA" />
+      <include name="IDR_CHROME_CONTENT_GPU_MANIFEST_OVERLAY" file="..\..\chrome\browser\chrome_content_gpu_manifest_overlay.json" type="BINDATA" />
+      <include name="IDR_CHROME_CONTENT_PLUGIN_MANIFEST_OVERLAY" file="..\..\chrome\browser\chrome_content_plugin_manifest_overlay.json" type="BINDATA" />
+      <include name="IDR_CHROME_CONTENT_RENDERER_MANIFEST_OVERLAY" file="..\..\chrome\browser\chrome_content_renderer_manifest_overlay.json" type="BINDATA" />
+      <include name="IDR_CHROME_CONTENT_UTILITY_MANIFEST_OVERLAY" file="..\..\chrome\browser\chrome_content_utility_manifest_overlay.json" type="BINDATA" />
     </includes>
   </release>
 </grit>

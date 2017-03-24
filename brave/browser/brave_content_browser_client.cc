@@ -9,10 +9,12 @@
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "base/base_switches.h"
+#include "base/json/json_reader.h"
 #include "base/lazy_instance.h"
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
+#include "brave/grit/brave_resources.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/plugins/plugin_info_message_filter.h"
@@ -35,12 +37,14 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_process_host.h"
+#include "content/public/common/service_names.mojom.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
 #include "services/image_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
 #include "ui/base/l10n/l10n_util.h"
+#include "ui/base/resource/resource_bundle.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
@@ -551,6 +555,28 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
 #else
   return false;
 #endif
+}
+
+std::unique_ptr<base::Value>
+BraveContentBrowserClient::GetServiceManifestOverlay(base::StringPiece name) {
+  ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+  int id = -1;
+  if (name == content::mojom::kBrowserServiceName)
+    id = IDR_CHROME_CONTENT_BROWSER_MANIFEST_OVERLAY;
+  else if (name == content::mojom::kGpuServiceName)
+    id = IDR_CHROME_CONTENT_GPU_MANIFEST_OVERLAY;
+  else if (name == content::mojom::kPluginServiceName)
+    id = IDR_CHROME_CONTENT_PLUGIN_MANIFEST_OVERLAY;
+  else if (name == content::mojom::kRendererServiceName)
+    id = IDR_CHROME_CONTENT_RENDERER_MANIFEST_OVERLAY;
+  else if (name == content::mojom::kUtilityServiceName)
+    id = IDR_CHROME_CONTENT_UTILITY_MANIFEST_OVERLAY;
+  if (id == -1)
+    return nullptr;
+
+  base::StringPiece manifest_contents =
+      rb.GetRawDataResourceForScale(id, ui::ScaleFactor::SCALE_FACTOR_NONE);
+  return base::JSONReader::Read(manifest_contents);
 }
 
 std::vector<std::unique_ptr<content::NavigationThrottle>>
