@@ -453,7 +453,7 @@ if (is_mac) {
 
 process_version("electron_version_header") {
   sources = []
-  template_file = "app/resources/muon_version.h.in"
+  template_file = "app/resources/atom_version.h.in"
   extra_args = [
     "-e", "MAJOR=$electron_version_major",
     "-e", "MINOR=$electron_version_minor",

@@ -9,7 +9,7 @@ from lib.util import execute
 IGNORE_FILES = [
   os.path.join('atom', 'browser', 'mac', 'atom_application.h'),
   os.path.join('atom', 'browser', 'mac', 'atom_application_delegate.h'),
-  os.path.join('app', 'resources', 'resource.h'),
+  os.path.join('atom', 'browser', 'resources', 'win', 'resource.h'),
   os.path.join('atom', 'browser', 'ui', 'cocoa', 'atom_menu_controller.h'),
   os.path.join('atom', 'common', 'api', 'api_messages.h'),
   os.path.join('atom', 'common', 'common_message_generator.cc'),
