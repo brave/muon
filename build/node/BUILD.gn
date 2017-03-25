@@ -8,17 +8,14 @@ config("build_config") {
 source_set("node") {
   lib_dirs = []
 
-  if (is_win) {
-    lib_dirs += [
-      "$root_out_dir/obj/electron/vendor/node",
-      "$root_out_dir/obj/electron/vendor/node/deps/uv",
-      "$root_out_dir/obj/electron/vendor/node/deps/cares",
-      "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
-      "$root_out_dir/obj/electron/vendor/node/deps/zlib",
-    ]
-  } else {
-    lib_dirs += [ root_out_dir ]
-  }
+  lib_dirs += [
+    root_out_dir,
+    "$root_out_dir/obj/electron/vendor/node",
+    "$root_out_dir/obj/electron/vendor/node/deps/uv",
+    "$root_out_dir/obj/electron/vendor/node/deps/cares",
+    "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
+    "$root_out_dir/obj/electron/vendor/node/deps/zlib",
+  ]
 
   if (is_win) {
     libs = [
