@@ -2584,10 +2584,10 @@ index f23085ca0c137bf9ec18f371492d1c7f51487ee7..5bbdeaa8c6386bd163f8e6e7a5341ebe
  # Windows' assembly is built with Yasm. The other platforms use the platform
  # assembler.
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
-index 8b40b1ab1e7ac238cb695cb177fae873e7cf9eb3..2dd34a2c5c10f03374de80fd97ddf296aea5e3a3 100644
+index 8b40b1ab1e7ac238cb695cb177fae873e7cf9eb3..ceb0c28fb7ab60fce8ca95f36d3b025fe50d1850 100644
 --- a/third_party/widevine/cdm/BUILD.gn
 +++ b/third_party/widevine/cdm/BUILD.gn
-@@ -108,9 +108,9 @@ if (widevine_cdm_binary_files != []) {
+@@ -108,9 +108,10 @@ if (widevine_cdm_binary_files != []) {
      if (is_mac) {
        ldflags = [
          # Not to strip important symbols by -Wl,-dead_strip.
@@ -2597,6 +2597,7 @@ index 8b40b1ab1e7ac238cb695cb177fae873e7cf9eb3..2dd34a2c5c10f03374de80fd97ddf296
 +        # "-Wl,-exported_symbol,_PPP_GetInterface",
 +        # "-Wl,-exported_symbol,_PPP_InitializeModule",
 +        # "-Wl,-exported_symbol,_PPP_ShutdownModule",
++        "-Wl,-install_name,@loader_path/libwidevinecdm.dylib",
        ]
        #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
      } else if (is_posix && !is_mac) {
