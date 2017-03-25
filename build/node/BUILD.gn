@@ -9,11 +9,11 @@ source_set("node") {
   lib_dirs = []
 
   if (is_mac) {
-    lib_dirs = [
+    lib_dirs += [
       root_out_dir,
     ]
   } else {
-    lib_dirs = [
+    lib_dirs += [
       "$root_out_dir/obj/electron/vendor/node",
       "$root_out_dir/obj/electron/vendor/node/deps/uv",
       "$root_out_dir/obj/electron/vendor/node/deps/cares",
@@ -37,6 +37,18 @@ source_set("node") {
       "cares",
       "http_parser",
       "zlib",
+    ]
+  }
+
+  # hack for unresolved symbols - not sure why this is needed
+  if (is_linux) {
+    lib_dirs += [
+      "$root_out_dir/obj/third_party/boringssl",
+      "$root_out_dir/obj/third_party/icu",
+    ]
+    libs += [
+      "boringssl",
+      "icui18n",
     ]
   }
 
