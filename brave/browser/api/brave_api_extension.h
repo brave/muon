@@ -49,6 +49,10 @@ class Extension : public gin::Wrappable<Extension>,
   static bool IsBackgroundPageUrl(GURL url,
                                     content::BrowserContext* browser_context);
   static bool IsBackgroundPageWebContents(content::WebContents* web_contents);
+  static content::WebContents* MaybeCreateBackgroundContents(
+                                      content::BrowserContext* browser_context,
+                                      const GURL& target_url);
+
 
  protected:
   Extension(v8::Isolate* isolate, BraveBrowserContext* browser_context);

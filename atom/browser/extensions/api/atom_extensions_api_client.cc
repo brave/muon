@@ -195,7 +195,6 @@ AtomExtensionsAPIClient::CreateGuestViewManagerDelegate(
 
 void AtomExtensionsAPIClient::AttachWebContentsHelpers(
     content::WebContents* web_contents) const {
-  extensions::TabHelper::CreateForWebContents(web_contents);
   AtomExtensionWebContentsObserver::CreateForWebContents(web_contents);
 }
 

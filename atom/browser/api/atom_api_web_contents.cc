@@ -390,36 +390,48 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   Observe(web_contents);
 
   InitWithWebContents(web_contents, GetBrowserContext());
-
   managed_web_contents()->GetView()->SetDelegate(this);
 
   // Save the preferences in C++.
   new WebContentsPreferences(web_contents, options);
+
+  #if BUILDFLAG(ENABLE_EXTENSIONS)
+    extensions::ExtensionsAPIClient::Get()->
+        AttachWebContentsHelpers(web_contents);
+  #endif
 
   // Intialize permission helper.
   WebContentsPermissionHelper::CreateForWebContents(web_contents);
   // Intialize security state client.
   SecurityStateTabHelper::CreateForWebContents(web_contents);
 
-  // Initialize zoom
-  zoom::ZoomController::CreateForWebContents(web_contents);
-  brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
-  // Initialize autofill client
-  autofill::AtomAutofillClient::CreateForWebContents(web_contents);
-  std::string locale = static_cast<brave::BraveContentBrowserClient*>(
-      brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
-  autofill::AtomAutofillClient::FromWebContents(web_contents)->Initialize(this);
-  autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
-      web_contents,
-      autofill::AtomAutofillClient::FromWebContents(web_contents),
-      locale,
-      autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+  if (!IsBackgroundPage()) {
+    // Initialize the tab helper
+    extensions::TabHelper::CreateForWebContents(web_contents);
+    // Initialize zoom
+    zoom::ZoomController::CreateForWebContents(web_contents);
+    brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
+
+    if (GetType() == WEB_VIEW) {
+      // Initialize autofill client
+      autofill::AtomAutofillClient::CreateForWebContents(web_contents);
+      std::string locale = static_cast<brave::BraveContentBrowserClient*>(
+          brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
+      autofill::AtomAutofillClient::FromWebContents(web_contents)->
+          Initialize(this);
+      autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
+          web_contents,
+          autofill::AtomAutofillClient::FromWebContents(web_contents),
+          locale,
+          autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+
+      memory_pressure_listener_.reset(new base::MemoryPressureListener(
+        base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
+    }
+  }
 
   Init(isolate);
   AttachAsUserData(web_contents);
-
-  memory_pressure_listener_.reset(new base::MemoryPressureListener(
-      base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
 }
 
 void WebContents::OnRegisterProtocol(content::BrowserContext* browser_context,
@@ -518,6 +530,16 @@ bool WebContents::ShouldCreateWebContents(
     const GURL& target_url,
     const std::string& partition_id,
     content::SessionStorageNamespace* session_storage_namespace) {
+  if (window_container_type == WINDOW_CONTAINER_TYPE_BACKGROUND) {
+    // If a BackgroundContents is created, suppress the normal WebContents.
+    content::WebContents* background =
+        brave::api::Extension::MaybeCreateBackgroundContents(
+            source_site_instance->GetBrowserContext(),
+            target_url);
+    if (background)
+      return false;
+  }
+
   node::Environment* env = node::Environment::GetCurrent(isolate());
   if (!env)
     return false;
@@ -627,6 +649,27 @@ void WebContents::AutofillPopupHidden() {
 content::WebContents* WebContents::OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) {
+  if (brave::api::Extension::IsBackgroundPageUrl(
+        params.url, source->GetBrowserContext())) {
+    // check for existing background contents
+    content::WebContents* background_contents =
+        brave::api::Extension::MaybeCreateBackgroundContents(
+            source->GetBrowserContext(),
+            params.url);
+
+    if (background_contents) {
+      bool was_blocked = false;
+      AddNewContents(source,
+                      background_contents,
+                      params.disposition,
+                      gfx::Rect(),
+                      params.user_gesture,
+                      &was_blocked);
+      if (!was_blocked)
+        return background_contents;
+    }
+  }
+
   if (guest_delegate_ && !guest_delegate_->OpenURLFromTab(source, params))
     return nullptr;
 
@@ -1196,6 +1239,22 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
     return;
   }
 
+  if (brave::api::Extension::IsBackgroundPageUrl(url,
+      web_contents()->GetBrowserContext())) {
+    content::OpenURLParams open_url_params(url,
+                content::Referrer(),
+                WindowOpenDisposition::NEW_FOREGROUND_TAB,
+                ui::PAGE_TRANSITION_TYPED,
+                false);
+    OpenURLFromTab(web_contents(), open_url_params);
+    Emit("did-fail-provisional-load",
+         static_cast<int>(net::ERR_ABORTED),
+         net::ErrorToShortString(net::ERR_ABORTED),
+         url.possibly_invalid_spec(),
+         true);
+    return;
+  }
+
   content::NavigationController::LoadURLParams params(url);
 
   GURL http_referrer;
@@ -1387,7 +1446,7 @@ void WebContents::OpenDevTools(mate::Arguments* args) {
     return;
 
   std::string state;
-  if (type_ == WEB_VIEW || !owner_window()) {
+  if (type_ == WEB_VIEW || type_ == BACKGROUND_PAGE || !owner_window()) {
     state = "detach";
   } else if (args && args->Length() == 1) {
     bool detach = false;

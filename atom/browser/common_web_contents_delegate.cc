@@ -189,11 +189,6 @@ void CommonWebContentsDelegate::InitWithWebContents(
   // Create InspectableWebContents.
   web_contents_.reset(brightray::InspectableWebContents::Create(web_contents));
   web_contents_->SetDelegate(this);
-
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  extensions::ExtensionsAPIClient::Get()->
-      AttachWebContentsHelpers(web_contents);
-#endif
 }
 
 void CommonWebContentsDelegate::SetOwnerWindow(NativeWindow* owner_window) {

@@ -538,8 +538,9 @@ void App::Observe(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC
-      if (brave::api::Extension::IsBackgroundPageUrl(url, browser_context)) {
-        WebContents::CreateFrom(isolate(), web_contents);
+      if (brave::api::Extension::IsBackgroundPageWebContents(web_contents)) {
+        WebContents::CreateFrom(isolate(), web_contents,
+            WebContents::Type::BACKGROUND_PAGE);
       }
 #endif
       break;

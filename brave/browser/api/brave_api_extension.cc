@@ -21,13 +21,16 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
+#include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/child/v8_value_converter.h"
 #include "content/public/common/url_constants.h"
+#include "extensions/browser/extension_host.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/notification_types.h"
+#include "extensions/browser/process_manager.h"
 #include "extensions/common/extension.h"
 #include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/background_info.h"
@@ -297,7 +300,7 @@ void Extension::Enable(const std::string& extension_id) {
 // static
 bool Extension::IsBackgroundPageUrl(GURL url,
                     content::BrowserContext* browser_context) {
-  if (url.scheme() != "chrome-extension")
+  if (!url.is_valid() || url.scheme() != "chrome-extension")
     return false;
 
   if (extensions::ExtensionSystem::Get(browser_context)
@@ -318,8 +321,41 @@ bool Extension::IsBackgroundPageWebContents(
     content::WebContents* web_contents) {
   auto browser_context = web_contents->GetBrowserContext();
   auto url = web_contents->GetURL();
+  return IsBackgroundPageUrl(url, browser_context) &&
+      web_contents == MaybeCreateBackgroundContents(browser_context, url);
+}
 
-  return IsBackgroundPageUrl(url, browser_context);
+// static
+content::WebContents* Extension::MaybeCreateBackgroundContents(
+    content::BrowserContext* browser_context,
+    const GURL& target_url) {
+  if (!extensions::ExtensionSystem::Get(browser_context)->ready().is_signaled())
+    return nullptr;
+
+  if (!target_url.is_valid() ||
+      !IsBackgroundPageUrl(target_url, browser_context))
+    return nullptr;
+
+  auto extensions_service =
+      extensions::ExtensionSystem::Get(browser_context)->extension_service();
+
+  if (!extensions_service || !extensions_service->is_ready())
+    return nullptr;
+
+  const extensions::Extension* extension =
+      extensions::ExtensionRegistry::Get(browser_context)->enabled_extensions()
+                                            .GetExtensionOrAppByURL(target_url);
+  if (!extension)
+    return nullptr;
+
+  // Only allow a single background contents per app.
+  extensions::ExtensionHost* extension_host =
+      extensions::ProcessManager::Get(browser_context)
+          ->GetBackgroundHostForExtension(extension->id());
+  if (!extension_host)
+    return nullptr;
+
+  return extension_host->host_contents();
 }
 
 // static
