@@ -8,14 +8,19 @@ config("build_config") {
 source_set("node") {
   lib_dirs = []
 
-  lib_dirs += [
-    root_out_dir,
-    "$root_out_dir/obj/electron/vendor/node",
-    "$root_out_dir/obj/electron/vendor/node/deps/uv",
-    "$root_out_dir/obj/electron/vendor/node/deps/cares",
-    "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
-    "$root_out_dir/obj/electron/vendor/node/deps/zlib",
-  ]
+  if (is_mac) {
+    lib_dirs = [
+      root_out_dir,
+    ]
+  } else {
+    lib_dirs = [
+      "$root_out_dir/obj/electron/vendor/node",
+      "$root_out_dir/obj/electron/vendor/node/deps/uv",
+      "$root_out_dir/obj/electron/vendor/node/deps/cares",
+      "$root_out_dir/obj/electron/vendor/node/deps/http_parser",
+      "$root_out_dir/obj/electron/vendor/node/deps/zlib",
+    ]
+  }
 
   if (is_win) {
     libs = [
@@ -60,12 +65,12 @@ action("build_node") {
   } else if (is_win) {
     outputs += [
       "$root_out_dir/obj/electron/vendor/node/node.lib",
-      "$root_out_dir/obj/electron/vendor/node/deps/libuv.lib",
+      "$root_out_dir/obj/electron/vendor/node/deps/uv/libuv.lib",
     ]
   } else if (is_linux) {
     outputs += [
-      "$root_out_dir/lib/libnode.a",
-      "$root_out_dir/lib/libnuv.a",
+      "$root_out_dir/obj/electron/vendor/node/libnode.a",
+      "$root_out_dir/obj/electron/vendor/node/deps/uv//libuv.a",
     ]
   }
 }
