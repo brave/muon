@@ -1034,7 +1034,7 @@ void WebContents::DidFinishNavigation(
     int code = navigation_handle->GetNetErrorCode();
     auto description = net::ErrorToShortString(code);
     Emit("did-fail-provisional-load", code, description, url, is_main_frame,
-      web_contents()->GetURL());
+      web_contents()->GetLastCommittedURL());
   }
 }
 
@@ -1251,7 +1251,8 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
          static_cast<int>(net::ERR_ABORTED),
          net::ErrorToShortString(net::ERR_ABORTED),
          url.possibly_invalid_spec(),
-         true);
+         true,
+         web_contents()->GetLastCommittedURL());
     return;
   }
 
