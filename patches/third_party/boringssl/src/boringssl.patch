@@ -21,7 +21,7 @@ index ae045aefcaef23ab8417edd93399b2431369097f..d225d2928b4ac9d01b0d735792a1a1bb
  
    return NULL;
 diff --git a/decrepit/evp/evp_do_all.c b/decrepit/evp/evp_do_all.c
-index 621c0b11701ffb0a61c5a8ae7585f96289b20438..0533a3b0d7781bee481f87115aa3f9bc5ac7188d 100644
+index 621c0b11701ffb0a61c5a8ae7585f96289b20438..43983f2a1ebb8fc8e6650be5f7ebcdc5d7a9139e 100644
 --- a/decrepit/evp/evp_do_all.c
 +++ b/decrepit/evp/evp_do_all.c
 @@ -26,6 +26,7 @@ void EVP_CIPHER_do_all_sorted(void (*callback)(const EVP_CIPHER *cipher,
@@ -40,6 +40,92 @@ index 621c0b11701ffb0a61c5a8ae7585f96289b20438..0533a3b0d7781bee481f87115aa3f9bc
    callback(EVP_aes_256_ofb(), "aes-256-ofb", NULL, arg);
    callback(EVP_aes_256_xts(), "aes-256-xts", NULL, arg);
    callback(EVP_des_cbc(), "des-cbc", NULL, arg);
+@@ -61,6 +63,7 @@ void EVP_MD_do_all_sorted(void (*callback)(const EVP_MD *cipher,
+                           void *arg) {
+   callback(EVP_md4(), "MD4", NULL, arg);
+   callback(EVP_md5(), "MD5", NULL, arg);
++  callback(EVP_ripemd160(), "RIPEMD160", NULL, arg);
+   callback(EVP_sha1(), "SHA1", NULL, arg);
+   callback(EVP_sha224(), "SHA224", NULL, arg);
+   callback(EVP_sha256(), "SHA256", NULL, arg);
+@@ -69,6 +72,7 @@ void EVP_MD_do_all_sorted(void (*callback)(const EVP_MD *cipher,
+ 
+   callback(EVP_md4(), "md4", NULL, arg);
+   callback(EVP_md5(), "md5", NULL, arg);
++  callback(EVP_ripemd160(), "ripemd160", NULL, arg);
+   callback(EVP_sha1(), "sha1", NULL, arg);
+   callback(EVP_sha224(), "sha224", NULL, arg);
+   callback(EVP_sha256(), "sha256", NULL, arg);
+diff --git a/decrepit/ripemd/ripemd.c b/decrepit/ripemd/ripemd.c
+index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..5def583a495213695862240bf26e79670d9e7ccb 100644
+--- a/decrepit/ripemd/ripemd.c
++++ b/decrepit/ripemd/ripemd.c
+@@ -56,9 +56,12 @@
+ 
+ #include <openssl/ripemd.h>
+ 
++#include <openssl/digest.h>
++#include <openssl/nid.h>
+ #include <string.h>
+ 
+ #include "internal.h"
++#include "../../crypto/digest/internal.h"
+ 
+ 
+ int RIPEMD160_Init(RIPEMD160_CTX *ctx) {
+@@ -322,3 +325,40 @@ uint8_t *RIPEMD160(const uint8_t *data, size_t len, unsigned char *out) {
+   RIPEMD160_Final(out, &ctx);
+   return out;
+ }
++
++#if defined(NDEBUG)
++#define CHECK(x) (void) (x)
++#else
++#define CHECK(x) assert(x)
++#endif
++
++static void ripemd160_init(EVP_MD_CTX *ctx)
++{
++    CHECK(RIPEMD160_Init(ctx->md_data));
++}
++
++static void ripemd160_update(EVP_MD_CTX *ctx, const void *data, size_t count)
++{
++    CHECK(RIPEMD160_Update(ctx->md_data, data, count));
++}
++
++static void ripemd160_final(EVP_MD_CTX *ctx, unsigned char *md)
++{
++    CHECK(RIPEMD160_Final(md, ctx->md_data));
++}
++
++static const EVP_MD ripemd160_md = {
++    NID_ripemd160,
++    RIPEMD160_DIGEST_LENGTH,
++    0,
++    ripemd160_init,
++    ripemd160_update,
++    ripemd160_final,
++    RIPEMD160_CBLOCK,
++    sizeof(RIPEMD160_CTX),
++};
++
++const EVP_MD *EVP_ripemd160(void)
++{
++    return (&ripemd160_md);
++}
+diff --git a/include/openssl/digest.h b/include/openssl/digest.h
+index caf58610b13978936e6245466d9f6ee8a6274ccc..c33e77a5efb73c36f3b5b4147b9c9bc508509f8e 100644
+--- a/include/openssl/digest.h
++++ b/include/openssl/digest.h
+@@ -83,6 +83,7 @@ OPENSSL_EXPORT const EVP_MD *EVP_sha224(void);
+ OPENSSL_EXPORT const EVP_MD *EVP_sha256(void);
+ OPENSSL_EXPORT const EVP_MD *EVP_sha384(void);
+ OPENSSL_EXPORT const EVP_MD *EVP_sha512(void);
++OPENSSL_EXPORT const EVP_MD *EVP_ripemd160(void);
+ 
+ /* EVP_md5_sha1 is a TLS-specific |EVP_MD| which computes the concatenation of
+  * MD5 and SHA-1, as used in TLS 1.1 and below. */
 diff --git a/util/BUILD.toplevel b/util/BUILD.toplevel
 index 6b645e61a6dd1c9f0932c35ad0ad0939b212e8a7..ddd5212281be01edb6822b420b257ba2c7d31d6c 100644
 --- a/util/BUILD.toplevel
