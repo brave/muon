@@ -21,18 +21,20 @@ index ae045aefcaef23ab8417edd93399b2431369097f..d225d2928b4ac9d01b0d735792a1a1bb
  
    return NULL;
 diff --git a/crypto/digest/digests.c b/crypto/digest/digests.c
-index 9656027668df82e9db1cdf397a65e3327b6679b3..540db7ed73205b3e09ef122072694e7932875e7d 100644
+index 9656027668df82e9db1cdf397a65e3327b6679b3..432808d2b2679e8e483436b9786973d80d176e26 100644
 --- a/crypto/digest/digests.c
 +++ b/crypto/digest/digests.c
-@@ -272,6 +272,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+@@ -272,6 +272,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
      {NID_sha384, EVP_sha384, SN_sha384, LN_sha384},
      {NID_sha512, EVP_sha512, SN_sha512, LN_sha512},
      {NID_md5_sha1, EVP_md5_sha1, SN_md5_sha1, LN_md5_sha1},
 +    {NID_ripemd160, EVP_ripemd160, SN_ripemd160, LN_ripemd160},
++    {NID_ripemd160, EVP_ripemd160, SN_ripemd, LN_ripemd},
++    {NID_ripemd160, EVP_ripemd160, SN_rmd160, LN_rmd160},
      /* As a remnant of signing |EVP_MD|s, OpenSSL returned the corresponding
       * hash function when given a signature OID. To avoid unintended lax parsing
       * of hash OIDs, this is no longer supported for lookup by OID or NID.
-@@ -290,6 +291,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+@@ -290,6 +293,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
       LN_sha384WithRSAEncryption},
      {NID_undef, EVP_sha512, SN_sha512WithRSAEncryption,
       LN_sha512WithRSAEncryption},
@@ -41,7 +43,7 @@ index 9656027668df82e9db1cdf397a65e3327b6679b3..540db7ed73205b3e09ef122072694e79
  
  const EVP_MD* EVP_get_digestbynid(int nid) {
 diff --git a/decrepit/evp/evp_do_all.c b/decrepit/evp/evp_do_all.c
-index 621c0b11701ffb0a61c5a8ae7585f96289b20438..53c5dbf01a642d0e0c171ef7a631014e06417255 100644
+index 621c0b11701ffb0a61c5a8ae7585f96289b20438..43983f2a1ebb8fc8e6650be5f7ebcdc5d7a9139e 100644
 --- a/decrepit/evp/evp_do_all.c
 +++ b/decrepit/evp/evp_do_all.c
 @@ -26,6 +26,7 @@ void EVP_CIPHER_do_all_sorted(void (*callback)(const EVP_CIPHER *cipher,
@@ -60,23 +62,19 @@ index 621c0b11701ffb0a61c5a8ae7585f96289b20438..53c5dbf01a642d0e0c171ef7a631014e
    callback(EVP_aes_256_ofb(), "aes-256-ofb", NULL, arg);
    callback(EVP_aes_256_xts(), "aes-256-xts", NULL, arg);
    callback(EVP_des_cbc(), "des-cbc", NULL, arg);
-@@ -61,6 +63,9 @@ void EVP_MD_do_all_sorted(void (*callback)(const EVP_MD *cipher,
+@@ -61,6 +63,7 @@ void EVP_MD_do_all_sorted(void (*callback)(const EVP_MD *cipher,
                            void *arg) {
    callback(EVP_md4(), "MD4", NULL, arg);
    callback(EVP_md5(), "MD5", NULL, arg);
-+  callback(EVP_ripemd160(), "RIPEMD", NULL, arg);
 +  callback(EVP_ripemd160(), "RIPEMD160", NULL, arg);
-+  callback(EVP_ripemd160(), "RMD160", NULL, arg);
    callback(EVP_sha1(), "SHA1", NULL, arg);
    callback(EVP_sha224(), "SHA224", NULL, arg);
    callback(EVP_sha256(), "SHA256", NULL, arg);
-@@ -69,6 +74,9 @@ void EVP_MD_do_all_sorted(void (*callback)(const EVP_MD *cipher,
+@@ -69,6 +72,7 @@ void EVP_MD_do_all_sorted(void (*callback)(const EVP_MD *cipher,
  
    callback(EVP_md4(), "md4", NULL, arg);
    callback(EVP_md5(), "md5", NULL, arg);
-+  callback(EVP_ripemd160(), "ripemd", NULL, arg);
 +  callback(EVP_ripemd160(), "ripemd160", NULL, arg);
-+  callback(EVP_ripemd160(), "rmd160", NULL, arg);
    callback(EVP_sha1(), "sha1", NULL, arg);
    callback(EVP_sha224(), "sha224", NULL, arg);
    callback(EVP_sha256(), "sha256", NULL, arg);
@@ -150,6 +148,23 @@ index caf58610b13978936e6245466d9f6ee8a6274ccc..c33e77a5efb73c36f3b5b4147b9c9bc5
  
  /* EVP_md5_sha1 is a TLS-specific |EVP_MD| which computes the concatenation of
   * MD5 and SHA-1, as used in TLS 1.1 and below. */
+diff --git a/include/openssl/nid.h b/include/openssl/nid.h
+index 4270dc1b4ce1c185e6b933720a7805cffe87e7e4..3a11cd09dc23f14e40d527d3534dd7966e13b823 100644
+--- a/include/openssl/nid.h
++++ b/include/openssl/nid.h
+@@ -615,6 +615,12 @@ extern "C" {
+ #define NID_ripemd160 117
+ #define OBJ_ripemd160 1L, 3L, 36L, 3L, 2L, 1L
+ 
++#define SN_ripemd "RIPEMD"
++#define LN_ripemd "ripemd"
++
++#define SN_rmd160 "RMD160"
++#define LN_rmd160 "rmd160"
++
+ #define SN_ripemd160WithRSA "RSA-RIPEMD160"
+ #define LN_ripemd160WithRSA "ripemd160WithRSA"
+ #define NID_ripemd160WithRSA 119
 diff --git a/util/BUILD.toplevel b/util/BUILD.toplevel
 index 6b645e61a6dd1c9f0932c35ad0ad0939b212e8a7..ddd5212281be01edb6822b420b257ba2c7d31d6c 100644
 --- a/util/BUILD.toplevel
