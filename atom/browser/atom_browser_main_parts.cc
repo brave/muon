@@ -25,8 +25,10 @@
 #include "base/threading/thread_task_runner_handle.h"
 #include "brightray/browser/brightray_paths.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
-#include "chrome/browser/browser_process.h"
+#include "chrome/browser/browser_process_impl.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
+#include "chrome/common/chrome_constants.h"
+#include "components/prefs/json_pref_store.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_switches.h"
@@ -66,8 +68,7 @@ void Erase(T* container, typename T::iterator iter) {
 AtomBrowserMainParts* AtomBrowserMainParts::self_ = nullptr;
 
 AtomBrowserMainParts::AtomBrowserMainParts()
-    : fake_browser_process_(new BrowserProcess),
-      exit_code_(nullptr),
+    : exit_code_(nullptr),
       browser_(new Browser),
       node_bindings_(NodeBindings::Create(true)),
       atom_bindings_(new AtomBindings),
@@ -119,6 +120,13 @@ void AtomBrowserMainParts::PreEarlyInitialization() {
 }
 
 int AtomBrowserMainParts::PreCreateThreads() {
+  scoped_refptr<base::SequencedTaskRunner> local_state_task_runner =
+      JsonPrefStore::GetTaskRunnerForFile(
+          base::FilePath(chrome::kLocalStorePoolName),
+          content::BrowserThread::GetBlockingPool());
+
+  fake_browser_process_.reset(
+      new BrowserProcessImpl(local_state_task_runner.get()));
   fake_browser_process_->PreCreateThreads();
 
   // Force MediaCaptureDevicesDispatcher to be created on UI thread.

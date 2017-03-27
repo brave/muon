@@ -7,7 +7,7 @@
 #include "brave/browser/component_updater/default_extensions.h"
 #include "brave/browser/component_updater/extension_installer_traits.h"
 #include "brave/browser/component_updater/widevine_cdm_component_installer.h"
-#include "chrome/browser/browser_process.h"
+#include "chrome/browser/browser_process_impl.h"
 #include "components/component_updater/component_updater_service.h"
 #include "components/update_client/crx_update_item.h"
 #include "native_mate/dictionary.h"
@@ -35,7 +35,8 @@ component_updater::ComponentUpdateService* ComponentsUI::GetCUSForID(
   if (component_id == kWidevineId) {
     return g_browser_process->component_updater();
   }
-  return g_browser_process->brave_component_updater();
+  return static_cast<BrowserProcessImpl*>(g_browser_process)->
+      brave_component_updater();
 }
 
 
@@ -84,7 +85,8 @@ void ComponentUpdater::RegisterComponentForUpdate(
     const base::Closure& registered_callback,
     const ReadyCallback& ready_callback) {
   brave::RegisterExtension(
-      g_browser_process->brave_component_updater(),
+      static_cast<BrowserProcessImpl*>(g_browser_process)->
+          brave_component_updater(),
       public_key, registered_callback, ready_callback);
 }
 
@@ -102,7 +104,8 @@ void ComponentUpdater::OnComponentReady(
 void ComponentUpdater::RegisterComponent(const std::string& component_id) {
   static bool registeredObserver = false;
   if (!registeredObserver) {
-    g_browser_process->brave_component_updater()->AddObserver(this);
+    static_cast<BrowserProcessImpl*>(g_browser_process)->
+        brave_component_updater()->AddObserver(this);
     g_browser_process->component_updater()->AddObserver(this);
     registeredObserver = true;
   }

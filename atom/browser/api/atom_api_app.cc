@@ -38,7 +38,7 @@
 #include "brave/common/workers/v8_worker_thread.h"
 #include "brave/common/workers/worker_bindings.h"
 #include "brightray/browser/brightray_paths.h"
-#include "chrome/browser/browser_process.h"
+#include "chrome/browser/browser_process_impl.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/component_updater/component_updater_paths.h"
 #include "content/browser/plugin_service_impl.h"
@@ -513,7 +513,7 @@ App::App(v8::Isolate* isolate) {
   Browser::Get()->AddObserver(this);
   content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
-  g_browser_process->set_app(this);
+  static_cast<BrowserProcessImpl*>(g_browser_process)->set_app(this);
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   registrar_.Add(this,
                  content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED,
@@ -742,13 +742,11 @@ void App::SetDesktopName(const std::string& desktop_name) {
 }
 
 std::string App::GetLocale() {
-  return static_cast<brave::BraveContentBrowserClient*>(
-      brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
+  return g_browser_process->GetApplicationLocale();
 }
 
 void App::SetLocale(std::string locale) {
-  static_cast<brave::BraveContentBrowserClient*>(
-      brave::BraveContentBrowserClient::Get())->SetApplicationLocale(locale);
+  g_browser_process->SetApplicationLocale(locale);
 }
 
 bool App::MakeSingleInstance(

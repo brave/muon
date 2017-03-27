@@ -15,7 +15,7 @@
 #include "brightray/browser/browser_main_parts.h"
 #include "content/public/browser/browser_context.h"
 
-class BrowserProcess;
+class BrowserProcessImpl;
 
 namespace brightray {
 class BrowserContext;
@@ -81,7 +81,7 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   brightray::BrowserContext* browser_context_;
 
   // A fake BrowserProcess object that used to feed the source code from chrome.
-  std::unique_ptr<BrowserProcess> fake_browser_process_;
+  std::unique_ptr<BrowserProcessImpl> fake_browser_process_;
 
   // The gin::PerIsolateData requires a task runner to create, so we feed it
   // with a task runner that will post all work to main loop.

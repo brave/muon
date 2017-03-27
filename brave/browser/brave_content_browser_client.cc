@@ -282,6 +282,7 @@ std::string BraveContentBrowserClient::GetApplicationLocale() {
   }
 }
 
+// static
 void BraveContentBrowserClient::SetApplicationLocale(std::string locale) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 #if BUILDFLAG(ENABLE_EXTENSIONS)
