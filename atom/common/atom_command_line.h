@@ -19,9 +19,13 @@ class AtomCommandLine {
  public:
   using StringVector = std::vector<std::string>;
 
-  static void InitializeFromCommandLine();
-  static StringVector argv_utf8() { return argv_utf8_; }
-  static base::CommandLine::StringVector argv() { return argv_; }
+#if defined(OS_WIN)
+  static void InitW(int argc, const wchar_t* const* argv);
+#else
+  static void Init(int argc, const char* const* argv);
+#endif
+  static const StringVector& argv_utf8() { return argv_utf8_; }
+  static const base::CommandLine::StringVector& argv() { return argv_; }
 
  private:
   static base::CommandLine::StringVector argv_;

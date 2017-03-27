@@ -17,9 +17,15 @@ CommandLine::StringVector AtomCommandLine::argv_;
 AtomCommandLine::StringVector AtomCommandLine::argv_utf8_;
 
 // static
-void AtomCommandLine::InitializeFromCommandLine() {
-  CommandLine::StringVector argv = CommandLine::ForCurrentProcess()->argv();
-  for (size_t i = 0; i < argv.size(); ++i) {
+#if defined(OS_WIN)
+void AtomCommandLine::InitW(int argc, const wchar_t* const* argv) {
+#else
+void AtomCommandLine::Init(int argc, const char* const* argv) {
+#endif
+  argv_.clear();
+  argv_utf8_.clear();
+
+  for (int i = 0; i < argc; ++i) {
 #if defined(OS_WIN)
     argv_utf8_.push_back(base::SysWideToUTF8(argv[i]));
 #else

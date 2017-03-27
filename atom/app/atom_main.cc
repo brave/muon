@@ -8,8 +8,8 @@
 
 #include "atom/app/atom_main_delegate.h"
 #include "atom/app/uv_task_runner.h"
+#include "atom/common/atom_command_line.h"
 #include "base/at_exit.h"
-#include "base/command_line.h"
 #include "base/time/time.h"
 #include "build/build_config.h"
 #include "content/public/app/content_main.h"
@@ -63,11 +63,11 @@ int main(int argc, const char* argv[]) {
 
   params.instance = instance;
   params.sandbox_info = &sandbox_info;
+  atom::AtomCommandLine::InitW(argc, argv_setup);
 #else
   params.argc = argc;
   params.argv = argv;
-
-  base::CommandLine::Init(argc, argv_setup);
+  atom::AtomCommandLine::Init(argc, argv_setup);
 #endif
 
   base::AtExitManager exit_manager;
