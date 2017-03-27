@@ -29,6 +29,7 @@
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
 #include "components/prefs/json_pref_store.h"
+#include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_switches.h"

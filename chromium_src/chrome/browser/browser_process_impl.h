@@ -34,6 +34,10 @@ class App;
 
 }  // namespace atom
 
+namespace base {
+class SequencedTaskRunner;
+}
+
 namespace chrome {
 class ChromeNetLog;
 }
@@ -127,6 +131,9 @@ class BrowserProcessImpl : public BrowserProcess {
   shell_integration::DefaultWebClientState CachedDefaultWebClientState()
       override;
   physical_web::PhysicalWebDataSource* GetPhysicalWebDataSource() override;
+#if (defined(OS_WIN) || defined(OS_LINUX)) && !defined(OS_CHROMEOS)
+  void StartAutoupdateTimer() override;
+#endif
 
  private:
   base::ThreadChecker thread_checker_;

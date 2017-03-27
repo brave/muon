@@ -38,6 +38,8 @@ int ChromeMain(int argc, const char* argv[]);
 
 #if defined(OS_WIN)
 int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE, wchar_t* cmd, int) {
+  int argc = 0;
+  wchar_t** argv_setup = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
 #else  // OS_WIN
 #if defined(OS_MACOSX)
 int ChromeMain(int argc, const char* argv[]) {

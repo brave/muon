@@ -15,6 +15,7 @@
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
 #include "brightray/browser/brightray_paths.h"
+#include "chrome/browser/background/background_mode_manager.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/memory/tab_manager.h"
 #include "chrome/browser/printing/print_job_manager.h"
@@ -195,7 +196,7 @@ void BrowserProcessImpl::CreateLocalState() {
       new JsonPrefStore(local_state_path,
                         local_state_task_runner_.get(),
                         std::unique_ptr<PrefFilter>()));
-  return factory.Create(pref_registry.get());
+  factory.Create(pref_registry.get());
 }
 
 bool BrowserProcessImpl::created_local_state() const {
@@ -326,12 +327,10 @@ GpuProfileCache* BrowserProcessImpl::gpu_profile_cache() {
 void BrowserProcessImpl::CreateDevToolsHttpProtocolHandler(
     const std::string& ip, uint16_t port) {
   NOTIMPLEMENTED();
-  return nullptr;
 }
 
 void BrowserProcessImpl::CreateDevToolsAutoOpener() {
   NOTIMPLEMENTED();
-  return nullptr;
 }
 
 printing::PrintPreviewDialogController*
@@ -449,3 +448,9 @@ BrowserProcessImpl::GetPhysicalWebDataSource() {
   NOTIMPLEMENTED();
   return nullptr;
 }
+
+#if (defined(OS_WIN) || defined(OS_LINUX)) && !defined(OS_CHROMEOS)
+void BrowserProcessImpl::StartAutoupdateTimer() {
+  NOTIMPLEMENTED();
+}
+#endif
