@@ -7,7 +7,6 @@
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/browser.h"
-#include "atom/browser/net/url_request_async_asar_job.h"
 #include "atom/browser/net/url_request_buffer_job.h"
 #include "atom/browser/net/url_request_fetch_job.h"
 #include "atom/browser/net/url_request_string_job.h"
@@ -228,8 +227,6 @@ void Protocol::BuildPrototype(
                  &Protocol::RegisterProtocol<URLRequestStringJob>)
       .SetMethod("registerBufferProtocol",
                  &Protocol::RegisterProtocol<URLRequestBufferJob>)
-      .SetMethod("registerFileProtocol",
-                 &Protocol::RegisterProtocol<URLRequestAsyncAsarJob>)
       .SetMethod("registerHttpProtocol",
                  &Protocol::RegisterProtocol<URLRequestFetchJob>)
       .SetMethod("unregisterProtocol", &Protocol::UnregisterProtocol)

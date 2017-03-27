@@ -141,8 +141,6 @@ source_set("browser") {
     "net/http_protocol_handler.h",
     "net/js_asker.cc",
     "net/js_asker.h",
-    "net/url_request_async_asar_job.cc",
-    "net/url_request_async_asar_job.h",
     "net/url_request_string_job.cc",
     "net/url_request_string_job.h",
     "net/url_request_buffer_job.cc",

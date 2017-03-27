@@ -35,21 +35,22 @@ net::URLRequestJob* CreateJobFromPath(
 
 class URLRequestAsarJob : public net::URLRequestJob {
  public:
+  // The type of this job.
+  enum JobType {
+    TYPE_ERROR,
+    TYPE_ASAR,
+    TYPE_FILE,
+  };
+
   URLRequestAsarJob(net::URLRequest* request,
-                    net::NetworkDelegate* network_delegate);
-
-  void Initialize(const scoped_refptr<base::TaskRunner> file_task_runner,
-                  const base::FilePath& file_path);
-
+                    net::NetworkDelegate* network_delegate,
+                    const scoped_refptr<base::TaskRunner> file_task_runner);
  protected:
   virtual ~URLRequestAsarJob();
 
-  void InitializeAsarJob(const scoped_refptr<base::TaskRunner> file_task_runner,
-                         std::shared_ptr<Archive> archive,
-                         const base::FilePath& file_path,
-                         const Archive::FileInfo& file_info);
-  void InitializeFileJob(const scoped_refptr<base::TaskRunner> file_task_runner,
-                         const base::FilePath& file_path);
+  void DidInitialize();
+  void InitializeAsarJob();
+  void InitializeFileJob();
 
   // net::URLRequestJob:
   void Start() override;
@@ -101,12 +102,6 @@ class URLRequestAsarJob : public net::URLRequestJob {
   // Callback after data is asynchronously read from the file into |buf|.
   void DidRead(scoped_refptr<net::IOBuffer> buf, int result);
 
-  // The type of this job.
-  enum JobType {
-    TYPE_ERROR,
-    TYPE_ASAR,
-    TYPE_FILE,
-  };
   JobType type_;
 
   std::shared_ptr<Archive> archive_;
@@ -115,7 +110,6 @@ class URLRequestAsarJob : public net::URLRequestJob {
 
   std::unique_ptr<net::FileStream> stream_;
   FileMetaInfo meta_info_;
-  scoped_refptr<base::TaskRunner> file_task_runner_;
 
   net::HttpByteRange byte_range_;
   int64_t remaining_bytes_;
@@ -123,7 +117,11 @@ class URLRequestAsarJob : public net::URLRequestJob {
 
   net::Error range_parse_result_;
 
+  scoped_refptr<base::TaskRunner> file_task_runner_;
+
   base::WeakPtrFactory<URLRequestAsarJob> weak_ptr_factory_;
+
+  base::FilePath full_path_;
 
   DISALLOW_COPY_AND_ASSIGN(URLRequestAsarJob);
 };

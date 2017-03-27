@@ -33,6 +33,41 @@
 
 namespace asar {
 
+namespace {
+
+void Initialize(
+    const base::FilePath& full_path,
+    std::shared_ptr<Archive>& archive,
+    base::FilePath* file_path,
+    Archive::FileInfo* file_info,
+    URLRequestAsarJob::JobType* type) {
+  // Determine whether it is an asar file.
+  base::FilePath asar_path, relative_path;
+  if (!GetAsarArchivePath(full_path, &asar_path, &relative_path)) {
+    *file_path = full_path;
+    *type = URLRequestAsarJob::TYPE_FILE;
+    return;
+  }
+
+  archive =
+      GetOrCreateAsarArchive(asar_path);
+  if (!archive || !archive->GetFileInfo(relative_path, file_info)) {
+    *type = URLRequestAsarJob::TYPE_ERROR;
+    return;
+  }
+
+  if (file_info->unpacked) {
+    archive->CopyFileOut(relative_path, file_path);
+    *type = URLRequestAsarJob::TYPE_FILE;
+    return;
+  }
+
+  *file_path = relative_path;
+  *type = URLRequestAsarJob::TYPE_ASAR;
+}
+
+}  // namespace
+
 URLRequestAsarJob::FileMetaInfo::FileMetaInfo()
     : file_size(0),
       mime_type_result(false),
@@ -42,67 +77,40 @@ URLRequestAsarJob::FileMetaInfo::FileMetaInfo()
 
 URLRequestAsarJob::URLRequestAsarJob(
     net::URLRequest* request,
-    net::NetworkDelegate* network_delegate)
+    net::NetworkDelegate* network_delegate,
+    const scoped_refptr<base::TaskRunner> file_task_runner)
     : net::URLRequestJob(request, network_delegate),
       type_(TYPE_ERROR),
       remaining_bytes_(0),
       seek_offset_(0),
       range_parse_result_(net::OK),
-      weak_ptr_factory_(this) {}
+      file_task_runner_(file_task_runner),
+      weak_ptr_factory_(this) {
+  net::FileURLToFilePath(request->url(), &full_path_);
+}
 
 URLRequestAsarJob::~URLRequestAsarJob() {}
 
-void URLRequestAsarJob::Initialize(
-    const scoped_refptr<base::TaskRunner> file_task_runner,
-    const base::FilePath& file_path) {
-  // Determine whether it is an asar file.
-  base::FilePath asar_path, relative_path;
-  if (!GetAsarArchivePath(file_path, &asar_path, &relative_path)) {
-    InitializeFileJob(file_task_runner, file_path);
-    return;
-  }
-
-  std::shared_ptr<Archive> archive = GetOrCreateAsarArchive(asar_path);
-  Archive::FileInfo file_info;
-  if (!archive || !archive->GetFileInfo(relative_path, &file_info)) {
-    type_ = TYPE_ERROR;
-    return;
-  }
-
-  if (file_info.unpacked) {
-    base::FilePath real_path;
-    archive->CopyFileOut(relative_path, &real_path);
-    InitializeFileJob(file_task_runner, real_path);
-    return;
-  }
-
-  InitializeAsarJob(file_task_runner, archive, relative_path, file_info);
+void URLRequestAsarJob::InitializeAsarJob() {
+  stream_.reset(new net::FileStream(file_task_runner_));
 }
 
-void URLRequestAsarJob::InitializeAsarJob(
-    const scoped_refptr<base::TaskRunner> file_task_runner,
-    std::shared_ptr<Archive> archive,
-    const base::FilePath& file_path,
-    const Archive::FileInfo& file_info) {
-  type_ = TYPE_ASAR;
-  file_task_runner_ = file_task_runner;
+void URLRequestAsarJob::InitializeFileJob() {
   stream_.reset(new net::FileStream(file_task_runner_));
-  archive_ = archive;
-  file_path_ = file_path;
-  file_info_ = file_info;
-}
-
-void URLRequestAsarJob::InitializeFileJob(
-    const scoped_refptr<base::TaskRunner> file_task_runner,
-    const base::FilePath& file_path) {
-  type_ = TYPE_FILE;
-  file_task_runner_ = file_task_runner;
-  stream_.reset(new net::FileStream(file_task_runner_));
-  file_path_ = file_path;
 }
 
 void URLRequestAsarJob::Start() {
+  file_task_runner_->PostTaskAndReply(
+      FROM_HERE,
+      base::Bind(&Initialize,
+          full_path_, std::ref(archive_), &file_path_, &file_info_, &type_),
+      base::Bind(&URLRequestAsarJob::DidInitialize,
+          weak_ptr_factory_.GetWeakPtr()));
+}
+
+void URLRequestAsarJob::DidInitialize() {
   if (type_ == TYPE_ASAR) {
+    InitializeAsarJob();
     int flags = base::File::FLAG_OPEN |
                 base::File::FLAG_READ |
                 base::File::FLAG_ASYNC;
@@ -112,6 +120,7 @@ void URLRequestAsarJob::Start() {
     if (rv != net::ERR_IO_PENDING)
       DidOpen(rv);
   } else if (type_ == TYPE_FILE) {
+    InitializeFileJob();
     auto* meta_info = new FileMetaInfo();
     file_task_runner_->PostTaskAndReply(
         FROM_HERE,
