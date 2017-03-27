@@ -12,6 +12,8 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/strings/utf_string_conversions.h"
+#include "chrome/browser/sessions/session_tab_helper.h"
+#include "components/sessions/core/session_id.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/render_frame_host.h"
@@ -47,9 +49,8 @@ const char kPinnedKey[] = "pinned";
 const char kSelectedKey[] = "selected";
 }  // namespace keys
 
-static std::map<int, std::pair<int, int>> render_view_map_;
-static std::map<int, int> active_tab_map_;
-static int32_t next_id = 1;
+static std::map<int32_t, std::pair<int, int>> render_view_map_;
+static std::map<int32_t, int32_t> active_tab_map_;
 
 namespace extensions {
 
@@ -58,7 +59,7 @@ TabHelper::TabHelper(content::WebContents* contents)
       values_(new base::DictionaryValue),
       script_executor_(
           new ScriptExecutor(contents, &script_execution_observers_)) {
-  session_id_ = next_id++;
+  SessionTabHelper::CreateForWebContents(contents);
   RenderViewCreated(contents->GetRenderViewHost());
   contents->ForEachFrame(
       base::Bind(&TabHelper::SetTabId, base::Unretained(this)));
@@ -70,18 +71,20 @@ TabHelper::~TabHelper() {
 }
 
 void TabHelper::SetWindowId(const int32_t& id) {
-  window_id_ = id;
-  // Extension code in the renderer holds the ID of the window that hosts it.
-  // Notify it that the window ID changed.
-  web_contents()->SendToAllFrames(
-      new ExtensionMsg_UpdateBrowserWindowId(MSG_ROUTING_NONE, window_id_));
+  SessionID session;
+  session.set_id(id);
+  SessionTabHelper::FromWebContents(web_contents())->SetWindowID(session);
+}
+
+int32_t TabHelper::window_id() const {
+  return SessionTabHelper::FromWebContents(web_contents())->window_id().id();
 }
 
 void TabHelper::SetActive(bool active) {
   if (active)
-    active_tab_map_[window_id_] = session_id_;
-  else if (active_tab_map_[window_id_] == session_id_)
-    active_tab_map_[window_id_] = -1;
+    active_tab_map_[window_id()] = session_id();
+  else if (active_tab_map_[window_id()] == session_id())
+    active_tab_map_.erase(window_id());
 }
 
 void TabHelper::SetTabIndex(int index) {
@@ -93,7 +96,7 @@ void TabHelper::SetTabValues(const base::DictionaryValue& values) {
 }
 
 void TabHelper::RenderViewCreated(content::RenderViewHost* render_view_host) {
-  render_view_map_[session_id_] = std::make_pair(
+  render_view_map_[session_id()] = std::make_pair(
       render_view_host->GetProcess()->GetID(),
       render_view_host->GetRoutingID());
 }
@@ -103,13 +106,17 @@ void TabHelper::RenderFrameCreated(content::RenderFrameHost* host) {
 }
 
 void TabHelper::WebContentsDestroyed() {
-  render_view_map_.erase(session_id_);
+  render_view_map_.erase(session_id());
 }
 
 void TabHelper::SetTabId(content::RenderFrameHost* render_frame_host) {
   render_frame_host->Send(
       new ExtensionMsg_SetTabId(render_frame_host->GetRoutingID(),
-                                session_id_));
+                                session_id()));
+}
+
+int32_t TabHelper::session_id() const {
+  return SessionTabHelper::FromWebContents(web_contents())->session_id().id();
 }
 
 void TabHelper::DidCloneToNewWebContents(
@@ -327,17 +334,13 @@ base::DictionaryValue* TabHelper::CreateTabValue(
 
 // static
 int32_t TabHelper::IdForTab(const content::WebContents* tab) {
-  const TabHelper* session_tab_helper =
-      tab ? TabHelper::FromWebContents(tab) : NULL;
-  return session_tab_helper ? session_tab_helper->session_id_ : -1;
+  return SessionTabHelper::IdForTab(tab);
 }
 
 // static
 int32_t TabHelper::IdForWindowContainingTab(
     const content::WebContents* tab) {
-  const TabHelper* session_tab_helper =
-      tab ? TabHelper::FromWebContents(tab) : NULL;
-  return session_tab_helper ? session_tab_helper->window_id_ : -1;
+  return SessionTabHelper::IdForWindowContainingTab(tab);
 }
 
 }  // namespace extensions

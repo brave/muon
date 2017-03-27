@@ -52,11 +52,11 @@ class TabHelper : public content::WebContentsObserver,
 
   // Identifier of the tab.
   void SetTabId(content::RenderFrameHost* render_frame_host);
-  const int32_t& session_id() const { return session_id_; }
+  int32_t session_id() const;
 
   // Identifier of the window the tab is in.
   void SetWindowId(const int32_t& id);
-  const int32_t& window_id() const { return window_id_; }
+  int32_t window_id() const;
 
   // Set this tab as the active tab in its window
   void SetActive(bool active);
@@ -115,14 +115,6 @@ class TabHelper : public content::WebContentsObserver,
   // Our content script observers. Declare at top so that it will outlive all
   // other members, since they might add themselves as observers.
   base::ObserverList<ScriptExecutionObserver> script_execution_observers_;
-
-  // Unique identifier of the tab for session restore. This id is only unique
-  // within the current session, and is not guaranteed to be unique across
-  // sessions.
-  int32_t session_id_ = -1;
-
-  // Unique identifier of the window the tab is in.
-  int32_t window_id_ = -1;
 
   std::unique_ptr<base::DictionaryValue> values_;
   std::unique_ptr<ScriptExecutor> script_executor_;

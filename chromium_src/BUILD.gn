@@ -11,6 +11,8 @@ config("chromium_src_config") {
   include_dirs = [
     "//electron/chromium_src",
     "//electron",
+    "//electron/vendor",
+    "//electron/vendor/brightray",
     rebase_path(".", "//"),
     root_gen_dir,
     "$root_gen_dir/chrome",
@@ -126,6 +128,7 @@ source_set("browser") {
 
   public_deps = []
   deps = [
+    ":sessions",
     "//electron/atom/browser",
     "//chrome/browser/devtools:devtools_protocol_constants",
     "//chrome/common",
@@ -200,16 +203,6 @@ source_set("browser") {
     "chrome/browser/process_singleton_posix.cc",
     "chrome/browser/process_singleton_win.cc",
     "chrome/browser/process_singleton.h",
-    "chrome/browser/profiles/incognito_helpers.cc",
-    "chrome/browser/profiles/incognito_helpers.h",
-    "chrome/browser/profiles/profile_io_data.cc",
-    "chrome/browser/profiles/profile_io_data.h",
-    "chrome/browser/profiles/profile.cc",
-    "chrome/browser/profiles/profile.h",
-    "chrome/browser/profiles/profile_manager.cc",
-    "chrome/browser/profiles/profile_manager.h",
-    "chrome/browser/profiles/profiles_state.cc",
-    "chrome/browser/profiles/profiles_state.h",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.cc",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.h",
     "//chrome/browser/speech/tts_controller.h",
@@ -416,4 +409,27 @@ source_set("browser") {
       "//ppapi/proxy",
     ]
   }
+}
+source_set("sessions") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+  sources = [
+    "chrome/browser/profiles/incognito_helpers.cc",
+    "chrome/browser/profiles/incognito_helpers.h",
+    "chrome/browser/profiles/profile.cc",
+    "chrome/browser/profiles/profile.h",
+    "chrome/browser/profiles/profile_io_data.cc",
+    "chrome/browser/profiles/profile_io_data.h",
+    "chrome/browser/profiles/profile_manager.cc",
+    "chrome/browser/profiles/profile_manager.h",
+    "chrome/browser/profiles/profiles_state.cc",
+    "chrome/browser/profiles/profiles_state.h",
+    "//chrome/browser/sessions/session_tab_helper.cc",
+    "//chrome/browser/sessions/session_tab_helper.h",
+  ]
+
+  deps = [
+    "//third_party/icu",
+    "//third_party/protobuf:protobuf_lite",
+  ]
 }

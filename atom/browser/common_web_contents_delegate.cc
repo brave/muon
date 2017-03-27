@@ -31,6 +31,7 @@
 #include "components/prefs/scoped_user_pref_update.h"
 #include "components/security_state/content/content_utils.h"
 #include "components/security_state/core/security_state.h"
+#include "components/sessions/core/session_id.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
@@ -208,6 +209,8 @@ void CommonWebContentsDelegate::SetOwnerWindow(
   int32_t id =
       api::Window::TrackableObject::GetIDFromWrappedClass(owner_window);
   if (id > 0) {
+    SessionID sessionID;
+    sessionID.set_id(id);
     tab_helper->SetWindowId(id);
 
     content::NotificationService::current()->Notify(
