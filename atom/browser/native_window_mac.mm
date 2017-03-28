@@ -776,11 +776,19 @@ void NativeWindowMac::Unmaximize() {
   [window_ zoom:nil];
 }
 
-bool NativeWindowMac::IsActive() {
+bool NativeWindowMac::IsActive() const {
   return [window_ isKeyWindow];
 }
 
-bool NativeWindowMac::IsMaximized() {
+void NativeWindowMac::Activate() {
+  Focus(true);
+}
+
+void NativeWindowMac::Deactivate() {
+  Focus(false);
+}
+
+bool NativeWindowMac::IsMaximized() const {
   if (([window_ styleMask] & NSResizableWindowMask) != 0) {
     return [window_ isZoomed];
   } else {
@@ -801,7 +809,7 @@ void NativeWindowMac::Restore() {
   [window_ deminiaturize:nil];
 }
 
-bool NativeWindowMac::IsMinimized() {
+bool NativeWindowMac::IsMinimized() const {
   return [window_ isMiniaturized];
 }
 
@@ -841,7 +849,7 @@ void NativeWindowMac::SetBounds(const gfx::Rect& bounds, bool animate) {
   [window_ setFrame:cocoa_bounds display:YES animate:animate];
 }
 
-gfx::Rect NativeWindowMac::GetBounds() {
+gfx::Rect NativeWindowMac::GetBounds() const {
   NSRect frame = [window_ frame];
   gfx::Rect bounds(frame.origin.x, 0, NSWidth(frame), NSHeight(frame));
   NSScreen* screen = [[NSScreen screens] objectAtIndex:0];
@@ -943,7 +951,7 @@ void NativeWindowMac::SetAlwaysOnTop(bool top) {
   [window_ setLevel:(top ? NSFloatingWindowLevel : NSNormalWindowLevel)];
 }
 
-bool NativeWindowMac::IsAlwaysOnTop() {
+bool NativeWindowMac::IsAlwaysOnTop() const {
   return [window_ level] == NSFloatingWindowLevel;
 }
 
@@ -1060,11 +1068,11 @@ void NativeWindowMac::SetParentWindow(NativeWindow* parent) {
     [parent->GetNativeWindow() addChildWindow:window_ ordered:NSWindowAbove];
 }
 
-gfx::NativeWindow NativeWindowMac::GetNativeWindow() {
+gfx::NativeWindow NativeWindowMac::GetNativeWindow() const {
   return window_;
 }
 
-gfx::Rect NativeWindowMac::GetRestoredBounds() {
+gfx::Rect NativeWindowMac::GetRestoredBounds() const {
   // Flip coordinates based on the primary screen.
   NSScreen* screen = [[NSScreen screens] firstObject];
   NSRect frame = restored_bounds_;
@@ -1073,7 +1081,7 @@ gfx::Rect NativeWindowMac::GetRestoredBounds() {
   return bounds;
 }
 
-ui::WindowShowState NativeWindowMac::GetRestoredState() {
+ui::WindowShowState NativeWindowMac::GetRestoredState() const {
   if (IsMaximized())
     return ui::SHOW_STATE_MAXIMIZED;
   if (IsFullscreen())

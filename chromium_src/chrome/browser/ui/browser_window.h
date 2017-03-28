@@ -7,17 +7,11 @@
 
 #include "ui/base/base_window.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// BrowserWindow interface
-//  An interface implemented by the "view" of the Browser window.
-//  This interface includes ui::BaseWindow methods as well as Browser window
-//  specific methods.
-//
-// NOTE: All getters may return NULL.
-//
 class BrowserWindow : public ui::BaseWindow {
  public:
   virtual ~BrowserWindow() {}
+  virtual bool IsVisibleOnAllWorkspaces() { return false; }
+  virtual std::string GetWorkspace() { return std::string(); }
 };
 
 #endif  // CHROME_BROWSER_UI_BROWSER_WINDOW_H_
