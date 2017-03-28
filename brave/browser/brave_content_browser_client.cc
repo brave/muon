@@ -196,6 +196,8 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   chrome::mojom::RendererConfigurationAssociatedPtr rc_interface;
   host->GetChannel()->GetRemoteAssociatedInterface(&rc_interface);
   rc_interface->SetContentSettingRules(rules);
+  bool is_incognito_process = profile->IsOffTheRecord();
+  rc_interface->SetInitialConfiguration(is_incognito_process);
 }
 
 GURL BraveContentBrowserClient::GetEffectiveURL(
