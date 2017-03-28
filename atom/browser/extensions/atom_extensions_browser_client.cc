@@ -318,6 +318,7 @@ bool AtomExtensionsBrowserClient::IsGuestSession(
 bool AtomExtensionsBrowserClient::IsIncognitoEnabled(
       const std::string& extension_id,
       content::BrowserContext* context) {
+  return true;
   auto registry = ExtensionRegistry::Get(context);
   if (!registry)
     return false;

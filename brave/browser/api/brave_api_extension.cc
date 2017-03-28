@@ -16,6 +16,7 @@
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
 #include "base/strings/string_util.h"
+#include "chrome/browser/extensions/extension_util.h"
 #include "components/prefs/pref_service.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
@@ -129,7 +130,10 @@ gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
       .SetMethod("enable",
                  base::Bind(&Extension::Enable, base::Unretained(this)))
       .SetMethod("disable",
-                 base::Bind(&Extension::Disable, base::Unretained(this)));
+                 base::Bind(&Extension::Disable, base::Unretained(this)))
+      .SetMethod("setIsIncognitoEnabled",
+                 base::Bind(&Extension::SetIsIncognitoEnabled,
+                     base::Unretained(this)));
 }
 
 Extension::Extension(v8::Isolate* isolate,
@@ -295,6 +299,17 @@ void Extension::Enable(const std::string& extension_id) {
     extension_service->EnableExtension(
         extension_id);
   }
+}
+
+void Extension::SetIsIncognitoEnabled(gin::Arguments* args) {
+  std::string extension_id;
+  args->GetNext(&extension_id);
+
+  bool enable = false;
+  args->GetNext(&enable);
+
+  extensions::util::SetIsIncognitoEnabled(
+      extension_id, browser_context_, enable);
 }
 
 // static

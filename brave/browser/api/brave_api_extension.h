@@ -75,6 +75,7 @@ class Extension : public gin::Wrappable<Extension>,
 
   void Disable(const std::string& extension_id);
   void Enable(const std::string& extension_id);
+  void SetIsIncognitoEnabled(gin::Arguments* args);
   v8::Isolate* isolate() { return isolate_; }
 
  private:

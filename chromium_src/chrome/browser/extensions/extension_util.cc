@@ -1,6 +1,9 @@
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+//
+// BB March 28, 2017 - Uses a different, but similar implementation
+// for SetIsIncognitoEnabled without the sync stuff.
 
 #include "chrome/browser/extensions/extension_util.h"
 
@@ -9,6 +12,7 @@
 #include "base/metrics/field_trial.h"
 #include "base/values.h"
 #include "build/build_config.h"
+#include "chrome/browser/extensions/extension_service.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/extensions/sync_helper.h"
@@ -51,6 +55,29 @@ bool IsWhitelistedForIncognito(const Extension* extension) {
   return feature && feature->IsAvailableToExtension(extension).is_available();
 }
 
+
+/*
+// Returns |extension_id|. See note below.
+std::string ReloadExtensionIfEnabled(const std::string& extension_id,
+                                     content::BrowserContext* context) {
+  ExtensionRegistry* registry = ExtensionRegistry::Get(context);
+  bool extension_is_enabled =
+      registry->enabled_extensions().Contains(extension_id);
+
+  if (!extension_is_enabled)
+    return extension_id;
+
+  // When we reload the extension the ID may be invalidated if we've passed it
+  // by const ref everywhere. Make a copy to be safe. http://crbug.com/103762
+  std::string id = extension_id;
+  ExtensionService* service =
+      ExtensionSystem::Get(context)->extension_service();
+  CHECK(service);
+  service->ReloadExtension(id);
+  return id;
+}
+*/
+
 }  // namespace
 
 bool IsIncognitoEnabled(const std::string& extension_id,
@@ -75,7 +102,36 @@ bool IsIncognitoEnabled(const std::string& extension_id,
 void SetIsIncognitoEnabled(const std::string& extension_id,
                            content::BrowserContext* context,
                            bool enabled) {
-  NOTIMPLEMENTED();
+  ExtensionRegistry* registry = ExtensionRegistry::Get(context);
+  const Extension* extension =
+      registry->GetExtensionById(extension_id, ExtensionRegistry::EVERYTHING);
+  LOG(ERROR) << "Set incognito enabled: -------0";
+
+  if (extension) {
+    if (!util::CanBeIncognitoEnabled(extension)) {
+      LOG(ERROR) << "Set incognito enabled: -------1";
+      return;
+    }
+  }
+  LOG(ERROR) << "Set incognito enabled: -------1.5";
+
+  ExtensionPrefs* extension_prefs = ExtensionPrefs::Get(context);
+  // Broadcast unloaded and loaded events to update browser state. Only bother
+  // if the value changed and the extension is actually enabled, since there is
+  // no UI otherwise.
+  bool old_enabled = extension_prefs->IsIncognitoEnabled(extension_id);
+  /*
+  if (enabled == old_enabled) {
+    LOG(ERROR) << "Set incognito enabled: -------2";
+    return;
+  }
+  */
+  LOG(ERROR) << "Set incognito enabled: -------2.5:" << old_enabled;
+
+  LOG(ERROR) << "Set incognito enabled: -------3:" << enabled;
+  extension_prefs->SetIsIncognitoEnabled(extension_id, enabled);
+
+  // ReloadExtensionIfEnabled(extension_id, context);
 }
 
 bool CanCrossIncognito(const Extension* extension,
