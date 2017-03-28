@@ -21,6 +21,8 @@
 #include <shellscalingapi.h>
 #include <tchar.h>
 
+#include "atom/common/crash_reporter/win/crash_service_main.h"
+#include "base/environment.h"
 #include "base/win/win_util.h"
 #include "chrome/install_static/install_details.h"
 #include "chrome/install_static/install_util.h"
@@ -28,6 +30,17 @@
 #include "content/public/app/sandbox_helper_win.h"
 #include "sandbox/win/src/sandbox_types.h"
 #endif  // defined(OS_WIN)
+
+bool IsEnvSet(const char* name) {
+#if defined(OS_WIN)
+  size_t required_size;
+  getenv_s(&required_size, nullptr, 0, name);
+  return required_size != 0;
+#else
+  char* indicator = getenv(name);
+  return indicator && indicator[0] != '\0';
+#endif
+}
 
 #if defined(OS_MACOSX)
 extern "C" {
@@ -40,6 +53,10 @@ int ChromeMain(int argc, const char* argv[]);
 int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE, wchar_t* cmd, int) {
   int argc = 0;
   wchar_t** argv_setup = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+
+  if (IsEnvSet("ELECTRON_INTERNAL_CRASH_SERVICE")) {
+    return crash_service::Main(cmd);
+  }
 #else  // OS_WIN
 #if defined(OS_MACOSX)
 int ChromeMain(int argc, const char* argv[]) {
