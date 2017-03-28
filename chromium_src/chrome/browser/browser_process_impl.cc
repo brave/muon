@@ -248,6 +248,17 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
 #endif  // BUILDFLAG(ENABLE_PLUGINS)
 }
 
+memory::TabManager* BrowserProcessImpl::GetTabManager() {
+  DCHECK(thread_checker_.CalledOnValidThread());
+#if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
+  if (!tab_manager_.get())
+    tab_manager_.reset(new memory::TabManager());
+  return tab_manager_.get();
+#else
+  return nullptr;
+#endif
+}
+
 // NOTIMPLEMENTED
 void BrowserProcessImpl::EndSession() {
   NOTIMPLEMENTED();
@@ -428,11 +439,6 @@ gcm::GCMDriver* BrowserProcessImpl::gcm_driver() {
 }
 
 StatusTray* BrowserProcessImpl::status_tray() {
-  NOTIMPLEMENTED();
-  return nullptr;
-}
-
-memory::TabManager* BrowserProcessImpl::GetTabManager() {
   NOTIMPLEMENTED();
   return nullptr;
 }

@@ -55,6 +55,8 @@
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
@@ -1782,17 +1784,27 @@ void WebContents::Clone(mate::Arguments* args) {
             options, callback)));
 }
 
+::Browser* WebContents::browser() const {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    return tab_helper->browser();
+#endif
+  return nullptr;
+}
+
 void WebContents::SetActive(bool active) {
   if (active)
     web_contents()->WasShown();
   else
     web_contents()->WasHidden();
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (tab_helper)
-    tab_helper->SetActive(active);
-#endif
+  if (active && browser()) {
+    int index =
+      browser()->tab_strip_model()->GetIndexOfWebContents(web_contents());
+    if (index != TabStripModel::kNoTab)
+      browser()->tab_strip_model()->ActivateTabAt(index, true);
+  }
 
   Emit("set-active", active);
 }
@@ -1805,6 +1817,30 @@ void WebContents::SetTabIndex(int index) {
 #endif
 
   Emit("set-tab-index", index);
+}
+
+void WebContents::SetPinned(bool pinned) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetPinned(pinned);
+
+  Emit("set-pinned", pinned);
+}
+
+void WebContents::SetAutoDiscardable(bool auto_discardable) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetAutoDiscardable(auto_discardable);
+
+  Emit("set-auto-discardable", auto_discardable);
+}
+
+void WebContents::Discard() {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper) {
+    if (!Emit("will-discard") && tab_helper->Discard())
+      Emit("discarded");
+  }
 }
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)

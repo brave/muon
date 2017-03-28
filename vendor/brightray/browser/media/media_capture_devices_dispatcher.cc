@@ -5,6 +5,7 @@
 #include "browser/media/media_capture_devices_dispatcher.h"
 
 #include "base/logging.h"
+#include "chrome/browser/media/webrtc/media_stream_capture_indicator.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/media_capture_devices.h"
 #include "content/public/common/media_stream_request.h"
@@ -41,7 +42,8 @@ MediaCaptureDevicesDispatcher* MediaCaptureDevicesDispatcher::GetInstance() {
 }
 
 MediaCaptureDevicesDispatcher::MediaCaptureDevicesDispatcher()
-    : is_device_enumeration_disabled_(false) {
+    : is_device_enumeration_disabled_(false),
+      media_stream_capture_indicator_(new MediaStreamCaptureIndicator()) {
   // MediaCaptureDevicesDispatcher is a singleton. It should be created on
   // UI thread.
   DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
@@ -63,6 +65,11 @@ MediaCaptureDevicesDispatcher::GetVideoCaptureDevices() {
   if (is_device_enumeration_disabled_)
     return EmptyDevices();
   return content::MediaCaptureDevices::GetInstance()->GetVideoCaptureDevices();
+}
+
+scoped_refptr<MediaStreamCaptureIndicator>
+MediaCaptureDevicesDispatcher::GetMediaStreamCaptureIndicator() {
+  return media_stream_capture_indicator_;
 }
 
 void MediaCaptureDevicesDispatcher::GetDefaultDevices(
@@ -121,6 +128,13 @@ MediaCaptureDevicesDispatcher::GetFirstAvailableVideoDevice() {
   if (video_devices.empty())
     return nullptr;
   return &(*video_devices.begin());
+}
+
+bool MediaCaptureDevicesDispatcher::IsInsecureCapturingInProgress(
+    int render_process_id,
+    int render_frame_id) {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+  return false;
 }
 
 void MediaCaptureDevicesDispatcher::DisableDeviceEnumerationForTesting() {

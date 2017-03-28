@@ -9,6 +9,10 @@
 #include "atom/browser/native_window.h"
 #include "atom/browser/window_list_observer.h"
 #include "base/logging.h"
+#include "browser/inspectable_web_contents.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_list.h"
 
 namespace atom {
 
@@ -29,6 +33,14 @@ WindowList* WindowList::GetInstance() {
 // static
 void WindowList::AddWindow(NativeWindow* window) {
   DCHECK(window);
+
+  // add to browser list
+  ::Browser::CreateParams create_params(::Browser::Type::TYPE_TABBED,
+      Profile::FromBrowserContext(window->inspectable_web_contents()
+          ->GetWebContents()->GetBrowserContext()));
+  create_params.window = window;
+  new ::Browser(create_params);
+
   // Push |window| on the appropriate list instance.
   WindowVector& windows = GetInstance()->windows_;
   windows.push_back(window);
@@ -49,6 +61,12 @@ void WindowList::RemoveWindow(NativeWindow* window) {
   if (windows.size() == 0)
     for (WindowListObserver& observer : observers_.Get())
       observer.OnWindowAllClosed();
+
+  for (auto* browser : *BrowserList::GetInstance()) {
+    if (browser->window() == window) {
+      delete browser;
+    }
+  }
 }
 
 // static

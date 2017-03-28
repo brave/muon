@@ -23,7 +23,9 @@
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
+#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_dialogs.h"
+#include "chrome/browser/ui/browser_list.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/pref_registry/pref_registry_syncable.h"
@@ -212,6 +214,12 @@ void CommonWebContentsDelegate::SetOwnerWindow(
     SessionID sessionID;
     sessionID.set_id(id);
     tab_helper->SetWindowId(id);
+
+    for (auto* browser : *BrowserList::GetInstance()) {
+      if (browser->window() == owner_window) {
+        tab_helper->SetBrowser(browser);
+      }
+    }
 
     content::NotificationService::current()->Notify(
       chrome::NOTIFICATION_TAB_PARENTED,

@@ -12,7 +12,12 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/strings/utf_string_conversions.h"
+#include "chrome/browser/browser_process.h"
+#include "chrome/browser/memory/tab_manager.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_list.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
@@ -29,6 +34,8 @@
 #include "native_mate/dictionary.h"
 #include "net/base/filename_util.h"
 #include "ui/base/resource/resource_bundle.h"
+
+using memory::TabManager;
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
 
@@ -50,7 +57,6 @@ const char kSelectedKey[] = "selected";
 }  // namespace keys
 
 static std::map<int32_t, std::pair<int, int>> render_view_map_;
-static std::map<int32_t, int32_t> active_tab_map_;
 
 namespace extensions {
 
@@ -58,16 +64,42 @@ TabHelper::TabHelper(content::WebContents* contents)
     : content::WebContentsObserver(contents),
       values_(new base::DictionaryValue),
       script_executor_(
-          new ScriptExecutor(contents, &script_execution_observers_)) {
+          new ScriptExecutor(contents, &script_execution_observers_)),
+      index_(TabStripModel::kNoTab),
+      pinned_(false),
+      browser_(nullptr) {
   SessionTabHelper::CreateForWebContents(contents);
   RenderViewCreated(contents->GetRenderViewHost());
   contents->ForEachFrame(
       base::Bind(&TabHelper::SetTabId, base::Unretained(this)));
 
   AtomExtensionWebContentsObserver::CreateForWebContents(contents);
+  BrowserList::AddObserver(this);
 }
 
 TabHelper::~TabHelper() {
+  BrowserList::RemoveObserver(this);
+}
+
+void TabHelper::OnBrowserRemoved(Browser* browser) {
+  if (browser_ == browser)
+    browser_ = nullptr;
+}
+
+void TabHelper::SetBrowser(Browser* browser) {
+  if (browser == browser_)
+    return;
+
+  if (browser_) {
+    if (index_ != TabStripModel::kNoTab)
+      browser_->tab_strip_model()->DetachWebContentsAt(index_);
+  }
+
+  if (!browser)
+    return;
+
+  browser_ = browser;
+  browser_->tab_strip_model()->AppendWebContents(web_contents(), false);
 }
 
 void TabHelper::SetWindowId(const int32_t& id) {
@@ -80,15 +112,34 @@ int32_t TabHelper::window_id() const {
   return SessionTabHelper::FromWebContents(web_contents())->window_id().id();
 }
 
-void TabHelper::SetActive(bool active) {
-  if (active)
-    active_tab_map_[window_id()] = session_id();
-  else if (active_tab_map_[window_id()] == session_id())
-    active_tab_map_.erase(window_id());
+void TabHelper::SetAutoDiscardable(bool auto_discardable) {
+  g_browser_process->GetTabManager()->SetTabAutoDiscardableState(
+      web_contents(), auto_discardable);
+}
+
+bool TabHelper::Discard() {
+  int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
+  if (g_browser_process->GetTabManager()->DiscardTabById(web_contents_id))
+    return true;
+
+  return false;
+}
+
+void TabHelper::SetPinned(bool pinned) {
+  pinned_ = pinned;
 }
 
 void TabHelper::SetTabIndex(int index) {
   index_ = index;
+}
+
+bool TabHelper::is_active() const {
+  if (browser()) {
+    return browser()->tab_strip_model()->
+        GetActiveWebContents() == web_contents();
+  } else {
+    return false;
+  }
 }
 
 void TabHelper::SetTabValues(const base::DictionaryValue& values) {
@@ -106,6 +157,9 @@ void TabHelper::RenderFrameCreated(content::RenderFrameHost* host) {
 }
 
 void TabHelper::WebContentsDestroyed() {
+  if (browser())
+    SetBrowser(nullptr);
+
   render_view_map_.erase(session_id());
 }
 
@@ -303,8 +357,20 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   auto tab_id = IdForTab(contents);
   auto window_id = IdForWindowContainingTab(contents);
   auto tab_helper = TabHelper::FromWebContents(contents);
+  auto browser = tab_helper->browser();
 
-  bool active = (active_tab_map_[window_id] == tab_id);
+  bool pinned = false;
+  if (browser) {
+    int index =
+      browser->tab_strip_model()->GetIndexOfWebContents(contents);
+    pinned = browser->tab_strip_model()->IsTabPinned(index);
+  }
+
+  bool discarded =
+      g_browser_process->GetTabManager()->IsTabDiscarded(contents);
+  bool auto_discardable =
+      g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
+  bool active = tab_helper->is_active();
   std::unique_ptr<base::DictionaryValue> result(
       tab_helper->getTabValues()->CreateDeepCopy());
 
@@ -321,12 +387,12 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetString(keys::kStatusKey, contents->IsLoading()
       ? "loading" : "complete");
   result->SetBoolean(keys::kAudibleKey, contents->WasRecentlyAudible());
-  result->SetBoolean(keys::kDiscardedKey, false);
-  result->SetBoolean(keys::kAutoDiscardableKey, false);
+  result->SetBoolean(keys::kDiscardedKey, discarded);
+  result->SetBoolean(keys::kAutoDiscardableKey, auto_discardable);
   result->SetBoolean(keys::kHighlightedKey, active);
   result->SetInteger(keys::kIndexKey, tab_helper->index_);
   // TODO(bridiver) - set pinned value
-  result->SetBoolean(keys::kPinnedKey, false);
+  result->SetBoolean(keys::kPinnedKey, pinned);
   result->SetBoolean(keys::kSelectedKey, active);
 
   return result.release();
