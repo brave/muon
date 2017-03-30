@@ -8,7 +8,10 @@ const GuestViewInternal = require('guest-view-internal').GuestViewInternal
 const TabViewInternal = require('tabViewInternal').TabViewInternal;
 const WebViewInternal = require('webViewInternal').WebViewInternal;
 const WebViewImpl = require('webView').WebViewImpl;
+const GuestViewImpl = require('guestView').GuestViewImpl
 const remote = require('remote')
+const GuestViewContainer = require('guestViewContainer').GuestViewContainer;
+const GuestView = require('guestView').GuestView;
 
 const asyncMethods = [
   'loadURL',
@@ -62,14 +65,14 @@ const syncMethods = [
   'getCurrentEntryIndex',
   'getURLAtIndex',
   'getTitleAtIndex',
-  'getId',
   'isFocused',
   'getZoomPercent',
   'getURL',
 ]
 
 var WEB_VIEW_API_METHODS = [
-  'setGuestInstanceId',
+  'attachGuest',
+  'detachGuest',
   // Returns Chrome's internal process ID for the guest web page's current
   // process.
   'getProcessId',
@@ -77,12 +80,10 @@ var WEB_VIEW_API_METHODS = [
 
 asyncMethods.forEach((method) => {
   WebViewImpl.prototype[method] = function () {
-    if (!this.guest.getId())
+    if (!this.tabID)
       return
 
-    this.getTabID(this.guest.getId(), (tabID) => {
-      remote.callAsyncWebContentsFunction(tabID, method, arguments)
-    })
+    remote.callAsyncWebContentsFunction(this.tabID, method, arguments)
   }
 })
 
@@ -101,46 +102,61 @@ syncMethods.forEach((method) => {
 
 // -----------------------------------------------------------------------------
 // Custom API method implementations.
-WebViewImpl.prototype.getTabID = function (instanceId, cb) {
-  if (!this.tabID) {
-    TabViewInternal.getTabID(instanceId, (tabID) => {
-      this.tabID = tabID
-      cb(tabID)
-    })
-  } else {
-    cb(this.tabID)
-  }
-}
-
 const attachWindow = WebViewImpl.prototype.attachWindow$
-WebViewImpl.prototype.attachWindow$ = function(opt_guestInstanceId) {
-  let attached = attachWindow.bind(this)(opt_guestInstanceId)
-  // preload the webcontents and tabID
+WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
+  console.log('attachWindow ' + opt_guestInstanceId)
+  if (this.guest.getId() === opt_guestInstanceId &&
+      this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    return
+  }
   const guestInstanceId = opt_guestInstanceId || this.guest.getId()
 
-  WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
-    // cache webContents_
-    this.webContents_ = webContents
-  })
-  this.getTabID(guestInstanceId, (tabID) => {
-    // cache tabId
-    this.tabID = tabID
-    GuestViewInternal.registerEvents(this, tabID)
-  })
+  if (opt_guestInstanceId || this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    this.guest.detach();
+    this.guest = new GuestView('webview', guestInstanceId);
+  }
 
+  const attached = GuestViewContainer.prototype.attachWindow$.call(this);
+
+  if (attached) {
+    WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
+      // cache webContents_
+      this.webContents_ = webContents
+    })
+  }
   return attached
 }
 
-WebViewImpl.prototype.setGuestInstanceId = function (guestInstanceId) {
-  return this.attachWindow$(guestInstanceId)
+WebViewImpl.prototype.detachGuest = function () {
+  const newGuest = () => {
+    this.guest = new GuestView('webview')
+  }
+  if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    this.guest.detach(() => newGuest())
+  } else {
+    newGuest()
+  }
 }
 
 WebViewImpl.prototype.getProcessId = function() {
   return this.processId
 }
 
+WebViewImpl.prototype.attachGuest = function (guestInstanceId) {
+  return this.attachWindow$(guestInstanceId)
+}
+
+WebViewImpl.prototype.setTabId = function (tabID) {
+  this.tabID = tabID
+  GuestViewInternal.registerEvents(this, tabID)
+}
+
+WebViewImpl.prototype.getId = function() {
+  return this.tabID
+}
+
 // -----------------------------------------------------------------------------
 
-WebViewImpl.getApiMethods = function() {
+WebViewImpl.getApiMethods = function () {
   return WEB_VIEW_API_METHODS;
 };

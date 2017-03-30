@@ -14,10 +14,10 @@
 #include "base/threading/thread_restrictions.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
+#include "brave/browser/memory/guest_tab_manager.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/background/background_mode_manager.h"
 #include "chrome/browser/browser_shutdown.h"
-#include "chrome/browser/memory/tab_manager.h"
 #include "chrome/browser/printing/print_job_manager.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/shell_integration.h"
@@ -252,7 +252,7 @@ memory::TabManager* BrowserProcessImpl::GetTabManager() {
   DCHECK(thread_checker_.CalledOnValidThread());
 #if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
   if (!tab_manager_.get())
-    tab_manager_.reset(new memory::TabManager());
+    tab_manager_.reset(new memory::GuestTabManager());
   return tab_manager_.get();
 #else
   return nullptr;

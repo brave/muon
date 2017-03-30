@@ -25,6 +25,10 @@
 
       <include name="IDR_ATOM_WEB_FRAME_BINDINGS_JS" file="common\api\resources\web_frame_bindings.js" type="BINDATA" />
 
+      <include name="IDR_ATOM_WEB_VIEW_EVENTS_API_BINDINGS_JS" file="common\api\resources\web_view_events_api_bindings.js" type="BINDATA" />
+
+      <include name="IDR_ATOM_GUEST_VIEW_API_BINDINGS_JS" file="common\api\resources\guest_view_api_bindings.js" type="BINDATA" />
+
       <include name="IDR_ATOM_WEB_VIEW_INTERNAL_BINDINGS_JS" file="common\api\resources\web_view_internal_bindings.js" type="BINDATA" />
 
       <include name="IDR_ATOM_TAB_VIEW_INTERNAL_BINDINGS_JS" file="common\api\resources\tab_view_internal_bindings.js" type="BINDATA" />

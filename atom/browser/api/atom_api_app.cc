@@ -532,8 +532,6 @@ void App::Observe(
       content::WebContents* web_contents =
           content::Source<content::WebContents>(source).ptr();
       auto browser_context = web_contents->GetBrowserContext();
-      auto url = web_contents->GetURL();
-
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC

@@ -108,6 +108,21 @@ source_set("browser") {
   }
 }
 
+source_set("tab_manager") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "memory/guest_tab_manager.cc",
+    "memory/guest_tab_manager.h",
+  ]
+
+  deps = [
+    "//electron/chromium_src:tab_manager"
+  ]
+}
+
 source_set("component_updater_api") {
   configs += [
     "//electron/build:electron_config",

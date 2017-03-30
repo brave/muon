@@ -63,8 +63,15 @@ GuestViewBase* TabViewGuest::Create(WebContents* owner_web_contents) {
 // static
 const char TabViewGuest::Type[] = "webview";
 
+void TabViewGuest::SetCanRunInDetachedState(bool can_run_detached) {
+  can_run_detached_ = can_run_detached;
+  if (!can_run_detached_ && !attached()) {
+    Destroy();
+  }
+}
+
 bool TabViewGuest::CanRunInDetachedState() const {
-  return true;
+  return can_run_detached_;
 }
 
 void TabViewGuest::GuestDestroyed() {
@@ -181,6 +188,25 @@ void TabViewGuest::DidCommitProvisionalLoadForFrame(
   // find_helper_.CancelAllFindSessions();
 }
 
+void TabViewGuest::AttachGuest(int guestInstanceId) {
+  std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+  args->SetInteger("guestInstanceId", guestInstanceId);
+  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+      "webViewInternal.onAttachGuest", std::move(args)));
+}
+
+void TabViewGuest::DetachGuest(bool notify_view) {
+  if (notify_view) {
+    std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+    DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+        "webViewInternal.onDetachGuest", std::move(args)));
+  }
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  api_web_contents_->Emit("did-detach",
+      extensions::TabHelper::IdForTab(web_contents()));
+#endif
+}
+
 void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Locker locker(isolate);
@@ -268,24 +294,24 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   api_web_contents_->ResumeLoadingCreatedWebContents();
 
   web_contents()->WasHidden();
   web_contents()->WasShown();
 
-  ApplyAttributes(*attach_params());
+  if (!tab_helper->IsDiscarded()) {
+    ApplyAttributes(*attach_params());
 
-  if (web_contents()->GetController().IsInitialNavigation()) {
-    web_contents()->GetController().LoadIfNecessary();
+    if (web_contents()->GetController().IsInitialNavigation()) {
+      web_contents()->GetController().LoadIfNecessary();
+    }
+  } else {
+    web_contents()->WasHidden();
   }
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
-#else
-  api_web_contents_->Emit("did-attach",
-      web_contents()->GetRenderProcessHost()->GetID());
-#endif
 }
 
 bool TabViewGuest::ZoomPropagatesFromEmbedderToGuest() const {
@@ -310,6 +336,11 @@ void TabViewGuest::GuestReady() {
       ->GetWidget()
       ->GetView()
       ->SetBackgroundColorToDefault();
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  api_web_contents_->Emit("guest-ready",
+      extensions::TabHelper::IdForTab(web_contents()), guest_instance_id());
+#endif
 }
 
 void TabViewGuest::WillDestroy() {
@@ -336,7 +367,8 @@ bool TabViewGuest::IsAutoSizeSupported() const {
 TabViewGuest::TabViewGuest(WebContents* owner_web_contents)
     : GuestView<TabViewGuest>(owner_web_contents),
       api_web_contents_(nullptr),
-      clone_(false) {
+      clone_(false),
+      can_run_detached_(true) {
 }
 
 TabViewGuest::~TabViewGuest() {
@@ -353,8 +385,20 @@ void TabViewGuest::WillAttachToEmbedder() {
   if (relay)
     owner_window = relay->window.get();
 
-  if (owner_window)
+  if (owner_window) {
+    std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+    args->SetInteger("tabID",
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+        extensions::TabHelper::IdForTab(web_contents())
+#else
+        -1
+#endif
+        );
+    DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+        "webViewInternal.onTabIdChanged", std::move(args)));
+
     api_web_contents_->SetOwnerWindow(web_contents(), owner_window);
+  }
 }
 
 }  // namespace brave

@@ -10,6 +10,8 @@
 
 #include "base/macros.h"
 #include "chrome/browser/ui/browser_list_observer.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
+#include "components/guest_view/browser/guest_view_manager.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "extensions/browser/extension_function_dispatcher.h"
@@ -20,6 +22,10 @@ class Browser;
 
 namespace base {
 class DictionaryValue;
+}
+
+namespace brave {
+class TabViewGuest;
 }
 
 namespace content {
@@ -42,6 +48,8 @@ extern const char kAudibleKey[];
 extern const char kMutedKey[];
 }
 
+using guest_view::GuestViewManager;
+
 namespace extensions {
 
 class Extension;
@@ -50,9 +58,18 @@ class Extension;
 // window of the tab.
 class TabHelper : public content::WebContentsObserver,
                   public content::WebContentsUserData<TabHelper>,
-                  public chrome::BrowserListObserver {
+                  public chrome::BrowserListObserver,
+                  public TabStripModelObserver {
  public:
   ~TabHelper() override;
+
+  static void CreateTab(content::WebContents* owner,
+                content::BrowserContext* browser_context,
+                const base::DictionaryValue& create_params,
+                const GuestViewManager::WebContentsCreatedCallback& callback);
+  static content::WebContents* CreateTab(content::WebContents* owner,
+                            content::WebContents::CreateParams create_params);
+  static void DestroyTab(content::WebContents* tab);
 
   // Identifier of the tab.
   void SetTabId(content::RenderFrameHost* render_frame_host);
@@ -72,6 +89,8 @@ class TabHelper : public content::WebContentsObserver,
 
   bool Discard();
 
+  bool IsDiscarded();
+
   void SetTabValues(const base::DictionaryValue& values);
   base::DictionaryValue* getTabValues() {
     return values_.get();
@@ -86,6 +105,8 @@ class TabHelper : public content::WebContentsObserver,
   Browser* browser() const {
     return browser_;
   }
+
+  brave::TabViewGuest* guest() const;
 
   int get_index() const { return index_; }
   bool is_pinned() const { return pinned_; }
@@ -112,7 +133,18 @@ class TabHelper : public content::WebContentsObserver,
   explicit TabHelper(content::WebContents* contents);
   friend class content::WebContentsUserData<TabHelper>;
 
-  void OnBrowserRemoved(Browser* browser);
+  void TabDetachedAt(content::WebContents* contents, int index) override;
+  void TabInsertedAt(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index,
+                             bool foreground) override;
+  void TabReplacedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* old_contents,
+                     content::WebContents* new_contents,
+                     int index) override;
+  void OnBrowserRemoved(Browser* browser) override;
+  void UpdateBrowser(Browser* browser);
+
   void ExecuteScript(
       std::string extension_id,
       std::unique_ptr<base::DictionaryValue> options,

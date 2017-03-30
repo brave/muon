@@ -163,6 +163,82 @@ index b77fbdeea3cd28ead065828c3fffb19496f80ab8..86aad8c1312e801ff64a81b11700d3a4
      return;
    }
  
+diff --git a/chrome/browser/memory/tab_manager.cc b/chrome/browser/memory/tab_manager.cc
+index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..af107629afbea2e9c13686765cace0e55c70c4f4 100644
+--- a/chrome/browser/memory/tab_manager.cc
++++ b/chrome/browser/memory/tab_manager.cc
+@@ -786,6 +786,17 @@ void TabManager::PurgeAndSuspendBackgroundedTabs() {
+   }
+ }
+ 
++// MUON(bridiver): see tab_manager.h
++WebContents* TabManager::CreateNullContents(
++    TabStripModel* model, WebContents* old_contents) {
++  return WebContents::Create(WebContents::CreateParams(model->profile()));
++}
++
++// MUON(bridiver): see tab_manager.h
++void TabManager::DestroyOldContents(WebContents* old_contents) {
++  delete old_contents;
++}
++
+ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+   // Can't discard active index.
+   if (model->active_index() == index)
+@@ -805,8 +816,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+       "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
+       old_contents->NeedToFireBeforeUnload());
+ 
+-  WebContents* null_contents =
+-      WebContents::Create(WebContents::CreateParams(model->profile()));
++  // MUON(bridiver): see tab_manager.h
++  WebContents* null_contents = CreateNullContents(model, old_contents);
+   // Copy over the state from the navigation controller to preserve the
+   // back/forward history and to continue to display the correct title/favicon.
+   null_contents->GetController().CopyStateFrom(old_contents->GetController());
+@@ -818,7 +829,7 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+ 
+   // Replace the discarded tab with the null version.
+   model->ReplaceWebContentsAt(index, null_contents);
+-  // Mark the tab so it will reload when clicked on.
++  // Mark the tab so it will reload when clicked on
+   GetWebContentsData(null_contents)->SetDiscardState(true);
+   GetWebContentsData(null_contents)->IncrementDiscardCount();
+ 
+@@ -826,7 +837,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+   // TODO(jamescook): This breaks script connections with other tabs.
+   // Find a different approach that doesn't do that, perhaps based on navigation
+   // to swappedout://.
+-  delete old_contents;
++  // MUON(bridiver): see tab_manager.h
++  DestroyOldContents(old_contents);
+   recent_tab_discard_ = true;
+ 
+   return null_contents;
+diff --git a/chrome/browser/memory/tab_manager.h b/chrome/browser/memory/tab_manager.h
+index 55b6d1d98314f0adcdd087b0c64379b453df24e5..4c72b67644434ed82e94c94dea57f8dffd5cf4a4 100644
+--- a/chrome/browser/memory/tab_manager.h
++++ b/chrome/browser/memory/tab_manager.h
+@@ -181,6 +181,7 @@ class TabManager : public TabStripModelObserver {
+   // This is needed so WebContentsData can call OnDiscardedStateChange, and
+   // can use PurgeAndSuspendState.
+   friend class WebContentsData;
++  friend class GuestTabManager;
+ 
+   // Called by WebContentsData whenever the discard state of a WebContents
+   // changes, so that observers can be informed.
+@@ -331,6 +332,11 @@ class TabManager : public TabStripModelObserver {
+   // Returns true if tabs can be discarded only once.
+   bool CanOnlyDiscardOnce();
+ 
++  // MUON(bridiver): override to create/destroy guests webcontents
++  virtual content::WebContents* CreateNullContents(
++      TabStripModel* model, content::WebContents* old_contents);
++  virtual void DestroyOldContents(content::WebContents* old_contents);
++
+   // Timer to periodically update the stats of the renderers.
+   base::RepeatingTimer update_timer_;
+ 
 diff --git a/chrome/browser/plugins/chrome_plugin_service_filter.cc b/chrome/browser/plugins/chrome_plugin_service_filter.cc
 index 1783a101aa024a5aa39a7bd7c335427398d47093..ac11311d78e2271f9ca7f6016c79a37de078621c 100644
 --- a/chrome/browser/plugins/chrome_plugin_service_filter.cc
@@ -2224,6 +2300,21 @@ index 00a8accbe2cdc3c77c6fce3fd28cd697ff0524d5..8a9cf6907b0d27cb5b1a7fd8eed00500
  #else
    is_elastic_overscroll_enabled_ = false;
  #endif
+diff --git a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
+index 061480b5acd6431aa9abb7e02c98ebe5e881d7f9..cb06be194f24f5b7865874101da696b8f168c3ab 100644
+--- a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
++++ b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
+@@ -53,8 +53,8 @@ void ExtensionsGuestViewManagerDelegate::DispatchEvent(
+   // extensions::events::HistogramValue as an argument.
+   events::HistogramValue histogram_value =
+       guest_view_events::GetEventHistogramValue(event_name);
+-  DCHECK_NE(events::UNKNOWN, histogram_value) << "Event " << event_name
+-                                              << " must have a histogram value";
++  // DCHECK_NE(events::UNKNOWN, histogram_value) << "Event " << event_name
++  //                                             << " must have a histogram value";
+ 
+   content::WebContents* owner = guest->owner_web_contents();
+   if (!owner)
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
 index 57c9a2e6a43558e2325a76b5b147a3c7e2b99fd3..5ee029882c5ecf0104f83ee61e4a0ba729a7a516 100644
 --- a/extensions/common/api/_api_features.json
@@ -2243,6 +2334,7 @@ index 57c9a2e6a43558e2325a76b5b147a3c7e2b99fd3..5ee029882c5ecf0104f83ee61e4a0ba7
 @@ -510,6 +513,7 @@
      "internal": true,
      "contexts": ["webui"],
++  // MUON(bridiver): creating new histograms is a pain
      "matches": [
 +      "chrome://brave/*",
        "chrome://chrome-signin/*",

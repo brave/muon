@@ -131,7 +131,7 @@ source_set("browser") {
     ":devtools",
     ":importer",
     ":sessions",
-    ":tab_manager",
+    "//electron/brave/browser:tab_manager",
     "//chrome/common",
     "//chrome/utility",
     "//components/certificate_transparency",

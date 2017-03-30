@@ -1747,6 +1747,7 @@ void WebContents::Clone(mate::Arguments* args) {
   } else {
     options = mate::Dictionary::CreateEmpty(isolate());
   }
+  options.Set("userGesture", true);
 
   base::Callback<void(content::WebContents*)> callback;
   if (!args->GetNext(&callback)) {
@@ -1766,18 +1767,8 @@ void WebContents::Clone(mate::Arguments* args) {
 
   create_params.SetBoolean("clone", true);
 
-  auto guest_view_manager =
-      static_cast<GuestViewManager*>(GetBrowserContext()->GetGuestManager());
-
-  if (!guest_view_manager) {
-    callback.Run(nullptr);
-    return;
-  }
-
-  options.Set("userGesture", true);
-
-  guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
-      HostWebContents(),
+  extensions::TabHelper::CreateTab(HostWebContents(),
+      GetBrowserContext(),
       create_params,
       base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
         base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
@@ -1840,6 +1831,8 @@ void WebContents::Discard() {
   if (tab_helper) {
     if (!Emit("will-discard") && tab_helper->Discard())
       Emit("discarded");
+    else
+      Emit("discard-aborted");
   }
 }
 
@@ -2216,6 +2209,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
       .SetMethod("setTabIndex", &WebContents::SetTabIndex)
+      .SetMethod("discard", &WebContents::Discard)
       .SetMethod("setWebRTCIPHandlingPolicy",
                   &WebContents::SetWebRTCIPHandlingPolicy)
       .SetMethod("getWebRTCIPHandlingPolicy",
@@ -2356,14 +2350,6 @@ void WebContents::CreateTab(mate::Arguments* args) {
 
   auto browser_context = session->browser_context();
 
-  auto guest_view_manager =
-      static_cast<GuestViewManager*>(browser_context->GetGuestManager());
-
-  if (!guest_view_manager) {
-    args->ThrowError("No guest view manager");
-    return;
-  }
-
   base::DictionaryValue create_params;
   std::string src;
   if (options.Get("src", &src) || options.Get("url", &src)) {
@@ -2373,8 +2359,8 @@ void WebContents::CreateTab(mate::Arguments* args) {
       static_cast<brave::BraveBrowserContext*>(
             browser_context)->partition_with_prefix());
 
-  guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
-      owner->web_contents(),
+  extensions::TabHelper::CreateTab(owner->web_contents(),
+      browser_context,
       create_params,
       base::Bind(&WebContents::OnTabCreated, base::Unretained(owner),
           options, callback));

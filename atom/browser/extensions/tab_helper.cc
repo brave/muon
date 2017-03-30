@@ -12,6 +12,7 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/memory/tab_manager.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
@@ -35,6 +36,7 @@
 #include "net/base/filename_util.h"
 #include "ui/base/resource/resource_bundle.h"
 
+using guest_view::GuestViewManager;
 using memory::TabManager;
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
@@ -81,9 +83,97 @@ TabHelper::~TabHelper() {
   BrowserList::RemoveObserver(this);
 }
 
+// static
+void TabHelper::CreateTab(content::WebContents* owner,
+                content::BrowserContext* browser_context,
+                const base::DictionaryValue& create_params,
+                const GuestViewManager::WebContentsCreatedCallback& callback) {
+
+  auto guest_view_manager =
+      static_cast<GuestViewManager*>(browser_context->GetGuestManager());
+  DCHECK(guest_view_manager);
+
+  guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
+                                  owner,
+                                  create_params,
+                                  callback);
+}
+
+// static
+content::WebContents* TabHelper::CreateTab(content::WebContents* owner,
+                            content::WebContents::CreateParams create_params) {
+  auto guest_view_manager = static_cast<GuestViewManager*>(
+      create_params.browser_context->GetGuestManager());
+  DCHECK(guest_view_manager);
+
+  return guest_view_manager->CreateGuestWithWebContentsParams(
+      brave::TabViewGuest::Type,
+      owner,
+      create_params);
+}
+
+// static
+void TabHelper::DestroyTab(content::WebContents* tab) {
+  auto guest = brave::TabViewGuest::FromWebContents(tab);
+  DCHECK(guest);
+  guest->Destroy();
+}
+
 void TabHelper::OnBrowserRemoved(Browser* browser) {
-  if (browser_ == browser)
+  if (browser_ != nullptr && browser_ == browser) {
+    index_ = TabStripModel::kNoTab;
+    browser_->tab_strip_model()->RemoveObserver(this);
     browser_ = nullptr;
+  }
+}
+
+void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index,
+                             bool foreground) {
+  if (contents != web_contents())
+    return;
+
+  DCHECK(index != TabStripModel::kNoTab);
+  index_ = index;
+  // TODO(bridiver) - deal with foreground
+}
+
+void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
+                               content::WebContents* old_contents,
+                               content::WebContents* new_contents,
+                               int index) {
+  if (old_contents != web_contents())
+    return;
+
+  auto old_browser = browser_;
+
+  brave::TabViewGuest* old_guest = guest();
+  int guest_instance_id = old_guest->guest_instance_id();
+
+  auto new_helper = TabHelper::FromWebContents(new_contents);
+  new_helper->index_ = index_;
+  new_helper->pinned_ = pinned_;
+
+  OnBrowserRemoved(old_browser);
+  new_helper->UpdateBrowser(old_browser);
+
+  brave::TabViewGuest* new_guest = new_helper->guest();
+  // always attach first because detach disconnects the webview
+  old_guest->AttachGuest(new_guest->guest_instance_id());
+  old_guest->DetachGuest(false);
+}
+
+void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
+  if (contents != web_contents())
+    return;
+
+  OnBrowserRemoved(browser_);
+}
+
+void TabHelper::UpdateBrowser(Browser* browser) {
+  browser_ = browser;
+  browser_->tab_strip_model()->AddObserver(this);
 }
 
 void TabHelper::SetBrowser(Browser* browser) {
@@ -93,13 +183,16 @@ void TabHelper::SetBrowser(Browser* browser) {
   if (browser_) {
     if (index_ != TabStripModel::kNoTab)
       browser_->tab_strip_model()->DetachWebContentsAt(index_);
+
+    OnBrowserRemoved(browser_);
   }
 
-  if (!browser)
-    return;
-
-  browser_ = browser;
-  browser_->tab_strip_model()->AppendWebContents(web_contents(), false);
+  if (browser) {
+    UpdateBrowser(browser);
+    browser_->tab_strip_model()->AppendWebContents(web_contents(), false);
+  } else {
+    browser_ = nullptr;
+  }
 }
 
 void TabHelper::SetWindowId(const int32_t& id) {
@@ -119,10 +212,11 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 
 bool TabHelper::Discard() {
   int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-  if (g_browser_process->GetTabManager()->DiscardTabById(web_contents_id))
-    return true;
+  return !!g_browser_process->GetTabManager()->DiscardTabById(web_contents_id);
+}
 
-  return false;
+bool TabHelper::IsDiscarded() {
+  return g_browser_process->GetTabManager()->IsTabDiscarded(web_contents());
 }
 
 void TabHelper::SetPinned(bool pinned) {
@@ -140,6 +234,12 @@ bool TabHelper::is_active() const {
   } else {
     return false;
   }
+}
+
+brave::TabViewGuest* TabHelper::guest() const {
+  auto guest = brave::TabViewGuest::FromWebContents(web_contents());
+  DCHECK(guest);
+  return guest;
 }
 
 void TabHelper::SetTabValues(const base::DictionaryValue& values) {
