@@ -470,6 +470,10 @@ source_set("tab_manager") {
   configs += [ ":chromium_src_config" ]
   include_dirs = [ "." ] # force this to appear before the chromium src dir
   sources = [
+    "//chrome/browser/engagement/site_engagement_metrics.cc",
+    "//chrome/browser/engagement/site_engagement_metrics.h",
+    "//chrome/browser/engagement/site_engagement_score.cc",
+    "//chrome/browser/engagement/site_engagement_score.h",
     "chrome/browser/engagement/site_engagement_service.cc",
     "chrome/browser/lifetime/application_lifetime.cc",
     "//chrome/browser/memory/oom_memory_details.cc",
