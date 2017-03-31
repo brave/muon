@@ -1,26 +1,23 @@
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..2cf3e988c452a015c24956dda7cc4292ee56e2e3 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..e19fbe053444f8062b011a9ebfde502f682af940 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
-@@ -13,10 +13,12 @@ declare_args() {
+@@ -11,7 +11,9 @@ declare_args() {
+   # Break chrome.dll into multple pieces based on process type. Only available
+   # on Windows.
    is_multi_dll_chrome = is_win && !is_component_build
- }
+-}
++
++  # Build chromium without muon flags
++  muon_chromium_build = false
  
--# Refers to the subdirectory for branding in various places including
--# chrome/app/theme.
--if (is_chrome_branded) {
--  branding_path_component = "google_chrome"
--} else {
--  branding_path_component = "chromium"
-+declare_args() {
-+  # Refers to the subdirectory for branding in various places including
-+  # chrome/app/theme.
-+  if (is_chrome_branded) {
-+    branding_path_component = "google_chrome"
-+  } else {
-+    branding_path_component = "chromium"
-+  }
+ # Refers to the subdirectory for branding in various places including
+ # chrome/app/theme.
+@@ -20,3 +22,4 @@ if (is_chrome_branded) {
+ } else {
+   branding_path_component = "chromium"
  }
++}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
 index 537c733e6873e3a4ed0d5609540fed92e46bae91..df12e8f7e067e7c7ccbd396cfbff108862764883 100644
 --- a/build/toolchain/mac/BUILD.gn
@@ -64,27 +61,32 @@ index 8efa40c26314fa1dfe14795242fe284f02863fee..95c46c02de6a70333b7faa410e575b2d
    goma_prefix = ""
  }
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 7a92debbf39a1cd3e9f911971025d0f5b35f2834..6d76992c6b88ba228e927246848f042a44692c10 100644
+index 7a92debbf39a1cd3e9f911971025d0f5b35f2834..467739cffc772f4fde25256cb2bcb37a2956f35c 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -35,6 +35,8 @@ if (is_android) {
+@@ -35,6 +35,11 @@ if (is_android) {
    import("//build_overrides/v8.gni")
    import("//media/cdm/ppapi/cdm_paths.gni")
    import("//third_party/icu/config.gni")
-+  chrome_product_full_name = "Google Chrome"
-+  chrome_product_short_name = "Google Chrome"
++  if (!muon_chromium_build) {
++    # Avoid mac app/framework naming conflicts
++    chrome_product_full_name = "Google Chrome"
++    chrome_product_short_name = "Google Chrome"
++  }
  }
  
  if (enable_resource_whitelist_generation) {
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index f7f50a0302dc5f0813cdae54beba7647b6eb75ee..49194d0f5115af1d3ccc25897cdf671e637ff24b 100644
+index 85dfe4f2467b2294f152348573515c803bbb57dc..d8091f0a0a39a4c059e089694ca41fa629e7d27f 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -3453,6 +3453,7 @@ split_static_library("browser") {
+@@ -3455,6 +3455,9 @@ split_static_library("browser") {
        "//device/battery",
        "//net:net_browser_services",
      ]
-+    include_dirs = [ "//electron" ]
++    if (!muon_chromium_build) {
++      include_dirs = [ "//electron" ]
++    }
    }
  
    if (!is_chrome_branded) {
@@ -704,7 +706,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@
+@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -963,7 +965,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 3b52ec1e47e5e37131b165df20529d410461d01c..cc922ee6bcf4caaadb18d8416c08e5ea3e888e7a 100644
+index b70f74601095ec6eac4a675bbb507a077c3f036e..51a7047b71f3e379f621eae7bc9ea6f56310ba4c 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -784,7 +784,7 @@ if (!is_android) {
@@ -1885,7 +1887,7 @@ diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/compone
 index ff49472ba68692cdf09cb4f50de461e94b8c8540..6c6cb01ef34ca6408e49cd603560d2d17d6f36df 100644
 --- a/components/printing/renderer/print_web_view_helper_mac.mm
 +++ b/components/printing/renderer/print_web_view_helper_mac.mm
-@@ -69,7 +69,6 @@
+@@ -69,7 +69,6 @@ void PrintWebViewHelper::PrintPageInternal(
    Send(new PrintHostMsg_DidPrintPage(routing_id(), page_params));
  }
  
@@ -1893,7 +1895,7 @@ index ff49472ba68692cdf09cb4f50de461e94b8c8540..6c6cb01ef34ca6408e49cd603560d2d1
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -106,7 +105,6 @@
+@@ -106,7 +105,6 @@ bool PrintWebViewHelper::RenderPreviewPage(
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1914,32 +1916,6 @@ index 604acb0165115bce865463c258eee0a876ab3495..cbb19f5c3363f60bb576e2acadbc8d4d
    // Print stack traces to stderr when crashes occur. This opens up security
    // holes so it should never be enabled for official builds.
    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-diff --git a/content/browser/accessibility/browser_accessibility_manager_mac.mm b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-index 076568758f1b1ef1fe7d0ac53fdda0f0130b800f..037c6426f21edc16b3b5a7a4bf665084686390e7 100644
---- a/content/browser/accessibility/browser_accessibility_manager_mac.mm
-+++ b/content/browser/accessibility/browser_accessibility_manager_mac.mm
-@@ -93,8 +93,10 @@
-     @"AXTextSelectionGranularity";
- NSString* const NSAccessibilityTextSelectionChangedFocus =
-     @"AXTextSelectionChangedFocus";
-+#ifndef MAS_BUILD
- NSString* const NSAccessibilitySelectedTextMarkerRangeAttribute =
-     @"AXSelectedTextMarkerRange";
-+#endif
- NSString* const NSAccessibilityTextChangeElement = @"AXTextChangeElement";
- NSString* const NSAccessibilityTextEditType = @"AXTextEditType";
- NSString* const NSAccessibilityTextChangeValue = @"AXTextChangeValue";
-@@ -427,8 +429,10 @@
-     focus_object = focus_object->GetClosestPlatformObject();
-     auto native_focus_object = ToBrowserAccessibilityCocoa(focus_object);
-     if (native_focus_object && [native_focus_object instanceActive]) {
-+#ifndef MAS_BUILD
-       [user_info setObject:native_focus_object
-                     forKey:NSAccessibilityTextChangeElement];
-+#endif
- 
-       id selected_text = [native_focus_object selectedTextMarkerRange];
-       if (selected_text) {
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index 93a1da4df0c069433eb6020cd198a722929658af..476d7ccd2b7f77e13e256a67de2fec9263b1aaaf 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
@@ -1957,7 +1933,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index d10bcb69154d389318b6f67ba231dba728f5f1cd..fffbf371e38da48dcb7037bcb9da5505e303bc32 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@ @interface SyntheticPinchEvent : NSObject
+@@ -21,7 +21,7 @@
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1967,118 +1943,105 @@ index d10bcb69154d389318b6f67ba231dba728f5f1cd..fffbf371e38da48dcb7037bcb9da5505
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index c91614f5c60f505661f68f3390315a215913abfc..4e6af5ba60a38ee1e798919089db454edafb53a7 100644
+index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012e80dba61 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -138,6 +138,11 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
+@@ -138,6 +138,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
  
  }  // namespace
  
++#ifndef MUON_CHROMIUM_BUILD
 +@interface NSWindow (AtomCustomMethods)
 +- (BOOL)acceptsFirstMouse;
 +- (BOOL)disableAutoHideCursor;
 +@end
-+
++#endif
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -464,7 +469,7 @@ float FlipYFromRectToScreen(float y, float rect_height) {
+@@ -464,7 +470,9 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
--  [background_layer_ setBackgroundColor:CGColorGetConstantColor(kCGColorWhite)];
-+  // [background_layer_ setBackgroundColor:CGColorGetConstantColor(kCGColorWhite)];
++#ifdef MUON_CHROMIUM_BUILD
+   [background_layer_ setBackgroundColor:CGColorGetConstantColor(kCGColorWhite)];
++#endif
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1836,7 +1841,10 @@ - (BOOL)acceptsMouseEventsWhenInactive {
+@@ -1834,7 +1842,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
--  return [self acceptsMouseEventsWhenInactive];
++#ifdef MUON_CHROMIUM_BUILD
+   return [self acceptsMouseEventsWhenInactive];
++#else
 +  if ([self.window respondsToSelector:@selector(acceptsFirstMouse)] &&
 +      [self.window acceptsFirstMouse])
 +    return YES;
 +  return NO;
++#endif  // MUON_CHROMIUM_BUILD
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -1983,13 +1991,13 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
-   // we need to return |YES| for all events that might be swallowed by the menu.
-   // We do not return |YES| for every keypress because we don't get |keyDown:|
-   // events for keys that we handle this way.
--  NSUInteger modifierFlags = [theEvent modifierFlags];
--  if ((modifierFlags & NSCommandKeyMask) == 0) {
--    // Make sure the menu does not contain key equivalents that don't
--    // contain cmd.
--    DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
--    return NO;
--  }
-+  // NSUInteger modifierFlags = [theEvent modifierFlags];
-+  // if ((modifierFlags & NSCommandKeyMask) == 0) {
-+  //   // Make sure the menu does not contain key equivalents that don't
-+  //   // contain cmd.
-+  //   DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
-+  //   return NO;
-+  // }
+@@ -1975,6 +1990,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+   if (EventIsReservedBySystem(theEvent))
+     return NO;
+ 
++#ifdef MUON_CHROMIUM_BUILD
+   // If we return |NO| from this function, cocoa will send the key event to
+   // the menu and only if the menu does not process the event to |keyDown:|. We
+   // want to send the event to a renderer _before_ sending it to the menu, so
+@@ -1988,6 +2004,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+     DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
+     return NO;
+   }
++#endif  // MUON_CHROMIUM_BUILD
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2037,8 +2045,9 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+@@ -2035,8 +2052,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
--  DCHECK([theEvent type] != NSKeyDown ||
--         !equiv == !([theEvent modifierFlags] & NSCommandKeyMask));
-+  // TODO(bridiver) undo this and the electron patch
-+  // DCHECK([theEvent type] != NSKeyDown ||
-+  //        !equiv == !([theEvent modifierFlags] & NSCommandKeyMask));
++#ifdef MUON_CHROMIUM_BUILD
+   DCHECK([theEvent type] != NSKeyDown ||
+          !equiv == !([theEvent modifierFlags] & NSCommandKeyMask));
++#endif  // MUON_CHROMIUM_BUILD
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2393,14 +2402,14 @@ - (void)showLookUpDictionaryOverlayFromRange:(NSRange)range
+@@ -2391,14 +2410,18 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    // do so. For this reason, for now, we accept this non-ideal way of fixing the
    // point offset manually from the view bounds. This should be revisited when
    // fixing issues in TextInputClientMac (https://crbug.com/643233).
--  gfx::Rect root_box = renderWidgetHostView_->GetViewBounds();
--  gfx::Rect view_box = widgetHost->GetView()->GetViewBounds();
-+  // gfx::Rect root_box = renderWidgetHostView_->GetViewBounds();
-+  // gfx::Rect view_box = widgetHost->GetView()->GetViewBounds();
++#ifdef MUON_CHROMIUM_BUILD
+   gfx::Rect root_box = renderWidgetHostView_->GetViewBounds();
+   gfx::Rect view_box = widgetHost->GetView()->GetViewBounds();
++#endif  // MUON_CHROMIUM_BUILD
  
    TextInputClientMac::GetInstance()->GetStringFromRange(
        widgetHost, range, ^(NSAttributedString* string, NSPoint baselinePoint) {
--        baselinePoint.x += view_box.origin().x() - root_box.origin().x();
--        baselinePoint.y +=
--            root_box.bottom_left().y() - view_box.bottom_left().y();
-+        // baselinePoint.x += view_box.origin().x() - root_box.origin().x();
-+        // baselinePoint.y +=
-+        //     root_box.bottom_left().y() - view_box.bottom_left().y();
++#ifdef MUON_CHROMIUM_BUILD
+         baselinePoint.x += view_box.origin().x() - root_box.origin().x();
+         baselinePoint.y +=
+             root_box.bottom_left().y() - view_box.bottom_left().y();
++#endif  // MUON_CHROMIUM_BUILD
          [self showLookUpDictionaryOverlayInternal:string
                                      baselinePoint:baselinePoint
                                         targetView:targetView];
-@@ -2779,6 +2788,10 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
+@@ -2777,6 +2800,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
++#ifndef MUON_CHROMIUM_BUILD
 +  if ([event.window respondsToSelector:@selector(disableAutoHideCursor)] &&
 +      [event.window disableAutoHideCursor])
 +    return NO;
-+
++#endif  // MUON_CHROMIUM_BUILD
    return ([event type] == NSKeyDown &&
               !([event modifierFlags] & NSCommandKeyMask)) ? YES : NO;
  }
-@@ -2935,9 +2948,11 @@ - (id)accessibilityFocusedUIElement {
- // Since this implementation doesn't have to wait any IPC calls, this doesn't
- // make any key-typing jank. --hbono 7/23/09
- //
-+#ifndef MAS_BUILD
- extern "C" {
- extern NSString *NSTextInputReplacementRangeAttributeName;
- }
-+#endif
- 
- - (NSArray *)validAttributesForMarkedText {
-   // This code is just copied from WebKit except renaming variables.
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index ea0069b7fffabb484b22b62fd04f7fab39a5a9ef..d72beaf6dae1220fc15432dbf8201350b70b2e98 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
@@ -2107,7 +2070,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index 1d01ac835dbe810121a24de1a4014f1bd4de4307..ad65af2b0c4b02e11244455eb5a17b858f579fca 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -576,6 +576,7 @@ - (void)draggedImage:(NSImage*)anImage
+@@ -576,6 +576,7 @@ void WebContentsViewMac::CloseTab() {
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -2133,7 +2096,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index 458b01aaeedaa1d829cdc852a0a93d553d3c3523..b88d5831a2b2a285a7606293b9cb45f08e18956d 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -330,6 +330,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
+@@ -330,6 +330,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  
