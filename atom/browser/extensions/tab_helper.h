@@ -85,6 +85,8 @@ class TabHelper : public content::WebContentsObserver,
 
   void SetAutoDiscardable(bool auto_discardable);
 
+  void SetActive(bool active);
+
   void SetPinned(bool pinned);
 
   bool Discard();
@@ -161,6 +163,7 @@ class TabHelper : public content::WebContentsObserver,
   void DidCloneToNewWebContents(
       content::WebContents* old_web_contents,
       content::WebContents* new_web_contents) override;
+  void WasShown() override;
 
   // Our content script observers. Declare at top so that it will outlive all
   // other members, since they might add themselves as observers.

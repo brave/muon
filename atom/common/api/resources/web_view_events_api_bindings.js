@@ -19,20 +19,22 @@ WebViewEvents.EVENTS['attachguest'] = {
   handler: 'handleAttachGuest'
 }
 
-WebViewEvents.EVENTS['tabidchanged'] = {
+WebViewEvents.EVENTS['tab-id-changed'] = {
   evt: CreateEvent('webViewInternal.onTabIdChanged'),
   fields: ['tabID'],
   handler: 'handleTabIdChanged'
 }
 
-WebViewEvents.prototype.handleDetachGuest = function(event, eventName) {
+WebViewEvents.prototype.handleDetachGuest = function (event, eventName) {
   this.view.detachGuest()
 }
 
-WebViewEvents.prototype.handleAttachGuest = function(event, eventName) {
+WebViewEvents.prototype.handleAttachGuest = function (event, eventName) {
   this.view.attachGuest(event.guestInstanceId)
 }
 
-WebViewEvents.prototype.handleTabIdChanged = function(event, eventName) {
+WebViewEvents.prototype.handleTabIdChanged = function (event, eventName) {
   this.view.setTabId(event.tabID)
+  const webViewEvent = this.makeDomEvent(event, eventName)
+  this.view.dispatchEvent(webViewEvent)
 }

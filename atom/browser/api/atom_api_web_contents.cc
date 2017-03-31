@@ -55,8 +55,6 @@
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
@@ -1775,29 +1773,18 @@ void WebContents::Clone(mate::Arguments* args) {
             options, callback)));
 }
 
-::Browser* WebContents::browser() const {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (tab_helper)
-    return tab_helper->browser();
-#endif
-  return nullptr;
+void WebContents::WasHidden() {
+  Emit("set-active", false);
+}
+
+void WebContents::WasShown() {
+  Emit("set-active", true);
 }
 
 void WebContents::SetActive(bool active) {
-  if (active)
-    web_contents()->WasShown();
-  else
-    web_contents()->WasHidden();
-
-  if (active && browser()) {
-    int index =
-      browser()->tab_strip_model()->GetIndexOfWebContents(web_contents());
-    if (index != TabStripModel::kNoTab)
-      browser()->tab_strip_model()->ActivateTabAt(index, true);
-  }
-
-  Emit("set-active", active);
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetActive(active);
 }
 
 void WebContents::SetTabIndex(int index) {

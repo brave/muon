@@ -88,11 +88,9 @@ void TabHelper::CreateTab(content::WebContents* owner,
                 content::BrowserContext* browser_context,
                 const base::DictionaryValue& create_params,
                 const GuestViewManager::WebContentsCreatedCallback& callback) {
-
   auto guest_view_manager =
       static_cast<GuestViewManager*>(browser_context->GetGuestManager());
   DCHECK(guest_view_manager);
-
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
                                   owner,
                                   create_params,
@@ -156,12 +154,18 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   new_helper->pinned_ = pinned_;
 
   OnBrowserRemoved(old_browser);
-  new_helper->UpdateBrowser(old_browser);
+  new_helper->SetBrowser(old_browser);
 
   brave::TabViewGuest* new_guest = new_helper->guest();
-  // always attach first because detach disconnects the webview
-  old_guest->AttachGuest(new_guest->guest_instance_id());
-  old_guest->DetachGuest(false);
+  old_contents->WasHidden();
+
+  const base::DictionaryValue* attach_params =
+      old_guest->attach_params()->CreateDeepCopy().release();
+  new_guest->SetAttachParams(*attach_params);
+  new_guest->TabIdChanged();
+
+  old_guest->DetachGuest();
+  new_guest->AttachGuest(new_guest->guest_instance_id());
 }
 
 void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
@@ -169,6 +173,22 @@ void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
     return;
 
   OnBrowserRemoved(browser_);
+}
+
+void TabHelper::SetActive(bool active) {
+  if (active) {
+    WasShown();
+    if (!IsDiscarded()) {
+      web_contents()->WasShown();
+    }
+  } else {
+    web_contents()->WasHidden();
+  }
+}
+
+void TabHelper::WasShown() {
+  if (browser_ && index_ != TabStripModel::kNoTab)
+    browser_->tab_strip_model()->ActivateTabAt(index_, true);
 }
 
 void TabHelper::UpdateBrowser(Browser* browser) {
@@ -466,8 +486,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
     pinned = browser->tab_strip_model()->IsTabPinned(index);
   }
 
-  bool discarded =
-      g_browser_process->GetTabManager()->IsTabDiscarded(contents);
+  bool discarded = tab_helper->IsDiscarded();
   bool auto_discardable =
       g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
   bool active = tab_helper->is_active();

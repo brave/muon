@@ -46,7 +46,6 @@ const asyncMethods = [
   'showCertificate',
   'showDefinitionForSelection',
   'capturePage',
-  'setActive',
   'setTabIndex',
   'setWebRTCIPHandlingPolicy',
   'executeScriptInTab',
@@ -65,9 +64,7 @@ const syncMethods = [
   'getCurrentEntryIndex',
   'getURLAtIndex',
   'getTitleAtIndex',
-  'isFocused',
   'getZoomPercent',
-  'getURL',
 ]
 
 var WEB_VIEW_API_METHODS = [
@@ -104,15 +101,17 @@ syncMethods.forEach((method) => {
 // Custom API method implementations.
 const attachWindow = WebViewImpl.prototype.attachWindow$
 WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
-  console.log('attachWindow ' + opt_guestInstanceId)
   if (this.guest.getId() === opt_guestInstanceId &&
       this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
     return
   }
   const guestInstanceId = opt_guestInstanceId || this.guest.getId()
 
-  if (opt_guestInstanceId || this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
-    this.guest.detach();
+  if (opt_guestInstanceId) {
+    if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+      this.guest.detach();
+    }
+
     this.guest = new GuestView('webview', guestInstanceId);
   }
 
@@ -151,10 +150,13 @@ WebViewImpl.prototype.setTabId = function (tabID) {
   GuestViewInternal.registerEvents(this, tabID)
 }
 
-WebViewImpl.prototype.getId = function() {
+WebViewImpl.prototype.getId = function () {
   return this.tabID
 }
 
+WebViewImpl.prototype.getURL = function () {
+  return this.attributes[WebViewConstants.ATTRIBUTE_SRC]
+}
 // -----------------------------------------------------------------------------
 
 WebViewImpl.getApiMethods = function () {

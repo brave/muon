@@ -28,8 +28,9 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   static const char Type[];
 
   void AttachGuest(int guest_instance_id);
-  void DetachGuest(bool notify_view = true);
+  void DetachGuest();
   void SetCanRunInDetachedState(bool can_run_detached);
+  void TabIdChanged();
 
  private:
   explicit TabViewGuest(content::WebContents* owner_web_contents);

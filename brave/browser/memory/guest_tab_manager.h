@@ -22,6 +22,11 @@ class GuestTabManager : public TabManager {
                         content::WebContents* new_contents,
                         int index,
                         int reason) override;
+  void TabReplacedAt(TabStripModel* tab_strip_model,
+                       content::WebContents* old_contents,
+                       content::WebContents* new_contents,
+                       int index) override;
+
   // MUON(bridiver): override to create/destroy guests webcontents
   virtual content::WebContents* CreateNullContents(
       TabStripModel* model, content::WebContents* old_contents);

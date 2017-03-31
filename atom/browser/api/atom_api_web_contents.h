@@ -22,7 +22,6 @@
 #include "native_mate/handle.h"
 #include "ui/gfx/image/image.h"
 
-class Browser;
 class ProtocolHandler;
 
 namespace autofill {
@@ -219,7 +218,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool IsFocused() const;
 
   // Tab state
-  ::Browser* browser() const;
   void SetActive(bool active);
   void SetTabIndex(int index);
   void SetPinned(bool pinned);
@@ -437,6 +435,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void MediaStoppedPlaying(const MediaPlayerInfo& media_info,
                            const MediaPlayerId& id) override;
   void DidChangeThemeColor(SkColor theme_color) override;
+  void WasHidden() override;
+  void WasShown() override;
 
   // brightray::InspectableWebContentsDelegate:
   void DevToolsReloadPage() override;
