@@ -1,19 +1,21 @@
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..e19fbe053444f8062b011a9ebfde502f682af940 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c1e3c004f 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
-@@ -11,7 +11,9 @@ declare_args() {
+@@ -11,8 +11,11 @@ declare_args() {
    # Break chrome.dll into multple pieces based on process type. Only available
    # on Windows.
    is_multi_dll_chrome = is_win && !is_component_build
 -}
-+
+ 
 +  # Build chromium without muon flags
 +  muon_chromium_build = false
- 
++}
++declare_args() {
  # Refers to the subdirectory for branding in various places including
  # chrome/app/theme.
-@@ -20,3 +22,4 @@ if (is_chrome_branded) {
+ if (is_chrome_branded) {
+@@ -20,3 +23,4 @@ if (is_chrome_branded) {
  } else {
    branding_path_component = "chromium"
  }
