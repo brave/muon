@@ -90,6 +90,7 @@ void V8WorkerThread::Init() {
 }
 
 void V8WorkerThread::Run(base::RunLoop* run_loop) {
+  base::ThreadRestrictions::SetIOAllowed(true);
   content::WorkerThreadRegistry::Instance()->DidStartCurrentWorkerThread();
   env()->OnMessageLoopCreated();
   LoadModule();
