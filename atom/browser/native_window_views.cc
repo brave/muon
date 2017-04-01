@@ -386,7 +386,7 @@ bool NativeWindowViews::IsActive() const {
 }
 
 bool NativeWindowViews::IsFocused() {
-  return window_->HasFocus();
+  return window_->IsActive();
 }
 
 void NativeWindowViews::Show() {
@@ -935,7 +935,7 @@ void NativeWindowViews::SetParentWindow(NativeWindow* parent) {
 #endif
 }
 
-gfx::NativeWindow NativeWindowViews::GetNativeWindow() {
+gfx::NativeWindow NativeWindowViews::GetNativeWindow() const {
   return window_->GetNativeWindow();
 }
 

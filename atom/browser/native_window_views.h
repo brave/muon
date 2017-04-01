@@ -55,6 +55,7 @@ class NativeWindowViews : public NativeWindow,
   void Close() override;
   void CloseImmediately() override;
   void Focus(bool focus) override;
+  bool IsActive() const override;
   bool IsFocused() override;
   void Show() override;
   void ShowInactive() override;
@@ -71,6 +72,7 @@ class NativeWindowViews : public NativeWindow,
   bool IsMinimized() const override;
   void SetFullScreen(bool fullscreen) override;
   bool IsFullscreen() const override;
+  void SetBounds(const gfx::Rect& bounds) const override;
   void SetBounds(const gfx::Rect& bounds, bool animate) override;
   gfx::Rect GetBounds() const override;
   gfx::Rect GetContentBounds() override;
