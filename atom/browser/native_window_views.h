@@ -61,6 +61,8 @@ class NativeWindowViews : public NativeWindow,
   void Hide() override;
   bool IsVisible() override;
   bool IsEnabled() override;
+  void Activate() override;
+  void Deactivate() override;
   void Maximize() override;
   void Unmaximize() override;
   bool IsMaximized() const override;
@@ -182,6 +184,7 @@ class NativeWindowViews : public NativeWindow,
   // Register accelerators supported by the menu model.
   void RegisterAccelerators(AtomMenuModel* menu_model);
 
+  gfx::Rect GetRestoredBounds() const override;
   // Returns the restore state for the window.
   ui::WindowShowState GetRestoredState();
 

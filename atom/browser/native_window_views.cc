@@ -381,8 +381,12 @@ void NativeWindowViews::Focus(bool focus) {
   }
 }
 
-bool NativeWindowViews::IsFocused() {
+bool NativeWindowViews::IsActive() const {
   return window_->IsActive();
+}
+
+bool NativeWindowViews::IsFocused() {
+  return window_->HasFocus();
 }
 
 void NativeWindowViews::Show() {
@@ -436,6 +440,14 @@ bool NativeWindowViews::IsEnabled() {
 #endif
 }
 
+void NativeWindowViews::Activate() {
+  window_->Activate();
+}
+
+void NativeWindowViews::Deactivate() {
+  window_->Deactivate();
+}
+
 void NativeWindowViews::Maximize() {
 #if defined(OS_WIN)
   // For window without WS_THICKFRAME style, we can not call Maximize().
@@ -466,7 +478,7 @@ void NativeWindowViews::Unmaximize() {
   window_->Restore();
 }
 
-bool NativeWindowViews::IsMaximized() {
+bool NativeWindowViews::IsMaximized() const {
   return window_->IsMaximized();
 }
 
@@ -482,7 +494,7 @@ void NativeWindowViews::Restore() {
   window_->Restore();
 }
 
-bool NativeWindowViews::IsMinimized() {
+bool NativeWindowViews::IsMinimized() const {
   return window_->IsMinimized();
 }
 
@@ -535,7 +547,7 @@ bool NativeWindowViews::IsFullscreen() const {
   return window_->IsFullscreen();
 }
 
-void NativeWindowViews::SetBounds(const gfx::Rect& bounds, bool animate) {
+void NativeWindowViews::SetBounds(const gfx::Rect& bounds) const {
 #if defined(USE_X11)
   // On Linux the minimum and maximum size should be updated with window size
   // when window is not resizable.
@@ -548,7 +560,15 @@ void NativeWindowViews::SetBounds(const gfx::Rect& bounds, bool animate) {
   window_->SetBounds(bounds);
 }
 
-gfx::Rect NativeWindowViews::GetBounds() {
+void NativeWindowViews::SetBounds(const gfx::Rect& bounds, bool animate) {
+  SetBounds(bounds);
+}
+
+gfx::Rect NativeWindowViews::GetRestoredBounds() const {
+  return window_->GetRestoredBounds();
+}
+
+gfx::Rect NativeWindowViews::GetBounds() const {
 #if defined(OS_WIN)
   if (IsMinimized())
     return window_->GetRestoredBounds();
@@ -699,7 +719,7 @@ void NativeWindowViews::SetAlwaysOnTop(bool top) {
   window_->SetAlwaysOnTop(top);
 }
 
-bool NativeWindowViews::IsAlwaysOnTop() {
+bool NativeWindowViews::IsAlwaysOnTop() const {
   return window_->IsAlwaysOnTop();
 }
 
@@ -1286,7 +1306,7 @@ void NativeWindowViews::RegisterAccelerators(AtomMenuModel* menu_model) {
   }
 }
 
-ui::WindowShowState NativeWindowViews::GetRestoredState() {
+ui::WindowShowState NativeWindowViews::GetRestoredState() const {
   if (IsMaximized())
     return ui::SHOW_STATE_MAXIMIZED;
   if (IsFullscreen())
