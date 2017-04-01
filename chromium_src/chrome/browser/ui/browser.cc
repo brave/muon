@@ -12,13 +12,14 @@
 
 #include "atom/browser/native_window.h"
 #include "build/build_config.h"
+#include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/devtools/devtools_window.h"
 #include "chrome/browser/lifetime/keep_alive_registry.h"
 #include "chrome/browser/lifetime/keep_alive_types.h"
 #include "chrome/browser/lifetime/scoped_keep_alive.h"
 #include "chrome/browser/ui/browser_list.h"
-// #include "chrome/browser/ui/browser_tab_strip_model_delegate.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "content/public/browser/notification_service.h"
 
 Browser::CreateParams::CreateParams(Profile* profile)
     : type(TYPE_TABBED),
@@ -38,12 +39,10 @@ Browser::CreateParams::CreateParams(Type type, Profile* profile)
 
 Browser::CreateParams::CreateParams(const CreateParams& other) = default;
 
-// TODO(bridiver) - atom_api_web_contents should be tab strip model delegate
 Browser::Browser(const CreateParams& params)
     : type_(params.type),
       profile_(params.profile),
       window_(params.window),
-      // tab_strip_model_delegate_(new chrome::BrowserTabStripModelDelegate(this)),
       tab_strip_model_(
           new TabStripModel(nullptr, params.profile)),
       app_name_(params.app_name),
@@ -52,9 +51,9 @@ Browser::Browser(const CreateParams& params)
       is_session_restore_(params.is_session_restore),
       weak_factory_(this) {
   BrowserList::AddBrowser(this);
-  // content::NotificationService::current()->Notify(
-  //     chrome::NOTIFICATION_BROWSER_WINDOW_READY, content::Source<Browser>(this),
-  //     content::NotificationService::NoDetails());
+  content::NotificationService::current()->Notify(
+      chrome::NOTIFICATION_BROWSER_WINDOW_READY, content::Source<Browser>(this),
+      content::NotificationService::NoDetails());
 }
 
 Browser::~Browser() {
@@ -94,6 +93,7 @@ bool Browser::CanSupportWindowFeature(WindowFeature feature) const {
 bool Browser::CallBeforeUnloadHandlers(
     const base::Callback<void(bool)>& on_close_confirmed) {
   on_close_confirmed.Run(true);
+  return false;
 }
 
 void Browser::ResetBeforeUnloadHandlers() {
@@ -101,28 +101,8 @@ void Browser::ResetBeforeUnloadHandlers() {
 
 bool Browser::SupportsWindowFeatureImpl(WindowFeature feature,
                                         bool check_fullscreen) const {
-//   bool hide_ui_for_fullscreen = check_fullscreen && ShouldHideUIForFullscreen();
-
   unsigned int features = FEATURE_NONE;
-
-//   if (is_type_tabbed())
-//     features |= FEATURE_BOOKMARKBAR;
-
-//   if (!hide_ui_for_fullscreen) {
-//     if (!is_type_tabbed())
-//       features |= FEATURE_TITLEBAR;
-
     if (is_type_tabbed())
       features |= FEATURE_TABSTRIP;
-
-//     if (is_type_tabbed())
-//       features |= FEATURE_TOOLBAR;
-
-    // if (SupportsLocationBar())
-    //   features |= FEATURE_LOCATIONBAR;
-
-//     if (ShouldUseWebAppFrame())
-//       features |= FEATURE_WEBAPPFRAME;
-//   }
   return !!(features & feature);
 }

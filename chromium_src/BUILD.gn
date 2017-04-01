@@ -468,6 +468,8 @@ source_set("importer") {
 
 source_set("tab_manager") {
   configs += [ ":chromium_src_config" ]
+  configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
+
   include_dirs = [ "." ] # force this to appear before the chromium src dir
   sources = [
     "//chrome/browser/engagement/site_engagement_metrics.cc",
