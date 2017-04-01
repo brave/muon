@@ -55,22 +55,26 @@ class NativeWindowViews : public NativeWindow,
   void Close() override;
   void CloseImmediately() override;
   void Focus(bool focus) override;
+  bool IsActive() const override;
   bool IsFocused() override;
   void Show() override;
   void ShowInactive() override;
   void Hide() override;
   bool IsVisible() override;
   bool IsEnabled() override;
+  void Activate() override;
+  void Deactivate() override;
   void Maximize() override;
   void Unmaximize() override;
-  bool IsMaximized() override;
+  bool IsMaximized() const override;
   void Minimize() override;
   void Restore() override;
-  bool IsMinimized() override;
+  bool IsMinimized() const override;
   void SetFullScreen(bool fullscreen) override;
   bool IsFullscreen() const override;
+  void SetBounds(const gfx::Rect& bounds) override;
   void SetBounds(const gfx::Rect& bounds, bool animate) override;
-  gfx::Rect GetBounds() override;
+  gfx::Rect GetBounds() const override;
   gfx::Rect GetContentBounds() override;
   gfx::Size GetContentSize() override;
   void SetContentSizeConstraints(
@@ -88,14 +92,14 @@ class NativeWindowViews : public NativeWindow,
   void SetClosable(bool closable) override;
   bool IsClosable() override;
   void SetAlwaysOnTop(bool top) override;
-  bool IsAlwaysOnTop() override;
+  bool IsAlwaysOnTop() const override;
   void Center() override;
   void SetTitle(const std::string& title) override;
   std::string GetTitle() override;
   void FlashFrame(bool flash) override;
   void SetSkipTaskbar(bool skip) override;
   void SetKiosk(bool kiosk) override;
-  bool IsKiosk() override;
+  bool IsKiosk() const override;
   void SetBackgroundColor(const std::string& color_name) override;
   void SetHasShadow(bool has_shadow) override;
   bool HasShadow() override;
@@ -104,7 +108,7 @@ class NativeWindowViews : public NativeWindow,
   void SetFocusable(bool focusable) override;
   void SetMenu(AtomMenuModel* menu_model) override;
   void SetParentWindow(NativeWindow* parent) override;
-  gfx::NativeWindow GetNativeWindow() override;
+  gfx::NativeWindow GetNativeWindow() const override;
   void SetOverlayIcon(const gfx::Image& overlay,
                       const std::string& description) override;
   void SetProgressBar(double progress, const ProgressState state) override;
@@ -182,8 +186,9 @@ class NativeWindowViews : public NativeWindow,
   // Register accelerators supported by the menu model.
   void RegisterAccelerators(AtomMenuModel* menu_model);
 
+  gfx::Rect GetRestoredBounds() const override;
   // Returns the restore state for the window.
-  ui::WindowShowState GetRestoredState();
+  ui::WindowShowState GetRestoredState() const;
 
   std::unique_ptr<views::Widget> window_;
   views::View* web_view_;  // Managed by inspectable_web_contents_.

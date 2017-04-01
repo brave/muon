@@ -46,15 +46,18 @@ class NativeWindowMac : public NativeWindow,
   void Maximize() override;
   void Unmaximize() override;
   bool IsActive();
-  bool IsMaximized() override;
+  bool IsActive() const override;
+  void Activate() override;
+  void Deactivate() override;
+  bool IsMaximized() const override;
   void Minimize() override;
   void Restore() override;
-  bool IsMinimized() override;
+  bool IsMinimized() const override;
   void SetFullScreen(bool fullscreen) override;
   bool IsFullscreen() const override;
   void SetBounds(const gfx::Rect& bounds);
   void SetBounds(const gfx::Rect& bounds, bool animate = false) override;
-  gfx::Rect GetBounds() override;
+  gfx::Rect GetBounds() const override;
   void SetContentSizeConstraints(
       const extensions::SizeConstraints& size_constraints) override;
   void SetResizable(bool resizable) override;
@@ -72,14 +75,14 @@ class NativeWindowMac : public NativeWindow,
   void SetClosable(bool closable) override;
   bool IsClosable() override;
   void SetAlwaysOnTop(bool top) override;
-  bool IsAlwaysOnTop() override;
+  bool IsAlwaysOnTop() const override;
   void Center() override;
   void SetTitle(const std::string& title) override;
   std::string GetTitle() override;
   void FlashFrame(bool flash) override;
   void SetSkipTaskbar(bool skip) override;
   void SetKiosk(bool kiosk) override;
-  bool IsKiosk() override;
+  bool IsKiosk() const override;
   void SetBackgroundColor(const std::string& color_name) override;
   void SetHasShadow(bool has_shadow) override;
   bool HasShadow() override;
@@ -90,9 +93,9 @@ class NativeWindowMac : public NativeWindow,
   void SetIgnoreMouseEvents(bool ignore) override;
   void SetContentProtection(bool enable) override;
   void SetParentWindow(NativeWindow* parent) override;
-  gfx::NativeWindow GetNativeWindow() override;
-  gfx::Rect GetRestoredBounds();
-  ui::WindowShowState GetRestoredState();
+  gfx::NativeWindow GetNativeWindow() const override;
+  gfx::Rect GetRestoredBounds() const override;
+  ui::WindowShowState GetRestoredState() const override;
   gfx::AcceleratedWidget GetAcceleratedWidget() override;
   void SetProgressBar(double progress, const ProgressState state) override;
   void SetOverlayIcon(const gfx::Image& overlay,

@@ -9,14 +9,23 @@
 #include <string>
 
 #include "base/macros.h"
+#include "chrome/browser/ui/browser_list_observer.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
+#include "components/guest_view/browser/guest_view_manager.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "extensions/browser/extension_function_dispatcher.h"
 #include "extensions/browser/script_execution_observer.h"
 #include "extensions/browser/script_executor.h"
 
+class Browser;
+
 namespace base {
 class DictionaryValue;
+}
+
+namespace brave {
+class TabViewGuest;
 }
 
 namespace content {
@@ -39,6 +48,8 @@ extern const char kAudibleKey[];
 extern const char kMutedKey[];
 }
 
+using guest_view::GuestViewManager;
+
 namespace extensions {
 
 class Extension;
@@ -46,22 +57,41 @@ class Extension;
 // This class keeps the extension API's windowID up-to-date with the current
 // window of the tab.
 class TabHelper : public content::WebContentsObserver,
-                  public content::WebContentsUserData<TabHelper> {
+                  public content::WebContentsUserData<TabHelper>,
+                  public chrome::BrowserListObserver,
+                  public TabStripModelObserver {
  public:
   ~TabHelper() override;
 
+  static void CreateTab(content::WebContents* owner,
+                content::BrowserContext* browser_context,
+                const base::DictionaryValue& create_params,
+                const GuestViewManager::WebContentsCreatedCallback& callback);
+  static content::WebContents* CreateTab(content::WebContents* owner,
+                            content::WebContents::CreateParams create_params);
+  static void DestroyTab(content::WebContents* tab);
+
   // Identifier of the tab.
   void SetTabId(content::RenderFrameHost* render_frame_host);
-  const int32_t& session_id() const { return session_id_; }
+  int32_t session_id() const;
 
   // Identifier of the window the tab is in.
   void SetWindowId(const int32_t& id);
-  const int32_t& window_id() const { return window_id_; }
+  int32_t window_id() const;
 
-  // Set this tab as the active tab in its window
-  void SetActive(bool active);
+  void SetBrowser(Browser* browser);
   // Set the tab's index in its window
   void SetTabIndex(int index);
+
+  void SetAutoDiscardable(bool auto_discardable);
+
+  void SetActive(bool active);
+
+  void SetPinned(bool pinned);
+
+  bool Discard();
+
+  bool IsDiscarded();
 
   void SetTabValues(const base::DictionaryValue& values);
   base::DictionaryValue* getTabValues() {
@@ -70,9 +100,19 @@ class TabHelper : public content::WebContentsObserver,
 
   bool ExecuteScriptInTab(mate::Arguments* args);
 
-  ScriptExecutor* script_executor() {
+  ScriptExecutor* script_executor() const {
     return script_executor_.get();
   }
+
+  Browser* browser() const {
+    return browser_;
+  }
+
+  brave::TabViewGuest* guest() const;
+
+  int get_index() const { return index_; }
+  bool is_pinned() const { return pinned_; }
+  bool is_active() const;
 
   // If the specified WebContents has a TabHelper (probably because it
   // was used as the contents of a tab), returns a tab id. This value is
@@ -95,6 +135,18 @@ class TabHelper : public content::WebContentsObserver,
   explicit TabHelper(content::WebContents* contents);
   friend class content::WebContentsUserData<TabHelper>;
 
+  void TabDetachedAt(content::WebContents* contents, int index) override;
+  void TabInsertedAt(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index,
+                             bool foreground) override;
+  void TabReplacedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* old_contents,
+                     content::WebContents* new_contents,
+                     int index) override;
+  void OnBrowserRemoved(Browser* browser) override;
+  void UpdateBrowser(Browser* browser);
+
   void ExecuteScript(
       std::string extension_id,
       std::unique_ptr<base::DictionaryValue> options,
@@ -111,24 +163,20 @@ class TabHelper : public content::WebContentsObserver,
   void DidCloneToNewWebContents(
       content::WebContents* old_web_contents,
       content::WebContents* new_web_contents) override;
+  void WasShown() override;
 
   // Our content script observers. Declare at top so that it will outlive all
   // other members, since they might add themselves as observers.
   base::ObserverList<ScriptExecutionObserver> script_execution_observers_;
 
-  // Unique identifier of the tab for session restore. This id is only unique
-  // within the current session, and is not guaranteed to be unique across
-  // sessions.
-  int32_t session_id_ = -1;
-
-  // Unique identifier of the window the tab is in.
-  int32_t window_id_ = -1;
-
   std::unique_ptr<base::DictionaryValue> values_;
   std::unique_ptr<ScriptExecutor> script_executor_;
 
   // Index of the tab within the window
-  int index_ = -1;
+  int index_;
+  bool pinned_;
+
+  Browser* browser_;
 
   DISALLOW_COPY_AND_ASSIGN(TabHelper);
 };

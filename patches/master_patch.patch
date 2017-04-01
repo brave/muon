@@ -163,113 +163,73 @@ index b77fbdeea3cd28ead065828c3fffb19496f80ab8..86aad8c1312e801ff64a81b11700d3a4
      return;
    }
  
-diff --git a/chrome/browser/plugins/chrome_plugin_service_filter.cc b/chrome/browser/plugins/chrome_plugin_service_filter.cc
-index 1783a101aa024a5aa39a7bd7c335427398d47093..ac11311d78e2271f9ca7f6016c79a37de078621c 100644
---- a/chrome/browser/plugins/chrome_plugin_service_filter.cc
-+++ b/chrome/browser/plugins/chrome_plugin_service_filter.cc
-@@ -12,7 +12,7 @@
- #include "base/strings/utf_string_conversions.h"
- #include "chrome/browser/chrome_notification_types.h"
- #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
--#include "chrome/browser/engagement/site_engagement_service.h"
-+// #include "chrome/browser/engagement/site_engagement_service.h"
- #include "chrome/browser/plugins/flash_temporary_permission_tracker.h"
- #include "chrome/browser/plugins/plugin_finder.h"
- #include "chrome/browser/plugins/plugin_metadata.h"
-@@ -227,20 +227,20 @@ bool ChromePluginServiceFilter::IsPluginAvailable(
-         settings_map, main_frame_origin, plugin_content_url, &is_managed);
-     flash_setting = PluginsFieldTrial::EffectiveContentSetting(
-         settings_map, CONTENT_SETTINGS_TYPE_PLUGINS, flash_setting);
--    double engagement = SiteEngagementService::GetScoreFromSettings(
--        settings_map, main_frame_origin.GetURL());
-+    // double engagement = SiteEngagementService::GetScoreFromSettings(
-+    //     settings_map, main_frame_origin.GetURL());
- 
-     if (flash_setting == CONTENT_SETTING_ALLOW) {
--      UMA_HISTOGRAM_COUNTS_100(kEngagementSettingAllowedHistogram, engagement);
-+      // UMA_HISTOGRAM_COUNTS_100(kEngagementSettingAllowedHistogram, engagement);
-       return true;
-     }
- 
-     if (flash_setting == CONTENT_SETTING_BLOCK) {
--      UMA_HISTOGRAM_COUNTS_100(kEngagementSettingBlockedHistogram, engagement);
-+      // UMA_HISTOGRAM_COUNTS_100(kEngagementSettingBlockedHistogram, engagement);
-       return false;
-     }
- 
--    UMA_HISTOGRAM_COUNTS_100(kEngagementNoSettingHistogram, engagement);
-+    // UMA_HISTOGRAM_COUNTS_100(kEngagementNoSettingHistogram, engagement);
- 
-     // If the content setting is being managed by enterprise policy and is an
-     // ASK setting, we check to see if it has been temporarily granted.
-@@ -253,8 +253,8 @@ bool ChromePluginServiceFilter::IsPluginAvailable(
-     // check whether the site meets the engagement cutoff for making Flash
-     // available without a prompt.This should only happen if the setting isn't
-     // being enforced by an enterprise policy.
--    if (engagement < PluginsFieldTrial::GetSiteEngagementThresholdForFlash())
--      return false;
-+    // if (engagement < PluginsFieldTrial::GetSiteEngagementThresholdForFlash())
-+    //   return false;
+diff --git a/chrome/browser/memory/tab_manager.cc b/chrome/browser/memory/tab_manager.cc
+index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..cd3976a461838a710a72543399351af296435414 100644
+--- a/chrome/browser/memory/tab_manager.cc
++++ b/chrome/browser/memory/tab_manager.cc
+@@ -786,6 +786,17 @@ void TabManager::PurgeAndSuspendBackgroundedTabs() {
    }
- 
-   return true;
-diff --git a/chrome/browser/plugins/plugin_info_message_filter.cc b/chrome/browser/plugins/plugin_info_message_filter.cc
-index 75a6fda631f1af6039c7497e1a373a58c04e412c..b0c991f0383cb7d6d0a1af9c56e159a0dfc9521f 100644
---- a/chrome/browser/plugins/plugin_info_message_filter.cc
-+++ b/chrome/browser/plugins/plugin_info_message_filter.cc
-@@ -115,29 +115,29 @@ static void SendPluginAvailabilityUMA(const std::string& mime_type,
- void ReportMetrics(const std::string& mime_type,
-                    const GURL& url,
-                    const url::Origin& main_frame_origin) {
--  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
--
--  if (chrome::IsIncognitoSessionActive())
--    return;
--  rappor::RapporServiceImpl* rappor_service =
--      g_browser_process->rappor_service();
--  if (!rappor_service)
--    return;
--  if (main_frame_origin.unique())
--    return;
--
--  if (mime_type == content::kFlashPluginSwfMimeType ||
--      mime_type == content::kFlashPluginSplMimeType) {
--    rappor_service->RecordSampleString(
--        "Plugins.FlashOriginUrl", rappor::ETLD_PLUS_ONE_RAPPOR_TYPE,
--        net::registry_controlled_domains::GetDomainAndRegistry(
--            main_frame_origin.GetURL(),
--            net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES));
--    rappor_service->RecordSampleString(
--        "Plugins.FlashUrl", rappor::ETLD_PLUS_ONE_RAPPOR_TYPE,
--        net::registry_controlled_domains::GetDomainAndRegistry(
--            url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES));
--  }
-+  // DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-+
-+  // if (chrome::IsIncognitoSessionActive())
-+  //   return;
-+  // rappor::RapporServiceImpl* rappor_service =
-+  //     g_browser_process->rappor_service();
-+  // if (!rappor_service)
-+  //   return;
-+  // if (main_frame_origin.unique())
-+  //   return;
-+
-+  // if (mime_type == content::kFlashPluginSwfMimeType ||
-+  //     mime_type == content::kFlashPluginSplMimeType) {
-+  //   rappor_service->RecordSampleString(
-+  //       "Plugins.FlashOriginUrl", rappor::ETLD_PLUS_ONE_RAPPOR_TYPE,
-+  //       net::registry_controlled_domains::GetDomainAndRegistry(
-+  //           main_frame_origin.GetURL(),
-+  //           net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES));
-+  //   rappor_service->RecordSampleString(
-+  //       "Plugins.FlashUrl", rappor::ETLD_PLUS_ONE_RAPPOR_TYPE,
-+  //       net::registry_controlled_domains::GetDomainAndRegistry(
-+  //           url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES));
-+  // }
  }
  
- #if BUILDFLAG(ENABLE_EXTENSIONS)
++// MUON(bridiver): see tab_manager.h
++WebContents* TabManager::CreateNullContents(
++    TabStripModel* model, WebContents* old_contents) {
++  return WebContents::Create(WebContents::CreateParams(model->profile()));
++}
++
++// MUON(bridiver): see tab_manager.h
++void TabManager::DestroyOldContents(WebContents* old_contents) {
++  delete old_contents;
++}
++
+ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+   // Can't discard active index.
+   if (model->active_index() == index)
+@@ -805,8 +816,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+       "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
+       old_contents->NeedToFireBeforeUnload());
+ 
+-  WebContents* null_contents =
+-      WebContents::Create(WebContents::CreateParams(model->profile()));
++  // MUON(bridiver): see tab_manager.h
++  WebContents* null_contents = CreateNullContents(model, old_contents);
+   // Copy over the state from the navigation controller to preserve the
+   // back/forward history and to continue to display the correct title/favicon.
+   null_contents->GetController().CopyStateFrom(old_contents->GetController());
+@@ -826,7 +837,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+   // TODO(jamescook): This breaks script connections with other tabs.
+   // Find a different approach that doesn't do that, perhaps based on navigation
+   // to swappedout://.
+-  delete old_contents;
++  // MUON(bridiver): see tab_manager.h
++  DestroyOldContents(old_contents);
+   recent_tab_discard_ = true;
+ 
+   return null_contents;
+diff --git a/chrome/browser/memory/tab_manager.h b/chrome/browser/memory/tab_manager.h
+index 55b6d1d98314f0adcdd087b0c64379b453df24e5..7ec61a93f6195a5c7cd059ea5662376453fb0934 100644
+--- a/chrome/browser/memory/tab_manager.h
++++ b/chrome/browser/memory/tab_manager.h
+@@ -181,6 +181,7 @@ class TabManager : public TabStripModelObserver {
+   // This is needed so WebContentsData can call OnDiscardedStateChange, and
+   // can use PurgeAndSuspendState.
+   friend class WebContentsData;
++  friend class GuestTabManager;
+ 
+   // Called by WebContentsData whenever the discard state of a WebContents
+   // changes, so that observers can be informed.
+@@ -285,6 +286,11 @@ class TabManager : public TabStripModelObserver {
+   // Purges and suspends renderers in backgrounded tabs.
+   void PurgeAndSuspendBackgroundedTabs();
+ 
++  // MUON(bridiver): override to create/destroy guests webcontents
++  virtual content::WebContents* CreateNullContents(
++      TabStripModel* model, content::WebContents* old_contents);
++  virtual void DestroyOldContents(content::WebContents* old_contents);
++
+   // Does the actual discard by destroying the WebContents in |model| at |index|
+   // and replacing it by an empty one. Returns the new WebContents or NULL if
+   // the operation fails (return value used only in testing).
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index 33ada8ce7b315e2bd327883bc682e5527ff0696e..b2381424d5ac18e5d09f77e3f4bcb2487311b494 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
@@ -2224,6 +2184,21 @@ index 00a8accbe2cdc3c77c6fce3fd28cd697ff0524d5..8a9cf6907b0d27cb5b1a7fd8eed00500
  #else
    is_elastic_overscroll_enabled_ = false;
  #endif
+diff --git a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
+index 061480b5acd6431aa9abb7e02c98ebe5e881d7f9..f8288fa42f148651fd729dbce111c6c4151fe2b0 100644
+--- a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
++++ b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
+@@ -53,8 +53,10 @@ void ExtensionsGuestViewManagerDelegate::DispatchEvent(
+   // extensions::events::HistogramValue as an argument.
+   events::HistogramValue histogram_value =
+       guest_view_events::GetEventHistogramValue(event_name);
++#ifdef MUON_CHROMIUM_BUILD
+   DCHECK_NE(events::UNKNOWN, histogram_value) << "Event " << event_name
+                                               << " must have a histogram value";
++#endif
+ 
+   content::WebContents* owner = guest->owner_web_contents();
+   if (!owner)
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
 index 57c9a2e6a43558e2325a76b5b147a3c7e2b99fd3..5ee029882c5ecf0104f83ee61e4a0ba729a7a516 100644
 --- a/extensions/common/api/_api_features.json

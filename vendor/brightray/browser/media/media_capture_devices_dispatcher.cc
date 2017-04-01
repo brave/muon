@@ -5,6 +5,7 @@
 #include "browser/media/media_capture_devices_dispatcher.h"
 
 #include "base/logging.h"
+#include "chrome/browser/media/webrtc/media_stream_capture_indicator.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/media_capture_devices.h"
 #include "content/public/common/media_stream_request.h"
@@ -121,6 +122,13 @@ MediaCaptureDevicesDispatcher::GetFirstAvailableVideoDevice() {
   if (video_devices.empty())
     return nullptr;
   return &(*video_devices.begin());
+}
+
+bool MediaCaptureDevicesDispatcher::IsInsecureCapturingInProgress(
+    int render_process_id,
+    int render_frame_id) {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+  return false;
 }
 
 void MediaCaptureDevicesDispatcher::DisableDeviceEnumerationForTesting() {

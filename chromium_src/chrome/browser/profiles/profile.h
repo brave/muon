@@ -94,6 +94,7 @@ class Profile : public atom::AtomBrowserContext {
   double GetDefaultZoomLevelForProfile();
 
   virtual sync_preferences::PrefServiceSyncable* GetPrefs() = 0;
+  virtual const sync_preferences::PrefServiceSyncable* GetPrefs() const = 0;
 
   virtual user_prefs::PrefRegistrySyncable* pref_registry() const = 0;
 

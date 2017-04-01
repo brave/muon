@@ -216,8 +216,13 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // Focus.
   void Focus();
   bool IsFocused() const;
+
+  // Tab state
   void SetActive(bool active);
   void SetTabIndex(int index);
+  void SetPinned(bool pinned);
+  void SetAutoDiscardable(bool auto_discardable);
+  void Discard();
 
   // Zoom
   void SetZoomLevel(double zoom);
@@ -430,6 +435,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void MediaStoppedPlaying(const MediaPlayerInfo& media_info,
                            const MediaPlayerId& id) override;
   void DidChangeThemeColor(SkColor theme_color) override;
+  void WasHidden() override;
+  void WasShown() override;
 
   // brightray::InspectableWebContentsDelegate:
   void DevToolsReloadPage() override;

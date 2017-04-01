@@ -27,6 +27,11 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
 
   static const char Type[];
 
+  void AttachGuest(int guest_instance_id);
+  void DetachGuest();
+  void SetCanRunInDetachedState(bool can_run_detached);
+  void TabIdChanged();
+
  private:
   explicit TabViewGuest(content::WebContents* owner_web_contents);
 
@@ -80,6 +85,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
 
   bool clone_;
 
+  bool can_run_detached_;
   // Stores the src URL of the WebView.
   GURL src_;
 

@@ -210,6 +210,10 @@ void ChromeExtensionsDispatcherDelegate::PopulateSourceMap(
       IDR_ATOM_TAB_VIEW_INTERNAL_BINDINGS_JS);
   source_map->RegisterSource("webViewApiMethods",
       IDR_ATOM_WEB_VIEW_API_BINDINGS_JS);
+  source_map->RegisterSource("webViewEventsApiMethods",
+      IDR_ATOM_WEB_VIEW_EVENTS_API_BINDINGS_JS);
+  source_map->RegisterSource("guestViewApiMethods",
+      IDR_ATOM_GUEST_VIEW_API_BINDINGS_JS);
 }
 
 void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
@@ -223,6 +227,8 @@ void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
     module_system->Require("webViewInternal");
     module_system->Require("webViewApiMethods");
     module_system->Require("webViewAttributes");
+    module_system->Require("webViewEventsApiMethods");
+    module_system->Require("guestViewApiMethods");
   }
 
   if (context_type == extensions::Feature::WEBUI_CONTEXT ||

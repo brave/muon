@@ -49,6 +49,9 @@ class MediaCaptureDevicesDispatcher : public content::MediaObserver {
   // signleton.
   void DisableDeviceEnumerationForTesting();
 
+  bool IsInsecureCapturingInProgress(int render_process_id,
+                                     int render_frame_id);
+
   // Overridden from content::MediaObserver:
   void OnAudioCaptureDevicesChanged() override;
   void OnVideoCaptureDevicesChanged() override;

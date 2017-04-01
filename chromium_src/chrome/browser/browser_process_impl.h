@@ -24,6 +24,8 @@
 #include "extensions/features/features.h"
 #include "net/log/net_log.h"
 
+class TabManager;
+
 namespace atom {
 
 class AtomResourceDispatcherHostDelegate;
@@ -171,6 +173,12 @@ class BrowserProcessImpl : public BrowserProcess {
   component_updater::ComponentUpdateService* component_updater(
       std::unique_ptr<component_updater::ComponentUpdateService> &,
       bool use_brave_server);
+
+#if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
+  // Any change to this #ifdef must be reflected as well in
+  // chrome/browser/memory/tab_manager_browsertest.cc
+  std::unique_ptr<memory::TabManager> tab_manager_;
+#endif
 
   std::unique_ptr<PrefService> local_state_;
 

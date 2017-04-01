@@ -14,21 +14,20 @@
 #include "atom/browser/api/atom_api_session.h"
 #include "atom/browser/api/event.h"
 #include "atom/browser/atom_browser_context.h"
+#include "atom/browser/extensions/atom_browser_client_extensions_part.h"
 #include "atom/browser/extensions/tab_helper.h"
-#include "base/memory/ptr_util.h"
-#include "brave/browser/brave_browser_context.h"
-#include "build/build_config.h"
-#include "components/guest_view/browser/guest_view_event.h"
-#include "components/guest_view/browser/guest_view_manager.h"
-#include "components/guest_view/common/guest_view_constants.h"
-#include "extensions/browser/guest_view/web_view/web_view_constants.h"
-
 #include "atom/browser/native_window.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
+#include "base/memory/ptr_util.h"
+#include "brave/browser/brave_browser_context.h"
+#include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
+#include "components/guest_view/browser/guest_view_event.h"
+#include "components/guest_view/browser/guest_view_manager.h"
+#include "components/guest_view/common/guest_view_constants.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/guest_host.h"
 #include "content/public/browser/navigation_handle.h"
@@ -38,17 +37,14 @@
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/site_instance.h"
+#include "extensions/browser/guest_view/web_view/web_view_constants.h"
 #include "native_mate/dictionary.h"
 #include "ui/base/page_transition_types.h"
-
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "atom/browser/extensions/atom_browser_client_extensions_part.h"
-using extensions::AtomBrowserClientExtensionsPart;
-#endif
 
 using content::RenderFrameHost;
 using content::RenderProcessHost;
 using content::WebContents;
+using extensions::AtomBrowserClientExtensionsPart;
 using guest_view::GuestViewBase;
 using guest_view::GuestViewEvent;
 using guest_view::GuestViewManager;
@@ -63,8 +59,14 @@ GuestViewBase* TabViewGuest::Create(WebContents* owner_web_contents) {
 // static
 const char TabViewGuest::Type[] = "webview";
 
+void TabViewGuest::SetCanRunInDetachedState(bool can_run_detached) {
+  can_run_detached_ = can_run_detached;
+  if (!can_run_detached_ && !attached())
+    Destroy();
+}
+
 bool TabViewGuest::CanRunInDetachedState() const {
-  return true;
+  return can_run_detached_;
 }
 
 void TabViewGuest::GuestDestroyed() {
@@ -88,7 +90,6 @@ void TabViewGuest::WebContentsCreated(WebContents* source_contents,
   guest->name_ = frame_name;
 
   NewWindowInfo new_window_info(target_url, frame_name);
-#if BUILDFLAG(ENABLE_EXTENSIONS)
   // if the browser instance changes the old window won't be able to
   // load the url so let ApplyAttributes handle it
   bool changed =
@@ -97,7 +98,6 @@ void TabViewGuest::WebContentsCreated(WebContents* source_contents,
           source_contents->GetURL(),
           target_url);
   new_window_info.changed = changed;
-#endif
   pending_new_windows_.insert(std::make_pair(guest, new_window_info));
 }
 
@@ -179,6 +179,29 @@ void TabViewGuest::DidCommitProvisionalLoadForFrame(
       webview::kEventLoadCommit, std::move(args)));
 
   // find_helper_.CancelAllFindSessions();
+}
+
+void TabViewGuest::AttachGuest(int guestInstanceId) {
+  std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+  args->SetInteger("guestInstanceId", guestInstanceId);
+  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+      "webViewInternal.onAttachGuest", std::move(args)));
+}
+
+void TabViewGuest::DetachGuest() {
+  std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+      "webViewInternal.onDetachGuest", std::move(args)));
+
+  api_web_contents_->Emit("did-detach",
+      extensions::TabHelper::IdForTab(web_contents()));
+}
+
+void TabViewGuest::TabIdChanged() {
+  std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+  args->SetInteger("tabID", extensions::TabHelper::IdForTab(web_contents()));
+  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+      "webViewInternal.onTabIdChanged", std::move(args)));
 }
 
 void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
@@ -268,10 +291,14 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
-  api_web_contents_->ResumeLoadingCreatedWebContents();
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
 
-  web_contents()->WasHidden();
-  web_contents()->WasShown();
+  if (!tab_helper->IsDiscarded()) {
+    api_web_contents_->ResumeLoadingCreatedWebContents();
+
+    web_contents()->WasHidden();
+    web_contents()->WasShown();
+  }
 
   ApplyAttributes(*attach_params());
 
@@ -279,13 +306,8 @@ void TabViewGuest::DidAttachToEmbedder() {
     web_contents()->GetController().LoadIfNecessary();
   }
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
-#else
-  api_web_contents_->Emit("did-attach",
-      web_contents()->GetRenderProcessHost()->GetID());
-#endif
 }
 
 bool TabViewGuest::ZoomPropagatesFromEmbedderToGuest() const {
@@ -310,6 +332,9 @@ void TabViewGuest::GuestReady() {
       ->GetWidget()
       ->GetView()
       ->SetBackgroundColorToDefault();
+
+  api_web_contents_->Emit("guest-ready",
+      extensions::TabHelper::IdForTab(web_contents()), guest_instance_id());
 }
 
 void TabViewGuest::WillDestroy() {
@@ -336,7 +361,8 @@ bool TabViewGuest::IsAutoSizeSupported() const {
 TabViewGuest::TabViewGuest(WebContents* owner_web_contents)
     : GuestView<TabViewGuest>(owner_web_contents),
       api_web_contents_(nullptr),
-      clone_(false) {
+      clone_(false),
+      can_run_detached_(true) {
 }
 
 TabViewGuest::~TabViewGuest() {
@@ -353,8 +379,10 @@ void TabViewGuest::WillAttachToEmbedder() {
   if (relay)
     owner_window = relay->window.get();
 
-  if (owner_window)
+  if (owner_window) {
+    TabIdChanged();
     api_web_contents_->SetOwnerWindow(web_contents(), owner_window);
+  }
 }
 
 }  // namespace brave

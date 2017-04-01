@@ -1745,6 +1745,7 @@ void WebContents::Clone(mate::Arguments* args) {
   } else {
     options = mate::Dictionary::CreateEmpty(isolate());
   }
+  options.Set("userGesture", true);
 
   base::Callback<void(content::WebContents*)> callback;
   if (!args->GetNext(&callback)) {
@@ -1764,37 +1765,26 @@ void WebContents::Clone(mate::Arguments* args) {
 
   create_params.SetBoolean("clone", true);
 
-  auto guest_view_manager =
-      static_cast<GuestViewManager*>(GetBrowserContext()->GetGuestManager());
-
-  if (!guest_view_manager) {
-    callback.Run(nullptr);
-    return;
-  }
-
-  options.Set("userGesture", true);
-
-  guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
-      HostWebContents(),
+  extensions::TabHelper::CreateTab(HostWebContents(),
+      GetBrowserContext(),
       create_params,
       base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
         base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
             options, callback)));
 }
 
-void WebContents::SetActive(bool active) {
-  if (active)
-    web_contents()->WasShown();
-  else
-    web_contents()->WasHidden();
+void WebContents::WasHidden() {
+  Emit("set-active", false);
+}
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
+void WebContents::WasShown() {
+  Emit("set-active", true);
+}
+
+void WebContents::SetActive(bool active) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper)
     tab_helper->SetActive(active);
-#endif
-
-  Emit("set-active", active);
 }
 
 void WebContents::SetTabIndex(int index) {
@@ -1805,6 +1795,32 @@ void WebContents::SetTabIndex(int index) {
 #endif
 
   Emit("set-tab-index", index);
+}
+
+void WebContents::SetPinned(bool pinned) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetPinned(pinned);
+
+  Emit("set-pinned", pinned);
+}
+
+void WebContents::SetAutoDiscardable(bool auto_discardable) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->SetAutoDiscardable(auto_discardable);
+
+  Emit("set-auto-discardable", auto_discardable);
+}
+
+void WebContents::Discard() {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper) {
+    if (!Emit("will-discard") && tab_helper->Discard())
+      Emit("discarded");
+    else
+      Emit("discard-aborted");
+  }
 }
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -2180,6 +2196,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
       .SetMethod("setTabIndex", &WebContents::SetTabIndex)
+      .SetMethod("discard", &WebContents::Discard)
       .SetMethod("setWebRTCIPHandlingPolicy",
                   &WebContents::SetWebRTCIPHandlingPolicy)
       .SetMethod("getWebRTCIPHandlingPolicy",
@@ -2320,14 +2337,6 @@ void WebContents::CreateTab(mate::Arguments* args) {
 
   auto browser_context = session->browser_context();
 
-  auto guest_view_manager =
-      static_cast<GuestViewManager*>(browser_context->GetGuestManager());
-
-  if (!guest_view_manager) {
-    args->ThrowError("No guest view manager");
-    return;
-  }
-
   base::DictionaryValue create_params;
   std::string src;
   if (options.Get("src", &src) || options.Get("url", &src)) {
@@ -2337,8 +2346,8 @@ void WebContents::CreateTab(mate::Arguments* args) {
       static_cast<brave::BraveBrowserContext*>(
             browser_context)->partition_with_prefix());
 
-  guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
-      owner->web_contents(),
+  extensions::TabHelper::CreateTab(owner->web_contents(),
+      browser_context,
       create_params,
       base::Bind(&WebContents::OnTabCreated, base::Unretained(owner),
           options, callback));

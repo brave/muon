@@ -71,16 +71,15 @@
 #include "content/public/browser/notification_types.h"
 #endif
 
-using atom::Browser;
 using content::CertificateRequestResultType;
 
 namespace mate {
 
 #if defined(OS_WIN)
 template<>
-struct Converter<Browser::UserTask> {
+struct Converter<atom::Browser::UserTask> {
   static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
-                     Browser::UserTask* out) {
+                     atom::Browser::UserTask* out) {
     mate::Dictionary dict;
     if (!ConvertFromV8(isolate, val, &dict))
       return false;
@@ -312,9 +311,9 @@ struct Converter<JumpListResult> {
 #endif
 
 template<>
-struct Converter<Browser::LoginItemSettings> {
+struct Converter<atom::Browser::LoginItemSettings> {
   static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
-                     Browser::LoginItemSettings* out) {
+                     atom::Browser::LoginItemSettings* out) {
     mate::Dictionary dict;
     if (!ConvertFromV8(isolate, val, &dict))
       return false;
@@ -325,7 +324,7 @@ struct Converter<Browser::LoginItemSettings> {
   }
 
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   Browser::LoginItemSettings val) {
+                                   atom::Browser::LoginItemSettings val) {
     mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
     dict.Set("openAtLogin", val.open_at_login);
     dict.Set("openAsHidden", val.open_as_hidden);
@@ -432,7 +431,7 @@ bool NotificationCallbackWrapper(
     const base::CommandLine::StringVector& cmd,
     const base::FilePath& cwd) {
   // Make sure the callback is called after app gets ready.
-  if (Browser::Get()->is_ready()) {
+  if (atom::Browser::Get()->is_ready()) {
     callback.Run(cmd, cwd);
   } else {
     scoped_refptr<base::SingleThreadTaskRunner> task_runner(
@@ -441,7 +440,7 @@ bool NotificationCallbackWrapper(
         FROM_HERE, base::Bind(base::IgnoreResult(callback), cmd, cwd));
   }
   // ProcessSingleton needs to know whether current process is quiting.
-  return !Browser::Get()->is_shutting_down();
+  return !atom::Browser::Get()->is_shutting_down();
 }
 
 void OnClientCertificateSelected(
@@ -510,7 +509,7 @@ int ImportIntoCertStore(
 App::App(v8::Isolate* isolate) {
   static_cast<brave::BraveContentBrowserClient*>(
     brave::BraveContentBrowserClient::Get())->set_delegate(this);
-  Browser::Get()->AddObserver(this);
+  atom::Browser::Get()->AddObserver(this);
   content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
   static_cast<BrowserProcessImpl*>(g_browser_process)->set_app(this);
@@ -533,8 +532,6 @@ void App::Observe(
       content::WebContents* web_contents =
           content::Source<content::WebContents>(source).ptr();
       auto browser_context = web_contents->GetBrowserContext();
-      auto url = web_contents->GetURL();
-
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       // make sure background pages get a webcontents
       // api wrapper so they can communicate via IPC
@@ -558,7 +555,7 @@ void App::Observe(
 App::~App() {
   static_cast<brave::BraveContentBrowserClient*>(
     brave::BraveContentBrowserClient::Get())->set_delegate(nullptr);
-  Browser::Get()->RemoveObserver(this);
+  atom::Browser::Get()->RemoveObserver(this);
   net::NetworkChangeNotifier::RemoveMaxBandwidthObserver(this);
   content::GpuDataManager::GetInstance()->RemoveObserver(this);
 }
@@ -813,7 +810,7 @@ bool App::Relaunch(mate::Arguments* js_args) {
 }
 
 void App::DisableHardwareAcceleration(mate::Arguments* args) {
-  if (Browser::Get()->is_ready()) {
+  if (atom::Browser::Get()->is_ready()) {
     args->ThrowError("app.disableHardwareAcceleration() can only be called "
                      "before app is ready");
     return;
@@ -895,7 +892,7 @@ void App::OnCertificateManagerModelCreated(
 
 #if defined(OS_WIN)
 v8::Local<v8::Value> App::GetJumpListSettings() {
-  JumpList jump_list(Browser::Get()->GetAppUserModelID());
+  JumpList jump_list(atom::Browser::Get()->GetAppUserModelID());
 
   int min_items = 10;
   std::vector<JumpListItem> removed_items;
@@ -922,7 +919,7 @@ JumpListResult App::SetJumpList(v8::Local<v8::Value> val,
     return JumpListResult::ARGUMENT_ERROR;
   }
 
-  JumpList jump_list(Browser::Get()->GetAppUserModelID());
+  JumpList jump_list(atom::Browser::Get()->GetAppUserModelID());
 
   if (delete_jump_list) {
     return jump_list.Delete()
@@ -959,50 +956,50 @@ mate::Handle<App> App::Create(v8::Isolate* isolate) {
 void App::BuildPrototype(
     v8::Isolate* isolate, v8::Local<v8::FunctionTemplate> prototype) {
   prototype->SetClassName(mate::StringToV8(isolate, "App"));
-  auto browser = base::Unretained(Browser::Get());
+  auto browser = base::Unretained(atom::Browser::Get());
   mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
-      .SetMethod("quit", base::Bind(&Browser::Quit, browser))
-      .SetMethod("exit", base::Bind(&Browser::Exit, browser))
-      .SetMethod("focus", base::Bind(&Browser::Focus, browser))
-      .SetMethod("getVersion", base::Bind(&Browser::GetVersion, browser))
-      .SetMethod("setVersion", base::Bind(&Browser::SetVersion, browser))
-      .SetMethod("getName", base::Bind(&Browser::GetName, browser))
-      .SetMethod("setName", base::Bind(&Browser::SetName, browser))
-      .SetMethod("isReady", base::Bind(&Browser::is_ready, browser))
+      .SetMethod("quit", base::Bind(&atom::Browser::Quit, browser))
+      .SetMethod("exit", base::Bind(&atom::Browser::Exit, browser))
+      .SetMethod("focus", base::Bind(&atom::Browser::Focus, browser))
+      .SetMethod("getVersion", base::Bind(&atom::Browser::GetVersion, browser))
+      .SetMethod("setVersion", base::Bind(&atom::Browser::SetVersion, browser))
+      .SetMethod("getName", base::Bind(&atom::Browser::GetName, browser))
+      .SetMethod("setName", base::Bind(&atom::Browser::SetName, browser))
+      .SetMethod("isReady", base::Bind(&atom::Browser::is_ready, browser))
       .SetMethod("addRecentDocument",
-                 base::Bind(&Browser::AddRecentDocument, browser))
+                 base::Bind(&atom::Browser::AddRecentDocument, browser))
       .SetMethod("clearRecentDocuments",
-                 base::Bind(&Browser::ClearRecentDocuments, browser))
+                 base::Bind(&atom::Browser::ClearRecentDocuments, browser))
       .SetMethod("setAppUserModelId",
-                 base::Bind(&Browser::SetAppUserModelID, browser))
+                 base::Bind(&atom::Browser::SetAppUserModelID, browser))
       .SetMethod("isDefaultProtocolClient",
-                 base::Bind(&Browser::IsDefaultProtocolClient, browser))
+                 base::Bind(&atom::Browser::IsDefaultProtocolClient, browser))
       .SetMethod("setAsDefaultProtocolClient",
-                 base::Bind(&Browser::SetAsDefaultProtocolClient, browser))
+                 base::Bind(&atom::Browser::SetAsDefaultProtocolClient, browser))
       .SetMethod("removeAsDefaultProtocolClient",
-                 base::Bind(&Browser::RemoveAsDefaultProtocolClient, browser))
-      .SetMethod("setBadgeCount", base::Bind(&Browser::SetBadgeCount, browser))
-      .SetMethod("getBadgeCount", base::Bind(&Browser::GetBadgeCount, browser))
+                 base::Bind(&atom::Browser::RemoveAsDefaultProtocolClient, browser))
+      .SetMethod("setBadgeCount", base::Bind(&atom::Browser::SetBadgeCount, browser))
+      .SetMethod("getBadgeCount", base::Bind(&atom::Browser::GetBadgeCount, browser))
       .SetMethod("getLoginItemSettings",
-                 base::Bind(&Browser::GetLoginItemSettings, browser))
+                 base::Bind(&atom::Browser::GetLoginItemSettings, browser))
       .SetMethod("setLoginItemSettings",
-                 base::Bind(&Browser::SetLoginItemSettings, browser))
+                 base::Bind(&atom::Browser::SetLoginItemSettings, browser))
 #if defined(OS_MACOSX)
-      .SetMethod("hide", base::Bind(&Browser::Hide, browser))
-      .SetMethod("show", base::Bind(&Browser::Show, browser))
+      .SetMethod("hide", base::Bind(&atom::Browser::Hide, browser))
+      .SetMethod("show", base::Bind(&atom::Browser::Show, browser))
       .SetMethod("setUserActivity",
-                 base::Bind(&Browser::SetUserActivity, browser))
+                 base::Bind(&atom::Browser::SetUserActivity, browser))
       .SetMethod("getCurrentActivityType",
-                 base::Bind(&Browser::GetCurrentActivityType, browser))
+                 base::Bind(&atom::Browser::GetCurrentActivityType, browser))
 #endif
 #if defined(OS_WIN)
-      .SetMethod("setUserTasks", base::Bind(&Browser::SetUserTasks, browser))
+      .SetMethod("setUserTasks", base::Bind(&atom::Browser::SetUserTasks, browser))
       .SetMethod("getJumpListSettings", &App::GetJumpListSettings)
       .SetMethod("setJumpList", &App::SetJumpList)
 #endif
 #if defined(OS_LINUX)
       .SetMethod("isUnityRunning",
-                 base::Bind(&Browser::IsUnityRunning, browser))
+                 base::Bind(&atom::Browser::IsUnityRunning, browser))
 #endif
       .SetMethod("setPath", &App::SetPath)
       .SetMethod("getPath", &App::GetPath)
@@ -1069,14 +1066,14 @@ void AppendSwitch(const std::string& switch_string, mate::Arguments* args) {
 int DockBounce(const std::string& type) {
   int request_id = -1;
   if (type == "critical")
-    request_id = Browser::Get()->DockBounce(Browser::BOUNCE_CRITICAL);
+    request_id = atom::Browser::Get()->DockBounce(atom::Browser::BOUNCE_CRITICAL);
   else if (type == "informational")
-    request_id = Browser::Get()->DockBounce(Browser::BOUNCE_INFORMATIONAL);
+    request_id = atom::Browser::Get()->DockBounce(atom::Browser::BOUNCE_INFORMATIONAL);
   return request_id;
 }
 
 void DockSetMenu(atom::api::Menu* menu) {
-  Browser::Get()->DockSetMenu(menu->model());
+  atom::Browser::Get()->DockSetMenu(menu->model());
 }
 #endif
 
@@ -1093,21 +1090,21 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
                  base::Bind(&base::CommandLine::AppendArg,
                             base::Unretained(command_line)));
 #if defined(OS_MACOSX)
-  auto browser = base::Unretained(Browser::Get());
+  auto browser = base::Unretained(atom::Browser::Get());
   dict.SetMethod("dockBounce", &DockBounce);
   dict.SetMethod("dockCancelBounce",
-                 base::Bind(&Browser::DockCancelBounce, browser));
+                 base::Bind(&atom::Browser::DockCancelBounce, browser));
   dict.SetMethod("dockDownloadFinished",
-                 base::Bind(&Browser::DockDownloadFinished, browser));
+                 base::Bind(&atom::Browser::DockDownloadFinished, browser));
   dict.SetMethod("dockSetBadgeText",
-                 base::Bind(&Browser::DockSetBadgeText, browser));
+                 base::Bind(&atom::Browser::DockSetBadgeText, browser));
   dict.SetMethod("dockGetBadgeText",
-                 base::Bind(&Browser::DockGetBadgeText, browser));
-  dict.SetMethod("dockHide", base::Bind(&Browser::DockHide, browser));
-  dict.SetMethod("dockShow", base::Bind(&Browser::DockShow, browser));
-  dict.SetMethod("dockIsVisible", base::Bind(&Browser::DockIsVisible, browser));
+                 base::Bind(&atom::Browser::DockGetBadgeText, browser));
+  dict.SetMethod("dockHide", base::Bind(&atom::Browser::DockHide, browser));
+  dict.SetMethod("dockShow", base::Bind(&atom::Browser::DockShow, browser));
+  dict.SetMethod("dockIsVisible", base::Bind(&atom::Browser::DockIsVisible, browser));
   dict.SetMethod("dockSetMenu", &DockSetMenu);
-  dict.SetMethod("dockSetIcon", base::Bind(&Browser::DockSetIcon, browser));
+  dict.SetMethod("dockSetIcon", base::Bind(&atom::Browser::DockSetIcon, browser));
 #endif
 }
 
