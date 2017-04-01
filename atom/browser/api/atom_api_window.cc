@@ -361,7 +361,7 @@ void Window::Unmaximize() {
   window_->Unmaximize();
 }
 
-bool Window::IsMaximized() {
+bool Window::IsMaximized() const {
   return window_->IsMaximized();
 }
 
@@ -557,7 +557,7 @@ void Window::SetKiosk(bool kiosk) {
   window_->SetKiosk(kiosk);
 }
 
-bool Window::IsKiosk() {
+bool Window::IsKiosk() const {
   return window_->IsKiosk();
 }
 

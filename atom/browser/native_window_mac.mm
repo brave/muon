@@ -1005,7 +1005,7 @@ void NativeWindowMac::SetKiosk(bool kiosk) {
   }
 }
 
-bool NativeWindowMac::IsKiosk() {
+bool NativeWindowMac::IsKiosk() const {
   return is_kiosk_;
 }
 

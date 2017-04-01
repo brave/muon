@@ -82,7 +82,7 @@ class NativeWindowMac : public NativeWindow,
   void FlashFrame(bool flash) override;
   void SetSkipTaskbar(bool skip) override;
   void SetKiosk(bool kiosk) override;
-  bool IsKiosk() override;
+  bool IsKiosk() const override;
   void SetBackgroundColor(const std::string& color_name) override;
   void SetHasShadow(bool has_shadow) override;
   bool HasShadow() override;

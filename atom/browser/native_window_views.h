@@ -99,7 +99,7 @@ class NativeWindowViews : public NativeWindow,
   void FlashFrame(bool flash) override;
   void SetSkipTaskbar(bool skip) override;
   void SetKiosk(bool kiosk) override;
-  bool IsKiosk() override;
+  bool IsKiosk() const override;
   void SetBackgroundColor(const std::string& color_name) override;
   void SetHasShadow(bool has_shadow) override;
   bool HasShadow() override;
@@ -188,7 +188,7 @@ class NativeWindowViews : public NativeWindow,
 
   gfx::Rect GetRestoredBounds() const override;
   // Returns the restore state for the window.
-  ui::WindowShowState GetRestoredState();
+  ui::WindowShowState GetRestoredState() const;
 
   std::unique_ptr<views::Widget> window_;
   views::View* web_view_;  // Managed by inspectable_web_contents_.

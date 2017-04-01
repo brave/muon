@@ -775,7 +775,7 @@ void NativeWindowViews::SetKiosk(bool kiosk) {
   SetFullScreen(kiosk);
 }
 
-bool NativeWindowViews::IsKiosk() {
+bool NativeWindowViews::IsKiosk() const {
   return IsFullscreen();
 }
 
