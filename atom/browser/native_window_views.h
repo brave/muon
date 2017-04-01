@@ -55,12 +55,15 @@ class NativeWindowViews : public NativeWindow,
   void Close() override;
   void CloseImmediately() override;
   void Focus(bool focus) override;
+  bool IsActive() const override;
   bool IsFocused() override;
   void Show() override;
   void ShowInactive() override;
   void Hide() override;
   bool IsVisible() override;
   bool IsEnabled() override;
+  void Activate() override;
+  void Deactivate() override;
   void Maximize() override;
   void Unmaximize() override;
   bool IsMaximized() const override;
@@ -69,6 +72,7 @@ class NativeWindowViews : public NativeWindow,
   bool IsMinimized() const override;
   void SetFullScreen(bool fullscreen) override;
   bool IsFullscreen() const override;
+  void SetBounds(const gfx::Rect& bounds) override;
   void SetBounds(const gfx::Rect& bounds, bool animate) override;
   gfx::Rect GetBounds() const override;
   gfx::Rect GetContentBounds() override;
@@ -95,7 +99,7 @@ class NativeWindowViews : public NativeWindow,
   void FlashFrame(bool flash) override;
   void SetSkipTaskbar(bool skip) override;
   void SetKiosk(bool kiosk) override;
-  bool IsKiosk() override;
+  bool IsKiosk() const override;
   void SetBackgroundColor(const std::string& color_name) override;
   void SetHasShadow(bool has_shadow) override;
   bool HasShadow() override;
@@ -182,8 +186,9 @@ class NativeWindowViews : public NativeWindow,
   // Register accelerators supported by the menu model.
   void RegisterAccelerators(AtomMenuModel* menu_model);
 
+  gfx::Rect GetRestoredBounds() const override;
   // Returns the restore state for the window.
-  ui::WindowShowState GetRestoredState();
+  ui::WindowShowState GetRestoredState() const;
 
   std::unique_ptr<views::Widget> window_;
   views::View* web_view_;  // Managed by inspectable_web_contents_.

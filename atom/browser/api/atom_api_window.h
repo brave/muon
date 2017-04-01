@@ -108,7 +108,7 @@ class Window : public mate::TrackableObject<Window>,
   bool IsEnabled();
   void Maximize();
   void Unmaximize();
-  bool IsMaximized();
+  bool IsMaximized() const;
   void Minimize();
   void Restore();
   bool IsMinimized();
@@ -149,7 +149,7 @@ class Window : public mate::TrackableObject<Window>,
   void FlashFrame(bool flash);
   void SetSkipTaskbar(bool skip);
   void SetKiosk(bool kiosk);
-  bool IsKiosk();
+  bool IsKiosk() const;
   void SetBackgroundColor(const std::string& color_name);
   void SetHasShadow(bool has_shadow);
   bool HasShadow();
