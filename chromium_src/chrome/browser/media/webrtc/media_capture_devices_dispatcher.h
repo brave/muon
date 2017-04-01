@@ -37,6 +37,8 @@ class MediaCaptureDevicesDispatcher {
   MediaCaptureDevicesDispatcher();
   ~MediaCaptureDevicesDispatcher();
 
+  scoped_refptr<MediaStreamCaptureIndicator> media_stream_capture_indicator_;
+
   DISALLOW_COPY_AND_ASSIGN(MediaCaptureDevicesDispatcher);
 };
 

@@ -11,8 +11,6 @@
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/common/media_stream_request.h"
 
-class MediaStreamCaptureIndicator;
-
 namespace brightray {
 
 // This singleton is used to receive updates about media events from the content
@@ -54,8 +52,6 @@ class MediaCaptureDevicesDispatcher : public content::MediaObserver {
   bool IsInsecureCapturingInProgress(int render_process_id,
                                      int render_frame_id);
 
-  scoped_refptr<MediaStreamCaptureIndicator> GetMediaStreamCaptureIndicator();
-
   // Overridden from content::MediaObserver:
   void OnAudioCaptureDevicesChanged() override;
   void OnVideoCaptureDevicesChanged() override;
@@ -82,8 +78,6 @@ class MediaCaptureDevicesDispatcher : public content::MediaObserver {
 
   // Flag used by unittests to disable device enumeration.
   bool is_device_enumeration_disabled_;
-
-  scoped_refptr<MediaStreamCaptureIndicator> media_stream_capture_indicator_;
 
   DISALLOW_COPY_AND_ASSIGN(MediaCaptureDevicesDispatcher);
 };

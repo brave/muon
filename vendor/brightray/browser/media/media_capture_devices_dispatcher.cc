@@ -42,8 +42,7 @@ MediaCaptureDevicesDispatcher* MediaCaptureDevicesDispatcher::GetInstance() {
 }
 
 MediaCaptureDevicesDispatcher::MediaCaptureDevicesDispatcher()
-    : is_device_enumeration_disabled_(false),
-      media_stream_capture_indicator_(new MediaStreamCaptureIndicator()) {
+    : is_device_enumeration_disabled_(false) {
   // MediaCaptureDevicesDispatcher is a singleton. It should be created on
   // UI thread.
   DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
@@ -65,11 +64,6 @@ MediaCaptureDevicesDispatcher::GetVideoCaptureDevices() {
   if (is_device_enumeration_disabled_)
     return EmptyDevices();
   return content::MediaCaptureDevices::GetInstance()->GetVideoCaptureDevices();
-}
-
-scoped_refptr<MediaStreamCaptureIndicator>
-MediaCaptureDevicesDispatcher::GetMediaStreamCaptureIndicator() {
-  return media_stream_capture_indicator_;
 }
 
 void MediaCaptureDevicesDispatcher::GetDefaultDevices(
