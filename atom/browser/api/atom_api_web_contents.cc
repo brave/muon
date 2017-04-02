@@ -283,6 +283,28 @@ namespace api {
 
 namespace {
 
+mate::Handle<api::Session> SessionFromOptions(v8::Isolate* isolate,
+    const mate::Dictionary& options) {
+  mate::Handle<api::Session> session;
+
+  std::string partition;
+  if (options.Get("partition", &session)) {
+  } else if (options.Get("partition", &partition)) {
+    base::DictionaryValue session_options;
+
+    std::string parent_partition;
+    if (options.Get("parent_partition", &parent_partition)) {
+      session_options.SetString("parent_partition", parent_partition);
+    }
+    session = Session::FromPartition(isolate, partition, session_options);
+  } else {
+    // Use the default session if not specified.
+    session = Session::FromPartition(isolate, "");
+  }
+
+  return session;
+}
+
 content::ServiceWorkerContext* GetServiceWorkerContext(
     const content::WebContents* web_contents) {
   auto context = web_contents->GetBrowserContext();
@@ -327,34 +349,30 @@ WebContents::WebContents(v8::Isolate* isolate,
   }
 }
 
-WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
-    const content::WebContents::CreateParams& create_params)
+WebContents::WebContents(v8::Isolate* isolate,
+    const mate::Dictionary& options,
+    guest_view::GuestViewBase* guest_delegate)
   : type_(BROWSER_WINDOW),
     request_id_(0),
     enable_devtools_(true),
     is_being_destroyed_(false),
-    guest_delegate_(nullptr) {
-  CreateWebContents(isolate, options, create_params);
-}
+    guest_delegate_(guest_delegate) {
+  node::Environment* env = node::Environment::GetCurrent(isolate);
+  if (env) {
+    auto event = v8::Local<v8::Object>::Cast(
+        mate::Event::Create(isolate).ToV8());
 
-WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options)
-    : type_(BROWSER_WINDOW),
-      request_id_(0),
-      enable_devtools_(true),
-      is_being_destroyed_(false),
-      guest_delegate_(nullptr) {
-  mate::Handle<api::Session> session;
-
-  // Obtain the session.
-  std::string partition;
-  if (options.Get("partition", &session)) {
-  } else if (options.Get("partition", &partition)) {
-    session = Session::FromPartition(isolate, partition);
-  } else {
-    // Use the default session if not specified.
-    session = Session::FromPartition(isolate, "");
+    mate::EmitEvent(isolate,
+                    env->process_object(),
+                    "will-create-web-contents",
+                    options,
+                    guest_delegate ? true : false);
   }
+
+  mate::Handle<api::Session> session = SessionFromOptions(isolate, options);
   content::WebContents::CreateParams create_params(session->browser_context());
+  if (guest_delegate_)
+    create_params.guest_delegate = guest_delegate_;
   CreateWebContents(isolate, options, create_params);
 }
 
@@ -644,6 +662,22 @@ void WebContents::AutofillPopupHidden() {
     autofill::AtomAutofillClient::FromWebContents(web_contents());
   if (autofillClient)
     autofillClient->PopupHidden();
+}
+
+void WebContents::DetachGuest(mate::Arguments* args) {
+  v8::Locker locker(isolate());
+  v8::HandleScope handle_scope(isolate());
+
+  auto browser_context = web_contents()->GetBrowserContext();
+
+  brave::TabViewGuest* guest =
+        brave::TabViewGuest::FromWebContents(web_contents());
+
+  if (!guest) {
+    args->ThrowError("No guest attached");
+    return;
+  }
+  guest->DetachGuest();
 }
 
 content::WebContents* WebContents::OpenURLFromTab(
@@ -2193,8 +2227,10 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("capturePage", &WebContents::CapturePage)
       .SetMethod("getPreferredSize", &WebContents::GetPreferredSize)
       .SetProperty("id", &WebContents::ID)
+      .SetProperty("attached", &WebContents::IsAttached)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
+      .SetMethod("setPinned", &WebContents::SetPinned)
       .SetMethod("setTabIndex", &WebContents::SetTabIndex)
       .SetMethod("discard", &WebContents::Discard)
       .SetMethod("setWebRTCIPHandlingPolicy",
@@ -2224,6 +2260,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("close", &WebContents::CloseContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
+      .SetMethod("detachGuest", &WebContents::DetachGuest)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("guestInstanceId", &WebContents::GetGuestInstanceId)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
@@ -2281,6 +2318,11 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   int opener_tab_id = -1;
   options.Get("openerTabId", &opener_tab_id);
 
+  bool pinned = false;
+  if (options.Get("pinned", &pinned)) {
+    SetPinned(pinned);
+  }
+
   content::WebContents* source = nullptr;
   if (opener_tab_id != -1) {
     source = extensions::TabHelper::GetTabById(opener_tab_id);
@@ -2335,7 +2377,8 @@ void WebContents::CreateTab(mate::Arguments* args) {
     return;
   }
 
-  auto browser_context = session->browser_context();
+  auto browser_context = static_cast<brave::BraveBrowserContext*>(
+      session->browser_context());
 
   base::DictionaryValue create_params;
   std::string src;
@@ -2343,8 +2386,12 @@ void WebContents::CreateTab(mate::Arguments* args) {
     create_params.SetString("src", src);
   }
   create_params.SetString("partition",
-      static_cast<brave::BraveBrowserContext*>(
-            browser_context)->partition_with_prefix());
+      browser_context->partition_with_prefix());
+
+  if (browser_context->HasParentContext()) {
+    create_params.SetString("parent_partition",
+        browser_context->original_context()->partition_with_prefix());
+  }
 
   extensions::TabHelper::CreateTab(owner->web_contents(),
       browser_context,
@@ -2388,14 +2435,16 @@ mate::Handle<WebContents> WebContents::CreateFrom(
 // static
 mate::Handle<WebContents> WebContents::Create(
     v8::Isolate* isolate, const mate::Dictionary& options) {
-  return mate::CreateHandle(isolate, new WebContents(isolate, options));
+  return mate::CreateHandle(isolate,
+      new WebContents(isolate, options, nullptr));
 }
 
-mate::Handle<WebContents> WebContents::CreateWithParams(
-    v8::Isolate* isolate, const mate::Dictionary& options,
-    const content::WebContents::CreateParams& create_params) {
+mate::Handle<WebContents> WebContents::CreateGuest(
+    v8::Isolate* isolate,
+    const mate::Dictionary& options,
+    guest_view::GuestViewBase* guest_delegate) {
   return mate::CreateHandle(isolate,
-      new WebContents(isolate, options, create_params));
+      new WebContents(isolate, options, guest_delegate));
 }
 
 }  // namespace api

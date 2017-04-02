@@ -11,7 +11,6 @@
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 
 #include "atom/browser/api/atom_api_web_contents.h"
-#include "atom/browser/api/atom_api_session.h"
 #include "atom/browser/api/event.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
@@ -192,9 +191,6 @@ void TabViewGuest::DetachGuest() {
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   DispatchEventToView(base::MakeUnique<GuestViewEvent>(
       "webViewInternal.onDetachGuest", std::move(args)));
-
-  api_web_contents_->Emit("did-detach",
-      extensions::TabHelper::IdForTab(web_contents()));
 }
 
 void TabViewGuest::TabIdChanged() {
@@ -225,19 +221,32 @@ void TabViewGuest::CreateWebContents(
   v8::HandleScope handle_scope(isolate);
 
   atom::AtomBrowserContext* browser_context;
+  mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
   std::string partition;
-  params.GetString("partition", &partition);
+  if (params.GetString("partition", &partition)) {
+    options.Set("partition", partition);
+  }
   base::DictionaryValue partition_options;
   browser_context =
       brave::BraveBrowserContext::FromPartition(partition, partition_options);
   content::WebContents::CreateParams create_params(browser_context);
   create_params.guest_delegate = this;
 
-  mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
+  std::string parent_partition;
+  if (params.GetString("parent_partition", &parent_partition)) {
+    options.Set("parent_partition", parent_partition);
+  }
+
+  bool pinned = false;
+  if (params.GetBoolean("pinned", &pinned)) {
+    options.Set("pinned", pinned);
+  }
+
+  should_nav_from_src_ = true;
 
   mate::Handle<atom::api::WebContents> new_api_web_contents =
-      atom::api::WebContents::CreateWithParams(isolate, options, create_params);
+      atom::api::WebContents::CreateGuest(isolate, options, this);
 
   content::WebContents* web_contents = new_api_web_contents->web_contents();
   callback.Run(web_contents);
@@ -273,6 +282,12 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 
   // handle navigation for src attribute changes
   if (!is_pending_new_window) {
+    /*
+    bool pinned = false;
+    if (params.GetBoolean("pinned", &pinned)) {
+      extensions::TabHelper::FromWebContents(web_contents())->SetPinned(pinned);
+    }
+    */
     bool clone = false;
     if (params.GetBoolean("clone", &clone) && clone) {
       clone_ = true;
@@ -281,8 +296,10 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
       if (params.GetString("src", &src)) {
         src_ = GURL(src);
       }
-      if (attached()) {
+
+      if (attached() && should_nav_from_src_) {
         NavigateGuest(src_.spec(), true);
+        should_nav_from_src_ = false;
       }
     }
   }
@@ -307,6 +324,11 @@ void TabViewGuest::DidAttachToEmbedder() {
   }
 
   api_web_contents_->Emit("did-attach",
+      extensions::TabHelper::IdForTab(web_contents()));
+}
+
+void TabViewGuest::DidDetachFromEmbedder() {
+  api_web_contents_->Emit("did-detach",
       extensions::TabHelper::IdForTab(web_contents()));
 }
 

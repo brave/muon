@@ -64,7 +64,7 @@ const syncMethods = [
   'getCurrentEntryIndex',
   'getURLAtIndex',
   'getTitleAtIndex',
-  'getZoomPercent',
+  'getZoomPercent'
 ]
 
 var WEB_VIEW_API_METHODS = [
@@ -126,9 +126,10 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
   return attached
 }
 
-WebViewImpl.prototype.detachGuest = function () {
+WebViewImpl.prototype.detachGuest = function (cb) {
   const newGuest = () => {
     this.guest = new GuestView('webview')
+    cb && cb()
   }
   if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
     this.guest.detach(() => newGuest())
@@ -142,7 +143,14 @@ WebViewImpl.prototype.getProcessId = function() {
 }
 
 WebViewImpl.prototype.attachGuest = function (guestInstanceId) {
-  return this.attachWindow$(guestInstanceId)
+  if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    this.guest.detach(() => {
+      this.attachWindow$(guestInstanceId)
+    })
+  } else {
+    this.attachWindow$(guestInstanceId)
+  }
+  return true
 }
 
 WebViewImpl.prototype.setTabId = function (tabID) {

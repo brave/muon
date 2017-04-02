@@ -61,6 +61,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
     const WebContentsCreatedCallback& callback) final;
   bool CanRunInDetachedState() const final;
   void DidAttachToEmbedder() final;
+  void DidDetachFromEmbedder() final;
   bool ZoomPropagatesFromEmbedderToGuest() const final;
   const char* GetAPINamespace() const final;
   void GuestSizeChangedDueToAutoSize(const gfx::Size& old_size,
@@ -88,6 +89,8 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   bool can_run_detached_;
   // Stores the src URL of the WebView.
   GURL src_;
+
+  bool should_nav_from_src_;
 
   // Tracks the name, and target URL of the new window. Once the first
   // navigation commits, we no longer track this information.

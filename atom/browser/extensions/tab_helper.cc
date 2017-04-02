@@ -479,12 +479,14 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   auto tab_helper = TabHelper::FromWebContents(contents);
   auto browser = tab_helper->browser();
 
+  /*
   bool pinned = false;
   if (browser) {
     int index =
       browser->tab_strip_model()->GetIndexOfWebContents(contents);
     pinned = browser->tab_strip_model()->IsTabPinned(index);
   }
+  */
 
   bool discarded = tab_helper->IsDiscarded();
   bool auto_discardable =
@@ -510,8 +512,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetBoolean(keys::kAutoDiscardableKey, auto_discardable);
   result->SetBoolean(keys::kHighlightedKey, active);
   result->SetInteger(keys::kIndexKey, tab_helper->index_);
-  // TODO(bridiver) - set pinned value
-  result->SetBoolean(keys::kPinnedKey, pinned);
+  result->SetBoolean(keys::kPinnedKey, tab_helper->pinned_);
   result->SetBoolean(keys::kSelectedKey, active);
 
   return result.release();
