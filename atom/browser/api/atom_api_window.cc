@@ -108,6 +108,7 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
       web_contents->managed_web_contents(),
       options,
       parent.IsEmpty() ? nullptr : parent->window_.get()));
+  window_->browser()->session_id().set_id(-1);
   web_contents->SetOwnerWindow(window_.get());
 
 #if defined(TOOLKIT_VIEWS)
@@ -128,6 +129,7 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
   if (!parent.IsEmpty())
     parent->child_windows_.Set(isolate, ID(), wrapper);
 
+  window_->browser()->session_id().set_id(ID());
   Emit("initialized");
 }
 

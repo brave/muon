@@ -128,7 +128,7 @@ class Browser : public content::WebContentsDelegate {
 
   BrowserWindow* window() const { return window_; }
   TabStripModel* tab_strip_model() const { return tab_strip_model_.get(); }
-  const SessionID& session_id() const { return session_id_; }
+  SessionID& session_id() { return session_id_; }
 
   // OnBeforeUnload handling //////////////////////////////////////////////////
 
@@ -224,7 +224,7 @@ class Browser : public content::WebContentsDelegate {
   // Unique identifier of this browser for session restore. This id is only
   // unique within the current session, and is not guaranteed to be unique
   // across sessions.
-  const SessionID session_id_;
+  SessionID session_id_;
 
   // /////////////////////////////////////////////////////////////////////////////
 

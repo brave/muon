@@ -674,6 +674,8 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   mate::Dictionary dict(isolate, exports);
   dict.Set("Session", Session::GetConstructor(isolate)->GetFunction());
   dict.SetMethod("fromPartition", &FromPartition);
+  dict.SetMethod("getAllSessions",
+                           &mate::TrackableObject<Session>::GetAll);
 }
 
 }  // namespace

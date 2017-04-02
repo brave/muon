@@ -16,6 +16,7 @@
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/trace_event/trace_event_impl.h"
 #include "brightray/browser/brightray_paths.h"
+#include "chrome/browser/browser_shutdown.h"
 
 namespace atom {
 
@@ -43,6 +44,8 @@ void Browser::Quit() {
   is_quiting_ = HandleBeforeQuit();
   if (!is_quiting_)
     return;
+
+  browser_shutdown::SetTryingToQuit(true);
 
   atom::WindowList* window_list = atom::WindowList::GetInstance();
   if (window_list->size() == 0)

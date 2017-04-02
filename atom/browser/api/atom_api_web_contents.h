@@ -14,6 +14,7 @@
 #include "atom/browser/common_web_contents_delegate.h"
 #include "atom/common/options_switches.h"
 #include "base/memory/memory_pressure_listener.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "content/common/cursors/webcursor.h"
 #include "content/common/view_messages.h"
 #include "content/public/browser/web_contents_observer.h"
@@ -23,6 +24,7 @@
 #include "ui/gfx/image/image.h"
 
 class ProtocolHandler;
+class TabStripModel;
 
 namespace autofill {
 class AtomAutofillClient;
@@ -94,7 +96,8 @@ namespace api {
 
 class WebContents : public mate::TrackableObject<WebContents>,
                     public CommonWebContentsDelegate,
-                    public content::WebContentsObserver {
+                    public content::WebContentsObserver,
+                    public TabStripModelObserver {
  public:
   enum Type {
     BACKGROUND_PAGE,  // A DevTools extension background page.
@@ -124,7 +127,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
       v8::Isolate* isolate, const mate::Dictionary& options);
 
   static mate::Handle<WebContents> CreateWithParams(
-      v8::Isolate* isolate, const mate::Dictionary& options,
+      v8::Isolate* isolate,
+      const mate::Dictionary& options,
       const content::WebContents::CreateParams& create_params);
 
   static void BuildPrototype(v8::Isolate* isolate,
@@ -133,6 +137,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void Clone(mate::Arguments* args);
 
   void DestroyWebContents();
+
+  void SetOwnerWindow(NativeWindow* owner_window) override;
+  void SetOwnerWindow(content::WebContents* web_contents,
+                      NativeWindow* owner_window) override;
 
   int GetID() const;
   Type GetType() const;
@@ -266,6 +274,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void AutofillSelect(const std::string& value, int frontend_id, int index);
   void AutofillPopupHidden();
 
+  void AttachGuest(mate::Arguments* args);
+  void DetachGuest(mate::Arguments* args);
+  void IsPlaceholder(mate::Arguments* args);
+
   // Returns the web preferences of current WebContents.
   v8::Local<v8::Value> GetWebPreferences(v8::Isolate* isolate);
 
@@ -281,7 +293,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
  protected:
   WebContents(v8::Isolate* isolate,
-        content::WebContents* web_contents, Type type);
+      content::WebContents* web_contents, Type type);
   WebContents(v8::Isolate* isolate, const mate::Dictionary& options);
   WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
       const content::WebContents::CreateParams& create_params);
@@ -303,6 +315,12 @@ class WebContents : public mate::TrackableObject<WebContents>,
       content::WebContents* clone);
 
   void AuthorizePlugin(mate::Arguments* args);
+
+  // TabStripModelObserver
+  void TabPinnedStateChanged(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index) override;
+  void TabDetachedAt(content::WebContents* contents, int index) override;
 
   // content::WebContentsDelegate:
   void RegisterProtocolHandler(content::WebContents* web_contents,

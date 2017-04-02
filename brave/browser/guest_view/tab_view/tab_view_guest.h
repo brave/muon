@@ -32,6 +32,8 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void SetCanRunInDetachedState(bool can_run_detached);
   void TabIdChanged();
 
+  void Load();
+
  private:
   explicit TabViewGuest(content::WebContents* owner_web_contents);
 
@@ -61,6 +63,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
     const WebContentsCreatedCallback& callback) final;
   bool CanRunInDetachedState() const final;
   void DidAttachToEmbedder() final;
+  void DidDetachFromEmbedder() final;
   bool ZoomPropagatesFromEmbedderToGuest() const final;
   const char* GetAPINamespace() const final;
   void GuestSizeChangedDueToAutoSize(const gfx::Size& old_size,

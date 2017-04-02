@@ -210,10 +210,7 @@ void CommonWebContentsDelegate::SetOwnerWindow(
   int32_t id =
       api::Window::TrackableObject::GetIDFromWrappedClass(owner_window);
   if (id > 0) {
-    SessionID sessionID;
-    sessionID.set_id(id);
     tab_helper->SetWindowId(id);
-
     tab_helper->SetBrowser(owner_window->browser());
 
     content::NotificationService::current()->Notify(

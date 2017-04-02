@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "atom/browser/native_window_observer.h"
 #include "base/macros.h"
 #include "chrome/browser/ui/browser_list_observer.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
@@ -59,6 +60,7 @@ class Extension;
 class TabHelper : public content::WebContentsObserver,
                   public content::WebContentsUserData<TabHelper>,
                   public chrome::BrowserListObserver,
+                  public atom::NativeWindowObserver,
                   public TabStripModelObserver {
  public:
   ~TabHelper() override;
@@ -70,6 +72,9 @@ class TabHelper : public content::WebContentsObserver,
   static content::WebContents* CreateTab(content::WebContents* owner,
                             content::WebContents::CreateParams create_params);
   static void DestroyTab(content::WebContents* tab);
+
+  void AttachGuest(int window_id, int index);
+  content::WebContents* DetachGuest();
 
   // Identifier of the tab.
   void SetTabId(content::RenderFrameHost* render_frame_host);
@@ -93,6 +98,8 @@ class TabHelper : public content::WebContentsObserver,
 
   bool IsDiscarded();
 
+  void DidAttach();
+
   void SetTabValues(const base::DictionaryValue& values);
   base::DictionaryValue* getTabValues() {
     return values_.get();
@@ -113,6 +120,9 @@ class TabHelper : public content::WebContentsObserver,
   int get_index() const { return index_; }
   bool is_pinned() const { return pinned_; }
   bool is_active() const;
+
+  void SetPlaceholder(bool is_placeholder);
+  bool is_placeholder() const { return is_placeholder_; }
 
   // If the specified WebContents has a TabHelper (probably because it
   // was used as the contents of a tab), returns a tab id. This value is
@@ -144,8 +154,19 @@ class TabHelper : public content::WebContentsObserver,
                      content::WebContents* old_contents,
                      content::WebContents* new_contents,
                      int index) override;
+  void TabPinnedStateChanged(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index) override;
+
   void OnBrowserRemoved(Browser* browser) override;
+  void OnBrowserSetLastActive(Browser* browser) override;
   void UpdateBrowser(Browser* browser);
+
+  void MaybeAttachOrCreatePinnedTab();
+  void MaybeRequestWindowClose();
+
+  // atom::NativeWindowObserver overrides.
+  void WillCloseWindow(bool* prevent_default) override;
 
   void ExecuteScript(
       std::string extension_id,
@@ -175,6 +196,8 @@ class TabHelper : public content::WebContentsObserver,
   // Index of the tab within the window
   int index_;
   bool pinned_;
+  bool is_placeholder_;
+  bool window_closing_;
 
   Browser* browser_;
 

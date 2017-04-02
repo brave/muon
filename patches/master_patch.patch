@@ -217,10 +217,22 @@ index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..0f1e8c5c46cb3f52723bacf936e179c0
  
    return null_contents;
 diff --git a/chrome/browser/memory/tab_manager.h b/chrome/browser/memory/tab_manager.h
-index 55b6d1d98314f0adcdd087b0c64379b453df24e5..7ec61a93f6195a5c7cd059ea5662376453fb0934 100644
+index 55b6d1d98314f0adcdd087b0c64379b453df24e5..00738f0871284e0cea5c358ad8c53e0cc22e84cc 100644
 --- a/chrome/browser/memory/tab_manager.h
 +++ b/chrome/browser/memory/tab_manager.h
-@@ -181,6 +181,7 @@ class TabManager : public TabStripModelObserver {
+@@ -73,6 +73,11 @@ class TabManager : public TabStripModelObserver {
+   TabManager();
+   ~TabManager() override;
+ 
++  // MUON(bridiver): override to create/destroy guests webcontents
++  virtual content::WebContents* CreateNullContents(
++      TabStripModel* model, content::WebContents* old_contents);
++  virtual void DestroyOldContents(content::WebContents* old_contents);
++
+   // Number of discard events since Chrome started.
+   int discard_count() const { return discard_count_; }
+ 
+@@ -181,6 +186,7 @@ class TabManager : public TabStripModelObserver {
    // This is needed so WebContentsData can call OnDiscardedStateChange, and
    // can use PurgeAndSuspendState.
    friend class WebContentsData;
@@ -228,18 +240,6 @@ index 55b6d1d98314f0adcdd087b0c64379b453df24e5..7ec61a93f6195a5c7cd059ea56623764
  
    // Called by WebContentsData whenever the discard state of a WebContents
    // changes, so that observers can be informed.
-@@ -285,6 +286,11 @@ class TabManager : public TabStripModelObserver {
-   // Purges and suspends renderers in backgrounded tabs.
-   void PurgeAndSuspendBackgroundedTabs();
- 
-+  // MUON(bridiver): override to create/destroy guests webcontents
-+  virtual content::WebContents* CreateNullContents(
-+      TabStripModel* model, content::WebContents* old_contents);
-+  virtual void DestroyOldContents(content::WebContents* old_contents);
-+
-   // Does the actual discard by destroying the WebContents in |model| at |index|
-   // and replacing it by an empty one. Returns the new WebContents or NULL if
-   // the operation fails (return value used only in testing).
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index 33ada8ce7b315e2bd327883bc682e5527ff0696e..b2381424d5ac18e5d09f77e3f4bcb2487311b494 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
@@ -678,7 +678,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
+@@ -41,7 +41,9 @@
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -1124,6 +1124,38 @@ index 2bef627aa890484a3fb75fa9bd04b2994f997305..6cdf479c733c3a546c8fc54bdb29d4be
      default:
        NOTREACHED();
        return nullptr;
+diff --git a/components/guest_view/browser/guest_view_base.cc b/components/guest_view/browser/guest_view_base.cc
+index 98a25805dc97d27858a0ebb3f605932eb938f0e4..0c4aafe05f1a7232a1ff2eb0e279ea0e05c34404 100644
+--- a/components/guest_view/browser/guest_view_base.cc
++++ b/components/guest_view/browser/guest_view_base.cc
+@@ -437,8 +437,12 @@ void GuestViewBase::DidDetach() {
+   owner_web_contents()->Send(new GuestViewMsg_GuestDetached(
+       element_instance_id_));
+   element_instance_id_ = kInstanceIDNone;
+-  if (!CanRunInDetachedState())
++  if (!CanRunInDetachedState()) {
+     Destroy();
++  } else {
++    // Give the derived class an opportunity to perform some actions.
++    DidDetachFromEmbedder();
++  }
+ }
+ 
+ bool GuestViewBase::HandleFindForEmbedder(
+diff --git a/components/guest_view/browser/guest_view_base.h b/components/guest_view/browser/guest_view_base.h
+index 6c58eeff981eaefd0e0303b169ccde7423e07e85..cd66cd3335e580fb9d69334e276071d11f79d86d 100644
+--- a/components/guest_view/browser/guest_view_base.h
++++ b/components/guest_view/browser/guest_view_base.h
+@@ -248,6 +248,9 @@ class GuestViewBase : public content::BrowserPluginGuestDelegate,
+   // an opportunity to perform setup actions after attachment.
+   virtual void DidAttachToEmbedder() {}
+ 
++  // This method is called after the guest has been detached from an embedder
++  virtual void DidDetachFromEmbedder() {}
++
+   // This method is called after this GuestViewBase has been initiated.
+   //
+   // This gives the derived class an opportunity to perform additional
 diff --git a/components/guest_view/browser/guest_view_manager.cc b/components/guest_view/browser/guest_view_manager.cc
 index 315ea635bfd49e4d1ff029709ff9c39e657d48b8..bdda6074d0f76cfe0d9a8d11fe09ac255a4f9180 100644
 --- a/components/guest_view/browser/guest_view_manager.cc
@@ -1859,7 +1891,7 @@ diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/compone
 index ff49472ba68692cdf09cb4f50de461e94b8c8540..6c6cb01ef34ca6408e49cd603560d2d17d6f36df 100644
 --- a/components/printing/renderer/print_web_view_helper_mac.mm
 +++ b/components/printing/renderer/print_web_view_helper_mac.mm
-@@ -69,7 +69,6 @@ void PrintWebViewHelper::PrintPageInternal(
+@@ -69,7 +69,6 @@
    Send(new PrintHostMsg_DidPrintPage(routing_id(), page_params));
  }
  
@@ -1867,7 +1899,7 @@ index ff49472ba68692cdf09cb4f50de461e94b8c8540..6c6cb01ef34ca6408e49cd603560d2d1
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -106,7 +105,6 @@ bool PrintWebViewHelper::RenderPreviewPage(
+@@ -106,7 +105,6 @@
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1905,7 +1937,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index d10bcb69154d389318b6f67ba231dba728f5f1cd..fffbf371e38da48dcb7037bcb9da5505e303bc32 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@
+@@ -21,7 +21,7 @@ @interface SyntheticPinchEvent : NSObject
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1918,7 +1950,7 @@ diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/cont
 index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012e80dba61 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -138,6 +138,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
+@@ -138,6 +138,12 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
  
  }  // namespace
  
@@ -1931,7 +1963,7 @@ index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -464,7 +470,9 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
+@@ -464,7 +470,9 @@ float FlipYFromRectToScreen(float y, float rect_height) {
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
@@ -1941,7 +1973,7 @@ index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1834,7 +1842,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1834,7 +1842,14 @@ - (BOOL)acceptsMouseEventsWhenInactive {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1956,7 +1988,7 @@ index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -1975,6 +1990,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1975,6 +1990,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1964,7 +1996,7 @@ index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -1988,6 +2004,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1988,6 +2004,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1972,7 +2004,7 @@ index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2035,8 +2052,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2035,8 +2052,10 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1983,7 +2015,7 @@ index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2391,14 +2410,18 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2391,14 +2410,18 @@ - (void)showLookUpDictionaryOverlayFromRange:(NSRange)range
    // do so. For this reason, for now, we accept this non-ideal way of fixing the
    // point offset manually from the view bounds. This should be revisited when
    // fixing issues in TextInputClientMac (https://crbug.com/643233).
@@ -2002,7 +2034,7 @@ index 4c575689b3f7a0724f56a74b228448f231f86bbd..e590c6c7abde30ff1b56ee7b270db012
          [self showLookUpDictionaryOverlayInternal:string
                                      baselinePoint:baselinePoint
                                         targetView:targetView];
-@@ -2777,6 +2800,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2777,6 +2800,11 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -2042,7 +2074,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index 1d01ac835dbe810121a24de1a4014f1bd4de4307..ad65af2b0c4b02e11244455eb5a17b858f579fca 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -576,6 +576,7 @@ void WebContentsViewMac::CloseTab() {
+@@ -576,6 +576,7 @@ - (void)draggedImage:(NSImage*)anImage
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -2068,7 +2100,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index 458b01aaeedaa1d829cdc852a0a93d553d3c3523..b88d5831a2b2a285a7606293b9cb45f08e18956d 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -330,6 +330,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
+@@ -330,6 +330,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  

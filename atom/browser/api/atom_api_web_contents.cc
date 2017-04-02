@@ -55,6 +55,8 @@
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
@@ -283,6 +285,28 @@ namespace api {
 
 namespace {
 
+mate::Handle<api::Session> SessionFromOptions(v8::Isolate* isolate,
+    const mate::Dictionary& options) {
+  mate::Handle<api::Session> session;
+
+  std::string partition;
+  if (options.Get("partition", &session)) {
+  } else if (options.Get("partition", &partition)) {
+    base::DictionaryValue session_options;
+
+    std::string parent_partition;
+    if (options.Get("parent_partition", &parent_partition)) {
+      session_options.SetString("parent_partition", parent_partition);
+    }
+    session = Session::FromPartition(isolate, partition, session_options);
+  } else {
+    // Use the default session if not specified.
+    session = Session::FromPartition(isolate, "");
+  }
+
+  return session;
+}
+
 content::ServiceWorkerContext* GetServiceWorkerContext(
     const content::WebContents* web_contents) {
   auto context = web_contents->GetBrowserContext();
@@ -327,7 +351,8 @@ WebContents::WebContents(v8::Isolate* isolate,
   }
 }
 
-WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options,
+WebContents::WebContents(v8::Isolate* isolate,
+    const mate::Dictionary& options,
     const content::WebContents::CreateParams& create_params)
   : type_(BROWSER_WINDOW),
     request_id_(0),
@@ -343,17 +368,8 @@ WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options)
       enable_devtools_(true),
       is_being_destroyed_(false),
       guest_delegate_(nullptr) {
-  mate::Handle<api::Session> session;
+  mate::Handle<api::Session> session = SessionFromOptions(isolate, options);
 
-  // Obtain the session.
-  std::string partition;
-  if (options.Get("partition", &session)) {
-  } else if (options.Get("partition", &partition)) {
-    session = Session::FromPartition(isolate, partition);
-  } else {
-    // Use the default session if not specified.
-    session = Session::FromPartition(isolate, "");
-  }
   content::WebContents::CreateParams create_params(session->browser_context());
   CreateWebContents(isolate, options, create_params);
 }
@@ -408,6 +424,7 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   if (!IsBackgroundPage()) {
     // Initialize the tab helper
     extensions::TabHelper::CreateForWebContents(web_contents);
+
     // Initialize zoom
     zoom::ZoomController::CreateForWebContents(web_contents);
     brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
@@ -428,6 +445,12 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
     }
+  }
+
+  // TODO(bridiver) - move to TabHelper::Init
+  bool pinned = false;
+  if (options.Get("pinned", &pinned)) {
+    SetPinned(pinned);
   }
 
   Init(isolate);
@@ -646,6 +669,38 @@ void WebContents::AutofillPopupHidden() {
     autofillClient->PopupHidden();
 }
 
+void WebContents::IsPlaceholder(mate::Arguments* args) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper) {
+    args->Return(tab_helper->is_placeholder());
+  }
+  args->Return(false);
+}
+
+void WebContents::AttachGuest(mate::Arguments* args) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper) {
+    int window_id = -1;
+    if (!args->GetNext(&window_id)) {
+      args->ThrowError("`windowId` is a required field");
+      return;
+    }
+
+    int index = -1;
+    if (!args->GetNext(&index)) {
+      index = tab_helper->get_index();
+    }
+
+    tab_helper->AttachGuest(window_id, index);
+  }
+}
+
+void WebContents::DetachGuest(mate::Arguments* args) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    args->Return(tab_helper->DetachGuest());
+}
+
 content::WebContents* WebContents::OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) {
@@ -825,6 +880,26 @@ void WebContents::AuthorizePlugin(mate::Arguments* args) {
 
   BravePluginServiceFilter::GetInstance()->AuthorizeAllPlugins(
       web_contents(), true, resource_id);
+}
+
+void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index) {
+  if (contents != web_contents())
+    return;
+
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper) {
+    Emit("pinned", tab_helper->is_pinned());
+  }
+}
+
+void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
+  if (contents != web_contents())
+    return;
+
+  if (owner_window() && owner_window()->browser())
+    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
 }
 
 bool WebContents::OnGoToEntryOffset(int offset) {
@@ -1135,6 +1210,24 @@ void WebContents::DestroyWebContents() {
   }
 }
 
+void WebContents::SetOwnerWindow(NativeWindow* new_owner_window) {
+  if (owner_window() == new_owner_window)
+    return;
+
+  if (IsGuest()) {
+    if (owner_window())
+      owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+    new_owner_window->browser()->tab_strip_model()->AddObserver(this);
+  }
+
+  SetOwnerWindow(web_contents(), new_owner_window);
+}
+
+void WebContents::SetOwnerWindow(content::WebContents* web_contents,
+                      NativeWindow* new_owner_window) {
+  CommonWebContentsDelegate::SetOwnerWindow(web_contents, new_owner_window);
+}
+
 // There are three ways of destroying a webContents:
 // 1. call webContents.destroy();
 // 2. garbage collection;
@@ -1152,6 +1245,9 @@ void WebContents::WebContentsDestroyed() {
     return;
 
   is_being_destroyed_ = true;
+
+  if (owner_window() && owner_window()->browser())
+    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
 
   // clear out fullscreen state
   if (CommonWebContentsDelegate::IsFullscreenForTabOrPending(web_contents())) {
@@ -1759,13 +1855,9 @@ void WebContents::Clone(mate::Arguments* args) {
   }
 
   base::DictionaryValue create_params;
-  create_params.SetString("partition",
-      static_cast<brave::BraveBrowserContext*>(
-          GetBrowserContext())->partition_with_prefix());
-
   create_params.SetBoolean("clone", true);
 
-  extensions::TabHelper::CreateTab(HostWebContents(),
+  extensions::TabHelper::CreateTab(web_contents(),
       GetBrowserContext(),
       create_params,
       base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
@@ -1801,8 +1893,6 @@ void WebContents::SetPinned(bool pinned) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper)
     tab_helper->SetPinned(pinned);
-
-  Emit("set-pinned", pinned);
 }
 
 void WebContents::SetAutoDiscardable(bool auto_discardable) {
@@ -2193,8 +2283,10 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("capturePage", &WebContents::CapturePage)
       .SetMethod("getPreferredSize", &WebContents::GetPreferredSize)
       .SetProperty("id", &WebContents::ID)
+      .SetProperty("attached", &WebContents::IsAttached)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
+      .SetMethod("setPinned", &WebContents::SetPinned)
       .SetMethod("setTabIndex", &WebContents::SetTabIndex)
       .SetMethod("discard", &WebContents::Discard)
       .SetMethod("setWebRTCIPHandlingPolicy",
@@ -2222,8 +2314,13 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("tabValue", &WebContents::TabValue)
 #endif
       .SetMethod("close", &WebContents::CloseContents)
+      .SetMethod("forceClose", &WebContents::DestroyWebContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
+
+      .SetMethod("_attachGuest", &WebContents::AttachGuest)
+      .SetMethod("_detachGuest", &WebContents::DetachGuest)
+      .SetMethod("isPlaceholder", &WebContents::IsPlaceholder)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("guestInstanceId", &WebContents::GetGuestInstanceId)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)
@@ -2335,16 +2432,18 @@ void WebContents::CreateTab(mate::Arguments* args) {
     return;
   }
 
-  auto browser_context = session->browser_context();
+  auto browser_context = static_cast<brave::BraveBrowserContext*>(
+      session->browser_context());
 
   base::DictionaryValue create_params;
   std::string src;
   if (options.Get("src", &src) || options.Get("url", &src)) {
     create_params.SetString("src", src);
   }
-  create_params.SetString("partition",
-      static_cast<brave::BraveBrowserContext*>(
-            browser_context)->partition_with_prefix());
+  bool pinned = false;
+  if (options.Get("pinned", &pinned)) {
+    create_params.SetBoolean("pinned", pinned);
+  }
 
   extensions::TabHelper::CreateTab(owner->web_contents(),
       browser_context,
@@ -2388,11 +2487,14 @@ mate::Handle<WebContents> WebContents::CreateFrom(
 // static
 mate::Handle<WebContents> WebContents::Create(
     v8::Isolate* isolate, const mate::Dictionary& options) {
-  return mate::CreateHandle(isolate, new WebContents(isolate, options));
+  return mate::CreateHandle(isolate,
+      new WebContents(isolate, options));
 }
 
+// static
 mate::Handle<WebContents> WebContents::CreateWithParams(
-    v8::Isolate* isolate, const mate::Dictionary& options,
+    v8::Isolate* isolate,
+    const mate::Dictionary& options,
     const content::WebContents::CreateParams& create_params) {
   return mate::CreateHandle(isolate,
       new WebContents(isolate, options, create_params));

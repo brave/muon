@@ -8,12 +8,15 @@
 #include <utility>
 #include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
+#include "atom/browser/native_window.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_browser_context.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/memory/tab_manager.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
@@ -36,6 +39,7 @@
 #include "net/base/filename_util.h"
 #include "ui/base/resource/resource_bundle.h"
 
+using brave::BraveBrowserContext;
 using guest_view::GuestViewManager;
 using memory::TabManager;
 
@@ -69,8 +73,12 @@ TabHelper::TabHelper(content::WebContents* contents)
           new ScriptExecutor(contents, &script_execution_observers_)),
       index_(TabStripModel::kNoTab),
       pinned_(false),
+      is_placeholder_(false),
+      window_closing_(false),
       browser_(nullptr) {
   SessionTabHelper::CreateForWebContents(contents);
+  SetWindowId(-1);
+
   RenderViewCreated(contents->GetRenderViewHost());
   contents->ForEachFrame(
       base::Bind(&TabHelper::SetTabId, base::Unretained(this)));
@@ -88,12 +96,26 @@ void TabHelper::CreateTab(content::WebContents* owner,
                 content::BrowserContext* browser_context,
                 const base::DictionaryValue& create_params,
                 const GuestViewManager::WebContentsCreatedCallback& callback) {
-  auto guest_view_manager =
-      static_cast<GuestViewManager*>(browser_context->GetGuestManager());
+  BraveBrowserContext* profile =
+      BraveBrowserContext::FromBrowserContext(browser_context);
+  auto guest_view_manager = static_cast<GuestViewManager*>(
+      profile->GetGuestManager());
   DCHECK(guest_view_manager);
+
+  std::unique_ptr<base::DictionaryValue> params =
+      create_params.CreateDeepCopy();
+
+  params->SetString("partition",
+      profile->partition_with_prefix());
+
+  if (profile->HasParentContext()) {
+    params->SetString("parent_partition",
+        profile->original_context()->partition_with_prefix());
+  }
+
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
                                   owner,
-                                  create_params,
+                                  *params.get(),
                                   callback);
 }
 
@@ -117,12 +139,108 @@ void TabHelper::DestroyTab(content::WebContents* tab) {
   guest->Destroy();
 }
 
+void TabHelper::AttachGuest(int window_id, int index) {
+  DCHECK(!guest()->attached());
+
+  index_ = index;
+
+  for (auto* browser : *BrowserList::GetInstance()) {
+    if (browser->session_id().id() == window_id) {
+      browser->tab_strip_model()->ReplaceWebContentsAt(index_, web_contents());
+    }
+  }
+}
+
+content::WebContents* TabHelper::DetachGuest() {
+  if (guest()->attached()) {
+    // create temporary null placeholder
+    auto tab_manager = g_browser_process->GetTabManager();
+    auto null_contents = tab_manager->
+        CreateNullContents(browser_->tab_strip_model(), web_contents());
+
+    null_contents->GetController().CopyStateFrom(
+        web_contents()->GetController());
+
+    auto null_helper = TabHelper::FromWebContents(null_contents);
+    null_helper->index_ = index_;
+    null_helper->pinned_ = pinned_;
+    // transfer window closing state
+    null_helper->window_closing_ = window_closing_;
+    window_closing_ = false;
+
+    null_helper->SetPlaceholder(true);
+
+    // Replace the detached tab with the null placeholder
+    browser_->tab_strip_model()->ReplaceWebContentsAt(
+        index_, null_contents);
+
+    return null_contents;
+  }
+  return nullptr;
+}
+
+void TabHelper::DidAttach() {
+  MaybeRequestWindowClose();
+
+  if (is_placeholder()) {
+    guest()->SetCanRunInDetachedState(false);
+    if (!pinned_ && !IsDiscarded()) {
+      // This is a placeholder that was used for a tab move so get rid of it
+      base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
+        base::Bind(TabHelper::DestroyTab,
+            base::Unretained(web_contents())));
+    } else {
+      MaybeAttachOrCreatePinnedTab();
+    }
+  }
+}
+
+void TabHelper::SetPlaceholder(bool is_placeholder) {
+  is_placeholder_  = is_placeholder;
+  if (!is_placeholder_)
+    // set to false in DidAttach to prevent early destruction
+    guest()->SetCanRunInDetachedState(true);
+}
+
+void TabHelper::MaybeRequestWindowClose() {
+  if (window_closing_ && browser()) {
+    auto window = static_cast<atom::NativeWindow*>(browser_->window());
+    window->RequestToClosePage();
+  }
+}
+
+void TabHelper::WillCloseWindow(bool* prevent_default) {
+  window_closing_ = false;
+
+  if (browser() &&
+      is_pinned() &&
+      !is_placeholder() &&
+      !browser_shutdown::IsTryingToQuit() &&
+      BrowserList::GetInstance()->size() > 1) {
+    // TODO(bridiver) - enable pinned tab transfer
+    // *prevent_default = true;
+    // window_closing_ = true;
+    browser()->window()->Deactivate();
+    browser()->window()->Hide();
+  }
+}
+
 void TabHelper::OnBrowserRemoved(Browser* browser) {
+  MaybeRequestWindowClose();
+
   if (browser_ != nullptr && browser_ == browser) {
-    index_ = TabStripModel::kNoTab;
+    auto window = static_cast<atom::NativeWindow*>(browser_->window());
+    window->RemoveObserver(this);
+
     browser_->tab_strip_model()->RemoveObserver(this);
     browser_ = nullptr;
+    index_ = TabStripModel::kNoTab;
   }
+}
+
+void TabHelper::OnBrowserSetLastActive(Browser* browser) {
+  MaybeRequestWindowClose();
+  MaybeAttachOrCreatePinnedTab();
 }
 
 void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
@@ -135,6 +253,39 @@ void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
   DCHECK(index != TabStripModel::kNoTab);
   index_ = index;
   // TODO(bridiver) - deal with foreground
+}
+
+void TabHelper::MaybeAttachOrCreatePinnedTab() {
+  if (window_closing_ ||
+      !is_pinned() ||
+      !is_placeholder() ||
+      !guest()->attached() ||
+      browser_ != BrowserList::GetInstance()->GetLastActive())
+    return;
+
+  // TODO(bridiver) - enable pinned tab transfer
+  // content::WebContents* pinned_web_contents = nullptr;
+  // for (auto* browser : *BrowserList::GetInstance()) {
+  //   auto web_contents =
+  //       browser->tab_strip_model()->GetWebContentsAt(index_);
+  //   if (web_contents) {
+  //     auto tab_helper = TabHelper::FromWebContents(web_contents);
+  //     if (!tab_helper->is_placeholder()) {
+  //       pinned_web_contents = web_contents;
+  //       tab_helper->DetachGuest();
+  //       break;
+  //     }
+  //   }
+  // }
+
+  // if (pinned_web_contents) {
+  //   browser_->tab_strip_model()->ReplaceWebContentsAt(index_,
+  //                                                     pinned_web_contents);
+  // } else {
+    SetPlaceholder(false);
+    web_contents()->UserGestureDone();
+    guest()->Load();
+  // }
 }
 
 void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
@@ -175,12 +326,22 @@ void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
   OnBrowserRemoved(browser_);
 }
 
+void TabHelper::TabPinnedStateChanged(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index) {
+  if (contents != web_contents())
+    return;
+
+  MaybeAttachOrCreatePinnedTab();
+}
+
 void TabHelper::SetActive(bool active) {
   if (active) {
     WasShown();
     if (!IsDiscarded()) {
       web_contents()->WasShown();
     }
+    MaybeAttachOrCreatePinnedTab();
   } else {
     web_contents()->WasHidden();
   }
@@ -194,6 +355,7 @@ void TabHelper::WasShown() {
 void TabHelper::UpdateBrowser(Browser* browser) {
   browser_ = browser;
   browser_->tab_strip_model()->AddObserver(this);
+  static_cast<atom::NativeWindow*>(browser_->window())->AddObserver(this);
 }
 
 void TabHelper::SetBrowser(Browser* browser) {
@@ -240,7 +402,19 @@ bool TabHelper::IsDiscarded() {
 }
 
 void TabHelper::SetPinned(bool pinned) {
+  if (pinned == pinned_)
+    return;
+
   pinned_ = pinned;
+  if (browser()) {
+    browser()->tab_strip_model()->SetTabPinned(index_, pinned);
+  }
+
+  if (pinned_) {
+    SetPlaceholder(true);
+  } else {
+    SetPlaceholder(false);
+  }
 }
 
 void TabHelper::SetTabIndex(int index) {
@@ -479,13 +653,6 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   auto tab_helper = TabHelper::FromWebContents(contents);
   auto browser = tab_helper->browser();
 
-  bool pinned = false;
-  if (browser) {
-    int index =
-      browser->tab_strip_model()->GetIndexOfWebContents(contents);
-    pinned = browser->tab_strip_model()->IsTabPinned(index);
-  }
-
   bool discarded = tab_helper->IsDiscarded();
   bool auto_discardable =
       g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
@@ -510,8 +677,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetBoolean(keys::kAutoDiscardableKey, auto_discardable);
   result->SetBoolean(keys::kHighlightedKey, active);
   result->SetInteger(keys::kIndexKey, tab_helper->index_);
-  // TODO(bridiver) - set pinned value
-  result->SetBoolean(keys::kPinnedKey, pinned);
+  result->SetBoolean(keys::kPinnedKey, tab_helper->pinned_);
   result->SetBoolean(keys::kSelectedKey, active);
 
   return result.release();

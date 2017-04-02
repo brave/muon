@@ -11,7 +11,6 @@
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 
 #include "atom/browser/api/atom_api_web_contents.h"
-#include "atom/browser/api/atom_api_session.h"
 #include "atom/browser/api/event.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
@@ -25,6 +24,7 @@
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser.h"
 #include "components/guest_view/browser/guest_view_event.h"
 #include "components/guest_view/browser/guest_view_manager.h"
 #include "components/guest_view/common/guest_view_constants.h"
@@ -146,9 +146,15 @@ void TabViewGuest::LoadURLWithParams(
   src_ = validated_url;
 }
 
+void TabViewGuest::Load() {
+  if (web_contents()->GetController().IsInitialNavigation())
+    NavigateGuest(src_.spec(), true);
+}
+
 void TabViewGuest::NavigateGuest(const std::string& src,
                                  bool force_navigation) {
-  if (src.empty())
+  // auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (src.empty()) // || tab_helper->is_placeholder())
     return;
 
   LoadURLWithParams(GURL(src), content::Referrer(),
@@ -189,12 +195,11 @@ void TabViewGuest::AttachGuest(int guestInstanceId) {
 }
 
 void TabViewGuest::DetachGuest() {
+  api_web_contents_->Emit("will-detach",
+      extensions::TabHelper::IdForTab(web_contents()));
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   DispatchEventToView(base::MakeUnique<GuestViewEvent>(
       "webViewInternal.onDetachGuest", std::move(args)));
-
-  api_web_contents_->Emit("did-detach",
-      extensions::TabHelper::IdForTab(web_contents()));
 }
 
 void TabViewGuest::TabIdChanged() {
@@ -224,17 +229,25 @@ void TabViewGuest::CreateWebContents(
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
-  atom::AtomBrowserContext* browser_context;
+  mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
   std::string partition;
   params.GetString("partition", &partition);
   base::DictionaryValue partition_options;
-  browser_context =
+  std::string parent_partition;
+  if (params.GetString("parent_partition", &parent_partition)) {
+    partition_options.SetString("parent_partition", parent_partition);
+  }
+  atom::AtomBrowserContext* browser_context =
       brave::BraveBrowserContext::FromPartition(partition, partition_options);
+
+  bool pinned = false;
+  if (params.GetBoolean("pinned", &pinned)) {
+    options.Set("pinned", pinned);
+  }
+
   content::WebContents::CreateParams create_params(browser_context);
   create_params.guest_delegate = this;
-
-  mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
   mate::Handle<atom::api::WebContents> new_api_web_contents =
       atom::api::WebContents::CreateWithParams(isolate, options, create_params);
@@ -281,7 +294,9 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
       if (params.GetString("src", &src)) {
         src_ = GURL(src);
       }
-      if (attached()) {
+
+      if (attached() &&
+          web_contents()->GetController().IsInitialNavigation()) {
         NavigateGuest(src_.spec(), true);
       }
     }
@@ -308,6 +323,15 @@ void TabViewGuest::DidAttachToEmbedder() {
 
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
+
+  tab_helper->DidAttach();
+}
+
+void TabViewGuest::DidDetachFromEmbedder() {
+  if (api_web_contents_) {
+    api_web_contents_->Emit("did-detach",
+        extensions::TabHelper::IdForTab(web_contents()));
+  }
 }
 
 bool TabViewGuest::ZoomPropagatesFromEmbedderToGuest() const {
@@ -381,7 +405,7 @@ void TabViewGuest::WillAttachToEmbedder() {
 
   if (owner_window) {
     TabIdChanged();
-    api_web_contents_->SetOwnerWindow(web_contents(), owner_window);
+    api_web_contents_->SetOwnerWindow(owner_window);
   }
 }
 
