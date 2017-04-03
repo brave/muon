@@ -164,10 +164,29 @@ index b77fbdeea3cd28ead065828c3fffb19496f80ab8..86aad8c1312e801ff64a81b11700d3a4
    }
  
 diff --git a/chrome/browser/memory/tab_manager.cc b/chrome/browser/memory/tab_manager.cc
-index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..cd3976a461838a710a72543399351af296435414 100644
+index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..15c23beec8d3ebf04466504bc8692fae4553f325 100644
 --- a/chrome/browser/memory/tab_manager.cc
 +++ b/chrome/browser/memory/tab_manager.cc
-@@ -786,6 +786,17 @@ void TabManager::PurgeAndSuspendBackgroundedTabs() {
+@@ -144,7 +144,7 @@ TabManager::TabManager()
+       recent_tab_discard_(false),
+       discard_once_(false),
+ #if !defined(OS_CHROMEOS)
+-      minimum_protection_time_(base::TimeDelta::FromMinutes(10)),
++      minimum_protection_time_(base::TimeDelta::FromMinutes(0)),
+ #endif
+       browser_tab_strip_tracker_(this, nullptr, nullptr),
+       test_tick_clock_(nullptr),
+@@ -654,7 +654,8 @@ void TabManager::AddTabStats(const TabStripModel* model,
+                              TabStatsList* stats_list) {
+   for (int i = 0; i < model->count(); i++) {
+     WebContents* contents = model->GetWebContentsAt(i);
+-    if (!contents->IsCrashed()) {
++    // TODO(bridiver) - temporary workaround for pinned and unloaded tabs
++    if (contents && !contents->IsCrashed()) {
+       TabStats stats;
+       stats.is_app = is_app;
+       stats.is_internal_page = IsInternalPage(contents->GetLastCommittedURL());
+@@ -786,6 +787,17 @@ void TabManager::PurgeAndSuspendBackgroundedTabs() {
    }
  }
  
@@ -185,7 +204,7 @@ index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..cd3976a461838a710a72543399351af2
  WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
    // Can't discard active index.
    if (model->active_index() == index)
-@@ -805,8 +816,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+@@ -805,8 +817,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
        "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
        old_contents->NeedToFireBeforeUnload());
  
@@ -196,7 +215,7 @@ index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..cd3976a461838a710a72543399351af2
    // Copy over the state from the navigation controller to preserve the
    // back/forward history and to continue to display the correct title/favicon.
    null_contents->GetController().CopyStateFrom(old_contents->GetController());
-@@ -826,7 +837,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+@@ -826,7 +838,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
    // TODO(jamescook): This breaks script connections with other tabs.
    // Find a different approach that doesn't do that, perhaps based on navigation
    // to swappedout://.

@@ -26,6 +26,7 @@
 #include "ui/gfx/image/image.h"
 #include "ui/gfx/image/image_skia.h"
 
+class Browser;
 class SkRegion;
 
 namespace brightray {
@@ -71,6 +72,8 @@ class NativeWindow : public base::SupportsUserData,
   static NativeWindow* FromWebContents(content::WebContents* web_contents);
 
   void InitFromOptions(const mate::Dictionary& options);
+
+  ::Browser* browser() const { return browser_.get(); }
 
   virtual void Close() = 0;
   virtual void CloseImmediately() = 0;
@@ -281,6 +284,8 @@ class NativeWindow : public base::SupportsUserData,
 
   // Whether window has standard frame.
   bool has_frame_;
+
+  std::unique_ptr<::Browser> browser_;
 
   // For custom drag, the whole window is non-draggable and the draggable region
   // has to been explicitly provided.

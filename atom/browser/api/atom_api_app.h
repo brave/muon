@@ -134,6 +134,7 @@ class App : public AtomBrowserClient::Delegate,
   bool Relaunch(mate::Arguments* args);
   void DisableHardwareAcceleration(mate::Arguments* args);
   bool IsAccessibilitySupportEnabled();
+  void SendMemoryPressureAlert();
   void PostMessage(int worker_id,
                   v8::Local<v8::Value> message,
                   mate::Arguments* args);

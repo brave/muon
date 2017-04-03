@@ -154,7 +154,7 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   new_helper->pinned_ = pinned_;
 
   OnBrowserRemoved(old_browser);
-  new_helper->SetBrowser(old_browser);
+  new_helper->UpdateBrowser(old_browser);
 
   brave::TabViewGuest* new_guest = new_helper->guest();
   old_contents->WasHidden();

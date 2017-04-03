@@ -246,6 +246,12 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
   // Triggers initialization of the singleton instance on UI thread.
   PluginFinder::GetInstance()->Init();
 #endif  // BUILDFLAG(ENABLE_PLUGINS)
+
+// Start the tab manager here so that we give the most amount of time for the
+// other services to start up before we start adjusting the oom priority.
+#if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
+  g_browser_process->GetTabManager()->Start();
+#endif
 }
 
 memory::TabManager* BrowserProcessImpl::GetTabManager() {

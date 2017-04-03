@@ -16,6 +16,8 @@
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_list.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/resource_dispatcher_host.h"
@@ -187,10 +189,14 @@ void Window::OnWindowBlur() {
 }
 
 void Window::OnWindowFocus() {
+  BrowserList::SetLastActive(window_->browser());
   Emit("focus");
 }
 
 void Window::OnWindowShow() {
+  if (window_->IsActive())
+    BrowserList::SetLastActive(window_->browser());
+
   Emit("show");
 }
 

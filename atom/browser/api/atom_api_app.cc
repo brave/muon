@@ -47,6 +47,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/client_certificate_delegate.h"
 #include "content/public/browser/gpu_data_manager.h"
+#include "content/public/browser/memory_pressure_controller.h"
 #include "content/public/browser/navigation_details.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/render_frame_host.h"
@@ -823,6 +824,11 @@ bool App::IsAccessibilitySupportEnabled() {
   return ax_state->IsAccessibleBrowser();
 }
 
+void App::SendMemoryPressureAlert() {
+  base::MemoryPressureListener::NotifyMemoryPressure(
+      base::MemoryPressureListener::MEMORY_PRESSURE_LEVEL_CRITICAL);
+}
+
 void App::PostMessage(int worker_id,
                       v8::Local<v8::Value> message,
                       mate::Arguments* args) {
@@ -1014,6 +1020,7 @@ void App::BuildPrototype(
       .SetMethod("relaunch", &App::Relaunch)
       .SetMethod("isAccessibilitySupportEnabled",
                  &App::IsAccessibilitySupportEnabled)
+      .SetMethod("sendMemoryPressureAlert", &App::SendMemoryPressureAlert)
       .SetMethod("_postMessage", &App::PostMessage)
       .SetMethod("_startWorker", &App::StartWorker)
       .SetMethod("stopWorker", &App::StopWorker)

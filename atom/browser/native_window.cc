@@ -23,6 +23,9 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_list.h"
 #include "components/prefs/pref_service.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/navigation_entry.h"
@@ -86,6 +89,14 @@ NativeWindow::NativeWindow(
   prefs->use_bitmaps = params.use_bitmaps;
   prefs->subpixel_rendering = params.subpixel_rendering;
 #endif
+
+  // add to browser list
+  ::Browser::CreateParams create_params(::Browser::Type::TYPE_TABBED,
+      Profile::FromBrowserContext(inspectable_web_contents_->
+          GetWebContents()->GetBrowserContext()));
+  create_params.window = this;
+  browser_.reset(new ::Browser(create_params));
+
   WindowList::AddWindow(this);
 }
 
@@ -435,6 +446,7 @@ void NativeWindow::NotifyWindowClosed() {
   if (is_closed_)
     return;
 
+  browser_.reset(nullptr);
   WindowList::RemoveWindow(this);
 
   is_closed_ = true;
