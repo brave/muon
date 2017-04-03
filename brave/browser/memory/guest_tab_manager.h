@@ -37,4 +37,4 @@ class GuestTabManager : public TabManager {
 
 }  // namespace memory
 
-#endif  // BRAVE_BROWSER_MEMORY_GUEST_T#include "chrome/browser/memory/tab_manager.h
+#endif  // BRAVE_BROWSER_MEMORY_GUEST_TAB_MANAGER_H_

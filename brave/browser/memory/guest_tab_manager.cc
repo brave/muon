@@ -18,7 +18,7 @@ namespace content {
 class RestoreHelper : public content::WebContentsObserver,
                       public content::WebContentsUserData<RestoreHelper> {
  public:
-  RestoreHelper(content::WebContents* contents)
+  explicit RestoreHelper(content::WebContents* contents)
       : content::WebContentsObserver(contents) {}
   void ClearNeedsReload() {
     static_cast<content::WebContentsImpl*>(
@@ -29,7 +29,7 @@ class RestoreHelper : public content::WebContentsObserver,
   }
 };
 
-}  // content
+}  // namespace content
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(content::RestoreHelper);
 
@@ -86,4 +86,4 @@ void GuestTabManager::ActiveTabChanged(content::WebContents* old_contents,
   }
 }
 
-}  // namespace
+}  // namespace memory

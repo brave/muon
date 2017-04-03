@@ -45,6 +45,7 @@ class URLRequestAsarJob : public net::URLRequestJob {
   URLRequestAsarJob(net::URLRequest* request,
                     net::NetworkDelegate* network_delegate,
                     const scoped_refptr<base::TaskRunner> file_task_runner);
+
  protected:
   virtual ~URLRequestAsarJob();
 

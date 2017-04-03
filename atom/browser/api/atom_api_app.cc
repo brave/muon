@@ -973,23 +973,25 @@ void App::BuildPrototype(
       .SetMethod("setName", base::Bind(&atom::Browser::SetName, browser))
       .SetMethod("isReady", base::Bind(&atom::Browser::is_ready, browser))
       .SetMethod("addRecentDocument",
-                 base::Bind(&atom::Browser::AddRecentDocument, browser))
+          base::Bind(&atom::Browser::AddRecentDocument, browser))
       .SetMethod("clearRecentDocuments",
-                 base::Bind(&atom::Browser::ClearRecentDocuments, browser))
+          base::Bind(&atom::Browser::ClearRecentDocuments, browser))
       .SetMethod("setAppUserModelId",
-                 base::Bind(&atom::Browser::SetAppUserModelID, browser))
+          base::Bind(&atom::Browser::SetAppUserModelID, browser))
       .SetMethod("isDefaultProtocolClient",
-                 base::Bind(&atom::Browser::IsDefaultProtocolClient, browser))
+          base::Bind(&atom::Browser::IsDefaultProtocolClient, browser))
       .SetMethod("setAsDefaultProtocolClient",
-                 base::Bind(&atom::Browser::SetAsDefaultProtocolClient, browser))
+          base::Bind(&atom::Browser::SetAsDefaultProtocolClient, browser))
       .SetMethod("removeAsDefaultProtocolClient",
-                 base::Bind(&atom::Browser::RemoveAsDefaultProtocolClient, browser))
-      .SetMethod("setBadgeCount", base::Bind(&atom::Browser::SetBadgeCount, browser))
-      .SetMethod("getBadgeCount", base::Bind(&atom::Browser::GetBadgeCount, browser))
+          base::Bind(&atom::Browser::RemoveAsDefaultProtocolClient, browser))
+      .SetMethod("setBadgeCount",
+          base::Bind(&atom::Browser::SetBadgeCount, browser))
+      .SetMethod("getBadgeCount",
+          base::Bind(&atom::Browser::GetBadgeCount, browser))
       .SetMethod("getLoginItemSettings",
-                 base::Bind(&atom::Browser::GetLoginItemSettings, browser))
+          base::Bind(&atom::Browser::GetLoginItemSettings, browser))
       .SetMethod("setLoginItemSettings",
-                 base::Bind(&atom::Browser::SetLoginItemSettings, browser))
+          base::Bind(&atom::Browser::SetLoginItemSettings, browser))
 #if defined(OS_MACOSX)
       .SetMethod("hide", base::Bind(&atom::Browser::Hide, browser))
       .SetMethod("show", base::Bind(&atom::Browser::Show, browser))
@@ -999,7 +1001,8 @@ void App::BuildPrototype(
                  base::Bind(&atom::Browser::GetCurrentActivityType, browser))
 #endif
 #if defined(OS_WIN)
-      .SetMethod("setUserTasks", base::Bind(&atom::Browser::SetUserTasks, browser))
+      .SetMethod("setUserTasks",
+          base::Bind(&atom::Browser::SetUserTasks, browser))
       .SetMethod("getJumpListSettings", &App::GetJumpListSettings)
       .SetMethod("setJumpList", &App::SetJumpList)
 #endif
@@ -1073,9 +1076,11 @@ void AppendSwitch(const std::string& switch_string, mate::Arguments* args) {
 int DockBounce(const std::string& type) {
   int request_id = -1;
   if (type == "critical")
-    request_id = atom::Browser::Get()->DockBounce(atom::Browser::BOUNCE_CRITICAL);
+    request_id = atom::Browser::Get()->DockBounce(
+        atom::Browser::BOUNCE_CRITICAL);
   else if (type == "informational")
-    request_id = atom::Browser::Get()->DockBounce(atom::Browser::BOUNCE_INFORMATIONAL);
+    request_id = atom::Browser::Get()->DockBounce(
+        atom::Browser::BOUNCE_INFORMATIONAL);
   return request_id;
 }
 
@@ -1100,18 +1105,20 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   auto browser = base::Unretained(atom::Browser::Get());
   dict.SetMethod("dockBounce", &DockBounce);
   dict.SetMethod("dockCancelBounce",
-                 base::Bind(&atom::Browser::DockCancelBounce, browser));
+      base::Bind(&atom::Browser::DockCancelBounce, browser));
   dict.SetMethod("dockDownloadFinished",
-                 base::Bind(&atom::Browser::DockDownloadFinished, browser));
+      base::Bind(&atom::Browser::DockDownloadFinished, browser));
   dict.SetMethod("dockSetBadgeText",
-                 base::Bind(&atom::Browser::DockSetBadgeText, browser));
+      base::Bind(&atom::Browser::DockSetBadgeText, browser));
   dict.SetMethod("dockGetBadgeText",
-                 base::Bind(&atom::Browser::DockGetBadgeText, browser));
+    base::Bind(&atom::Browser::DockGetBadgeText, browser));
   dict.SetMethod("dockHide", base::Bind(&atom::Browser::DockHide, browser));
   dict.SetMethod("dockShow", base::Bind(&atom::Browser::DockShow, browser));
-  dict.SetMethod("dockIsVisible", base::Bind(&atom::Browser::DockIsVisible, browser));
+  dict.SetMethod("dockIsVisible",
+      base::Bind(&atom::Browser::DockIsVisible, browser));
   dict.SetMethod("dockSetMenu", &DockSetMenu);
-  dict.SetMethod("dockSetIcon", base::Bind(&atom::Browser::DockSetIcon, browser));
+  dict.SetMethod("dockSetIcon",
+      base::Bind(&atom::Browser::DockSetIcon, browser));
 #endif
 }
 

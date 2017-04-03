@@ -37,7 +37,7 @@ namespace {
 
 void Initialize(
     const base::FilePath& full_path,
-    std::shared_ptr<Archive>& archive,
+    std::shared_ptr<Archive>& archive,  // NOLINT
     base::FilePath* file_path,
     Archive::FileInfo* file_info,
     URLRequestAsarJob::JobType* type) {
