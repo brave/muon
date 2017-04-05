@@ -164,18 +164,9 @@ index b77fbdeea3cd28ead065828c3fffb19496f80ab8..86aad8c1312e801ff64a81b11700d3a4
    }
  
 diff --git a/chrome/browser/memory/tab_manager.cc b/chrome/browser/memory/tab_manager.cc
-index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..15c23beec8d3ebf04466504bc8692fae4553f325 100644
+index 6c2cf66a1aba3f71310e4e3317e849839d3b0e0b..0f1e8c5c46cb3f52723bacf936e179c01d0e2fdb 100644
 --- a/chrome/browser/memory/tab_manager.cc
 +++ b/chrome/browser/memory/tab_manager.cc
-@@ -144,7 +144,7 @@ TabManager::TabManager()
-       recent_tab_discard_(false),
-       discard_once_(false),
- #if !defined(OS_CHROMEOS)
--      minimum_protection_time_(base::TimeDelta::FromMinutes(10)),
-+      minimum_protection_time_(base::TimeDelta::FromMinutes(0)),
- #endif
-       browser_tab_strip_tracker_(this, nullptr, nullptr),
-       test_tick_clock_(nullptr),
 @@ -654,7 +654,8 @@ void TabManager::AddTabStats(const TabStripModel* model,
                               TabStatsList* stats_list) {
    for (int i = 0; i < model->count(); i++) {
