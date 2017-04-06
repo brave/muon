@@ -154,7 +154,7 @@ void TabViewGuest::Load() {
 void TabViewGuest::NavigateGuest(const std::string& src,
                                  bool force_navigation) {
   // auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (src.empty()) // || tab_helper->is_placeholder())
+  if (src.empty())  // || tab_helper->is_placeholder())
     return;
 
   LoadURLWithParams(GURL(src), content::Referrer(),

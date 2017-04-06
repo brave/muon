@@ -1857,7 +1857,7 @@ void WebContents::Clone(mate::Arguments* args) {
   base::DictionaryValue create_params;
   create_params.SetBoolean("clone", true);
 
-  extensions::TabHelper::CreateTab(web_contents(),
+  extensions::TabHelper::CreateTab(HostWebContents(),
       GetBrowserContext(),
       create_params,
       base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
