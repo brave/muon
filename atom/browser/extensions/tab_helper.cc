@@ -21,6 +21,7 @@
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
+#include "chrome/browser/ui/tab_contents/tab_contents_iterator.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/browser_context.h"
@@ -65,6 +66,14 @@ const char kSelectedKey[] = "selected";
 static std::map<int32_t, std::pair<int, int>> render_view_map_;
 
 namespace extensions {
+
+namespace {
+
+TabManager* GetTabManager() {
+  return g_browser_process->GetTabManager();
+}
+
+}  // namespace
 
 TabHelper::TabHelper(content::WebContents* contents)
     : content::WebContentsObserver(contents),
@@ -139,29 +148,42 @@ void TabHelper::DestroyTab(content::WebContents* tab) {
   guest->Destroy();
 }
 
-void TabHelper::AttachGuest(int window_id, int index) {
-  DCHECK(!guest()->attached());
+// static
+int TabHelper::GetTabStripIndex(int window_id, int index) {
+  for (TabContentsIterator it; !it.done(); it.Next()) {
+    auto tab_helper = FromWebContents(*it);
+    if (tab_helper &&
+        tab_helper->get_index() == index &&
+        tab_helper->window_id() == window_id)
+      return tab_helper->get_tab_strip_index();
+  }
+  return TabStripModel::kNoTab;
+}
 
-  index_ = index;
+bool TabHelper::AttachGuest(int window_id, int index) {
+  DCHECK(!guest()->attached());
 
   for (auto* browser : *BrowserList::GetInstance()) {
     if (browser->session_id().id() == window_id) {
-      browser->tab_strip_model()->ReplaceWebContentsAt(index_, web_contents());
+      index_ = index;
+      browser->tab_strip_model()->ReplaceWebContentsAt(
+          GetTabStripIndex(window_id, index_), web_contents());
+      return true;
     }
   }
+  return false;
 }
 
 content::WebContents* TabHelper::DetachGuest() {
   if (guest()->attached()) {
     // create temporary null placeholder
-    auto tab_manager = g_browser_process->GetTabManager();
-    auto null_contents = tab_manager->
-        CreateNullContents(browser_->tab_strip_model(), web_contents());
+    auto null_contents = GetTabManager()->CreateNullContents(
+        browser_->tab_strip_model(), web_contents());
 
     null_contents->GetController().CopyStateFrom(
         web_contents()->GetController());
 
-    auto null_helper = TabHelper::FromWebContents(null_contents);
+    auto null_helper = FromWebContents(null_contents);
     null_helper->index_ = index_;
     null_helper->pinned_ = pinned_;
     // transfer window closing state
@@ -172,7 +194,7 @@ content::WebContents* TabHelper::DetachGuest() {
 
     // Replace the detached tab with the null placeholder
     browser_->tab_strip_model()->ReplaceWebContentsAt(
-        index_, null_contents);
+        get_tab_strip_index(), null_contents);
 
     return null_contents;
   }
@@ -243,18 +265,6 @@ void TabHelper::OnBrowserSetLastActive(Browser* browser) {
   MaybeAttachOrCreatePinnedTab();
 }
 
-void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
-                             content::WebContents* contents,
-                             int index,
-                             bool foreground) {
-  if (contents != web_contents())
-    return;
-
-  DCHECK(index != TabStripModel::kNoTab);
-  index_ = index;
-  // TODO(bridiver) - deal with foreground
-}
-
 void TabHelper::MaybeAttachOrCreatePinnedTab() {
   if (window_closing_ ||
       !is_pinned() ||
@@ -267,9 +277,9 @@ void TabHelper::MaybeAttachOrCreatePinnedTab() {
   // content::WebContents* pinned_web_contents = nullptr;
   // for (auto* browser : *BrowserList::GetInstance()) {
   //   auto web_contents =
-  //       browser->tab_strip_model()->GetWebContentsAt(index_);
+  //       browser->tab_strip_model()->GetWebContentsAt(get_tab_strip_index());
   //   if (web_contents) {
-  //     auto tab_helper = TabHelper::FromWebContents(web_contents);
+  //     auto tab_helper = FromWebContents(web_contents);
   //     if (!tab_helper->is_placeholder()) {
   //       pinned_web_contents = web_contents;
   //       tab_helper->DetachGuest();
@@ -279,7 +289,7 @@ void TabHelper::MaybeAttachOrCreatePinnedTab() {
   // }
 
   // if (pinned_web_contents) {
-  //   browser_->tab_strip_model()->ReplaceWebContentsAt(index_,
+  //   browser_->tab_strip_model()->ReplaceWebContentsAt(get_tab_strip_index(),
   //                                                     pinned_web_contents);
   // } else {
     SetPlaceholder(false);
@@ -300,7 +310,7 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   brave::TabViewGuest* old_guest = guest();
   int guest_instance_id = old_guest->guest_instance_id();
 
-  auto new_helper = TabHelper::FromWebContents(new_contents);
+  auto new_helper = FromWebContents(new_contents);
   new_helper->index_ = index_;
   new_helper->pinned_ = pinned_;
 
@@ -349,7 +359,7 @@ void TabHelper::SetActive(bool active) {
 
 void TabHelper::WasShown() {
   if (browser_ && index_ != TabStripModel::kNoTab)
-    browser_->tab_strip_model()->ActivateTabAt(index_, true);
+    browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
 }
 
 void TabHelper::UpdateBrowser(Browser* browser) {
@@ -363,8 +373,8 @@ void TabHelper::SetBrowser(Browser* browser) {
     return;
 
   if (browser_) {
-    if (index_ != TabStripModel::kNoTab)
-      browser_->tab_strip_model()->DetachWebContentsAt(index_);
+    if (get_tab_strip_index() != TabStripModel::kNoTab)
+      browser_->tab_strip_model()->DetachWebContentsAt(get_tab_strip_index());
 
     OnBrowserRemoved(browser_);
   }
@@ -388,17 +398,16 @@ int32_t TabHelper::window_id() const {
 }
 
 void TabHelper::SetAutoDiscardable(bool auto_discardable) {
-  g_browser_process->GetTabManager()->SetTabAutoDiscardableState(
-      web_contents(), auto_discardable);
+  GetTabManager()->SetTabAutoDiscardableState(web_contents(), auto_discardable);
 }
 
 bool TabHelper::Discard() {
   int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-  return !!g_browser_process->GetTabManager()->DiscardTabById(web_contents_id);
+  return !!GetTabManager()->DiscardTabById(web_contents_id);
 }
 
 bool TabHelper::IsDiscarded() {
-  return g_browser_process->GetTabManager()->IsTabDiscarded(web_contents());
+  return GetTabManager()->IsTabDiscarded(web_contents());
 }
 
 void TabHelper::SetPinned(bool pinned) {
@@ -407,7 +416,7 @@ void TabHelper::SetPinned(bool pinned) {
 
   pinned_ = pinned;
   if (browser()) {
-    browser()->tab_strip_model()->SetTabPinned(index_, pinned);
+    browser()->tab_strip_model()->SetTabPinned(get_tab_strip_index(), pinned);
   }
 
   if (pinned_) {
@@ -618,6 +627,13 @@ void TabHelper::ExecuteScript(
       callback);
 }
 
+int TabHelper::get_tab_strip_index() const {
+  if (browser())
+    return browser()->tab_strip_model()->GetIndexOfWebContents(web_contents());
+
+  return TabStripModel::kNoTab;
+}
+
 // static
 content::WebContents* TabHelper::GetTabById(int32_t tab_id) {
   content::RenderViewHost* rvh =
@@ -648,22 +664,17 @@ content::WebContents* TabHelper::GetTabById(int32_t tab_id,
 // static
 base::DictionaryValue* TabHelper::CreateTabValue(
                                               content::WebContents* contents) {
-  auto tab_id = IdForTab(contents);
-  auto window_id = IdForWindowContainingTab(contents);
-  auto tab_helper = TabHelper::FromWebContents(contents);
-  auto browser = tab_helper->browser();
-
-  bool discarded = tab_helper->IsDiscarded();
-  bool auto_discardable =
-      g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
+  auto tab_helper = FromWebContents(contents);
   bool active = tab_helper->is_active();
+  bool auto_discardable = GetTabManager()->IsTabAutoDiscardable(contents);
+
   std::unique_ptr<base::DictionaryValue> result(
       tab_helper->getTabValues()->CreateDeepCopy());
 
   auto entry = contents->GetController().GetLastCommittedEntry();
 
-  result->SetInteger(keys::kIdKey, tab_id);
-  result->SetInteger(keys::kWindowIdKey, window_id);
+  result->SetInteger(keys::kIdKey, IdForTab(contents));
+  result->SetInteger(keys::kWindowIdKey, IdForWindowContainingTab(contents));
   result->SetBoolean(keys::kIncognitoKey,
                      contents->GetBrowserContext()->IsOffTheRecord());
   result->SetBoolean(keys::kActiveKey, active);
@@ -673,10 +684,10 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetString(keys::kStatusKey, contents->IsLoading()
       ? "loading" : "complete");
   result->SetBoolean(keys::kAudibleKey, contents->WasRecentlyAudible());
-  result->SetBoolean(keys::kDiscardedKey, discarded);
+  result->SetBoolean(keys::kDiscardedKey, tab_helper->IsDiscarded());
   result->SetBoolean(keys::kAutoDiscardableKey, auto_discardable);
   result->SetBoolean(keys::kHighlightedKey, active);
-  result->SetInteger(keys::kIndexKey, tab_helper->index_);
+  result->SetInteger(keys::kIndexKey, tab_helper->get_index());
   result->SetBoolean(keys::kPinnedKey, tab_helper->pinned_);
   result->SetBoolean(keys::kSelectedKey, active);
 

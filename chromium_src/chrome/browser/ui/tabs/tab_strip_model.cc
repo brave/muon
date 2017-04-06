@@ -28,7 +28,6 @@ class TabStripModel::WebContentsData : public content::WebContentsObserver {
 
   // Changes the WebContents that this WebContentsData tracks.
   void SetWebContents(WebContents* contents);
-  TabHelper* tab_helper();
 
  private:
   DISALLOW_COPY_AND_ASSIGN(WebContentsData);
@@ -39,10 +38,6 @@ TabStripModel::WebContentsData::WebContentsData(WebContents* contents)
 
 void TabStripModel::WebContentsData::SetWebContents(WebContents* contents) {
   Observe(contents);
-}
-
-TabHelper* TabStripModel::WebContentsData::tab_helper() {
-  return TabHelper::FromWebContents(web_contents());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,22 +64,16 @@ void TabStripModel::RemoveObserver(TabStripModelObserver* observer) {
 }
 
 bool TabStripModel::ContainsIndex(int index) const {
-  return !!GetWebContentsAt(index);
+  return index >= 0 && index < count();
 }
 
 void TabStripModel::AppendWebContents(WebContents* contents,
                                       bool foreground) {
-  TabHelper* tab_helper = TabHelper::FromWebContents(contents);
-  DCHECK(tab_helper);
-
   // delegate_->WillAddWebContents(contents);
   std::unique_ptr<WebContentsData> data =
       base::MakeUnique<WebContentsData>(contents);
 
-  // the TabHelper tracks the actual index for now
-  int index = tab_helper->get_index() != kNoTab
-      ? tab_helper->get_index()
-      : contents_data_.size();
+  int index = contents_data_.size();
   contents_data_.push_back(std::move(data));
   for (auto& observer : observers_)
     observer.TabInsertedAt(this, contents, index, foreground);
@@ -160,23 +149,16 @@ WebContents* TabStripModel::GetActiveWebContents() const {
 }
 
 WebContents* TabStripModel::GetWebContentsAt(int index) const {
-  for (size_t i = 0; i < contents_data_.size(); ++i) {
-    auto tab_helper = contents_data_[i]->tab_helper();
-    if (tab_helper && tab_helper->get_index() == index)
-      return contents_data_[i]->web_contents();
-  }
+  if (index != kNoTab && index < contents_data_.size())
+    return contents_data_[index]->web_contents();
   return nullptr;
 }
 
 int TabStripModel::GetIndexOfWebContents(const WebContents* contents) const {
   for (size_t i = 0; i < contents_data_.size(); ++i) {
-    // make sure the webcontents is in this tab strip model
-    if (contents == contents_data_[i]->web_contents() &&
-        contents_data_[i]->tab_helper()) {
-      return contents_data_[i]->tab_helper()->get_index();
-    }
+    if (contents_data_[i]->web_contents() == contents)
+      return i;
   }
-
   return kNoTab;
 }
 

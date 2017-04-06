@@ -691,7 +691,7 @@ void WebContents::AttachGuest(mate::Arguments* args) {
       index = tab_helper->get_index();
     }
 
-    tab_helper->AttachGuest(window_id, index);
+    args->Return(tab_helper->AttachGuest(window_id, index));
   }
 }
 

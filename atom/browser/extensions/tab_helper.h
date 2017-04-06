@@ -73,7 +73,7 @@ class TabHelper : public content::WebContentsObserver,
                             content::WebContents::CreateParams create_params);
   static void DestroyTab(content::WebContents* tab);
 
-  void AttachGuest(int window_id, int index);
+  bool AttachGuest(int window_id, int index);
   content::WebContents* DetachGuest();
 
   // Identifier of the tab.
@@ -135,6 +135,8 @@ class TabHelper : public content::WebContentsObserver,
                          content::BrowserContext* browser_context);
   static content::WebContents* GetTabById(int32_t tab_id);
 
+  static int GetTabStripIndex(int window_id, int index);
+
   static int32_t IdForWindowContainingTab(
       const content::WebContents* tab);
 
@@ -146,10 +148,6 @@ class TabHelper : public content::WebContentsObserver,
   friend class content::WebContentsUserData<TabHelper>;
 
   void TabDetachedAt(content::WebContents* contents, int index) override;
-  void TabInsertedAt(TabStripModel* tab_strip_model,
-                             content::WebContents* contents,
-                             int index,
-                             bool foreground) override;
   void TabReplacedAt(TabStripModel* tab_strip_model,
                      content::WebContents* old_contents,
                      content::WebContents* new_contents,
@@ -157,6 +155,7 @@ class TabHelper : public content::WebContentsObserver,
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
                              int index) override;
+  int get_tab_strip_index() const;
 
   void OnBrowserRemoved(Browser* browser) override;
   void OnBrowserSetLastActive(Browser* browser) override;
