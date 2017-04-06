@@ -138,6 +138,7 @@ source_set("browser") {
     "//components/data_usage/core",
     "//components/prefs",
     "//components/ssl_config",
+    "//content/public/browser",
     "//electron/atom/browser",
   ]
 
@@ -524,6 +525,7 @@ source_set("sessions") {
   ]
 
   deps = [
+    "//content/public/browser",
     "//third_party/icu",
     "//third_party/protobuf:protobuf_lite",
   ]
