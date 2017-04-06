@@ -654,6 +654,14 @@ bool WebContents::IsAttached() {
   return owner_window() != nullptr;
 }
 
+bool WebContents::IsPinned() const {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (!tab_helper) {
+    return false;
+  }
+  return tab_helper->IsPinned();
+}
+
 void WebContents::AutofillSelect(const std::string& value,
                                  int frontend_id, int index) {
   auto autofillClient =
@@ -2288,6 +2296,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getPreferredSize", &WebContents::GetPreferredSize)
       .SetProperty("id", &WebContents::ID)
       .SetProperty("attached", &WebContents::IsAttached)
+      .SetProperty("pinned", &WebContents::IsPinned)
       .SetMethod("getContentWindowId", &WebContents::GetContentWindowId)
       .SetMethod("setActive", &WebContents::SetActive)
       .SetMethod("setPinned", &WebContents::SetPinned)

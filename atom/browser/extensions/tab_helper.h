@@ -93,6 +93,7 @@ class TabHelper : public content::WebContentsObserver,
   void SetActive(bool active);
 
   void SetPinned(bool pinned);
+  bool IsPinned() const;
 
   bool Discard();
 

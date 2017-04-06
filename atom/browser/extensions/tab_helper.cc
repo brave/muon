@@ -426,6 +426,10 @@ void TabHelper::SetPinned(bool pinned) {
   }
 }
 
+bool TabHelper::IsPinned() const {
+  return pinned_;
+}
+
 void TabHelper::SetTabIndex(int index) {
   index_ = index;
 }
@@ -688,7 +692,7 @@ base::DictionaryValue* TabHelper::CreateTabValue(
   result->SetBoolean(keys::kAutoDiscardableKey, auto_discardable);
   result->SetBoolean(keys::kHighlightedKey, active);
   result->SetInteger(keys::kIndexKey, tab_helper->get_index());
-  result->SetBoolean(keys::kPinnedKey, tab_helper->pinned_);
+  result->SetBoolean(keys::kPinnedKey, tab_helper->IsPinned());
   result->SetBoolean(keys::kSelectedKey, active);
 
   return result.release();
