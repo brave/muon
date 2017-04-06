@@ -902,6 +902,18 @@ void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
     owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
 }
 
+void WebContents::ActiveTabChanged(content::WebContents* old_contents,
+                                   content::WebContents* new_contents,
+                                   int index,
+                                   int reason) {
+  auto new_api_web_contents = CreateFrom(isolate(), new_contents);
+  new_api_web_contents->Emit("set-active", true);
+  if (old_contents) {
+    auto old_api_web_contents = CreateFrom(isolate(), old_contents);
+    old_api_web_contents->Emit("set-active", false);
+  }
+}
+
 bool WebContents::OnGoToEntryOffset(int offset) {
   GoToOffset(offset);
   return false;
@@ -1863,14 +1875,6 @@ void WebContents::Clone(mate::Arguments* args) {
       base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
         base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
             options, callback)));
-}
-
-void WebContents::WasHidden() {
-  Emit("set-active", false);
-}
-
-void WebContents::WasShown() {
-  Emit("set-active", true);
 }
 
 void WebContents::SetActive(bool active) {

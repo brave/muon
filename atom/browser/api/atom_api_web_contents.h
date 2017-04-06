@@ -321,6 +321,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
                              content::WebContents* contents,
                              int index) override;
   void TabDetachedAt(content::WebContents* contents, int index) override;
+  void ActiveTabChanged(content::WebContents* old_contents,
+                        content::WebContents* new_contents,
+                        int index,
+                        int reason) override;
 
   // content::WebContentsDelegate:
   void RegisterProtocolHandler(content::WebContents* web_contents,
@@ -453,8 +457,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void MediaStoppedPlaying(const MediaPlayerInfo& media_info,
                            const MediaPlayerId& id) override;
   void DidChangeThemeColor(SkColor theme_color) override;
-  void WasHidden() override;
-  void WasShown() override;
 
   // brightray::InspectableWebContentsDelegate:
   void DevToolsReloadPage() override;
