@@ -119,6 +119,7 @@ source_set("tab_manager") {
   ]
 
   deps = [
+    "//content/public/common",
     "//electron/chromium_src:tab_manager"
   ]
 }
