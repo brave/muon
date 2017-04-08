@@ -237,6 +237,12 @@ void TabViewGuest::CreateWebContents(
   std::string parent_partition;
   if (params.GetString("parent_partition", &parent_partition)) {
     partition_options.SetString("parent_partition", parent_partition);
+  } else {
+    std::string session_tab_prefix = "persist:partition-";
+    if (partition.compare(0, session_tab_prefix.length(),
+          session_tab_prefix) == 0) {
+      partition_options.SetString("parent_partition", "");
+    }
   }
   atom::AtomBrowserContext* browser_context =
       brave::BraveBrowserContext::FromPartition(partition, partition_options);
