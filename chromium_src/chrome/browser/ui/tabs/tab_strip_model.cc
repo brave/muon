@@ -149,7 +149,7 @@ WebContents* TabStripModel::GetActiveWebContents() const {
 }
 
 WebContents* TabStripModel::GetWebContentsAt(int index) const {
-  if (index != kNoTab && index < contents_data_.size())
+  if (index != kNoTab && index < (int)contents_data_.size())
     return contents_data_[index]->web_contents();
   return nullptr;
 }
