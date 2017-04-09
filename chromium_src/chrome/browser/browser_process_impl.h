@@ -36,6 +36,10 @@ class App;
 
 }  // namespace atom
 
+namespace ukm {
+class UkmService;
+}
+
 namespace base {
 class SequencedTaskRunner;
 }
@@ -74,6 +78,7 @@ class BrowserProcessImpl : public BrowserProcess {
   metrics::MetricsService* metrics_service() override { return NULL; };
   PrefService* local_state() override;
   ProfileManager* profile_manager() override;
+  ukm::UkmService* ukm_service() override;
   rappor::RapporServiceImpl* rappor_service() override;
   component_updater::ComponentUpdateService* brave_component_updater();
   component_updater::ComponentUpdateService* component_updater() override;
