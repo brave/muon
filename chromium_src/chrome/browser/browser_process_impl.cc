@@ -110,6 +110,10 @@ rappor::RapporServiceImpl* BrowserProcessImpl::rappor_service() {
   return nullptr;
 }
 
+ukm::UkmService* BrowserProcessImpl::ukm_service() {
+  return nullptr;
+}
+
 component_updater::ComponentUpdateService*
 BrowserProcessImpl::component_updater(
     std::unique_ptr<component_updater::ComponentUpdateService> &component_updater,
