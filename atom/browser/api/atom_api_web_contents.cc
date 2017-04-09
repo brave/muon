@@ -554,7 +554,8 @@ bool WebContents::ShouldCreateWebContents(
     const GURL& target_url,
     const std::string& partition_id,
     content::SessionStorageNamespace* session_storage_namespace) {
-  if (window_container_type == WINDOW_CONTAINER_TYPE_BACKGROUND) {
+  if (window_container_type ==
+      content::mojom::WindowContainerType::BACKGROUND) {
     // If a BackgroundContents is created, suppress the normal WebContents.
     content::WebContents* background =
         brave::api::Extension::MaybeCreateBackgroundContents(
