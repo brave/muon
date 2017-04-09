@@ -1,17 +1,17 @@
 diff --git a/crypto/cipher/cipher.c b/crypto/cipher/cipher.c
-index ae045aefcaef23ab8417edd93399b2431369097f..d225d2928b4ac9d01b0d735792a1a1bb8ac0e38c 100644
+index e46e43ef11580d4546e0dfc56aeee770bb685d1f..37e2969b36fd0c70781ea38cec60e748e4b894f2 100644
 --- a/crypto/cipher/cipher.c
 +++ b/crypto/cipher/cipher.c
 @@ -83,6 +83,8 @@ const EVP_CIPHER *EVP_get_cipherbynid(int nid) {
        return EVP_aes_192_cbc();
      case NID_aes_256_cbc:
        return EVP_aes_256_cbc();
-+    case  NID_aes_256_gcm:
++    case NID_aes_256_gcm:
 +      return EVP_aes_256_gcm();
      default:
        return NULL;
    }
-@@ -647,6 +649,8 @@ const EVP_CIPHER *EVP_get_cipherbyname(const char *name) {
+@@ -651,6 +653,8 @@ const EVP_CIPHER *EVP_get_cipherbyname(const char *name) {
      return EVP_aes_128_ecb();
    } else if (OPENSSL_strcasecmp(name, "aes-256-ecb") == 0) {
      return EVP_aes_256_ecb();
@@ -21,7 +21,7 @@ index ae045aefcaef23ab8417edd93399b2431369097f..d225d2928b4ac9d01b0d735792a1a1bb
  
    return NULL;
 diff --git a/crypto/digest/digests.c b/crypto/digest/digests.c
-index 9656027668df82e9db1cdf397a65e3327b6679b3..432808d2b2679e8e483436b9786973d80d176e26 100644
+index fd2a939ab0d7a29a7eef84d1b0017da22652f5ea..632368c6d969db2ce14b6516fdf0659f0f3e5d81 100644
 --- a/crypto/digest/digests.c
 +++ b/crypto/digest/digests.c
 @@ -272,6 +272,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
@@ -137,7 +137,7 @@ index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..5def583a495213695862240bf26e7967
 +    return (&ripemd160_md);
 +}
 diff --git a/include/openssl/digest.h b/include/openssl/digest.h
-index caf58610b13978936e6245466d9f6ee8a6274ccc..c33e77a5efb73c36f3b5b4147b9c9bc508509f8e 100644
+index 87de3dfe493267b53f8b1cbad429e055b8a7d31f..a98ff7ac9c5b3a536a52d2a4a5bcc22af9068d96 100644
 --- a/include/openssl/digest.h
 +++ b/include/openssl/digest.h
 @@ -83,6 +83,7 @@ OPENSSL_EXPORT const EVP_MD *EVP_sha224(void);
@@ -166,18 +166,18 @@ index 4270dc1b4ce1c185e6b933720a7805cffe87e7e4..3a11cd09dc23f14e40d527d3534dd796
  #define LN_ripemd160WithRSA "ripemd160WithRSA"
  #define NID_ripemd160WithRSA 119
 diff --git a/util/BUILD.toplevel b/util/BUILD.toplevel
-index 6b645e61a6dd1c9f0932c35ad0ad0939b212e8a7..ddd5212281be01edb6822b420b257ba2c7d31d6c 100644
+index be3fd96c90b33c460983438f2c068a0e825a4894..88bca9c6487443a723e48bd20b70146b47ae4a42 100644
 --- a/util/BUILD.toplevel
 +++ b/util/BUILD.toplevel
-@@ -28,6 +28,7 @@ load(
-     "ssl_sources",
+@@ -29,6 +29,7 @@ load(
+     "ssl_cc_sources",
      "tool_sources",
      "tool_headers",
 +    "decrepit_sources",
  )
  
  config_setting(
-@@ -111,6 +112,15 @@ cc_library(
+@@ -121,6 +122,15 @@ cc_library(
      deps = [":crypto"],
  )
  
@@ -194,10 +194,10 @@ index 6b645e61a6dd1c9f0932c35ad0ad0939b212e8a7..ddd5212281be01edb6822b420b257ba2
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index aae158d13b30b2d169a040ce8140da3c1dbf6da5..0e497baee67d96f695fe417a3b573e96a1965f80 100644
+index a3435f2bc6c5716177134c37fc5f3cf7b8669e5b..2c107bc08ed99fc10b0f871114cbf00140b4553d 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
-@@ -154,6 +154,14 @@ class Android(object):
+@@ -170,6 +170,14 @@ class Android(object):
        blueprint.write('    ],\n')
        blueprint.write('}\n')
  
@@ -212,7 +212,7 @@ index aae158d13b30b2d169a040ce8140da3c1dbf6da5..0e497baee67d96f695fe417a3b573e96
      # Legacy Android.mk format, only used by Trusty in new branches
      with open('sources.mk', 'w+') as makefile:
        makefile.write(self.header)
-@@ -201,6 +209,7 @@ class Bazel(object):
+@@ -219,6 +227,7 @@ class Bazel(object):
        self.PrintVariableSection(out, 'crypto_sources', files['crypto'])
        self.PrintVariableSection(out, 'tool_sources', files['tool'])
        self.PrintVariableSection(out, 'tool_headers', files['tool_headers'])
@@ -220,7 +220,7 @@ index aae158d13b30b2d169a040ce8140da3c1dbf6da5..0e497baee67d96f695fe417a3b573e96
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -317,6 +326,8 @@ class GN(object):
+@@ -339,6 +348,8 @@ class GN(object):
        self.PrintVariableSection(out, 'ssl_sources',
                                  files['ssl'] + files['ssl_headers'] +
                                  files['ssl_internal_headers'])
@@ -229,8 +229,8 @@ index aae158d13b30b2d169a040ce8140da3c1dbf6da5..0e497baee67d96f695fe417a3b573e96
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -616,6 +627,21 @@ def main(platforms):
-   ssl_c_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
+@@ -613,6 +624,21 @@ def main(platforms):
+   ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
 +  decrepit_c_files = (
@@ -251,8 +251,8 @@ index aae158d13b30b2d169a040ce8140da3c1dbf6da5..0e497baee67d96f695fe417a3b573e96
  
    # Generate err_data.c
    with open('err_data.c', 'w+') as err_data:
-@@ -680,6 +706,7 @@ def main(platforms):
-       'ssl_internal_headers': ssl_internal_h_files,
+@@ -692,6 +718,7 @@ def main(platforms):
+       'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,
 +      'decrepit': decrepit_c_files,
