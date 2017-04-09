@@ -2089,10 +2089,10 @@ index 271ec5391d8a9a478f36da58f1b539963cf39724..cd0fcf8bec875485097560c9c8231ad0
    m_private.reset();
  }
 diff --git a/third_party/WebKit/public/BUILD.gn b/third_party/WebKit/public/BUILD.gn
-index 2f1c3c2c7e7b85a521b3aa4d951f74ff269af824..8b6be4dbf5faf54996e1c54ebe2d6387893c14c4 100644
+index 2f1c3c2c7e7b85a521b3aa4d951f74ff269af824..d34d3650f7a51470510f14bd03163a2d0bd928fd 100644
 --- a/third_party/WebKit/public/BUILD.gn
 +++ b/third_party/WebKit/public/BUILD.gn
-@@ -647,7 +647,10 @@ grit("image_resources") {
+@@ -647,7 +647,11 @@ grit("image_resources") {
  }
  
  mojom("mojo_bindings") {
@@ -2100,6 +2100,7 @@ index 2f1c3c2c7e7b85a521b3aa4d951f74ff269af824..8b6be4dbf5faf54996e1c54ebe2d6387
 +  visibility = [
 +    "//content/*",
 +    "//electron/atom/common/*",
++    "//electron/atom/app/*",
 +  ]
    visibility_blink = [
      "//content/common:mojo_bindings_blink",
