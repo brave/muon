@@ -1,6 +1,7 @@
 var ipc = require('ipc_utils')
 
 var id = 1;
+var focusId = 1;
 
 var binding = {
   getCurrent: function () {
@@ -44,6 +45,57 @@ var binding = {
       cb(win)
     })
     ipc.send('chrome-windows-update', responseId, windowId, updateInfo)
+  },
+
+  get: function (windowId, getInfo, cb) {
+    console.warn('chrome.windows.get is not supported yet')
+  },
+
+  getLastFocused: function (getInfo, cb) {
+    console.warn('chrome.windows.getLastFocused is not supported yet')
+  },
+
+  remove: function (windowId, cb) {
+    console.warn('chrome.windows.remove is not supported yet')
+  },
+
+  onCreated: {
+
+    addListener: function (callback) {
+      console.warn('chrome.windows.onCreated is not supported yet')
+    },
+
+    Filters: ['app', 'normal', 'panel', 'popup']
+  },
+
+  onRemoved: {
+
+    addListener: function (callback) {
+      console.warn('chrome.windows.onRemoved is not supported yet')
+    },
+
+    Filters: ['app', 'normal', 'panel', 'popup']
+  },
+
+  onFocusChanged: {
+
+    addListener: function (cb) {
+
+      if(cb.length != 1) {
+        console.warn('Callback has wrong number of arguments.')
+      }
+
+      var responseId = ++focusId
+
+      ipc.on('chrome-windows-focused-window-update-response-' + responseId, function (evt, responseId) {
+        cb(responseId);
+      })
+
+      ipc.send('chrome-windows-focused-window-update', responseId)
+
+    },
+
+    Filters: ['app', 'normal', 'panel', 'popup']
   },
 
   WINDOW_ID_NONE: -1,
