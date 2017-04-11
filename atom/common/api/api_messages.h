@@ -5,6 +5,7 @@
 // Multiply-included file, no traditional include guard.
 
 #include "base/strings/string16.h"
+#include "base/memory/shared_memory.h"
 #include "base/values.h"
 #include "content/public/common/common_param_traits.h"
 #include "ipc/ipc_message_macros.h"
@@ -28,6 +29,10 @@ IPC_MESSAGE_ROUTED3(AtomViewMsg_Message,
                     bool /* send_to_all */,
                     base::string16 /* channel */,
                     base::ListValue /* arguments */)
+
+IPC_MESSAGE_ROUTED2(AtomViewMsg_Message_Shared,
+                    base::string16 /* channel */,
+                    base::SharedMemoryHandle /* arguments */)
 
 // Update renderer process preferences.
 IPC_MESSAGE_CONTROL1(AtomMsg_UpdatePreferences, base::ListValue)

@@ -30,6 +30,10 @@ namespace autofill {
 class AtomAutofillClient;
 }
 
+namespace base {
+class SharedMemory;
+}
+
 namespace blink {
 struct WebDeviceEmulationParams;
 }
@@ -248,6 +252,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool SendIPCMessage(bool all_frames,
                       const base::string16& channel,
                       const base::ListValue& args);
+  bool SendIPCSharedMemory(const base::string16& channel,
+                            base::SharedMemory* shared_memory);
 
   // Send WebInputEvent to the page.
   void SendInputEvent(v8::Isolate* isolate, v8::Local<v8::Value> input_event);
@@ -458,6 +464,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void MediaStoppedPlaying(const MediaPlayerInfo& media_info,
                            const MediaPlayerId& id) override;
   void DidChangeThemeColor(SkColor theme_color) override;
+  void RenderViewCreated(content::RenderViewHost* render_view_host) override;
 
   // brightray::InspectableWebContentsDelegate:
   void DevToolsReloadPage() override;

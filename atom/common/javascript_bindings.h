@@ -10,6 +10,10 @@
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"
 
+namespace base {
+class SharedMemoryHandle;
+}
+
 namespace mate {
 class Arguments;
 }
@@ -59,6 +63,9 @@ class JavascriptBindings : public content::RenderViewObserver,
   void OnBrowserMessage(bool all_frames,
                         const base::string16& channel,
                         const base::ListValue& args);
+  void OnSharedBrowserMessage(const base::string16& channel,
+                              const base::SharedMemoryHandle& handle);
+
   DISALLOW_COPY_AND_ASSIGN(JavascriptBindings);
 };
 

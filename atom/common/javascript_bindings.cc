@@ -12,12 +12,15 @@
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "brave/common/extensions/shared_memory_bindings.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_view.h"
 #include "extensions/renderer/console.h"
 #include "native_mate/dictionary.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebView.h"
+
+using extensions::Feature;
 
 namespace atom {
 
@@ -197,10 +200,20 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
   if (!is_valid())
     return false;
 
+  auto context_type = context()->effective_context_type();
+
   // never handle ipc messages in a web page context
-  if (context()->effective_context_type() ==
-      extensions::Feature::WEB_PAGE_CONTEXT)
+  if (context_type == Feature::WEB_PAGE_CONTEXT)
     return false;
+
+  if (context_type == Feature::WEBUI_CONTEXT ||
+      context_type == Feature::BLESSED_EXTENSION_CONTEXT) {
+    bool handled = true;
+    IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
+      IPC_MESSAGE_HANDLER(AtomViewMsg_Message_Shared, OnSharedBrowserMessage)
+      IPC_MESSAGE_UNHANDLED(handled = false)
+    IPC_END_MESSAGE_MAP()
+  }
 
   bool handled = false;  // don't swallow any of these messages
   IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
@@ -209,6 +222,35 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
   IPC_END_MESSAGE_MAP()
 
   return handled;
+}
+
+void JavascriptBindings::OnSharedBrowserMessage(const base::string16& channel,
+                                      const base::SharedMemoryHandle& handle) {
+  if (!is_valid())
+    return;
+
+  v8::Isolate* isolate = context()->isolate();
+  v8::HandleScope handle_scope(isolate);
+  v8::Context::Scope context_scope(context()->v8_context());
+
+  std::vector<v8::Local<v8::Value>> args_vector;
+  args_vector.insert(args_vector.begin(),
+      extensions::SharedMemoryWrapper::CreateFrom(isolate, handle).ToV8());
+
+  // Insert the Event object, event.sender is ipc
+  mate::Dictionary event = mate::Dictionary::CreateEmpty(isolate);
+  args_vector.insert(args_vector.begin(), event.GetHandle());
+
+  std::vector<v8::Local<v8::Value>> concatenated_args =
+        { mate::StringToV8(isolate, channel) };
+      concatenated_args.reserve(1 + args_vector.size());
+      concatenated_args.insert(concatenated_args.end(),
+                                args_vector.begin(), args_vector.end());
+
+  context()->module_system()->CallModuleMethod("ipc_utils",
+                                  "emit",
+                                  concatenated_args.size(),
+                                  &concatenated_args.front());
 }
 
 void JavascriptBindings::OnBrowserMessage(bool all_frames,

@@ -46,6 +46,7 @@
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "brave/browser/renderer_preferences_helper.h"
+#include "brave/common/extensions/shared_memory_bindings.h"
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
 #include "chrome/browser/browser_process.h"
@@ -1032,6 +1033,10 @@ void WebContents::DidChangeThemeColor(SkColor theme_color) {
   Emit("did-change-theme-color", hex_theme_color);
 }
 
+void WebContents::RenderViewCreated(content::RenderViewHost* render_view_host) {
+  Emit("render-view-created", render_view_host->GetProcess()->GetID());
+}
+
 void WebContents::DocumentAvailableInMainFrame() {
   Emit("document-available");
 }
@@ -1943,6 +1948,20 @@ void WebContents::SetTabValues(const base::DictionaryValue& values) {
 }
 #endif
 
+bool WebContents::SendIPCSharedMemory(const base::string16& channel,
+                                      base::SharedMemory* shared_memory) {
+  auto process_handle = web_contents()->GetRenderProcessHost()->GetHandle();
+  if (!process_handle)
+    return false;
+
+  base::SharedMemoryHandle memory_handle;
+  if (!shared_memory->ShareToProcess(process_handle, &memory_handle))
+    return false;
+
+  return Send(
+      new AtomViewMsg_Message_Shared(routing_id(), channel, memory_handle));
+}
+
 bool WebContents::SendIPCMessage(bool all_frames,
                                  const base::string16& channel,
                                  const base::ListValue& args) {
@@ -2272,6 +2291,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("isFocused", &WebContents::IsFocused)
       .SetMethod("_clone", &WebContents::Clone)
       .SetMethod("_send", &WebContents::SendIPCMessage)
+      .SetMethod("_sendShared", &WebContents::SendIPCSharedMemory)
       .SetMethod("sendInputEvent", &WebContents::SendInputEvent)
       .SetMethod("startDrag", &WebContents::StartDrag)
       .SetMethod("setSize", &WebContents::SetSize)
