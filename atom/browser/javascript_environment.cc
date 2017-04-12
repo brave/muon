@@ -64,12 +64,17 @@ std::vector<base::FilePath> GetModuleSearchPaths() {
 
   auto command_line = base::CommandLine::ForCurrentProcess();
   base::FilePath source_root = command_line->GetSwitchValuePath("source-root");
-  if (source_root.empty() &&
-      !base::PathService::Get(base::DIR_SOURCE_ROOT, &source_root)) {
+  if (source_root.empty()) {
     source_root = GetResourcesDir().Append(FILE_PATH_LITERAL("app.asar"));
   }
 
-  if (base::PathExists(source_root)) {
+  bool path_exists = base::PathExists(source_root);
+  if (!path_exists) {
+    base::PathService::Get(base::DIR_SOURCE_ROOT, &source_root);
+    path_exists = base::PathExists(source_root);
+  }
+
+  if (path_exists) {
     search_paths.push_back(source_root);
     search_paths.push_back(source_root.Append(FILE_PATH_LITERAL("app")));
     search_paths.push_back(source_root
