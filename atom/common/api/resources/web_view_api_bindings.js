@@ -5,13 +5,13 @@
 // This module implements the public-facing API functions for the <webview> tag.
 
 const GuestViewInternal = require('guest-view-internal').GuestViewInternal
-const TabViewInternal = require('tabViewInternal').TabViewInternal;
-const WebViewInternal = require('webViewInternal').WebViewInternal;
-const WebViewImpl = require('webView').WebViewImpl;
+const TabViewInternal = require('tabViewInternal').TabViewInternal
+const WebViewInternal = require('webViewInternal').WebViewInternal
+const WebViewImpl = require('webView').WebViewImpl
 const GuestViewImpl = require('guestView').GuestViewImpl
 const remote = require('remote')
-const GuestViewContainer = require('guestViewContainer').GuestViewContainer;
-const GuestView = require('guestView').GuestView;
+const GuestViewContainer = require('guestViewContainer').GuestViewContainer
+const GuestView = require('guestView').GuestView
 
 const asyncMethods = [
   'loadURL',
@@ -109,13 +109,13 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
 
   if (opt_guestInstanceId) {
     if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
-      this.guest.detach();
+      this.guest.detach()
     }
 
-    this.guest = new GuestView('webview', guestInstanceId);
+    this.guest = new GuestView('webview', guestInstanceId)
   }
 
-  const attached = GuestViewContainer.prototype.attachWindow$.call(this);
+  const attached = GuestViewContainer.prototype.attachWindow$.call(this)
 
   if (attached) {
     WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
@@ -128,7 +128,9 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
 
 WebViewImpl.prototype.detachGuest = function () {
   if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
-    this.guest.detach()
+    this.guest.detach(() => {
+      this.guest = new GuestView('webview')
+    })
   }
 }
 
@@ -161,5 +163,5 @@ WebViewImpl.prototype.getURL = function () {
 // -----------------------------------------------------------------------------
 
 WebViewImpl.getApiMethods = function () {
-  return WEB_VIEW_API_METHODS;
-};
+  return WEB_VIEW_API_METHODS
+}
