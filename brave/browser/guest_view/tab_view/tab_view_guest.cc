@@ -36,6 +36,7 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
+#include "content/public/browser/resource_dispatcher_host.h"
 #include "content/public/browser/site_instance.h"
 #include "extensions/browser/guest_view/web_view/web_view_constants.h"
 #include "native_mate/dictionary.h"
@@ -312,6 +313,9 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
+  content::ResourceDispatcherHost::ResumeBlockedRequestsForFrameFromUI(
+        web_contents()->GetMainFrame());
+
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
 
   if (!tab_helper->IsDiscarded()) {
@@ -334,6 +338,9 @@ void TabViewGuest::DidAttachToEmbedder() {
 }
 
 void TabViewGuest::DidDetachFromEmbedder() {
+  content::ResourceDispatcherHost::BlockRequestsForFrameFromUI(
+      web_contents()->GetMainFrame());
+
   if (api_web_contents_) {
     api_web_contents_->Emit("did-detach",
         extensions::TabHelper::IdForTab(web_contents()));
