@@ -5,14 +5,11 @@
 #ifndef ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 #define ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 
+#include "base/memory/shared_memory_handle.h"
 #include "content/public/renderer/render_view_observer.h"
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"
-
-namespace base {
-class SharedMemoryHandle;
-}
 
 namespace mate {
 class Arguments;

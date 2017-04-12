@@ -9,6 +9,7 @@
 
 #include "base/compiler_specific.h"
 #include "base/macros.h"
+#include "base/memory/shared_memory_handle.h"
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "native_mate/handle.h"
 #include "native_mate/wrappable.h"
@@ -16,7 +17,6 @@
 
 namespace base {
 class SharedMemory;
-class SharedMemoryHandle;
 }
 
 namespace mate {
