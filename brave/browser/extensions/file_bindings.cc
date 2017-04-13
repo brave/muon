@@ -2,10 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <string>
 #include <utility>
 
 #include "brave/browser/extensions/file_bindings.h"
 
+#include "base/files/file_util.h"
 #include "base/files/important_file_writer.h"
 #include "base/memory/ptr_util.h"
 #include "base/sequenced_task_runner.h"
@@ -110,7 +112,7 @@ scoped_refptr<base::SequencedTaskRunner> FileBindings::GetTaskRunnerForFile(
     const base::FilePath& filename,
     base::SequencedWorkerPool* worker_pool) {
   std::string token("muon-file-");
-  token.append(filename.AsUTF8Unsafe());
+  token.append(MakeAbsoluteFilePath(filename).AsUTF8Unsafe());
   return worker_pool->GetSequencedTaskRunnerWithShutdownBehavior(
       worker_pool->GetNamedSequenceToken(token),
       base::SequencedWorkerPool::BLOCK_SHUTDOWN);
