@@ -105,6 +105,7 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
       pref_registry_(new user_prefs::PrefRegistrySyncable),
       has_parent_(false),
       original_context_(nullptr),
+      otr_context_(nullptr),
       partition_(partition),
       ready_(
         new base::WaitableEvent(base::WaitableEvent::ResetPolicy::MANUAL,
