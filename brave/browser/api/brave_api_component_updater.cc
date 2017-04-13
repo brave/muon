@@ -44,7 +44,7 @@ namespace brave {
 
 namespace api {
 
-ComponentUpdater::ComponentUpdater(v8::Isolate* isolate) {
+ComponentUpdater::ComponentUpdater(v8::Isolate* isolate) : weak_factory_(this) {
   Init(isolate);
 }
 
@@ -111,10 +111,10 @@ void ComponentUpdater::RegisterComponent(const std::string& component_id) {
   }
   base::Closure registered_callback =
     base::Bind(&ComponentUpdater::OnComponentRegistered,
-               base::Unretained(this), component_id);
+               weak_factory_.GetWeakPtr(), component_id);
   ReadyCallback ready_callback =
     base::Bind(&ComponentUpdater::OnComponentReady,
-               base::Unretained(this), component_id);
+               weak_factory_.GetWeakPtr(), component_id);
   if (component_id == kOnePasswordId) {
     RegisterComponentForUpdate(
         kOnePasswordPublicKeyStr, registered_callback, ready_callback);

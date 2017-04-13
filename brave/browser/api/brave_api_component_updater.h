@@ -10,6 +10,7 @@
 
 #include "atom/browser/api/trackable_object.h"
 #include "base/callback.h"
+#include "base/memory/weak_ptr.h"
 #include "components/component_updater/component_updater_service.h"
 #include "native_mate/handle.h"
 
@@ -68,6 +69,9 @@ class ComponentUpdater : public mate::TrackableObject<ComponentUpdater>,
   void OnEvent(Events event, const std::string& id) override;
 
  private:
+
+  base::WeakPtrFactory<ComponentUpdater> weak_factory_;
+
   DISALLOW_COPY_AND_ASSIGN(ComponentUpdater);
 };
 
