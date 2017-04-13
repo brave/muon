@@ -166,9 +166,13 @@ SharedMemoryBindings::~SharedMemoryBindings() {
 // static
 v8::Local<v8::Object> SharedMemoryBindings::API(
     extensions::ScriptContext* context) {
+  context->module_system()->RegisterNativeHandler(
+    "muon_shared_memory", std::unique_ptr<extensions::NativeHandler>(
+        new SharedMemoryBindings(context)));
+
   v8::Local<v8::Object> shared_memory_api = v8::Object::New(context->isolate());
   context->module_system()->SetNativeLazyField(
-        shared_memory_api, "create", "shared_memory", "Create");
+        shared_memory_api, "create", "muon_shared_memory", "Create");
   return shared_memory_api;
 }
 

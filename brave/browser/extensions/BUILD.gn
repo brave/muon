@@ -14,6 +14,8 @@ static_library("extensions") {
   ]
 
   sources = [
+    "file_bindings.cc",
+    "file_bindings.h",
     "path_bindings.cc",
     "path_bindings.h",
     "api/guest_view/tab_view/tab_view_internal_api.cc",

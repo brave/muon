@@ -17,6 +17,7 @@
 #include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
+#include "brave/browser/extensions/file_bindings.h"
 #include "brave/browser/extensions/path_bindings.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
 #include "content/public/common/content_switches.h"
@@ -149,10 +150,6 @@ JavascriptEnvironment::JavascriptEnvironment()
     script_context_->module_system()->RegisterNativeHandler(
       "path", std::unique_ptr<extensions::NativeHandler>(
           new brave::PathBindings(script_context_.get(), &source_map_)));
-    script_context_->module_system()->RegisterNativeHandler(
-      "shared_memory", std::unique_ptr<extensions::NativeHandler>(
-          new extensions::SharedMemoryBindings(
-              script_context_.get())));
   }
 
   ModuleRegistry* registry = ModuleRegistry::From(context());
@@ -164,8 +161,13 @@ JavascriptEnvironment::JavascriptEnvironment()
   v8::Local<v8::Object> muon = v8::Object::New(isolate_);
   global->Set(v8::String::NewFromUtf8(isolate_, "muon"), muon);
 
-  v8::Local<v8::Object> api = extensions::SharedMemoryBindings::API(script_context_.get());
-  muon->Set(v8::String::NewFromUtf8(isolate_, "shared_memory"), api);
+  v8::Local<v8::Object> shared_memory =
+      extensions::SharedMemoryBindings::API(script_context_.get());
+  muon->Set(v8::String::NewFromUtf8(isolate_, "shared_memory"), shared_memory);
+
+  v8::Local<v8::Object> file =
+      extensions::FileBindings::API(script_context_.get());
+  muon->Set(v8::String::NewFromUtf8(isolate_, "file"), file);
 }
 
 JavascriptEnvironment::~JavascriptEnvironment() {
