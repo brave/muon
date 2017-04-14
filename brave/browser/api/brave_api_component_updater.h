@@ -69,7 +69,6 @@ class ComponentUpdater : public mate::TrackableObject<ComponentUpdater>,
   void OnEvent(Events event, const std::string& id) override;
 
  private:
-
   base::WeakPtrFactory<ComponentUpdater> weak_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(ComponentUpdater);
