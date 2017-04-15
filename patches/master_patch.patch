@@ -1,18 +1,24 @@
 diff --git a/DEPS b/DEPS
-index f56638ac21ad0f45a2761a3bcd47320a4d29d84c..ef43ddb652c308f2909f153d327c39d6e5c1ef7a 100644
+index f56638ac21ad0f45a2761a3bcd47320a4d29d84c..1e412f2319e546c0de3dc8fe0bf33024ecbe5635 100644
 --- a/DEPS
 +++ b/DEPS
-@@ -1166,8 +1166,8 @@ recursedeps = [
-   'src/buildtools',
-   'src/third_party/android_tools',
-   [
--    'DEPS.chromium',
--    'src/third_party/angle'
-+    'src/third_party/angle',
-+    'DEPS.chromium'
-   ],
-   [
-     'DEPS',
+@@ -1,6 +1,6 @@
+ vars = {
+   'angle_revision':
+-    '461d9a3060e315706c74d1203ed945a600a1a241',
++    'd1bed175f107143a7c52485a9d197b486cd5433e',
+   'boringssl_git':
+     'https://boringssl.googlesource.com',
+   'boringssl_revision':
+@@ -82,7 +82,7 @@ deps = {
+   'src/third_party/SPIRV-Tools/src':
+     (Var("chromium_git")) + '/external/github.com/KhronosGroup/SPIRV-Tools.git@9166854ac93ef81b026e943ccd230fed6c8b8d3c',
+   'src/third_party/angle':
+-    (Var("chromium_git")) + '/angle/angle.git@461d9a3060e315706c74d1203ed945a600a1a241',
++    (Var("chromium_git")) + '/angle/angle.git@d1bed175f107143a7c52485a9d197b486cd5433e',
+   'src/third_party/bidichecker':
+     (Var("chromium_git")) + '/external/bidichecker/lib.git@97f2aa645b74c28c57eca56992235c79850fa9e0',
+   'src/third_party/boringssl/src':
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
 index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c1e3c004f 100644
 --- a/build/config/chrome_build.gni
@@ -2010,6 +2016,26 @@ index bf0ece1e723ba1a0644961cfd3a01ce3c14c892a..5e7d3dbb9da51a5abb0447bc04c90c9b
                                    HolderIsFirstArgument);
    }
    static void SetAsFunctionHandler(v8::Isolate* isolate,
+diff --git a/gpu/config/BUILD.gn b/gpu/config/BUILD.gn
+index b579142188dcd66cbfda91f60dbce0f37f097d73..e1e6ec4d73196c593d968afdc6a35bb11d158b43 100644
+--- a/gpu/config/BUILD.gn
++++ b/gpu/config/BUILD.gn
+@@ -7,11 +7,12 @@ import("//build/config/chromecast_build.gni")
+ import("//build/config/ui.gni")
+ 
+ declare_args() {
+-  # Use the PCI lib to collect GPU information on Linux.
+-  use_libpci = is_linux && (!is_chromecast || is_cast_desktop_build) &&
+-               (use_x11 || use_ozone)
+ }
+ 
++# Use the PCI lib to collect GPU information on Linux.
++use_libpci = is_linux && (!is_chromecast || is_cast_desktop_build) &&
++             (use_x11 || use_ozone)
++
+ group("config") {
+   if (is_component_build) {
+     public_deps = [
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
 index 62bed8c449c09098bd5d703be0a7172066d2050d..04908f9c562f836b5fe5acd64d6c2d9acd67825d 100644
 --- a/net/http/http_util.cc
