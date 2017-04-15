@@ -27,4 +27,10 @@ hooks = [
     'pattern': '.',
     'action': ['python', 'src/electron/script/apply-patches.py'],
   },
+  {
+    # Temporary sync again to get the patched DEPS
+    'name': 'sync',
+    'pattern': '.',
+    'action': ['node', './scripts/sync.js', '--run_sync'],
+  }
 ]
