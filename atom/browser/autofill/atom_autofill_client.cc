@@ -10,11 +10,13 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/browser_process.h"
+#include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "components/autofill/content/browser/content_autofill_driver.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/popup_item_ids.h"
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
 #include "components/autofill/core/common/autofill_pref_names.h"
+#include "components/password_manager/content/browser/content_password_manager_driver.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/render_frame_host.h"
@@ -206,6 +208,12 @@ void AtomAutofillClient::HideAutofillPopup() {
   if (api_web_contents_ && api_web_contents_->IsFocused()) {
     api_web_contents_->Emit("hide-autofill-popup");
   }
+  // Password generation popups behave in the same fashion and should also
+  // be hidden.
+  BravePasswordManagerClient* password_client =
+      BravePasswordManagerClient::FromWebContents(web_contents());
+  if (password_client)
+    password_client->HidePasswordGenerationPopup();
 }
 
 bool AtomAutofillClient::IsAutocompleteEnabled() {
@@ -220,6 +228,14 @@ void AtomAutofillClient::WebContentsDestroyed() {
 void AtomAutofillClient::PropagateAutofillPredictions(
     content::RenderFrameHost* rfh,
     const std::vector<autofill::FormStructure*>& forms) {
+  password_manager::ContentPasswordManagerDriver* driver =
+      password_manager::ContentPasswordManagerDriver::GetForRenderFrameHost(
+          rfh);
+  if (driver) {
+    driver->GetPasswordGenerationManager()->DetectFormsEligibleForGeneration(
+        forms);
+    driver->GetPasswordManager()->ProcessAutofillPredictions(driver, forms);
+  }
 }
 
 void AtomAutofillClient::DidFillOrPreviewField(

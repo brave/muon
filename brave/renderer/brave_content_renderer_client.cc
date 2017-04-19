@@ -23,6 +23,7 @@
 #include "components/autofill/content/renderer/password_autofill_agent.h"
 #include "components/autofill/content/renderer/password_generation_agent.h"
 #include "components/network_hints/renderer/prescient_networking_dispatcher.h"
+#include "components/password_manager/content/renderer/credential_manager_client.h"
 #include "components/plugins/renderer/plugin_placeholder.h"
 #include "components/printing/renderer/print_web_view_helper.h"
 #include "components/visitedlink/renderer/visitedlink_slave.h"
@@ -161,6 +162,8 @@ void BraveContentRendererClient::RenderViewCreated(
   ChromeExtensionsRendererClient::GetInstance()->RenderViewCreated(render_view);
 #endif
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
+
+  new password_manager::CredentialManagerClient(render_view);
 }
 
 bool BraveContentRendererClient::OverrideCreatePlugin(

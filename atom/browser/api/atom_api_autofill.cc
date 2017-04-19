@@ -7,17 +7,24 @@
 #include <vector>
 
 #include "atom/browser/autofill/personal_data_manager_factory.h"
+#include "atom/common/native_mate_converters/callback.h"
+#include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
+#include "atom/common/native_mate_converters/unique_ptr_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/node_includes.h"
 #include "base/guid.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
 #include "brave/browser/brave_content_browser_client.h"
+#include "chrome/browser/password_manager/password_store_factory.h"
+#include "chrome/browser/profiles/profile.h"
 #include "components/autofill/core/browser/autofill_profile.h"
 #include "components/autofill/core/browser/credit_card.h"
 #include "components/autofill/core/browser/personal_data_manager.h"
 #include "components/autofill/core/common/autofill_constants.h"
+#include "components/password_manager/core/browser/password_form_manager.h"
+#include "components/password_manager/core/browser/password_store_consumer.h"
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/dictionary.h"
 
@@ -146,6 +153,44 @@ struct Converter<autofill::CreditCard*> {
   }
 };
 
+template<>
+struct Converter<autofill::PasswordForm> {
+  static v8::Local<v8::Value> ToV8(
+    v8::Isolate* isolate, autofill::PasswordForm val) {
+  mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
+  dict.Set("signon_realm", val.signon_realm);
+  dict.Set("origin", val.origin);
+  dict.Set("username", val.username_value);
+  dict.Set("username_element", val.username_element);
+  dict.Set("password", val.password_value);
+  dict.Set("password_element", val.password_element);
+  dict.Set("action", val.action);
+  dict.Set("preferred", val.preferred);
+  dict.Set("blacklisted_by_user", val.blacklisted_by_user);
+  return dict.GetHandle();
+  }
+
+  static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
+                     autofill::PasswordForm* out) {
+    mate::Dictionary dict;
+    if (!ConvertFromV8(isolate, val, &dict))
+      return false;
+    if (!dict.Get("signon_realm", &(out->signon_realm)))
+        return false;
+    if (!dict.Get("origin", &(out->origin)))
+        return false;
+    dict.Get("username", &(out->username_value));
+    dict.Get("username_element", &(out->username_element));
+    dict.Get("password", &(out->password_value));
+    dict.Get("password_element", &(out->password_element));
+    dict.Get("action", &(out->action));
+    dict.Get("preferred", &(out->preferred));
+    dict.Get("blacklisted_by_user", &(out->blacklisted_by_user));
+    out->date_created = base::Time::Now();
+    return true;
+  }
+};
+
 }  // namespace mate
 
 namespace atom {
@@ -168,6 +213,12 @@ Autofill::~Autofill() {
 
 Profile* Autofill::profile() {
   return Profile::FromBrowserContext(browser_context_);
+}
+
+password_manager::PasswordStore* Autofill::GetPasswordStore() {
+  return PasswordStoreFactory::GetForProfile(
+    Profile::FromBrowserContext(browser_context_),
+    ServiceAccessType::EXPLICIT_ACCESS).get();
 }
 
 void Autofill::AddProfile(const base::DictionaryValue& profile) {
@@ -416,6 +467,65 @@ void Autofill::OnClearedAutofillData() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 }
 
+void Autofill::GetAutofillableLogins(mate::Arguments* args) {
+  PasswordFormCallback callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback` is a required field");
+    return;
+  }
+  password_manager::PasswordStore* store = GetPasswordStore();
+  password_list_consumer_.reset(new BravePasswordStoreConsumer(callback));
+  store->GetAutofillableLogins(password_list_consumer_.get());
+}
+
+void Autofill::GetBlacklistLogins(mate::Arguments* args) {
+  PasswordFormCallback callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback` is a required field");
+    return;
+  }
+  password_manager::PasswordStore* store = GetPasswordStore();
+  password_blacked_list_consumer_.reset(
+    new BravePasswordStoreConsumer(callback));
+  store->GetBlacklistLogins(password_blacked_list_consumer_.get());
+}
+
+void Autofill::AddLogin(mate::Arguments* args) {
+  autofill::PasswordForm form;
+  if (args->Length() == 1 && !args->GetNext(&form)) {
+    args->ThrowError();
+    return;
+  }
+  password_manager::PasswordStore* store = GetPasswordStore();
+  store->AddLogin(form);
+}
+
+void Autofill::UpdateLogin(mate::Arguments* args) {
+  autofill::PasswordForm form;
+  if (args->Length() == 1 && !args->GetNext(&form)) {
+    args->ThrowError();
+    return;
+  }
+  password_manager::PasswordStore* store = GetPasswordStore();
+  store->UpdateLogin(form);
+}
+
+void Autofill::RemoveLogin(mate::Arguments* args) {
+  autofill::PasswordForm form;
+  if (args->Length() == 1 && !args->GetNext(&form)) {
+    args->ThrowError();
+    return;
+  }
+  password_manager::PasswordStore* store = GetPasswordStore();
+  store->RemoveLogin(form);
+}
+
+void Autofill::ClearLogins() {
+  password_manager::PasswordStore* store = GetPasswordStore();
+  store->RemoveLoginsCreatedBetween(base::Time(), base::Time::Max(),
+                                    base::Closure());
+}
+
 void Autofill::OnPersonalDataChanged() {
   std::vector<autofill::AutofillProfile*> profiles =
     personal_data_manager_->GetProfiles();
@@ -439,6 +549,12 @@ void Autofill::OnPersonalDataChanged() {
                   profile_guids,
                   credit_card_guids);
 }
+void Autofill::OnLoginsChanged(
+    const password_manager::PasswordStoreChangeList& changes) {
+  password_manager::PasswordStore* store = GetPasswordStore();
+  store->GetAutofillableLogins(password_list_consumer_.get());
+  store->GetBlacklistLogins(password_blacked_list_consumer_.get());
+}
 
 // static
 mate::Handle<Autofill> Autofill::Create(
@@ -459,7 +575,13 @@ void Autofill::BuildPrototype(v8::Isolate* isolate,
     .SetMethod("getCreditCard", &Autofill::GetCreditCard)
     .SetMethod("removeCreditCard", &Autofill::RemoveCreditCard)
     .SetMethod("clearAutocompleteData", &Autofill::ClearAutocompleteData)
-    .SetMethod("clearAutofillData", &Autofill::ClearAutofillData);
+    .SetMethod("clearAutofillData", &Autofill::ClearAutofillData)
+    .SetMethod("getAutofillableLogins", &Autofill::GetAutofillableLogins)
+    .SetMethod("getBlackedlistLogins", &Autofill::GetBlacklistLogins)
+    .SetMethod("addLogin", &Autofill::AddLogin)
+    .SetMethod("updateLogin", &Autofill::UpdateLogin)
+    .SetMethod("removeLogin", &Autofill::RemoveLogin)
+    .SetMethod("clearLogins", &Autofill::ClearLogins);
 }
 
 }  // namespace api

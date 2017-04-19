@@ -14,6 +14,7 @@
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
+#include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/grit/brave_resources.h"
 #include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
@@ -36,6 +37,7 @@
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/common/service_names.mojom.h"
 #include "content/public/common/url_constants.h"
@@ -170,6 +172,13 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
 void BraveContentBrowserClient::RegisterRenderFrameMojoInterfaces(
     service_manager::InterfaceRegistry* registry,
     content::RenderFrameHost* render_frame_host) {
+
+  if (!render_frame_host->GetParent()) {
+    // Register mojo CredentialManager interface only for main frame.
+    registry->AddInterface(
+        base::Bind(&BravePasswordManagerClient::BindCredentialManager,
+                   render_frame_host));
+  }
   registry->AddInterface(
       base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver,
                  render_frame_host));
@@ -177,6 +186,11 @@ void BraveContentBrowserClient::RegisterRenderFrameMojoInterfaces(
   registry->AddInterface(
       base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
                      BindPasswordManagerDriver,
+                 render_frame_host));
+
+  registry->AddInterface(
+      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
+                     BindSensitiveInputVisibilityService,
                  render_frame_host));
 }
 

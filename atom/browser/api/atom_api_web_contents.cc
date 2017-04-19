@@ -45,6 +45,7 @@
 #include "brave/browser/brave_browser_context.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
+#include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "brave/browser/renderer_preferences_helper.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
@@ -448,6 +449,11 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
           autofill::AtomAutofillClient::FromWebContents(web_contents),
           locale,
           autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+      BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
+          web_contents,
+          autofill::AtomAutofillClient::FromWebContents(web_contents));
+      BravePasswordManagerClient::FromWebContents(web_contents)->
+          Initialize(this);
 
       // favicon::CreateContentFaviconDriverForWebContents(web_contents);
       HistoryTabHelper::CreateForWebContents(web_contents);
@@ -718,6 +724,37 @@ void WebContents::DetachGuest(mate::Arguments* args) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper)
     args->Return(tab_helper->DetachGuest());
+}
+
+void WebContents::SavePassword() {
+  auto passwordManagerClient =
+    BravePasswordManagerClient::FromWebContents(web_contents());
+  auto autofillClient =
+    autofill::AtomAutofillClient::FromWebContents(web_contents());
+  if (passwordManagerClient) {
+    passwordManagerClient->DidClickSave();
+  }
+}
+
+void WebContents::NeverSavePassword() {
+  auto passwordManagerClient =
+    BravePasswordManagerClient::FromWebContents(web_contents());
+  if (passwordManagerClient)
+    passwordManagerClient->DidClickNever();
+}
+
+void WebContents::UpdatePassword() {
+  auto passwordManagerClient =
+    BravePasswordManagerClient::FromWebContents(web_contents());
+  if (passwordManagerClient)
+    passwordManagerClient->DidClickUpdate();
+}
+
+void WebContents::NoUpdatePassword() {
+  auto passwordManagerClient =
+    BravePasswordManagerClient::FromWebContents(web_contents());
+  if (passwordManagerClient)
+    passwordManagerClient->DidClickNoUpdate();
 }
 
 content::WebContents* WebContents::OpenURLFromTab(
@@ -2377,10 +2414,13 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("forceClose", &WebContents::DestroyWebContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
-
       .SetMethod("_attachGuest", &WebContents::AttachGuest)
       .SetMethod("_detachGuest", &WebContents::DetachGuest)
       .SetMethod("isPlaceholder", &WebContents::IsPlaceholder)
+      .SetMethod("savePassword", &WebContents::SavePassword)
+      .SetMethod("neverSavePassword", &WebContents::NeverSavePassword)
+      .SetMethod("updatePassword", &WebContents::UpdatePassword)
+      .SetMethod("noUpdatePassword", &WebContents::NoUpdatePassword)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("guestInstanceId", &WebContents::GetGuestInstanceId)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)

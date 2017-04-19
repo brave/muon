@@ -45,6 +45,7 @@ source_set("node") {
     "native_mate_converters/v8_value_converter.h",
     "native_mate_converters/value_converter.cc",
     "native_mate_converters/value_converter.h",
+    "native_mate_converters/unique_ptr_converter.h",
     "node_bindings.cc",
     "node_bindings.h",
     "node_includes.h",

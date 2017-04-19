@@ -21,6 +21,10 @@ namespace autofill {
 class AutofillWebDataService;
 }
 
+#if defined(OS_WIN)
+class PasswordWebDataService;
+#endif
+
 namespace base {
 class DictionaryValue;
 }
@@ -102,6 +106,11 @@ class Profile : public atom::AtomBrowserContext {
 
   virtual scoped_refptr<autofill::AutofillWebDataService>
     GetAutofillWebdataService() = 0;
+
+#if defined(OS_WIN)
+  virtual scoped_refptr<PasswordWebDataService>
+    GetPasswordWebdataService() = 0;
+#endif
 
   virtual PrefChangeRegistrar* user_prefs_change_registrar() const = 0;
 

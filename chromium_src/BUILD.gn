@@ -527,9 +527,12 @@ source_set("sync") {
 
   sources = [
     "chrome/browser/sync/glue/sync_start_util.cc",
+    "chrome/browser/sync/profile_sync_service_factory.cc"
   ]
 
   deps = [
+    "//components/browser_sync",
+    "//components/keyed_service/content",
     ":sessions",
   ]
 }
@@ -554,9 +557,27 @@ source_set("password_manager") {
   configs += [ ":chromium_src_config" ]
   include_dirs = [ "." ] # force this to appear before the chromium src dir
 
+  if (is_win) {
+    all_dependent_configs = [ "//chrome/browser:browser_win_linker_flags" ]
+  }
+
   sources = [
-    "chrome/browser/password_manager/password_store_factory.cc",
+    "//chrome/browser/browsing_data/browsing_data_helper.h",
+    "//chrome/browser/browsing_data/browsing_data_helper.cc",
+    "//chrome/browser/mac/security_wrappers.h",
+    "//chrome/browser/mac/security_wrappers.cc",
+    "//chrome/browser/password_manager/password_manager_util_win.h",
+    "//chrome/browser/password_manager/password_manager_util_win.cc",
+    "//chrome/browser/password_manager/password_store_factory.cc",
     "//chrome/browser/password_manager/password_store_factory.h",
+    "//chrome/browser/password_manager/password_store_mac.h",
+    "//chrome/browser/password_manager/password_store_mac.cc",
+    "//chrome/browser/password_manager/password_store_proxy_mac.h",
+    "//chrome/browser/password_manager/password_store_proxy_mac.cc",
+    "//chrome/browser/password_manager/password_store_win.h",
+    "//chrome/browser/password_manager/password_store_win.cc",
+    "//chrome/browser/password_manager/simple_password_store_mac.h",
+    "//chrome/browser/password_manager/simple_password_store_mac.cc",
   ]
 
   deps = [
@@ -564,6 +585,22 @@ source_set("password_manager") {
     "//components/password_manager/core/browser",
     "//components/password_manager/core/common",
   ]
+
+  if (is_linux) {
+    if (use_x11) {
+      sources += [
+        "//chrome/browser/password_manager/password_store_x.h",
+        "//chrome/browser/password_manager/password_store_x.cc",
+      ]
+    }
+    if (use_dbus) {
+      deps += [ "//dbus" ]
+    }
+    sources += [
+      "//chrome/browser/password_manager/native_backend_kwallet_x.h",
+      "//chrome/browser/password_manager/native_backend_kwallet_x.cc",
+    ]
+  }
 }
 
 source_set("favicon") {

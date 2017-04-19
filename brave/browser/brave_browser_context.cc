@@ -27,6 +27,8 @@
 #include "components/guest_view/browser/guest_view_manager.h"
 #include "components/guest_view/browser/guest_view_manager_delegate.h"
 #include "components/guest_view/common/guest_view_constants.h"
+#include "components/password_manager/core/browser/password_manager.h"
+#include "components/password_manager/core/browser/webdata/logins_table.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
@@ -95,6 +97,11 @@ const int kPersistPrefixLength = 8;
 void DatabaseErrorCallback(sql::InitStatus init_status,
                            const std::string& diagnostics) {
   LOG(WARNING) << "initializing autocomplete database failed";
+}
+
+void PasswordErrorCallback(sql::InitStatus init_status,
+                           const std::string& diagnostics) {
+  LOG(WARNING) << "initializing Password database failed";
 }
 
 BraveBrowserContext::BraveBrowserContext(const std::string& partition,
@@ -166,6 +173,9 @@ BraveBrowserContext::~BraveBrowserContext() {
 
   if (!IsOffTheRecord() && !HasParentContext()) {
     autofill_data_->ShutdownOnUIThread();
+#if defined(OS_WIN)
+    password_data_->ShutdownOnUIThread();
+#endif
     web_database_->ShutdownDatabase();
 
     bool prefs_loaded = user_prefs_->GetInitializationStatus() !=
@@ -399,6 +409,8 @@ void BraveBrowserContext::CreateProfilePrefs(
     ProtocolHandlerRegistry::RegisterProfilePrefs(pref_registry_.get());
     HostContentSettingsMap::RegisterProfilePrefs(pref_registry_.get());
     autofill::AutofillManager::RegisterProfilePrefs(pref_registry_.get());
+    password_manager::PasswordManager::RegisterProfilePrefs(
+      pref_registry_.get());
 #if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions::AtomBrowserClientExtensionsPart::RegisterProfilePrefs(
         pref_registry_.get());
@@ -455,6 +467,7 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
         BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
         BrowserThread::GetTaskRunnerForThread(BrowserThread::DB));
     web_database_->AddTable(base::WrapUnique(new autofill::AutofillTable));
+    web_database_->AddTable(base::WrapUnique(new LoginsTable));
     web_database_->LoadDatabase();
 
     autofill_data_ = new autofill::AutofillWebDataService(
@@ -463,6 +476,14 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
         BrowserThread::GetTaskRunnerForThread(BrowserThread::DB),
         base::Bind(&DatabaseErrorCallback));
     autofill_data_->Init();
+
+#if defined(OS_WIN)
+    password_data_ = new PasswordWebDataService(
+        web_database_,
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
+        base::Bind(&PasswordErrorCallback));
+    password_data_->Init();
+#endif
   }
 
   user_prefs_registrar_->Init(user_prefs_.get());
@@ -495,6 +516,13 @@ scoped_refptr<autofill::AutofillWebDataService>
 BraveBrowserContext::GetAutofillWebdataService() {
   return original_context()->autofill_data_;
 }
+
+#if defined(OS_WIN)
+scoped_refptr<PasswordWebDataService>
+BraveBrowserContext::GetPasswordWebdataService() {
+  return original_context()->password_data_;
+}
+#endif
 
 base::FilePath BraveBrowserContext::GetPath() const {
   return brightray::BrowserContext::GetPath();
