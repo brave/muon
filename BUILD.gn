@@ -680,7 +680,7 @@ action("create_dist") {
   }
   if (is_win) {
     deps += [
-      "app/win:dist_widevine_resources"
+      "app/win:dist_widevine_resources",
     ]
   }
 

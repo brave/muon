@@ -1,7 +1,15 @@
 config("build_config") {
   defines = [
     "NODE_WANT_INTERNALS=1",
-    "NODE_SHARED_MODE",
+    "NODE_SHARED_MODE"
+  ]
+
+  include_dirs = [
+    "//electron/vendor/node/src",
+    "//electron/vendor/node/deps/http_parser",
+    "//electron/vendor/node/deps/uv/include",
+    # The `node.h` is using `#include"ares.h"`.
+    "//electron/vendor/node/deps/cares/include",
   ]
 }
 

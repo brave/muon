@@ -57,7 +57,7 @@
       }
     },
     'target_conditions': [
-      ['_target_name in ["libuv", "http_parser", "cares", "node", "zlib"]', {
+      ['_target_name in ["libuv", "http_parser", "cares", "node", "zlib", "v8_libbase", "v8_base", "v8_external_snapshot"]', {
         'msvs_disabled_warnings': [
           4003,  # not enough actual parameters for macro 'V'
           4013,  # 'free' undefined; assuming extern returning int
@@ -228,6 +228,11 @@
       4996,  # (atlapp.h) 'GetVersionExW': was declared deprecated
       4716,  # 'function' must return a value,
       4251, # class 'std::xx' needs to have dll-interface.
+      # icu
+      4005,
+      4068,
+      4267,
+      4333,
     ],
   },
 }
