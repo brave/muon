@@ -41,10 +41,10 @@ def get_files_list(version):
     'node-{0}.tar.gz'.format(version),
     'iojs-{0}.tar.gz'.format(version),
     'iojs-{0}-headers.tar.gz'.format(version),
-    'node.exe',
-    'x64/node.exe',
-    'win-x86/iojs.exe',
-    'win-x64/iojs.exe',
+    'node.lib',
+    'x64/node.lib',
+    'win-x86/iojs.lib',
+    'win-x64/iojs.lib',
   ]
 
 
