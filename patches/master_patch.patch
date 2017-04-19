@@ -1,5 +1,5 @@
 diff --git a/DEPS b/DEPS
-index f56638ac21ad0f45a2761a3bcd47320a4d29d84c..1e412f2319e546c0de3dc8fe0bf33024ecbe5635 100644
+index f5dbbf4c8768430b3e23c6c90e565219c50b0ab4..decf5bf37bdb622fe151ad69e0042df25c67dcf1 100644
 --- a/DEPS
 +++ b/DEPS
 @@ -1,6 +1,6 @@
@@ -1621,7 +1621,7 @@ index d10bcb69154d389318b6f67ba231dba728f5f1cd..fffbf371e38da48dcb7037bcb9da5505
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 9ce93d256d4f1c3cdaaa277f7d09987c621a0731..d4bed59d1ea0ec6382faabd56ea4dc0659a605f6 100644
+index b7f8bad5ef1a10c5d2e9ac4d83f87e069dbd179a..615023a1338aa05cc2ba2a60ae5fe218d7c13180 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -139,6 +139,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1647,7 +1647,7 @@ index 9ce93d256d4f1c3cdaaa277f7d09987c621a0731..d4bed59d1ea0ec6382faabd56ea4dc06
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1845,7 +1853,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1846,7 +1854,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1662,7 +1662,7 @@ index 9ce93d256d4f1c3cdaaa277f7d09987c621a0731..d4bed59d1ea0ec6382faabd56ea4dc06
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2001,6 +2016,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2002,6 +2017,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1670,7 +1670,7 @@ index 9ce93d256d4f1c3cdaaa277f7d09987c621a0731..d4bed59d1ea0ec6382faabd56ea4dc06
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -2014,6 +2030,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2015,6 +2031,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1678,7 +1678,7 @@ index 9ce93d256d4f1c3cdaaa277f7d09987c621a0731..d4bed59d1ea0ec6382faabd56ea4dc06
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2061,8 +2078,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2062,8 +2079,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1689,7 +1689,7 @@ index 9ce93d256d4f1c3cdaaa277f7d09987c621a0731..d4bed59d1ea0ec6382faabd56ea4dc06
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2422,14 +2441,18 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2423,14 +2442,18 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    // do so. For this reason, for now, we accept this non-ideal way of fixing the
    // point offset manually from the view bounds. This should be revisited when
    // fixing issues in TextInputClientMac (https://crbug.com/643233).
@@ -1708,7 +1708,7 @@ index 9ce93d256d4f1c3cdaaa277f7d09987c621a0731..d4bed59d1ea0ec6382faabd56ea4dc06
          [self showLookUpDictionaryOverlayInternal:string
                                      baselinePoint:baselinePoint
                                         targetView:targetView];
-@@ -2808,6 +2831,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2809,6 +2832,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
