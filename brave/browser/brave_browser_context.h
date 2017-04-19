@@ -15,6 +15,9 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/zoom/chrome_zoom_level_prefs.h"
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
+#if defined(OS_WIN)
+#include "components/password_manager/core/browser/webdata/password_web_data_service_win.h"
+#endif
 #include "components/prefs/overlay_user_pref_store.h"
 #include "components/webdata/common/web_database_service.h"
 
@@ -105,6 +108,11 @@ class BraveBrowserContext : public Profile {
   scoped_refptr<autofill::AutofillWebDataService>
     GetAutofillWebdataService() override;
 
+#if defined(OS_WIN)
+  scoped_refptr<PasswordWebDataService>
+    GetPasswordWebdataService() override;
+#endif
+
   base::FilePath GetPath() const override;
 
   DevToolsNetworkControllerHandle*
@@ -137,6 +145,9 @@ class BraveBrowserContext : public Profile {
   std::unique_ptr<base::WaitableEvent> ready_;
 
   scoped_refptr<autofill::AutofillWebDataService> autofill_data_;
+#if defined(OS_WIN)
+  scoped_refptr<PasswordWebDataService> password_data_;
+#endif
   scoped_refptr<WebDatabaseService> web_database_;
   std::unique_ptr<ProtocolHandlerRegistry::JobInterceptorFactory>
       protocol_handler_interceptor_;

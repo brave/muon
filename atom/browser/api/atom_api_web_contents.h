@@ -285,6 +285,11 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void DetachGuest(mate::Arguments* args);
   void IsPlaceholder(mate::Arguments* args);
 
+  void SavePassword();
+  void NeverSavePassword();
+  void UpdatePassword();
+  void NoUpdatePassword();
+
   // Returns the web preferences of current WebContents.
   v8::Local<v8::Value> GetWebPreferences(v8::Isolate* isolate);
 
