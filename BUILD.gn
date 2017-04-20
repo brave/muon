@@ -114,6 +114,7 @@ repack("packed_extra_resources") {
     "$root_gen_dir/ui/strings/app_locale_settings_en-US.pak",
     "$root_gen_dir/ui/strings/ui_strings_en-US.pak",
     "$root_gen_dir/components/components_resources.pak",
+    "$root_gen_dir/content/browser/devtools/devtools_resources.pak",
   ]
 
   deps = [
@@ -133,6 +134,7 @@ repack("packed_extra_resources") {
     "//ui/strings",
     "//content/browser/devtools:resources",
     "//components/resources:components_resources",
+    "//content/browser/devtools:devtools_resources",
   ]
 
   if (enable_extensions) {
