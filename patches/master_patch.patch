@@ -1,24 +1,3 @@
-diff --git a/DEPS b/DEPS
-index f5dbbf4c8768430b3e23c6c90e565219c50b0ab4..decf5bf37bdb622fe151ad69e0042df25c67dcf1 100644
---- a/DEPS
-+++ b/DEPS
-@@ -1,6 +1,6 @@
- vars = {
-   'angle_revision':
--    '461d9a3060e315706c74d1203ed945a600a1a241',
-+    'd1bed175f107143a7c52485a9d197b486cd5433e',
-   'boringssl_git':
-     'https://boringssl.googlesource.com',
-   'boringssl_revision':
-@@ -82,7 +82,7 @@ deps = {
-   'src/third_party/SPIRV-Tools/src':
-     (Var("chromium_git")) + '/external/github.com/KhronosGroup/SPIRV-Tools.git@9166854ac93ef81b026e943ccd230fed6c8b8d3c',
-   'src/third_party/angle':
--    (Var("chromium_git")) + '/angle/angle.git@461d9a3060e315706c74d1203ed945a600a1a241',
-+    (Var("chromium_git")) + '/angle/angle.git@d1bed175f107143a7c52485a9d197b486cd5433e',
-   'src/third_party/bidichecker':
-     (Var("chromium_git")) + '/external/bidichecker/lib.git@97f2aa645b74c28c57eca56992235c79850fa9e0',
-   'src/third_party/boringssl/src':
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
 index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c1e3c004f 100644
 --- a/build/config/chrome_build.gni
@@ -28,7 +7,7 @@ index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c
    # on Windows.
    is_multi_dll_chrome = is_win && !is_component_build
 -}
- 
+
 +  # Build chromium without muon flags
 +  muon_chromium_build = false
 +}
@@ -47,7 +26,7 @@ index b417e76a3b0b9d985f1442503b7b9fd93d6f2e0f..235a6bfcfbaaf80f53fe9db10ef2a573
 +++ b/build/toolchain/mac/BUILD.gn
 @@ -245,13 +245,15 @@ template("mac_toolchain") {
      }
- 
+
      tool("alink") {
 +      rspfile = "{{output}}.rsp"
        script =
@@ -73,9 +52,9 @@ index dd1017fb3d9f4f08d0b2f6fa34e1d307b228956f..36f974bedcb8d9b624f14f58c5f7dd06
 +import("//build/toolchain/cc_wrapper.gni")
  import("//build/toolchain/goma.gni")
  import("//build/toolchain/toolchain.gni")
- 
+
 @@ -23,6 +24,8 @@ tool_wrapper_path = rebase_path("tool_wrapper.py", root_build_dir)
- 
+
  if (use_goma) {
    goma_prefix = "$goma_dir/gomacc.exe "
 +} else if (cc_wrapper != "") {
@@ -97,7 +76,7 @@ index 9c0e2c5cde7e7ffa3eaed4478d1bad35cc380905..c9c3958f7c39a762faa7dc75be0be95a
 +    chrome_product_short_name = "Google Chrome"
 +  }
  }
- 
+
  if (enable_resource_whitelist_generation) {
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
 index 7c663752f6ee5fb932194d25c9ed63bcd5beee6d..dd36aa4ab8da456d23d1b2b458b491e6fcb09068 100644
@@ -111,7 +90,7 @@ index 7c663752f6ee5fb932194d25c9ed63bcd5beee6d..dd36aa4ab8da456d23d1b2b458b491e6
 +      include_dirs = [ "//electron" ]
 +    }
    }
- 
+
    if (enable_pepper_cdms) {
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
 index 7444d5b35cdf9588b72239da790aecb22820b31c..48c95c8c9e7b8e413d94da711ad51d0ab40e159e 100644
@@ -133,7 +112,7 @@ index 56d2f39a8be535d78d72954f12a78f188010c6cd..5ddb40fbea05eb72125f7469ace0958c
 @@ -8,6 +8,7 @@
  #include <limits>
  #include <utility>
- 
+
 +#include "atom/browser/extensions/tab_helper.h"
  #include "base/bind.h"
  #include "base/callback.h"
@@ -166,12 +145,12 @@ index 56d2f39a8be535d78d72954f12a78f188010c6cd..5ddb40fbea05eb72125f7469ace0958c
 -                         ->ToValue()
 -                         .release());
 +    source_tab.reset(extensions::TabHelper::CreateTabValue(source_contents));
- 
+
      content::RenderFrameHost* rfh =
          content::RenderFrameHost::FromID(source_process_id, source_routing_id);
 @@ -360,10 +363,10 @@ void MessageService::OpenChannelToExtension(
      }
- 
+
      // This check may show a dialog.
 -    IncognitoConnectability::Get(context)
 -        ->Query(target_extension, source_contents, source_url,
@@ -183,7 +162,7 @@ index 56d2f39a8be535d78d72954f12a78f188010c6cd..5ddb40fbea05eb72125f7469ace0958c
 +    //                        weak_factory_.GetWeakPtr(), base::Passed(&params)));
      return;
    }
- 
+
 diff --git a/chrome/browser/memory/tab_manager.cc b/chrome/browser/memory/tab_manager.cc
 index b689350325b807a0276cac709e4e4fa3d2054980..f16ba67996a7091d87d7de9ad71de63182015780 100644
 --- a/chrome/browser/memory/tab_manager.cc
@@ -201,7 +180,7 @@ index b689350325b807a0276cac709e4e4fa3d2054980..f16ba67996a7091d87d7de9ad71de631
 @@ -789,6 +790,17 @@ void TabManager::PurgeAndSuspendBackgroundedTabs() {
    }
  }
- 
+
 +// MUON(bridiver): see tab_manager.h
 +WebContents* TabManager::CreateNullContents(
 +    TabStripModel* model, WebContents* old_contents) {
@@ -219,7 +198,7 @@ index b689350325b807a0276cac709e4e4fa3d2054980..f16ba67996a7091d87d7de9ad71de631
 @@ -808,8 +820,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
        "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
        old_contents->NeedToFireBeforeUnload());
- 
+
 -  WebContents* null_contents =
 -      WebContents::Create(WebContents::CreateParams(model->profile()));
 +  // MUON(bridiver): see tab_manager.h
@@ -235,7 +214,7 @@ index b689350325b807a0276cac709e4e4fa3d2054980..f16ba67996a7091d87d7de9ad71de631
 +  // MUON(bridiver): see tab_manager.h
 +  DestroyOldContents(old_contents);
    recent_tab_discard_ = true;
- 
+
    return null_contents;
 diff --git a/chrome/browser/memory/tab_manager.h b/chrome/browser/memory/tab_manager.h
 index c384b7e054b07fa3eb20ad6b794bd748fcaf5665..22ca673c3e9a82d3dfa4a6e95a9cf74434fa0620 100644
@@ -244,7 +223,7 @@ index c384b7e054b07fa3eb20ad6b794bd748fcaf5665..22ca673c3e9a82d3dfa4a6e95a9cf744
 @@ -73,6 +73,11 @@ class TabManager : public TabStripModelObserver {
    TabManager();
    ~TabManager() override;
- 
+
 +  // MUON(bridiver): override to create/destroy guests webcontents
 +  virtual content::WebContents* CreateNullContents(
 +      TabStripModel* model, content::WebContents* old_contents);
@@ -252,13 +231,13 @@ index c384b7e054b07fa3eb20ad6b794bd748fcaf5665..22ca673c3e9a82d3dfa4a6e95a9cf744
 +
    // Number of discard events since Chrome started.
    int discard_count() const { return discard_count_; }
- 
+
 @@ -187,6 +192,7 @@ class TabManager : public TabStripModelObserver {
    // This is needed so WebContentsData can call OnDiscardedStateChange, and
    // can use PurgeAndSuspendState.
    friend class WebContentsData;
 +  friend class GuestTabManager;
- 
+
    // Called by WebContentsData whenever the discard state of a WebContents
    // changes, so that observers can be informed.
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
@@ -266,7 +245,7 @@ index df471305c8f649bf4f16837138007be6aedf2d9e..32645b5f9c2b6356f3c2e25f09a321c3
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
 @@ -58,13 +58,13 @@ namespace {
- 
+
  void ShowWarningMessageBox(const base::string16& message) {
    // Runs always on the UI thread.
 -  static bool is_dialog_shown = false;
@@ -278,11 +257,11 @@ index df471305c8f649bf4f16837138007be6aedf2d9e..32645b5f9c2b6356f3c2e25f09a321c3
    // Block opening dialog from nested task.
 -  base::AutoReset<bool> auto_reset(&is_dialog_shown, true);
 +  // base::AutoReset<bool> auto_reset(&is_dialog_shown, true);
- 
+
 -  chrome::ShowWarningMessageBox(nullptr, base::string16(), message);
 +  // chrome::ShowWarningMessageBox(nullptr, base::string16(), message);
  }
- 
+
  }  // namespace
 diff --git a/chrome/browser/renderer_host/chrome_extension_message_filter.cc b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 index 0ba1d828cb9d63bb4430ebe14969a017c2e2343b..7b5a75a5f289d9886c31605605b4901cbfe6265a 100644
@@ -312,7 +291,7 @@ index 0ba1d828cb9d63bb4430ebe14969a017c2e2343b..7b5a75a5f289d9886c31605605b4901c
 @@ -43,6 +46,7 @@ const uint32_t kFilteredMessageClasses[] = {
      ChromeExtensionMsgStart, ExtensionMsgStart,
  };
- 
+
 +#if 0
  // Logs an action to the extension activity log for the specified profile.
  void AddActionToExtensionActivityLog(Profile* profile,
@@ -322,9 +301,9 @@ index 0ba1d828cb9d63bb4430ebe14969a017c2e2343b..7b5a75a5f289d9886c31605605b4901c
    activity_log->LogAction(action);
  }
 +#endif  // 0
- 
+
  }  // namespace
- 
+
 @@ -65,7 +70,7 @@ ChromeExtensionMessageFilter::ChromeExtensionMessageFilter(
                             arraysize(kFilteredMessageClasses)),
        render_process_id_(render_process_id),
@@ -348,7 +327,7 @@ index 0ba1d828cb9d63bb4430ebe14969a017c2e2343b..7b5a75a5f289d9886c31605605b4901c
 +#endif  // 0
      IPC_MESSAGE_UNHANDLED(handled = false)
    IPC_END_MESSAGE_MAP()
- 
+
 @@ -113,9 +120,11 @@ void ChromeExtensionMessageFilter::OverrideThreadForMessage(
      case ExtensionHostMsg_OpenMessagePort::ID:
      case ExtensionHostMsg_CloseMessagePort::ID:
@@ -364,7 +343,7 @@ index 0ba1d828cb9d63bb4430ebe14969a017c2e2343b..7b5a75a5f289d9886c31605605b4901c
 @@ -266,6 +275,7 @@ void ChromeExtensionMessageFilter::OnGetExtMessageBundleAsync(
    Send(reply_msg);
  }
- 
+
 +#if 0
  void ChromeExtensionMessageFilter::OnAddAPIActionToExtensionActivityLog(
      const std::string& extension_id,
@@ -374,7 +353,7 @@ index 0ba1d828cb9d63bb4430ebe14969a017c2e2343b..7b5a75a5f289d9886c31605605b4901c
    AddActionToExtensionActivityLog(profile_, activity_log_, action);
  }
 +#endif  // 0
- 
+
  void ChromeExtensionMessageFilter::Observe(
      int type,
 @@ -323,7 +334,7 @@ void ChromeExtensionMessageFilter::Observe(
@@ -384,7 +363,7 @@ index 0ba1d828cb9d63bb4430ebe14969a017c2e2343b..7b5a75a5f289d9886c31605605b4901c
 -  activity_log_ = nullptr;
 +  // activity_log_ = nullptr;
  }
- 
+
  bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
 @@ -332,7 +343,8 @@ bool ChromeExtensionMessageFilter::ShouldLogExtensionAction(
    // conditions (e.g. logging gets disabled but the renderer sends the message
@@ -415,7 +394,7 @@ index 55568bd69be22628210cf5c1b61cc28b0c7187ac..32d3080cc9107c6a5131477141c0de46
        const std::string& extension_id,
        const ExtensionHostMsg_APIActionOrEvent_Params& params);
 +#endif  // 0
- 
+
    // content::NotificationObserver implementation.
    void Observe(int type,
 diff --git a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
@@ -442,7 +421,7 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..0d1f9efcb260f8c943ab24a4c23c14db
 +      // }
      }
    }
- 
+
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 856a1d44f12f408aeba38ee5502b26ec6eee5700..75a19da4b826c2117c7f069c60235213f5b5a3db 100644
 --- a/chrome/common/BUILD.gn
@@ -453,7 +432,7 @@ index 856a1d44f12f408aeba38ee5502b26ec6eee5700..75a19da4b826c2117c7f069c60235213
      ]
 +    include_dirs = [ "//electron" ]
    }
- 
+
    if (is_chromeos) {
 diff --git a/chrome/common/chrome_constants.cc b/chrome/common/chrome_constants.cc
 index d480ff03f60e0380eea243910ea8c2aa13db949c..162071ea27a8abe0c6712aaf2f65913402bd6733 100644
@@ -461,7 +440,7 @@ index d480ff03f60e0380eea243910ea8c2aa13db949c..162071ea27a8abe0c6712aaf2f659134
 +++ b/chrome/common/chrome_constants.cc
 @@ -10,11 +10,11 @@
  #define FPL FILE_PATH_LITERAL
- 
+
  #if defined(OS_MACOSX)
 -#define CHROMIUM_PRODUCT_STRING "Chromium"
 +#define CHROMIUM_PRODUCT_STRING PRODUCT_SHORTNAME_STRING
@@ -475,7 +454,7 @@ index d480ff03f60e0380eea243910ea8c2aa13db949c..162071ea27a8abe0c6712aaf2f659134
  #error Unknown branding
  #endif
 @@ -43,13 +43,13 @@ const char kChromeVersion[] = CHROME_VERSION_STRING;
- 
+
  #if defined(OS_WIN)
  const base::FilePath::CharType kBrowserProcessExecutableNameChromium[] =
 -    FPL("chrome.exe");
@@ -513,7 +492,7 @@ index d480ff03f60e0380eea243910ea8c2aa13db949c..162071ea27a8abe0c6712aaf2f659134
  // /proc/self/exe.  See bug 22703.
  const base::FilePath::CharType kHelperProcessExecutableNameChromium[] =
 @@ -80,13 +80,13 @@ const base::FilePath::CharType kHelperProcessExecutableName[] = FPL("exe");
- 
+
  #if defined(OS_WIN)
  const base::FilePath::CharType kBrowserProcessExecutablePathChromium[] =
 -    FPL("chrome.exe");
@@ -556,11 +535,11 @@ index d480ff03f60e0380eea243910ea8c2aa13db949c..162071ea27a8abe0c6712aaf2f659134
 +    FPL(EXECUTABLE_NAME);
 +const base::FilePath::CharType kHelperProcessExecutablePath[] = FPL(EXECUTABLE_NAME);
  #endif  // OS_*
- 
+
  #if defined(OS_MACOSX)
 @@ -121,8 +121,8 @@ const base::FilePath::CharType kFrameworkExecutableName[] =
  #endif  // OS_MACOSX
- 
+
  #if defined(OS_WIN)
 -const base::FilePath::CharType kBrowserResourcesDll[] = FPL("chrome.dll");
 -const base::FilePath::CharType kChromeElfDllName[] = FPL("chrome_elf.dll");
@@ -574,7 +553,7 @@ index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
 @@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
- 
+
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
 -  base::FilePath outer_app_dir = versioned_dir.DirName().DirName().DirName();
@@ -583,34 +562,34 @@ index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8
 +  base::FilePath outer_app_dir = versioned_dir.DirName().DirName();
    const char* outer_app_dir_c = outer_app_dir.value().c_str();
    NSString* outer_app_dir_ns = [NSString stringWithUTF8String:outer_app_dir_c];
- 
+
 diff --git a/chrome/common/chrome_utility_printing_messages.h b/chrome/common/chrome_utility_printing_messages.h
 index f5712a7a5bb8fabf279088631141cad405c8be8d..da8ff4065d721d49c1ca443a5c64c45e9f59ca4d 100644
 --- a/chrome/common/chrome_utility_printing_messages.h
 +++ b/chrome/common/chrome_utility_printing_messages.h
 @@ -26,7 +26,6 @@
  #define IPC_MESSAGE_START ChromeUtilityPrintingMsgStart
- 
+
  // Preview and Cloud Print messages.
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  IPC_ENUM_TRAITS_MAX_VALUE(printing::PdfRenderSettings::Mode,
                            printing::PdfRenderSettings::Mode::LAST)
- 
+
 @@ -44,6 +43,7 @@ IPC_STRUCT_TRAITS_BEGIN(printing::PrinterCapsAndDefaults)
    IPC_STRUCT_TRAITS_MEMBER(printer_defaults)
    IPC_STRUCT_TRAITS_MEMBER(defaults_mime_type)
  IPC_STRUCT_TRAITS_END()
 +#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  IPC_ENUM_TRAITS_MAX_VALUE(printing::ColorModel, printing::PROCESSCOLORMODEL_RGB)
- 
+
 diff --git a/chrome/common/chrome_version.h.in b/chrome/common/chrome_version.h.in
 index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e453aef4287 100644
 --- a/chrome/common/chrome_version.h.in
 +++ b/chrome/common/chrome_version.h.in
 @@ -22,3 +22,5 @@
  // Changelist Information
- 
+
  #define LASTCHANGE_STRING "@LASTCHANGE@"
 +
 +#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
@@ -638,7 +617,7 @@ index c2abd64b2d7c5166c1fdbaaf782974cb4bcc5e53..eb59bbe098dabd0edd3d9d8e24befe10
 +  // No value to read means not legacy mode
 +  return false;
  }
- 
+
  bool EdgeImporterCanImport() {
 diff --git a/chrome/common/importer/importer_bridge.h b/chrome/common/importer/importer_bridge.h
 index 56d4259aba433df997802109cf5a8d28c03ebd13..c7542923071f28e4077727a9b494bf56e4debf8f 100644
@@ -647,7 +626,7 @@ index 56d4259aba433df997802109cf5a8d28c03ebd13..c7542923071f28e4077727a9b494bf56
 @@ -24,6 +24,8 @@ namespace autofill {
  struct PasswordForm;
  }
- 
+
 +struct ImportedCookieEntry;
 +
  namespace importer {
@@ -656,12 +635,12 @@ index 56d4259aba433df997802109cf5a8d28c03ebd13..c7542923071f28e4077727a9b494bf56
 @@ -66,6 +68,8 @@ class ImporterBridge : public base::RefCountedThreadSafe<ImporterBridge> {
    virtual void SetAutofillFormData(
        const std::vector<ImporterAutofillFormDataEntry>& entries) = 0;
- 
+
 +  virtual void SetCookies(const std::vector<ImportedCookieEntry>& cookies) = 0;
 +
    // Notifies the coordinator that the import operation has begun.
    virtual void NotifyStarted() = 0;
- 
+
 diff --git a/chrome/common/importer/importer_data_types.h b/chrome/common/importer/importer_data_types.h
 index 0fc90c62398a93eb89568ce78c8ded2bc9b232b6..50a7d3c0079b7e9c5bc38a4ae3b25eef6d024169 100644
 --- a/chrome/common/importer/importer_data_types.h
@@ -672,7 +651,7 @@ index 0fc90c62398a93eb89568ce78c8ded2bc9b232b6..50a7d3c0079b7e9c5bc38a4ae3b25eef
    VISIT_SOURCE_SAFARI_IMPORTED = 3,
 +  VISIT_SOURCE_CHROME_IMPORTED = 4,
  };
- 
+
  }  // namespace importer
 diff --git a/chrome/common/importer/importer_type.h b/chrome/common/importer/importer_type.h
 index c172f8a5bc534465ff4d063a52f9bb510b7e36af..437026ae26eec5dce80edb73929a0fbce870cc37 100644
@@ -693,13 +672,13 @@ index f366a941273f0807405743f1365fdaf3a549cddc..35d5a90c778adfa67597866c31a91bc7
 +++ b/chrome/common/importer/profile_import.mojom
 @@ -16,6 +16,9 @@ struct ImportedBookmarkEntry;
  struct ImporterAutofillFormDataEntry;
- 
+
  [Native]
 +struct ImportedCookieEntry;
 +
 +[Native]
  struct SearchEngineInfo;
- 
+
  [Native]
 @@ -63,6 +66,8 @@ interface ProfileImportObserver {
    OnAutofillFormDataImportStart(uint32 total_autofill_form_data_entry_count);
@@ -741,7 +720,7 @@ index eb4b00d6ed6af19c4fc998e81dab735db63484e9..152b643afe66ccda1644fcff4e2a976e
 --- a/chrome/common/importer/profile_import_process_param_traits_macros.h
 +++ b/chrome/common/importer/profile_import_process_param_traits_macros.h
 @@ -13,6 +13,7 @@
- 
+
  #include "base/strings/string16.h"
  #include "base/values.h"
 +#include "brave/common/importer/imported_cookie_entry.h"
@@ -751,7 +730,7 @@ index eb4b00d6ed6af19c4fc998e81dab735db63484e9..152b643afe66ccda1644fcff4e2a976e
 @@ -92,4 +93,15 @@ IPC_STRUCT_TRAITS_BEGIN(importer::ImporterIE7PasswordInfo)
    IPC_STRUCT_TRAITS_MEMBER(date_created)
  IPC_STRUCT_TRAITS_END()
- 
+
 +IPC_STRUCT_TRAITS_BEGIN(ImportedCookieEntry)
 +  IPC_STRUCT_TRAITS_MEMBER(domain)
 +  IPC_STRUCT_TRAITS_MEMBER(name)
@@ -783,7 +762,7 @@ index 1b96488ad0536b9b1ac4f233a1846360a9d13027..c6618724485fc10a595dc551ed850853
 @@ -1361,19 +1361,19 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
  #endif
  }
- 
+
 -void ChromeContentRendererClient::RecordRappor(const std::string& metric,
 -                                               const std::string& sample) {
 -  if (!rappor_recorder_)
@@ -810,7 +789,7 @@ index 1b96488ad0536b9b1ac4f233a1846360a9d13027..c6618724485fc10a595dc551ed850853
 +//     RenderThread::Get()->GetRemoteInterfaces()->GetInterface(&rappor_recorder_);
 +//   rappor_recorder_->RecordRapporURL(metric, url);
 +// }
- 
+
  void ChromeContentRendererClient::AddImageContextMenuProperties(
      const WebURLResponse& response,
 diff --git a/chrome/renderer/chrome_content_renderer_client.h b/chrome/renderer/chrome_content_renderer_client.h
@@ -848,7 +827,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
 +  //     return base::MakeUnique<PepperUMAHost>(host_, instance, resource);
 +  //   }
 +  // }
- 
+
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
@@ -858,7 +837,7 @@ index 22a865dc6a74b8ef33831c27a432ffba0cde142e..01eb004cb8c79b15e5b33bc6efa408f6
 @@ -791,7 +791,7 @@ if (!is_android) {
        ]
      }
- 
+
 -    if (!use_aura || is_chromeos) {
 +    if (toolkit_views && (!use_aura || is_chromeos)) {
        sources -= [ "//ui/views/corewm/desktop_capture_controller_unittest.cc" ]
@@ -874,7 +853,7 @@ index 637a2336e396d92ef3dbe4a86421407e9a6f1a62..5bae64732f44f3e41a119239beea0f55
      ]
 +    include_dirs = [ "//electron" ]
    }
- 
+
    if (enable_extensions) {
 diff --git a/chrome/utility/importer/external_process_importer_bridge.cc b/chrome/utility/importer/external_process_importer_bridge.cc
 index 38a8e7a41bf771a59fdb3d227243b88c5b85b8d0..c3db151f0f5d2303a8f76ecf5b2ffb8f52bdc5d7 100644
@@ -885,13 +864,13 @@ index 38a8e7a41bf771a59fdb3d227243b88c5b85b8d0..c3db151f0f5d2303a8f76ecf5b2ffb8f
  const int kNumFaviconsToSend = 100;
  const int kNumAutofillFormDataToSend = 100;
 +const int kNumCookiesToSend = 100;
- 
+
  } // namespace
- 
+
 @@ -160,6 +161,28 @@ void ExternalProcessImporterBridge::SetAutofillFormData(
    DCHECK_EQ(0, autofill_form_data_entries_left);
  }
- 
+
 +void ExternalProcessImporterBridge::SetCookies(
 +    const std::vector<ImportedCookieEntry>& cookies) {
 +  (*observer_)->OnCookiesImportStart(cookies.size());
@@ -924,7 +903,7 @@ index 7e05c4e04f8e61b418d373a73bd8901347df4c76..1c080a558988cf0c76c051e186f78b7f
 @@ -76,6 +76,8 @@ class ExternalProcessImporterBridge : public ImporterBridge {
    void SetAutofillFormData(
        const std::vector<ImporterAutofillFormDataEntry>& entries) override;
- 
+
 +  void SetCookies(const std::vector<ImportedCookieEntry>& cookies) override;
 +
    void NotifyStarted() override;
@@ -954,11 +933,11 @@ index 7f8d598bca0243e62f11d5d2ce50d8c25ba88764..11064b77c8c69896c8137a096495813a
 +  bridge_->NotifyEnded();
    bridge_->NotifyEnded();
  }
- 
+
 @@ -433,6 +440,50 @@ void FirefoxImporter::ImportAutofillFormData() {
      bridge_->SetAutofillFormData(form_entries);
  }
- 
+
 +void FirefoxImporter::ImportCookies() {
 +  base::FilePath file = source_path_.AppendASCII("cookies.sqlite");
 +  if (!base::PathExists(file))
@@ -1023,13 +1002,13 @@ index 2bef627aa890484a3fb75fa9bd04b2994f997305..6cdf479c733c3a546c8fc54bdb29d4be
 --- a/chrome/utility/importer/importer_creator.cc
 +++ b/chrome/utility/importer/importer_creator.cc
 @@ -6,6 +6,7 @@
- 
+
  #include "base/logging.h"
  #include "build/build_config.h"
 +#include "brave/utility/importer/chrome_importer.h"
  #include "chrome/utility/importer/bookmarks_file_importer.h"
  #include "chrome/utility/importer/firefox_importer.h"
- 
+
 @@ -43,6 +44,8 @@ scoped_refptr<Importer> CreateImporterByType(ImporterType type) {
      case TYPE_SAFARI:
        return new SafariImporter(base::mac::GetUserLibraryPath());
@@ -1055,7 +1034,7 @@ index 606a47060b430eb6e808386349dd97f21c3fe211..c2405a843e7278b2ca2cd1600bae63d1
 +    DidDetachFromEmbedder();
 +  }
  }
- 
+
  bool GuestViewBase::HandleFindForEmbedder(
 diff --git a/components/guest_view/browser/guest_view_base.h b/components/guest_view/browser/guest_view_base.h
 index 42e3734eff90e8765ae71ee02bf496da6cbeace3..49df85bdb329a0ddbdb4d223ee1fa824baee08b9 100644
@@ -1064,7 +1043,7 @@ index 42e3734eff90e8765ae71ee02bf496da6cbeace3..49df85bdb329a0ddbdb4d223ee1fa824
 @@ -247,6 +247,9 @@ class GuestViewBase : public content::BrowserPluginGuestDelegate,
    // an opportunity to perform setup actions after attachment.
    virtual void DidAttachToEmbedder() {}
- 
+
 +  // This method is called after the guest has been detached from an embedder
 +  virtual void DidDetachFromEmbedder() {}
 +
@@ -1076,11 +1055,11 @@ index 315ea635bfd49e4d1ff029709ff9c39e657d48b8..bdda6074d0f76cfe0d9a8d11fe09ac25
 --- a/components/guest_view/browser/guest_view_manager.cc
 +++ b/components/guest_view/browser/guest_view_manager.cc
 @@ -63,6 +63,7 @@ class GuestViewManager::EmbedderRenderProcessHostObserver
- 
+
  // static
  GuestViewManagerFactory* GuestViewManager::factory_ = nullptr;
 +GuestViewManager* manager_ = nullptr;
- 
+
  GuestViewManager::GuestViewManager(
      content::BrowserContext* context,
 @@ -87,7 +88,8 @@ GuestViewManager* GuestViewManager::CreateWithDelegate(
@@ -1103,7 +1082,7 @@ index 315ea635bfd49e4d1ff029709ff9c39e657d48b8..bdda6074d0f76cfe0d9a8d11fe09ac25
 +  //     kGuestViewManagerKeyName));
 +  return manager_;
  }
- 
+
  content::WebContents* GuestViewManager::GetGuestByInstanceIDSafely(
 diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
 index 9a90bc11073848958d9128c80dc76bedc54e796a..c52f0646edcad1a0876b0a5033f754a7faf508ed 100644
@@ -1112,7 +1091,7 @@ index 9a90bc11073848958d9128c80dc76bedc54e796a..c52f0646edcad1a0876b0a5033f754a7
 @@ -228,7 +228,6 @@ IPC_STRUCT_TRAITS_BEGIN(PrintMsg_PrintPages_Params)
    IPC_STRUCT_TRAITS_MEMBER(pages)
  IPC_STRUCT_TRAITS_END()
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  // Parameters to describe a rendered document.
  IPC_STRUCT_BEGIN(PrintHostMsg_DidPreviewDocument_Params)
@@ -1120,7 +1099,7 @@ index 9a90bc11073848958d9128c80dc76bedc54e796a..c52f0646edcad1a0876b0a5033f754a7
 @@ -250,6 +249,7 @@ IPC_STRUCT_BEGIN(PrintHostMsg_DidPreviewDocument_Params)
    IPC_STRUCT_MEMBER(int, preview_request_id)
  IPC_STRUCT_END()
- 
+
 +#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  // Parameters to describe a rendered preview page.
  IPC_STRUCT_BEGIN(PrintHostMsg_DidPreviewPage_Params)
@@ -1128,7 +1107,7 @@ index 9a90bc11073848958d9128c80dc76bedc54e796a..c52f0646edcad1a0876b0a5033f754a7
 @@ -361,13 +361,11 @@ IPC_MESSAGE_ROUTED1(PrintMsg_PrintingDone,
  // Tells the RenderFrame whether printing is enabled or not.
  IPC_MESSAGE_ROUTED1(PrintMsg_SetPrintingEnabled, bool /* enabled */)
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  // Tells the RenderFrame to switch the CSS to print media type, renders every
  // requested pages for print preview using the given |settings|. This gets
@@ -1136,33 +1115,33 @@ index 9a90bc11073848958d9128c80dc76bedc54e796a..c52f0646edcad1a0876b0a5033f754a7
  IPC_MESSAGE_ROUTED1(PrintMsg_PrintPreview,
                      base::DictionaryValue /* settings */)
 -#endif
- 
+
  // Messages sent from the renderer to the browser.
- 
+
 @@ -451,13 +449,13 @@ IPC_SYNC_MESSAGE_ROUTED2_1(PrintHostMsg_CheckForCancel,
                             int32_t /* PrintPreviewUI ID */,
                             int /* request id */,
                             bool /* print preview cancelled */)
 +#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  // Sends back to the browser the complete rendered document (non-draft mode,
  // used for printing) that was requested by a PrintMsg_PrintPreview message.
  // The memory handle in this message is already valid in the browser process.
  IPC_MESSAGE_ROUTED1(PrintHostMsg_MetafileReadyForPrinting,
                      PrintHostMsg_DidPreviewDocument_Params /* params */)
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  // This is sent when there are invalid printer settings.
  IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
 @@ -466,11 +464,11 @@ IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintingFailed,
                      int /* document cookie */)
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  // Tell the browser print preview failed.
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewFailed,
                      int /* document cookie */)
- 
+
 +#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  // Tell the browser print preview was cancelled.
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
@@ -1174,7 +1153,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
 @@ -323,7 +323,7 @@ bool PrintingNodeOrPdfFrame(const blink::WebLocalFrame* frame,
    return plugin && plugin->supportsPaginatedPrint();
  }
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 +#if 0
  // Returns true if the current destination printer is PRINT_TO_PDF.
@@ -1186,13 +1165,13 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
  }
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
 +#endif  // 0
- 
+
  #if BUILDFLAG(ENABLE_PRINTING)
  // Disable scaling when either:
 @@ -401,7 +401,7 @@ MarginType GetMarginsForPdf(blink::WebLocalFrame* frame,
  }
  #endif
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 +#if 0
  bool FitToPageEnabled(const base::DictionaryValue& job_settings) {
@@ -1204,7 +1183,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
  }
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
 +#endif  // 0
- 
+
  // Helper function to scale and round an integer value with a double valued
  // scaling.
 @@ -1004,9 +1004,9 @@ bool PrintWebViewHelper::OnMessageReceived(const IPC::Message& message) {
@@ -1219,39 +1198,39 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
      IPC_MESSAGE_UNHANDLED(handled = false)
    IPC_END_MESSAGE_MAP()
 @@ -1023,8 +1023,8 @@ void PrintWebViewHelper::OnDestruct() {
- 
+
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
  void PrintWebViewHelper::OnPrintPages() {
 -  if (ipc_nesting_level_> 1)
 -    return;
 +  // if (ipc_nesting_level_> 1)
 +  //   return;
- 
+
    blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
- 
+
 @@ -1135,8 +1135,8 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
    ignore_css_margins_ = (margins_type != DEFAULT_MARGINS);
  }
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
 +#if 0
    if (ipc_nesting_level_ > 1)
      return;
- 
+
 @@ -1144,6 +1144,10 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
- 
+
    UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
                              PREVIEW_EVENT_REQUESTED, PREVIEW_EVENT_MAX);
 +#endif  // 0
 +
 +  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
 +  print_preview_context_.InitWithFrame(frame);
- 
+
    if (!print_preview_context_.source_frame()) {
      DidFinishPrinting(FAIL_PREVIEW);
 @@ -1152,6 +1156,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
- 
+
    if (!UpdatePrintSettings(print_preview_context_.source_frame(),
                             print_preview_context_.source_node(), settings)) {
 +#if 0
@@ -1266,7 +1245,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
      DidFinishPrinting(FAIL_PREVIEW);
      return;
    }
- 
+
    // Set the options from document if we are previewing a pdf and send a
    // message to browser.
 +#if 0
@@ -1277,25 +1256,25 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
        Send(new PrintHostMsg_SetOptionsFromDocument(routing_id(), options));
    }
 +#endif  // 0
- 
+
    is_print_ready_metafile_sent_ = false;
- 
+
 +#if 0
    // PDF printer device supports alpha blending.
    print_pages_params_->params.supports_alpha_blend = true;
- 
+
 @@ -1182,6 +1191,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
      NOTREACHED();
    }
    print_preview_context_.set_generate_draft_pages(generate_draft_pages);
 +#endif  // 0
- 
+
    PrepareFrameForPreviewDocument();
  }
 @@ -1189,7 +1199,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  void PrintWebViewHelper::PrepareFrameForPreviewDocument() {
    reset_prep_frame_view_ = false;
- 
+
 -  if (!print_pages_params_ || CheckForCancel()) {
 +  if (!print_pages_params_) {
      DidFinishPrinting(FAIL_PREVIEW);
@@ -1303,23 +1282,23 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
    }
 @@ -1220,11 +1230,11 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
  }
- 
+
  bool PrintWebViewHelper::CreatePreviewDocument() {
 -  if (!print_pages_params_ || CheckForCancel())
 +  if (!print_pages_params_)
      return false;
- 
+
 -  UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
 -                            PREVIEW_EVENT_CREATE_DOCUMENT, PREVIEW_EVENT_MAX);
 +  // UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
 +  //                           PREVIEW_EVENT_CREATE_DOCUMENT, PREVIEW_EVENT_MAX);
- 
+
    const PrintMsg_Print_Params& print_params = print_pages_params_->params;
    const std::vector<int>& pages = print_pages_params_->pages;
 @@ -1234,6 +1244,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
      return false;
    }
- 
+
 +#if 0
    PageSizeMargins default_page_layout;
    double scale_factor =
@@ -1329,24 +1308,24 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
    if (CheckForCancel())
      return false;
 +#endif  // 0
- 
+
    while (!print_preview_context_.IsFinalPageRendered()) {
      int page_number = print_preview_context_.GetNextPageNumber();
 @@ -1307,8 +1319,8 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
      if (!RenderPreviewPage(page_number, print_params))
        return false;
- 
+
 -    if (CheckForCancel())
 -      return false;
 +    // if (CheckForCancel())
 +    //   return false;
- 
+
      // We must call PrepareFrameAndViewForPrint::FinishPrinting() (by way of
      // print_preview_context_.AllPagesRendered()) before calling
 @@ -1331,7 +1343,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
    return true;
  }
- 
+
 -#if !defined(OS_MACOSX) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
 +#if !defined(OS_MACOSX)
  bool PrintWebViewHelper::RenderPreviewPage(
@@ -1358,7 +1337,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
  }
 -#endif  // !defined(OS_MACOSX) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
 +#endif  // !defined(OS_MACOSX)
- 
+
  bool PrintWebViewHelper::FinalizePrintReadyDocument() {
    DCHECK(!is_print_ready_metafile_sent_);
 @@ -1391,11 +1403,10 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
@@ -1366,7 +1345,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
    return true;
  }
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  void PrintWebViewHelper::OnPrintingDone(bool success) {
 -  if (ipc_nesting_level_ > 1)
 -    return;
@@ -1378,7 +1357,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
 @@ -1540,8 +1551,8 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
        }
        break;
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
      case FAIL_PREVIEW:
 +#if 0
@@ -1406,13 +1385,13 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
    return true;
  }
 +#endif  // defined(ENABLE_PRINT_PREVIEW)
- 
+
  bool PrintWebViewHelper::UpdatePrintSettings(
      blink::WebLocalFrame* frame,
 @@ -1757,13 +1773,16 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      return false;
    }
- 
+
 +#if 0
    if (!job_settings->GetInteger(kPreviewUIID, &settings.params.preview_ui_id)) {
      NOTREACHED();
@@ -1420,7 +1399,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
      return false;
    }
 +#endif
- 
+
    if (!print_for_preview_) {
 +#if 0
      // Validate expected print preview settings.
@@ -1438,11 +1417,11 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
 +    settings.params.print_scaling_option =
 +       blink::WebPrintScalingOptionSourceSize;
    }
- 
+
    SetPrintPagesParams(settings);
 @@ -1786,12 +1812,9 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      return true;
- 
+
    if (print_for_preview_)
 -    Send(new PrintHostMsg_ShowInvalidPrinterSettingsError(routing_id()));
 -  else
@@ -1450,7 +1429,7 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
    return false;
  }
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
  void PrintWebViewHelper::GetPrintSettingsFromUser(
 @@ -2049,6 +2072,7 @@ bool PrintWebViewHelper::CheckForCancel() {
@@ -1458,26 +1437,26 @@ index eaa294d97cf0375669c12b0e08526f95280fc0a2..3f55c49e18f9324eb71fb02ff9dc5a36
    return cancel;
  }
 +#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  bool PrintWebViewHelper::PreviewPageRendered(int page_number,
                                               PdfMetafileSkia* metafile) {
 @@ -2070,6 +2094,7 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
      return false;
    }
- 
+
 +#if 0
    PrintHostMsg_DidPreviewPage_Params preview_page_params;
    // Get the size of the resulting metafile.
    if (!CopyMetafileDataToSharedMem(
 @@ -2084,9 +2109,9 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
        print_pages_params_->params.preview_request_id;
- 
+
    Send(new PrintHostMsg_DidPreviewPage(routing_id(), preview_page_params));
 +#endif  // 0
    return true;
  }
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  PrintWebViewHelper::PrintPreviewContext::PrintPreviewContext()
      : total_page_count_(0),
 diff --git a/components/printing/renderer/print_web_view_helper.h b/components/printing/renderer/print_web_view_helper.h
@@ -1492,7 +1471,7 @@ index d979333feb1fd72972fe4109e1afc061f49af2d1..304b7404092138dfcb1642a9f041a47b
      FAIL_PREVIEW,
 -#endif
    };
- 
+
    enum PrintPreviewErrorBuckets {
 @@ -185,8 +183,8 @@ class PrintWebViewHelper
  #endif  // BUILDFLAG(ENABLE_BASIC_PRINTING)
@@ -1502,22 +1481,22 @@ index d979333feb1fd72972fe4109e1afc061f49af2d1..304b7404092138dfcb1642a9f041a47b
  #endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
 +  void OnPrintPreview(const base::DictionaryValue& settings);
    void OnPrintingDone(bool success);
- 
+
    // Get |page_size| and |content_area| information from
 @@ -199,7 +197,6 @@ class PrintWebViewHelper
    // Update |ignore_css_margins_| based on settings.
    void UpdateFrameMarginsCssInfo(const base::DictionaryValue& settings);
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
    // Prepare frame for creating preview document.
    void PrepareFrameForPreviewDocument();
- 
+
 @@ -216,7 +213,6 @@ class PrintWebViewHelper
- 
+
    // Finalize the print ready preview document.
    bool FinalizePrintReadyDocument();
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
    // Enable/Disable printing.
    void OnSetPrintingEnabled(bool enabled);
 @@ -250,6 +246,7 @@ class PrintWebViewHelper
@@ -1525,7 +1504,7 @@ index d979333feb1fd72972fe4109e1afc061f49af2d1..304b7404092138dfcb1642a9f041a47b
    bool SetOptionsFromPdfDocument(
        PrintHostMsg_SetOptionsFromDocument_Params* options);
 +#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
    // Update the current print settings with new |passed_job_settings|.
    // |passed_job_settings| dictionary contains print job details such as printer
 @@ -257,7 +254,6 @@ class PrintWebViewHelper
@@ -1533,7 +1512,7 @@ index d979333feb1fd72972fe4109e1afc061f49af2d1..304b7404092138dfcb1642a9f041a47b
                             const blink::WebNode& node,
                             const base::DictionaryValue& passed_job_settings);
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
    // Get final print settings from the user.
 @@ -363,6 +359,7 @@ class PrintWebViewHelper
@@ -1541,7 +1520,7 @@ index d979333feb1fd72972fe4109e1afc061f49af2d1..304b7404092138dfcb1642a9f041a47b
    // PRINT_PREVIEW_SCRIPTED.
    void RequestPrintPreview(PrintPreviewRequestType type);
 +#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
    // Checks whether print preview should continue or not.
    // Returns true if canceling, false if continuing.
 @@ -374,7 +371,6 @@ class PrintWebViewHelper
@@ -1549,9 +1528,9 @@ index d979333feb1fd72972fe4109e1afc061f49af2d1..304b7404092138dfcb1642a9f041a47b
    // Returns true if print preview should continue, false on failure.
    bool PreviewPageRendered(int page_number, PdfMetafileSkia* metafile);
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
    void SetPrintPagesParams(const PrintMsg_PrintPages_Params& settings);
- 
+
 diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/components/printing/renderer/print_web_view_helper_mac.mm
 index 6de15ad3c7a8f111a839fde82925a3f96b82bd22..8c6e8ce6a7c2c61d8945e7666e0d9bc285291a2d 100644
 --- a/components/printing/renderer/print_web_view_helper_mac.mm
@@ -1559,7 +1538,7 @@ index 6de15ad3c7a8f111a839fde82925a3f96b82bd22..8c6e8ce6a7c2c61d8945e7666e0d9bc2
 @@ -68,7 +68,6 @@ void PrintWebViewHelper::PrintPageInternal(
    Send(new PrintHostMsg_DidPrintPage(routing_id(), page_params));
  }
- 
+
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
@@ -1569,7 +1548,7 @@ index 6de15ad3c7a8f111a839fde82925a3f96b82bd22..8c6e8ce6a7c2c61d8945e7666e0d9bc2
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
+
  void PrintWebViewHelper::RenderPage(const PrintMsg_Print_Params& params,
                                      int page_number,
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
@@ -1577,9 +1556,9 @@ index c2839221ad4b22eb5b8c17b51671328918570687..e48afee2fa8ac11147caea02d1ed6e60
 --- a/content/app/content_main_runner.cc
 +++ b/content/app/content_main_runner.cc
 @@ -763,7 +763,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
- 
+
      InitializeV8IfNeeded(command_line, process_type);
- 
+
 -#if !defined(OFFICIAL_BUILD)
 +#if 0
  #if defined(OS_WIN)
@@ -1591,7 +1570,7 @@ index c2839221ad4b22eb5b8c17b51671328918570687..e48afee2fa8ac11147caea02d1ed6e60
      }
 -#endif  // !defined(OFFICIAL_BUILD)
 +#endif  // 0
- 
+
      if (delegate_)
        delegate_->PreSandboxStartup();
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
@@ -1601,7 +1580,7 @@ index 5b8f571ae0ddb1778e3b4fc9e1401d72d1441cd5..10222136f876a6feaac7713b7a9256af
 @@ -478,7 +478,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
    PluginServiceFilter* filter = PluginServiceImpl::GetInstance()->GetFilter();
    std::vector<WebPluginInfo> plugins;
- 
+
 -  int child_process_id = -1;
 +  int child_process_id = render_process_id_;
    int routing_id = MSG_ROUTING_NONE;
@@ -1618,16 +1597,16 @@ index d10bcb69154d389318b6f67ba231dba728f5f1cd..fffbf371e38da48dcb7037bcb9da5505
 -@property(readonly) NSEventModifierFlags modifierFlags;
 +@property(readonly) NSUInteger modifierFlags;
  @property(readonly) NSTimeInterval timestamp;
- 
+
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
 index b7f8bad5ef1a10c5d2e9ac4d83f87e069dbd179a..615023a1338aa05cc2ba2a60ae5fe218d7c13180 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -139,6 +139,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
- 
+
  }  // namespace
- 
+
 +#ifndef MUON_CHROMIUM_BUILD
 +@interface NSWindow (AtomCustomMethods)
 +- (BOOL)acceptsFirstMouse;
@@ -1646,10 +1625,10 @@ index b7f8bad5ef1a10c5d2e9ac4d83f87e069dbd179a..615023a1338aa05cc2ba2a60ae5fe218
 +#endif
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
- 
+
 @@ -1846,7 +1854,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
- 
+
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
 +#ifdef MUON_CHROMIUM_BUILD
    return [self acceptsMouseEventsWhenInactive];
@@ -1660,12 +1639,12 @@ index b7f8bad5ef1a10c5d2e9ac4d83f87e069dbd179a..615023a1338aa05cc2ba2a60ae5fe218
 +  return NO;
 +#endif  // MUON_CHROMIUM_BUILD
  }
- 
+
  - (void)setCloseOnDeactivate:(BOOL)b {
 @@ -2002,6 +2017,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
- 
+
 +#ifdef MUON_CHROMIUM_BUILD
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
@@ -1675,18 +1654,18 @@ index b7f8bad5ef1a10c5d2e9ac4d83f87e069dbd179a..615023a1338aa05cc2ba2a60ae5fe218
      return NO;
    }
 +#endif  // MUON_CHROMIUM_BUILD
- 
+
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
 @@ -2062,8 +2079,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
- 
+
 +#ifdef MUON_CHROMIUM_BUILD
    DCHECK([theEvent type] != NSKeyDown ||
           !equiv == !([theEvent modifierFlags] & NSCommandKeyMask));
 +#endif  // MUON_CHROMIUM_BUILD
- 
+
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
 @@ -2423,14 +2442,18 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
@@ -1697,7 +1676,7 @@ index b7f8bad5ef1a10c5d2e9ac4d83f87e069dbd179a..615023a1338aa05cc2ba2a60ae5fe218
    gfx::Rect root_box = renderWidgetHostView_->GetViewBounds();
    gfx::Rect view_box = widgetHost->GetView()->GetViewBounds();
 +#endif  // MUON_CHROMIUM_BUILD
- 
+
    TextInputClientMac::GetInstance()->GetStringFromRange(
        widgetHost, range, ^(NSAttributedString* string, NSPoint baselinePoint) {
 +#ifdef MUON_CHROMIUM_BUILD
@@ -1731,19 +1710,19 @@ index e3076d2727e3fccce10079773e43b606a916f869..5e05f68a506fbc109a61a8c036bcf42f
 -  should_normally_be_visible_ = !params.initially_hidden;
 +  // should_normally_be_visible_ = !params.initially_hidden;
 +  should_normally_be_visible_ = true;
- 
+
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
 @@ -2046,7 +2047,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
- 
+
    scoped_refptr<SiteInstance> site_instance =
 -      params.opener_suppressed && !is_guest
 +      // params.opener_suppressed && !is_guest
 +      params.opener_suppressed
            ? SiteInstance::CreateForURL(GetBrowserContext(), params.target_url)
            : source_site_instance;
- 
+
 diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/browser/web_contents/web_contents_view_mac.mm
 index b2366393bad700944ddbf977d318b1b59455f8e7..520eefb5631eb61f7bad73f9d35f35680e0d697e 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
@@ -1753,7 +1732,7 @@ index b2366393bad700944ddbf977d318b1b59455f8e7..520eefb5631eb61f7bad73f9d35f3568
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
 +  [dragDest_ endDrag];
- 
+
    // Might as well throw out this object now.
    dragSource_.reset();
 diff --git a/content/browser/web_contents/web_drag_dest_mac.h b/content/browser/web_contents/web_drag_dest_mac.h
@@ -1763,7 +1742,7 @@ index da4427bca57814b671c22a900781a77116adc526..56462350c4c9f6590097728a531ec18b
 @@ -92,6 +92,9 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
  // Sets |dragStartProcessID_| and |dragStartViewID_|.
  - (void)setDragStartTrackersForProcess:(int)processID;
- 
+
 +// Ends a drag operation
 +- (void)endDrag;
 +
@@ -1777,7 +1756,7 @@ index 37ed2657ac19f8a1dbbdc54b9cff3dae5a578e6a..edc3a5f56f51a500fa5b09603ae49fc3
 @@ -347,6 +347,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
- 
+
 +- (void)endDrag {
 +  dragStartProcessID_ = content::ChildProcessHost::kInvalidUniqueID;
 +  dragStartViewID_ = content::GlobalRoutingID(
@@ -1805,14 +1784,14 @@ index 71368bdd55039ddc76278e7b5706e30517ab8aae..526ce5d8a08002af28762ae54a9280ce
 --- a/content/common/dom_storage/dom_storage_map.cc
 +++ b/content/common/dom_storage/dom_storage_map.cc
 @@ -66,8 +66,8 @@ bool DOMStorageMap::SetItem(
- 
+
    // Only check quota if the size is increasing, this allows
    // shrinking changes to pre-existing files that are over budget.
 -  if (new_item_size > old_item_size && new_bytes_used > quota_)
 -    return false;
 +  // if (new_item_size > old_item_size && new_bytes_used > quota_)
 +  //   return false;
- 
+
    values_[key] = base::NullableString16(value, false);
    ResetKeyIterator();
 diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
@@ -1853,28 +1832,28 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
 +#include "net/http/http_response_headers.h"
  #include "net/url_request/url_request_status.h"
  #include "url/gurl.h"
- 
+
 @@ -41,6 +42,7 @@ struct ResourceRequestDetails {
    // HTTP response code. See HttpResponseHeaders::response_code().
    // -1 if there are no response headers yet.
    int http_response_code;
 +  scoped_refptr<net::HttpResponseHeaders> headers;
  };
- 
+
  // Details about a redirection of a resource request.
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
 index d7ebcfdb8eb930de3146c64d69307f4f48aad6bd..de8772061040c596494f53106d56772b48ba6647 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
 @@ -460,8 +460,8 @@ blink::WebInputEventResult BrowserPlugin::handleInputEvent(
- 
+
    if (blink::WebInputEvent::isGestureEventType(event.type())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
 -    DCHECK(blink::WebInputEvent::GestureTapDown == event.type() ||
 -           gesture_event.resendingPluginId == browser_plugin_instance_id_);
 +    // DCHECK(blink::WebInputEvent::GestureTapDown == event.type() ||
 +    //        gesture_event.resendingPluginId == browser_plugin_instance_id_);
- 
+
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
 diff --git a/content/renderer/render_thread_impl.cc b/content/renderer/render_thread_impl.cc
@@ -1883,7 +1862,7 @@ index 02a6627cb64b382382cca61bbdb793cec28ec5c2..db02c33bfe5bb0c2d869c49d8be15461
 +++ b/content/renderer/render_thread_impl.cc
 @@ -747,12 +747,12 @@ void RenderThreadImpl::Init(
        switches::kEnableGpuMemoryBufferCompositorResources);
- 
+
  #if defined(OS_MACOSX)
 -  base::ScopedCFTypeRef<CFStringRef> key(
 -      base::SysUTF8ToCFStringRef("NSScrollViewRubberbanding"));
@@ -1912,7 +1891,7 @@ index 061480b5acd6431aa9abb7e02c98ebe5e881d7f9..f8288fa42f148651fd729dbce111c6c4
    DCHECK_NE(events::UNKNOWN, histogram_value) << "Event " << event_name
                                                << " must have a histogram value";
 +#endif
- 
+
    content::WebContents* owner = guest->owner_web_contents();
    if (!owner)
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
@@ -1971,7 +1950,7 @@ index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8
    var shadowRoot = this.element.createShadowRoot();
 +  shadowRoot.innerHTML = '<style>:host { display: flex; }</style>'
    shadowRoot.appendChild(privates(this).internalElement);
- 
+
    GuestViewInternalNatives.RegisterView(this.viewInstanceId, this, viewType);
 @@ -209,8 +210,9 @@ function registerInternalElement(viewType) {
    proto.createdCallback = function() {
@@ -1983,7 +1962,7 @@ index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8
 +    // this.style.height = '100%';
 +    this.style.flex = '1 1 auto';
    };
- 
+
    proto.attachedCallback = function() {
 diff --git a/gin/object_template_builder.h b/gin/object_template_builder.h
 index bf0ece1e723ba1a0644961cfd3a01ce3c14c892a..5e7d3dbb9da51a5abb0447bc04c90c9bee6b9324 100644
@@ -2022,13 +2001,13 @@ index b579142188dcd66cbfda91f60dbce0f37f097d73..e1e6ec4d73196c593d968afdc6a35bb1
 +++ b/gpu/config/BUILD.gn
 @@ -7,11 +7,12 @@ import("//build/config/chromecast_build.gni")
  import("//build/config/ui.gni")
- 
+
  declare_args() {
 -  # Use the PCI lib to collect GPU information on Linux.
 -  use_libpci = is_linux && (!is_chromecast || is_cast_desktop_build) &&
 -               (use_x11 || use_ozone)
  }
- 
+
 +# Use the PCI lib to collect GPU information on Linux.
 +use_libpci = is_linux && (!is_chromecast || is_cast_desktop_build) &&
 +             (use_x11 || use_ozone)
@@ -2050,7 +2029,7 @@ index 62bed8c449c09098bd5d703be0a7172066d2050d..04908f9c562f836b5fe5acd64d6c2d9a
 +  //                           url.SchemeIsWSOrWSS()));
    return SimplifyUrlForRequest(url).spec();
  }
- 
+
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 2341999ae5493b1e205343963b41d8cbc68549de..25552307f59d70dbc9484a0edb241c21e0b67ebd 100644
 --- a/net/url_request/url_request_job.h
@@ -2058,7 +2037,7 @@ index 2341999ae5493b1e205343963b41d8cbc68549de..25552307f59d70dbc9484a0edb241c21
 @@ -269,6 +269,7 @@ class NET_EXPORT URLRequestJob : public base::PowerObserver {
    void OnCallToDelegate();
    void OnCallToDelegateComplete();
- 
+
 +public:
    // Called to read raw (pre-filtered) data from this Job. Reads at most
    // |buf_size| bytes into |buf|.
@@ -2075,7 +2054,7 @@ index 5ce8c463774ba8bb69566ddabf49501e8a0ca9a4..a92b6f344d86fc8b125129cbdaea94d3
 +  {
 +    return new DOMArrayBuffer(source, byteLength);
 +  }
- 
+
    // Only for use by XMLHttpRequest::responseArrayBuffer and
    // Internals::serializeObject.
 @@ -47,6 +51,8 @@ class CORE_EXPORT DOMArrayBuffer final : public DOMArrayBufferBase {
@@ -2085,7 +2064,7 @@ index 5ce8c463774ba8bb69566ddabf49501e8a0ca9a4..a92b6f344d86fc8b125129cbdaea94d3
 +  DOMArrayBuffer(void* source, unsigned byteLength)
 +      : DOMArrayBufferBase(source, byteLength) {}
  };
- 
+
  }  // namespace blink
 diff --git a/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h b/third_party/WebKit/Source/core/dom/DOMArrayBufferBase.h
 index 74738dade2b75b3659e21f2cf97f4a3cfd0d477e..115e410ea378654673dd8295b23d14ec68f8f825 100644
@@ -2094,7 +2073,7 @@ index 74738dade2b75b3659e21f2cf97f4a3cfd0d477e..115e410ea378654673dd8295b23d14ec
 @@ -21,9 +21,24 @@ class CORE_EXPORT DOMArrayBufferBase
    const WTF::ArrayBuffer* buffer() const { return m_buffer.get(); }
    WTF::ArrayBuffer* buffer() { return m_buffer.get(); }
- 
+
 -  const void* data() const { return buffer()->data(); }
 -  void* data() { return buffer()->data(); }
 -  unsigned byteLength() const { return buffer()->byteLength(); }
@@ -2120,7 +2099,7 @@ index 74738dade2b75b3659e21f2cf97f4a3cfd0d477e..115e410ea378654673dd8295b23d14ec
      return buffer()->transfer(result);
    }
 @@ -43,11 +58,26 @@ class CORE_EXPORT DOMArrayBufferBase
- 
+
   protected:
    explicit DOMArrayBufferBase(PassRefPtr<WTF::ArrayBuffer> buffer)
 -      : m_buffer(buffer) {
@@ -2131,7 +2110,7 @@ index 74738dade2b75b3659e21f2cf97f4a3cfd0d477e..115e410ea378654673dd8295b23d14ec
 +  {
      DCHECK(m_buffer);
    }
- 
+
 +  DOMArrayBufferBase(void* source, unsigned byteLength)
 +      : m_buffer(WTF::ArrayBuffer::create(source, byteLength)),
 +        m_isExternal(true),
@@ -2145,7 +2124,7 @@ index 74738dade2b75b3659e21f2cf97f4a3cfd0d477e..115e410ea378654673dd8295b23d14ec
 +  void* m_source;
 +  unsigned m_byteLength;
  };
- 
+
  }  // namespace blink
 diff --git a/third_party/WebKit/Source/core/editing/EditingBehavior.h b/third_party/WebKit/Source/core/editing/EditingBehavior.h
 index 3f098ef2b9b425d2964ab563ce1bbfc56ad2fd22..d18d78f20fa745a17f0b3d1ba17102a308ff8f11 100644
@@ -2158,7 +2137,7 @@ index 3f098ef2b9b425d2964ab563ce1bbfc56ad2fd22..d18d78f20fa745a17f0b3d1ba17102a3
 -    return m_type != EditingWindowsBehavior && m_type != EditingAndroidBehavior;
 +    return false;
    }
- 
+
    bool shouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/fileapi/File.idl b/third_party/WebKit/Source/core/fileapi/File.idl
 index df954bc8f81850101676b1c20f688ba0ba6b4b09..4683b2853bb467ec9f58616ede207d456f4112ec 100644
@@ -2170,7 +2149,7 @@ index df954bc8f81850101676b1c20f688ba0ba6b4b09..4683b2853bb467ec9f58616ede207d45
      readonly attribute DOMString name;
 +    readonly attribute DOMString path;
      readonly attribute long long lastModified;
- 
+
      // Non-standard APIs
 diff --git a/third_party/WebKit/Source/web/WebArrayBuffer.cpp b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
 index 271ec5391d8a9a478f36da58f1b539963cf39724..cd0fcf8bec875485097560c9c8231ad013cc0a96 100644
@@ -2179,7 +2158,7 @@ index 271ec5391d8a9a478f36da58f1b539963cf39724..cd0fcf8bec875485097560c9c8231ad0
 @@ -39,6 +39,11 @@ WebArrayBuffer WebArrayBuffer::create(unsigned numElements,
    return WebArrayBuffer(DOMArrayBuffer::create(numElements, elementByteSize));
  }
- 
+
 +WebArrayBuffer WebArrayBuffer::createExternal(void* source, unsigned byteLength)
 +{
 +  return WebArrayBuffer(DOMArrayBuffer::createExternal(source, byteLength));
@@ -2194,7 +2173,7 @@ index 2f1c3c2c7e7b85a521b3aa4d951f74ff269af824..d34d3650f7a51470510f14bd03163a2d
 +++ b/third_party/WebKit/public/BUILD.gn
 @@ -647,7 +647,11 @@ grit("image_resources") {
  }
- 
+
  mojom("mojo_bindings") {
 -  visibility = [ "//content/*" ]
 +  visibility = [
@@ -2210,12 +2189,12 @@ index 6acdddff8c59f63214fb6267a562f6ac8a2b5296..7a1097d9538981c6b8f8928796dba0b1
 --- a/third_party/WebKit/public/web/WebArrayBuffer.h
 +++ b/third_party/WebKit/public/web/WebArrayBuffer.h
 @@ -51,6 +51,8 @@ class WebArrayBuffer {
- 
+
    BLINK_EXPORT static WebArrayBuffer create(unsigned numElements,
                                              unsigned elementByteSize);
 +  BLINK_EXPORT static WebArrayBuffer createExternal(void* source,
 +                                                    unsigned byteLength);
- 
+
    BLINK_EXPORT void reset();
    BLINK_EXPORT void assign(const WebArrayBuffer&);
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
@@ -2225,7 +2204,7 @@ index 2371143308776a7323fe27b0ab20f7c2444d1047..f59124a08627da270e546dcc7119020f
 @@ -417,6 +417,24 @@ ssl_sources = [
    "src/ssl/tls_record.c",
  ]
- 
+
 +decrepit_sources = [
 +  "src/decrepit/bio/base64_bio.c",
 +  "src/decrepit/blowfish/blowfish.c",
@@ -2254,10 +2233,10 @@ index abe39b229b2da1842b808db8b8ff8fc91c402b75..a5758550b8a7b726d78ca647515168fc
 @@ -41,7 +41,7 @@ config("no_asm_config") {
    defines = [ "OPENSSL_NO_ASM" ]
  }
- 
+
 -all_sources = crypto_sources + ssl_sources
 +all_sources = crypto_sources + ssl_sources + decrepit_sources
- 
+
  # Windows' assembly is built with Yasm. The other platforms use the platform
  # assembler.
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
