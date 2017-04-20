@@ -28,13 +28,25 @@
       '<(DEPTH)/v8/src/v8.gyp:v8_base',
     ],
 
-    'msvs_settings': {
-      'VCLinkerTool': {
-        'ForceSymbolReferences': [
-          'node_module_register',
-        ],
-      },
-    },
+    'conditions': [
+      [ 'target_arch == "x64"', {
+        'msvs_settings': {
+          'VCLinkerTool': {
+            'ForceSymbolReferences': [
+              'node_module_register',
+            ],
+          },
+        },
+      }, {
+        'msvs_settings': {
+          'VCLinkerTool': {
+            'ForceSymbolReferences': [
+              '_node_module_register',
+            ],
+          },
+        },
+      }],
+    ],
 
     'link_settings': {
       'libraries': [
