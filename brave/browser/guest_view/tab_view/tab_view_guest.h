@@ -77,6 +77,8 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
 
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;
+  void DidStartNavigation(
+      content::NavigationHandle* navigation_handle) override;
 
   atom::api::WebContents* api_web_contents_;  // not owned
 

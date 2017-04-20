@@ -191,6 +191,19 @@ void TabViewGuest::DidFinishNavigation(
   // find_helper_.CancelAllFindSessions();
 }
 
+void TabViewGuest::DidStartNavigation(
+    content::NavigationHandle* navigation_handle) {
+  // loadStart shouldn't be sent for same page navigations.
+  if (navigation_handle->IsSamePage())
+    return;
+
+  std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
+  args->SetString(guest_view::kUrl, navigation_handle->GetURL().spec());
+  args->SetBoolean(guest_view::kIsTopLevel, navigation_handle->IsInMainFrame());
+  DispatchEventToView(base::MakeUnique<GuestViewEvent>(webview::kEventLoadStart,
+                                                       std::move(args)));
+}
+
 void TabViewGuest::AttachGuest(int guestInstanceId) {
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   args->SetInteger("guestInstanceId", guestInstanceId);
