@@ -55,6 +55,9 @@ NodeDebugger::NodeDebugger(v8::Isolate* isolate)
     isolate_->SetData(kIsolateSlot, this);
     v8::Debug::SetMessageHandler(isolate_, DebugMessageHandler);
 
+    auto dummy_event_listener = [] (const v8::Debug::EventDetails&) {};
+    v8::Debug::SetDebugEventListener(isolate_, dummy_event_listener);
+
     uv_async_init(uv_default_loop(), &weak_up_ui_handle_, ProcessMessageInUI);
 
     // Start a new IO thread.
