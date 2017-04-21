@@ -173,12 +173,6 @@ void TabViewGuest::DidFinishNavigation(
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   args->SetString(guest_view::kUrl, src_.spec());
   args->SetBoolean(guest_view::kIsTopLevel, navigation_handle->IsInMainFrame());
-  args->SetString(webview::kInternalBaseURLForDataURL,
-                  web_contents()
-                      ->GetController()
-                      .GetLastCommittedEntry()
-                      ->GetBaseURLForDataURL()
-                      .spec());
   args->SetInteger(webview::kInternalCurrentEntryIndex,
                    web_contents()->GetController().GetCurrentEntryIndex());
   args->SetInteger(webview::kInternalEntryCount,
