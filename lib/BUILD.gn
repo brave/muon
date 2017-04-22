@@ -72,20 +72,17 @@ action("lib") {
 
 action("atom_js2c") {
   script = "//electron/tools/js2c.py"
-  inputs = [
+
+  sources = [
     "common/asar.js",
     "common/asar_init.js",
   ]
 
   outputs = [
-    "$root_gen_dir/atom_natives.h"
+    "$root_gen_dir/atom_natives.h",
   ]
 
   args = [
-    rebase_path("$root_gen_dir/atom_natives.h"),
-  ]
-
-  foreach(filename, inputs) {
-    args += [ rebase_path(filename, root_build_dir) ]
-  }
+    rebase_path("$root_gen_dir/atom_natives.h", root_build_dir),
+  ] + rebase_path(sources)
 }

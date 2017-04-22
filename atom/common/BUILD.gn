@@ -57,6 +57,7 @@ source_set("node") {
   ]
 
   public_deps = [
+    "//electron/lib:atom_js2c",
     "//electron/build/node",
     "//electron:native_mate",
   ]
