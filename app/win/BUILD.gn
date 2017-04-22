@@ -15,7 +15,43 @@ import("//media/cdm/ppapi/cdm_paths.gni")
 import("//electron/build/config.gni")
 import("//chrome/process_version_rc_template.gni")
 
-executable("electron_app") {
+group("electron_app") {
+  public_deps = [
+    ":electron_exe",
+    ":rename_exe",
+    ":rename_pdb",
+  ]
+}
+
+copy("rename_exe") {
+  sources = [
+    "$root_out_dir/node.exe",
+  ]
+
+  outputs = [
+    "$root_out_dir/brave.exe",
+  ]
+
+  deps = [
+    ":electron_exe"
+  ]
+}
+
+copy("rename_pdb") {
+  sources = [
+    "$root_out_dir/node.exe.pdb",
+  ]
+
+  outputs = [
+    "$root_out_dir/brave.exe.pdb",
+  ]
+
+  deps = [
+    ":electron_exe"
+  ]
+}
+
+executable("electron_exe") {
   configs += [
     "//build/config/compiler:wexit_time_destructors",
     "//electron/build:electron_config",
@@ -68,7 +104,9 @@ executable("electron_app") {
     ":widevine_cdm_adapter",
   ]
 
-  output_name = executable_name
+  # output filename must be node to generate the correct import library for
+  # node native modules
+  output_name = "node"
 
   ldflags = [
     "/DELAYLOAD:dbghelp.dll",
