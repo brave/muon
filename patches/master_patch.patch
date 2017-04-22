@@ -2151,6 +2151,32 @@ index df954bc8f81850101676b1c20f688ba0ba6b4b09..4683b2853bb467ec9f58616ede207d45
      readonly attribute long long lastModified;
 
      // Non-standard APIs
+diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
+index da3a1b4aa199f57959086950eba49d5cc444e110..09b84917001850ace42c97116bafbc6af87bb8c9 100644
+--- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
++++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
+@@ -2096,6 +2096,10 @@ bool HTMLMediaElement::autoplay() const {
+ }
+ 
+ bool HTMLMediaElement::shouldAutoplay() {
++  // MUON(darkdh): check autoplay setting
++  if (!isAutoplayAllowedPerSettings()) {
++    return false;
++  }
+   if (document().isSandboxed(SandboxAutomaticFeatures))
+     return false;
+   return m_autoplaying && m_paused && autoplay();
+@@ -3828,6 +3832,10 @@ void HTMLMediaElement::unlockUserGesture() {
+ }
+ 
+ bool HTMLMediaElement::isGestureNeededForPlayback() const {
++  // MUON(darkdh): check autoplay setting
++  if (!isAutoplayAllowedPerSettings()) {
++    return true;
++  }
+   if (!m_lockedPendingUserGesture)
+     return false;
+ 
 diff --git a/third_party/WebKit/Source/web/WebArrayBuffer.cpp b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
 index 271ec5391d8a9a478f36da58f1b539963cf39724..cd0fcf8bec875485097560c9c8231ad013cc0a96 100644
 --- a/third_party/WebKit/Source/web/WebArrayBuffer.cpp
