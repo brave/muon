@@ -12,7 +12,7 @@ namespace atom {
 
 class NodeBindingsLinux : public NodeBindings {
  public:
-  explicit NodeBindingsLinux(bool is_browser);
+  explicit NodeBindingsLinux();
   virtual ~NodeBindingsLinux();
 
   void RunMessageLoop() override;

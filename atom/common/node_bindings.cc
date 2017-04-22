@@ -21,6 +21,8 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/content_paths.h"
 #include "native_mate/dictionary.h"
+#include "gin/public/v8_platform.h"
+#include "v8/include/libplatform/libplatform.h"
 
 #include "atom/common/node_includes.h"
 
@@ -109,16 +111,14 @@ std::unique_ptr<const char*[]> StringVectorToArgArray(
   return array;
 }
 
-base::FilePath GetResourcesPath(bool is_browser) {
+base::FilePath GetResourcesPath() {
   auto command_line = base::CommandLine::ForCurrentProcess();
   base::FilePath exec_path(command_line->GetProgram());
   PathService::Get(base::FILE_EXE, &exec_path);
 
   base::FilePath resources_path =
 #if defined(OS_MACOSX)
-      is_browser ? exec_path.DirName().DirName().Append("Resources") :
-                   exec_path.DirName().DirName().DirName().DirName().DirName()
-                            .Append("Resources");
+      exec_path.DirName().DirName().Append("Resources");
 #else
       exec_path.DirName().Append(FILE_PATH_LITERAL("resources"));
 #endif
@@ -127,9 +127,8 @@ base::FilePath GetResourcesPath(bool is_browser) {
 
 }  // namespace
 
-NodeBindings::NodeBindings(bool is_browser)
-    : is_browser_(is_browser),
-      message_loop_(nullptr),
+NodeBindings::NodeBindings()
+    : message_loop_(nullptr),
       uv_loop_(uv_default_loop()),
       embed_closed_(false),
       uv_env_(nullptr),
@@ -154,7 +153,7 @@ NodeBindings::~NodeBindings() {
 
 void NodeBindings::Initialize() {
   // Open node's error reporting system for browser process.
-  node::g_standalone_mode = is_browser_;
+  node::g_standalone_mode = true;
   node::g_upstream_node_mode = false;
 
   // Init node.
@@ -175,9 +174,8 @@ node::Environment* NodeBindings::CreateEnvironment(
   auto args = AtomCommandLine::argv_utf8();
 
   // Feed node the path to initialization script.
-  base::FilePath::StringType process_type = is_browser_ ?
-      FILE_PATH_LITERAL("browser") : FILE_PATH_LITERAL("renderer");
-  base::FilePath resources_path = GetResourcesPath(is_browser_);
+  base::FilePath::StringType process_type = FILE_PATH_LITERAL("browser");
+  base::FilePath resources_path = GetResourcesPath();
   base::FilePath script_path =
       resources_path.Append(FILE_PATH_LITERAL("electron.asar"))
                     .Append(process_type)
@@ -192,27 +190,29 @@ node::Environment* NodeBindings::CreateEnvironment(
       node::CreateIsolateData(context->GetIsolate(), uv_default_loop()),
       context, args.size(), c_argv.get(), 0, nullptr);
 
-  // Node uses the deprecated SetAutorunMicrotasks(false) mode, we should switch
-  // to use the scoped policy to match blink's behavior.
-  if (!is_browser_) {
-    context->GetIsolate()->SetMicrotasksPolicy(v8::MicrotasksPolicy::kScoped);
-  }
-
   mate::Dictionary process(context->GetIsolate(), env->process_object());
   process.Set("type", process_type);
   process.Set("resourcesPath", resources_path);
-  // Do not set DOM globals for renderer process.
-  if (!is_browser_)
-    process.Set("_noBrowserGlobals", resources_path);
+
   // The path to helper app.
   base::FilePath helper_exec_path;
   PathService::Get(content::CHILD_PROCESS_EXE, &helper_exec_path);
   process.Set("helperExecPath", helper_exec_path);
+
   // Set process._debugWaitConnect if --debug-brk was specified to stop
   // the debugger on the first line
-  if (is_browser_ &&
-      base::CommandLine::ForCurrentProcess()->HasSwitch("debug-brk"))
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch("debug-brk"))
     process.Set("_debugWaitConnect", true);
+
+  node::DebugOptions debug_options;
+  for (size_t i = 0; i < args.size(); ++i) {
+    debug_options.ParseOption(args[i]);
+  }
+  if (debug_options.inspector_enabled() || debug_options.debugger_enabled()) {
+    // always enable the inspector
+    debug_options.ParseOption("--inspect");
+    env->inspector_agent()->Start(gin::V8Platform::Get(), nullptr, debug_options);
+  }
 
   return env;
 }
@@ -223,7 +223,7 @@ void NodeBindings::LoadEnvironment(node::Environment* env) {
 }
 
 void NodeBindings::PrepareMessageLoop() {
-  DCHECK(!is_browser_ || BrowserThread::CurrentlyOn(BrowserThread::UI));
+  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
 
   // Add dummy handle for libuv, otherwise libuv would quit when there is
   // nothing to do.
@@ -235,7 +235,7 @@ void NodeBindings::PrepareMessageLoop() {
 }
 
 void NodeBindings::RunMessageLoop() {
-  DCHECK(!is_browser_ || BrowserThread::CurrentlyOn(BrowserThread::UI));
+  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
 
   // The MessageLoop should have been created, remember the one in main thread.
   message_loop_ = base::MessageLoop::current();
@@ -245,7 +245,7 @@ void NodeBindings::RunMessageLoop() {
 }
 
 void NodeBindings::UvRunOnce() {
-  DCHECK(!is_browser_ || BrowserThread::CurrentlyOn(BrowserThread::UI));
+  DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
 
   node::Environment* env = uv_env();
 

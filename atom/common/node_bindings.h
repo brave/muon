@@ -22,7 +22,7 @@ namespace atom {
 
 class NodeBindings {
  public:
-  static NodeBindings* Create(bool is_browser);
+  static NodeBindings* Create();
 
   virtual ~NodeBindings();
 
@@ -46,7 +46,7 @@ class NodeBindings {
   node::Environment* uv_env() const { return uv_env_; }
 
  protected:
-  explicit NodeBindings(bool is_browser);
+  explicit NodeBindings();
 
   // Called to poll events in new thread.
   virtual void PollEvents() = 0;
@@ -59,9 +59,6 @@ class NodeBindings {
 
   // Interrupt the PollEvents.
   void WakeupEmbedThread();
-
-  // Are we running in browser.
-  bool is_browser_;
 
   // Main thread's MessageLoop.
   base::MessageLoop* message_loop_;

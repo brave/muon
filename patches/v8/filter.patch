@@ -17,3 +17,16 @@ index 8895103222b4ee8ebf212d5c3e1e030cf62a4fd5..764cd0d3b5546a3c744923a1f3cc41ea
      defines = [ "BUILDING_V8_SHARED" ]
    }
  }
+diff --git a/src/profiler/profiler-listener.cc b/src/profiler/profiler-listener.cc
+index bacfffaa7304c47dbe4504f80881379bb21a48e4..c282ed41b37a5400e03b04a0152116de93ff392c 100644
+--- a/src/profiler/profiler-listener.cc
++++ b/src/profiler/profiler-listener.cc
+@@ -100,7 +100,7 @@ void ProfilerListener::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
+       int position = it.source_position().ScriptOffset();
+       int line_number = script->GetLineNumber(position) + 1;
+       int pc_offset = it.code_offset() + offset;
+-      line_table->SetPosition(pc_offset, line_number);
++      line_table->SetPosition(pc_offset, line_number > 0 ? line_number : line);
+     }
+   }
+   rec->entry = NewCodeEntry(

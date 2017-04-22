@@ -120,7 +120,7 @@ def upload_node(bucket, access_key, secret_key, version):
     safe_mkdir(os.path.dirname(iojs_lib))
 
     # Copy atom.lib to node.lib and iojs.lib.
-    atom_lib = os.path.join(output_dir(), 'node.lib')
+    atom_lib = os.path.join(output_dir(), 'node_import.lib')
     shutil.copy2(atom_lib, node_lib)
     shutil.copy2(atom_lib, iojs_lib)
 

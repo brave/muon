@@ -12,7 +12,6 @@
 #include "atom/browser/browser.h"
 #include "atom/browser/browser_context_keyed_service_factories.h"
 #include "atom/browser/javascript_environment.h"
-#include "atom/browser/node_debugger.h"
 #include "atom/common/api/atom_bindings.h"
 #include "atom/common/node_bindings.h"
 #include "atom/common/node_includes.h"
@@ -35,8 +34,6 @@
 #include "content/public/common/content_switches.h"
 #include "device/geolocation/geolocation_delegate.h"
 #include "device/geolocation/geolocation_provider.h"
-#include "gin/public/v8_platform.h"
-#include "v8/include/libplatform/libplatform.h"
 #include "v8/include/v8.h"
 #include "v8/include/v8-debug.h"
 
@@ -71,7 +68,7 @@ AtomBrowserMainParts* AtomBrowserMainParts::self_ = nullptr;
 AtomBrowserMainParts::AtomBrowserMainParts()
     : exit_code_(nullptr),
       browser_(new Browser),
-      node_bindings_(NodeBindings::Create(true)),
+      node_bindings_(NodeBindings::Create()),
       atom_bindings_(new AtomBindings),
       gc_timer_(true, true) {
   DCHECK(!self_) << "Cannot have two AtomBrowserMainParts";
@@ -170,16 +167,9 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   node_bindings_->Initialize();
 
-  // Support the "--debug" switch.
-  node_debugger_.reset(new NodeDebugger(js_env_->isolate()));
-
   // Create the global environment.
   node::Environment* env =
       node_bindings_->CreateEnvironment(js_env_->context());
-
-  // Make sure node can get correct environment when debugging.
-  if (node_debugger_->IsRunning())
-    env->AssignToContext(v8::Debug::GetDebugContext(js_env_->isolate()));
 
   // Add atom-shell extended APIs.
   atom_bindings_->BindTo(js_env_->isolate(), env->process_object());

@@ -1,7 +1,8 @@
 config("build_config") {
   defines = [
     "NODE_WANT_INTERNALS=1",
-    "NODE_SHARED_MODE"
+    "NODE_SHARED_MODE",
+    "HAVE_INSPECTOR=1",
   ]
 
   include_dirs = [

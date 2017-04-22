@@ -109,6 +109,7 @@ executable("electron_exe") {
   output_name = "node"
 
   ldflags = [
+    "/IMPLIB:node_import.lib",
     "/DELAYLOAD:dbghelp.dll",
     "/DELAYLOAD:dwmapi.dll",
     "/DELAYLOAD:uxtheme.dll",
