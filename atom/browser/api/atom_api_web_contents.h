@@ -393,6 +393,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void EnterFullscreenModeForTab(content::WebContents* source,
                                  const GURL& origin) override;
   void ExitFullscreenModeForTab(content::WebContents* source) override;
+  void ContentsZoomChange(bool zoom_in) override;
   void RendererUnresponsive(
       content::WebContents* source,
       const content::WebContentsUnresponsiveState& unresponsive_state) override;

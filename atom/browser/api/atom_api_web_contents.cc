@@ -837,6 +837,17 @@ void WebContents::OnEnterFullscreenModeForTab(content::WebContents* source,
   Emit("enter-html-full-screen");
 }
 
+void WebContents::ContentsZoomChange(bool zoom_in) {
+  if (zoom_in) {
+    zoom::PageZoom::Zoom(web_contents(),
+                         content::PAGE_ZOOM_IN);
+  } else {
+    zoom::PageZoom::Zoom(web_contents(),
+                         content::PAGE_ZOOM_OUT);
+  }
+  Emit("contents-zoom-change", zoom_in);
+}
+
 void WebContents::ExitFullscreenModeForTab(content::WebContents* source) {
   CommonWebContentsDelegate::ExitFullscreenModeForTab(source);
   Emit("leave-html-full-screen");
