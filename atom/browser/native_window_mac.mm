@@ -432,6 +432,13 @@ bool ScopedDisableResize::disable_resize_ = false;
   [button setPostsFrameChangedNotifications:didPost];
 }
 
+- (BOOL)systemSettingsAllowHistorySwiping:(NSEvent*)event {
+  if ([NSEvent
+          respondsToSelector:@selector(isSwipeTrackingFromScrollEventsEnabled)])
+    return [NSEvent isSwipeTrackingFromScrollEventsEnabled];
+  return NO;
+}
+
 - (NSView*)frameView {
   return [[self contentView] superview];
 }
@@ -661,6 +668,11 @@ NativeWindowMac::NativeWindowMac(
 
       if (!web_contents)
         return event;
+
+      if (![window_ systemSettingsAllowHistorySwiping:event]) {
+        began = NO;
+        return event;
+      }
 
       if (!began && (([event phase] == NSEventPhaseMayBegin) ||
                                  ([event phase] == NSEventPhaseBegan))) {
