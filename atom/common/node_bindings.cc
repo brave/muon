@@ -20,8 +20,8 @@
 #include "base/path_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/content_paths.h"
-#include "native_mate/dictionary.h"
 #include "gin/public/v8_platform.h"
+#include "native_mate/dictionary.h"
 #include "v8/include/libplatform/libplatform.h"
 
 #include "atom/common/node_includes.h"
@@ -211,7 +211,8 @@ node::Environment* NodeBindings::CreateEnvironment(
   if (debug_options.inspector_enabled() || debug_options.debugger_enabled()) {
     // always enable the inspector
     debug_options.ParseOption("--inspect");
-    env->inspector_agent()->Start(gin::V8Platform::Get(), nullptr, debug_options);
+    env->inspector_agent()->Start(
+        gin::V8Platform::Get(), nullptr, debug_options);
   }
 
   return env;

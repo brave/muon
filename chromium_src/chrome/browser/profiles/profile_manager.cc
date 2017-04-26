@@ -23,6 +23,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/trace_event/trace_event.h"
 #include "build/build_config.h"
+#include "atom/browser/atom_browser_context.h"
 // #include "chrome/browser/bookmarks/bookmark_model_factory.h"
 // #include "chrome/browser/bookmarks/startup_task_runner_service_factory.h"
 #include "chrome/browser/browser_process.h"
@@ -210,7 +211,10 @@ Profile* ProfileManager::GetProfile(const base::FilePath& profile_dir) {
 
   // If the profile is already loaded (e.g., chrome.exe launched twice), just
   // return it.
-  return GetProfileByPath(profile_dir);
+  Profile* profile = GetProfileByPath(profile_dir);
+  if (profile)
+    return profile;
+  return CreateAndInitializeProfile(profile_dir);
 }
 
 bool ProfileManager::IsValidProfile(const void* profile) {
@@ -279,6 +283,19 @@ Profile* ProfileManager::GetProfileByPath(const base::FilePath& path) const {
                                                  : nullptr;
 }
 
+Profile* ProfileManager::CreateProfileHelper(const base::FilePath& path) {
+  TRACE_EVENT0("browser", "ProfileManager::CreateProfileHelper");
+  SCOPED_UMA_HISTOGRAM_TIMER("Profile.CreateProfileHelperTime");
+
+  std::string partition = "";
+  if (path != user_data_dir()) {
+    partition = path.BaseName().AsUTF8Unsafe();
+  }
+
+  return static_cast<Profile*>(
+      atom::AtomBrowserContext::From(partition, false));
+}
+
 Profile* ProfileManager::GetActiveUserOrOffTheRecordProfileFromPath(
     const base::FilePath& user_data_dir) {
   base::FilePath default_profile_dir(user_data_dir);
@@ -298,6 +315,24 @@ bool ProfileManager::AddProfile(Profile* profile) {
 
   RegisterProfile(profile, true);
   return true;
+}
+
+Profile* ProfileManager::CreateAndInitializeProfile(
+    const base::FilePath& profile_dir) {
+  TRACE_EVENT0("browser", "ProfileManager::CreateAndInitializeProfile");
+  SCOPED_UMA_HISTOGRAM_LONG_TIMER("Profile.CreateAndInitializeProfile");
+  // CHECK that we are not trying to load the same profile twice, to prevent
+  // profile corruption. Note that this check also covers the case when we have
+  // already started loading the profile but it is not fully initialized yet,
+  // which would make Bad Things happen if we returned it.
+  CHECK(!GetProfileByPathInternal(profile_dir));
+  Profile* profile = CreateProfileHelper(profile_dir);
+  // BraveBrowserContext currently initializes the profile
+  // if (profile) {
+  //   bool result = AddProfile(profile);
+  //   DCHECK(result);
+  // }
+  return profile;
 }
 
 ProfileManager::ProfileInfo* ProfileManager::RegisterProfile(

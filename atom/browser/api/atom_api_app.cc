@@ -429,7 +429,7 @@ int GetPathConstant(const std::string& name) {
 
 bool NotificationCallbackWrapper(
     const ProcessSingleton::NotificationCallback& callback,
-    const base::CommandLine::StringVector& cmd,
+    const base::CommandLine& cmd,
     const base::FilePath& cwd) {
   // Make sure the callback is called after app gets ready.
   if (atom::Browser::Get()->is_ready()) {
@@ -472,38 +472,6 @@ void PassLoginInformation(scoped_refptr<LoginHandler> login_handler,
   else
     login_handler->CancelAuth();
 }
-
-#if defined(USE_NSS_CERTS)
-int ImportIntoCertStore(
-    CertificateManagerModel* model,
-    const base::DictionaryValue& options) {
-  std::string file_data, cert_path;
-  base::string16 password;
-  net::CertificateList imported_certs;
-  int rv = -1;
-  options.GetString("certificate", &cert_path);
-  options.GetString("password", &password);
-
-  if (!cert_path.empty()) {
-    if (base::ReadFileToString(base::FilePath(cert_path), &file_data)) {
-      rv = model->ImportFromPKCS12(model->cert_db()->GetPublicSlot().get(),
-                                   file_data,
-                                   password,
-                                   true,
-                                   &imported_certs);
-      if (imported_certs.size() > 1) {
-        auto it = imported_certs.begin();
-        ++it;  // skip first which would  be the client certificate.
-        for (; it != imported_certs.end(); ++it)
-          rv &= model->SetCertTrust(it->get(),
-                                    net::CA_CERT,
-                                    net::NSSCertDatabase::TRUSTED_SSL);
-      }
-    }
-  }
-  return rv;
-}
-#endif
 
 }  // namespace
 
@@ -865,37 +833,6 @@ void App::StartWorker(mate::Arguments* args) {
   args->Return(worker_id);
 }
 
-#if defined(USE_NSS_CERTS)
-void App::ImportCertificate(
-    const base::DictionaryValue& options,
-    const net::CompletionCallback& callback) {
-  auto browser_context = AtomBrowserContext::From("", false);
-  if (!certificate_manager_model_) {
-    std::unique_ptr<base::DictionaryValue> copy = options.CreateDeepCopy();
-    CertificateManagerModel::Create(
-        browser_context,
-        base::Bind(&App::OnCertificateManagerModelCreated,
-                   base::Unretained(this),
-                   base::Passed(&copy),
-                   callback));
-    return;
-  }
-
-  int rv = ImportIntoCertStore(certificate_manager_model_.get(), options);
-  callback.Run(rv);
-}
-
-void App::OnCertificateManagerModelCreated(
-    std::unique_ptr<base::DictionaryValue> options,
-    const net::CompletionCallback& callback,
-    std::unique_ptr<CertificateManagerModel> model) {
-  certificate_manager_model_ = std::move(model);
-  int rv = ImportIntoCertStore(certificate_manager_model_.get(),
-                               *(options.get()));
-  callback.Run(rv);
-}
-#endif
-
 #if defined(OS_WIN)
 v8::Local<v8::Value> App::GetJumpListSettings() {
   JumpList jump_list(atom::Browser::Get()->GetAppUserModelID());
@@ -1015,9 +952,6 @@ void App::BuildPrototype(
       .SetMethod("setDesktopName", &App::SetDesktopName)
       .SetMethod("getLocale", &App::GetLocale)
       .SetMethod("setLocale", &App::SetLocale)
-#if defined(USE_NSS_CERTS)
-      .SetMethod("importCertificate", &App::ImportCertificate)
-#endif
       .SetMethod("makeSingleInstance", &App::MakeSingleInstance)
       .SetMethod("releaseSingleInstance", &App::ReleaseSingleInstance)
       .SetMethod("relaunch", &App::Relaunch)

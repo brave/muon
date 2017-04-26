@@ -6,7 +6,6 @@
 
 #include <map>
 #include <utility>
-#include "atom/browser/extensions/atom_extension_api_frame_id_map_helper.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "atom/browser/native_window.h"
 #include "atom/common/native_mate_converters/callback.h"
@@ -31,6 +30,7 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/web_contents.h"
 #include "extensions/browser/component_extension_resource_manager.h"
+#include "extensions/browser/extension_api_frame_id_map.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/file_reader.h"
@@ -663,39 +663,6 @@ content::WebContents* TabHelper::GetTabById(int32_t tab_id,
     }
   }
   return NULL;
-}
-
-// static
-base::DictionaryValue* TabHelper::CreateTabValue(
-                                              content::WebContents* contents) {
-  auto tab_helper = FromWebContents(contents);
-  bool active = tab_helper->is_active();
-  bool auto_discardable = GetTabManager()->IsTabAutoDiscardable(contents);
-
-  std::unique_ptr<base::DictionaryValue> result(
-      tab_helper->getTabValues()->CreateDeepCopy());
-
-  auto entry = contents->GetController().GetLastCommittedEntry();
-
-  result->SetInteger(keys::kIdKey, IdForTab(contents));
-  result->SetInteger(keys::kWindowIdKey, IdForWindowContainingTab(contents));
-  result->SetBoolean(keys::kIncognitoKey,
-                     contents->GetBrowserContext()->IsOffTheRecord());
-  result->SetBoolean(keys::kActiveKey, active);
-  result->SetString(keys::kUrlKey, contents->GetURL().spec());
-  result->SetString(keys::kTitleKey,
-                    entry ? base::UTF16ToUTF8(entry->GetTitle()) : "");
-  result->SetString(keys::kStatusKey, contents->IsLoading()
-      ? "loading" : "complete");
-  result->SetBoolean(keys::kAudibleKey, contents->WasRecentlyAudible());
-  result->SetBoolean(keys::kDiscardedKey, tab_helper->IsDiscarded());
-  result->SetBoolean(keys::kAutoDiscardableKey, auto_discardable);
-  result->SetBoolean(keys::kHighlightedKey, active);
-  result->SetInteger(keys::kIndexKey, tab_helper->get_index());
-  result->SetBoolean(keys::kPinnedKey, tab_helper->IsPinned());
-  result->SetBoolean(keys::kSelectedKey, active);
-
-  return result.release();
 }
 
 // static

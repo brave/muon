@@ -20,9 +20,10 @@
 
 class ExternalProcessImporterHost;
 class ImporterList;
-class ProfileWriter;
 
 namespace atom {
+
+class ProfileWriter;
 
 namespace api {
 

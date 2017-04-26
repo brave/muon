@@ -32,13 +32,17 @@
 #include "base/guid.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
+#include "base/task/cancelable_task_tracker.h"
 #include "base/threading/thread_restrictions.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
 #include "chrome/browser/devtools/devtools_network_conditions.h"
 #include "chrome/browser/devtools/devtools_network_controller_handle.h"
+#include "chrome/browser/history/history_service_factory.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
+#include "components/history/core/browser/history_service.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/storage_partition.h"
@@ -344,6 +348,8 @@ void OnClearStorageDataDone(const base::Closure& callback) {
     callback.Run();
 }
 
+void OnClearHistory() {}
+
 }  // namespace
 
 Session::Session(v8::Isolate* isolate, AtomBrowserContext* browser_context)
@@ -412,6 +418,24 @@ void Session::ClearStorageData(mate::Arguments* args) {
       content::StoragePartition::OriginMatcherFunction(),
       base::Time(), base::Time::Max(),
       base::Bind(&OnClearStorageDataDone, callback));
+}
+
+void Session::ClearHistory(mate::Arguments* args) {
+  base::Closure callback;
+  if (!args->GetNext(&callback))
+    callback = base::Bind(&OnClearHistory);
+
+  history::HistoryService* history_service =
+      HistoryServiceFactory::GetForProfile(
+          Profile::FromBrowserContext(browser_context()),
+          ServiceAccessType::EXPLICIT_ACCESS);
+
+  base::CancelableTaskTracker task_tracker;
+  history_service->ExpireHistoryBetween(std::set<GURL>(),
+                                        base::Time(),
+                                        base::Time::Max(),
+                                        callback,
+                                        &task_tracker);
 }
 
 void Session::FlushStorageData() {
@@ -626,6 +650,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getCacheSize", &Session::DoCacheAction<CacheAction::STATS>)
       .SetMethod("clearCache", &Session::DoCacheAction<CacheAction::CLEAR>)
       .SetMethod("clearStorageData", &Session::ClearStorageData)
+      .SetMethod("clearHistory", &Session::ClearHistory)
       .SetMethod("flushStorageData", &Session::FlushStorageData)
       .SetMethod("setProxy", &Session::SetProxy)
       .SetMethod("setDownloadPath", &Session::SetDownloadPath)

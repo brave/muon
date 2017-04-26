@@ -381,6 +381,10 @@ void BraveBrowserContext::CreateProfilePrefs(
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
     pref_registry_->RegisterDictionaryPref("app_state");
+    pref_registry_->RegisterBooleanPref(
+        prefs::kSavingBrowserHistoryDisabled, false);
+    pref_registry_->RegisterBooleanPref(
+        prefs::kAllowDeletingBrowserHistory, true);
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionDefaultZoomLevel);
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionPerHostZoomLevels);
     pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);

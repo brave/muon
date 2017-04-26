@@ -7,6 +7,7 @@
 #include "base/files/file_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/url_constants.h"
+#include "components/favicon/core/favicon_service.h"
 #include "content/browser/webui/web_ui_impl.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/url_data_source.h"
@@ -189,4 +190,19 @@ ChromeWebUIControllerFactory::ChromeWebUIControllerFactory() {
 }
 
 ChromeWebUIControllerFactory::~ChromeWebUIControllerFactory() {
+}
+
+void ChromeWebUIControllerFactory::GetFaviconForURL(
+    Profile* profile,
+    const GURL& page_url,
+    const std::vector<int>& desired_sizes_in_pixel,
+    const favicon_base::FaviconResultsCallback& callback) const {
+  std::vector<favicon_base::FaviconRawBitmapResult>* results =
+      new std::vector<favicon_base::FaviconRawBitmapResult>();
+
+  base::ThreadTaskRunnerHandle::Get()->PostTask(
+      FROM_HERE,
+      base::Bind(&favicon::FaviconService::FaviconResultsCallbackRunner,
+                 callback, base::Owned(results)));
+
 }

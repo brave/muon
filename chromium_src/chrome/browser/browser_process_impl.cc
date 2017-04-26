@@ -384,13 +384,11 @@ void BrowserProcessImpl::set_background_mode_manager_for_test(
 
 safe_browsing::SafeBrowsingService*
 BrowserProcessImpl::safe_browsing_service() {
-  NOTIMPLEMENTED();
   return nullptr;
 }
 
 safe_browsing::ClientSideDetectionService*
 BrowserProcessImpl::safe_browsing_detection_service() {
-  NOTIMPLEMENTED();
   return nullptr;
 }
 

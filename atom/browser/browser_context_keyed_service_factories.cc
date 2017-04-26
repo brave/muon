@@ -7,6 +7,7 @@
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/history/history_service_factory.h"
 #include "extensions/features/features.h"
 #include "ppapi/features/features.h"
 #if BUILDFLAG(ENABLE_PLUGINS)
@@ -72,6 +73,7 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   PluginPrefsFactory::GetInstance();
 #endif
   ProtocolHandlerRegistryFactory::GetInstance();
+  HistoryServiceFactory::GetInstance();
 }
 
 }  // namespace atom

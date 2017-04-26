@@ -60,10 +60,6 @@ const asyncMethods = [
 ]
 
 const syncMethods = [
-  'getEntryCount',
-  'getCurrentEntryIndex',
-  'getURLAtIndex',
-  'getTitleAtIndex',
   'getZoomPercent'
 ]
 

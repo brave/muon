@@ -64,6 +64,7 @@ class Session: public mate::TrackableObject<Session>,
   template<CacheAction action>
   void DoCacheAction(const net::CompletionCallback& callback);
   void ClearStorageData(mate::Arguments* args);
+  void ClearHistory(mate::Arguments* args);
   void FlushStorageData();
   void SetProxy(const net::ProxyConfig& config, const base::Closure& callback);
   void SetDownloadPath(const base::FilePath& path);
