@@ -12,7 +12,7 @@ namespace atom {
 
 class NodeBindingsWin : public NodeBindings {
  public:
-  explicit NodeBindingsWin();
+  NodeBindingsWin();
   virtual ~NodeBindingsWin();
 
  private:

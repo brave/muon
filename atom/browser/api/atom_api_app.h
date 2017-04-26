@@ -20,10 +20,6 @@
 #include "net/base/completion_callback.h"
 #include "net/base/network_change_notifier.h"
 
-#if defined(USE_NSS_CERTS)
-#include "chrome/browser/certificate_manager_model.h"
-#endif
-
 namespace base {
 class FilePath;
 }
@@ -58,13 +54,6 @@ class App : public AtomBrowserClient::Delegate,
                       WindowOpenDisposition disposition,
                       int render_process_id,
                       int render_frame_id);
-
-#if defined(USE_NSS_CERTS)
-  void OnCertificateManagerModelCreated(
-      std::unique_ptr<base::DictionaryValue> options,
-      const net::CompletionCallback& callback,
-      std::unique_ptr<CertificateManagerModel> model);
-#endif
 
  protected:
   explicit App(v8::Isolate* isolate);
@@ -140,10 +129,6 @@ class App : public AtomBrowserClient::Delegate,
                   mate::Arguments* args);
   void StartWorker(mate::Arguments* args);
   void StopWorker(mate::Arguments* args);
-#if defined(USE_NSS_CERTS)
-  void ImportCertificate(const base::DictionaryValue& options,
-                         const net::CompletionCallback& callback);
-#endif
 
 #if defined(OS_WIN)
   // Get the current Jump List settings.
@@ -156,10 +141,6 @@ class App : public AtomBrowserClient::Delegate,
   content::NotificationRegistrar registrar_;
 
   std::unique_ptr<ProcessSingleton> process_singleton_;
-
-#if defined(USE_NSS_CERTS)
-  std::unique_ptr<CertificateManagerModel> certificate_manager_model_;
-#endif
 
   DISALLOW_COPY_AND_ASSIGN(App);
 };

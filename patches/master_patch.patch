@@ -78,20 +78,6 @@ index 9c0e2c5cde7e7ffa3eaed4478d1bad35cc380905..c9c3958f7c39a762faa7dc75be0be95a
  }
 
  if (enable_resource_whitelist_generation) {
-diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index 7c663752f6ee5fb932194d25c9ed63bcd5beee6d..dd36aa4ab8da456d23d1b2b458b491e6fcb09068 100644
---- a/chrome/browser/BUILD.gn
-+++ b/chrome/browser/BUILD.gn
-@@ -3497,6 +3497,9 @@ split_static_library("browser") {
-       "//device/battery",
-       "//net:net_browser_services",
-     ]
-+    if (!muon_chromium_build) {
-+      include_dirs = [ "//electron" ]
-+    }
-   }
-
-   if (enable_pepper_cdms) {
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
 index 7444d5b35cdf9588b72239da790aecb22820b31c..48c95c8c9e7b8e413d94da711ad51d0ab40e159e 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
@@ -106,25 +92,9 @@ index 7444d5b35cdf9588b72239da790aecb22820b31c..48c95c8c9e7b8e413d94da711ad51d0a
            "translate::mojom::ContentTranslateDriver"
          ],
 diff --git a/chrome/browser/extensions/api/messaging/message_service.cc b/chrome/browser/extensions/api/messaging/message_service.cc
-index 56d2f39a8be535d78d72954f12a78f188010c6cd..5ddb40fbea05eb72125f7469ace0958cb859927e 100644
+index 56d2f39a8be535d78d72954f12a78f188010c6cd..80035a8654ae0860e1a9dc5a58cbaf1933fab453 100644
 --- a/chrome/browser/extensions/api/messaging/message_service.cc
 +++ b/chrome/browser/extensions/api/messaging/message_service.cc
-@@ -8,6 +8,7 @@
- #include <limits>
- #include <utility>
-
-+#include "atom/browser/extensions/tab_helper.h"
- #include "base/bind.h"
- #include "base/callback.h"
- #include "base/json/json_writer.h"
-@@ -17,7 +18,6 @@
- #include "base/metrics/histogram_macros.h"
- #include "build/build_config.h"
- #include "chrome/browser/extensions/api/messaging/extension_message_port.h"
--#include "chrome/browser/extensions/api/messaging/incognito_connectability.h"
- #include "chrome/browser/extensions/api/messaging/native_message_port.h"
- #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
- #include "chrome/browser/extensions/extension_service.h"
 @@ -171,6 +171,11 @@ namespace {
  static content::RenderProcessHost* GetExtensionProcess(
      BrowserContext* context,
@@ -137,32 +107,47 @@ index 56d2f39a8be535d78d72954f12a78f188010c6cd..5ddb40fbea05eb72125f7469ace0958c
    scoped_refptr<SiteInstance> site_instance =
        ProcessManager::Get(context)->GetSiteInstanceForURL(
            Extension::GetBaseURLFromExtensionId(extension_id));
-@@ -298,9 +303,7 @@ void MessageService::OpenChannelToExtension(
-     // Only the tab id is useful to platform apps for internal use. The
-     // unnecessary bits will be stripped out in
-     // MessagingBindings::DispatchOnConnect().
--    source_tab.reset(ExtensionTabUtil::CreateTabObject(source_contents)
--                         ->ToValue()
--                         .release());
-+    source_tab.reset(extensions::TabHelper::CreateTabValue(source_contents));
-
-     content::RenderFrameHost* rfh =
-         content::RenderFrameHost::FromID(source_process_id, source_routing_id);
-@@ -360,10 +363,10 @@ void MessageService::OpenChannelToExtension(
-     }
-
-     // This check may show a dialog.
--    IncognitoConnectability::Get(context)
--        ->Query(target_extension, source_contents, source_url,
--                base::Bind(&MessageService::OnOpenChannelAllowed,
--                           weak_factory_.GetWeakPtr(), base::Passed(&params)));
-+    // IncognitoConnectability::Get(context)
-+    //     ->Query(target_extension, source_contents, source_url,
-+    //             base::Bind(&MessageService::OnOpenChannelAllowed,
-+    //                        weak_factory_.GetWeakPtr(), base::Passed(&params)));
-     return;
-   }
-
+diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
+index edf5cc054ac3c703cc049509aed223313a875001..6c5f76eb7f8082afa02f6d0721efa3dc09a996d5 100644
+--- a/chrome/browser/importer/external_process_importer_client.h
++++ b/chrome/browser/importer/external_process_importer_client.h
+@@ -97,6 +97,8 @@ class ExternalProcessImporterClient
+   void OnAutofillFormDataImportGroup(
+       const std::vector<ImporterAutofillFormDataEntry>&
+           autofill_form_data_entry_group) override;
++  void OnCookiesImportStart(uint32_t total_cookies_count) override {};
++  void OnCookiesImportGroup(const std::vector<ImportedCookieEntry>& cookies_group) override {};
+   void OnIE7PasswordReceived(
+       const importer::ImporterIE7PasswordInfo& importer_password_info) override;
+ 
+diff --git a/chrome/browser/importer/external_process_importer_host.h b/chrome/browser/importer/external_process_importer_host.h
+index 08c6f28746cc5f345114a942834db18f5c7a1d41..45b3b8072cc352d3fc2824489b2b59a2cee38ec3 100644
+--- a/chrome/browser/importer/external_process_importer_host.h
++++ b/chrome/browser/importer/external_process_importer_host.h
+@@ -74,7 +74,9 @@ class ExternalProcessImporterHost
+ 
+  private:
+   // ExternalProcessImporterHost deletes itself in OnImportEnded().
++ protected:
+   ~ExternalProcessImporterHost() override;
++ private:
+ 
+   // Launches the utility process that starts the import task, unless bookmark
+   // or template model are not yet loaded. If load is not detected, this method
+diff --git a/chrome/browser/importer/in_process_importer_bridge.h b/chrome/browser/importer/in_process_importer_bridge.h
+index 247d24220beb7d176b890d7c2d45bdd2dfd8db99..c270bba0fabb557e8d3d1df8ac166bbb00ed6e8b 100644
+--- a/chrome/browser/importer/in_process_importer_bridge.h
++++ b/chrome/browser/importer/in_process_importer_bridge.h
+@@ -68,7 +68,9 @@ class InProcessImporterBridge : public ImporterBridge {
+   // End ImporterBridge implementation.
+ 
+  private:
++ protected:
+   ~InProcessImporterBridge() override;
++ private:
+ 
+   ProfileWriter* const writer_;  // weak
+   const base::WeakPtr<ExternalProcessImporterHost> host_;
 diff --git a/chrome/browser/memory/tab_manager.cc b/chrome/browser/memory/tab_manager.cc
 index b689350325b807a0276cac709e4e4fa3d2054980..f16ba67996a7091d87d7de9ad71de63182015780 100644
 --- a/chrome/browser/memory/tab_manager.cc
@@ -423,18 +408,10 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..0d1f9efcb260f8c943ab24a4c23c14db
    }
 
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 856a1d44f12f408aeba38ee5502b26ec6eee5700..145fd3c0f5bf1a86fe92456f45fda912f9e4d29a 100644
+index 856a1d44f12f408aeba38ee5502b26ec6eee5700..11d563ea95c52e7a8e483210021fa277d3a3c90d 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
-@@ -435,6 +435,7 @@ static_library("common") {
-       "importer/safari_importer_utils.h",
-       "importer/safari_importer_utils.mm",
-     ]
-+    include_dirs = [ "//electron" ]
-   }
-
-   if (is_chromeos) {
-@@ -533,6 +534,12 @@ static_library("common") {
+@@ -533,6 +533,12 @@ static_library("common") {
      ]
      public_deps += [ "//chrome/common:version_header" ]
    }
@@ -602,21 +579,10 @@ index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e45
 +++ b/chrome/common/chrome_version.h.in
 @@ -22,3 +22,5 @@
  // Changelist Information
-
+ 
  #define LASTCHANGE_STRING "@LASTCHANGE@"
 +
 +#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
-diff --git a/chrome/common/importer/BUILD.gn b/chrome/common/importer/BUILD.gn
-index 905bddcd622791be18efafe41dcf86a52578d92e..47922ee7575a64b6afd95b5082015e5336b1cc4e 100644
---- a/chrome/common/importer/BUILD.gn
-+++ b/chrome/common/importer/BUILD.gn
-@@ -14,4 +14,6 @@ mojom("interfaces") {
-     "//mojo/common:common_custom_types",
-     "//url/mojo:url_mojom_gurl",
-   ]
-+
-+  import_dirs = [ "//electron" ]
- }
 diff --git a/chrome/common/importer/edge_importer_utils_win.cc b/chrome/common/importer/edge_importer_utils_win.cc
 index c2abd64b2d7c5166c1fdbaaf782974cb4bcc5e53..eb59bbe098dabd0edd3d9d8e24befe1006e56b8b 100644
 --- a/chrome/common/importer/edge_importer_utils_win.cc
@@ -632,28 +598,6 @@ index c2abd64b2d7c5166c1fdbaaf782974cb4bcc5e53..eb59bbe098dabd0edd3d9d8e24befe10
  }
 
  bool EdgeImporterCanImport() {
-diff --git a/chrome/common/importer/importer_bridge.h b/chrome/common/importer/importer_bridge.h
-index 56d4259aba433df997802109cf5a8d28c03ebd13..c7542923071f28e4077727a9b494bf56e4debf8f 100644
---- a/chrome/common/importer/importer_bridge.h
-+++ b/chrome/common/importer/importer_bridge.h
-@@ -24,6 +24,8 @@ namespace autofill {
- struct PasswordForm;
- }
-
-+struct ImportedCookieEntry;
-+
- namespace importer {
- #if defined(OS_WIN)
- struct ImporterIE7PasswordInfo;
-@@ -66,6 +68,8 @@ class ImporterBridge : public base::RefCountedThreadSafe<ImporterBridge> {
-   virtual void SetAutofillFormData(
-       const std::vector<ImporterAutofillFormDataEntry>& entries) = 0;
-
-+  virtual void SetCookies(const std::vector<ImportedCookieEntry>& cookies) = 0;
-+
-   // Notifies the coordinator that the import operation has begun.
-   virtual void NotifyStarted() = 0;
-
 diff --git a/chrome/common/importer/importer_data_types.h b/chrome/common/importer/importer_data_types.h
 index 0fc90c62398a93eb89568ce78c8ded2bc9b232b6..50a7d3c0079b7e9c5bc38a4ae3b25eef6d024169 100644
 --- a/chrome/common/importer/importer_data_types.h
@@ -703,7 +647,7 @@ index f366a941273f0807405743f1365fdaf3a549cddc..35d5a90c778adfa67597866c31a91bc7
    OnIE7PasswordReceived(ImporterIE7PasswordInfo importer_password_info);
  };
 diff --git a/chrome/common/importer/profile_import.typemap b/chrome/common/importer/profile_import.typemap
-index 6283f2bf6871a10f710694772b5da0bc9b70c2ad..263c6f5914079cfe9f16baff9a1f9274453fc37f 100644
+index 6283f2bf6871a10f710694772b5da0bc9b70c2ad..d5d1de309cb50eb9f8757d32d0eec3b42d08f9c0 100644
 --- a/chrome/common/importer/profile_import.typemap
 +++ b/chrome/common/importer/profile_import.typemap
 @@ -9,6 +9,7 @@ public_headers = [
@@ -714,33 +658,25 @@ index 6283f2bf6871a10f710694772b5da0bc9b70c2ad..263c6f5914079cfe9f16baff9a1f9274
  ]
  traits_headers =
      [ "//chrome/common/importer/profile_import_process_param_traits.h" ]
-@@ -16,6 +17,7 @@ deps = [
-   "//chrome/common",
-   "//components/favicon_base",
-   "//ipc",
-+  "//electron:common",
- ]
- type_mappings = [
-   "chrome.mojom.FaviconUsageDataList=::favicon_base::FaviconUsageDataList",
-@@ -26,4 +28,5 @@ type_mappings = [
+@@ -26,4 +27,5 @@ type_mappings = [
    "chrome.mojom.SearchEngineInfo=::importer::SearchEngineInfo",
    "chrome.mojom.SourceProfile=::importer::SourceProfile",
    "chrome.mojom.ImportItem=::importer::ImportItem",
 +  "chrome.mojom.ImportedCookieEntry=::ImportedCookieEntry",
  ]
 diff --git a/chrome/common/importer/profile_import_process_param_traits_macros.h b/chrome/common/importer/profile_import_process_param_traits_macros.h
-index eb4b00d6ed6af19c4fc998e81dab735db63484e9..152b643afe66ccda1644fcff4e2a976e4a83174b 100644
+index eb4b00d6ed6af19c4fc998e81dab735db63484e9..04579f1c6a7f0d102a36a58ca4d9b497dbf28754 100644
 --- a/chrome/common/importer/profile_import_process_param_traits_macros.h
 +++ b/chrome/common/importer/profile_import_process_param_traits_macros.h
-@@ -13,6 +13,7 @@
-
- #include "base/strings/string16.h"
- #include "base/values.h"
-+#include "brave/common/importer/imported_cookie_entry.h"
- #include "build/build_config.h"
- #include "chrome/common/common_param_traits_macros.h"
- #include "chrome/common/importer/imported_bookmark_entry.h"
-@@ -92,4 +93,15 @@ IPC_STRUCT_TRAITS_BEGIN(importer::ImporterIE7PasswordInfo)
+@@ -24,6 +24,7 @@
+ #include "components/favicon_base/favicon_usage_data.h"
+ #include "content/public/common/common_param_traits.h"
+ #include "ipc/ipc_message_macros.h"
++#include "electron/brave/common/importer/imported_cookie_entry.h"
+ 
+ #if defined(OS_WIN)
+ IPC_ENUM_TRAITS_MIN_MAX_VALUE(importer::ImporterType,
+@@ -92,4 +93,14 @@ IPC_STRUCT_TRAITS_BEGIN(importer::ImporterIE7PasswordInfo)
    IPC_STRUCT_TRAITS_MEMBER(date_created)
  IPC_STRUCT_TRAITS_END()
 
@@ -754,7 +690,6 @@ index eb4b00d6ed6af19c4fc998e81dab735db63484e9..152b643afe66ccda1644fcff4e2a976e
 +  IPC_STRUCT_TRAITS_MEMBER(secure)
 +  IPC_STRUCT_TRAITS_MEMBER(httponly)
 +IPC_STRUCT_TRAITS_END()
-+
  #endif  // CHROME_COMMON_IMPORTER_PROFILE_IMPORT_PROCESS_PARAM_TRAITS_MACROS_H_
 diff --git a/chrome/common/mac/app_mode_chrome_locator.mm b/chrome/common/mac/app_mode_chrome_locator.mm
 index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b359624d55e525 100644
@@ -884,181 +819,44 @@ index 22a865dc6a74b8ef33831c27a432ffba0cde142e..01eb004cb8c79b15e5b33bc6efa408f6
        sources -= [ "//ui/views/corewm/desktop_capture_controller_unittest.cc" ]
      }
    }
-diff --git a/chrome/utility/BUILD.gn b/chrome/utility/BUILD.gn
-index 637a2336e396d92ef3dbe4a86421407e9a6f1a62..5bae64732f44f3e41a119239beea0f5516745a33 100644
---- a/chrome/utility/BUILD.gn
-+++ b/chrome/utility/BUILD.gn
-@@ -97,6 +97,7 @@ static_library("utility") {
-       "//chrome/common/importer:interfaces",
-       "//net:net_utility_services",
-     ]
-+    include_dirs = [ "//electron" ]
-   }
-
-   if (enable_extensions) {
-diff --git a/chrome/utility/importer/external_process_importer_bridge.cc b/chrome/utility/importer/external_process_importer_bridge.cc
-index 38a8e7a41bf771a59fdb3d227243b88c5b85b8d0..c3db151f0f5d2303a8f76ecf5b2ffb8f52bdc5d7 100644
---- a/chrome/utility/importer/external_process_importer_bridge.cc
-+++ b/chrome/utility/importer/external_process_importer_bridge.cc
-@@ -28,6 +28,7 @@ const int kNumBookmarksToSend = 100;
- const int kNumHistoryRowsToSend = 100;
- const int kNumFaviconsToSend = 100;
- const int kNumAutofillFormDataToSend = 100;
-+const int kNumCookiesToSend = 100;
-
- } // namespace
-
-@@ -160,6 +161,28 @@ void ExternalProcessImporterBridge::SetAutofillFormData(
-   DCHECK_EQ(0, autofill_form_data_entries_left);
- }
-
-+void ExternalProcessImporterBridge::SetCookies(
-+    const std::vector<ImportedCookieEntry>& cookies) {
-+  (*observer_)->OnCookiesImportStart(cookies.size());
-+
-+  // |cookies_left| is required for the checks below as Windows has a
-+  // Debug bounds-check which prevents pushing an iterator beyond its end()
-+  // (i.e., |it + 2 < s.end()| crashes in debug mode if |i + 1 == s.end()|).
-+  int cookies_left = cookies.end() - cookies.begin();
-+  for (std::vector<ImportedCookieEntry>::const_iterator it =
-+           cookies.begin(); it < cookies.end();) {
-+    std::vector<ImportedCookieEntry> cookies_group;
-+    std::vector<ImportedCookieEntry>::const_iterator end_group =
-+        it + std::min(cookies_left, kNumCookiesToSend);
-+    cookies_group.assign(it, end_group);
-+
-+    (*observer_)->OnCookiesImportGroup(cookies_group);
-+    cookies_left -= end_group - it;
-+    it = end_group;
-+  }
-+  DCHECK_EQ(0, cookies_left);
-+}
-+
- void ExternalProcessImporterBridge::NotifyStarted() {
-   (*observer_)->OnImportStart();
- }
 diff --git a/chrome/utility/importer/external_process_importer_bridge.h b/chrome/utility/importer/external_process_importer_bridge.h
-index 7e05c4e04f8e61b418d373a73bd8901347df4c76..1c080a558988cf0c76c051e186f78b7f80ac2352 100644
+index 7e05c4e04f8e61b418d373a73bd8901347df4c76..e7e6d9fa5e0d54c7755fe3a38eca6f70a902411c 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.h
 +++ b/chrome/utility/importer/external_process_importer_bridge.h
-@@ -76,6 +76,8 @@ class ExternalProcessImporterBridge : public ImporterBridge {
-   void SetAutofillFormData(
-       const std::vector<ImporterAutofillFormDataEntry>& entries) override;
-
-+  void SetCookies(const std::vector<ImportedCookieEntry>& cookies) override;
-+
-   void NotifyStarted() override;
-   void NotifyItemStarted(importer::ImportItem item) override;
-   void NotifyItemEnded(importer::ImportItem item) override;
-diff --git a/chrome/utility/importer/firefox_importer.cc b/chrome/utility/importer/firefox_importer.cc
-index 7f8d598bca0243e62f11d5d2ce50d8c25ba88764..11064b77c8c69896c8137a096495813a8d0b6a6a 100644
---- a/chrome/utility/importer/firefox_importer.cc
-+++ b/chrome/utility/importer/firefox_importer.cc
-@@ -15,6 +15,7 @@
- #include "base/message_loop/message_loop.h"
- #include "base/strings/string_util.h"
- #include "base/strings/utf_string_conversions.h"
-+#include "brave/common/importer/imported_cookie_entry.h"
- #include "build/build_config.h"
- #include "chrome/common/importer/firefox_importer_utils.h"
- #include "chrome/common/importer/imported_bookmark_entry.h"
-@@ -147,6 +148,12 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
-     ImportAutofillFormData();
-     bridge_->NotifyItemEnded(importer::AUTOFILL_FORM_DATA);
-   }
-+  if ((items & importer::COOKIES) && !cancelled()) {
-+    bridge_->NotifyItemStarted(importer::COOKIES);
-+    ImportCookies();
-+    bridge_->NotifyItemEnded(importer::COOKIES);
-+  }
-+  bridge_->NotifyEnded();
-   bridge_->NotifyEnded();
- }
-
-@@ -433,6 +440,50 @@ void FirefoxImporter::ImportAutofillFormData() {
-     bridge_->SetAutofillFormData(form_entries);
- }
-
-+void FirefoxImporter::ImportCookies() {
-+  base::FilePath file = source_path_.AppendASCII("cookies.sqlite");
-+  if (!base::PathExists(file))
-+    return;
-+
-+  sql::Connection db;
-+  if (!db.Open(file))
-+    return;
-+
-+  const char query[] =
-+      "SELECT baseDomain, name, value, host, path, expiry, isSecure, "
-+      "isHttpOnly FROM moz_cookies";
-+
-+  sql::Statement s(db.GetUniqueStatement(query));
-+
-+  std::vector<ImportedCookieEntry> cookies;
-+  while (s.Step() && !cancelled()) {
-+    ImportedCookieEntry cookie;
-+    base::string16 domain(base::UTF8ToUTF16("."));
-+    domain.append(s.ColumnString16(0));
-+    base::string16 host;
-+    if (s.ColumnString16(3)[0] == '.') {
-+      host.append(base::UTF8ToUTF16("*"));
-+      host.append(s.ColumnString16(3));
-+    } else {
-+      host = s.ColumnString16(3);
-+    }
-+    cookie.domain = domain;
-+    cookie.name = s.ColumnString16(1);
-+    cookie.value = s.ColumnString16(2);
-+    cookie.host = host;
-+    cookie.path = s.ColumnString16(4);
-+    cookie.expiry_date =
-+      base::Time::FromDoubleT(s.ColumnInt64(5));
-+    cookie.secure = s.ColumnBool(6);
-+    cookie.httponly = s.ColumnBool(7);
-+
-+    cookies.push_back(cookie);
-+  }
-+
-+  if (!cookies.empty() && !cancelled())
-+    bridge_->SetCookies(cookies);
-+}
-+
- void FirefoxImporter::GetSearchEnginesXMLData(
-     std::vector<std::string>* search_engine_data) {
-   base::FilePath file = source_path_.AppendASCII("search.sqlite");
+@@ -86,6 +86,7 @@ class ExternalProcessImporterBridge : public ImporterBridge {
+ 
+  private:
+   ~ExternalProcessImporterBridge() override;
++  friend class BraveExternalProcessImporterBridge;
+ 
+   // Holds strings needed by the external importer because the resource
+   // bundle isn't available to the external process.
 diff --git a/chrome/utility/importer/firefox_importer.h b/chrome/utility/importer/firefox_importer.h
-index c3f648f165483a2d618438c1a4ef1b35ad6fb10c..192f603f8f18abf0ad25081d12e2f4d4372ccf79 100644
+index c3f648f165483a2d618438c1a4ef1b35ad6fb10c..3c95e1256465b7b6a009d3bf7619c8f48e2d3d94 100644
 --- a/chrome/utility/importer/firefox_importer.h
 +++ b/chrome/utility/importer/firefox_importer.h
-@@ -54,6 +54,7 @@ class FirefoxImporter : public Importer {
-   // defined in browserconfig.properties.
-   void ImportHomepage();
-   void ImportAutofillFormData();
-+  void ImportCookies();
-   void GetSearchEnginesXMLData(std::vector<std::string>* search_engine_data);
-   void GetSearchEnginesXMLDataFromJSON(
-       std::vector<std::string>* search_engine_data);
-diff --git a/chrome/utility/importer/importer_creator.cc b/chrome/utility/importer/importer_creator.cc
-index 2bef627aa890484a3fb75fa9bd04b2994f997305..6cdf479c733c3a546c8fc54bdb29d4bec031f2e1 100644
---- a/chrome/utility/importer/importer_creator.cc
-+++ b/chrome/utility/importer/importer_creator.cc
-@@ -6,6 +6,7 @@
-
- #include "base/logging.h"
- #include "build/build_config.h"
-+#include "brave/utility/importer/chrome_importer.h"
- #include "chrome/utility/importer/bookmarks_file_importer.h"
- #include "chrome/utility/importer/firefox_importer.h"
-
-@@ -43,6 +44,8 @@ scoped_refptr<Importer> CreateImporterByType(ImporterType type) {
-     case TYPE_SAFARI:
-       return new SafariImporter(base::mac::GetUserLibraryPath());
- #endif
-+    case TYPE_CHROME:
-+      return new ChromeImporter();
-     default:
-       NOTREACHED();
-       return nullptr;
+@@ -43,7 +43,9 @@ class FirefoxImporter : public Importer {
+  private:
+   using FaviconMap = std::map<int64_t, std::set<GURL>>;
+ 
++ protected:
+   ~FirefoxImporter() override;
++ private:
+ 
+   FRIEND_TEST_ALL_PREFIXES(FirefoxImporterTest, ImportBookmarksV25);
+   void ImportBookmarks();
+diff --git a/chrome/utility/profile_import_handler.h b/chrome/utility/profile_import_handler.h
+index cdc85cbadaf970e9edc98ab39233daf49a79d3c5..0e76886d7e87157deacd2b4a3fa2b67481ee3b4b 100644
+--- a/chrome/utility/profile_import_handler.h
++++ b/chrome/utility/profile_import_handler.h
+@@ -37,6 +37,7 @@ class ProfileImportHandler : public chrome::mojom::ProfileImport {
+       mojo::InterfaceRequest<chrome::mojom::ProfileImport> request);
+ 
+  private:
++  friend class BraveProfileImportHandler;
+   // chrome::mojom::ProfileImport:
+   void StartImport(const importer::SourceProfile& source_profile,
+                    uint16_t items,
 diff --git a/components/guest_view/browser/guest_view_base.cc b/components/guest_view/browser/guest_view_base.cc
 index 606a47060b430eb6e808386349dd97f21c3fe211..c2405a843e7278b2ca2cd1600bae63d1efca3cfe 100644
 --- a/components/guest_view/browser/guest_view_base.cc

@@ -153,7 +153,8 @@ std::vector<std::string> ComponentUpdater::GetComponentIDs() {
   std::vector<std::string> components =
       g_browser_process->component_updater()->GetComponentIDs();
   std::vector<std::string> brave_components =
-      g_browser_process->component_updater()->GetComponentIDs();
+      static_cast<BrowserProcessImpl*>(g_browser_process)->
+          brave_component_updater()->GetComponentIDs();
   components.insert(components.end(),
       brave_components.begin(), brave_components.end());
   return components;

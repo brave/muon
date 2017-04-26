@@ -184,7 +184,7 @@ class Browser : public content::WebContentsDelegate {
   // bool is_type_popup() const { return type_ == TYPE_POPUP; }
 
   bool is_app() const;
-  // bool is_devtools() const;
+  bool is_devtools() const { return false; }
 
   bool ShouldRunUnloadListenerBeforeClosing(content::WebContents* web_contents);
   bool RunUnloadListenerBeforeClosing(content::WebContents* web_contents);

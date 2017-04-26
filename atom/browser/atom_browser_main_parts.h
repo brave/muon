@@ -21,6 +21,8 @@ namespace brightray {
 class BrowserContext;
 }
 
+class PrefService;
+
 namespace atom {
 
 class AtomBindings;
@@ -97,6 +99,8 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
 
   base::Timer gc_timer_;
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
+
+  PrefService* local_state_;
 
   // List of callbacks should be executed before destroying JS env.
   std::list<base::Closure> destructors_;

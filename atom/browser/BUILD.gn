@@ -27,6 +27,8 @@ source_set("browser") {
     "//electron:common",
     "//storage/browser",
     "//storage/common",
+    "//components/prefs",
+    ":importer",
   ]
 
   sources = [
@@ -117,7 +119,6 @@ source_set("browser") {
     "browser_observer.h",
     "common_web_contents_delegate.cc",
     "common_web_contents_delegate.h",
-    "importer/profile_writer.cc",
     "javascript_environment.cc",
     "javascript_environment.h",
     "lib/bluetooth_chooser.cc",
@@ -169,10 +170,6 @@ source_set("browser") {
     "window_list.cc",
     "window_list.h",
     "window_list_observer.h",
-  ]
-
-  deps += [
-    "//electron/chromium_src:debug",
   ]
 
   if (is_posix) {
@@ -316,8 +313,6 @@ source_set("browser") {
       "extensions/api/atom_extensions_api_client.h",
       "extensions/atom_browser_client_extensions_part.cc",
       "extensions/atom_browser_client_extensions_part.h",
-      "extensions/atom_extension_api_frame_id_map_helper.cc",
-      "extensions/atom_extension_api_frame_id_map_helper.h",
       "extensions/atom_extension_host_delegate.cc",
       "extensions/atom_extension_host_delegate.h",
       "extensions/atom_extensions_network_delegate.cc",
@@ -338,6 +333,26 @@ source_set("browser") {
       "extensions/tab_helper.h",
     ]
   }
+}
+
+source_set("importer") {
+  public_configs = [
+    "//electron/build:electron_config"
+  ]
+
+  sources = [
+    "importer/external_process_importer_client.cc",
+    "importer/external_process_importer_client.h",
+    "importer/in_process_importer_bridge.cc",
+    "importer/in_process_importer_bridge.h",
+    "importer/profile_writer.cc",
+    "importer/profile_writer.h",
+  ]
+
+  deps = [
+    "//electron:utility",
+    "//third_party/protobuf:protobuf_lite",
+  ]
 }
 
 source_set("mac_auto_updater") {

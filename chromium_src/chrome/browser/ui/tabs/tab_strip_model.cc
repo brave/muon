@@ -29,12 +29,18 @@ class TabStripModel::WebContentsData : public content::WebContentsObserver {
   // Changes the WebContents that this WebContentsData tracks.
   void SetWebContents(WebContents* contents);
 
+  WebContents* opener() const { return opener_; }
+  void set_opener(WebContents* value) { opener_ = value; }
+
  private:
+  WebContents* opener_;
+
   DISALLOW_COPY_AND_ASSIGN(WebContentsData);
 };
 
 TabStripModel::WebContentsData::WebContentsData(WebContents* contents)
-    : content::WebContentsObserver(contents) {}
+    : content::WebContentsObserver(contents),
+      opener_(nullptr) {}
 
 void TabStripModel::WebContentsData::SetWebContents(WebContents* contents) {
   Observe(contents);
@@ -238,5 +244,17 @@ void TabStripModel::SetSelection(
     NotifyIfTabDeactivated(old_contents);
   selection_model_.Copy(new_model);
   NotifyIfActiveOrSelectionChanged(old_contents, notify_types, old_model);
+}
+
+WebContents* TabStripModel::GetOpenerOfWebContentsAt(int index) {
+  DCHECK(ContainsIndex(index));
+  return contents_data_[index]->opener();
+}
+
+void TabStripModel::SetOpenerOfWebContentsAt(int index,
+                                             WebContents* opener) {
+  DCHECK(ContainsIndex(index));
+  DCHECK(opener);
+  contents_data_[index]->set_opener(opener);
 }
 

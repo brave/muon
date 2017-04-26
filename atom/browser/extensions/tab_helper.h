@@ -141,9 +141,6 @@ class TabHelper : public content::WebContentsObserver,
   static int32_t IdForWindowContainingTab(
       const content::WebContents* tab);
 
-  static base::DictionaryValue* CreateTabValue(
-      content::WebContents* web_contents);
-
  private:
   explicit TabHelper(content::WebContents* contents);
   friend class content::WebContentsUserData<TabHelper>;

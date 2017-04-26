@@ -15,6 +15,8 @@
 #include "base/memory/scoped_vector.h"
 #include "base/memory/singleton.h"
 #include "base/observer_list.h"
+#include "content/public/browser/media_observer.h"
+#include "content/public/common/media_stream_request.h"
 
 class MediaStreamCaptureIndicator;
 
@@ -22,6 +24,32 @@ class MediaStreamCaptureIndicator;
 // layer.
 class MediaCaptureDevicesDispatcher {
  public:
+  class Observer {
+   public:
+    // Handle an information update consisting of a up-to-date audio capture
+    // device lists. This happens when a microphone is plugged in or unplugged.
+    virtual void OnUpdateAudioDevices(
+        const content::MediaStreamDevices& devices) {}
+
+    // Handle an information update consisting of a up-to-date video capture
+    // device lists. This happens when a camera is plugged in or unplugged.
+    virtual void OnUpdateVideoDevices(
+        const content::MediaStreamDevices& devices) {}
+
+    // Handle an information update related to a media stream request.
+    virtual void OnRequestUpdate(
+        int render_process_id,
+        int render_frame_id,
+        content::MediaStreamType stream_type,
+        const content::MediaRequestState state) {}
+
+    // Handle an information update that a new stream is being created.
+    virtual void OnCreatingAudioStream(int render_process_id,
+                                       int render_frame_id) {}
+
+    virtual ~Observer() {}
+  };
+
   static MediaCaptureDevicesDispatcher* GetInstance();
 
   // Return true if there is any ongoing insecured capturing. The capturing is
