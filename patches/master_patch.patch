@@ -423,7 +423,7 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..0d1f9efcb260f8c943ab24a4c23c14db
    }
 
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 856a1d44f12f408aeba38ee5502b26ec6eee5700..75a19da4b826c2117c7f069c60235213f5b5a3db 100644
+index 856a1d44f12f408aeba38ee5502b26ec6eee5700..145fd3c0f5bf1a86fe92456f45fda912f9e4d29a 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
 @@ -435,6 +435,7 @@ static_library("common") {
@@ -434,6 +434,19 @@ index 856a1d44f12f408aeba38ee5502b26ec6eee5700..75a19da4b826c2117c7f069c60235213
    }
 
    if (is_chromeos) {
+@@ -533,6 +534,12 @@ static_library("common") {
+     ]
+     public_deps += [ "//chrome/common:version_header" ]
+   }
++
++  if (!muon_chromium_build && enable_extensions) {
++    sources -= [
++      "extensions/chrome_extensions_client.cc",
++    ]
++  }
+ }
+ 
+ process_version("version_header") {
 diff --git a/chrome/common/chrome_constants.cc b/chrome/common/chrome_constants.cc
 index d480ff03f60e0380eea243910ea8c2aa13db949c..162071ea27a8abe0c6712aaf2f65913402bd6733 100644
 --- a/chrome/common/chrome_constants.cc
@@ -755,6 +768,34 @@ index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b35962
      @"Google Chrome": @"Google Chrome",
      @"Google Chrome Canary": @"Google Chrome",
    };
+diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
+index 1dd59886504d335e5d26b8880b0adafc8bc5862b..f6f370066108ebef7cfddf2468ff6f753f240982 100644
+--- a/chrome/renderer/BUILD.gn
++++ b/chrome/renderer/BUILD.gn
+@@ -363,6 +363,23 @@ static_library("renderer") {
+       "resources/extensions/file_system_provider_custom_bindings.js",
+     ]
+   }
++
++  if (!muon_chromium_build) {
++    include_dirs = [
++      "//electron/chromium_src"
++    ]
++
++    sources -= [
++      "content_settings_observer.cc",
++      "content_settings_observer.h",
++    ]
++
++    if (enable_extensions) {
++      sources -= [
++        "extensions/chrome_extensions_dispatcher_delegate.cc",
++      ]
++    }
++  }
+ }
+ 
+ static_library("test_support") {
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
 index 1b96488ad0536b9b1ac4f233a1846360a9d13027..c6618724485fc10a595dc551ed85085382f53278 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
