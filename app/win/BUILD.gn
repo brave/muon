@@ -121,7 +121,6 @@ executable("electron_exe") {
     "/DELAYLOAD:dwmapi.dll",
     "/DELAYLOAD:imagehlp.dll",
     "/DELAYLOAD:imm32.dll",
-    "/DELAYLOAD:iphlpapi.dll",
     "/DELAYLOAD:setupapi.dll",
     "/DELAYLOAD:urlmon.dll",
     "/DELAYLOAD:winhttp.dll",
