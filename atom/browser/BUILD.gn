@@ -289,7 +289,7 @@ source_set("browser") {
     ]
 
     deps +=  [
-      "//chrome/browser/ui/libgtkui:libgtk2ui",
+      "//chrome/browser/ui/libgtkui:libgtkui",
       "//electron/build:gtk2",
     ]
   }
