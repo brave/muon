@@ -227,18 +227,9 @@ void BrowserProcessImpl::ResourceDispatcherHostCreated() {
 
 void BrowserProcessImpl::PreCreateThreads() {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  // Register the chrome-extension scheme to reflect the extension process
-  // model. Controlled by a field trial, so we can't do this earlier.
-  base::FieldTrialList::FindFullName("SiteIsolationExtensions");
-  if (extensions::IsIsolateExtensionsEnabled()) {
-    // chrome-extension:// URLs are safe to request anywhere, but may only
-    // commit (including in iframes) in extension processes.
-    ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeIsolatedScheme(
-        extensions::kExtensionScheme, true);
-  } else {
-    ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
-        extensions::kExtensionScheme);
-  }
+  // Disable Isolate Extensions by default
+  ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
+      extensions::kExtensionScheme);
 #endif
 }
 
