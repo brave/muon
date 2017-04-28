@@ -43,7 +43,7 @@ source_set("browser") {
   ]
 
   deps = [
-    ":component_updater_api",
+    ":apis",
     "//electron/atom/browser",
     "//electron/chromium_src:browser",
     "//electron:common",
@@ -124,7 +124,7 @@ source_set("tab_manager") {
   ]
 }
 
-source_set("component_updater_api") {
+source_set("apis") {
   configs += [
     "//electron/build:electron_config",
   ]
@@ -139,6 +139,10 @@ source_set("component_updater_api") {
     "api/brave_api_component_updater.h",
     "api/brave_api_extension.cc",
     "api/brave_api_extension.h",
+    "api/navigation_controller.cc",
+    "api/navigation_controller.h",
+    "api/navigation_handle.cc",
+    "api/navigation_handle.h",
   ]
 
   deps = [

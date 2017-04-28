@@ -15,11 +15,25 @@ class ListValue;
 
 namespace net {
 class AuthChallengeInfo;
+class HttpRequestHeaders;
+class HttpResponseHeaders;
 class URLRequest;
 class X509Certificate;
 }
 
 namespace mate {
+
+template<>
+struct Converter<const net::HttpResponseHeaders*> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   const net::HttpResponseHeaders* headers);
+};
+
+template<>
+struct Converter<net::HttpRequestHeaders> {
+  static bool FromV8(v8::Isolate* isolate, v8::Handle<v8::Value> val,
+                     net::HttpRequestHeaders* out);
+};
 
 template<>
 struct Converter<const net::AuthChallengeInfo*> {

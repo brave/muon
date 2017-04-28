@@ -8,14 +8,21 @@
 #include <utility>
 
 #include "content/public/browser/permission_type.h"
+#include "content/public/browser/reload_type.h"
+#include "content/public/browser/restore_type.h"
 #include "content/public/common/menu_item.h"
+#include "content/public/common/page_type.h"
 #include "content/public/common/stop_find_action.h"
 #include "native_mate/converter.h"
 #include "third_party/WebKit/public/platform/modules/permissions/permission_status.mojom.h"
+#include "ui/base/page_transition_types.h"
 
 namespace content {
 struct ContextMenuParams;
 class WebContents;
+class NavigationController;
+class NavigationEntry;
+class NavigationHandle;
 }
 
 using ContextMenuParamsWithWebContents =
@@ -61,6 +68,47 @@ struct Converter<content::WebContents*> {
                      content::WebContents** out);
 };
 
+template<>
+struct Converter<content::NavigationController*> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   content::NavigationController* val);
+};
+
+template<>
+struct Converter<content::NavigationEntry*> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   content::NavigationEntry* val);
+};
+
+template<>
+struct Converter<content::NavigationHandle*> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   content::NavigationHandle* val);
+};
+
+template<>
+struct Converter<content::PageType> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   const content::PageType& val);
+};
+
+template<>
+struct Converter<content::ReloadType> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   const content::ReloadType& val);
+};
+
+template<>
+struct Converter<content::RestoreType> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   const content::RestoreType& val);
+};
+
+template<>
+struct Converter<ui::PageTransition> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   const ui::PageTransition& val);
+};
 }  // namespace mate
 
 #endif  // ATOM_COMMON_NATIVE_MATE_CONVERTERS_CONTENT_CONVERTER_H_

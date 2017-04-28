@@ -36,6 +36,7 @@
 #include "atom/common/native_mate_converters/gfx_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/image_converter.h"
+#include "atom/common/native_mate_converters/net_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/options_switches.h"
@@ -1092,6 +1093,7 @@ void WebContents::DidStopLoading() {
 
 void WebContents::DidGetResourceResponseStart(
     const content::ResourceRequestDetails& details) {
+  const net::HttpResponseHeaders* headers = details.headers.get();
   Emit("did-get-response-details",
        details.socket_address.IsEmpty(),
        details.url,
@@ -1099,12 +1101,13 @@ void WebContents::DidGetResourceResponseStart(
        details.http_response_code,
        details.method,
        details.referrer,
-       details.headers.get(),
+       headers,
        ResourceTypeToString(details.resource_type));
 }
 
 void WebContents::DidGetRedirectForResourceRequest(
     const content::ResourceRedirectDetails& details) {
+  const net::HttpResponseHeaders* headers = details.headers.get();
   Emit("did-get-redirect-request",
        details.url,
        details.new_url,
@@ -1112,11 +1115,14 @@ void WebContents::DidGetRedirectForResourceRequest(
        details.http_response_code,
        details.method,
        details.referrer,
-       details.headers.get());
+       headers);
 }
 
 void WebContents::DidStartNavigation(
     content::NavigationHandle* navigation_handle) {
+  Emit("did-start-navigation", navigation_handle);
+
+  // deprecated event handling
   if (navigation_handle->HasCommitted() &&
       (navigation_handle->IsSamePage() || navigation_handle->IsErrorPage()))
     return;
@@ -1129,6 +1135,9 @@ void WebContents::DidStartNavigation(
 
 void WebContents::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
+  Emit("did-finish-navigation", navigation_handle);
+
+  // deprecated event handling
   bool is_main_frame = navigation_handle->IsInMainFrame();
   auto url = navigation_handle->GetURL();
   if (navigation_handle->HasCommitted() && !navigation_handle->IsErrorPage()) {
@@ -1504,6 +1513,10 @@ int WebContents::GetLastCommittedEntryIndex() const {
 
 int WebContents::GetEntryCount() const {
   return web_contents()->GetController().GetEntryCount();
+}
+
+void WebContents::GetController(mate::Arguments* args) const {
+  args->Return(&web_contents()->GetController());
 }
 
 const GURL& WebContents::GetURLAtIndex(int index) const {
@@ -2270,6 +2283,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getCurrentEntryIndex", &WebContents::GetCurrentEntryIndex)
       .SetMethod("getLastCommittedEntryIndex",
                  &WebContents::GetLastCommittedEntryIndex)
+      .SetMethod("controller", &WebContents::GetController)
       .SetMethod("isCrashed", &WebContents::IsCrashed)
       .SetMethod("setUserAgent", &WebContents::SetUserAgent)
       .SetMethod("getUserAgent", &WebContents::GetUserAgent)

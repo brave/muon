@@ -91,7 +91,8 @@ void WebRequest::OnURLFetchComplete(
     dict.SetInteger("errorCode", source->GetStatus().error());
     err = mate::ConvertToV8(isolate(), dict);
   } else {
-    response.Set("headers", source->GetResponseHeaders());
+    const net::HttpResponseHeaders* headers = source->GetResponseHeaders();
+    response.Set("headers", headers);
     source->GetResponseAsString(&body);
   }
 

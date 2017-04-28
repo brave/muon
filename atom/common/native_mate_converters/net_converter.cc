@@ -12,6 +12,7 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/strings/string_util.h"
 #include "base/values.h"
 #include "native_mate/dictionary.h"
 #include "net/base/upload_bytes_element_reader.h"
@@ -19,6 +20,7 @@
 #include "net/base/upload_element_reader.h"
 #include "net/base/upload_file_element_reader.h"
 #include "net/cert/x509_certificate.h"
+#include "net/http/http_request_headers.h"
 #include "net/http/http_response_headers.h"
 #include "net/url_request/url_request.h"
 
@@ -57,6 +59,50 @@ v8::Local<v8::Value> Converter<scoped_refptr<net::X509Certificate>>::ToV8(
               val->CalculateFingerprint256(val->os_cert_handle())).ToString());
 
   return dict.GetHandle();
+}
+
+v8::Local<v8::Value> Converter<const net::HttpResponseHeaders*>::ToV8(
+                                    v8::Isolate* isolate,
+                                    const net::HttpResponseHeaders* headers) {
+  base::DictionaryValue response_headers;
+  if (headers) {
+    size_t iter = 0;
+    std::string key;
+    std::string value;
+    while (headers->EnumerateHeaderLines(&iter, &key, &value)) {
+      key = base::ToLowerASCII(key);
+      if (response_headers.HasKey(key)) {
+        base::ListValue* values = nullptr;
+        if (response_headers.GetList(key, &values))
+          values->AppendString(value);
+      } else {
+        std::unique_ptr<base::ListValue> values(new base::ListValue());
+        values->AppendString(value);
+        response_headers.Set(key, std::move(values));
+      }
+    }
+  }
+  return ConvertToV8(isolate, response_headers);
+}
+
+bool Converter<net::HttpRequestHeaders>::FromV8(v8::Isolate* isolate,
+                                          v8::Handle<v8::Value> val,
+                                          net::HttpRequestHeaders* out) {
+  net::HttpRequestHeaders request_headers;
+  *out = request_headers;
+  base::DictionaryValue headers;
+  if (!ConvertFromV8(isolate, val, &headers))
+    return false;
+
+  for (base::DictionaryValue::Iterator it(headers); !it.IsAtEnd();
+       it.Advance()) {
+    std::string value;
+    if (!it.value().GetAsString(&value))
+      continue;
+
+    out->SetHeader(it.key(), value);
+  }
+  return true;
 }
 
 }  // namespace mate

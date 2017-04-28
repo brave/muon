@@ -20,57 +20,7 @@
 #include "net/url_request/url_fetcher_delegate.h"
 
 namespace mate {
-
-template<>
-struct Converter<net::HttpResponseHeaders*> {
-  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   net::HttpResponseHeaders* headers) {
-    base::DictionaryValue response_headers;
-    if (headers) {
-      size_t iter = 0;
-      std::string key;
-      std::string value;
-      while (headers->EnumerateHeaderLines(&iter, &key, &value)) {
-        key = base::ToLowerASCII(key);
-        if (response_headers.HasKey(key)) {
-          base::ListValue* values = nullptr;
-          if (response_headers.GetList(key, &values))
-            values->AppendString(value);
-        } else {
-          std::unique_ptr<base::ListValue> values(new base::ListValue());
-          values->AppendString(value);
-          response_headers.Set(key, std::move(values));
-        }
-      }
-    }
-    return ConvertToV8(isolate, response_headers);
-  }
-};
-
-template<>
-struct Converter<net::HttpRequestHeaders> {
-  static bool FromV8(v8::Isolate* isolate, v8::Handle<v8::Value> val,
-                     net::HttpRequestHeaders* out) {
-    net::HttpRequestHeaders request_headers;
-    *out = request_headers;
-    base::DictionaryValue headers;
-    if (!ConvertFromV8(isolate, val, &headers))
-      return false;
-
-    for (base::DictionaryValue::Iterator it(headers); !it.IsAtEnd();
-         it.Advance()) {
-      std::string value;
-      if (!it.value().GetAsString(&value))
-        continue;
-
-      out->SetHeader(it.key(), value);
-    }
-    return true;
-  }
-};
-
 class Dictionary;
-
 }  // namespace mate
 
 namespace atom {

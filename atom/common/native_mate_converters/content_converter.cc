@@ -14,6 +14,11 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/ui_base_types_converter.h"
+#include "brave/browser/api/navigation_controller.h"
+#include "brave/browser/api/navigation_handle.h"
+#include "content/public/browser/navigation_controller.h"
+#include "content/public/browser/navigation_entry.h"
+#include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/context_menu_params.h"
 #include "native_mate/dictionary.h"
@@ -217,6 +222,131 @@ bool Converter<content::WebContents*>::FromV8(
 
   *out = web_contents->web_contents();
   return true;
+}
+
+// static
+v8::Local<v8::Value> Converter<content::NavigationHandle*>::ToV8(
+    v8::Isolate* isolate, content::NavigationHandle* val) {
+  if (!val)
+    return v8::Null(isolate);
+  return brave::NavigationHandle::CreateFrom(isolate, val).ToV8();
+}
+
+// static
+v8::Local<v8::Value> Converter<content::NavigationEntry*>::ToV8(
+    v8::Isolate* isolate, content::NavigationEntry* val) {
+  if (!val)
+    return v8::Null(isolate);
+
+  mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
+  dict.Set("uniqueId", val->GetUniqueID());
+  dict.Set("pageType", val->GetPageType());
+  dict.Set("url", val->GetURL());
+  dict.Set("referrer", val->GetReferrer().url);
+  dict.Set("virtualURL", val->GetVirtualURL());
+  dict.Set("title", val->GetTitle());
+  dict.Set("display_title", val->GetTitleForDisplay());
+  dict.Set("viewSourceMode", val->IsViewSourceMode());
+  dict.Set("transitionType", val->GetTransitionType());
+  dict.Set("hasPostData", val->GetHasPostData());
+  // GetFavicon
+  // GetSSL
+  dict.Set("originalRequestURL", val->GetOriginalRequestURL());
+  dict.Set("isOverridingUserAgent", val->GetIsOverridingUserAgent());
+  dict.Set("timestamp", val->GetTimestamp().ToDoubleT());
+  dict.Set("httpStatusCode", val->GetHttpStatusCode());
+  dict.Set("isRestored", val->IsRestored());
+  dict.Set("extraHeaders",  val->GetExtraHeaders());
+
+  return mate::ConvertToV8(isolate, dict);
+}
+
+// static
+v8::Local<v8::Value> Converter<content::NavigationController*>::ToV8(
+    v8::Isolate* isolate, content::NavigationController* val) {
+  if (!val)
+    return v8::Null(isolate);
+  return brave::NavigationController::CreateFrom(isolate, val).ToV8();
+}
+
+// static
+v8::Local<v8::Value> Converter<content::ReloadType>::ToV8(
+    v8::Isolate* isolate, const content::ReloadType& val) {
+  switch (val) {
+    case content::ReloadType::NONE:
+      return StringToV8(isolate, "none");
+    case content::ReloadType::NORMAL:
+      return StringToV8(isolate, "normal");
+    case content::ReloadType::BYPASSING_CACHE:
+      return StringToV8(isolate, "bypassingCache");
+    case content::ReloadType::ORIGINAL_REQUEST_URL:
+      return StringToV8(isolate, "originalRequestUrl");
+    case content::ReloadType::DISABLE_LOFI_MODE:
+      return StringToV8(isolate, "disableLofiMode");
+    default:
+      break;
+  }
+
+  return StringToV8(isolate, "unknown");
+}
+
+// static
+v8::Local<v8::Value> Converter<content::PageType>::ToV8(
+    v8::Isolate* isolate, const content::PageType& val) {
+  switch (val) {
+    case content::PageType::PAGE_TYPE_NORMAL:
+      return StringToV8(isolate, "normal");
+    case content::PageType::PAGE_TYPE_ERROR:
+      return StringToV8(isolate, "error");
+    case content::PageType::PAGE_TYPE_INTERSTITIAL:
+      return StringToV8(isolate, "interstitial");
+    default:
+      return StringToV8(isolate, "unknown");
+  }
+}
+
+// static
+v8::Local<v8::Value> Converter<content::RestoreType>::ToV8(
+    v8::Isolate* isolate, const content::RestoreType& val) {
+  switch (val) {
+    case content::RestoreType::LAST_SESSION_EXITED_CLEANLY:
+      return StringToV8(isolate, "lastSessionExitedCleanly");
+    case content::RestoreType::LAST_SESSION_CRASHED:
+      return StringToV8(isolate, "lastSessionCrashed");
+    case content::RestoreType::CURRENT_SESSION:
+      return StringToV8(isolate, "currentSession");
+    default:
+      return StringToV8(isolate, "none");
+  }
+}
+
+// static
+v8::Local<v8::Value> Converter<ui::PageTransition>::ToV8(
+    v8::Isolate* isolate, const ui::PageTransition& val) {
+  if (val & ui::PageTransition::PAGE_TRANSITION_LINK)
+    return StringToV8(isolate, "link");
+  if (val & ui::PageTransition::PAGE_TRANSITION_TYPED)
+    return StringToV8(isolate, "typed");
+  if (val & ui::PageTransition::PAGE_TRANSITION_AUTO_BOOKMARK)
+    return StringToV8(isolate, "auto_bookmark");
+  if (val & ui::PageTransition::PAGE_TRANSITION_AUTO_SUBFRAME)
+    return StringToV8(isolate, "auto_subframe");
+  if (val & ui::PageTransition::PAGE_TRANSITION_MANUAL_SUBFRAME)
+    return StringToV8(isolate, "manual_subframe");
+  if (val & ui::PageTransition::PAGE_TRANSITION_GENERATED)
+    return StringToV8(isolate, "generated");
+  if (val & ui::PageTransition::PAGE_TRANSITION_AUTO_TOPLEVEL)
+    return StringToV8(isolate, "auto_toplevel");
+  if (val & ui::PageTransition::PAGE_TRANSITION_FORM_SUBMIT)
+    return StringToV8(isolate, "form_submit");
+  if (val & ui::PageTransition::PAGE_TRANSITION_RELOAD)
+    return StringToV8(isolate, "reload");
+  if (val & ui::PageTransition::PAGE_TRANSITION_KEYWORD)
+    return StringToV8(isolate, "keyword");
+  if (val & ui::PageTransition::PAGE_TRANSITION_KEYWORD_GENERATED)
+    return StringToV8(isolate, "keyword_generated");
+
+  return StringToV8(isolate, "unknown");
 }
 
 }  // namespace mate
