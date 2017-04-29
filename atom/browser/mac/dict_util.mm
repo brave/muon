@@ -33,14 +33,14 @@ std::unique_ptr<base::ListValue> NSArrayToListValue(NSArray* arr) {
       if (sub_arr)
         result->Append(std::move(sub_arr));
       else
-        result->Append(base::Value::CreateNullValue());
+        result->Append(base::MakeUnique<base::Value>());
     } else if ([value isKindOfClass:[NSDictionary class]]) {
       std::unique_ptr<base::DictionaryValue> sub_dict =
           NSDictionaryToDictionaryValue(value);
       if (sub_dict)
         result->Append(std::move(sub_dict));
       else
-        result->Append(base::Value::CreateNullValue());
+        result->Append(base::MakeUnique<base::Value>());
     } else {
       result->AppendString(base::SysNSStringToUTF8([value description]));
     }
@@ -92,7 +92,7 @@ std::unique_ptr<base::DictionaryValue> NSDictionaryToDictionaryValue(
         result->SetWithoutPathExpansion(str_key, std::move(sub_arr));
       else
         result->SetWithoutPathExpansion(str_key,
-                                        base::Value::CreateNullValue());
+                                        base::MakeUnique<base::Value>());
     } else if ([value isKindOfClass:[NSDictionary class]]) {
       std::unique_ptr<base::DictionaryValue> sub_dict =
           NSDictionaryToDictionaryValue(value);
@@ -100,7 +100,7 @@ std::unique_ptr<base::DictionaryValue> NSDictionaryToDictionaryValue(
         result->SetWithoutPathExpansion(str_key, std::move(sub_dict));
       else
         result->SetWithoutPathExpansion(str_key,
-                                        base::Value::CreateNullValue());
+                                        base::MakeUnique<base::Value>());
     } else {
       result->SetStringWithoutPathExpansion(
           str_key,
