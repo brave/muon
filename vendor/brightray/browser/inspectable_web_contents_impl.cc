@@ -183,7 +183,7 @@ int ResponseWriter::Write(net::IOBuffer* buffer,
   }
 
   base::Value* id = new base::Value(stream_id_);
-  base::StringValue* chunkValue = new base::StringValue(chunk);
+  base::Value* chunkValue = new base::Value(chunk);
   base::Value* encodedValue = new base::Value(encoded);
 
   content::BrowserThread::PostTask(
@@ -622,7 +622,7 @@ void InspectableWebContentsImpl::DispatchProtocolMessage(
 
   base::Value total_size(static_cast<int>(message.length()));
   for (size_t pos = 0; pos < message.length(); pos += kMaxMessageChunkSize) {
-    base::StringValue message_value(message.substr(pos, kMaxMessageChunkSize));
+    base::Value message_value(message.substr(pos, kMaxMessageChunkSize));
     CallClientFunction("DevToolsAPI.dispatchMessageChunk",
                        &message_value, pos ? nullptr : &total_size, nullptr);
   }
