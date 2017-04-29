@@ -35,7 +35,6 @@ class BraveConfigurator : public update_client::Configurator {
   // update_client::Configurator overrides.
   int InitialDelay() const override;
   int NextCheckDelay() const override;
-  int StepDelay() const override;
   int OnDemandDelay() const override;
   int UpdateDelay() const override;
   std::vector<GURL> UpdateUrl() const override;
@@ -85,10 +84,6 @@ int BraveConfigurator::InitialDelay() const {
 
 int BraveConfigurator::NextCheckDelay() const {
   return configurator_impl_.NextCheckDelay();
-}
-
-int BraveConfigurator::StepDelay() const {
-  return configurator_impl_.StepDelay();
 }
 
 int BraveConfigurator::OnDemandDelay() const {
