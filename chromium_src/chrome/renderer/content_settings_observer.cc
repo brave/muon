@@ -52,14 +52,14 @@ using content::NavigationState;
 namespace {
 
 GURL GetOriginOrURL(const WebFrame* frame) {
-  WebString top_origin = frame->top()->getSecurityOrigin().toString();
+  WebString top_origin = frame->Top()->GetSecurityOrigin().ToString();
   // The |top_origin| is unique ("null") e.g., for file:// URLs. Use the
   // document URL as the primary URL in those cases.
   // TODO(alexmos): This is broken for --site-per-process, since top() can be a
   // WebRemoteFrame which does not have a document(), and the WebRemoteFrame's
   // URL is not replicated.
   if (top_origin == "null")
-    return frame->top()->document().url();
+    return frame->Top()->GetDocument().Url();
   return blink::WebStringToGURL(top_origin);
 }
 
@@ -79,7 +79,7 @@ ContentSettingsObserver::ContentSettingsObserver(
       current_request_id_(0),
       should_whitelist_(should_whitelist) {
   ClearBlockedContentSettings();
-  render_frame->GetWebFrame()->setContentSettingsClient(this);
+  render_frame->GetWebFrame()->SetContentSettingsClient(this);
 
   content::RenderFrame* main_frame =
       render_frame->GetRenderView()->GetMainRenderFrame();
@@ -205,7 +205,7 @@ void ContentSettingsObserver::DidBlockContentType(
     const std::string& settings_type) {
   DidBlockContentType(settings_type,
       blink::WebStringToGURL(render_frame()->GetWebFrame()->
-          getSecurityOrigin().toString()).spec());
+          GetSecurityOrigin().ToString()).spec());
 }
 
 void ContentSettingsObserver::DidBlockContentType(
@@ -234,7 +234,7 @@ void ContentSettingsObserver::DidCommitProvisionalLoad(
     bool is_new_navigation,
     bool is_same_page_navigation) {
   WebFrame* frame = render_frame()->GetWebFrame();
-  if (frame->parent())
+  if (frame->Parent())
     return;  // Not a top-level navigation.
 
   if (!is_same_page_navigation) {
@@ -247,17 +247,17 @@ void ContentSettingsObserver::OnDestruct() {
   delete this;
 }
 
-bool ContentSettingsObserver::allowDatabase(const WebString& name,
+bool ContentSettingsObserver::AllowDatabase(const WebString& name,
                                           const WebString& display_name,
                                           unsigned estimated_size) {  // NOLINT
   WebFrame* frame = render_frame()->GetWebFrame();
-  if (frame->getSecurityOrigin().isUnique() ||
-      frame->top()->getSecurityOrigin().isUnique())
+  if (frame->GetSecurityOrigin().IsUnique() ||
+      frame->Top()->GetSecurityOrigin().IsUnique())
     return false;
 
   bool allow = true;
   GURL secondary_url(
-      blink::WebStringToGURL(frame->getSecurityOrigin().toString()));
+      blink::WebStringToGURL(frame->GetSecurityOrigin().ToString()));
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
@@ -273,19 +273,19 @@ bool ContentSettingsObserver::allowDatabase(const WebString& name,
 }
 
 
-void ContentSettingsObserver::requestFileSystemAccessAsync(
+void ContentSettingsObserver::RequestFileSystemAccessAsync(
         const WebContentSettingCallbacks& callbacks) {
   WebFrame* frame = render_frame()->GetWebFrame();
   WebContentSettingCallbacks permissionCallbacks(callbacks);
-  if (frame->getSecurityOrigin().isUnique() ||
-      frame->top()->getSecurityOrigin().isUnique()) {
-      permissionCallbacks.doDeny();
+  if (frame->GetSecurityOrigin().IsUnique() ||
+      frame->Top()->GetSecurityOrigin().IsUnique()) {
+      permissionCallbacks.DoDeny();
       return;
   }
 
   bool allow = true;
   GURL secondary_url(
-      blink::WebStringToGURL(frame->getSecurityOrigin().toString()));
+      blink::WebStringToGURL(frame->GetSecurityOrigin().ToString()));
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
@@ -296,13 +296,13 @@ void ContentSettingsObserver::requestFileSystemAccessAsync(
   }
   if (!allow) {
       DidBlockContentType("filesystem", secondary_url.spec());
-      permissionCallbacks.doDeny();
+      permissionCallbacks.DoDeny();
   } else {
-      permissionCallbacks.doAllow();
+      permissionCallbacks.DoAllow();
   }
 }
 
-bool ContentSettingsObserver::allowImage(bool enabled_per_settings,
+bool ContentSettingsObserver::AllowImage(bool enabled_per_settings,
                                          const WebURL& image_url) {
   if (enabled_per_settings && IsWhitelistedForContentSettings())
     return true;
@@ -323,16 +323,16 @@ bool ContentSettingsObserver::allowImage(bool enabled_per_settings,
   return allow;
 }
 
-bool ContentSettingsObserver::allowIndexedDB(const WebString& name,
+bool ContentSettingsObserver::AllowIndexedDB(const WebString& name,
                                              const WebSecurityOrigin& origin) {
   WebFrame* frame = render_frame()->GetWebFrame();
-  if (frame->getSecurityOrigin().isUnique() ||
-      frame->top()->getSecurityOrigin().isUnique())
+  if (frame->GetSecurityOrigin().IsUnique() ||
+      frame->Top()->GetSecurityOrigin().IsUnique())
     return false;
 
   bool allow = true;
   GURL secondary_url(
-      blink::WebStringToGURL(frame->getSecurityOrigin().toString()));
+      blink::WebStringToGURL(frame->GetSecurityOrigin().ToString()));
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
@@ -347,11 +347,11 @@ bool ContentSettingsObserver::allowIndexedDB(const WebString& name,
   return allow;
 }
 
-bool ContentSettingsObserver::allowPlugins(bool enabled_per_settings) {
+bool ContentSettingsObserver::AllowPlugins(bool enabled_per_settings) {
   return enabled_per_settings;
 }
 
-bool ContentSettingsObserver::allowScript(bool enabled_per_settings) {
+bool ContentSettingsObserver::AllowScript(bool enabled_per_settings) {
   if (IsWhitelistedForContentSettings())
     return true;
 
@@ -377,7 +377,7 @@ bool ContentSettingsObserver::allowScript(bool enabled_per_settings) {
   return allow;
 }
 
-bool ContentSettingsObserver::allowScriptFromSource(
+bool ContentSettingsObserver::AllowScriptFromSource(
     bool enabled_per_settings,
     const blink::WebURL& script_url) {
   if (IsWhitelistedForContentSettings())
@@ -400,17 +400,17 @@ bool ContentSettingsObserver::allowScriptFromSource(
   return allow;
 }
 
-bool ContentSettingsObserver::allowStorage(bool local) {
+bool ContentSettingsObserver::AllowStorage(bool local) {
   if (IsWhitelistedForContentSettings())
     return true;
 
   WebFrame* frame = render_frame()->GetWebFrame();
-  if (frame->getSecurityOrigin().isUnique() ||
-      frame->top()->getSecurityOrigin().isUnique())
+  if (frame->GetSecurityOrigin().IsUnique() ||
+      frame->Top()->GetSecurityOrigin().IsUnique())
     return false;
 
   StoragePermissionsKey key(
-      blink::WebStringToGURL(frame->document().getSecurityOrigin().toString()),
+      blink::WebStringToGURL(frame->GetDocument().GetSecurityOrigin().ToString()),
       local);
   std::map<StoragePermissionsKey, bool>::const_iterator permissions =
       cached_storage_permissions_.find(key);
@@ -422,7 +422,7 @@ bool ContentSettingsObserver::allowStorage(bool local) {
     allow =
         content_settings_manager_->GetSetting(
           GetOriginOrURL(frame),
-          blink::WebStringToGURL(frame->getSecurityOrigin().toString()),
+          blink::WebStringToGURL(frame->GetSecurityOrigin().ToString()),
           "cookies",
           allow) != CONTENT_SETTING_BLOCK;
   }
@@ -433,7 +433,7 @@ bool ContentSettingsObserver::allowStorage(bool local) {
   return allow;
 }
 
-bool ContentSettingsObserver::allowReadFromClipboard(bool default_value) {
+bool ContentSettingsObserver::AllowReadFromClipboard(bool default_value) {
   bool allowed = default_value;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::ScriptContext* current_context =
@@ -446,7 +446,7 @@ bool ContentSettingsObserver::allowReadFromClipboard(bool default_value) {
   return allowed;
 }
 
-bool ContentSettingsObserver::allowWriteToClipboard(bool default_value) {
+bool ContentSettingsObserver::AllowWriteToClipboard(bool default_value) {
   bool allowed = default_value;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   // All blessed extension pages could historically write to the clipboard, so
@@ -466,7 +466,7 @@ bool ContentSettingsObserver::allowWriteToClipboard(bool default_value) {
   return allowed;
 }
 
-bool ContentSettingsObserver::allowMutationEvents(bool default_value) {
+bool ContentSettingsObserver::AllowMutationEvents(bool default_value) {
   if (IsWhitelistedForContentSettings())
     return true;
 
@@ -485,7 +485,7 @@ bool ContentSettingsObserver::allowMutationEvents(bool default_value) {
   return allow;
 }
 
-bool ContentSettingsObserver::allowRunningInsecureContent(
+bool ContentSettingsObserver::AllowRunningInsecureContent(
     bool allowed_per_settings,
     const blink::WebSecurityOrigin& origin,
     const blink::WebURL& resource_url) {
@@ -508,7 +508,7 @@ bool ContentSettingsObserver::allowRunningInsecureContent(
   return allow;
 }
 
-bool ContentSettingsObserver::allowAutoplay(bool default_value) {
+bool ContentSettingsObserver::AllowAutoplay(bool default_value) {
   bool allow = default_value;
   if (content_settings_manager_->content_settings()) {
     WebFrame* frame = render_frame()->GetWebFrame();
@@ -516,7 +516,7 @@ bool ContentSettingsObserver::allowAutoplay(bool default_value) {
         content_settings_manager_->GetSetting(
                           GetOriginOrURL(frame),
                           blink::WebStringToGURL(
-                              frame->document().getSecurityOrigin().toString()),
+                              frame->GetDocument().GetSecurityOrigin().ToString()),
                           "autoplay",
                           allow) != CONTENT_SETTING_BLOCK;
   }
@@ -526,11 +526,11 @@ bool ContentSettingsObserver::allowAutoplay(bool default_value) {
   return allow;
 }
 
-void ContentSettingsObserver::didNotAllowPlugins() {
+void ContentSettingsObserver::DidNotAllowPlugins() {
   DidBlockContentType(CONTENT_SETTINGS_TYPE_PLUGINS);
 }
 
-void ContentSettingsObserver::didNotAllowScript() {
+void ContentSettingsObserver::DidNotAllowScript() {
   DidBlockContentType(CONTENT_SETTINGS_TYPE_JAVASCRIPT);
 }
 
@@ -589,7 +589,7 @@ bool ContentSettingsObserver::IsWhitelistedForContentSettings(
   if (document_url == GURL(content::kUnreachableWebDataURL))
     return true;
 
-  if (origin.isUnique())
+  if (origin.IsUnique())
     return false;  // Uninitialized document?
 
   base::string16 protocol = origin.Protocol().Utf16();
