@@ -28,18 +28,18 @@ class SpellCheckClient : public blink::WebSpellCheckClient {
 
  private:
   // blink::WebSpellCheckClient:
-  void checkSpelling(
+  void CheckSpelling(
       const blink::WebString& text,
       int& misspelledOffset,
       int& misspelledLength,
       blink::WebVector<blink::WebString>* optionalSuggestions) override;
-  void requestCheckingOfText(const blink::WebString&,
+  void RequestCheckingOfText(const blink::WebString&,
       blink::WebTextCheckingCompletion*) override;
-  void showSpellingUI(bool show) override;
-  bool isShowingSpellingUI() override;
-  void updateSpellingUIWithMisspelledWord(
+  void ShowSpellingUI(bool show) override;
+  bool IsShowingSpellingUI() override;
+  void UpdateSpellingUIWithMisspelledWord(
       const blink::WebString& word) override;
-  void cancelAllPendingRequests() { }
+  void CancelAllPendingRequests() { }
 
   // Check the spelling of text.
   void SpellCheckText(const base::string16& text,
