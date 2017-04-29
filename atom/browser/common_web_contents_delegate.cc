@@ -440,7 +440,7 @@ void CommonWebContentsDelegate::DevToolsAddFileSystem(
   auto pref_service = GetPrefService(GetDevToolsWebContents());
   DictionaryPrefUpdate update(pref_service, prefs::kDevToolsFileSystemPaths);
   update.Get()->SetWithoutPathExpansion(
-      path.AsUTF8Unsafe(), base::Value::CreateNullValue());
+      path.AsUTF8Unsafe(), base::MakeUnique<base::Value>());
 
   web_contents_->CallClientFunction("DevToolsAPI.fileSystemAdded",
                                     file_system_value.get(),
