@@ -348,7 +348,7 @@ int AtomMainDelegate::RunProcess(
     const content::MainFunctionParams& main_function_params) {
     static const MainFunction kMainFunctions[] = {
   #if BUILDFLAG(ENABLE_PRINT_PREVIEW) && !defined(CHROME_MULTIPLE_DLL_CHILD)
-      { switches::kServiceProcess,     ServiceProcessMain },
+      { switches::kCloudPrintServiceProcess, CloudPrintServiceProcessMain },
   #endif
 
   #if defined(OS_MACOSX)
@@ -376,7 +376,7 @@ void AtomMainDelegate::SandboxInitialized(const std::string& process_type) {
 #if defined(OS_MACOSX)
 bool AtomMainDelegate::ShouldSendMachPort(const std::string& process_type) {
   return process_type != switches::kRelauncherProcess &&
-      process_type != switches::kServiceProcess;
+      process_type != switches::kCloudPrintServiceProcess;
 }
 
 bool AtomMainDelegate::DelaySandboxInitialization(
