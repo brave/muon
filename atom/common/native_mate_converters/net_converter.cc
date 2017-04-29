@@ -138,8 +138,8 @@ void GetUploadData(base::ListValue* upload_data_list,
       const net::UploadBytesElementReader* bytes_reader =
           reader->AsBytesReader();
       std::unique_ptr<base::Value> bytes(
-          base::BinaryValue::CreateWithCopiedBuffer(bytes_reader->bytes(),
-                                                    bytes_reader->length()));
+          base::Value::CreateWithCopiedBuffer(bytes_reader->bytes(),
+                                              bytes_reader->length()));
       upload_data_dict->Set("bytes", std::move(bytes));
     } else if (reader->AsFileReader()) {
       const net::UploadFileElementReader* file_reader =
