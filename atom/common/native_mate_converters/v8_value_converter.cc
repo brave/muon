@@ -199,7 +199,7 @@ v8::Local<v8::Value> V8ValueConverter::ToV8ValueImpl(
 
     case base::Value::Type::BINARY:
       return ToArrayBuffer(isolate,
-                           static_cast<const base::BinaryValue*>(value));
+                           static_cast<const base::Value*>(value));
 
     default:
       LOG(ERROR) << "Unexpected value type: " << value->GetType();
@@ -248,7 +248,7 @@ v8::Local<v8::Value> V8ValueConverter::ToV8Object(
 }
 
 v8::Local<v8::Value> V8ValueConverter::ToArrayBuffer(
-    v8::Isolate* isolate, const base::BinaryValue* value) const {
+    v8::Isolate* isolate, const base::Value* value) const {
   return node::Buffer::Copy(isolate,
                             value->GetBuffer(),
                             value->GetSize()).ToLocalChecked();
@@ -374,7 +374,7 @@ base::Value* V8ValueConverter::FromNodeBuffer(
     v8::Local<v8::Value> value,
     FromV8ValueState* state,
     v8::Isolate* isolate) const {
-  return base::BinaryValue::CreateWithCopiedBuffer(
+  return base::Value::CreateWithCopiedBuffer(
       node::Buffer::Data(value), node::Buffer::Length(value)).release();
 }
 
