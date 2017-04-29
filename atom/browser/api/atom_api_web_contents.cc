@@ -238,16 +238,16 @@ struct Converter<blink::WebSecurityStyle> {
                                    blink::WebSecurityStyle val) {
     std::string type;
     switch (val) {
-      case blink::WebSecurityStyleUnauthenticated:
+      case blink::kWebSecurityStyleUnauthenticated:
         type = "insecure";
         break;
-      case blink::WebSecurityStyleAuthenticationBroken:
+      case blink::kWebSecurityStyleAuthenticationBroken:
         type = "broken";
         break;
-      case blink::WebSecurityStyleWarning:
+      case blink::kWebSecurityStyleWarning:
         type = "warning";
         break;
-      case blink::WebSecurityStyleAuthenticated:
+      case blink::kWebSecurityStyleAuthenticated:
         type = "secure";
         break;
       default:
@@ -263,13 +263,13 @@ struct Converter<blink::WebSecurityStyle> {
     if (!ConvertFromV8(isolate, val, &type))
       return false;
     if (type == "insecure") {
-      *out = blink::WebSecurityStyleUnauthenticated;
+      *out = blink::kWebSecurityStyleUnauthenticated;
     } else if (type == "broken") {
-      *out = blink::WebSecurityStyleAuthenticationBroken;
+      *out = blink::kWebSecurityStyleAuthenticationBroken;
     } else if (type == "warning") {
-      *out = blink::WebSecurityStyleWarning;
+      *out = blink::kWebSecurityStyleWarning;
     } else if (type == "secure") {
-      *out = blink::WebSecurityStyleAuthenticated;
+      *out = blink::kWebSecurityStyleAuthenticated;
     } else {
       return false;
     }
@@ -1156,7 +1156,7 @@ void WebContents::DidChangeVisibleSecurityState() {
     web_contents()->GetDelegate()->GetSecurityStyle(
       web_contents(), &explanations);
     if (explanations.displayed_mixed_content &&
-        security_style == blink::WebSecurityStyleUnauthenticated) {
+        security_style == blink::kWebSecurityStyleUnauthenticated) {
       Emit("security-style-changed", "passive-mixed-content");
     } else {
       Emit("security-style-changed", security_style);
@@ -1394,7 +1394,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   GURL http_referrer;
   if (options.Get("httpReferrer", &http_referrer))
     params.referrer = content::Referrer(http_referrer.GetAsReferrer(),
-                                        blink::WebReferrerPolicyDefault);
+                                        blink::kWebReferrerPolicyDefault);
 
   std::string user_agent;
   if (options.Get("userAgent", &user_agent)) {
@@ -1990,22 +1990,22 @@ void WebContents::SendInputEvent(v8::Isolate* isolate,
     return;
 
   int type = mate::GetWebInputEventType(isolate, input_event);
-  if (blink::WebInputEvent::isMouseEventType(type)) {
+  if (blink::WebInputEvent::IsMouseEventType(type)) {
     blink::WebMouseEvent mouse_event;
     if (mate::ConvertFromV8(isolate, input_event, &mouse_event)) {
       host->ForwardMouseEvent(mouse_event);
       return;
     }
-  } else if (blink::WebInputEvent::isKeyboardEventType(type)) {
+  } else if (blink::WebInputEvent::IsKeyboardEventType(type)) {
     content::NativeWebKeyboardEvent
-      keyboard_event(blink::WebKeyboardEvent::Undefined,
-                     blink::WebInputEvent::NoModifiers,
+      keyboard_event(blink::WebKeyboardEvent::kUndefined,
+                     blink::WebInputEvent::kNoModifiers,
                      base::TimeTicks::Now());
     if (mate::ConvertFromV8(isolate, input_event, &keyboard_event)) {
       host->ForwardKeyboardEvent(keyboard_event);
       return;
     }
-  } else if (type == blink::WebInputEvent::MouseWheel) {
+  } else if (type == blink::WebInputEvent::kMouseWheel) {
     blink::WebMouseWheelEvent mouse_wheel_event;
     if (mate::ConvertFromV8(isolate, input_event, &mouse_wheel_event)) {
       host->ForwardWheelEvent(mouse_wheel_event);

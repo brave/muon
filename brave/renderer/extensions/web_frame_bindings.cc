@@ -30,7 +30,7 @@ class ScriptExecutionCallback : public blink::WebScriptExecutionCallback {
   ScriptExecutionCallback() {}
   ~ScriptExecutionCallback() override {}
 
-  void completed(
+  void Completed(
       const blink::WebVector<v8::Local<v8::Value>>& result) override {
   }
 
@@ -80,8 +80,8 @@ WebFrameBindings::~WebFrameBindings() {
 
 void WebFrameBindings::Invalidate() {
   // only remove the spell check client when the main frame is invalidated
-  if (!context()->web_frame()->parent()) {
-    context()->web_frame()->view()->setSpellCheckClient(nullptr);
+  if (!context()->web_frame()->Parent()) {
+    context()->web_frame()->View()->SetSpellCheckClient(nullptr);
     spell_check_client_.reset(nullptr);
   }
   ObjectBackedNativeHandler::Invalidate();
@@ -123,13 +123,13 @@ void WebFrameBindings::RegisterEmbedderCustomElement(
   blink::WebExceptionCode c = 0;
   args.GetReturnValue().Set(
     context()->web_frame()->
-        document().registerEmbedderCustomElement(
-            blink::WebString::fromUTF16(name), options, c));
+        GetDocument().RegisterEmbedderCustomElement(
+            blink::WebString::FromUTF16(name), options, c));
 }
 
 void WebFrameBindings::SetSpellCheckProvider(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
-  if (context()->web_frame()->parent()) {
+  if (context()->web_frame()->Parent()) {
     extensions::console::AddMessage(context()->GetRenderFrame(),
       content::CONSOLE_MESSAGE_LEVEL_WARNING,
       "spellcheck provider can only be set by the main frame");
@@ -143,7 +143,7 @@ void WebFrameBindings::SetSpellCheckProvider(
   std::unique_ptr<atom::api::SpellCheckClient> spell_check_client(
       new atom::api::SpellCheckClient(
           lang, auto_spell_correct_turned_on, GetIsolate(), provider));
-  context()->web_frame()->view()->setSpellCheckClient(spell_check_client.get());
+  context()->web_frame()->View()->SetSpellCheckClient(spell_check_client.get());
   spell_check_client_.swap(spell_check_client);
 }
 
@@ -151,13 +151,13 @@ void WebFrameBindings::ExecuteJavaScript(
       const v8::FunctionCallbackInfo<v8::Value>& args) {
   const base::string16 code = base::UTF8ToUTF16(mate::V8ToString(args[0]));
   v8::Local<v8::Context> main_context =
-      context()->web_frame()->mainWorldScriptContext();
+      context()->web_frame()->MainWorldScriptContext();
   v8::Context::Scope context_scope(main_context);
 
   std::unique_ptr<blink::WebScriptExecutionCallback> callback(
       new ScriptExecutionCallback());
-  context()->web_frame()->requestExecuteScriptAndReturnValue(
-      blink::WebScriptSource(blink::WebString::fromUTF16(code)),
+  context()->web_frame()->RequestExecuteScriptAndReturnValue(
+      blink::WebScriptSource(blink::WebString::FromUTF16(code)),
       true,
       callback.release());
 }
@@ -172,7 +172,7 @@ void WebFrameBindings::SetGlobal(
   v8::Local<v8::Object> value = v8::Local<v8::Object>::Cast(args[1]);
 
   v8::Local<v8::Context> main_context =
-      context()->web_frame()->mainWorldScriptContext();
+      context()->web_frame()->MainWorldScriptContext();
   v8::Context::Scope context_scope(main_context);
 
   if (!ContextCanAccessObject(main_context, main_context->Global(), false)) {
@@ -202,11 +202,11 @@ void WebFrameBindings::SetZoomLevel(
   CHECK_EQ(args.Length(), 1);
   CHECK(args[0]->IsInt32());
   double level = args[0].As<v8::Number>()->Value();
-  context()->web_frame()->view()->setZoomLevel(level);
+  context()->web_frame()->View()->SetZoomLevel(level);
 }
 
 // double WebFrame::GetZoomLevel() const {
-//   return web_frame_->view()->zoomLevel();
+//   return web_frame_->View()->ZoomLevel();
 // }
 
 // double WebFrame::SetZoomFactor(double factor) {
@@ -225,15 +225,15 @@ void WebFrameBindings::SetZoomLevelLimits(
   CHECK(args[1]->IsInt32());
   float min_level = args[0].As<v8::Number>()->Value();
   float max_level = args[1].As<v8::Number>()->Value();
-  context()->web_frame()->view()->zoomLimitsChanged(min_level, max_level);
+  context()->web_frame()->View()->ZoomLimitsChanged(min_level, max_level);
 }
 
 // float WebFrame::GetPageScaleFactor() {
-//   return web_frame_->view()->pageScaleFactor();
+//   return web_frame_->View()->PageScaleFactor();
 // }
 
 // void WebFrame::SetPageScaleFactor(float factor) {
-//   web_frame_->view()->setPageScaleFactor(factor);
+//   web_frame_->View()->SetPageScaleFactor(factor);
 // }
 
 void WebFrameBindings::SetPageScaleLimits(
@@ -244,16 +244,16 @@ void WebFrameBindings::SetPageScaleLimits(
   auto web_frame = context()->web_frame();
   float min_scale = args[0].As<v8::Number>()->Value();
   float max_scale = args[1].As<v8::Number>()->Value();
-  web_frame->view()->setDefaultPageScaleLimits(min_scale, max_scale);
-  web_frame->view()->setIgnoreViewportTagScaleLimits(true);
+  web_frame->View()->SetDefaultPageScaleLimits(min_scale, max_scale);
+  web_frame->View()->SetIgnoreViewportTagScaleLimits(true);
 }
 
 // float WebFrame::GetTextZoomFactor() {
-//   return web_frame_->view()->textZoomFactor();
+//   return web_frame_->View()->TextZoomFactor();
 // }
 
 // void WebFrame::SetTextZoomFactor(float factor) {
-//   web_frame_->view()->setTextZoomFactor(factor);
+//   web_frame_->View()->SetTextZoomFactor(factor);
 // }
 
 }  // namespace brave

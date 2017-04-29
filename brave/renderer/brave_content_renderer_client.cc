@@ -88,13 +88,13 @@ void BraveContentRendererClient::RenderThreadStarted() {
       new network_hints::PrescientNetworkingDispatcher());
 
   for (auto& origin : GetSecureOriginWhitelist()) {
-    WebSecurityPolicy::addOriginTrustworthyWhiteList(
-        WebSecurityOrigin::create(origin));
+    WebSecurityPolicy::AddOriginTrustworthyWhiteList(
+        WebSecurityOrigin::Create(origin));
   }
 
   for (auto& scheme : GetSchemesBypassingSecureContextCheckWhitelist()) {
-    WebSecurityPolicy::addSchemeToBypassSecureContextWhitelist(
-        WebString::fromUTF8(scheme));
+    WebSecurityPolicy::AddSchemeToBypassSecureContextWhitelist(
+        WebString::FromUTF8(scheme));
   }
 }
 
@@ -168,7 +168,7 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
     WebLocalFrame* frame,
     const WebPluginParams& params,
     WebPlugin** plugin) {
-  std::string orig_mime_type = params.mimeType.utf8();
+  std::string orig_mime_type = params.mime_type.Utf8();
   if (orig_mime_type == content::kBrowserPluginMimeType)
     return false;
 
@@ -176,7 +176,7 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
 #if BUILDFLAG(ENABLE_PLUGINS)
   ChromeViewHostMsg_GetPluginInfo_Output output;
   render_frame->Send(new ChromeViewHostMsg_GetPluginInfo(
-      render_frame->GetRoutingID(), url, frame->top()->getSecurityOrigin(),
+      render_frame->GetRoutingID(), url, frame->Top()->GetSecurityOrigin(),
       orig_mime_type, &output));
 
   *plugin = CreatePlugin(render_frame, frame, params, output);
