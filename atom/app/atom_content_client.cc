@@ -28,6 +28,7 @@
 #include "content/public/common/pepper_plugin_info.h"
 #include "content/public/common/user_agent.h"
 #include "extensions/features/features.h"
+#include "gpu/config/gpu_crash_keys.h"
 #include "gpu/config/gpu_info.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -64,21 +65,24 @@ AtomContentClient::~AtomContentClient() {
 }
 
 void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {
-  base::debug::SetCrashKeyValue(crash_keys::kGPUVendorID,
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendorID,
       base::StringPrintf("0x%04x", gpu_info.gpu.vendor_id));
-  base::debug::SetCrashKeyValue(crash_keys::kGPUDeviceID,
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDeviceID,
       base::StringPrintf("0x%04x", gpu_info.gpu.device_id));
-  base::debug::SetCrashKeyValue(crash_keys::kGPUDriverVersion,
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDriverVersion,
       gpu_info.driver_version);
-  base::debug::SetCrashKeyValue(crash_keys::kGPUPixelShaderVersion,
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUPixelShaderVersion,
       gpu_info.pixel_shader_version);
-  base::debug::SetCrashKeyValue(crash_keys::kGPUVertexShaderVersion,
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVertexShaderVersion,
       gpu_info.vertex_shader_version);
 #if defined(OS_MACOSX)
-  base::debug::SetCrashKeyValue(crash_keys::kGPUGLVersion, gpu_info.gl_version);
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUGLVersion,
+      gpu_info.gl_version);
 #elif defined(OS_POSIX)
-  base::debug::SetCrashKeyValue(crash_keys::kGPUVendor, gpu_info.gl_vendor);
-  base::debug::SetCrashKeyValue(crash_keys::kGPURenderer, gpu_info.gl_renderer);
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendor,
+      gpu_info.gl_vendor);
+  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPURenderer,
+      gpu_info.gl_renderer);
 #endif
 }
 
