@@ -279,7 +279,7 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
 
   if (val->IsString()) {
     v8::String::Utf8Value utf8(val->ToString());
-    return new base::StringValue(std::string(*utf8, utf8.length()));
+    return new base::Value(std::string(*utf8, utf8.length()));
   }
 
   if (val->IsUndefined())
@@ -295,7 +295,7 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
           toISOString.As<v8::Function>()->Call(val, 0, nullptr);
       if (!result.IsEmpty()) {
         v8::String::Utf8Value utf8(result->ToString());
-        return new base::StringValue(std::string(*utf8, utf8.length()));
+        return new base::Value(std::string(*utf8, utf8.length()));
       }
     }
   }
@@ -304,7 +304,7 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
     if (!reg_exp_allowed_)
       // JSON.stringify converts to an object.
       return FromV8Object(val->ToObject(), state, isolate);
-    return new base::StringValue(*v8::String::Utf8Value(val->ToString()));
+    return new base::Value(*v8::String::Utf8Value(val->ToString()));
   }
 
   // v8::Value doesn't have a ToArray() method for some reason.
