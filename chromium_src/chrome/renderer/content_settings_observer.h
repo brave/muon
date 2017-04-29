@@ -66,29 +66,29 @@ class ContentSettingsObserver
                            const std::string& details);
 
   // blink::WebContentSettingsClient implementation.
-  bool allowDatabase(const blink::WebString& name,
+  bool AllowDatabase(const blink::WebString& name,
                      const blink::WebString& display_name,
                      unsigned estimated_size) override;  // NOLINT
-  void requestFileSystemAccessAsync(
+  void RequestFileSystemAccessAsync(
           const blink::WebContentSettingCallbacks& callbacks) override;
-  bool allowImage(bool enabled_per_settings,
+  bool AllowImage(bool enabled_per_settings,
                   const blink::WebURL& image_url) override;
-  bool allowIndexedDB(const blink::WebString& name,
+  bool AllowIndexedDB(const blink::WebString& name,
                       const blink::WebSecurityOrigin& origin) override;
-  bool allowPlugins(bool enabled_per_settings) override;
-  bool allowScript(bool enabled_per_settings) override;
-  bool allowScriptFromSource(bool enabled_per_settings,
+  bool AllowPlugins(bool enabled_per_settings) override;
+  bool AllowScript(bool enabled_per_settings) override;
+  bool AllowScriptFromSource(bool enabled_per_settings,
                              const blink::WebURL& script_url) override;
-  bool allowStorage(bool local) override;
-  bool allowReadFromClipboard(bool default_value) override;
-  bool allowWriteToClipboard(bool default_value) override;
-  bool allowMutationEvents(bool default_value) override;
-  bool allowRunningInsecureContent(bool allowed_per_settings,
+  bool AllowStorage(bool local) override;
+  bool AllowReadFromClipboard(bool default_value) override;
+  bool AllowWriteToClipboard(bool default_value) override;
+  bool AllowMutationEvents(bool default_value) override;
+  bool AllowRunningInsecureContent(bool allowed_per_settings,
                                    const blink::WebSecurityOrigin& context,
                                    const blink::WebURL& url) override;
-  bool allowAutoplay(bool defaultValue) override;
-  void didNotAllowPlugins() override;
-  void didNotAllowScript() override;
+  bool AllowAutoplay(bool defaultValue) override;
+  void DidNotAllowPlugins() override;
+  void DidNotAllowScript() override;
 
  private:
   void DidRunInsecureContent(GURL resouce_url);
