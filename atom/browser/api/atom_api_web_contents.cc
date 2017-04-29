@@ -243,7 +243,7 @@ struct Converter<blink::WebSecurityStyle> {
       case blink::kWebSecurityStyleInsecure:
         type = "broken";
         break;
-      case blink::WebSecurityStyleWarning:
+      case blink::kWebSecurityStyleWarning:
         type = "warning";
         break;
       case blink::kWebSecurityStyleSecure:
@@ -266,7 +266,7 @@ struct Converter<blink::WebSecurityStyle> {
     } else if (type == "broken") {
       *out = blink::kWebSecurityStyleInsecure;
     } else if (type == "warning") {
-      *out = blink::WebSecurityStyleWarning;
+      *out = blink::kWebSecurityStyleWarning;
     } else if (type == "secure") {
       *out = blink::kWebSecurityStyleSecure;
     } else {
@@ -1402,7 +1402,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   GURL http_referrer;
   if (options.Get("httpReferrer", &http_referrer))
     params.referrer = content::Referrer(http_referrer.GetAsReferrer(),
-                                        blink::WebReferrerPolicyDefault);
+                                        blink::kWebReferrerPolicyDefault);
 
   std::string user_agent;
   if (options.Get("userAgent", &user_agent)) {
@@ -1999,22 +1999,22 @@ void WebContents::SendInputEvent(v8::Isolate* isolate,
     return;
 
   int type = mate::GetWebInputEventType(isolate, input_event);
-  if (blink::WebInputEvent::isMouseEventType(type)) {
+  if (blink::WebInputEvent::IsMouseEventType(type)) {
     blink::WebMouseEvent mouse_event;
     if (mate::ConvertFromV8(isolate, input_event, &mouse_event)) {
       host->ForwardMouseEvent(mouse_event);
       return;
     }
-  } else if (blink::WebInputEvent::isKeyboardEventType(type)) {
+  } else if (blink::WebInputEvent::IsKeyboardEventType(type)) {
     content::NativeWebKeyboardEvent
-      keyboard_event(blink::WebKeyboardEvent::Undefined,
-                     blink::WebInputEvent::NoModifiers,
+      keyboard_event(blink::WebKeyboardEvent::kUndefined,
+                     blink::WebInputEvent::kNoModifiers,
                      base::TimeTicks::Now());
     if (mate::ConvertFromV8(isolate, input_event, &keyboard_event)) {
       host->ForwardKeyboardEvent(keyboard_event);
       return;
     }
-  } else if (type == blink::WebInputEvent::MouseWheel) {
+  } else if (type == blink::WebInputEvent::kMouseWheel) {
     blink::WebMouseWheelEvent mouse_wheel_event;
     if (mate::ConvertFromV8(isolate, input_event, &mouse_wheel_event)) {
       host->ForwardWheelEvent(mouse_wheel_event);
