@@ -121,7 +121,7 @@ class BrowserProcessImpl : public BrowserProcess {
   safe_browsing::SafeBrowsingService* safe_browsing_service() override;
   safe_browsing::ClientSideDetectionService* safe_browsing_detection_service()
       override;
-  subresource_filter::RulesetService* subresource_filter_ruleset_service()
+  subresource_filter::ContentRulesetService* subresource_filter_ruleset_service()
       override;
   CRLSetFetcher* crl_set_fetcher() override;
   component_updater::PnaclComponentInstaller* pnacl_component_installer()
