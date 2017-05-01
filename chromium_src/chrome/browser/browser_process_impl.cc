@@ -403,7 +403,7 @@ BrowserProcessImpl::safe_browsing_detection_service() {
   return nullptr;
 }
 
-subresource_filter::RulesetService*
+subresource_filter::ContentRulesetService*
 BrowserProcessImpl::subresource_filter_ruleset_service() {
   NOTIMPLEMENTED();
   return nullptr;
