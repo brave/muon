@@ -25,12 +25,12 @@ class BridgeTaskRunner : public base::SingleThreadTaskRunner {
 
   // base::SingleThreadTaskRunner:
   bool PostDelayedTask(const tracked_objects::Location& from_here,
-                       const base::Closure& task,
+                       base::OnceClosure task,
                        base::TimeDelta delay) override;
   bool RunsTasksOnCurrentThread() const override;
   bool PostNonNestableDelayedTask(
       const tracked_objects::Location& from_here,
-      const base::Closure& task,
+      base::OnceClosure task,
       base::TimeDelta delay) override;
 
  private:
