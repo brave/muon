@@ -12,7 +12,7 @@
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "content/public/renderer/render_frame_observer.h"
 #include "content/public/renderer/render_frame_observer_tracker.h"
-#include "third_party/WebKit/public/web/WebContentSettingsClient.h"
+#include "third_party/WebKit/public/platform/WebContentSettingsClient.h"
 
 class GURL;
 
