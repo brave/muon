@@ -18,6 +18,7 @@ config("chromium_src_config") {
     "$root_gen_dir/chrome",
     "$root_gen_dir/components/strings",
     "//skia/config",
+    "//third_party/boringssl/src/include",
     "//third_party/skia/include/core",
   ]
 
