@@ -101,7 +101,7 @@ ContentSetting ContentSettingsManager::GetContentSettingFromRules(
 
   // all rules are evaluated in order and the
   // most specific matching rule will apply
-  for (base::ListValue::const_iterator it = rules->begin();
+  for (const base::ListValue::iterator it = rules->begin();
        it != rules->end(); ++it) {
     base::DictionaryValue* rule;
     std::string pattern_string;
