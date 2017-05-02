@@ -10,6 +10,7 @@
 #include "base/values.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/common/chrome_features.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/extensions/sync_helper.h"
 #include "components/variations/variations_associated_data.h"
@@ -219,11 +220,9 @@ const gfx::ImageSkia& GetDefaultExtensionIcon() {
 
 bool IsNewBookmarkAppsEnabled() {
 #if defined(OS_MACOSX)
-  return base::CommandLine::ForCurrentProcess()->HasSwitch(
-      switches::kEnableNewBookmarkApps);
+  return base::FeatureList::IsEnabled(features::kBookmarkApps);
 #else
-  return !base::CommandLine::ForCurrentProcess()->HasSwitch(
-      switches::kDisableNewBookmarkApps);
+  return true;
 #endif
 }
 
