@@ -71,7 +71,7 @@ namespace {
 
 // Cached version of the locale so we can return the locale on the I/O
 // thread.
-base::LazyInstance<std::string> io_thread_application_locale;
+base::LazyInstance<std::string>::DestructorAtExit io_thread_application_locale;
 
 void SetApplicationLocaleOnIOThread(const std::string& locale) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);

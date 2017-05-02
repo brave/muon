@@ -27,7 +27,7 @@ ContentSettingsManager::~ContentSettingsManager() {
 
 // static
 ContentSettingsManager* ContentSettingsManager::GetInstance() {
-  static base::LazyInstance<ContentSettingsManager> manager =
+  static base::LazyInstance<ContentSettingsManager>::DestructorAtExit manager =
     LAZY_INSTANCE_INITIALIZER;
   return manager.Pointer();
 }
