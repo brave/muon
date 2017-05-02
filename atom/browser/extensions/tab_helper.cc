@@ -147,7 +147,7 @@ content::WebContents* TabHelper::CreateTab(content::WebContents* owner,
 void TabHelper::DestroyTab(content::WebContents* tab) {
   auto guest = brave::TabViewGuest::FromWebContents(tab);
   DCHECK(guest);
-  guest->Destroy();
+  guest->Destroy(true);
 }
 
 // static
