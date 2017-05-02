@@ -19,7 +19,7 @@ namespace {
 
 // The global instance of ArchiveMap, will be destroyed on exit.
 typedef std::map<base::FilePath, std::shared_ptr<Archive>> ArchiveMap;
-static base::LazyInstance<ArchiveMap> g_archive_map = LAZY_INSTANCE_INITIALIZER;
+static base::LazyInstance<ArchiveMap>::DestructorAtExit g_archive_map = LAZY_INSTANCE_INITIALIZER;
 
 const base::FilePath::CharType kAsarExtension[] = FILE_PATH_LITERAL(".asar");
 
