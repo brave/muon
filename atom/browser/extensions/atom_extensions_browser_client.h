@@ -122,7 +122,8 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
       ExtensionApiFrameIdMap* map) override;
 
  private:
-  friend struct base::DefaultLazyInstanceTraits<AtomExtensionsBrowserClient>;
+  friend struct base::internal::
+      DefaultLazyInstanceTraits<AtomExtensionsBrowserClient>;
 
   // Not owned.
   content::BrowserContext* browser_context_;
