@@ -579,7 +579,8 @@ bool ContentSettingsObserver::IsWhitelistedForContentSettings() const {
   }
 
   return IsWhitelistedForContentSettings(
-      web_frame->document().getSecurityOrigin(), web_frame->document().url());
+      web_frame->GetDocument().GetSecurityOrigin(),
+      web_frame->GetDocument().Url());
 }
 
 bool ContentSettingsObserver::IsWhitelistedForContentSettings(
@@ -591,7 +592,7 @@ bool ContentSettingsObserver::IsWhitelistedForContentSettings(
   if (origin.isUnique())
     return false;  // Uninitialized document?
 
-  base::string16 protocol = origin.protocol().utf16();
+  base::string16 protocol = origin.Protocol().Utf16();
   if (base::EqualsASCII(protocol, content::kChromeUIScheme))
     return true;  // Browser UI elements should still work.
 
