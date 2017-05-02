@@ -638,7 +638,7 @@ void WebContents::AddNewContents(content::WebContents* source,
   if (blocked) {
     auto guest = brave::TabViewGuest::FromWebContents(new_contents);
     if (guest) {
-      guest->Destroy();
+      guest->Destroy(true);
     } else {
       delete new_contents;
     }
@@ -1241,7 +1241,7 @@ bool WebContents::OnMessageReceived(const IPC::Message& message) {
 
 void WebContents::DestroyWebContents() {
   if (guest_delegate_) {
-    guest_delegate_->Destroy();
+    guest_delegate_->Destroy(true);
   } else {
     delete web_contents();
   }
