@@ -1170,7 +1170,7 @@ void WebContents::DidStartNavigation(
 
   // deprecated event handling
   if (navigation_handle->HasCommitted() &&
-      (navigation_handle->IsSamePage() || navigation_handle->IsErrorPage()))
+      (navigation_handle->IsSameDocument() || navigation_handle->IsErrorPage()))
     return;
 
   auto url = navigation_handle->GetURL();
@@ -1187,7 +1187,7 @@ void WebContents::DidFinishNavigation(
   bool is_main_frame = navigation_handle->IsInMainFrame();
   auto url = navigation_handle->GetURL();
   if (navigation_handle->HasCommitted() && !navigation_handle->IsErrorPage()) {
-    bool is_in_page = navigation_handle->IsSamePage();
+    bool is_in_page = navigation_handle->IsSameDocument();
     bool is_renderer_initiated = navigation_handle->IsRendererInitiated();
     if (!is_in_page) {
       Emit("load-commit", url, is_main_frame);
