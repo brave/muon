@@ -44,7 +44,7 @@
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
 #include "gpu/config/gpu_switches.h"
-#include "services/image_decoder/public/interfaces/constants.mojom.h"
+#include "services/data_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -560,7 +560,7 @@ void BraveContentBrowserClient::RegisterOutOfProcessServices(
   services->insert(std::make_pair("mojo:media",
                               base::ASCIIToUTF16("Media App")));
 #endif
-  services->insert(std::make_pair(image_decoder::mojom::kServiceName,
+  services->insert(std::make_pair(data_decoder::mojom::kServiceName,
                                   base::ASCIIToUTF16("Image Decoder Service")));
 }
 
