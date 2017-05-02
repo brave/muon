@@ -49,7 +49,7 @@ const char kExtensionBlocklistUrlPrefix[] =
 const char kExtensionBlocklistHttpsUrlPrefix[] =
     "https://www.gstatic.com/chrome/extensions/blacklist";
 
-static base::LazyInstance<ChromeExtensionsClient> g_client =
+static base::LazyInstance<ChromeExtensionsClient>::DestructorAtExit g_client =
     LAZY_INSTANCE_INITIALIZER;
 
 }  // namespace
