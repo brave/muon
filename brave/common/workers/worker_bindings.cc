@@ -62,13 +62,14 @@ void OnMessageInternal(const std::pair<uint8_t*, size_t>& buf) {
 WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
                                 V8WorkerThread* worker)
     : extensions::ObjectBackedNativeHandler(context),
-      worker_(worker) {
+      worker_(worker),
+      weak_ptr_factory_(this) {
   RouteFunction("postMessage",
-              base::Bind(&WorkerBindings::PostMessage, base::Unretained(this)));
+              base::Bind(&WorkerBindings::PostMessage, weak_ptr_factory_.GetWeakPtr()));
   RouteFunction("close",
-              base::Bind(&WorkerBindings::Close, base::Unretained(this)));
+              base::Bind(&WorkerBindings::Close, weak_ptr_factory_.GetWeakPtr()));
   RouteFunction("onerror",
-              base::Bind(&WorkerBindings::OnError, base::Unretained(this)));
+              base::Bind(&WorkerBindings::OnError, weak_ptr_factory_.GetWeakPtr()));
 
   v8::Local<v8::Context> v8_context = context->v8_context();
   v8::Isolate* isolate = v8_context->GetIsolate();
@@ -153,7 +154,7 @@ void WorkerBindings::OnError(
 
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
       base::Bind(&WorkerBindings::OnErrorOnUIThread,
-                  base::Unretained(this),
+                  weak_ptr_factory_.GetWeakPtr(),
                   std::move(message),
                   std::move(stack_trace)));
 }
@@ -204,7 +205,7 @@ void WorkerBindings::PostMessage(
 
     BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
         base::Bind(&WorkerBindings::PostMessageOnUIThread,
-                    base::Unretained(this),
+                    weak_ptr_factory_.GetWeakPtr(),
                     std::move(buffer)));
   } else {
     context()->isolate()->ThrowException(v8::String::NewFromUtf8(

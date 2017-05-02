@@ -10,6 +10,7 @@
 
 #include "base/compiler_specific.h"
 #include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "v8/include/v8.h"
 
@@ -34,6 +35,8 @@ class WorkerBindings : public extensions::ObjectBackedNativeHandler {
 
   V8WorkerThread* worker_;
   v8::Local<v8::Function> on_message_;
+
+  base::WeakPtrFactory<WorkerBindings> weak_ptr_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(WorkerBindings);
 };
