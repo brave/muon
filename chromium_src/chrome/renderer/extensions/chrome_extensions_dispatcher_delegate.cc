@@ -137,6 +137,7 @@ void ChromeExtensionsDispatcherDelegate::InitOriginPermissions(
 void ChromeExtensionsDispatcherDelegate::RegisterNativeHandlers(
     extensions::Dispatcher* dispatcher,
     extensions::ModuleSystem* module_system,
+    extensions::ExtensionBindingsSystem* bindings_system,
     extensions::ScriptContext* context) {
   module_system->RegisterNativeHandler(
       "atom",
