@@ -18,6 +18,10 @@ class PlatformNotificationService
   explicit PlatformNotificationService(BrowserClient* browser_client);
   ~PlatformNotificationService() override;
 
+  using DisplayedNotificationsCallback =
+    base::Callback<void(std::unique_ptr<std::set<std::string>>,
+                        bool /* supports synchronization */)>;
+
  protected:
   // content::PlatformNotificationService:
   blink::mojom::PermissionStatus CheckPermissionOnUIThread(
@@ -45,9 +49,9 @@ class PlatformNotificationService
   void ClosePersistentNotification(
       content::BrowserContext* browser_context,
       const std::string& notification_id) override;
-  bool GetDisplayedNotifications(
+  void GetDisplayedNotifications(
       content::BrowserContext* browser_context,
-      std::set<std::string>* displayed_notifications) override;
+      const DisplayedNotificationsCallback& callback) override;
 
  private:
   BrowserClient* browser_client_;
