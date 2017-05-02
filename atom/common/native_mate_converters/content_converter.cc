@@ -245,7 +245,7 @@ v8::Local<v8::Value> Converter<content::NavigationEntry*>::ToV8(
   dict.Set("referrer", val->GetReferrer().url);
   dict.Set("virtualURL", val->GetVirtualURL());
   dict.Set("title", val->GetTitle());
-  dict.Set("display_title", val->GetTitleForDisplay());
+  dict.Set("displayTitle", val->GetTitleForDisplay());
   dict.Set("viewSourceMode", val->IsViewSourceMode());
   dict.Set("transitionType", val->GetTransitionType());
   dict.Set("hasPostData", val->GetHasPostData());
@@ -323,28 +323,39 @@ v8::Local<v8::Value> Converter<content::RestoreType>::ToV8(
 // static
 v8::Local<v8::Value> Converter<ui::PageTransition>::ToV8(
     v8::Isolate* isolate, const ui::PageTransition& val) {
-  if (val & ui::PageTransition::PAGE_TRANSITION_LINK)
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_LINK))
     return StringToV8(isolate, "link");
-  if (val & ui::PageTransition::PAGE_TRANSITION_TYPED)
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_TYPED))
     return StringToV8(isolate, "typed");
-  if (val & ui::PageTransition::PAGE_TRANSITION_AUTO_BOOKMARK)
-    return StringToV8(isolate, "auto_bookmark");
-  if (val & ui::PageTransition::PAGE_TRANSITION_AUTO_SUBFRAME)
-    return StringToV8(isolate, "auto_subframe");
-  if (val & ui::PageTransition::PAGE_TRANSITION_MANUAL_SUBFRAME)
-    return StringToV8(isolate, "manual_subframe");
-  if (val & ui::PageTransition::PAGE_TRANSITION_GENERATED)
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_AUTO_BOOKMARK))
+    return StringToV8(isolate, "autoBookmark");
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_AUTO_SUBFRAME))
+    return StringToV8(isolate, "autoSubframe");
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_MANUAL_SUBFRAME))
+    return StringToV8(isolate, "manualSubframe");
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_GENERATED))
     return StringToV8(isolate, "generated");
-  if (val & ui::PageTransition::PAGE_TRANSITION_AUTO_TOPLEVEL)
-    return StringToV8(isolate, "auto_toplevel");
-  if (val & ui::PageTransition::PAGE_TRANSITION_FORM_SUBMIT)
-    return StringToV8(isolate, "form_submit");
-  if (val & ui::PageTransition::PAGE_TRANSITION_RELOAD)
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_AUTO_TOPLEVEL))
+    return StringToV8(isolate, "autoToplevel");
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_FORM_SUBMIT))
+    return StringToV8(isolate, "formSubmit");
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_RELOAD))
     return StringToV8(isolate, "reload");
-  if (val & ui::PageTransition::PAGE_TRANSITION_KEYWORD)
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_KEYWORD))
     return StringToV8(isolate, "keyword");
-  if (val & ui::PageTransition::PAGE_TRANSITION_KEYWORD_GENERATED)
-    return StringToV8(isolate, "keyword_generated");
+  if (ui::PageTransitionCoreTypeIs(val,
+      ui::PageTransition::PAGE_TRANSITION_KEYWORD_GENERATED))
+    return StringToV8(isolate, "keywordGenerated");
 
   return StringToV8(isolate, "unknown");
 }
