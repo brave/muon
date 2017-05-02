@@ -64,7 +64,7 @@ const char TabViewGuest::Type[] = "webview";
 void TabViewGuest::SetCanRunInDetachedState(bool can_run_detached) {
   can_run_detached_ = can_run_detached;
   if (!can_run_detached_ && !attached())
-    Destroy();
+    Destroy(true);
 }
 
 bool TabViewGuest::CanRunInDetachedState() const {
