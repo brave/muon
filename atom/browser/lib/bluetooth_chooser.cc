@@ -115,13 +115,4 @@ void BluetoothChooser::AddOrUpdateDevice(const std::string& device_id,
   device_list_.push_back(info);
 }
 
-void BluetoothChooser::RemoveDevice(const std::string& device_id) {
-  for (auto it = device_list_.begin(); it != device_list_.end(); ++it) {
-    if (it->device_id == device_id) {
-      device_list_.erase(it);
-      return;
-    }
-  }
-}
-
 }  // namespace atom

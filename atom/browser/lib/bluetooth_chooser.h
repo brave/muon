@@ -35,8 +35,6 @@ class BluetoothChooser : public content::BluetoothChooser {
                          bool is_paired,
                          int signal_strength_level) override;
 
-  void RemoveDevice(const std::string& device_id) override;
-
  private:
   std::vector<DeviceInfo> device_list_;
   api::WebContents* api_web_contents_;
