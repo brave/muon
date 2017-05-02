@@ -188,7 +188,7 @@ void TabViewGuest::DidFinishNavigation(
 void TabViewGuest::DidStartNavigation(
     content::NavigationHandle* navigation_handle) {
   // loadStart shouldn't be sent for same page navigations.
-  if (navigation_handle->IsSamePage())
+  if (navigation_handle->IsSameDocument())
     return;
 
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
@@ -323,9 +323,7 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
-  content::ResourceDispatcherHost::ResumeBlockedRequestsForFrameFromUI(
-        web_contents()->GetMainFrame());
-
+  web_contents()->GetMainFrame()->ResumeBlockedRequestsForFrame();
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
 
   if (!tab_helper->IsDiscarded()) {
@@ -348,8 +346,7 @@ void TabViewGuest::DidAttachToEmbedder() {
 }
 
 void TabViewGuest::DidDetachFromEmbedder() {
-  content::ResourceDispatcherHost::BlockRequestsForFrameFromUI(
-      web_contents()->GetMainFrame());
+  web_contents()->GetMainFrame()->BlockRequestsForFrame();
 
   if (api_web_contents_) {
     api_web_contents_->Emit("did-detach",
