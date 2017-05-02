@@ -28,7 +28,8 @@ class AtomProcessManagerDelegate : public ProcessManagerDelegate,
   ~AtomProcessManagerDelegate() override;
 
   // ProcessManagerDelegate implementation:
-  bool IsBackgroundPageAllowed(content::BrowserContext* context) const override;
+  bool AreBackgroundPagesAllowedForContext(
+      content::BrowserContext* context) const override;
   bool DeferCreatingStartupBackgroundHosts(
       content::BrowserContext* context) const override;
 
