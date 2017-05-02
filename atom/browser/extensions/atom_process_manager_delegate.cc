@@ -31,7 +31,7 @@ AtomProcessManagerDelegate::AtomProcessManagerDelegate() {
 AtomProcessManagerDelegate::~AtomProcessManagerDelegate() {
 }
 
-bool AtomProcessManagerDelegate::IsBackgroundPageAllowed(
+bool AtomProcessManagerDelegate::AreBackgroundPagesAllowedForContext(
     content::BrowserContext* context) const {
   return true;
 }
