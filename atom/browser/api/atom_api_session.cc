@@ -70,11 +70,6 @@
 using content::BrowserThread;
 using content::StoragePartition;
 
-class ScopedAllowWaitForLegacyWebViewApi {
- private:
-  base::ThreadRestrictions::ScopedAllowWait wait;
-};
-
 namespace {
 
 struct ClearStorageDataOptions {
@@ -634,7 +629,7 @@ mate::Handle<Session> Session::FromPartition(
 
   DCHECK(browser_context);
   // TODO(bridiver) - this is a huge hack to deal with sync call
-  ScopedAllowWaitForLegacyWebViewApi wait_allowed;
+  base::ThreadRestrictions::ScopedAllowWait wait_allowed;
   static_cast<brave::BraveBrowserContext*>(
       browser_context)->ready()->Wait();
 
