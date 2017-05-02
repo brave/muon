@@ -147,6 +147,7 @@ void AtomAutofillClient::ConfirmSaveCreditCardLocally(
 void AtomAutofillClient::ConfirmSaveCreditCardToCloud(
     const CreditCard& card,
     std::unique_ptr<base::DictionaryValue> legal_message,
+    bool should_cvc_be_requested,
     const base::Closure& callback) {
 }
 
@@ -241,22 +242,6 @@ void AtomAutofillClient::PropagateAutofillPredictions(
 void AtomAutofillClient::DidFillOrPreviewField(
     const base::string16& autofilled_value,
     const base::string16& profile_full_name) {
-}
-
-void AtomAutofillClient::OnFirstUserGestureObserved() {
-  ContentAutofillDriverFactory* factory =
-    ContentAutofillDriverFactory::FromWebContents(web_contents());
-  DCHECK(factory);
-
-  for (content::RenderFrameHost* frame : web_contents()->GetAllFrames()) {
-    // No need to notify non-live frames.
-    // And actually they have no corresponding drivers in the factory's map.
-    if (!frame->IsRenderFrameLive())
-      continue;
-    ContentAutofillDriver* driver = factory->DriverForFrame(frame);
-    DCHECK(driver);
-    driver->NotifyFirstUserGestureObservedInTab();
-  }
 }
 
 bool AtomAutofillClient::IsContextSecure() {
