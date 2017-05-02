@@ -89,7 +89,7 @@ AtomContentUtilityClient::~AtomContentUtilityClient() {
 
 void AtomContentUtilityClient::UtilityThreadStarted() {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  extensions::UtilityHandler::UtilityThreadStarted();
+  extensions::utility_handler::UtilityThreadStarted();
 #endif
 }
 
