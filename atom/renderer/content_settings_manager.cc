@@ -95,18 +95,18 @@ ContentSetting ContentSettingsManager::GetContentSettingFromRules(
     ? ContentSetting::CONTENT_SETTING_ALLOW
     : ContentSetting::CONTENT_SETTING_BLOCK;
 
-  const base::ListValue* rules = nullptr;
+  base::ListValue* rules = nullptr;
   if (!content_settings_->GetList(content_type, &rules))
     return result;
 
   // all rules are evaluated in order and the
   // most specific matching rule will apply
-  for (base::ListValue::const_iterator it = rules->begin();
+  for (base::ListValue::iterator it = rules->begin();
        it != rules->end(); ++it) {
     base::DictionaryValue* rule;
     std::string pattern_string;
     std::string setting_string;
-    if (!(*it)->GetAsDictionary(&rule) ||
+    if (!it->GetAsDictionary(&rule) ||
         !rule->GetString("primaryPattern", &pattern_string) ||
         !rule->GetString("setting", &setting_string)) {
       // skip invalid entries

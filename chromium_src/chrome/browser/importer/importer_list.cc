@@ -142,7 +142,7 @@ void AddChromeToProfiles(std::vector<importer::SourceProfile>* profiles,
                          std::string& brand) {
   for (const auto& value : *chrome_profiles) {
     const base::DictionaryValue* dict;
-    if (!value->GetAsDictionary(&dict))
+    if (!value.GetAsDictionary(&dict))
       continue;
     uint16_t items = importer::NONE;
     std::string profile;
