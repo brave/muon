@@ -27,10 +27,10 @@ class ExternalProcessImporterClient : public ::ExternalProcessImporterClient {
   void Cancel();
 
   void OnCookiesImportStart(
-      uint32_t total_cookies_count);
+      uint32_t total_cookies_count) override;
   void OnCookiesImportGroup(
       const std::vector<ImportedCookieEntry>&
-          cookies_group);
+          cookies_group) override;
 
  private:
   ~ExternalProcessImporterClient() override;
