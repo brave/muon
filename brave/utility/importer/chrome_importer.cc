@@ -257,7 +257,7 @@ void ChromeImporter::RecursiveReadBookmarksFolder(
   if (folder->GetList("children", &children)) {
     for (const auto& value : *children) {
       const base::DictionaryValue* dict;
-      if (!value->GetAsDictionary(&dict))
+      if (!value.GetAsDictionary(&dict))
         continue;
       std::string date_added, type, url;
       base::string16 name;
