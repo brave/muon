@@ -441,8 +441,6 @@ void AtomBrowserClientExtensionsPart::SiteInstanceDeleting(
 void AtomBrowserClientExtensionsPart::BrowserURLHandlerCreated(
     BrowserURLHandler* handler) {
   handler->AddHandlerPair(&brave::api::Extension::HandleURLOverride,
-                          BrowserURLHandler::null_handler());
-  handler->AddHandlerPair(BrowserURLHandler::null_handler(),
                           &brave::api::Extension::HandleURLOverrideReverse);
 }
 

@@ -73,6 +73,8 @@ class Extension : public gin::Wrappable<Extension>,
                     extensions::UnloadedExtensionInfo::Reason reason) override;
 
 
+  void SetURLHandler(gin::Arguments* args);
+  void SetReverseURLHandler(gin::Arguments* args);
   void Disable(const std::string& extension_id);
   void Enable(const std::string& extension_id);
   v8::Isolate* isolate() { return isolate_; }
