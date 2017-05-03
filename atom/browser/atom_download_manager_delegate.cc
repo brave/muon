@@ -109,12 +109,12 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
       download_item->SetSavePath(path);
   }
 
-  // Running the DownloadTargetCallback with an empty FilePath signals that the
-  // download should be cancelled.
-  // If user cancels the file save dialog, run the callback with empty FilePath.
   callback.Run(path,
                content::DownloadItem::TARGET_DISPOSITION_PROMPT,
-               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path);
+               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+               path.empty()
+                  ? content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED
+                  : content::DOWNLOAD_INTERRUPT_REASON_NONE);
 }
 
 void AtomDownloadManagerDelegate::Shutdown() {
@@ -131,7 +131,8 @@ bool AtomDownloadManagerDelegate::DetermineDownloadTarget(
     callback.Run(download->GetForcedFilePath(),
                  content::DownloadItem::TARGET_DISPOSITION_OVERWRITE,
                  content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS,
-                 download->GetForcedFilePath());
+                 download->GetForcedFilePath(),
+                 content::DOWNLOAD_INTERRUPT_REASON_NONE);
     return true;
   }
 
@@ -142,7 +143,8 @@ bool AtomDownloadManagerDelegate::DetermineDownloadTarget(
     callback.Run(save_path,
                  content::DownloadItem::TARGET_DISPOSITION_OVERWRITE,
                  content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS,
-                 save_path);
+                 save_path,
+                 content::DOWNLOAD_INTERRUPT_REASON_NONE);
     return true;
   }
 
