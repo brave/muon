@@ -251,6 +251,7 @@ source_set("browser") {
     sources += [
       "//chrome/browser/extensions/global_shortcut_listener_x11.cc",
       "//chrome/browser/extensions/global_shortcut_listener_x11.h",
+      "chrome/browser/ui/process_singleton_dialog_linux.cc",
     ]
   }
 
@@ -375,16 +376,27 @@ source_set("browser") {
         "//chrome/browser/ui/views/color_chooser_aura.h"
       ]
     }
-    if (is_linux) {
-      sources += [
-        "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.cc",
-        "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.h"
-      ]
-    }
 
     public_deps += [
       "//ppapi/host",
       "//ppapi/proxy",
+    ]
+  }
+}
+
+source_set("menu_bar") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.cc",
+    "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.h"
+  ]
+
+  if (use_gio) {
+    deps = [
+      "//third_party/protobuf:protobuf_lite",
+      "//build/linux/libgio",
     ]
   }
 }

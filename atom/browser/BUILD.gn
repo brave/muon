@@ -284,6 +284,7 @@ source_set("browser") {
     ]
 
     deps +=  [
+      "//electron/chromium_src:menu_bar",
       "//chrome/browser/ui/libgtkui:libgtk2ui",
       "//electron/build:gtk2",
     ]

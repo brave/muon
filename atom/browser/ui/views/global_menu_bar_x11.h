@@ -21,8 +21,8 @@ class Accelerator;
 }
 
 namespace atom {
-
 class NativeWindowViews;
+}
 
 // Controls the Mac style menu bar on Unity.
 //
@@ -37,13 +37,13 @@ class NativeWindowViews;
 // from menu models instead, and it is also per-window specific.
 class GlobalMenuBarX11 {
  public:
-  explicit GlobalMenuBarX11(NativeWindowViews* window);
+  explicit GlobalMenuBarX11(atom::NativeWindowViews* window);
   virtual ~GlobalMenuBarX11();
 
   // Creates the object path for DbusmenuServer which is attached to |xid|.
   static std::string GetPathForWindow(gfx::AcceleratedWidget xid);
 
-  void SetMenu(AtomMenuModel* menu_model);
+  void SetMenu(atom::AtomMenuModel* menu_model);
   bool IsServerStarted() const;
 
   // Called by NativeWindow when it show/hides.
@@ -55,7 +55,7 @@ class GlobalMenuBarX11 {
   void InitServer(gfx::AcceleratedWidget xid);
 
   // Create a menu from menu model.
-  void BuildMenuFromModel(AtomMenuModel* model, DbusmenuMenuitem* parent);
+  void BuildMenuFromModel(atom::AtomMenuModel* model, DbusmenuMenuitem* parent);
 
   // Sets the accelerator for |item|.
   void RegisterAccelerator(DbusmenuMenuitem* item,
@@ -65,14 +65,12 @@ class GlobalMenuBarX11 {
                      unsigned int);
   CHROMEG_CALLBACK_0(GlobalMenuBarX11, void, OnSubMenuShow, DbusmenuMenuitem*);
 
-  NativeWindowViews* window_;
+  atom::NativeWindowViews* window_;
   gfx::AcceleratedWidget xid_;
 
   DbusmenuServer* server_;
 
   DISALLOW_COPY_AND_ASSIGN(GlobalMenuBarX11);
 };
-
-}  // namespace atom
 
 #endif  // ATOM_BROWSER_UI_VIEWS_GLOBAL_MENU_BAR_X11_H_
