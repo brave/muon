@@ -41,6 +41,12 @@ bool AtomProcessManagerDelegate::DeferCreatingStartupBackgroundHosts(
   return !atom::Browser::Get()->is_ready();
 }
 
+bool AtomProcessManagerDelegate::IsExtensionBackgroundPageAllowed(
+    content::BrowserContext* context,
+    const Extension& extension) const {
+  return AreBackgroundPagesAllowedForContext(context);
+}
+
 void AtomProcessManagerDelegate::Observe(
     int type,
     const content::NotificationSource& source,
