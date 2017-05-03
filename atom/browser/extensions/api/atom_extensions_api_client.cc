@@ -28,8 +28,7 @@ class AtomRequirementsChecker : public RequirementsChecker {
   AtomRequirementsChecker() {}
   ~AtomRequirementsChecker() override {}
 
-  void Check(const scoped_refptr<const Extension>& extension,
-                     const RequirementsCheckedCallback& callback) override {
+  void Start(ResultCallback callback) override {
     NOTIMPLEMENTED();
   }
 
