@@ -80,6 +80,10 @@ void FileBindings::WriteImportantFile(
     return;
   }
   base::FilePath path(path_name);
+  if (!path.IsAbsolute()) {
+    isolate->ThrowException(v8::String::NewFromUtf8(
+        isolate, "`path` must be absolute"));
+  }
 
   if (!args[1]->IsString()) {
     isolate->ThrowException(v8::String::NewFromUtf8(
@@ -113,7 +117,7 @@ scoped_refptr<base::SequencedTaskRunner> FileBindings::GetTaskRunnerForFile(
     const base::FilePath& filename,
     base::SequencedWorkerPool* worker_pool) {
   std::string token("muon-file-");
-  token.append(MakeAbsoluteFilePath(filename).AsUTF8Unsafe());
+  token.append(filename.AsUTF8Unsafe());
   return worker_pool->GetSequencedTaskRunnerWithShutdownBehavior(
       worker_pool->GetNamedSequenceToken(token),
       base::SequencedWorkerPool::BLOCK_SHUTDOWN);
