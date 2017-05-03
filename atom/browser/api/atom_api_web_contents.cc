@@ -238,16 +238,16 @@ struct Converter<blink::WebSecurityStyle> {
                                    blink::WebSecurityStyle val) {
     std::string type;
     switch (val) {
-      case blink::WebSecurityStyleUnauthenticated:
+      case blink::kWebSecurityStyleNeutral:
         type = "insecure";
         break;
-      case blink::WebSecurityStyleAuthenticationBroken:
+      case blink::kWebSecurityStyleInsecure:
         type = "broken";
         break;
       case blink::WebSecurityStyleWarning:
         type = "warning";
         break;
-      case blink::WebSecurityStyleAuthenticated:
+      case blink::kWebSecurityStyleSecure:
         type = "secure";
         break;
       default:
@@ -263,13 +263,13 @@ struct Converter<blink::WebSecurityStyle> {
     if (!ConvertFromV8(isolate, val, &type))
       return false;
     if (type == "insecure") {
-      *out = blink::WebSecurityStyleUnauthenticated;
+      *out = blink::kWebSecurityStyleNeutral;
     } else if (type == "broken") {
-      *out = blink::WebSecurityStyleAuthenticationBroken;
+      *out = blink::kWebSecurityStyleInsecure;
     } else if (type == "warning") {
       *out = blink::WebSecurityStyleWarning;
     } else if (type == "secure") {
-      *out = blink::WebSecurityStyleAuthenticated;
+      *out = blink::kWebSecurityStyleSecure;
     } else {
       return false;
     }
@@ -1156,7 +1156,7 @@ void WebContents::DidChangeVisibleSecurityState() {
     web_contents()->GetDelegate()->GetSecurityStyle(
       web_contents(), &explanations);
     if (explanations.displayed_mixed_content &&
-        security_style == blink::WebSecurityStyleUnauthenticated) {
+        security_style == blink::kWebSecurityStyleNeutral) {
       Emit("security-style-changed", "passive-mixed-content");
     } else {
       Emit("security-style-changed", security_style);
