@@ -90,13 +90,13 @@ bool Browser::CanSupportWindowFeature(WindowFeature feature) const {
   return SupportsWindowFeatureImpl(feature, false);
 }
 
-bool Browser::CallBeforeUnloadHandlers(
+bool Browser::TryToCloseWindow(bool skip_beforeunload,
     const base::Callback<void(bool)>& on_close_confirmed) {
   on_close_confirmed.Run(true);
   return false;
 }
 
-void Browser::ResetBeforeUnloadHandlers() {
+void Browser::ResetTryToCloseWindow() {
 }
 
 bool Browser::SupportsWindowFeatureImpl(WindowFeature feature,
