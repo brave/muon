@@ -264,6 +264,8 @@ source_set("renderer") {
   include_dirs = [
     # force this to appear before the chromium root src dir
     "chromium_src",
+    # needed because TextCheckerClient.h uses paths rooted here
+    "//third_party/WebKit/Source"
   ]
 
   sources = [
