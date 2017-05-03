@@ -30,6 +30,9 @@
 #include "ui/base/accelerators/menu_label_accelerator_util_linux.h"
 #include "ui/events/keycodes/keyboard_code_conversion_x.h"
 
+using atom::NativeWindowViews;
+using atom::AtomMenuModel;
+
 // libdbusmenu-glib types
 typedef struct _DbusmenuMenuitem DbusmenuMenuitem;
 typedef DbusmenuMenuitem* (*dbusmenu_menuitem_new_func)();
@@ -61,8 +64,6 @@ typedef struct _DbusmenuServer      DbusmenuServer;
 typedef DbusmenuServer* (*dbusmenu_server_new_func)(const char* object);
 typedef void (*dbusmenu_server_set_root_func)(DbusmenuServer* self,
                                               DbusmenuMenuitem* root);
-
-namespace atom {
 
 namespace {
 
@@ -319,5 +320,3 @@ void GlobalMenuBarX11::OnSubMenuShow(DbusmenuMenuitem* item) {
   // Build children.
   BuildMenuFromModel(model->GetSubmenuModelAt(id), item);
 }
-
-}  // namespace atom

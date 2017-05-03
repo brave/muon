@@ -23,13 +23,14 @@
 #include <UIAutomationCoreApi.h>
 #endif
 
+class GlobalMenuBarX11;
+
 namespace views {
 class UnhandledKeyboardEventHandler;
 }
 
 namespace atom {
 
-class GlobalMenuBarX11;
 class MenuBar;
 class WindowStateWatcher;
 
