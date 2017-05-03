@@ -11,6 +11,8 @@
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/api/event_emitter_caller.h"
+#include "brave/common/converters/callback_converter.h"
+#include "brave/common/converters/gurl_converter.h"
 #include "brave/common/converters/file_path_converter.h"
 #include "brave/common/converters/value_converter.h"
 #include "atom/common/node_includes.h"
@@ -37,6 +39,8 @@
 #include "extensions/common/one_shot_event.h"
 #include "gin/dictionary.h"
 
+using base::Callback;
+using content::BrowserURLHandler;
 using content::V8ValueConverter;
 
 namespace gin {
@@ -101,6 +105,8 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
   return extension;
 }
 
+std::map<std::string, base::Callback<GURL(const GURL&)>> url_override_callbacks_;
+std::map<std::string, base::Callback<GURL(const GURL&)>> reverse_url_override_callbacks_;
 }  // namespace
 
 namespace brave {
@@ -125,11 +131,15 @@ gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
                                                         v8::Isolate* isolate) {
   return gin::Wrappable<Extension>::GetObjectTemplateBuilder(isolate)
       .SetMethod("load",
-                 base::Bind(&Extension::Load, base::Unretained(this)))
+          base::Bind(&Extension::Load, base::Unretained(this)))
       .SetMethod("enable",
-                 base::Bind(&Extension::Enable, base::Unretained(this)))
+          base::Bind(&Extension::Enable, base::Unretained(this)))
       .SetMethod("disable",
-                 base::Bind(&Extension::Disable, base::Unretained(this)));
+          base::Bind(&Extension::Disable, base::Unretained(this)))
+      .SetMethod("setURLHandler",
+          base::Bind(&Extension::SetURLHandler, base::Unretained(this)))
+      .SetMethod("setReverseURLHandler",
+          base::Bind(&Extension::SetReverseURLHandler, base::Unretained(this)));
 }
 
 Extension::Extension(v8::Isolate* isolate,
@@ -358,14 +368,78 @@ content::WebContents* Extension::MaybeCreateBackgroundContents(
   return extension_host->host_contents();
 }
 
+void Extension::SetURLHandler(gin::Arguments* args) {
+  std::string extension_id;
+  if (!args->GetNext(&extension_id)) {
+    args->ThrowTypeError("`extension_id` must be a string");
+    return;
+  }
+
+  base::Callback<GURL(const GURL&)> callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowTypeError("`callback` must be a function");
+    return;
+  }
+
+  url_override_callbacks_[extension_id] = callback;
+}
+
+void Extension::SetReverseURLHandler(gin::Arguments* args) {
+  std::string extension_id;
+  if (!args->GetNext(&extension_id)) {
+    args->ThrowTypeError("`extension_id` must be a string");
+    return;
+  }
+
+  base::Callback<GURL(const GURL&)> callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowTypeError("`callback` must be a function");
+    return;
+  }
+
+  reverse_url_override_callbacks_[extension_id] = callback;
+}
+
 // static
 bool Extension::HandleURLOverride(GURL* url,
         content::BrowserContext* browser_context) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  const extensions::Extension* extension =
+      extensions::ExtensionRegistry::Get(browser_context)->enabled_extensions()
+          .GetExtensionOrAppByURL(*url);
+  if (!extension)
+    return false;
+
+  if (!base::ContainsKey(url_override_callbacks_, extension->id()))
+    return false;
+
+  GURL new_url = url_override_callbacks_[extension->id()].Run(*url);
+  if (new_url != GURL()) {
+    *url = new_url;
+    return true;
+  }
+
   return false;
 }
 
 bool Extension::HandleURLOverrideReverse(GURL* url,
           content::BrowserContext* browser_context) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  const extensions::Extension* extension =
+      extensions::ExtensionRegistry::Get(browser_context)->enabled_extensions()
+          .GetExtensionOrAppByURL(*url);
+  if (!extension)
+    return false;
+
+  if (!base::ContainsKey(reverse_url_override_callbacks_, extension->id()))
+    return false;
+
+  GURL new_url = reverse_url_override_callbacks_[extension->id()].Run(*url);
+  if (new_url != GURL()) {
+    *url = new_url;
+    return true;
+  }
+
   return false;
 }
 

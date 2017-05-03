@@ -4,7 +4,11 @@ source_set("converters") {
   ]
 
   sources = [
+    "callback_converter.cc",
+    "callback_converter.h",
     "file_path_converter.h",
+    "gurl_converter.h",
+    "scoped_persistent.h",
     "string16_converter.h",
     "value_converter.cc",
     "value_converter.h",
