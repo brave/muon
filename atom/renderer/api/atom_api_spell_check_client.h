@@ -12,13 +12,15 @@
 #include "components/spellcheck/renderer/spellcheck.h"
 #include "components/spellcheck/renderer/spellcheck_worditerator.h"
 #include "native_mate/scoped_persistent.h"
+#include "third_party/WebKit/Source/platform/text/TextCheckerClient.h"
 #include "third_party/WebKit/public/web/WebSpellCheckClient.h"
 
 namespace atom {
 
 namespace api {
 
-class SpellCheckClient : public blink::WebSpellCheckClient {
+class SpellCheckClient : public blink::WebSpellCheckClient,
+                         public blink::TextCheckerClient {
  public:
   SpellCheckClient(const std::string& language,
                    bool auto_spell_correct_turned_on,
