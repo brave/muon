@@ -32,6 +32,9 @@ class AtomProcessManagerDelegate : public ProcessManagerDelegate,
       content::BrowserContext* context) const override;
   bool DeferCreatingStartupBackgroundHosts(
       content::BrowserContext* context) const override;
+  bool IsExtensionBackgroundPageAllowed(
+      content::BrowserContext* context,
+      const Extension& extension) const override;
 
   // content::NotificationObserver implementation:
   void Observe(int type,
