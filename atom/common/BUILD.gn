@@ -63,6 +63,7 @@ source_set("node") {
   ]
 
   deps = [
+    "//media:media_features",
     "//third_party/WebKit/public:blink_headers",
     "//third_party/WebKit/public:mojo_bindings",
     "//electron/brave/common/converters",
