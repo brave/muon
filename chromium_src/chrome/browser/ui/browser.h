@@ -134,25 +134,31 @@ class Browser : public content::WebContentsDelegate {
 
   // Gives beforeunload handlers the chance to cancel the close. Returns whether
   // to proceed with the close. If called while the process begun by
-  // CallBeforeUnloadHandlers is in progress, returns false without taking
+  // TryToCloseWindow is in progress, returns false without taking
   // action.
   // bool ShouldCloseWindow();
 
   // Begins the process of confirming whether the associated browser can be
   // closed. If there are no tabs with beforeunload handlers it will immediately
-  // return false. Otherwise, it starts prompting the user, returns true and
-  // will call |on_close_confirmed| with the result of the user's decision.
+  // return false. If |skip_beforeunload| is true, all beforeunload
+  // handlers will be skipped and window closing will be confirmed without
+  // showing the prompt, the function will return false as well.
+  // Otherwise, it starts prompting the user, returns true and will call
+  // |on_close_confirmed| with the result of the user's decision.
   // After calling this function, if the window will not be closed, call
   // ResetBeforeUnloadHandlers() to reset all beforeunload handlers; calling
   // this function multiple times without an intervening call to
-  // ResetBeforeUnloadHandlers() will run only the beforeunload handlers
+  // ResetTryToCloseWindow() will run only the beforeunload handlers
   // registered since the previous call.
-  bool CallBeforeUnloadHandlers(
+  // Note that if the browser window has been used before, users should always
+  // have a chance to save their work before the window is closed without
+  // triggering beforeunload event.
+  bool TryToCloseWindow(bool skip_beforeunload,
       const base::Callback<void(bool)>& on_close_confirmed);
 
   // Clears the results of any beforeunload confirmation dialogs triggered by a
-  // CallBeforeUnloadHandlers call.
-  void ResetBeforeUnloadHandlers();
+  // TryToCloseWindow call.
+  void ResetTryToCloseWindow();
 
   // Assorted browser commands ////////////////////////////////////////////////
 
