@@ -30,6 +30,9 @@ def main():
 def copy_files(folder_name, source_files, output_dir):
   for source_file in source_files:
     sep = os.sep
+    print "-----------------------"
+    print source_file
+    print "-----------------------"
     source_file = sep.join(source_file.split('/'))
     output_path = os.path.join(output_dir, source_file)
 
