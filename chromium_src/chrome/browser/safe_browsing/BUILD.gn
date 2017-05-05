@@ -1,0 +1,19 @@
+source_set("safe_browsing") {
+  configs += [ "//electron/chromium_src:chromium_src_config" ]
+  include_dirs = [ "//electron/chromium_src" ] # force this to appear before the chromium src dir
+
+  sources = [
+    "safe_browsing_service.cc",
+  ]
+
+  deps = [
+    "//components/safe_browsing_db",
+    "//third_party/protobuf:protobuf_lite",
+  ]
+
+  if (is_win) {
+    cflags = [ "/wd4172", ]
+  } else {
+    cflags = [ "-Wnoreturn-stack-address" ]
+  }
+}

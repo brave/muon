@@ -53,6 +53,8 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/favicon/favicon_utils.h"
+#include "chrome/browser/history/history_tab_helper.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
@@ -107,10 +109,13 @@
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/tab_helper.h"
 #include "brave/browser/api/brave_api_extension.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
 #include "extensions/browser/api/extensions_api_client.h"
+
+using extensions::ExtensionTabUtil;
+using extensions::ExtensionsAPIClient;
 #endif
 
-using extensions::ExtensionsAPIClient;
 using guest_view::GuestViewManager;
 
 namespace mate {
@@ -443,6 +448,9 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
           autofill::AtomAutofillClient::FromWebContents(web_contents),
           locale,
           autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+
+      // favicon::CreateContentFaviconDriverForWebContents(web_contents);
+      HistoryTabHelper::CreateForWebContents(web_contents);
 
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
@@ -1963,14 +1971,6 @@ bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
 
   return tab_helper->ExecuteScriptInTab(args);
 }
-
-void WebContents::SetTabValues(const base::DictionaryValue& values) {
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (!tab_helper)
-    return;
-
-  return tab_helper->SetTabValues(values);
-}
 #endif
 
 bool WebContents::SendIPCSharedMemory(const base::string16& channel,
@@ -2208,8 +2208,10 @@ bool WebContents::IsBackgroundPage() {
 }
 
 v8::Local<v8::Value> WebContents::TabValue() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
   std::unique_ptr<base::DictionaryValue> value(
-      extensions::TabHelper::CreateTabValue(web_contents()));
+    ExtensionTabUtil::CreateTabObject(web_contents())->ToValue().release());
 
   std::unique_ptr<content::V8ValueConverter>
       converter(content::V8ValueConverter::create());
@@ -2368,7 +2370,6 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
                   &WebContents::AuthorizePlugin)
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
-      .SetMethod("setTabValues", &WebContents::SetTabValues)
       .SetMethod("isBackgroundPage", &WebContents::IsBackgroundPage)
       .SetMethod("tabValue", &WebContents::TabValue)
 #endif

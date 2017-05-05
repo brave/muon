@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+#include "atom/browser/importer/in_process_importer_bridge.h"
 #include "base/files/file_util.h"
 #include "base/json/json_reader.h"
 #include "base/macros.h"
@@ -245,7 +246,8 @@ void ChromeImporter::ImportCookies() {
   }
 
   if (!cookies.empty() && !cancelled())
-    bridge_->SetCookies(cookies);
+    static_cast<atom::InProcessImporterBridge*>(bridge_.get())->
+        SetCookies(cookies);
 }
 
 void ChromeImporter::RecursiveReadBookmarksFolder(

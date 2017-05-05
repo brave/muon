@@ -25,9 +25,11 @@
 #include "brightray/browser/brightray_paths.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
 #include "chrome/browser/browser_process_impl.h"
+#include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
 #include "components/prefs/json_pref_store.h"
+#include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/web_ui_controller_factory.h"
@@ -127,6 +129,8 @@ int AtomBrowserMainParts::PreCreateThreads() {
       new BrowserProcessImpl(local_state_task_runner.get()));
   fake_browser_process_->PreCreateThreads();
 
+  local_state_ = g_browser_process->local_state();
+
   // Force MediaCaptureDevicesDispatcher to be created on UI thread.
   brightray::MediaCaptureDevicesDispatcher::GetInstance();
 
@@ -202,7 +206,7 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   // PreProfileInit
   EnsureBrowserContextKeyedServiceFactoriesBuilt();
 
-  browser_context_ = AtomBrowserContext::From("", false);
+  browser_context_ = ProfileManager::GetActiveUserProfile();
   brightray::BrowserMainParts::PreMainMessageLoopRun();
 
   js_env_->OnMessageLoopCreated();

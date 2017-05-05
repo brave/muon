@@ -12,7 +12,7 @@ namespace atom {
 
 class NodeBindingsMac : public NodeBindings {
  public:
-  explicit NodeBindingsMac();
+  NodeBindingsMac();
   virtual ~NodeBindingsMac();
 
   void RunMessageLoop() override;

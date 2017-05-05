@@ -46,7 +46,7 @@ class NodeBindings {
   node::Environment* uv_env() const { return uv_env_; }
 
  protected:
-  explicit NodeBindings();
+  NodeBindings();
 
   // Called to poll events in new thread.
   virtual void PollEvents() = 0;

@@ -45,22 +45,6 @@ config("chromium_src_config") {
   }
 }
 
-source_set("debug") {
-  public_configs = [ ":chromium_src_config" ]
-
-  include_dirs = [
-    # force this to appear before the chromium root src dir
-    ".",
-  ]
-
-  sources = [
-    "net/test/embedded_test_server/stream_listen_socket.cc",
-    "net/test/embedded_test_server/stream_listen_socket.h",
-    "net/test/embedded_test_server/tcp_listen_socket.cc",
-    "net/test/embedded_test_server/tcp_listen_socket.h",
-  ]
-}
-
 source_set("common") {
   configs += [
     ":chromium_src_config",
@@ -128,9 +112,14 @@ source_set("browser") {
 
   public_deps = []
   deps = [
+    ":bookmarks",
     ":devtools",
-    ":importer",
+    ":favicon",
+    ":history",
+    ":password_manager",
+    "chrome/browser/safe_browsing",
     ":sessions",
+    ":web_data",
     "//electron/brave/browser:tab_manager",
     "//chrome/common",
     "//chrome/utility",
@@ -182,12 +171,14 @@ source_set("browser") {
     "chrome/browser/ui/browser.h",
     "chrome/browser/ui/browser_otr_state.cc",
 
-    "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
-    "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
+    "chrome/browser/ui/profile_error_dialog.cc",
 
-    "chrome/browser/process_singleton_posix.cc",
-    "chrome/browser/process_singleton_win.cc",
-    "chrome/browser/process_singleton.h",
+    "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
+    "//chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
+
+    "//chrome/browser/process_singleton_posix.cc",
+    "//chrome/browser/process_singleton_win.cc",
+    "//chrome/browser/process_singleton.h",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.cc",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.h",
     "//chrome/browser/speech/tts_controller.h",
@@ -201,6 +192,7 @@ source_set("browser") {
     "//chrome/browser/speech/tts_platform.h",
     "//chrome/browser/speech/tts_win.cc",
     "chrome/browser/ui/browser_dialogs.h",
+    "chrome/browser/ui/simple_message_box.cc",
     "//chrome/browser/ui/cocoa/color_chooser_mac.mm",
     "//chrome/browser/ui/zoom/chrome_zoom_level_prefs.cc",
     "//chrome/browser/ui/zoom/chrome_zoom_level_prefs.h",
@@ -228,8 +220,8 @@ source_set("browser") {
     "//chrome/browser/printing/printer_query.h",
     "//chrome/browser/printing/printing_message_filter.cc",
     "//chrome/browser/printing/printing_message_filter.h",
-    "chrome/browser/ssl/security_state_tab_helper.cc",
-    "chrome/browser/ssl/security_state_tab_helper.h",
+    "//chrome/browser/ssl/security_state_tab_helper.cc",
+    "//chrome/browser/ssl/security_state_tab_helper.h",
     "//chrome/browser/tab_contents/tab_util.cc",
     "//chrome/browser/tab_contents/tab_util.h",
     "//chrome/browser/win/chrome_process_finder.cc",
@@ -238,9 +230,10 @@ source_set("browser") {
 
   if (is_win) {
     sources += [
+      "//chrome/browser/platform_util_aura.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
-      "chrome/browser/ui/views/color_chooser_win.cc",
+      "//chrome/browser/ui/views/color_chooser_win.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.h",
       "//chrome/browser/ui/views/certificate_viewer_win.cc",
@@ -265,16 +258,10 @@ source_set("browser") {
     sources += [
       "//chrome/browser/ui/certificate_viewer_mac.h",
       "//chrome/browser/ui/certificate_viewer_mac.mm",
+      "chrome/browser/ui/certificate_viewer_mac_views.mm",
     ]
     libs = [
       "SecurityInterface.framework",
-    ]
-  }
-
-  if (use_nss_certs) {
-    sources += [
-      "chrome/browser/certificate_manager_model.cc",
-      "chrome/browser/certificate_manager_model.h"
     ]
   }
 
@@ -346,11 +333,13 @@ source_set("browser") {
     if (enable_extensions) {
       sources += [
         "chrome/browser/extensions/extension_util.cc",
-        "chrome/browser/extensions/extension_util.h",
+        "//chrome/browser/extensions/extension_util.h",
         "chrome/browser/extensions/extension_tab_util.cc",
-        "chrome/browser/extensions/extension_tab_util.h",
+        "//chrome/browser/extensions/extension_tab_util.h",
         "//chrome/browser/extensions/api/messaging/extension_message_port.cc",
         "//chrome/browser/extensions/api/messaging/extension_message_port.h",
+        "chrome/browser/extensions/api/messaging/incognito_connectability.cc",
+        "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
         "//chrome/browser/extensions/api/messaging/message_property_provider.cc",
         "//chrome/browser/extensions/api/messaging/message_property_provider.h",
         "//chrome/browser/extensions/api/messaging/message_service.cc",
@@ -367,6 +356,10 @@ source_set("browser") {
         "//chrome/browser/extensions/api/messaging/native_process_launcher.h",
         "//chrome/browser/extensions/api/messaging/native_process_launcher_posix.cc",
         "//chrome/browser/extensions/api/messaging/native_process_launcher_win.cc",
+        "//chrome/browser/extensions/api/tabs/tabs_constants.cc",
+        "//chrome/browser/extensions/api/tabs/tabs_constants.h",
+        "//chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.cc",
+        "//chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h",
         "//chrome/browser/extensions/event_router_forwarder.cc",
         "//chrome/browser/extensions/event_router_forwarder.h",
       ]
@@ -384,8 +377,8 @@ source_set("browser") {
     }
     if (is_linux) {
       sources += [
-        "//electron/chromium_src/chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.cc",
-        "//electron/chromium_src/chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.h"
+        "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.cc",
+        "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.h"
       ]
     }
 
@@ -399,6 +392,7 @@ source_set("browser") {
 source_set("devtools") {
   configs += [ ":chromium_src_config" ]
   include_dirs = [ "." ] # force this to appear before the chromium src dir
+
   sources = [
     # devtools
     "//chrome/browser/devtools/devtools_network_conditions.cc",
@@ -442,11 +436,12 @@ source_set("devtools") {
 source_set("importer") {
   configs += [ ":chromium_src_config" ]
   include_dirs = [ "." ] # force this to appear before the chromium src dir
+
   sources = [
-    "chrome/browser/importer/external_process_importer_client.cc",
-    "chrome/browser/importer/external_process_importer_client.h",
-    "chrome/browser/importer/external_process_importer_host.cc",
-    "chrome/browser/importer/external_process_importer_host.h",
+    "//chrome/browser/importer/external_process_importer_client.cc",
+    "//chrome/browser/importer/external_process_importer_client.h",
+    "//chrome/browser/importer/external_process_importer_host.cc",
+    "//chrome/browser/importer/external_process_importer_host.h",
     "//chrome/browser/importer/firefox_profile_lock.cc",
     "//chrome/browser/importer/firefox_profile_lock.h",
     "//chrome/browser/importer/firefox_profile_lock_posix.cc",
@@ -455,15 +450,170 @@ source_set("importer") {
     "//chrome/browser/importer/importer_list.h",
     "//chrome/browser/importer/importer_lock_dialog.h",
     "//chrome/browser/importer/importer_progress_observer.h",
-    "chrome/browser/importer/importer_uma.cc",
+    "//chrome/browser/importer/importer_uma.cc",
     "//chrome/browser/importer/importer_uma.h",
-    "chrome/browser/importer/in_process_importer_bridge.cc",
-    "chrome/browser/importer/in_process_importer_bridge.h",
-    "chrome/browser/importer/profile_writer.h",
+    "//chrome/browser/importer/in_process_importer_bridge.cc",
+    "//chrome/browser/importer/in_process_importer_bridge.h",
+    "//chrome/browser/importer/profile_writer.cc",
+    "//chrome/browser/importer/profile_writer.h",
+    "chrome/browser/first_run/first_run.cc",
+    "//chrome/browser/first_run/first_run.h",
   ]
 
   deps = [
-    "//electron/atom/browser",
+    "//chrome/common",
+    "//chrome/utility",
+    ":search_engines",
+  ]
+}
+
+source_set("bookmarks") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  if (is_win) {
+    cflags = [ "/wd4172", ]
+  } else {
+    cflags = [ "-Wnoreturn-stack-address" ]
+  }
+
+  sources = [
+    "chrome/browser/bookmarks/bookmark_model_factory.cc",
+    "//chrome/browser/bookmarks/bookmark_model_factory.h",
+  ]
+
+  deps = [
+    "//components/bookmarks/browser",
+    "//components/keyed_service/content",
+    ":sessions",
+  ]
+}
+
+source_set("search_engines") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "chrome/browser/search_engines/template_url_service_factory.cc",
+    "//chrome/browser/search_engines/template_url_service_factory.h",
+    "chrome/browser/search_engines/ui_thread_search_terms_data.cc",
+    "//chrome/browser/search_engines/ui_thread_search_terms_data.h",
+  ]
+
+  deps = [
+    "//components/keyed_service/content",
+    "//components/search_engines",
+    "//components/omnibox/browser",
+  ]
+}
+
+source_set("sync") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "chrome/browser/sync/glue/sync_start_util.cc",
+  ]
+
+  deps = [
+    ":sessions",
+  ]
+}
+
+source_set("web_data") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "//chrome/browser/web_data_service_factory.cc",
+    "//chrome/browser/web_data_service_factory.h",
+  ]
+
+  deps = [
+    "//components/keyed_service/content",
+    "//components/webdata_services",
+    ":sync",
+  ]
+}
+
+source_set("password_manager") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "chrome/browser/password_manager/password_store_factory.cc",
+    "//chrome/browser/password_manager/password_store_factory.h",
+  ]
+
+  deps = [
+    "//components/password_manager/content/browser",
+    "//components/password_manager/core/browser",
+    "//components/password_manager/core/common",
+  ]
+}
+
+source_set("favicon") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "//chrome/browser/favicon/chrome_favicon_client.cc",
+    "//chrome/browser/favicon/chrome_favicon_client.h",
+    "//chrome/browser/favicon/favicon_service_factory.cc",
+    "//chrome/browser/favicon/favicon_service_factory.h",
+    "//chrome/browser/favicon/favicon_utils.cc",
+    "//chrome/browser/favicon/favicon_utils.h",
+  ]
+
+  deps = [
+    "//components/favicon/content",
+    "//components/favicon/core",
+    "//components/favicon_base",
+    "//components/keyed_service/content",
+    "//components/history/content/browser",
+    "//components/history/core/browser",
+    "//components/history/core/common",
+    ":search",
+  ]
+}
+
+source_set("search") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "chrome/browser/search/search.cc",
+  ]
+
+  deps = [
+    "//content/public/common",
+  ]
+}
+
+source_set("history") {
+  configs += [ ":chromium_src_config" ]
+  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "//chrome/browser/history/chrome_history_backend_client.cc",
+    "//chrome/browser/history/chrome_history_backend_client.h",
+    "//chrome/browser/history/chrome_history_client.cc",
+    "//chrome/browser/history/chrome_history_client.h",
+    "//chrome/browser/history/history_service_factory.cc",
+    "//chrome/browser/history/history_service_factory.h",
+    "//chrome/browser/history/history_tab_helper.cc",
+    "//chrome/browser/history/history_tab_helper.h",
+    "//chrome/browser/history/history_utils.cc",
+    "//chrome/browser/history/history_utils.h",
+  ]
+
+  deps = [
+    "//components/keyed_service/content",
+    "//components/history/content/browser",
+    "//components/history/core/browser",
+    "//components/history/core/common",
+    ":sessions",
+    "chrome/browser/prerender",
   ]
 }
 
@@ -510,9 +660,10 @@ source_set("tab_manager") {
 source_set("sessions") {
   configs += [ ":chromium_src_config" ]
   include_dirs = [ "." ] # force this to appear before the chromium src dir
+
   sources = [
-    "chrome/browser/profiles/incognito_helpers.cc",
-    "chrome/browser/profiles/incognito_helpers.h",
+    "//chrome/browser/profiles/incognito_helpers.cc",
+    "//chrome/browser/profiles/incognito_helpers.h",
     "chrome/browser/profiles/profile.cc",
     "chrome/browser/profiles/profile.h",
     "chrome/browser/profiles/profile_io_data.cc",
@@ -523,6 +674,8 @@ source_set("sessions") {
     "chrome/browser/profiles/profiles_state.h",
     "//chrome/browser/sessions/session_tab_helper.cc",
     "//chrome/browser/sessions/session_tab_helper.h",
+    "//chrome/browser/profiles/sql_init_error_message_ids.cc",
+    "//chrome/browser/profiles/sql_init_error_message_ids.h",
   ]
 
   deps = [

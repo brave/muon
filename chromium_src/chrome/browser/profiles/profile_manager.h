@@ -110,10 +110,14 @@ class ProfileManager : public base::NonThreadSafe {
 
   bool AddProfile(Profile* profile);
 
+  Profile* CreateAndInitializeProfile(const base::FilePath& profile_dir);
+
   const base::FilePath& user_data_dir() const { return user_data_dir_; }
 
- private:
+ protected:
+  virtual Profile* CreateProfileHelper(const base::FilePath& path);
 
+ private:
   // This struct contains information about profiles which are being loaded or
   // were loaded.
   struct ProfileInfo {

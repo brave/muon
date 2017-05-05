@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "atom/browser/importer/profile_writer.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
@@ -23,14 +24,6 @@
 #include "native_mate/dictionary.h"
 
 using content::BrowserThread;
-
-namespace importer {
-void ShowImportLockDialog(gfx::NativeWindow parent,
-                          const base::Callback<void(bool)>& callback) {
-  base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
-                                                base::Bind(callback, false));
-}
-}
 
 namespace atom {
 

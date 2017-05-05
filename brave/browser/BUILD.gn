@@ -33,7 +33,6 @@ source_set("browser") {
     "brave_javascript_dialog_manager.cc",
     "brave_permission_manager.h",
     "brave_permission_manager.cc",
-    "certificate_viewer_mac.mm",
     "renderer_preferences_helper.h",
     "renderer_preferences_helper.cc",
   ]
@@ -56,6 +55,8 @@ source_set("browser") {
     "//components/subresource_filter/content/browser",
     "//components/subresource_filter/core/browser",
     "//components/sync_preferences",
+    "//components/visitedlink/browser",
+    "//components/visitedlink/common",
     "//content/public/common:service_names",
     "//device/usb/mojo",
     "//device/usb/public/interfaces",

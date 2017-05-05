@@ -234,6 +234,8 @@ source_set("utility") {
   ]
 
   deps = [
+    "chromium_src:importer",
+    "//chrome/common",
     "//chrome/utility",
     "//third_party/protobuf:protobuf_lite",
   ]
@@ -243,6 +245,14 @@ source_set("utility") {
     "atom/utility/atom_content_utility_client.h",
     "brave/utility/importer/chrome_importer.cc",
     "brave/utility/importer/chrome_importer.h",
+    "brave/utility/importer/brave_external_process_importer_bridge.cc",
+    "brave/utility/importer/brave_external_process_importer_bridge.h",
+    "brave/utility/importer/firefox_importer.cc",
+    "brave/utility/importer/firefox_importer.h",
+    "brave/utility/importer/importer_creator.cc",
+    "brave/utility/importer/importer_creator.h",
+    "brave/utility/brave_profile_import_handler.cc",
+    "brave/utility/brave_profile_import_handler.h",
   ]
 }
 
