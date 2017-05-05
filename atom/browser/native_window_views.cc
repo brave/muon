@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "atom/browser/ui/views/menu_bar.h"
-#include "atom/browser/ui/views/menu_layout.h"
 #include "atom/browser/window_list.h"
 #include "atom/common/color_util.h"
 #include "atom/common/native_mate_converters/image_converter.h"
@@ -286,9 +285,6 @@ NativeWindowViews::NativeWindowViews(
   if (!window_type.empty())
     SetWindowType(GetAcceleratedWidget(), window_type);
 #endif
-
-  // Add web view.
-  SetLayoutManager(new MenuLayout(this, kMenuBarHeight));
 
   AddChildView(web_view_);
 
@@ -1275,6 +1271,21 @@ void NativeWindowViews::HandleKeyboardEvent(
   } else {
     // When any other keys except single Alt have been pressed/released:
     menu_bar_alt_pressed_ = false;
+  }
+}
+
+void NativeWindowViews::Layout() {
+  const auto size = GetContentsBounds().size();
+  const auto menu_bar_bounds =
+      menu_bar_ ? gfx::Rect(0, 0, size.width(), kMenuBarHeight) : gfx::Rect();
+  if (menu_bar_) {
+    menu_bar_->SetBoundsRect(menu_bar_bounds);
+  }
+
+  if (web_view_) {
+    web_view_->SetBoundsRect(
+        gfx::Rect(0, menu_bar_bounds.height(), size.width(),
+                  size.height() - menu_bar_bounds.height()));
   }
 }
 

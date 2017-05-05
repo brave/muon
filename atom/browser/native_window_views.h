@@ -179,6 +179,7 @@ class NativeWindowViews : public NativeWindow,
       const content::NativeWebKeyboardEvent& event) override;
 
   // views::View:
+  void Layout() override;
   gfx::Size GetMinimumSize() override;
   gfx::Size GetMaximumSize() override;
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;

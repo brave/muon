@@ -226,8 +226,6 @@ source_set("browser") {
       "ui/views/menu_bar.h",
       "ui/views/menu_delegate.cc",
       "ui/views/menu_delegate.h",
-      "ui/views/menu_layout.cc",
-      "ui/views/menu_layout.h",
       "ui/views/menu_model_adapter.cc",
       "ui/views/menu_model_adapter.h",
       "ui/views/native_frame_view.cc",

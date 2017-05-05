@@ -58,7 +58,6 @@ executable("electron_exe") {
   ]
 
   configs -= [ "//build/config/win:console" ]
-  configs += [ "//build/config/win:windowed" ]
 
   data_deps = [
     ":external_binaries",
@@ -133,6 +132,10 @@ executable("electron_exe") {
     "/DELAYLOAD:esent.dll",
     "/DELAYLOAD:API-MS-WIN-CORE-WINRT-L1-1-0.DLL",
     "/DELAYLOAD:API-MS-WIN-CORE-WINRT-STRING-L1-1-0.DLL",
+    # Chrome builds with this minimum environment which makes e.g.
+    # GetSystemMetrics(SM_CXSIZEFRAME) return Windows XP/2003
+    # compatible metrics. See: https://crbug.com/361720
+    "/SUBSYSTEM:WINDOWS,5.02",
   ]
 
   if (is_official_build) {
