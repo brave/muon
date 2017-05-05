@@ -186,11 +186,13 @@ def parse_version(version):
   if version[0] == 'v':
     version = version[1:]
 
-  vs = version.split('.')
-  if len(vs) > 4:
-    return vs[0:4]
-  else:
-    return vs + ['0'] * (4 - len(vs))
+  vs = version.split('+')[0]
+  vs = vs.split('.')
+
+  if len(version.split('+')) == 2:
+    vs = vs + [version.split('+')[1]]
+
+  return vs
 
 
 def boto_path_dirs():

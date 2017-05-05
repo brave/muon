@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-from lib.config import SOURCE_ROOT, get_electron_version
+from lib.config import SOURCE_ROOT, get_electron_version, get_chrome_version
 from lib.util import execute, parse_version, scoped_cwd
 
 
@@ -14,15 +14,18 @@ def main():
     return 1
 
   option = sys.argv[1]
-  increments = ['major', 'minor', 'patch', 'build']
+  increments = ['major', 'minor', 'patch']
   if option in increments:
     version = get_electron_version()
     versions = parse_version(version.split('-')[0])
     versions = increase_version(versions, increments.index(option))
+    chrome = get_chrome_version()
   else:
     versions = parse_version(option)
+    chrome = versions[3]
 
   version = '.'.join(versions[:3])
+  version = version + '+' + chrome
 
   with scoped_cwd(SOURCE_ROOT):
     update_package_json(version)
@@ -30,7 +33,7 @@ def main():
 
 
 def increase_version(versions, index):
-  for i in range(index + 1, 4):
+  for i in range(index + 1, 3):
     versions[i] = '0'
   versions[index] = str(int(versions[index]) + 1)
   return versions
