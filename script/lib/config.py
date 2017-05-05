@@ -43,9 +43,13 @@ def project_name():
   return os.environ.get('npm_config_electron_project_name') or electron_package()['name']
 
 
+def get_chrome_version():
+  version = os.environ.get('npm_config_electron_version') or electron_package()['version']
+  return version.split('+')[1]
+
 def get_electron_version():
   version = os.environ.get('npm_config_electron_version') or electron_package()['version']
-  return 'v' + version
+  return 'v' + version.split('+')[0]
 
 
 def get_platform_key():
