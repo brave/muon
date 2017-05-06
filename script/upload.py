@@ -84,7 +84,11 @@ def main():
   #   run_python_script('upload-windows-pdb.py')
 
   # Upload node headers.
-  run_python_script('upload-node-headers.py', '-v', args.version)
+
+  versions = parse_version(args.version)
+  version = '.'.join(versions[:3])
+
+  run_python_script('upload-node-headers.py', '-v', 'v' + version)
 
 
 def parse_args():
