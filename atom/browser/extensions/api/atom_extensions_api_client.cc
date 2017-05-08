@@ -23,19 +23,6 @@
 
 namespace extensions {
 
-class AtomRequirementsChecker : public RequirementsChecker {
- public:
-  AtomRequirementsChecker() {}
-  ~AtomRequirementsChecker() override {}
-
-  void Start(ResultCallback callback) override {
-    NOTIMPLEMENTED();
-  }
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(AtomRequirementsChecker);
-};
-
 class AtomExtensionWebRequestEventRouterDelegate :
     public WebRequestEventRouterDelegate {
  public:
@@ -82,10 +69,6 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
       const base::Callback<void(bool)>& callback) const override {
     NOTIMPLEMENTED();
     return base::WrapUnique(install_prompt_delegate_);
-  }
-  std::unique_ptr<RequirementsChecker>
-      CreateRequirementsChecker() const override {
-    return base::WrapUnique(new AtomRequirementsChecker());
   }
 
   // Enables the extension identified by |extension_id|.
