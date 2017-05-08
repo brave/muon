@@ -79,10 +79,10 @@ index 5b70b87ce8db373f2593da95f34c575fd45c6801..f181eb3fb5ba9d23d088154966353e75
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index ab942d661a1c4adcabd6a745067c55f817f9ea0c..b246f26442b5ab2f8a83669b304cca16d8f803fb 100644
+index bcf00f91d5cfcd35b61e521dc4b6bffa88c2cd1d..64f0c08a9cb1b9daa2c24ee5cfe485fc2292b7b0 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -3607,6 +3607,9 @@ split_static_library("browser") {
+@@ -3609,6 +3609,9 @@ split_static_library("browser") {
        "//device/battery",
        "//net:net_browser_services",
      ]
@@ -566,7 +566,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@
+@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -856,7 +856,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index fd3bac3bc11b404436e6901c0e1b6d30d3ded4cc..b23643a742047672649944bc386af4f20e8e34ef 100644
+index 42383698887adbf33b35fb603bf444cd8ad1a262..2c38b03182208945c955840616808049112de815 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -779,7 +779,7 @@ if (!is_android) {
@@ -1553,7 +1553,7 @@ diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/compone
 index 4c1c5b9a73ec45da4bf946e042c1d78429261610..8198c4ce9c37a89cc076dac54c0c36d09ab1b670 100644
 --- a/components/printing/renderer/print_web_view_helper_mac.mm
 +++ b/components/printing/renderer/print_web_view_helper_mac.mm
-@@ -74,7 +74,6 @@
+@@ -74,7 +74,6 @@ void PrintWebViewHelper::PrintPagesInternal(
    }
  }
  
@@ -1561,7 +1561,7 @@ index 4c1c5b9a73ec45da4bf946e042c1d78429261610..8198c4ce9c37a89cc076dac54c0c36d0
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -111,7 +110,6 @@
+@@ -111,7 +110,6 @@ bool PrintWebViewHelper::RenderPreviewPage(
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1608,7 +1608,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index e162dd03169f95f4b522650f4f585beef106850c..ca81d874d9c3bad150dde4480c4f97e04cfc48b0 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@ @interface SyntheticPinchEvent : NSObject
+@@ -21,7 +21,7 @@
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1618,10 +1618,10 @@ index e162dd03169f95f4b522650f4f585beef106850c..ca81d874d9c3bad150dde4480c4f97e0
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87fd4d66a51 100644
+index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb441971770 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -138,6 +138,12 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
+@@ -138,6 +138,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
  
  }  // namespace
  
@@ -1634,7 +1634,7 @@ index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87f
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -455,7 +461,9 @@ float FlipYFromRectToScreen(float y, float rect_height) {
+@@ -455,7 +461,9 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
@@ -1644,7 +1644,7 @@ index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87f
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1856,7 +1864,14 @@ - (BOOL)acceptsMouseEventsWhenInactive {
+@@ -1856,7 +1864,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1659,7 +1659,7 @@ index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87f
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2028,6 +2043,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
+@@ -2028,6 +2043,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1667,7 +1667,7 @@ index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87f
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -2041,6 +2057,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
+@@ -2041,6 +2057,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1675,7 +1675,7 @@ index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87f
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2088,8 +2105,10 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+@@ -2088,8 +2105,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1686,7 +1686,7 @@ index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87f
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2449,14 +2468,18 @@ - (void)showLookUpDictionaryOverlayFromRange:(NSRange)range
+@@ -2449,14 +2468,18 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    // do so. For this reason, for now, we accept this non-ideal way of fixing the
    // point offset manually from the view bounds. This should be revisited when
    // fixing issues in TextInputClientMac (https://crbug.com/643233).
@@ -1705,7 +1705,7 @@ index 94985476252380090bb5f89a50ca8dbb24b589a0..6cdd29ddc5b02d1baea4f5c90664b87f
          [self showLookUpDictionaryOverlayInternal:string
                                      baselinePoint:baselinePoint
                                         targetView:targetView];
-@@ -2835,6 +2858,11 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
+@@ -2835,6 +2858,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1745,7 +1745,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index 2b457494ab70022635a2033e92c34dad367d2f67..666dc60c3ca3ab88ec7721c32445a40f8c98375e 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -589,6 +589,7 @@ - (void)draggedImage:(NSImage*)anImage
+@@ -589,6 +589,7 @@ void WebContentsViewMac::CloseTab() {
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -1771,7 +1771,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index ff2c964a68d0b21d46a3b88b2ea6c3ff4d9d0a07..af043f6d204ee90ec54bc7df401a3bd6519b8541 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -347,6 +347,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
+@@ -347,6 +347,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  
