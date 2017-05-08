@@ -67,7 +67,13 @@ bool ReadFromSearchPaths(const std::vector<base::FilePath>& search_paths,
 
 const base::FilePath GetFilePath(const std::string& name) {
   std::vector<std::string> components = base::SplitString(
-      name, "/", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
+      name,
+#if defined(OS_WIN)
+      "/\\",
+#else
+      "/",
+#endif
+      base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
 
   std::vector<base::FilePath::StringType> path_components;
 
