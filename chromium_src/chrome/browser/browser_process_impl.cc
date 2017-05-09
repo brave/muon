@@ -24,6 +24,7 @@
 #include "chrome/browser/status_icons/status_tray.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/component_updater/component_updater_service.h"
+#include "components/password_manager/core/browser/password_manager.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_filter.h"
 #include "components/sync_preferences/pref_service_syncable_factory.h"
@@ -194,13 +195,17 @@ void BrowserProcessImpl::CreateLocalState() {
   CHECK(PathService::Get(chrome::FILE_LOCAL_STATE, &local_state_path));
   scoped_refptr<PrefRegistrySimple> pref_registry = new PrefRegistrySimple;
 
+#if defined(OS_WIN)
+    password_manager::PasswordManager::RegisterLocalPrefs(pref_registry.get());
+#endif
+
   sync_preferences::PrefServiceSyncableFactory factory;
   factory.set_async(false);
   factory.set_user_prefs(
       new JsonPrefStore(local_state_path,
                         local_state_task_runner_.get(),
                         std::unique_ptr<PrefFilter>()));
-  factory.Create(pref_registry.get());
+  local_state_ = factory.Create(pref_registry.get());
 }
 
 bool BrowserProcessImpl::created_local_state() const {
