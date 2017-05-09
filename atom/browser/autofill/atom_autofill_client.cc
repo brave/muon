@@ -94,6 +94,11 @@ PersonalDataManager* AtomAutofillClient::GetPersonalDataManager() {
   return PersonalDataManagerFactory::GetForBrowserContext(context);
 }
 
+autofill::SaveCardBubbleController*
+AtomAutofillClient::GetSaveCardBubbleController() {
+  return nullptr;
+}
+
 scoped_refptr<AutofillWebDataService> AtomAutofillClient::GetDatabase() {
   content::BrowserContext* context = web_contents()->GetBrowserContext();
   return static_cast<brave::BraveBrowserContext*>(context)
