@@ -166,8 +166,7 @@ std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
   tab_object->highlighted = tab_strip && tab_strip->IsTabSelected(tab_index);
   tab_object->pinned = tab_helper->is_pinned();
   tab_object->audible.reset(new bool(contents->WasRecentlyAudible()));
-  tab_object->discarded =
-      g_browser_process->GetTabManager()->IsTabDiscarded(contents);
+  tab_object->discarded = tab_helper->IsDiscarded();
   tab_object->auto_discardable =
       g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
   tab_object->muted_info = CreateMutedInfo(contents);

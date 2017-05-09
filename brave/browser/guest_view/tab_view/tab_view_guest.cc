@@ -155,8 +155,8 @@ void TabViewGuest::Load() {
 
 void TabViewGuest::NavigateGuest(const std::string& src,
                                  bool force_navigation) {
-  // auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (src.empty())  // || tab_helper->is_placeholder())
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (src.empty() || tab_helper->IsDiscarded())
     return;
 
   LoadURLWithParams(GURL(src), content::Referrer(),
@@ -257,11 +257,6 @@ void TabViewGuest::CreateWebContents(
   }
   atom::AtomBrowserContext* browser_context =
       brave::BraveBrowserContext::FromPartition(partition, partition_options);
-
-  bool pinned = false;
-  if (params.GetBoolean("pinned", &pinned)) {
-    options.Set("pinned", pinned);
-  }
 
   content::WebContents::CreateParams create_params(browser_context);
   create_params.guest_delegate = this;

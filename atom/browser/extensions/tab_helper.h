@@ -193,6 +193,7 @@ class TabHelper : public content::WebContentsObserver,
   // Index of the tab within the window
   int index_;
   bool pinned_;
+  bool discarded_;
   bool is_placeholder_;
   bool window_closing_;
 

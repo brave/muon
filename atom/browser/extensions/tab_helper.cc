@@ -14,9 +14,9 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_browser_context.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
+#include "brave/browser/memory/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
-#include "chrome/browser/memory/tab_manager.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -82,6 +82,7 @@ TabHelper::TabHelper(content::WebContents* contents)
           new ScriptExecutor(contents, &script_execution_observers_)),
       index_(TabStripModel::kNoTab),
       pinned_(false),
+      discarded_(false),
       is_placeholder_(false),
       window_closing_(false),
       browser_(nullptr) {
@@ -347,7 +348,15 @@ void TabHelper::TabPinnedStateChanged(TabStripModel* tab_strip_model,
 
 void TabHelper::SetActive(bool active) {
   if (active) {
-    WasShown();
+    if (discarded_) {
+      discarded_ = false;
+      // It's safe to let the tab manager take over again
+      SetAutoDiscardable(true);
+    }
+
+    if (browser_ && index_ != TabStripModel::kNoTab)
+        browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
+
     if (!IsDiscarded()) {
       web_contents()->WasShown();
     }
@@ -358,8 +367,17 @@ void TabHelper::SetActive(bool active) {
 }
 
 void TabHelper::WasShown() {
-  if (browser_ && index_ != TabStripModel::kNoTab)
-    browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
+  if (discarded_) {
+    // load the tab if it is shown without being activate (tab preview)
+    discarded_ = false;
+    SetAutoDiscardable(true);
+    auto helper = content::RestoreHelper::FromWebContents(web_contents());
+    if (helper) {
+      helper->RemoveRestoreHelper();
+    }
+
+    web_contents()->GetController().Reload(content::ReloadType::NORMAL, true);
+  }
 }
 
 void TabHelper::UpdateBrowser(Browser* browser) {
@@ -402,11 +420,25 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 }
 
 bool TabHelper::Discard() {
-  int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-  return !!GetTabManager()->DiscardTabById(web_contents_id);
+  if (guest()->attached()) {
+    int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
+    return !!GetTabManager()->DiscardTabById(web_contents_id);
+  } else {
+    discarded_ = true;
+    content::RestoreHelper::CreateForWebContents(web_contents());
+    auto helper = content::RestoreHelper::FromWebContents(web_contents());
+    helper->ClearNeedsReload();
+    // prevent the tab manager from discarding again because we're not
+    // registered as a discarded tab
+    SetAutoDiscardable(false);
+    return true;
+  }
 }
 
 bool TabHelper::IsDiscarded() {
+  if (discarded_) {
+    return true;
+  }
   return GetTabManager()->IsTabDiscarded(web_contents());
 }
 

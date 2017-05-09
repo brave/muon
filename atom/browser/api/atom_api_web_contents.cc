@@ -67,6 +67,7 @@
 #include "components/autofill/core/browser/autofill_manager.h"
 #include "components/zoom/page_zoom.h"
 #include "components/zoom/zoom_controller.h"
+#include "content/browser/frame_host/navigation_entry_impl.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/browser_plugin_guest_manager.h"
 #include "content/public/browser/favicon_status.h"
@@ -461,12 +462,6 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
     }
-  }
-
-  // TODO(bridiver) - move to TabHelper::Init
-  bool pinned = false;
-  if (options.Get("pinned", &pinned)) {
-    SetPinned(pinned);
   }
 
   Init(isolate);
@@ -2469,14 +2464,63 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
                   tab,
                   options);
 
-  bool active = true;
-  options.Get("active", &active);
-
   bool user_gesture = false;
   options.Get("userGesture", &user_gesture);
 
   int opener_tab_id = -1;
   options.Get("openerTabId", &opener_tab_id);
+
+  auto tab_helper = extensions::TabHelper::FromWebContents(tab);
+
+  bool active = true;
+  options.Get("active", &active);
+  tab_helper->SetActive(active);
+
+  int index = -1;
+  if (options.Get("index", &index)) {
+    tab_helper->SetTabIndex(index);
+  }
+
+  bool pinned = false;
+  if (options.Get("pinned", &pinned) && pinned) {
+    tab_helper->SetPinned(pinned);
+  }
+
+  bool autoDiscardable = true;
+  if (options.Get("autoDiscardable", &autoDiscardable)) {
+    tab_helper->SetAutoDiscardable(autoDiscardable);
+  }
+
+  bool discarded = false;
+  if (options.Get("discarded", &discarded) && discarded && !active) {
+    std::string url;
+    if (options.Get("url", &url)) {
+      std::unique_ptr<content::NavigationEntryImpl> entry =
+          base::WrapUnique(new content::NavigationEntryImpl);
+      entry->SetURL(GURL(url));
+      entry->SetVirtualURL(GURL(url));
+
+      std::string title;
+      if (options.Get("title", &title)) {
+        entry->SetTitle(base::UTF8ToUTF16(title));
+      }
+
+      std::string favicon_url;
+      if (options.Get("faviconUrl", &favicon_url)) {
+        content::FaviconStatus status;
+        status.valid = true;
+        status.url = GURL(favicon_url);
+        entry->GetFavicon() = status;
+      }
+
+      std::vector<std::unique_ptr<content::NavigationEntry>> entries;
+      entries.push_back(std::move(entry));
+      tab->GetController().Restore(entries.size() - 1,
+          content::RestoreType::CURRENT_SESSION, &entries);
+    }
+
+    tab_helper->Discard();
+  }
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != -1) {
@@ -2539,10 +2583,6 @@ void WebContents::CreateTab(mate::Arguments* args) {
   std::string src;
   if (options.Get("src", &src) || options.Get("url", &src)) {
     create_params.SetString("src", src);
-  }
-  bool pinned = false;
-  if (options.Get("pinned", &pinned)) {
-    create_params.SetBoolean("pinned", pinned);
   }
 
   extensions::TabHelper::CreateTab(owner->web_contents(),

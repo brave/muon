@@ -17,19 +17,17 @@ using content::WebContents;
 
 namespace content {
 
-class RestoreHelper : public content::WebContentsObserver,
-                      public content::WebContentsUserData<RestoreHelper> {
- public:
-  explicit RestoreHelper(content::WebContents* contents)
-      : content::WebContentsObserver(contents) {}
-  void ClearNeedsReload() {
-    static_cast<content::WebContentsImpl*>(
-        web_contents())->GetController().needs_reload_ = false;
-  }
-  void RemoveRestoreHelper() {
-    web_contents()->RemoveUserData(UserDataKey());
-  }
-};
+RestoreHelper::RestoreHelper(WebContents* contents)
+    : WebContentsObserver(contents) {}
+
+void RestoreHelper::ClearNeedsReload() {
+  static_cast<WebContentsImpl*>(
+      web_contents())->GetController().needs_reload_ = false;
+}
+
+void RestoreHelper::RemoveRestoreHelper() {
+  web_contents()->RemoveUserData(UserDataKey());
+}
 
 }  // namespace content
 

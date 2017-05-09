@@ -7,9 +7,24 @@
 
 #include "chrome/browser/memory/tab_manager.h"
 
+#include "content/public/browser/web_contents_observer.h"
+#include "content/public/browser/web_contents_user_data.h"
+
 namespace content {
 class WebContents;
 }
+
+namespace content {
+
+class RestoreHelper : public WebContentsObserver,
+                      public WebContentsUserData<RestoreHelper> {
+ public:
+  explicit RestoreHelper(WebContents* contents);
+  void ClearNeedsReload();
+  void RemoveRestoreHelper();
+};
+
+}  // namespace content
 
 namespace memory {
 
