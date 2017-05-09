@@ -46,6 +46,7 @@ class AtomAutofillClient
                            int index);
 
   // AutofillClient:
+  SaveCardBubbleController* GetSaveCardBubbleController() override;
   PersonalDataManager* GetPersonalDataManager() override;
   scoped_refptr<AutofillWebDataService> GetDatabase() override;
   PrefService* GetPrefs() override;
