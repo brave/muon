@@ -194,6 +194,7 @@ class TabHelper : public content::WebContentsObserver,
   int index_;
   bool pinned_;
   bool discarded_;
+  bool active_;
   bool is_placeholder_;
   bool window_closing_;
 

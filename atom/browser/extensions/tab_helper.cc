@@ -83,6 +83,7 @@ TabHelper::TabHelper(content::WebContents* contents)
       index_(TabStripModel::kNoTab),
       pinned_(false),
       discarded_(false),
+      active_(false),
       is_placeholder_(false),
       window_closing_(false),
       browser_(nullptr) {
@@ -205,6 +206,10 @@ content::WebContents* TabHelper::DetachGuest() {
 void TabHelper::DidAttach() {
   MaybeRequestWindowClose();
 
+  if (active_) {
+    browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
+    active_ = false;
+  }
   if (is_placeholder()) {
     guest()->SetCanRunInDetachedState(false);
     if (!pinned_ && !IsDiscarded()) {
@@ -354,14 +359,18 @@ void TabHelper::SetActive(bool active) {
       SetAutoDiscardable(true);
     }
 
-    if (browser_ && index_ != TabStripModel::kNoTab)
-        browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
-
-    if (!IsDiscarded()) {
-      web_contents()->WasShown();
+    if (browser_ && index_ != TabStripModel::kNoTab) {
+      browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
+      if (!IsDiscarded()) {
+        web_contents()->WasShown();
+      }
+    } else {
+      active_ = true;
     }
+
     MaybeAttachOrCreatePinnedTab();
   } else {
+    active_ = false;
     web_contents()->WasHidden();
   }
 }
@@ -471,7 +480,7 @@ bool TabHelper::is_active() const {
     return browser()->tab_strip_model()->
         GetActiveWebContents() == web_contents();
   } else {
-    return false;
+    return active_;
   }
 }
 
