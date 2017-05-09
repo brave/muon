@@ -17,6 +17,7 @@
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "content/common/cursors/webcursor.h"
 #include "content/common/view_messages.h"
+#include "content/public/browser/service_worker_context.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/common/favicon_url.h"
 #include "extensions/features/features.h"
@@ -191,7 +192,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void DisableDeviceEmulation();
   void InspectElement(int x, int y);
   void InspectServiceWorker();
-  void HasServiceWorker(const base::Callback<void(bool)>&);
+  void HasServiceWorker(
+      const base::Callback<void(content::ServiceWorkerCapability capability)>&);
   void UnregisterServiceWorker(const base::Callback<void(bool)>&);
   void SetAudioMuted(bool muted);
   bool IsAudioMuted();
