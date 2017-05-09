@@ -13,11 +13,11 @@ void BridgeTaskRunner::MessageLoopIsReady() {
   CHECK(message_loop);
   for (const TaskPair& task : tasks_) {
     message_loop->task_runner()->PostDelayedTask(
-        base::get<0>(task), base::get<1>(task), base::get<2>(task));
+        std::get<0>(task), std::get<1>(task), std::get<2>(task));
   }
   for (const TaskPair& task : non_nestable_tasks_) {
     message_loop->task_runner()->PostNonNestableDelayedTask(
-        base::get<0>(task), base::get<1>(task), base::get<2>(task));
+        std::get<0>(task), std::get<1>(task), std::get<2>(task));
   }
 }
 
