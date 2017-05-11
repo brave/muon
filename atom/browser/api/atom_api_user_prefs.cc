@@ -70,7 +70,7 @@ void UserPrefs::RegisterDictionaryPref(const std::string& path,
   std::unique_ptr<base::DictionaryValue> copied(
       default_value.CreateDeepCopy());
   profile()->pref_registry()->
-      RegisterDictionaryPref(path, copied.release());
+      RegisterDictionaryPref(path, std::move(copied));
   if (overlay)
     profile()->AddOverlayPref(path);
 }
@@ -80,7 +80,7 @@ void UserPrefs::RegisterListPref(const std::string& path,
   std::unique_ptr<base::ListValue> copied(
       default_value.CreateDeepCopy());
   profile()->pref_registry()->
-      RegisterListPref(path, copied.release());
+      RegisterListPref(path, std::move(copied));
   if (overlay)
     profile()->AddOverlayPref(path);
 }
