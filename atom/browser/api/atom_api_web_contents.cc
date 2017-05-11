@@ -2506,7 +2506,8 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
       }
 
       std::string favicon_url;
-      if (options.Get("faviconUrl", &favicon_url)) {
+      if (options.Get("faviconUrl", &favicon_url) ||
+          options.Get("favIconUrl", &favicon_url)) {
         content::FaviconStatus status;
         status.valid = true;
         status.url = GURL(favicon_url);
