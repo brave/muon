@@ -1,3 +1,36 @@
+diff --git a/base/threading/thread_restrictions.h b/base/threading/thread_restrictions.h
+index 97f3eb6129e108637a2d4de68e9f36ad1e386260..0497412c08294d3fe23e98307e8a9f7b72603bb0 100644
+--- a/base/threading/thread_restrictions.h
++++ b/base/threading/thread_restrictions.h
+@@ -17,7 +17,16 @@ namespace android_webview {
+ class AwFormDatabaseService;
+ class CookieManager;
+ }
+-
++#ifndef MUON_CHROMIUM_BUILD
++// Because of the removal of ScopedAllowWaitForLegacyWebViewApi
++// Added during upgrade to Chromium 59 because of:
++// https://chromium.googlesource.com/chromium/src.git/+/2ce547e8ae0c6a41876f95aec2465a0d1031ae52%5E%21/
++namespace atom {
++  namespace api {
++    class Session;
++  }
++}
++#endif
+ namespace cc {
+ class CompletionEvent;
+ class SingleThreadTaskGraphRunner;
+@@ -182,6 +191,10 @@ class BASE_EXPORT ThreadRestrictions {
+   // DO NOT ADD ANY OTHER FRIEND STATEMENTS, talk to jam or brettw first.
+   // BEGIN ALLOWED USAGE.
+   friend class android_webview::AwFormDatabaseService;
++#ifndef MUON_CHROMIUM_BUILD
++  // See above comment around MUON_CHROMIUM_BUILD
++  friend class atom::api::Session;
++#endif
+   friend class android_webview::CookieManager;
+   friend class content::BrowserShutdownProfileDumper;
+   friend class content::BrowserSurfaceViewManager;
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
 index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c1e3c004f 100644
 --- a/build/config/chrome_build.gni
@@ -2099,7 +2132,7 @@ index d54758bc3e2cda04fda14b23558709c68c20e43a..605d552375464c26a77450e846eef695
      "//content/common:mojo_bindings_blink",
      "//third_party/WebKit/Source/platform",
 diff --git a/third_party/WebKit/public/web/WebArrayBuffer.h b/third_party/WebKit/public/web/WebArrayBuffer.h
-index f862789f97baab626be950be9a4ae3a0fa2ed4a4..06c16368870dc65cdb8569bb3b8f4a15eb587a92 100644
+index f862789f97baab626be950be9a4ae3a0fa2ed4a4..119c846bb9a33ca1da678cfd81e81e733d00e072 100644
 --- a/third_party/WebKit/public/web/WebArrayBuffer.h
 +++ b/third_party/WebKit/public/web/WebArrayBuffer.h
 @@ -51,6 +51,8 @@ class WebArrayBuffer {
@@ -2111,15 +2144,6 @@ index f862789f97baab626be950be9a4ae3a0fa2ed4a4..06c16368870dc65cdb8569bb3b8f4a15
  
    BLINK_EXPORT void Reset();
    BLINK_EXPORT void Assign(const WebArrayBuffer&);
-@@ -67,6 +69,8 @@ class WebArrayBuffer {
- 
-  protected:
-   WebPrivatePtr<DOMArrayBuffer> private_;
-+  DOMArrayBuffer(void* source, unsigned byteLength)
-+      : DOMArrayBufferBase(source, byteLength) {}
- };
- 
- }  // namespace blink
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
 index d3653663265500b0fe1611d00984222d0d9cec86..ed538427b959ee12b5f77dd37e114c330dd5bc0a 100644
 --- a/third_party/boringssl/BUILD.generated.gni
