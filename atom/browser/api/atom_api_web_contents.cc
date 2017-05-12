@@ -630,6 +630,12 @@ void WebContents::AddNewContents(content::WebContents* source,
   auto event = v8::Local<v8::Object>::Cast(
       mate::Event::Create(isolate()).ToV8());
 
+  if (disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB) {
+    auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
+    if (tab_helper)
+      tab_helper->SetActive(true);
+  }
+
   mate::EmitEvent(isolate(),
                   env->process_object(),
                   "add-new-contents",
