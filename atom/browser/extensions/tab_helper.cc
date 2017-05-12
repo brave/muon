@@ -415,6 +415,9 @@ void TabHelper::SetBrowser(Browser* browser) {
 }
 
 void TabHelper::SetWindowId(const int32_t& id) {
+  if (SessionTabHelper::FromWebContents(web_contents())->window_id().id() == id)
+    return;
+
   SessionID session;
   session.set_id(id);
   SessionTabHelper::FromWebContents(web_contents())->SetWindowID(session);
