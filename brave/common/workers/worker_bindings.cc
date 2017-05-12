@@ -106,6 +106,18 @@ WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
           v8::NewStringType::kNormal).ToLocalChecked(),
       v8::Object::New(isolate));
 
+  v8::Local<v8::Object> process = v8::Object::New(isolate);
+  SetReadOnlyProperty(v8_context, v8_context->Global(),
+      v8::String::NewFromUtf8(isolate, "process",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      process);
+  SetReadOnlyProperty(v8_context, process,
+      v8::String::NewFromUtf8(isolate, "type",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      v8::String::NewFromUtf8(isolate, "worker",
+          v8::NewStringType::kNormal).ToLocalChecked());
+
+
   context->module_system()->SetNativeLazyField(v8_context->Global(),
       "postMessage",
       "worker",
