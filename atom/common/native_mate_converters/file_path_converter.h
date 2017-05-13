@@ -39,7 +39,8 @@ template<>
 struct Converter<base::CommandLine> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
                                     const base::CommandLine& val) {
-    return Converter<base::CommandLine::StringVector>::ToV8(isolate, val.argv());
+    return Converter<base::CommandLine::StringVector>::ToV8(isolate,
+                                                            val.argv());
   }
   static bool FromV8(v8::Isolate* isolate,
                      v8::Local<v8::Value> val,
@@ -48,7 +49,8 @@ struct Converter<base::CommandLine> {
       return true;
 
     base::CommandLine::StringVector path;
-    if (Converter<base::CommandLine::StringVector>::FromV8(isolate, val, &path)) {
+    if (Converter<base::CommandLine::StringVector>::FromV8(isolate, val,
+                                                           &path)) {
       *out = base::CommandLine(path);
       return true;
     } else {

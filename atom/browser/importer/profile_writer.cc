@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 
+#include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/api/atom_api_importer.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
@@ -15,10 +16,12 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/common/importer/imported_cookie_entry.h"
 #include "build/build_config.h"
+#include "chrome/browser/browser_process_impl.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
 #include "components/autofill/core/browser/webdata/autofill_entry.h"
 #include "components/autofill/core/common/password_form.h"
+#include "content/public/browser/browser_thread.h"
 
 #if defined(OS_WIN)
 #include "components/password_manager/core/browser/webdata/password_web_data_service_win.h"
@@ -26,7 +29,17 @@
 
 namespace importer {
 void ShowImportLockDialog(gfx::NativeWindow parent,
-                          const base::Callback<void(bool)>& callback) {}
+                          const base::Callback<void(bool)>& callback) {
+  atom::api::App *app =
+    static_cast<BrowserProcessImpl*>(g_browser_process)->app();
+  if (app) {
+    app->Emit("show-warning-dialog");
+  }
+  // TODO(darkdh): emit callback and let users have continue option without
+  // restart anotehr import process
+  content::BrowserThread::PostTask(
+      content::BrowserThread::UI, FROM_HERE, base::Bind(callback, false));
+}
 }  // namespace importer
 
 namespace atom {
@@ -185,10 +198,6 @@ void ProfileWriter::AddCookies(
 
 void ProfileWriter::Initialize(atom::api::Importer* importer) {
   importer_ = importer;
-}
-
-bool ProfileWriter::ShowWarningDialog() {
-  return importer_->Emit("show-warning-dialog");
 }
 
 ProfileWriter::~ProfileWriter() {}
