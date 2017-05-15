@@ -1988,24 +1988,13 @@ index df954bc8f81850101676b1c20f688ba0ba6b4b09..4683b2853bb467ec9f58616ede207d45
      readonly attribute DOMString name;
 +    readonly attribute DOMString path;
      readonly attribute long long lastModified;
-
+ 
      // Non-standard APIs
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index b80b134d9db6ebee55af88010de2718ed46d1860..a2776152333fcc877d6528b3e2a64023243beedf 100644
+index b80b134d9db6ebee55af88010de2718ed46d1860..cd1a7d38170bc705f882ef824d24f070ca7c2255 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 +++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-@@ -2142,6 +2142,10 @@ bool HTMLMediaElement::autoplay() const {
- }
- 
- bool HTMLMediaElement::shouldAutoplay() {
-+  // MUON(darkdh): check autoplay setting
-+  if (!isAutoplayAllowedPerSettings()) {
-+    return false;
-+  }
-   if (document().isSandboxed(SandboxAutomaticFeatures))
-     return false;
-   return m_canAutoplay && m_paused && autoplay();
-@@ -3905,6 +3909,10 @@ void HTMLMediaElement::unlockUserGesture() {
+@@ -3905,6 +3905,10 @@ void HTMLMediaElement::unlockUserGesture() {
  }
  
  bool HTMLMediaElement::isGestureNeededForPlayback() const {
