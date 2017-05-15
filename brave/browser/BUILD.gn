@@ -32,6 +32,8 @@ source_set("browser") {
     "brave_javascript_dialog_manager.cc",
     "brave_permission_manager.h",
     "brave_permission_manager.cc",
+    "importer/brave_external_process_importer_host.cc",
+    "importer/brave_external_process_importer_host.h",
     "password_manager/brave_credentials_filter.h",
     "password_manager/brave_credentials_filter.cc",
     "password_manager/brave_password_manager_client.h",

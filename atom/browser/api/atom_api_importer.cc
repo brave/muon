@@ -18,7 +18,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "brave/browser/brave_content_browser_client.h"
-#include "chrome/browser/importer/external_process_importer_host.h"
+#include "brave/browser/importer/brave_external_process_importer_host.h"
 #include "chrome/browser/importer/importer_list.h"
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/dictionary.h"
@@ -121,7 +121,7 @@ void Importer::StartImport(
 
   import_did_succeed_ = false;
 
-  importer_host_ = new ExternalProcessImporterHost();
+  importer_host_ = new BraveExternalProcessImporterHost();
   importer_host_->set_observer(this);
   importer_host_->StartImportSettings(source_profile, NULL,
                                       imported_items,

@@ -39,7 +39,7 @@ scoped_refptr<Importer> CreateImporterByType(importer::ImporterType type) {
     case importer::TYPE_BOOKMARKS_FILE:
       return new BookmarksFileImporter();
     case importer::TYPE_FIREFOX:
-      return new FirefoxImporter();
+      return new brave::FirefoxImporter();
 #if defined(OS_MACOSX)
     case importer::TYPE_SAFARI:
       return new SafariImporter(base::mac::GetUserLibraryPath());
