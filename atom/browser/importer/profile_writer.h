@@ -46,8 +46,6 @@ class ProfileWriter : public ::ProfileWriter {
   virtual void AddCookies(const std::vector<ImportedCookieEntry>& cookies);
   void Initialize(atom::api::Importer* importer);
 
-  bool ShowWarningDialog();
-
  protected:
   friend class base::RefCountedThreadSafe<ProfileWriter>;
 

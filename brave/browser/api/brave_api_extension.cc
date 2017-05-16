@@ -4,6 +4,7 @@
 
 #include "brave/browser/api/brave_api_extension.h"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -105,8 +106,10 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
   return extension;
 }
 
-std::map<std::string, base::Callback<GURL(const GURL&)>> url_override_callbacks_;
-std::map<std::string, base::Callback<GURL(const GURL&)>> reverse_url_override_callbacks_;
+std::map<std::string,
+  base::Callback<GURL(const GURL&)>> url_override_callbacks_;
+std::map<std::string,
+  base::Callback<GURL(const GURL&)>> reverse_url_override_callbacks_;
 }  // namespace
 
 namespace brave {

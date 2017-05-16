@@ -65,11 +65,12 @@ WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
       worker_(worker),
       weak_ptr_factory_(this) {
   RouteFunction("postMessage",
-              base::Bind(&WorkerBindings::PostMessage, weak_ptr_factory_.GetWeakPtr()));
+      base::Bind(&WorkerBindings::PostMessage,
+                 weak_ptr_factory_.GetWeakPtr()));
   RouteFunction("close",
-              base::Bind(&WorkerBindings::Close, weak_ptr_factory_.GetWeakPtr()));
+      base::Bind(&WorkerBindings::Close, weak_ptr_factory_.GetWeakPtr()));
   RouteFunction("onerror",
-              base::Bind(&WorkerBindings::OnError, weak_ptr_factory_.GetWeakPtr()));
+      base::Bind(&WorkerBindings::OnError, weak_ptr_factory_.GetWeakPtr()));
 
   v8::Local<v8::Context> v8_context = context->v8_context();
   v8::Isolate* isolate = v8_context->GetIsolate();

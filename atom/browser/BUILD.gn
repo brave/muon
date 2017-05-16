@@ -339,6 +339,11 @@ source_set("importer") {
     "//electron/build:electron_config"
   ]
 
+  include_dirs = [
+    # make sure chromium_src comes before the chrome src root
+    "//electron/chromium_src",
+  ]
+
   sources = [
     "importer/external_process_importer_client.cc",
     "importer/external_process_importer_client.h",
