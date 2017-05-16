@@ -1882,18 +1882,6 @@ index 5374bf1652af381a1efc0cdfc96b56b883b716a0..b157bc09a570ca3dd492ffcfb03417e3
    }
  
    bool ShouldSelectReplacement() const {
-diff --git a/third_party/WebKit/Source/core/fileapi/File.idl b/third_party/WebKit/Source/core/fileapi/File.idl
-index df954bc8f81850101676b1c20f688ba0ba6b4b09..4683b2853bb467ec9f58616ede207d456f4112ec 100644
---- a/third_party/WebKit/Source/core/fileapi/File.idl
-+++ b/third_party/WebKit/Source/core/fileapi/File.idl
-@@ -32,6 +32,7 @@
-     Exposed=(Window,Worker),
- ] interface File : Blob {
-     readonly attribute DOMString name;
-+    readonly attribute DOMString path;
-     readonly attribute long long lastModified;
- 
-     // Non-standard APIs
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 index 2fc0977882d944317b26a89c095cde076383e308..0a7d08b2c77e443f3b9ec9bfc4fe2c9e807e3174 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
