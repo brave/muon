@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#include "atom/browser/importer/in_process_importer_bridge.h"
+#include "brave/utility/importer/brave_external_process_importer_bridge.h"
 #include "base/files/file_enumerator.h"
 #include "base/files/file_util.h"
 #include "base/macros.h"
@@ -33,14 +33,11 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
 
   bridge_ = bridge;
   source_path_ = source_profile.source_path;
-
-  bridge_->NotifyStarted();
   if ((items & importer::COOKIES) && !cancelled()) {
     bridge_->NotifyItemStarted(importer::COOKIES);
     ImportCookies();
     bridge_->NotifyItemEnded(importer::COOKIES);
   }
-  bridge_->NotifyEnded();
   bridge_->NotifyEnded();
 }
 
@@ -86,7 +83,7 @@ void FirefoxImporter::ImportCookies() {
   }
 
   if (!cookies.empty() && !cancelled())
-    static_cast<atom::InProcessImporterBridge*>(bridge_.get())->
+    static_cast<BraveExternalProcessImporterBridge*>(bridge_.get())->
         SetCookies(cookies);
 }
 

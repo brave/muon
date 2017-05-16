@@ -121,16 +121,17 @@ index edf5cc054ac3c703cc049509aed223313a875001..6c5f76eb7f8082afa02f6d0721efa3dc
        const importer::ImporterIE7PasswordInfo& importer_password_info) override;
  
 diff --git a/chrome/browser/importer/external_process_importer_host.h b/chrome/browser/importer/external_process_importer_host.h
-index 08c6f28746cc5f345114a942834db18f5c7a1d41..45b3b8072cc352d3fc2824489b2b59a2cee38ec3 100644
+index 08c6f28746cc5f345114a942834db18f5c7a1d41..3a43ae76f054ba449e3b892ea752c62fdad2e5a3 100644
 --- a/chrome/browser/importer/external_process_importer_host.h
 +++ b/chrome/browser/importer/external_process_importer_host.h
-@@ -74,7 +74,9 @@ class ExternalProcessImporterHost
+@@ -74,7 +74,10 @@ class ExternalProcessImporterHost
  
   private:
    // ExternalProcessImporterHost deletes itself in OnImportEnded().
 + protected:
    ~ExternalProcessImporterHost() override;
 + private:
++  friend class BraveExternalProcessImporterHost;
  
    // Launches the utility process that starts the import task, unless bookmark
    // or template model are not yet loaded. If load is not detected, this method
@@ -831,6 +832,18 @@ index 7e05c4e04f8e61b418d373a73bd8901347df4c76..e7e6d9fa5e0d54c7755fe3a38eca6f70
  
    // Holds strings needed by the external importer because the resource
    // bundle isn't available to the external process.
+diff --git a/chrome/utility/importer/firefox_importer.cc b/chrome/utility/importer/firefox_importer.cc
+index 7f8d598bca0243e62f11d5d2ce50d8c25ba88764..d198d90e8872eb1d7a371aeaca6119c73a6cda1c 100644
+--- a/chrome/utility/importer/firefox_importer.cc
++++ b/chrome/utility/importer/firefox_importer.cc
+@@ -147,7 +147,6 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
+     ImportAutofillFormData();
+     bridge_->NotifyItemEnded(importer::AUTOFILL_FORM_DATA);
+   }
+-  bridge_->NotifyEnded();
+ }
+ 
+ void FirefoxImporter::ImportHistory() {
 diff --git a/chrome/utility/importer/firefox_importer.h b/chrome/utility/importer/firefox_importer.h
 index c3f648f165483a2d618438c1a4ef1b35ad6fb10c..3c95e1256465b7b6a009d3bf7619c8f48e2d3d94 100644
 --- a/chrome/utility/importer/firefox_importer.h
