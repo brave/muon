@@ -8,6 +8,7 @@
 #include <string>
 
 #include "gin/converter.h"
+#include "gin/dictionary.h"
 #include "url/gurl.h"
 
 namespace gin {

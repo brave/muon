@@ -13,6 +13,7 @@
 #include "atom/grit/atom_resources.h"  // NOLINT: This file is generated
 #include "atom/grit/electron_api_resources.h"  // NOLINT: This file is generated
 #include "base/win/windows_version.h"
+#include "brave/common/extensions/url_bindings.h"
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
 #include "brave/renderer/extensions/content_settings_bindings.h"
 #include "brave/renderer/extensions/web_frame_bindings.h"
@@ -238,6 +239,14 @@ void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
         Manifest::IsComponentLocation(context->extension()->location()))) {
     v8::Local<v8::Object> process =
         AsObjectOrEmpty(GetOrCreateProcess(context));
+    v8::Local<v8::Object> global = context->v8_context()->Global();
+    v8::Local<v8::Object> muon = v8::Object::New(context->isolate());
+    global->Set(v8::String::NewFromUtf8(context->isolate(), "muon"), muon);
+
+    v8::Local<v8::Object> url =
+        brave::URLBindings::API(context);
+    muon->Set(v8::String::NewFromUtf8(context->isolate(), "url"), url);
+
   }
 }
 
