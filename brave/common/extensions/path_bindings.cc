@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "brave/browser/extensions/path_bindings.h"
+#include "brave/common/extensions/path_bindings.h"
 
 #include "base/files/file_path.h"
 #include "extensions/renderer/script_context.h"

@@ -34,7 +34,7 @@ struct Converter<base::SharedMemory*> {
 
 }  // namespace mate
 
-namespace extensions {
+namespace brave {
 
 class SharedMemoryWrapper : public mate::Wrappable<SharedMemoryWrapper> {
  public:
@@ -72,6 +72,6 @@ class SharedMemoryBindings : public extensions::ObjectBackedNativeHandler {
   DISALLOW_COPY_AND_ASSIGN(SharedMemoryBindings);
 };
 
-}  // namespace extensions
+}  // namespace brave
 
 #endif  // BRAVE_COMMON_EXTENSIONS_SHARED_MEMORY_BINDINGS_H_
