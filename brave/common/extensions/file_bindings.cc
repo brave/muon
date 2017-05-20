@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 
-#include "brave/browser/extensions/file_bindings.h"
+#include "brave/common/extensions/file_bindings.h"
 
 #include "base/files/file_util.h"
 #include "base/files/important_file_writer.h"
@@ -21,7 +21,7 @@
 
 using content::BrowserThread;
 
-namespace extensions {
+namespace brave {
 
 namespace {
 
@@ -137,4 +137,4 @@ void FileBindings::RunCallback(
       v8::Local<v8::Function>::New(isolate, *callback), 1, callback_args);
 }
 
-}  // namespace extensions
+}  // namespace brave

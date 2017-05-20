@@ -66,7 +66,7 @@ v8::Local<v8::Value> Converter<base::SharedMemory*>::ToV8(
 bool Converter<base::SharedMemory*>::FromV8(v8::Isolate* isolate,
     v8::Local<v8::Value> val,
     base::SharedMemory** out) {
-  extensions::SharedMemoryWrapper* wrapper = nullptr;
+  brave::SharedMemoryWrapper* wrapper = nullptr;
   if (!ConvertFromV8(isolate, val, &wrapper) || !wrapper)
     return false;
 
@@ -76,7 +76,7 @@ bool Converter<base::SharedMemory*>::FromV8(v8::Isolate* isolate,
 
 }  // namespace mate
 
-namespace extensions {
+namespace brave {
 
 // static
 mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
@@ -188,4 +188,4 @@ void SharedMemoryBindings::Create(
       SharedMemoryWrapper::CreateFrom(context()->isolate(), args[0]).ToV8());
 }
 
-}  // namespace extensions
+}  // namespace brave
