@@ -133,16 +133,11 @@ gin::Handle<Extension> Extension::Create(v8::Isolate* isolate,
 gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
                                                         v8::Isolate* isolate) {
   return gin::Wrappable<Extension>::GetObjectTemplateBuilder(isolate)
-      .SetMethod("load",
-          base::Bind(&Extension::Load, base::Unretained(this)))
-      .SetMethod("enable",
-          base::Bind(&Extension::Enable, base::Unretained(this)))
-      .SetMethod("disable",
-          base::Bind(&Extension::Disable, base::Unretained(this)))
-      .SetMethod("setURLHandler",
-          base::Bind(&Extension::SetURLHandler, base::Unretained(this)))
-      .SetMethod("setReverseURLHandler",
-          base::Bind(&Extension::SetReverseURLHandler, base::Unretained(this)));
+      .SetMethod("load", &Extension::Load)
+      .SetMethod("enable", &Extension::Enable)
+      .SetMethod("disable", &Extension::Disable)
+      .SetMethod("setURLHandler", &Extension::SetURLHandler)
+      .SetMethod("setReverseURLHandler", &Extension::SetReverseURLHandler);
 }
 
 Extension::Extension(v8::Isolate* isolate,
