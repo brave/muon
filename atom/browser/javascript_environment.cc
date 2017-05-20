@@ -20,6 +20,7 @@
 #include "brave/common/extensions/file_bindings.h"
 #include "brave/common/extensions/path_bindings.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
+#include "brave/common/extensions/url_bindings.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/common/features/feature.h"
 #include "extensions/renderer/logging_native_handler.h"
@@ -168,6 +169,10 @@ JavascriptEnvironment::JavascriptEnvironment()
   v8::Local<v8::Object> file =
       brave::FileBindings::API(script_context_.get());
   muon->Set(v8::String::NewFromUtf8(isolate_, "file"), file);
+
+  v8::Local<v8::Object> url =
+      brave::URLBindings::API(script_context_.get());
+  muon->Set(v8::String::NewFromUtf8(isolate_, "url"), url);
 }
 
 JavascriptEnvironment::~JavascriptEnvironment() {

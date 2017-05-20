@@ -213,6 +213,8 @@ source_set("common") {
     "brave/common/extensions/path_bindings.h",
     "brave/common/extensions/shared_memory_bindings.cc",
     "brave/common/extensions/shared_memory_bindings.h",
+    "brave/common/extensions/url_bindings.cc",
+    "brave/common/extensions/url_bindings.h",
     "brave/common/importer/imported_cookie_entry.h",
     "brave/common/workers/worker_bindings.cc",
     "brave/common/workers/worker_bindings.h",
@@ -223,6 +225,7 @@ source_set("common") {
   deps = [
     "chromium_src:common",
     ":electron_version_header",
+    "//components/url_formatter"
   ]
 
   if (enable_extensions) {
