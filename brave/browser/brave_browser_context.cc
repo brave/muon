@@ -43,6 +43,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/dom_storage_context.h"
 #include "content/public/browser/storage_partition.h"
+#include "extensions/browser/pref_names.h"
 #include "extensions/features/features.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
@@ -376,7 +377,7 @@ void BraveBrowserContext::CreateProfilePrefs(
 
   if (IsOffTheRecord()) {
     overlay_pref_names_.push_back("app_state");
-    overlay_pref_names_.push_back("content_settings");
+    overlay_pref_names_.push_back(extensions::pref_names::kPrefContentSettings);
     overlay_pref_names_.push_back(prefs::kPartitionPerHostZoomLevels);
     user_prefs_.reset(
         original_context()->user_prefs()->CreateIncognitoPrefService(
@@ -391,6 +392,8 @@ void BraveBrowserContext::CreateProfilePrefs(
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
     pref_registry_->RegisterDictionaryPref("app_state");
+    pref_registry_->RegisterDictionaryPref(
+        extensions::pref_names::kPrefContentSettings);
     pref_registry_->RegisterBooleanPref(
         prefs::kSavingBrowserHistoryDisabled, false);
     pref_registry_->RegisterBooleanPref(
