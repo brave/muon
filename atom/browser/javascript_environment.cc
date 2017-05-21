@@ -17,9 +17,10 @@
 #include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
-#include "brave/browser/extensions/file_bindings.h"
-#include "brave/browser/extensions/path_bindings.h"
+#include "brave/common/extensions/file_bindings.h"
+#include "brave/common/extensions/path_bindings.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
+#include "brave/common/extensions/url_bindings.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/common/features/feature.h"
 #include "extensions/renderer/logging_native_handler.h"
@@ -162,12 +163,16 @@ JavascriptEnvironment::JavascriptEnvironment()
   global->Set(v8::String::NewFromUtf8(isolate_, "muon"), muon);
 
   v8::Local<v8::Object> shared_memory =
-      extensions::SharedMemoryBindings::API(script_context_.get());
+      brave::SharedMemoryBindings::API(script_context_.get());
   muon->Set(v8::String::NewFromUtf8(isolate_, "shared_memory"), shared_memory);
 
   v8::Local<v8::Object> file =
-      extensions::FileBindings::API(script_context_.get());
+      brave::FileBindings::API(script_context_.get());
   muon->Set(v8::String::NewFromUtf8(isolate_, "file"), file);
+
+  v8::Local<v8::Object> url =
+      brave::URLBindings::API(script_context_.get());
+  muon->Set(v8::String::NewFromUtf8(isolate_, "url"), url);
 }
 
 JavascriptEnvironment::~JavascriptEnvironment() {

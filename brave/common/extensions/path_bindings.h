@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BRAVE_BROWSER_EXTENSIONS_PATH_BINDINGS_H_
-#define BRAVE_BROWSER_EXTENSIONS_PATH_BINDINGS_H_
+#ifndef BRAVE_COMMON_EXTENSIONS_PATH_BINDINGS_H_
+#define BRAVE_COMMON_EXTENSIONS_PATH_BINDINGS_H_
 
 #include <string>
 #include <utility>
@@ -34,4 +34,4 @@ class PathBindings : public extensions::ObjectBackedNativeHandler {
 
 }  // namespace brave
 
-#endif  // BRAVE_BROWSER_EXTENSIONS_PATH_BINDINGS_H_
+#endif  // BRAVE_COMMON_EXTENSIONS_PATH_BINDINGS_H_

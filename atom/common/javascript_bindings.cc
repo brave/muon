@@ -235,7 +235,7 @@ void JavascriptBindings::OnSharedBrowserMessage(const base::string16& channel,
 
   std::vector<v8::Local<v8::Value>> args_vector;
   args_vector.insert(args_vector.begin(),
-      extensions::SharedMemoryWrapper::CreateFrom(isolate, handle).ToV8());
+      brave::SharedMemoryWrapper::CreateFrom(isolate, handle).ToV8());
 
   // Insert the Event object, event.sender is ipc
   mate::Dictionary event = mate::Dictionary::CreateEmpty(isolate);

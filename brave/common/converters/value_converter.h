@@ -32,6 +32,24 @@ struct Converter<base::ListValue> {
                                    const base::ListValue& val);
 };
 
+template<>
+struct Converter<v8::Local<v8::String> > {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                    v8::Local<v8::String> val);
+  static bool FromV8(v8::Isolate* isolate,
+                     v8::Local<v8::Value> val,
+                     v8::Local<v8::String>* out);
+};
+
+template<>
+struct Converter<v8::Local<v8::Array> > {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                    v8::Local<v8::Array> val);
+  static bool FromV8(v8::Isolate* isolate,
+                     v8::Local<v8::Value> val,
+                     v8::Local<v8::Array>* out);
+};
+
 }  // namespace gin
 
 #endif  // BRAVE_COMMON_CONVERTERS_VALUE_CONVERTER_H_
