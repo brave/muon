@@ -24,6 +24,7 @@
 #include "chrome/common/extensions/chrome_manifest_handlers.h"
 #include "chrome/common/url_constants.h"
 #include "chrome/grit/common_resources.h"  // NOLINT: This file is generated
+#include "content/public/renderer/render_thread.h"
 #include "extensions/common/api/generated_schemas.h"  // NOLINT: This file is generated
 #include "extensions/common/common_manifest_handlers.h"
 #include "extensions/common/extension_api.h"
@@ -215,7 +216,13 @@ std::set<base::FilePath> ChromeExtensionsClient::GetBrowserImagePaths(
 
 bool ChromeExtensionsClient::ExtensionAPIEnabledInExtensionServiceWorkers()
     const {
-  return false;
+  if (!content::RenderThread::Get() ||
+      content::RenderThread::Get()->GenerateRoutingID() == MSG_ROUTING_NONE) {
+    // allow in browser process
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // static

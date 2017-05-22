@@ -11,10 +11,12 @@
 
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"
+#include "atom/browser/javascript_environment.h"
 #include "atom/common/api/event_emitter_caller.h"
+#include "brave/browser/brave_browser_context.h"
 #include "brave/common/converters/callback_converter.h"
-#include "brave/common/converters/gurl_converter.h"
 #include "brave/common/converters/file_path_converter.h"
+#include "brave/common/converters/gurl_converter.h"
 #include "brave/common/converters/value_converter.h"
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
@@ -41,6 +43,7 @@
 #include "gin/dictionary.h"
 
 using base::Callback;
+using content::BrowserContext;
 using content::BrowserURLHandler;
 using content::V8ValueConverter;
 
@@ -122,7 +125,7 @@ gin::WrapperInfo Extension::kWrapperInfo = { gin::kEmbedderNativeGin };
 
 // static
 gin::Handle<Extension> Extension::Create(v8::Isolate* isolate,
-    content::BrowserContext* browser_context) {
+    BrowserContext* browser_context) {
   auto original_context = extensions::ExtensionsBrowserClient::Get()->
         GetOriginalContext(browser_context);
   return gin::CreateHandle(isolate,
@@ -136,13 +139,15 @@ gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
       .SetMethod("load", &Extension::Load)
       .SetMethod("enable", &Extension::Enable)
       .SetMethod("disable", &Extension::Disable)
+      .SetMethod("setScriptContextExtension", &Extension::SetContextForExtension)
       .SetMethod("setURLHandler", &Extension::SetURLHandler)
       .SetMethod("setReverseURLHandler", &Extension::SetReverseURLHandler);
 }
 
 Extension::Extension(v8::Isolate* isolate,
                  BraveBrowserContext* browser_context)
-    : isolate_(isolate),
+    : weak_factory_(this),
+      isolate_(isolate),
       browser_context_(browser_context) {
   extensions::ExtensionRegistry::Get(browser_context_)->AddObserver(this);
 }
@@ -154,7 +159,7 @@ Extension::~Extension() {
   }
 }
 
-void Extension::LoadOnFILEThread(const base::FilePath path,
+void Extension::LoadOnFileThread(const base::FilePath path,
     std::unique_ptr<base::DictionaryValue> manifest,
     extensions::Manifest::Location manifest_location,
     int flags) {
@@ -169,7 +174,7 @@ void Extension::LoadOnFILEThread(const base::FilePath path,
     content::BrowserThread::PostTask(
           content::BrowserThread::UI, FROM_HERE,
           base::Bind(&Extension::NotifyErrorOnUIThread,
-              base::Unretained(this), error));
+              weak_factory_.GetWeakPtr(), error));
   } else {
     scoped_refptr<extensions::Extension> extension = LoadExtension(path,
                               *manifest,
@@ -181,12 +186,12 @@ void Extension::LoadOnFILEThread(const base::FilePath path,
       content::BrowserThread::PostTask(
           content::BrowserThread::UI, FROM_HERE,
           base::Bind(&Extension::NotifyErrorOnUIThread,
-              base::Unretained(this), error));
+              weak_factory_.GetWeakPtr(), error));
     } else {
       content::BrowserThread::PostTask(
           content::BrowserThread::UI, FROM_HERE,
           base::Bind(&Extension::NotifyLoadOnUIThread,
-              base::Unretained(this), base::Passed(&extension)));
+              weak_factory_.GetWeakPtr(), base::Passed(&extension)));
     }
   }
 }
@@ -197,8 +202,7 @@ void Extension::NotifyLoadOnUIThread(
   extensions::ExtensionSystem::Get(browser_context_)->ready().Post(
         FROM_HERE,
         base::Bind(&Extension::AddExtension,
-          // GetWeakPtr()
-          base::Unretained(this), base::Passed(&extension)));
+          weak_factory_.GetWeakPtr(), base::Passed(&extension)));
 }
 
 void Extension::NotifyErrorOnUIThread(const std::string& error) {
@@ -231,8 +235,8 @@ void Extension::Load(gin::Arguments* args) {
 
   content::BrowserThread::PostTask(
         content::BrowserThread::FILE, FROM_HERE,
-        base::Bind(&Extension::LoadOnFILEThread,
-            base::Unretained(this),
+        base::Bind(&Extension::LoadOnFileThread,
+            weak_factory_.GetWeakPtr(),
             path, Passed(&manifest_copy), manifest_location, flags));
 }
 
@@ -246,7 +250,7 @@ void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {
   }
 }
 
-void Extension::OnExtensionReady(content::BrowserContext* browser_context,
+void Extension::OnExtensionReady(BrowserContext* browser_context,
                                 const extensions::Extension* extension) {
   gin::Dictionary install_info = gin::Dictionary::CreateEmpty(isolate());
   install_info.Set("name", extension->non_localized_name());
@@ -270,7 +274,7 @@ void Extension::OnExtensionReady(content::BrowserContext* browser_context,
                   install_info);
 }
 
-void Extension::OnExtensionUnloaded(content::BrowserContext* browser_context,
+void Extension::OnExtensionUnloaded(BrowserContext* browser_context,
                             const extensions::Extension* extension,
                             extensions::UnloadedExtensionInfo::Reason reason) {
   node::Environment* env = node::Environment::GetCurrent(isolate());
@@ -307,7 +311,7 @@ void Extension::Enable(const std::string& extension_id) {
 
 // static
 bool Extension::IsBackgroundPageUrl(GURL url,
-                    content::BrowserContext* browser_context) {
+                    BrowserContext* browser_context) {
   if (!url.is_valid() || url.scheme() != "chrome-extension")
     return false;
 
@@ -335,7 +339,7 @@ bool Extension::IsBackgroundPageWebContents(
 
 // static
 content::WebContents* Extension::MaybeCreateBackgroundContents(
-    content::BrowserContext* browser_context,
+    BrowserContext* browser_context,
     const GURL& target_url) {
   if (!extensions::ExtensionSystem::Get(browser_context)->ready().is_signaled())
     return nullptr;
@@ -364,6 +368,36 @@ content::WebContents* Extension::MaybeCreateBackgroundContents(
     return nullptr;
 
   return extension_host->host_contents();
+}
+
+void Extension::SetContextForExtension(gin::Arguments* args) {
+  std::string extension_id;
+  if (!args->GetNext(&extension_id)) {
+    args->ThrowTypeError("`extension_id` must be a string");
+    return;
+  }
+
+  auto extension_registry =
+      extensions::ExtensionRegistry::Get(browser_context_);
+  const extensions::Extension* extension =
+      extension_registry->GetExtensionById(extension_id,
+                                        extensions::ExtensionRegistry::ENABLED);
+
+  if (!extension) {
+    args->ThrowTypeError("Could not find extension for: " + extension_id);
+    return;
+  }
+
+  atom::JavascriptEnvironment::Get()->SetExtension(extension);
+
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  if (!env)
+    return;
+
+  mate::EmitEvent(isolate(),
+                env->process_object(),
+                "script-context-extension-changed",
+                extension->id());
 }
 
 void Extension::SetURLHandler(gin::Arguments* args) {
@@ -400,7 +434,7 @@ void Extension::SetReverseURLHandler(gin::Arguments* args) {
 
 // static
 bool Extension::HandleURLOverride(GURL* url,
-        content::BrowserContext* browser_context) {
+        BrowserContext* browser_context) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   const extensions::Extension* extension =
       extensions::ExtensionRegistry::Get(browser_context)->enabled_extensions()
@@ -421,7 +455,7 @@ bool Extension::HandleURLOverride(GURL* url,
 }
 
 bool Extension::HandleURLOverrideReverse(GURL* url,
-          content::BrowserContext* browser_context) {
+          BrowserContext* browser_context) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   const extensions::Extension* extension =
       extensions::ExtensionRegistry::Get(browser_context)->enabled_extensions()

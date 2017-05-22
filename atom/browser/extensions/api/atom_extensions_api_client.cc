@@ -10,6 +10,7 @@
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "base/memory/ptr_util.h"
+#include "brave/browser/extensions/api/storage/managed_value_store_cache.h"
 #include "brave/browser/guest_view/brave_guest_view_manager_delegate.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/browser/api/management/management_api_delegate.h"
@@ -167,6 +168,10 @@ void AtomExtensionsAPIClient::AddAdditionalValueStoreCaches(
   // Add temporary (fake) support for chrome.storage.sync.
   (*caches)[settings_namespace::SYNC] =
       new LocalValueStoreCache(factory);
+
+  // Add support for chrome.storage.managed.
+  (*caches)[settings_namespace::MANAGED] =
+      new ManagedValueStoreCache(context, factory, observers);
 }
 
 std::unique_ptr<guest_view::GuestViewManagerDelegate>

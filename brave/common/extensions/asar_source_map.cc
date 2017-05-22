@@ -10,6 +10,7 @@
 #include "base/files/file_util.h"
 #include "base/strings/string_split.h"
 #include "gin/converter.h"
+#include "ui/base/resource/resource_bundle.h"
 
 namespace brave {
 
@@ -103,15 +104,18 @@ const base::FilePath GetFilePath(const std::string& name) {
 
 AsarSourceMap::AsarSourceMap(
     const std::vector<base::FilePath>& search_paths)
-    : search_paths_(search_paths) {
-}
+    : search_paths_(search_paths),
+      source_map_(&ui::ResourceBundle::GetSharedInstance()) {}
 
-AsarSourceMap::~AsarSourceMap() {
-}
+AsarSourceMap::~AsarSourceMap() {}
 
 v8::Local<v8::String> AsarSourceMap::GetSource(
     v8::Isolate* isolate,
     const std::string& name) const {
+  if (source_map_.Contains(name)) {
+    return source_map_.GetSource(isolate, name);
+  }
+
   std::string source;
   if (ReadFromSearchPaths(search_paths_, GetFilePath(name), &source)) {
     if (name != commonjs) {
@@ -131,7 +135,15 @@ v8::Local<v8::String> AsarSourceMap::GetSource(
   return v8::Local<v8::String>();
 }
 
+void AsarSourceMap::RegisterSource(const char* const name, int resource_id) {
+  source_map_.RegisterSource(name, resource_id);
+}
+
 bool AsarSourceMap::Contains(const std::string& name) const {
+  if (source_map_.Contains(name)) {
+    return true;
+  }
+
   std::string source;
   return ReadFromSearchPaths(search_paths_, GetFilePath(name), &source);
 }

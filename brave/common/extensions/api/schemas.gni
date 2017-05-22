@@ -1,11 +1,12 @@
 schema_sources = [
   "tab_view_internal.json",
+  "managed_storage.json",
 ]
 
 uncompiled_sources = [
   "ipc.json",
+  "remote.json",
   "web_frame.json",
-  "remote.json"
 ]
 
 root_namespace = "extensions::api::%(namespace)s"
