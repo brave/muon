@@ -342,6 +342,7 @@ source_set("importer") {
   include_dirs = [
     # make sure chromium_src comes before the chrome src root
     "//electron/chromium_src",
+    "//third_party/boringssl/src/include",
   ]
 
   sources = [
