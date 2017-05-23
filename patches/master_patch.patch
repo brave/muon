@@ -1883,7 +1883,7 @@ index 5374bf1652af381a1efc0cdfc96b56b883b716a0..b157bc09a570ca3dd492ffcfb03417e3
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index 2fc0977882d944317b26a89c095cde076383e308..0a7d08b2c77e443f3b9ec9bfc4fe2c9e807e3174 100644
+index 2fc0977882d944317b26a89c095cde076383e308..b38ce0d2fab0f9e4c539341f5ac6bc887c667fc4 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 +++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 @@ -4033,6 +4033,10 @@ void HTMLMediaElement::UnlockUserGesture() {
@@ -1891,7 +1891,7 @@ index 2fc0977882d944317b26a89c095cde076383e308..0a7d08b2c77e443f3b9ec9bfc4fe2c9e
  
  bool HTMLMediaElement::IsGestureNeededForPlayback() const {
 +  // MUON(darkdh): check autoplay setting
-+  if (!isAutoplayAllowedPerSettings()) {
++  if (!IsAutoplayAllowedPerSettings()) {
 +    return true;
 +  }
    if (!locked_pending_user_gesture_)
