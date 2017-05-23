@@ -65,7 +65,8 @@ class BravePasswordManagerClient
   // PasswordManagerClient implementation.
   bool IsSavingAndFillingEnabledForCurrentPage() const override;
   bool IsFillingEnabledForCurrentPage() const override;
-  bool IsHSTSActiveForHost(const GURL& origin) const override;
+  void PostHSTSQueryForHost(const GURL& origin,
+                            const HSTSCallback& callback) const override;
   bool OnCredentialManagerUsed() override;
   bool PromptUserToSaveOrUpdatePassword(
       std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
