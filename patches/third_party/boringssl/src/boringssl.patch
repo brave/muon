@@ -21,10 +21,10 @@ index e46e43ef11580d4546e0dfc56aeee770bb685d1f..3fd2c6aae7a6de5cf474109b33156784
  
    return NULL;
 diff --git a/crypto/digest/digests.c b/crypto/digest/digests.c
-index fd2a939ab0d7a29a7eef84d1b0017da22652f5ea..632368c6d969db2ce14b6516fdf0659f0f3e5d81 100644
+index 9ad2d491425c9101c65c6152e93501d21426efc7..8be4bd6f572cc775ad893e7f09842ef26d2a1cb8 100644
 --- a/crypto/digest/digests.c
 +++ b/crypto/digest/digests.c
-@@ -272,6 +272,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+@@ -273,6 +273,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
      {NID_sha384, EVP_sha384, SN_sha384, LN_sha384},
      {NID_sha512, EVP_sha512, SN_sha512, LN_sha512},
      {NID_md5_sha1, EVP_md5_sha1, SN_md5_sha1, LN_md5_sha1},
@@ -34,7 +34,7 @@ index fd2a939ab0d7a29a7eef84d1b0017da22652f5ea..632368c6d969db2ce14b6516fdf0659f
      /* As a remnant of signing |EVP_MD|s, OpenSSL returned the corresponding
       * hash function when given a signature OID. To avoid unintended lax parsing
       * of hash OIDs, this is no longer supported for lookup by OID or NID.
-@@ -290,6 +293,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+@@ -291,6 +294,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
       LN_sha384WithRSAEncryption},
      {NID_undef, EVP_sha512, SN_sha512WithRSAEncryption,
       LN_sha512WithRSAEncryption},
@@ -140,7 +140,7 @@ index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..292ca1cff85c3eb7015ab5e57f414517
                                         size_t num) {
    uint32_t A, B, C, D, E;
 diff --git a/include/openssl/digest.h b/include/openssl/digest.h
-index 87de3dfe493267b53f8b1cbad429e055b8a7d31f..a98ff7ac9c5b3a536a52d2a4a5bcc22af9068d96 100644
+index 2de84f7d5dab71cf709fbf770308a2b691232b2e..435e92322108724617b52f6766052a691caf3bf3 100644
 --- a/include/openssl/digest.h
 +++ b/include/openssl/digest.h
 @@ -83,6 +83,7 @@ OPENSSL_EXPORT const EVP_MD *EVP_sha224(void);
@@ -197,7 +197,7 @@ index be3fd96c90b33c460983438f2c068a0e825a4894..88bca9c6487443a723e48bd20b70146b
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index a3435f2bc6c5716177134c37fc5f3cf7b8669e5b..2c107bc08ed99fc10b0f871114cbf00140b4553d 100644
+index 5af3d4f47ac7eac9a6970bd873e2e97d9e74cf5b..099c696675c76098030db9a24f0b6d5cf2ad8fa9 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
 @@ -170,6 +170,14 @@ class Android(object):
@@ -232,7 +232,7 @@ index a3435f2bc6c5716177134c37fc5f3cf7b8669e5b..2c107bc08ed99fc10b0f871114cbf001
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -613,6 +624,21 @@ def main(platforms):
+@@ -621,6 +632,21 @@ def main(platforms):
    ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
@@ -254,7 +254,7 @@ index a3435f2bc6c5716177134c37fc5f3cf7b8669e5b..2c107bc08ed99fc10b0f871114cbf001
  
    # Generate err_data.c
    with open('err_data.c', 'w+') as err_data:
-@@ -692,6 +718,7 @@ def main(platforms):
+@@ -700,6 +726,7 @@ def main(platforms):
        'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,
