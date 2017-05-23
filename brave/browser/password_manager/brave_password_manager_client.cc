@@ -34,6 +34,7 @@
 #include "components/password_manager/content/browser/content_password_manager_driver.h"
 #include "components/password_manager/content/browser/password_manager_internals_service_factory.h"
 #include "components/password_manager/core/browser/browser_save_password_progress_logger.h"
+#include "components/password_manager/core/browser/hsts_query.h"
 #include "components/password_manager/core/browser/log_manager.h"
 #include "components/password_manager/core/browser/log_receiver.h"
 #include "components/password_manager/core/browser/password_bubble_experiment.h"
@@ -60,8 +61,6 @@
 #include "extensions/features/features.h"
 #include "google_apis/gaia/gaia_urls.h"
 #include "net/base/url_util.h"
-#include "net/http/transport_security_state.h"
-#include "net/url_request/url_request_context.h"
 #include "third_party/re2/src/re2/re2.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -186,20 +185,11 @@ bool BravePasswordManagerClient::IsFillingEnabledForCurrentPage() const {
          IsPasswordManagementEnabledForCurrentPage();
 }
 
-bool BravePasswordManagerClient::IsHSTSActiveForHost(
-    const GURL& origin) const {
-  if (!origin.is_valid())
-    return false;
-
-  net::TransportSecurityState* security_state =
-      profile_->GetRequestContext()
-          ->GetURLRequestContext()
-          ->transport_security_state();
-
-  if (!security_state)
-    return false;
-
-  return security_state->ShouldUpgradeToSSL(origin.host());
+void BravePasswordManagerClient::PostHSTSQueryForHost(
+    const GURL& origin,
+    const HSTSCallback& callback) const {
+  password_manager::PostHSTSQueryForHostAndRequestContext(
+       origin, make_scoped_refptr(profile_->GetRequestContext()), callback);
 }
 
 bool BravePasswordManagerClient::OnCredentialManagerUsed() {
