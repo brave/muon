@@ -163,11 +163,11 @@ void NavigationHandle::GetNetErrorCode(mate::Arguments* args) const {
   args->Return(static_cast<int>(navigation_handle_->GetNetErrorCode()));
 }
 
-void NavigationHandle::IsSamePage(mate::Arguments* args) const {
+void NavigationHandle::IsSameDocument(mate::Arguments* args) const {
   if (!CheckNavigationHandle(args))
     return;
 
-  args->Return(navigation_handle_->IsSamePage());
+  args->Return(navigation_handle_->IsSameDocument());
 }
 
 void NavigationHandle::WasServerRedirect(mate::Arguments* args) const {
@@ -291,7 +291,7 @@ void NavigationHandle::BuildPrototype(
       .SetMethod("getPageTransition", &NavigationHandle::GetPageTransition)
       .SetMethod("isExternalProtocol", &NavigationHandle::IsExternalProtocol)
       .SetMethod("getNetErrorCode", &NavigationHandle::GetNetErrorCode)
-      .SetMethod("isSamePage", &NavigationHandle::IsSamePage)
+      .SetMethod("isSameDocument", &NavigationHandle::IsSameDocument)
       .SetMethod("wasServerRedirect", &NavigationHandle::WasServerRedirect)
       .SetMethod("getRedirectChain", &NavigationHandle::GetRedirectChain)
       .SetMethod("hasCommitted", &NavigationHandle::HasCommitted)
