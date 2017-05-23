@@ -46,7 +46,7 @@ class NavigationHandle : public mate::Wrappable<NavigationHandle>,
   void GetPageTransition(mate::Arguments* args) const;
   void IsExternalProtocol(mate::Arguments* args) const;
   void GetNetErrorCode(mate::Arguments* args) const;
-  void IsSamePage(mate::Arguments* args) const;
+  void IsSameDocument(mate::Arguments* args) const;
   void WasServerRedirect(mate::Arguments* args) const;
   void GetRedirectChain(mate::Arguments* args) const;
   void HasCommitted(mate::Arguments* args) const;
