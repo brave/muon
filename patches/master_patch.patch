@@ -1,3 +1,31 @@
+diff --git a/base/threading/thread_restrictions.h b/base/threading/thread_restrictions.h
+index 97f3eb6129e108637a2d4de68e9f36ad1e386260..98147c75a708217b6f1dc437fba19a4587985be8 100644
+--- a/base/threading/thread_restrictions.h
++++ b/base/threading/thread_restrictions.h
+@@ -31,6 +31,13 @@ class StatisticsProviderImpl;
+ namespace chrome_browser_net {
+ class Predictor;
+ }
++
++namespace atom {
++namespace api {
++  class Session;
++}
++}
++
+ namespace content {
+ class BrowserGpuChannelHostFactory;
+ class BrowserGpuMemoryBufferManager;
+@@ -212,6 +219,9 @@ class BASE_EXPORT ThreadRestrictions {
+   friend class ui::CommandBufferLocal;
+   friend class ui::GpuState;
+ 
++  // BB: MUON ones that maybe need to be fixed???
++  friend class atom::api::Session;
++
+   // END ALLOWED USAGE.
+   // BEGIN USAGE THAT NEEDS TO BE FIXED.
+   friend class ::chromeos::BlockingMethodCaller;  // http://crbug.com/125360
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
 index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c1e3c004f 100644
 --- a/build/config/chrome_build.gni
@@ -1883,9 +1911,18 @@ index 5374bf1652af381a1efc0cdfc96b56b883b716a0..b157bc09a570ca3dd492ffcfb03417e3
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index 2fc0977882d944317b26a89c095cde076383e308..b38ce0d2fab0f9e4c539341f5ac6bc887c667fc4 100644
+index 2fc0977882d944317b26a89c095cde076383e308..223eab775d985f06d1775e5141bd4aae6eb5f0d2 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 +++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
+@@ -2626,7 +2626,7 @@ void HTMLMediaElement::setMuted(bool muted) {
+     }
+   }
+ 
+-  // This is called after the volumechange event to make sure isAutoplayingMuted
++  // This is called after the volumechange event to make sure IsAutoplayingMuted
+   // returns the right value when webMediaPlayer receives the volume update.
+   if (GetWebMediaPlayer())
+     GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 @@ -4033,6 +4033,10 @@ void HTMLMediaElement::UnlockUserGesture() {
  }
  
