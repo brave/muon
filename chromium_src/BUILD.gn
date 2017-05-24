@@ -320,6 +320,8 @@ source_set("browser") {
       "//chrome/browser/plugins/plugin_finder.h",
       "//chrome/browser/plugins/plugin_info_message_filter.cc",
       "//chrome/browser/plugins/plugin_info_message_filter.h",
+      "//chrome/browser/plugins/plugin_installer.cc",
+      "//chrome/browser/plugins/plugin_installer.h",
       "//chrome/browser/plugins/plugin_metadata.cc",
       "//chrome/browser/plugins/plugin_metadata.h",
       "//chrome/browser/plugins/plugin_prefs.cc",
