@@ -198,7 +198,6 @@ bool BravePasswordManagerClient::OnCredentialManagerUsed() {
 
 bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
     std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
-    password_manager::CredentialSourceType type,
     bool update_password) {
   // Save password infobar and the password bubble prompts in case of
   // "webby" URLs and do not prompt in case of "non-webby" URLS (e.g. file://).
