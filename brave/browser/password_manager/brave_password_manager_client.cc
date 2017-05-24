@@ -176,7 +176,7 @@ bool BravePasswordManagerClient::IsSavingAndFillingEnabledForCurrentPage()
     const {
   // TODO(melandory): remove saving_and_filling_passwords_enabled_ check from
   // here once we decide to switch to new settings behavior for everyone.
-  return *saving_and_filling_passwords_enabled_ && !IsOffTheRecord() &&
+  return *saving_and_filling_passwords_enabled_ && !IsIncognito() &&
          IsFillingEnabledForCurrentPage();
 }
 
@@ -332,7 +332,7 @@ PrefService* BravePasswordManagerClient::GetPrefs() {
 
 password_manager::PasswordStore*
 BravePasswordManagerClient::GetPasswordStore() const {
-  // Always use EXPLICIT_ACCESS as the password manager checks IsOffTheRecord
+  // Always use EXPLICIT_ACCESS as the password manager checks IsIncognito
   // itself when it shouldn't access the PasswordStore.
   // TODO(gcasto): Is is safe to change this to
   // ServiceAccessType::IMPLICIT_ACCESS?
@@ -387,7 +387,7 @@ bool BravePasswordManagerClient::DidLastPageLoadEncounterSSLErrors() const {
   return ssl_errors;
 }
 
-bool BravePasswordManagerClient::IsOffTheRecord() const {
+bool BravePasswordManagerClient::IsIncognito() const {
   return web_contents()->GetBrowserContext()->IsOffTheRecord();
 }
 
@@ -447,7 +447,7 @@ void BravePasswordManagerClient::PromptUserToEnableAutosigninIfNecessary() {
           GetPrefs()) ||
       !GetPrefs()->GetBoolean(
           password_manager::prefs::kCredentialsEnableAutosignin) ||
-      IsOffTheRecord())
+      IsIncognito())
     return;
 }
 
