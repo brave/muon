@@ -62,7 +62,12 @@ v8::Local<v8::Value> GetSystemMemoryInfo(v8::Isolate* isolate,
 
   mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
   dict.Set("total", mem_info.total);
+#if !defined(OS_WIN)
   dict.Set("free", mem_info.free);
+#endif
+#if defined(OS_WIN)
+  dict.Set("availPhys", mem_info.avail_phys);
+#endif
 
   // NB: These return bogus values on macOS
 #if !defined(OS_MACOSX)
