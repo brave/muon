@@ -66,6 +66,7 @@ void MenuViews::PopupAt(
 
 void MenuViews::ClosePopupAt(int32_t window_id) {
   menu_runners_.erase(window_id);
+  Destroy();
 }
 
 // static
