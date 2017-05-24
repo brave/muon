@@ -84,6 +84,7 @@
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/resource_request_details.h"
 #include "content/public/browser/security_style_explanations.h"
+#include "content/public/browser/service_worker_context.h"
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/storage_partition.h"
@@ -287,10 +288,24 @@ struct Converter<blink::WebSecurityStyle> {
 template<>
 struct Converter<content::ServiceWorkerCapability> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   content::ServiceWorkerCapability val);
-  static content::ServiceWorkerCapability FromV8(v8::Isolate* isolate,
-                     v8::Local<v8::Value> val,
-                     content::ServiceWorkerCapability * out);
+                                   content::ServiceWorkerCapability val) {
+    std::string type;
+    switch (val) {
+      case content::ServiceWorkerCapability::NO_SERVICE_WORKER:
+        type = "no-service-worker";
+        break;
+      case content::ServiceWorkerCapability::SERVICE_WORKER_NO_FETCH_HANDLER:
+        type = "service-worker-no-fetch-handler";
+        break;
+      case content::ServiceWorkerCapability::SERVICE_WORKER_WITH_FETCH_HANDLER:
+        type = "service-worker-with-fetch-handler";
+        break;
+      default:
+        type = "unknown";
+        break;
+    }
+    return mate::ConvertToV8(isolate, type);
+  }
 };
 
 }  // namespace mate
