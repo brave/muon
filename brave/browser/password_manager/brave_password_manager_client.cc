@@ -340,6 +340,11 @@ BravePasswordManagerClient::GetPasswordStore() const {
              profile_, ServiceAccessType::EXPLICIT_ACCESS).get();
 }
 
+safe_browsing::PasswordProtectionService*
+BravePasswordManagerClient::GetPasswordProtectionService() const {
+  return nullptr;
+}
+
 password_manager::PasswordSyncState
 BravePasswordManagerClient::GetPasswordSyncState() const {
   return password_manager_util::GetPasswordSyncState(nullptr);
