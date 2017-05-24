@@ -96,6 +96,8 @@ class BravePasswordManagerClient
       const override;
   PrefService* GetPrefs() override;
   password_manager::PasswordStore* GetPasswordStore() const override;
+  safe_browsing::PasswordProtectionService* GetPasswordProtectionService()
+      const override;
   password_manager::PasswordSyncState GetPasswordSyncState() const override;
   bool WasLastNavigationHTTPError() const override;
   bool DidLastPageLoadEncounterSSLErrors() const override;
