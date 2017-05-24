@@ -54,25 +54,6 @@ bool IsWhitelistedForIncognito(const Extension* extension) {
 
 }  // namespace
 
-bool IsIncognitoEnabled(const std::string& extension_id,
-                        content::BrowserContext* context) {
-  const Extension* extension = ExtensionRegistry::Get(context)->
-      GetExtensionById(extension_id, ExtensionRegistry::ENABLED);
-  if (extension) {
-    if (!util::CanBeIncognitoEnabled(extension))
-      return false;
-    // If this is an existing component extension we always allow it to
-    // work in incognito mode.
-    if (extension->location() == Manifest::COMPONENT ||
-        extension->location() == Manifest::EXTERNAL_COMPONENT) {
-      return true;
-    }
-    if (IsWhitelistedForIncognito(extension))
-      return true;
-  }
-  return ExtensionPrefs::Get(context)->IsIncognitoEnabled(extension_id);
-}
-
 void SetIsIncognitoEnabled(const std::string& extension_id,
                            content::BrowserContext* context,
                            bool enabled) {
