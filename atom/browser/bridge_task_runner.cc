@@ -11,13 +11,13 @@ namespace atom {
 void BridgeTaskRunner::MessageLoopIsReady() {
   auto message_loop = base::MessageLoop::current();
   CHECK(message_loop);
-  for (const TaskPair& task : tasks_) {
+  for (TaskPair& task : tasks_) {
     message_loop->task_runner()->PostDelayedTask(
-        std::get<0>(task), std::get<1>(task), std::get<2>(task));
+        std::get<0>(task), std::move(std::get<1>(task)), std::get<2>(task));
   }
-  for (const TaskPair& task : non_nestable_tasks_) {
+  for (TaskPair& task : non_nestable_tasks_) {
     message_loop->task_runner()->PostNonNestableDelayedTask(
-        std::get<0>(task), std::get<1>(task), std::get<2>(task));
+        std::get<0>(task), std::move(std::get<1>(task)), std::get<2>(task));
   }
 }
 
@@ -56,7 +56,7 @@ bool BridgeTaskRunner::PostNonNestableDelayedTask(
   }
 
   return message_loop->task_runner()->PostNonNestableDelayedTask(
-      from_here, task, delay);
+      from_here, std::move(task), delay);
 }
 
 }  // namespace atom
