@@ -157,7 +157,6 @@ void PlatformNotificationServiceImpl::ClosePersistentNotification(
 void PlatformNotificationServiceImpl::GetDisplayedNotifications(
     content::BrowserContext* browser_context,
     const DisplayedNotificationsCallback& callback) {
-  return false;
 }
 
 }  // namespace brave
