@@ -4,20 +4,20 @@ import("//build/util/branding.gni")
 
 if (is_linux) {
   import("//build/config/linux/pkg_config.gni")
-  pkg_config("gtk2_internal_config") {
+  pkg_config("gtk3_internal_config") {
     packages = [
                  "dbus-1",
                  "gmodule-2.0",
                  "glib-2.0",
-                 "gtk+-2.0",
+                 "gtk+-3.0",
                  "gthread-2.0",
                  "gdk-pixbuf-2.0"
     ]
   }
 
-  group("gtk2") {
+  group("gtk3") {
     public_configs = [
-      ":gtk2_internal_config"
+      ":gtk3_internal_config"
     ]
   }
 }
