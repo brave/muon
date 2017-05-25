@@ -313,19 +313,19 @@
             # incorrect results when passed to pkg-config
             'conditions': [
               ['target_arch=="arm"', {
-                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_wheezy_arm-sysroot',
+                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_jessie_arm-sysroot',
               }],
               ['target_arch=="arm64"', {
                 'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_jessie_arm64-sysroot',
               }],
               ['target_arch=="x64"', {
-                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_wheezy_amd64-sysroot',
+                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_jessie_amd64-sysroot',
               }],
               ['target_arch=="ia32"', {
-                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_wheezy_i386-sysroot',
+                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_jessie_i386-sysroot',
               }],
               ['target_arch=="mipsel"', {
-                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_wheezy_mips-sysroot',
+                'sysroot%': '<!(cd <(DEPTH) && pwd -P)/build/linux/debian_jessie_mips-sysroot',
               }],
             ],
           }, {
