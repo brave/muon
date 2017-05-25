@@ -132,6 +132,13 @@ WebContents* TabStripModel::DetachWebContentsAt(int index) {
   for (auto& observer : observers_)
     observer.TabDetachedAt(removed_contents, index);
 
+  if (active_index() == index) {
+    ui::ListSelectionModel new_model;
+    new_model.Copy(selection_model_);
+    new_model.SetSelectedIndex(kNoTab);
+    selection_model_.Copy(new_model);
+  }
+
   if (empty()) {
     selection_model_.Clear();
     // TabDetachedAt() might unregister observers, so send |TabStripEmpty()| in
