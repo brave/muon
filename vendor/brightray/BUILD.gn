@@ -26,7 +26,7 @@ source_set("common") {
   ]
 
   if (is_linux) {
-    public_configs += [ "//electron/build:gtk2_internal_config" ]
+    public_configs += [ "//electron/build:gtk3_internal_config" ]
   }
 
   sources = [
@@ -157,7 +157,7 @@ source_set("browser") {
     ]
 
     deps += [
-      "//electron/build:gtk2",
+      "//electron/build:gtk3",
     ]
   }
 
