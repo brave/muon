@@ -24,6 +24,5 @@ double SiteEngagementService::GetScoreFromSettings(
     HostContentSettingsMap* settings,
     const GURL& origin) {
   auto clock = base::MakeUnique<base::DefaultClock>();
-  return SiteEngagementScore(clock.get(), origin, settings)
-      .GetScore();
+  return SiteEngagementScore(clock.get(), origin, settings).GetTotalScore();
 }
