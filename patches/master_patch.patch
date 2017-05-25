@@ -2004,10 +2004,38 @@ index df954bc8f81850101676b1c20f688ba0ba6b4b09..4683b2853bb467ec9f58616ede207d45
  
      // Non-standard APIs
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index b80b134d9db6ebee55af88010de2718ed46d1860..cd1a7d38170bc705f882ef824d24f070ca7c2255 100644
+index b80b134d9db6ebee55af88010de2718ed46d1860..eb50c91fb2d7235f70398345eabe712c349870ca 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 +++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-@@ -3905,6 +3905,10 @@ void HTMLMediaElement::unlockUserGesture() {
+@@ -459,6 +459,7 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName,
+       m_playingRemotely(false),
+       m_inOverlayFullscreenVideo(false),
+       m_mostlyFillingViewport(false),
++      m_hasPlayed(false),
+       m_audioTracks(this, AudioTrackList::create(*this)),
+       m_videoTracks(this, VideoTrackList::create(*this)),
+       m_textTracks(this, nullptr),
+@@ -2261,7 +2262,7 @@ Nullable<ExceptionCode> HTMLMediaElement::play() {
+     if (isGestureNeededForPlayback()) {
+       // If we're already playing, then this play would do nothing anyway.
+       // Call playInternal to handle scheduling the promise resolution.
+-      if (!m_paused) {
++      if (!m_paused || m_hasPlayed) {
+         playInternal();
+         return nullptr;
+       }
+@@ -2337,6 +2338,10 @@ void HTMLMediaElement::playInternal() {
+ 
+   m_canAutoplay = false;
+ 
++  // MUON(darkdh): timeline change will trigger a pause which conflicts with
++  // autoplay check
++  m_hasPlayed = true;
++
+   setIgnorePreloadNone();
+   updatePlayState();
+ }
+@@ -3905,6 +3910,10 @@ void HTMLMediaElement::unlockUserGesture() {
  }
  
  bool HTMLMediaElement::isGestureNeededForPlayback() const {
@@ -2018,6 +2046,20 @@ index b80b134d9db6ebee55af88010de2718ed46d1860..cd1a7d38170bc705f882ef824d24f070
    if (!m_lockedPendingUserGesture)
      return false;
  
+diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.h b/third_party/WebKit/Source/core/html/HTMLMediaElement.h
+index a1e734c4bd78d1740da67938702aa71ea34b10a3..796b9d60e5224169404388816353425266be0c64 100644
+--- a/third_party/WebKit/Source/core/html/HTMLMediaElement.h
++++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.h
+@@ -667,6 +667,9 @@ class CORE_EXPORT HTMLMediaElement
+ 
+   bool m_mostlyFillingViewport : 1;
+ 
++  // MUON(darkdh): video has been played
++  bool m_hasPlayed;
++
+   TraceWrapperMember<AudioTrackList> m_audioTracks;
+   TraceWrapperMember<VideoTrackList> m_videoTracks;
+   TraceWrapperMember<TextTrackList> m_textTracks;
 diff --git a/third_party/WebKit/Source/web/WebArrayBuffer.cpp b/third_party/WebKit/Source/web/WebArrayBuffer.cpp
 index 271ec5391d8a9a478f36da58f1b539963cf39724..cd0fcf8bec875485097560c9c8231ad013cc0a96 100644
 --- a/third_party/WebKit/Source/web/WebArrayBuffer.cpp
