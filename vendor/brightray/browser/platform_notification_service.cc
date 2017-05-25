@@ -105,7 +105,6 @@ void PlatformNotificationService::ClosePersistentNotification(
 void PlatformNotificationService::GetDisplayedNotifications(
     content::BrowserContext* browser_context,
     const DisplayedNotificationsCallback& callback) {
-  return false;
 }
 
 }  // namespace brightray
