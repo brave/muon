@@ -137,8 +137,7 @@ void BravePasswordManagerClient::DidClickNever() {
 
 void BravePasswordManagerClient::DidClickUpdate() {
   if (form_to_save_) {
-    const autofill::PasswordForm *form = form_to_save_->submitted_form();
-    form_to_save_->Update(*form);
+    form_to_save_->Update(form_to_save_->pending_credentials());
   }
 }
 
