@@ -12,15 +12,15 @@
 #include "components/spellcheck/renderer/spellcheck.h"
 #include "components/spellcheck/renderer/spellcheck_worditerator.h"
 #include "native_mate/scoped_persistent.h"
-#include "third_party/WebKit/Source/platform/text/TextCheckerClient.h"
 #include "third_party/WebKit/public/web/WebSpellCheckClient.h"
+#include "third_party/WebKit/public/web/WebTextCheckClient.h"
 
 namespace atom {
 
 namespace api {
 
 class SpellCheckClient : public blink::WebSpellCheckClient,
-                         public blink::TextCheckerClient {
+                                blink::WebTextCheckClient {
  public:
   SpellCheckClient(const std::string& language,
                    bool auto_spell_correct_turned_on,
@@ -30,22 +30,26 @@ class SpellCheckClient : public blink::WebSpellCheckClient,
 
  private:
   // blink::WebSpellCheckClient:
-  void CheckSpellingOfString(
-      const String& text,
-      int* misspelled_offset,
-      int* misspelled_length) override;
-  void RequestCheckingOfString(
-      blink::TextCheckingRequest* request) override;
+  void CheckSpelling(
+      const blink::WebString& text,
+      int& offset,
+      int& length,
+      blink::WebVector<blink::WebString>* optional_suggestions) override;
+  void RequestCheckingOfText(
+      const blink::WebString& text,
+      blink::WebTextCheckingCompletion* completion) override;
+  void CancelAllPendingRequests() override {};
+
+
   void ShowSpellingUI(bool show) override;
   bool IsShowingSpellingUI() override;
   void UpdateSpellingUIWithMisspelledWord(
       const blink::WebString& word) override;
-  void CancelAllPendingRequests() { }
 
   // Check the spelling of text.
   void SpellCheckText(const base::string16& text,
                       bool stop_at_first_result,
-                      Vector<blink::TextCheckingResult>* results);
+                      std::vector<blink::WebTextCheckingResult>* results);
 
   // Call JavaScript to check spelling a word.
   bool SpellCheckWord(const base::string16& word_to_check);

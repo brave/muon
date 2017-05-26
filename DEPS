@@ -1,7 +1,3 @@
-include_rules = [
-  "+third_party/boringssl/src/include",
-]
-
 use_relative_paths = True
 
 deps = {

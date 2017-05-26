@@ -18,7 +18,6 @@ config("chromium_src_config") {
     "$root_gen_dir/chrome",
     "$root_gen_dir/components/strings",
     "//skia/config",
-    "//third_party/boringssl/src/include",
     "//third_party/skia/include/core",
   ]
 
@@ -97,6 +96,7 @@ source_set("renderer") {
   }
 
   deps = [
+    "//content/public/common",
     "//chrome/renderer",
     "//components/content_settings/core/common",
     "//third_party/WebKit/public:blink_headers",
@@ -518,6 +518,7 @@ source_set("search_engines") {
   ]
 
   deps = [
+    ":sessions",
     "//components/keyed_service/content",
     "//components/search_engines",
     "//components/omnibox/browser",
@@ -550,6 +551,7 @@ source_set("web_data") {
   ]
 
   deps = [
+    ":sessions",
     "//components/keyed_service/content",
     "//components/webdata_services",
     ":sync",
@@ -620,6 +622,8 @@ source_set("favicon") {
   ]
 
   deps = [
+    "//content/public/browser",
+    "//content/public/common",
     "//components/favicon/content",
     "//components/favicon/core",
     "//components/favicon_base",
@@ -733,8 +737,13 @@ source_set("sessions") {
     "//chrome/browser/profiles/sql_init_error_message_ids.h",
   ]
 
-  deps = [
+  public_deps = [
     "//content/public/browser",
+    "//content/public/common",
+    "//net",
+  ]
+
+  deps = [
     "//third_party/icu",
     "//third_party/protobuf:protobuf_lite",
   ]

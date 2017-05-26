@@ -64,9 +64,9 @@ source_set("node") {
   ]
 
   deps = [
+    "//content/public/common",
     "//media:media_features",
     "//third_party/WebKit/public:blink_headers",
-    "//third_party/WebKit/public:mojo_bindings",
     "//electron/brave/common/converters",
   ]
 }
@@ -117,8 +117,10 @@ source_set("common") {
 
   public_deps = [
     ":node",
+    "//content/public/common",
     "//chrome/common",
     "//components/autofill/core/common",
+    "//ipc",
   ]
 
   deps = [

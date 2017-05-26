@@ -51,30 +51,33 @@ SpellCheckClient::SpellCheckClient(const std::string& language,
 
 SpellCheckClient::~SpellCheckClient() {}
 
-void SpellCheckClient::CheckSpellingOfString(
-    const String& text,
-    int* misspelling_start,
-    int* misspelling_len) {
-  Vector<blink::TextCheckingResult> results;
-  SpellCheckText(text.Characters16(), true, &results);
+void SpellCheckClient::CheckSpelling(
+    const blink::WebString& text,
+    int& misspelling_start,
+    int& misspelling_len,
+    blink::WebVector<blink::WebString>* optional_suggestions) {
+  std::vector<blink::WebTextCheckingResult> results;
+  SpellCheckText(text.Utf16(), true, &results);
   if (results.size() == 1) {
-    *misspelling_start = results[0].location;
-    *misspelling_len = results[0].length;
+    misspelling_start = results[0].location;
+    misspelling_len = results[0].length;
   }
 }
 
-void SpellCheckClient::RequestCheckingOfString(
-    blink::TextCheckingRequest* request) {
-  const String& wtfText = request->Data().GetText();
-  base::string16 text = wtfText.Characters16();
+void SpellCheckClient::RequestCheckingOfText(
+    const blink::WebString& wtfText,
+    blink::WebTextCheckingCompletion* completion) {
+  base::string16 text = wtfText.Utf16();
   if (text.empty() || !HasWordCharacters(text, 0)) {
-    request->DidCancel();
+    if (completion) {
+      completion->DidCancelCheckingText();
+    }
     return;
   }
 
-  Vector<blink::TextCheckingResult> results;
+  std::vector<blink::WebTextCheckingResult> results;
   SpellCheckText(text, false, &results);
-  request->DidSucceed(results);
+  completion->DidFinishCheckingText(results);
 }
 
 void SpellCheckClient::ShowSpellingUI(bool show) {
@@ -91,7 +94,7 @@ void SpellCheckClient::UpdateSpellingUIWithMisspelledWord(
 void SpellCheckClient::SpellCheckText(
     const base::string16& text,
     bool stop_at_first_result,
-    Vector<blink::TextCheckingResult>* results) {
+    std::vector<blink::WebTextCheckingResult>* results) {
   if (text.length() == 0 || spell_check_.IsEmpty())
     return;
 
@@ -126,7 +129,7 @@ void SpellCheckClient::SpellCheckText(
     if (IsValidContraction(word))
       continue;
 
-    blink::TextCheckingResult result;
+    blink::WebTextCheckingResult result;
     result.location = word_start;
     result.length = word_length;
     results->push_back(result);
