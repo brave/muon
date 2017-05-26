@@ -1802,6 +1802,29 @@ index 1d35db54bdeae44770d385f3a3e92e9ce1e64393..8d9b99080ce8234c0bd21ce3b4e4f3c5
  #else
    is_elastic_overscroll_enabled_ = false;
  #endif
+diff --git a/extensions/browser/api/BUILD.gn b/extensions/browser/api/BUILD.gn
+index dcf2bdb8fe74c816c8e8e3cebfb90c819c72c6c2..edc42708dfffc89da64ca24496d7085d5a93edd0 100644
+--- a/extensions/browser/api/BUILD.gn
++++ b/extensions/browser/api/BUILD.gn
+@@ -25,6 +25,9 @@ source_set("api") {
+   ]
+ 
+   public_deps = [
++    "//base",
++    "//content/public/browser",
++    "//content/public/common",
+     "//extensions/browser/api/activity_log",
+     "//extensions/browser/api/alarms",
+     "//extensions/browser/api/app_current_window_internal",
+@@ -73,6 +76,8 @@ source_set("api") {
+     "//extensions/browser/api/usb",
+     "//extensions/browser/api/virtual_keyboard_private",
+     "//extensions/browser/api/web_request",
++    "//extensions/common",
++    "//ipc",
+   ]
+ 
+   deps = [
 diff --git a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
 index 061480b5acd6431aa9abb7e02c98ebe5e881d7f9..f8288fa42f148651fd729dbce111c6c4151fe2b0 100644
 --- a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
@@ -1817,21 +1840,26 @@ index 061480b5acd6431aa9abb7e02c98ebe5e881d7f9..f8288fa42f148651fd729dbce111c6c4
  
    content::WebContents* owner = guest->owner_web_contents();
    if (!owner)
-diff --git a/extensions/browser/updater/BUILD.gn b/extensions/browser/updater/BUILD.gn
-index df80e64d6a71968ca0c984eacace8f6dba14a606..f785b386a443cc3e316c8ffde8a643695a61f34d 100644
---- a/extensions/browser/updater/BUILD.gn
-+++ b/extensions/browser/updater/BUILD.gn
-@@ -3,6 +3,10 @@
- # found in the LICENSE file.
- 
- source_set("updater") {
-+  include_dirs = [
-+    "//third_party/boringssl/src/include",
-+  ]
-+
-   sources = [
-     "extension_cache.h",
-     "extension_downloader.cc",
+diff --git a/extensions/common/BUILD.gn b/extensions/common/BUILD.gn
+index 8af643d9d4269fc523c89e983a9cb9b9800ed1cd..189cf47e7756d8917e87ac6ec46c81a8b1d08b2e 100644
+--- a/extensions/common/BUILD.gn
++++ b/extensions/common/BUILD.gn
+@@ -271,6 +271,7 @@ if (enable_extensions) {
+     public_deps = [
+       ":common_constants",
+       ":mojo",
++      "//content/public/common",
+       "//ipc",
+       "//skia",
+     ]
+@@ -284,7 +285,6 @@ if (enable_extensions) {
+       "//chrome:resources",
+       "//components/crx_file",
+       "//components/url_matcher",
+-      "//content/public/common",
+       "//crypto",
+       "//device/bluetooth",
+       "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
 index 3c12e67ab157eedaf21228288fdad29b23c01cf5..eff910f3b2109c2f427c85a59d60139c106d780c 100644
 --- a/extensions/common/api/_api_features.json
@@ -1878,6 +1906,18 @@ index 3c12e67ab157eedaf21228288fdad29b23c01cf5..eff910f3b2109c2f427c85a59d60139c
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://oobe/*"
+diff --git a/extensions/renderer/BUILD.gn b/extensions/renderer/BUILD.gn
+index fca1114a561be434deb0f0915ed36b3a669b23e9..b049678396ee14eef203ccbc42c71ee6adfc690e 100644
+--- a/extensions/renderer/BUILD.gn
++++ b/extensions/renderer/BUILD.gn
+@@ -245,6 +245,7 @@ source_set("renderer") {
+     "//components/guest_view/renderer",
+     "//content:resources",
+     "//extensions:extensions_resources",
++    "//extensions/common",
+     "//extensions/common/api",
+     "//gin",
+     "//mojo/edk/js",
 diff --git a/extensions/renderer/resources/guest_view/guest_view_container.js b/extensions/renderer/resources/guest_view/guest_view_container.js
 index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8c658431f 100644
 --- a/extensions/renderer/resources/guest_view/guest_view_container.js
@@ -1997,23 +2037,6 @@ index 2fc0977882d944317b26a89c095cde076383e308..223eab775d985f06d1775e5141bd4aae
    if (!locked_pending_user_gesture_)
      return false;
  
-diff --git a/third_party/WebKit/public/BUILD.gn b/third_party/WebKit/public/BUILD.gn
-index d54758bc3e2cda04fda14b23558709c68c20e43a..605d552375464c26a77450e846eef69545463689 100644
---- a/third_party/WebKit/public/BUILD.gn
-+++ b/third_party/WebKit/public/BUILD.gn
-@@ -691,7 +691,11 @@ grit("image_resources") {
- }
- 
- mojom("mojo_bindings") {
--  visibility = [ "//content/*" ]
-+  visibility = [
-+    "//content/*",
-+    "//electron/atom/common/*",
-+    "//electron/atom/app/*",
-+  ]
-   visibility_blink = [
-     "//content/common:mojo_bindings_blink",
-     "//third_party/WebKit/Source/platform",
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
 index d3653663265500b0fe1611d00984222d0d9cec86..ed538427b959ee12b5f77dd37e114c330dd5bc0a 100644
 --- a/third_party/boringssl/BUILD.generated.gni
@@ -2074,19 +2097,3 @@ index b66c652c0aebd8be609ce55e4964f50175098437..48a545ebf11e08ae2344e4ec6a0a7c1a
        ]
        #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
      } else if (is_posix && !is_mac) {
-diff --git a/tools/json_schema_compiler/json_schema_api.gni b/tools/json_schema_compiler/json_schema_api.gni
-index 46cb996f1bcb96cbfd2c12eda19cb2447c247eab..aa50a9540fe9a84e63bc32cb1bfcd964fb198381 100644
---- a/tools/json_schema_compiler/json_schema_api.gni
-+++ b/tools/json_schema_compiler/json_schema_api.gni
-@@ -86,7 +86,10 @@ template("json_schema_api") {
- 
-   generated_config_name = target_name + "_generated_config"
-   config(generated_config_name) {
--    include_dirs = [ root_gen_dir ]
-+    include_dirs = [
-+      root_gen_dir,
-+       "//third_party/boringssl/src/include",
-+    ]
-     visibility = target_visibility
-   }
- 

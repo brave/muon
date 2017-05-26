@@ -240,6 +240,10 @@ source_set("utility") {
     "build:electron_config",
   ]
 
+  public_deps = [
+    "//content/public/common",
+  ]
+
   deps = [
     "chromium_src:importer",
     "//chrome/common",
@@ -271,8 +275,6 @@ source_set("renderer") {
   include_dirs = [
     # force this to appear before the chromium root src dir
     "chromium_src",
-    # needed because TextCheckerClient.h uses paths rooted here
-    "//third_party/WebKit/Source"
   ]
 
   sources = [

@@ -26,6 +26,7 @@ json_schema_api("api_registration") {
 
   deps = [
     ":api",
+    "//extensions/common",
   ]
 
   deps += schema_dependencies

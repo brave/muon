@@ -8,8 +8,7 @@ config("brightray_config") {
     ".",
     "//gpu",
     "//skia/config",
-    "//third_party/skia/include/core",
-    "//third_party/boringssl/src/include",
+    "//third_party/skia/include/core"
   ]
 
   if (is_mac) {
@@ -45,8 +44,11 @@ source_set("common") {
     "common/switches.h",
   ]
 
+  public_deps = [
+    "//content/public/common",
+  ]
+
   deps = [
-    "//content/public/app:both",
     "//ui/base",
     "//storage/browser",
     "//storage/common",
@@ -145,9 +147,15 @@ source_set("browser") {
     "browser/web_ui_controller_factory.h",
   ]
 
+  public_deps = [
+    "//content/public/browser",
+    "//content/public/common",
+  ]
+
   deps = [
     "//third_party/WebKit/public:blink_headers",
     "//content/shell:resources",
+    "//net",
     ":common",
   ]
 
