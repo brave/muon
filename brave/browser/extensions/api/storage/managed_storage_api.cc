@@ -45,25 +45,25 @@ ExtensionFunction::ResponseValue ManagedStorageSetFunction::UseWriteResult(
 }
 
 bool ManagedStorageSetFunction::PreRunValidation(std::string* error) {
-  std::unique_ptr<base::StringValue> val(new base::StringValue("managed"));
+  std::unique_ptr<base::Value> val(new base::Value("managed"));
   args_->Insert(0, std::move(val));
   return StorageStorageAreaSetFunction::PreRunValidation(error);
 }
 
 bool ManagedStorageGetFunction::PreRunValidation(std::string* error) {
-  std::unique_ptr<base::StringValue> val(new base::StringValue("managed"));
+  std::unique_ptr<base::Value> val(new base::Value("managed"));
   args_->Insert(0, std::move(val));
   return StorageStorageAreaGetFunction::PreRunValidation(error);
 }
 
 bool ManagedStorageRemoveFunction::PreRunValidation(std::string* error) {
-  std::unique_ptr<base::StringValue> val(new base::StringValue("managed"));
+  std::unique_ptr<base::Value> val(new base::Value("managed"));
   args_->Insert(0, std::move(val));
   return StorageStorageAreaRemoveFunction::PreRunValidation(error);
 }
 
 bool ManagedStorageClearFunction::PreRunValidation(std::string* error) {
-  std::unique_ptr<base::StringValue> val(new base::StringValue("managed"));
+  std::unique_ptr<base::Value> val(new base::Value("managed"));
   args_->Insert(0, std::move(val));
   return StorageStorageAreaClearFunction::PreRunValidation(error);
 }

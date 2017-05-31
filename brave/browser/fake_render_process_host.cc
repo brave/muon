@@ -90,9 +90,11 @@ class FakeRenderThread : public RenderThread {
   service_manager::InterfaceRegistry* GetInterfaceRegistry() override {
     return nullptr;
   }
-  service_manager::InterfaceProvider* GetRemoteInterfaces() override {
+  service_manager::Connector* GetConnector() override {
     return nullptr;
   }
+  void SetFieldTrialGroup(const std::string& trial_name,
+                                  const std::string& group_name) override {}
 
  private:
   FakeRenderProcessHost* host_;

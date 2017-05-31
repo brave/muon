@@ -71,6 +71,12 @@ class FakeRenderProcessHost : public content::RenderProcessHost {
     return init_time_ - init_time_;
   }
   void FilterURL(bool empty_allowed, GURL* url) override {}
+  void AddWidget(content::RenderWidgetHost* widget) override {}
+  void RemoveWidget(content::RenderWidgetHost* widget) override {}
+  void SetEchoCanceller3(bool enable) override {}
+  void BindInterface(const std::string& interface_name,
+                      mojo::ScopedMessagePipeHandle interface_pipe) override {}
+
 #if BUILDFLAG(ENABLE_WEBRTC)
   void EnableAudioDebugRecordings(const base::FilePath& file) override {}
   void DisableAudioDebugRecordings() override {}
@@ -91,9 +97,6 @@ class FakeRenderProcessHost : public content::RenderProcessHost {
   void GetAudioOutputControllers(
       const GetAudioOutputControllersCallback& callback) const override;
   void ResumeDeferredNavigation(const GlobalRequestID& request_id) override {}
-  service_manager::InterfaceProvider* GetRemoteInterfaces() override {
-    return nullptr;
-  }
   std::unique_ptr<base::SharedPersistentMemoryAllocator>
   TakeMetricsAllocator() override { return nullptr; }
   const base::TimeTicks& GetInitTimeForNavigationMetrics() const override {
