@@ -20,16 +20,16 @@ namespace atom {
 namespace api {
 
 class SpellCheckClient : public blink::WebSpellCheckClient,
-                                blink::WebTextCheckClient {
+                         public blink::WebTextCheckClient {
  public:
   SpellCheckClient(const std::string& language,
                    bool auto_spell_correct_turned_on,
                    v8::Isolate* isolate,
                    v8::Local<v8::Object> provider);
-  virtual ~SpellCheckClient();
+  ~SpellCheckClient() override;
 
  private:
-  // blink::WebSpellCheckClient:
+  // blink::WebTextCheckClient:
   void CheckSpelling(
       const blink::WebString& text,
       int& offset,
@@ -41,6 +41,7 @@ class SpellCheckClient : public blink::WebSpellCheckClient,
   void CancelAllPendingRequests() override {};
 
 
+  // blink::WebSpellCheckClient:
   void ShowSpellingUI(bool show) override;
   bool IsShowingSpellingUI() override;
   void UpdateSpellingUIWithMisspelledWord(

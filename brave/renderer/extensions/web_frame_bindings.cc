@@ -144,6 +144,7 @@ void WebFrameBindings::SetSpellCheckProvider(
       new atom::api::SpellCheckClient(
           lang, auto_spell_correct_turned_on, GetIsolate(), provider));
   context()->web_frame()->View()->SetSpellCheckClient(spell_check_client.get());
+  context()->web_frame()->SetTextCheckClient(spell_check_client.get());
   spell_check_client_.swap(spell_check_client);
 }
 
