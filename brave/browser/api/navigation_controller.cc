@@ -126,6 +126,35 @@ void NavigationController::GetTransientEntry(Arguments* args) const {
   args->Return(navigation_controller_->GetTransientEntry());
 }
 
+void NavigationController::RemoveEntryAtIndex(mate::Arguments* args) {
+  if (!CheckNavigationController(args))
+    return;
+
+  if (args->Length() != 1) {
+    args->ThrowError("Wrong number of arguments");
+    return;
+  }
+
+  int index;
+  if (!args->GetNext(&index)) {
+    args->ThrowError("`index` is a required field");
+    return;
+  }
+
+  if (index < 0) {
+    args->ThrowError("`index` must be greater than 0");
+    return;
+  }
+
+  int maxIndex = navigation_controller_->GetEntryCount() - 1;
+  if (index > maxIndex) {
+    args->ThrowError("`index` must be less than " + std::to_string(maxIndex));
+    return;
+  }
+
+  args->Return(navigation_controller_->RemoveEntryAtIndex(index));
+}
+
 void NavigationController::CanGoBack(Arguments* args) const {
   if (!CheckNavigationController(args))
     return;
@@ -209,6 +238,8 @@ void NavigationController::BuildPrototype(
           &NavigationController::IsInitialNavigation)
       .SetMethod("isInitialBlankNavigation",
           &NavigationController::IsInitialBlankNavigation)
+      .SetMethod("removeEntryAtIndex",
+          &NavigationController::RemoveEntryAtIndex)
       .SetMethod("isValid", &NavigationController::IsValid);
 }
 

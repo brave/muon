@@ -40,6 +40,7 @@ class NavigationController : public mate::Wrappable<NavigationController>,
   void GetPendingEntry(mate::Arguments* args) const;
   void GetPendingEntryIndex(mate::Arguments* args) const;
   void GetTransientEntry(mate::Arguments* args) const;
+  void RemoveEntryAtIndex(mate::Arguments* args);
   void CanGoBack(mate::Arguments* args) const;
   void CanGoForward(mate::Arguments* args) const;
   void CanGoToOffset(int offset, mate::Arguments* args) const;
