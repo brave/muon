@@ -72,6 +72,7 @@ void MenuBar::SetMenu(AtomMenuModel* model) {
     button->SetTextColor(views::Button::STATE_PRESSED, highlight_color_);
     button->SetTextColor(views::Button::STATE_HOVERED, hover_color_);
     button->SetUnderlineColor(enabled_color_);
+    button->SetEnabledTextColors(SK_ColorBLACK);
 #elif defined(OS_WIN)
     button->SetUnderlineColor(color_utils::GetSysSkColor(COLOR_GRAYTEXT));
 #endif

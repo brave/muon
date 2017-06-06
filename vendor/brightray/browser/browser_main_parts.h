@@ -13,6 +13,9 @@
 namespace brightray {
 class ViewsDelegate;
 }
+namespace views {
+class LayoutProvider;
+}
 #endif
 
 #if defined(USE_AURA) && defined(USE_X11)
@@ -46,6 +49,7 @@ class BrowserMainParts : public content::BrowserMainParts {
 
 #if defined(TOOLKIT_VIEWS)
   std::unique_ptr<ViewsDelegate> views_delegate_;
+  std::unique_ptr<views::LayoutProvider> layout_provider_;
 #endif
 
 #if defined(USE_AURA) && defined(USE_X11)
