@@ -16,6 +16,12 @@ namespace base {
 class SupportsUserData;
 }
 
+namespace atom {
+namespace api {
+  class MenuViews;
+}
+}
+
 namespace mate {
 
 // Users should use TrackableObject instead.
@@ -45,6 +51,8 @@ class TrackableObjectBase {
   int32_t weak_map_id_;
 
  private:
+  friend class atom::api::MenuViews;
+
   void Destroy();
 
   base::Closure cleanup_;
