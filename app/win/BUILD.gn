@@ -76,7 +76,7 @@ executable("electron_exe") {
   deps = [
     ":electron_exe_version",
     ":electron_manifest",
-    "//build/config/sanitizers:deps",
+    "//build/config:exe_and_shlib_deps",
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
     "//base",
