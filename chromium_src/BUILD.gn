@@ -66,7 +66,8 @@ source_set("common") {
     ]
 
     deps += [
-      "//electron/brave/common/extensions/api:extensions_features"
+      "//content/public/renderer", # for RenderThread::Get
+      "//electron/brave/common/extensions/api:extensions_features",
     ]
   }
 

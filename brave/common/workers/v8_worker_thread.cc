@@ -77,22 +77,21 @@ void V8WorkerThread::Shutdown() {
 
 void V8WorkerThread::Init() {
   worker.Get().Set(this);
-
-  js_env_.reset(new atom::JavascriptEnvironment());
-
-  env()->module_system()->RegisterNativeHandler(
-      "worker", std::unique_ptr<extensions::NativeHandler>(
-          new WorkerBindings(env()->script_context(), this)));
-
-  memory_pressure_listener_.reset(new base::MemoryPressureListener(
-      base::Bind(&V8WorkerThread::OnMemoryPressure,
-        base::Unretained(this))));
 }
 
 void V8WorkerThread::Run(base::RunLoop* run_loop) {
   base::ThreadRestrictions::SetIOAllowed(true);
   content::WorkerThreadRegistry::Instance()->DidStartCurrentWorkerThread();
-  env()->OnMessageLoopCreated();
+  js_env_.reset(new atom::JavascriptEnvironment());
+  js_env_->module_system()->RegisterNativeHandler(
+      "worker", std::unique_ptr<extensions::NativeHandler>(
+          new WorkerBindings(js_env_->script_context(), this)));
+
+  memory_pressure_listener_.reset(new base::MemoryPressureListener(
+      base::Bind(&V8WorkerThread::OnMemoryPressure,
+        base::Unretained(this))));
+
+  js_env_->OnMessageLoopCreated();
   LoadModule();
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
       base::Bind(&NotifyStart,
@@ -103,20 +102,20 @@ void V8WorkerThread::Run(base::RunLoop* run_loop) {
 
 // Called just after the message loop ends
 void V8WorkerThread::CleanUp() {
-  content::WorkerThreadRegistry::Instance()->WillStopCurrentWorkerThread();
   memory_pressure_listener_.reset();
-  env()->OnMessageLoopDestroying();
+  js_env_->OnMessageLoopDestroying();
   js_env_.reset();
+  content::WorkerThreadRegistry::Instance()->WillStopCurrentWorkerThread();
   V8WorkerThread::Shutdown();
 }
 
 void V8WorkerThread::OnMemoryPressure(
     base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level) {
-  env()->isolate()->LowMemoryNotification();
+  js_env_->isolate()->LowMemoryNotification();
 }
 
 void V8WorkerThread::LoadModule() {
-  if (!env()->source_map().Contains(module_name_)) {
+  if (!js_env_->source_map()->Contains(module_name_)) {
     BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
         base::Bind(&NotifyError,
                     base::Unretained(app()),
@@ -126,8 +125,8 @@ void V8WorkerThread::LoadModule() {
     return;
   }
 
-  ModuleSystem::NativesEnabledScope natives_enabled(env()->module_system());
-  env()->module_system()->Require(module_name_);
+  ModuleSystem::NativesEnabledScope natives_enabled(js_env_->module_system());
+  js_env_->module_system()->Require(module_name_);
 }
 
 }  // namespace brave

@@ -247,7 +247,6 @@ void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
     v8::Local<v8::Object> url =
         brave::URLBindings::API(context);
     muon->Set(v8::String::NewFromUtf8(context->isolate(), "url"), url);
-
   }
 }
 

@@ -44,6 +44,26 @@
       "chrome://brave/*"
     ]
   },
+  "managedStorage": {
+    "channel": "stable",
+    "contexts": [
+      "webui",
+      "extension_service_worker",
+      "blessed_extension"
+    ],
+    "matches": [
+      "chrome://brave/*"
+    ],
+    "location": "component"
+  },
+  "managedStorage.set": {
+    "channel": "stable",
+    "contexts": [
+      "extension_service_worker",
+      "blessed_extension"
+    ],
+    "location": "component"
+  },
   "tabViewInternal": {
     "channel": "stable",
     "contexts": [

@@ -1918,6 +1918,37 @@ index fca1114a561be434deb0f0915ed36b3a669b23e9..b049678396ee14eef203ccbc42c71ee6
      "//extensions/common/api",
      "//gin",
      "//mojo/edk/js",
+diff --git a/extensions/renderer/event_bindings.cc b/extensions/renderer/event_bindings.cc
+index 5e8d41ac33cb30772b39e0ae6163d92f6985ede5..5445535c8beb9a778ac380b252f4d0febbc3fad0 100644
+--- a/extensions/renderer/event_bindings.cc
++++ b/extensions/renderer/event_bindings.cc
+@@ -58,9 +58,23 @@ std::string GetKeyForScriptContext(ScriptContext* script_context) {
+   const std::string& extension_id = script_context->GetExtensionID();
+   CHECK(crx_file::id_util::IdIsValid(extension_id) ||
+         script_context->url().is_valid());
+-  return crx_file::id_util::IdIsValid(extension_id)
+-             ? extension_id
+-             : script_context->url().spec();
++#ifdef MUON_CHROMIUM_BUILD
++   return crx_file::id_util::IdIsValid(extension_id)
++              ? extension_id
++              : script_context->url().spec();
++#else
++  // g_listener_counts is per-process and we need to register per-thread
++  // listeners for workers so we combine the extension_id and url to create
++  // a more unique key for the script context (ex url: chrome://brave/worker/1)
++  std::string key;
++  if (crx_file::id_util::IdIsValid(extension_id)) {
++    key = extension_id;
++  }
++  if (script_context->url().is_valid()) {
++    key += script_context->url().spec();
++  }
++  return key;
++#endif
+ }
+ 
+ // Increments the number of event-listeners for the given |event_name| and
 diff --git a/extensions/renderer/resources/guest_view/guest_view_container.js b/extensions/renderer/resources/guest_view/guest_view_container.js
 index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8c658431f 100644
 --- a/extensions/renderer/resources/guest_view/guest_view_container.js

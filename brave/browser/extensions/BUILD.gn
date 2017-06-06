@@ -16,6 +16,10 @@ static_library("extensions") {
   sources = [
     "api/guest_view/tab_view/tab_view_internal_api.cc",
     "api/guest_view/tab_view/tab_view_internal_api.h",
+    "api/storage/managed_storage_api.cc",
+    "api/storage/managed_storage_api.h",
+    "api/storage/managed_value_store_cache.cc",
+    "api/storage/managed_value_store_cache.h",
     "//extensions/shell/browser/shell_display_info_provider.cc",
   ]
 

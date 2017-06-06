@@ -8,9 +8,8 @@
 #include <memory>
 #include <string>
 
-#include "brave/browser/brave_browser_context.h"
+#include "base/memory/weak_ptr.h"
 #include "extensions/browser/extension_registry_observer.h"
-#include "extensions/common/extension_set.h"
 #include "extensions/common/manifest.h"
 #include "gin/handle.h"
 #include "gin/object_template_builder.h"
@@ -22,6 +21,7 @@ class FilePath;
 
 namespace content {
 class BrowserContext;
+class WebContents;
 }
 
 namespace extensions {
@@ -29,6 +29,8 @@ class Extension;
 }
 
 namespace brave {
+
+class BraveBrowserContext;
 
 namespace api {
 
@@ -41,6 +43,7 @@ class Extension : public gin::Wrappable<Extension>,
 
   gin::ObjectTemplateBuilder
       GetObjectTemplateBuilder(v8::Isolate* isolate) override;
+
   static bool HandleURLOverride(GURL* url,
                                      content::BrowserContext* browser_context);
   static bool HandleURLOverrideReverse(GURL* url,
@@ -53,14 +56,13 @@ class Extension : public gin::Wrappable<Extension>,
                                       content::BrowserContext* browser_context,
                                       const GURL& target_url);
 
-
  protected:
   Extension(v8::Isolate* isolate, BraveBrowserContext* browser_context);
   ~Extension() override;
 
   void NotifyLoadOnUIThread(scoped_refptr<extensions::Extension> extension);
   void NotifyErrorOnUIThread(const std::string& error);
-  void LoadOnFILEThread(const base::FilePath path,
+  void LoadOnFileThread(const base::FilePath path,
       std::unique_ptr<base::DictionaryValue> manifest,
       extensions::Manifest::Location manifest_location,
       int flags);
@@ -71,17 +73,19 @@ class Extension : public gin::Wrappable<Extension>,
   void OnExtensionUnloaded(content::BrowserContext* browser_context,
                     const extensions::Extension* extension,
                     extensions::UnloadedExtensionInfo::Reason reason) override;
-
-
   void SetURLHandler(gin::Arguments* args);
+  void CreateExtensionContext(gin::Arguments* args);
   void SetReverseURLHandler(gin::Arguments* args);
   void Disable(const std::string& extension_id);
   void Enable(const std::string& extension_id);
+  void SetContextForExtension(gin::Arguments* args);
+
   v8::Isolate* isolate() { return isolate_; }
 
  private:
+  base::WeakPtrFactory<Extension> weak_factory_;
   v8::Isolate* isolate_;  // not owned
-  BraveBrowserContext* browser_context_;
+  BraveBrowserContext* browser_context_;  // not owned
 
   DISALLOW_COPY_AND_ASSIGN(Extension);
 };

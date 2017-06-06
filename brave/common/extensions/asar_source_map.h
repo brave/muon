@@ -10,6 +10,7 @@
 
 #include "base/compiler_specific.h"
 #include "base/files/file_path.h"
+#include "extensions/renderer/resource_bundle_source_map.h"
 #include "extensions/renderer/source_map.h"
 #include "v8/include/v8.h"
 
@@ -23,9 +24,14 @@ class AsarSourceMap : public extensions::SourceMap {
   v8::Local<v8::String> GetSource(v8::Isolate* isolate,
                                  const std::string& name) const override;
   bool Contains(const std::string& name) const override;
+  void RegisterSource(const char* const name, int resource_id);
+  extensions::ResourceBundleSourceMap* GetResourceBundleSourceMap() {
+    return &source_map_;
+  }
 
  private:
   std::vector<base::FilePath> search_paths_;
+  extensions::ResourceBundleSourceMap source_map_;
 
   DISALLOW_COPY_AND_ASSIGN(AsarSourceMap);
 };
