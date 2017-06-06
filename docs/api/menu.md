@@ -264,16 +264,24 @@ will become properties of the constructed menu items.
 
 The `menu` object has the following instance methods:
 
-#### `menu.popup([browserWindow, x, y, positioningItem])`
+#### `menu.popup([browserWindow, options])`
 
-* `browserWindow` BrowserWindow (optional) - Default is `BrowserWindow.getFocusedWindow()`.
-* `x` Number (optional) - Default is the current mouse cursor position.
-* `y` Number (**required** if `x` is used) - Default is the current mouse cursor position.
-* `positioningItem` Number (optional) _macOS_ - The index of the menu item to
-  be positioned under the mouse cursor at the specified coordinates. Default is
-  -1.
+* `browserWindow` BrowserWindow (optional) - Default is the focused window.
+* `options` Object (optional)
+  * `x` Number (optional) - Default is the current mouse cursor position.
+  * `y` Number (**required** if `x` is used) - Default is the current mouse
+    cursor position.
+  * `positioningItem` Number (optional) _macOS_ - The index of the menu item to
+    be positioned under the mouse cursor at the specified coordinates. Default
+    is -1.
 
 Pops up this menu as a context menu in the `browserWindow`.
+
+#### `menu.closePopup([browserWindow])`
+
+* `browserWindow` BrowserWindow (optional) - Default is the focused window.
+
+Closes the context menu in the `browserWindow`.
 
 #### `menu.append(menuItem)`
 
