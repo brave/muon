@@ -45,7 +45,7 @@
 #include "extensions/common/constants.h"
 #include "gpu/config/gpu_switches.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
-#include "services/service_manager/public/cpp/interface_registry.h"
+#include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -169,8 +169,8 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
 //   return chrome::CreateWebContentsViewDelegate(web_contents);
 // }
 
-void BraveContentBrowserClient::RegisterRenderFrameMojoInterfaces(
-    service_manager::InterfaceRegistry* registry,
+void BraveContentBrowserClient::ExposeInterfacesToFrame(
+    service_manager::BinderRegistry* registry,
     content::RenderFrameHost* render_frame_host) {
 
   if (!render_frame_host->GetParent()) {
