@@ -8,6 +8,7 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
 #include "native_mate/object_template_builder.h"
 
@@ -83,7 +84,7 @@ void NavigationHandle::GetParentFrameTreeNodeId(mate::Arguments* args) const {
   if (!CheckNavigationHandle(args))
     return;
 
-  args->Return(navigation_handle_->GetParentFrameTreeNodeId());
+  args->Return(navigation_handle_->GetParentFrame()->GetFrameTreeNodeId());
 }
 
 void NavigationHandle::WasStartedFromContextMenu(mate::Arguments* args) const {
