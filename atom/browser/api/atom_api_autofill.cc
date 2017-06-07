@@ -554,6 +554,11 @@ void Autofill::OnLoginsChanged(
   password_manager::PasswordStore* store = GetPasswordStore();
   store->GetAutofillableLogins(password_list_consumer_.get());
   store->GetBlacklistLogins(password_blacked_list_consumer_.get());
+  // TODO(darkdh): Send delta data to browser-laptop and handle it there
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  mate::EmitEvent(isolate(),
+                  env->process_object(),
+                  "logins-changed");
 }
 
 // static
