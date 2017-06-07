@@ -37,7 +37,7 @@ class App;
 }  // namespace atom
 
 namespace ukm {
-class UkmService;
+class UkmRecorder;
 }
 
 namespace base {
@@ -78,7 +78,7 @@ class BrowserProcessImpl : public BrowserProcess {
   metrics::MetricsService* metrics_service() override { return NULL; };
   PrefService* local_state() override;
   ProfileManager* profile_manager() override;
-  ukm::UkmService* ukm_service() override;
+  ukm::UkmRecorder* ukm_recorder() override;
   rappor::RapporServiceImpl* rappor_service() override;
   component_updater::ComponentUpdateService* brave_component_updater();
   component_updater::ComponentUpdateService* component_updater() override;
