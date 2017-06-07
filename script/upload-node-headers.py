@@ -36,12 +36,16 @@ def main():
 
   args = parse_args()
   node_headers_dir = os.path.join(dist_dir(), 'node-{0}'.format(args.version))
+  node2_headers_dir = os.path.join(dist_dir(),
+                                   'node-{0}-headers'.format(args.version))
   iojs_headers_dir = os.path.join(dist_dir(), 'iojs-{0}'.format(args.version))
   iojs2_headers_dir = os.path.join(dist_dir(),
                                    'iojs-{0}-headers'.format(args.version))
 
   copy_headers(node_headers_dir)
   create_header_tarball(node_headers_dir)
+  copy_headers(node2_headers_dir)
+  create_header_tarball(node2_headers_dir)
   copy_headers(iojs_headers_dir)
   create_header_tarball(iojs_headers_dir)
   copy_headers(iojs2_headers_dir)
