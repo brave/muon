@@ -619,19 +619,18 @@ bool WebContents::ShouldCreateWebContents(
       mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
 }
 
-void WebContents::WebContentsCreated(content::WebContents* source_contents,
-                                int opener_render_process_id,
-                                int opener_render_frame_id,
-                                const std::string& frame_name,
-                                const GURL& target_url,
-                                content::WebContents* new_contents) {
+void WebContents::WebContentsCreated(
+    content::WebContents* source_contents,
+    int opener_render_process_id,
+    int opener_render_frame_id,
+    const std::string& frame_name,
+    const GURL& target_url,
+    content::WebContents* new_contents,
+    const base::Optional<content::WebContents::CreateParams>& create_params) {
   if (guest_delegate_) {
-    guest_delegate_->WebContentsCreated(source_contents,
-                                        opener_render_process_id,
-                                        opener_render_frame_id,
-                                        frame_name,
-                                        target_url,
-                                        new_contents);
+    guest_delegate_->WebContentsCreated(
+        source_contents, opener_render_process_id, opener_render_frame_id,
+        frame_name, target_url, new_contents, create_params);
   }
 }
 

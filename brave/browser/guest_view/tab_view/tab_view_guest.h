@@ -39,12 +39,15 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
 
   ~TabViewGuest() override;
 
-  void WebContentsCreated(content::WebContents* source_contents,
-                          int opener_render_process_id,
-                          int opener_render_frame_id,
-                          const std::string& frame_name,
-                          const GURL& target_url,
-                          content::WebContents* new_contents) override;
+  void WebContentsCreated(
+      content::WebContents* source_contents,
+      int opener_render_process_id,
+      int opener_render_frame_id,
+      const std::string& frame_name,
+      const GURL& target_url,
+      content::WebContents* new_contents,
+      const base::Optional<content::WebContents::CreateParams>& create_params)
+      override;
   content::WebContents* OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) override;
