@@ -637,22 +637,19 @@ void App::AllowCertificateError(
 void App::SelectClientCertificate(
     content::WebContents* web_contents,
     net::SSLCertRequestInfo* cert_request_info,
+    net::CertificateList client_certs,
     std::unique_ptr<content::ClientCertificateDelegate> delegate) {
   std::shared_ptr<content::ClientCertificateDelegate>
       shared_delegate(delegate.release());
-  bool prevent_default =
-      Emit("select-client-certificate",
-           WebContents::CreateFrom(isolate(), web_contents),
-           cert_request_info->host_and_port.ToString(),
-           cert_request_info->client_certs,
-           base::Bind(&OnClientCertificateSelected,
-                      isolate(),
-                      shared_delegate));
+  bool prevent_default = Emit(
+      "select-client-certificate",
+      WebContents::CreateFrom(isolate(), web_contents),
+      cert_request_info->host_and_port.ToString(), client_certs,
+      base::Bind(&OnClientCertificateSelected, isolate(), shared_delegate));
 
   // Default to first certificate from the platform store.
   if (!prevent_default)
-    shared_delegate->ContinueWithCertificate(
-        cert_request_info->client_certs[0].get());
+    shared_delegate->ContinueWithCertificate(client_certs[0].get());
 }
 
 void App::OnMaxBandwidthChanged(
