@@ -168,7 +168,6 @@ void BraveContentRendererClient::RenderViewCreated(
 
 bool BraveContentRendererClient::OverrideCreatePlugin(
     content::RenderFrame* render_frame,
-    WebLocalFrame* frame,
     const WebPluginParams& params,
     WebPlugin** plugin) {
   std::string orig_mime_type = params.mime_type.Utf8();
@@ -179,14 +178,17 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
 #if BUILDFLAG(ENABLE_PLUGINS)
   ChromeViewHostMsg_GetPluginInfo_Output output;
   render_frame->Send(new ChromeViewHostMsg_GetPluginInfo(
-      render_frame->GetRoutingID(), url, frame->Top()->GetSecurityOrigin(),
-      orig_mime_type, &output));
+      render_frame->GetRoutingID(), url,
+      render_frame->GetWebFrame()->Top()->GetSecurityOrigin(), orig_mime_type,
+      &output));
 
-  *plugin = CreatePlugin(render_frame, frame, params, output);
+  *plugin =
+      CreatePlugin(render_frame, params, output);
 #else  // !BUILDFLAG(ENABLE_PLUGINS)
   PluginUMAReporter::GetInstance()->ReportPluginMissing(orig_mime_type, url);
   *plugin = NonLoadablePluginPlaceholder::CreateNotSupportedPlugin(
-                render_frame, frame, params)->plugin();
+                render_frame, render_frame->GetWebFrame(), params)
+                ->plugin();
 #endif  // BUILDFLAG(ENABLE_PLUGINS)
   return true;
 }
