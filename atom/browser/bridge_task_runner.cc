@@ -38,12 +38,12 @@ bool BridgeTaskRunner::PostDelayedTask(
       std::move(task), delay);
 }
 
-bool BridgeTaskRunner::RunsTasksOnCurrentThread() const {
+bool BridgeTaskRunner::RunsTasksInCurrentSequence() const {
   auto message_loop = base::MessageLoop::current();
   if (!message_loop)
     return true;
 
-  return message_loop->task_runner()->RunsTasksOnCurrentThread();
+  return message_loop->task_runner()->RunsTasksInCurrentSequence();
 }
 
 bool BridgeTaskRunner::PostNonNestableDelayedTask(
