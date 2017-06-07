@@ -124,8 +124,8 @@ rappor::RapporServiceImpl* AtomAutofillClient::GetRapporServiceImpl() {
   return nullptr;
 }
 
-ukm::UkmService* AtomAutofillClient::GetUkmService() {
-  return g_browser_process->ukm_service();
+ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
+  return g_browser_process->ukm_recorder();
 }
 
 void AtomAutofillClient::ShowAutofillSettings() {
