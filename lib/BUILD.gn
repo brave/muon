@@ -49,6 +49,7 @@ action("lib") {
     "common/init.js",
     "common/reset-search-paths.js",
     "muon/module_system/commonjs.js",
+    "util/buffer.js",
   ]
 
   if (enable_extensions) {
