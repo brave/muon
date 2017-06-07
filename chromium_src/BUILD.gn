@@ -253,6 +253,11 @@ source_set("browser") {
       "//chrome/browser/extensions/global_shortcut_listener_x11.cc",
       "//chrome/browser/extensions/global_shortcut_listener_x11.h",
       "chrome/browser/ui/process_singleton_dialog_linux.cc",
+    ]
+  }
+
+  if (toolkit_views) {
+    sources += [
       "//chrome/browser/ui/views/harmony/chrome_layout_provider.cc",
       "//chrome/browser/ui/views/harmony/chrome_layout_provider.h",
       "//chrome/browser/ui/views/harmony/chrome_typography.cc",
@@ -261,6 +266,15 @@ source_set("browser") {
       "//chrome/browser/ui/views/harmony/harmony_layout_provider.h",
       "//chrome/browser/ui/views/harmony/harmony_typography_provider.cc",
       "//chrome/browser/ui/views/harmony/harmony_typography_provider.h",
+    ]
+
+    deps += [
+      "//base",
+      "//skia",
+      "//ui/base",
+      "//ui/events",
+      "//ui/gfx",
+      "//ui/gfx/geometry",
     ]
   }
 
