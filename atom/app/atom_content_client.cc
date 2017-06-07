@@ -97,7 +97,7 @@ std::string AtomContentClient::GetUserAgent() const {
 
 bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  return extensions::IsIsolateExtensionsEnabled();
+  return true;
 #else
   return false;
 #endif
