@@ -450,7 +450,7 @@ base::Value* V8ValueConverter::FromV8Object(
       continue;
 
     result->SetWithoutPathExpansion(std::string(*name_utf8, name_utf8.length()),
-                                    child.release());
+                                    std::move(child));
   }
 
   return result.release();
