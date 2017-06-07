@@ -23,7 +23,6 @@
 #include "net/proxy/mojo_proxy_resolver_factory_impl.h"
 #include "net/proxy/proxy_resolver_v8.h"
 #include "printing/features/features.h"
-#include "services/service_manager/public/cpp/interface_registry.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/common/extensions/chrome_extensions_client.h"
@@ -131,10 +130,10 @@ void AtomContentUtilityClient::ExposeInterfacesToBrowser(
   if (filter_messages_)
     return;
 
-  registry->AddInterface<net::interfaces::ProxyResolverFactory>(
-      base::Bind(CreateProxyResolverFactory));
-  registry->AddInterface(base::Bind(CreateResourceUsageReporter));
-  registry->AddInterface(base::Bind(&BraveProfileImportHandler::Create));
+  // registry->AddInterface<net::interfaces::ProxyResolverFactory>(
+      // base::Bind(CreateProxyResolverFactory));
+  // registry->AddInterface(base::Bind(CreateResourceUsageReporter));
+  // registry->AddInterface(base::Bind(&BraveProfileImportHandler::Create));
 }
 
 // static
