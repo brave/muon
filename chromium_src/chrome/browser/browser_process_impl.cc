@@ -111,7 +111,7 @@ rappor::RapporServiceImpl* BrowserProcessImpl::rappor_service() {
   return nullptr;
 }
 
-ukm::UkmService* BrowserProcessImpl::ukm_service() {
+ukm::UkmRecorder* BrowserProcessImpl::ukm_recorder() {
   return nullptr;
 }
 
