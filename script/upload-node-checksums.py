@@ -46,6 +46,8 @@ def get_files_list(version):
     'x64/node.lib',
     'win-x86/iojs.lib',
     'win-x64/iojs.lib',
+    'win-x86/node.lib',
+    'win-x64/node.lib',
   ]
 
 
