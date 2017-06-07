@@ -563,6 +563,7 @@ source_set("web_data") {
     "//components/keyed_service/content",
     "//components/webdata_services",
     ":sync",
+    "//chrome/app:generated_resources",
   ]
 }
 
