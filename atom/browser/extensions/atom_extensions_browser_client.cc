@@ -212,10 +212,6 @@ class AtomRuntimeAPIDelegate : public RuntimeAPIDelegate {
   // RuntimeAPIDelegate implementation.
   void AddUpdateObserver(UpdateObserver* observer) override {};
   void RemoveUpdateObserver(UpdateObserver* observer) override {};
-  base::Version GetPreviousExtensionVersion(
-      const Extension* extension) override {
-    return base::Version();
-  };
   void ReloadExtension(const std::string& extension_id) override {};
   bool CheckForUpdates(const std::string& extension_id,
                        const UpdateCheckCallback& callback) override {
