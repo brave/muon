@@ -30,6 +30,10 @@ class ComponentsUI {
       GetCUSForID(const std::string& component_id) const;
 };
 
+namespace mate {
+class Arguments;
+}
+
 using ReadyCallback = base::Callback<void(const base::FilePath&)>;
 
 namespace brave {
@@ -52,7 +56,7 @@ class ComponentUpdater : public mate::TrackableObject<ComponentUpdater>,
   ~ComponentUpdater() override;
   // When a component is registered, the old versions of the component
   // will be removed off the main thread by the DefaultComponentInstaller.
-  void RegisterComponent(const std::string& component_id);
+  void RegisterComponent(mate::Arguments* args);
   std::vector<std::string> GetComponentIDs();
   void CheckNow(const std::string& component_id);
   void OnComponentRegistered(const std::string& component_id);
