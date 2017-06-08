@@ -1,7 +1,7 @@
-diff --git a/crypto/cipher/cipher.c b/crypto/cipher/cipher.c
-index e46e43ef11580d4546e0dfc56aeee770bb685d1f..3fd2c6aae7a6de5cf474109b33156784dd270f2d 100644
---- a/crypto/cipher/cipher.c
-+++ b/crypto/cipher/cipher.c
+diff --git a/crypto/cipher_extra/cipher_extra.c b/crypto/cipher_extra/cipher_extra.c
+index fc8e24b65c4c6f379072f3756703d318747e9526..106f3a9103333e1cc6a2eff6666e980e5607248c 100644
+--- a/crypto/cipher_extra/cipher_extra.c
++++ b/crypto/cipher_extra/cipher_extra.c
 @@ -83,6 +83,8 @@ const EVP_CIPHER *EVP_get_cipherbynid(int nid) {
        return EVP_aes_192_cbc();
      case NID_aes_256_cbc:
@@ -11,7 +11,7 @@ index e46e43ef11580d4546e0dfc56aeee770bb685d1f..3fd2c6aae7a6de5cf474109b33156784
      default:
        return NULL;
    }
-@@ -651,6 +653,8 @@ const EVP_CIPHER *EVP_get_cipherbyname(const char *name) {
+@@ -108,6 +110,8 @@ const EVP_CIPHER *EVP_get_cipherbyname(const char *name) {
      return EVP_aes_128_ecb();
    } else if (OPENSSL_strcasecmp(name, "aes-256-ecb") == 0) {
      return EVP_aes_256_ecb();
@@ -20,11 +20,11 @@ index e46e43ef11580d4546e0dfc56aeee770bb685d1f..3fd2c6aae7a6de5cf474109b33156784
    }
  
    return NULL;
-diff --git a/crypto/digest/digests.c b/crypto/digest/digests.c
-index 9ad2d491425c9101c65c6152e93501d21426efc7..8be4bd6f572cc775ad893e7f09842ef26d2a1cb8 100644
---- a/crypto/digest/digests.c
-+++ b/crypto/digest/digests.c
-@@ -273,6 +273,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+diff --git a/crypto/digest_extra/digest_extra.c b/crypto/digest_extra/digest_extra.c
+index b18759afb0cd0aa5a01fdabc8b73233b6df149b1..1dc230da4ad178478eb62c30ff67642a439259ce 100644
+--- a/crypto/digest_extra/digest_extra.c
++++ b/crypto/digest_extra/digest_extra.c
+@@ -82,6 +82,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
      {NID_sha384, EVP_sha384, SN_sha384, LN_sha384},
      {NID_sha512, EVP_sha512, SN_sha512, LN_sha512},
      {NID_md5_sha1, EVP_md5_sha1, SN_md5_sha1, LN_md5_sha1},
@@ -34,7 +34,7 @@ index 9ad2d491425c9101c65c6152e93501d21426efc7..8be4bd6f572cc775ad893e7f09842ef2
      /* As a remnant of signing |EVP_MD|s, OpenSSL returned the corresponding
       * hash function when given a signature OID. To avoid unintended lax parsing
       * of hash OIDs, this is no longer supported for lookup by OID or NID.
-@@ -291,6 +294,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+@@ -100,6 +103,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
       LN_sha384WithRSAEncryption},
      {NID_undef, EVP_sha512, SN_sha512WithRSAEncryption,
       LN_sha512WithRSAEncryption},
@@ -79,10 +79,10 @@ index 621c0b11701ffb0a61c5a8ae7585f96289b20438..43983f2a1ebb8fc8e6650be5f7ebcdc5
    callback(EVP_sha224(), "sha224", NULL, arg);
    callback(EVP_sha256(), "sha256", NULL, arg);
 diff --git a/decrepit/ripemd/ripemd.c b/decrepit/ripemd/ripemd.c
-index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..292ca1cff85c3eb7015ab5e57f4145171357434a 100644
+index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..2b3e69e080e2eeb4a8a937254d846325ebe91977 100644
 --- a/decrepit/ripemd/ripemd.c
 +++ b/decrepit/ripemd/ripemd.c
-@@ -56,9 +56,12 @@
+@@ -56,9 +56,13 @@
  
  #include <openssl/ripemd.h>
  
@@ -91,11 +91,12 @@ index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..292ca1cff85c3eb7015ab5e57f414517
  #include <string.h>
  
  #include "internal.h"
-+#include "../../crypto/digest/internal.h"
++#include "../../crypto/fipsmodule/delocate.h"
++#include "../../crypto/fipsmodule/digest/internal.h"
  
  
  int RIPEMD160_Init(RIPEMD160_CTX *ctx) {
-@@ -71,6 +74,43 @@ int RIPEMD160_Init(RIPEMD160_CTX *ctx) {
+@@ -71,6 +75,38 @@ int RIPEMD160_Init(RIPEMD160_CTX *ctx) {
    return 1;
  }
  
@@ -115,30 +116,34 @@ index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..292ca1cff85c3eb7015ab5e57f414517
 +    CHECK(RIPEMD160_Update(ctx->md_data, data, count));
 +}
 +
-+static void ripemd160_final(EVP_MD_CTX *ctx, unsigned char *md)
++static void ripemd160_final(EVP_MD_CTX *ctx, uint8_t *out)
 +{
-+    CHECK(RIPEMD160_Final(md, ctx->md_data));
++    CHECK(RIPEMD160_Final(out, ctx->md_data));
 +}
 +
-+static const EVP_MD ripemd160_md = {
-+    NID_ripemd160,
-+    RIPEMD160_DIGEST_LENGTH,
-+    0,
-+    ripemd160_init,
-+    ripemd160_update,
-+    ripemd160_final,
-+    RIPEMD160_CBLOCK,
-+    sizeof(RIPEMD160_CTX),
-+};
-+
-+const EVP_MD *EVP_ripemd160(void)
-+{
-+    return (&ripemd160_md);
++DEFINE_METHOD_FUNCTION(EVP_MD, EVP_ripemd160) {
++  out->type = NID_ripemd160;
++  out->md_size = RIPEMD160_DIGEST_LENGTH;
++  out->flags = 0;
++  out->init = ripemd160_init;
++  out->update = ripemd160_update;
++  out->final = ripemd160_final;
++  out->block_size = RIPEMD160_CBLOCK;
++  out->ctx_size = sizeof(RIPEMD160_CTX);
 +}
 +
  static void ripemd160_block_data_order(uint32_t h[5], const uint8_t *data,
                                         size_t num) {
    uint32_t A, B, C, D, E;
+@@ -311,7 +347,7 @@ static void ripemd160_block_data_order(uint32_t h[5], const uint8_t *data,
+ #undef X
+ }
+ 
+-uint8_t *RIPEMD160(const uint8_t *data, size_t len, unsigned char *out) {
++uint8_t *RIPEMD160(const uint8_t *data, size_t len, uint8_t *out) {
+   RIPEMD160_CTX ctx;
+ 
+   if (!RIPEMD160_Init(&ctx)) {
 diff --git a/include/openssl/digest.h b/include/openssl/digest.h
 index 2de84f7d5dab71cf709fbf770308a2b691232b2e..435e92322108724617b52f6766052a691caf3bf3 100644
 --- a/include/openssl/digest.h
@@ -152,7 +157,7 @@ index 2de84f7d5dab71cf709fbf770308a2b691232b2e..435e92322108724617b52f6766052a69
  /* EVP_md5_sha1 is a TLS-specific |EVP_MD| which computes the concatenation of
   * MD5 and SHA-1, as used in TLS 1.1 and below. */
 diff --git a/include/openssl/nid.h b/include/openssl/nid.h
-index 4270dc1b4ce1c185e6b933720a7805cffe87e7e4..3a11cd09dc23f14e40d527d3534dd7966e13b823 100644
+index f023c1fd1edcfcdb391309fcbf3da4ada72e183e..2e367770445e7aa3cb1ac591c784cbcd8f776f1f 100644
 --- a/include/openssl/nid.h
 +++ b/include/openssl/nid.h
 @@ -615,6 +615,12 @@ extern "C" {
@@ -197,7 +202,7 @@ index be3fd96c90b33c460983438f2c068a0e825a4894..88bca9c6487443a723e48bd20b70146b
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index 5af3d4f47ac7eac9a6970bd873e2e97d9e74cf5b..099c696675c76098030db9a24f0b6d5cf2ad8fa9 100644
+index d6d6cc6b7faf529f70cc7c32d57b233149115827..07abbf8c2fc89287ad8221c0e429bd4a8aa56ee8 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
 @@ -170,6 +170,14 @@ class Android(object):
@@ -215,7 +220,7 @@ index 5af3d4f47ac7eac9a6970bd873e2e97d9e74cf5b..099c696675c76098030db9a24f0b6d5c
      # Legacy Android.mk format, only used by Trusty in new branches
      with open('sources.mk', 'w+') as makefile:
        makefile.write(self.header)
-@@ -219,6 +227,7 @@ class Bazel(object):
+@@ -220,6 +228,7 @@ class Bazel(object):
        self.PrintVariableSection(out, 'crypto_sources', files['crypto'])
        self.PrintVariableSection(out, 'tool_sources', files['tool'])
        self.PrintVariableSection(out, 'tool_headers', files['tool_headers'])
@@ -223,7 +228,7 @@ index 5af3d4f47ac7eac9a6970bd873e2e97d9e74cf5b..099c696675c76098030db9a24f0b6d5c
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -339,6 +348,8 @@ class GN(object):
+@@ -350,6 +359,8 @@ class GN(object):
        self.PrintVariableSection(out, 'ssl_sources',
                                  files['ssl'] + files['ssl_headers'] +
                                  files['ssl_internal_headers'])
@@ -232,7 +237,7 @@ index 5af3d4f47ac7eac9a6970bd873e2e97d9e74cf5b..099c696675c76098030db9a24f0b6d5c
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -621,6 +632,21 @@ def main(platforms):
+@@ -672,6 +683,21 @@ def main(platforms):
    ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
@@ -254,7 +259,7 @@ index 5af3d4f47ac7eac9a6970bd873e2e97d9e74cf5b..099c696675c76098030db9a24f0b6d5c
  
    # Generate err_data.c
    with open('err_data.c', 'w+') as err_data:
-@@ -700,6 +726,7 @@ def main(platforms):
+@@ -773,6 +799,7 @@ def main(platforms):
        'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,
