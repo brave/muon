@@ -205,10 +205,19 @@ Autofill::Autofill(v8::Isolate* isolate,
   personal_data_manager_ =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
-  personal_data_manager_->AddObserver(this);
+  if (personal_data_manager_)
+    personal_data_manager_->AddObserver(this);
+  password_manager::PasswordStore* store = GetPasswordStore();
+  if (store)
+    store->AddObserver(this);
 }
 
 Autofill::~Autofill() {
+  if (personal_data_manager_)
+    personal_data_manager_->RemoveObserver(this);
+  password_manager::PasswordStore* store = GetPasswordStore();
+  if (store)
+    store->RemoveObserver(this);
 }
 
 Profile* Autofill::profile() {
@@ -554,11 +563,6 @@ void Autofill::OnLoginsChanged(
   password_manager::PasswordStore* store = GetPasswordStore();
   store->GetAutofillableLogins(password_list_consumer_.get());
   store->GetBlacklistLogins(password_blacked_list_consumer_.get());
-  // TODO(darkdh): Send delta data to browser-laptop and handle it there
-  node::Environment* env = node::Environment::GetCurrent(isolate());
-  mate::EmitEvent(isolate(),
-                  env->process_object(),
-                  "logins-changed");
 }
 
 // static
