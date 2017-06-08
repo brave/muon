@@ -101,7 +101,7 @@ void ComponentUpdater::OnComponentReady(
     std::string(install_dir.value().begin(), install_dir.value().end()));
 }
 
-void ComponentUpdater::RegisterComponent(const std::string& component_id) {
+void ComponentUpdater::RegisterComponent(mate::Arguments* args) {
   static bool registeredObserver = false;
   if (!registeredObserver) {
     static_cast<BrowserProcessImpl*>(g_browser_process)->
@@ -109,6 +109,13 @@ void ComponentUpdater::RegisterComponent(const std::string& component_id) {
     g_browser_process->component_updater()->AddObserver(this);
     registeredObserver = true;
   }
+
+  std::string component_id;
+  if (!args->GetNext(&component_id)) {
+    args->ThrowError("`componentId` is a required field");
+    return;
+  }
+
   base::Closure registered_callback =
     base::Bind(&ComponentUpdater::OnComponentRegistered,
                weak_factory_.GetWeakPtr(), component_id);
@@ -146,6 +153,14 @@ void ComponentUpdater::RegisterComponent(const std::string& component_id) {
     brave::RegisterWidevineCdmComponent(
         g_browser_process->component_updater(),
         registered_callback, ready_callback);
+  } else {
+    std::string public_key_string;
+    if (!args->GetNext(&public_key_string)) {
+      args->ThrowError("`publicKeyString` is a required field");
+      return;
+    }
+    RegisterComponentForUpdate(
+        public_key_string, registered_callback, ready_callback);
   }
 }
 
