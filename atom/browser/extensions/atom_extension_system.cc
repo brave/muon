@@ -102,7 +102,7 @@ AtomExtensionSystem::Shared::UntrackTerminatedExtension(const std::string& id) {
 
 void AtomExtensionSystem::Shared::UnloadExtension(
     const std::string& extension_id,
-    UnloadedExtensionInfo::Reason reason) {
+    UnloadedExtensionReason reason) {
   // Make sure the extension gets deleted after we return from this function.
   int include_mask =
       ExtensionRegistry::EVERYTHING & ~ExtensionRegistry::TERMINATED;
@@ -280,7 +280,7 @@ void AtomExtensionSystem::Shared::DisableExtension(
   if (registry_->enabled_extensions().Contains(extension->id())) {
     registry_->RemoveEnabled(extension->id());
     NotifyExtensionUnloaded(extension,
-        extensions::UnloadedExtensionInfo::REASON_DISABLE);
+                            extensions::UnloadedExtensionReason::DISABLE);
   } else {
     registry_->RemoveTerminated(extension->id());
   }
@@ -288,15 +288,13 @@ void AtomExtensionSystem::Shared::DisableExtension(
 
 void AtomExtensionSystem::Shared::NotifyExtensionUnloaded(
     const Extension* extension,
-    extensions::UnloadedExtensionInfo::Reason reason) {
-  extensions::UnloadedExtensionInfo details(extension, reason);
-
+    extensions::UnloadedExtensionReason reason) {
   registry_->TriggerOnUnloaded(extension, reason);
 
   content::NotificationService::current()->Notify(
       extensions::NOTIFICATION_EXTENSION_UNLOADED_DEPRECATED,
       content::Source<content::BrowserContext>(browser_context_),
-      content::Details<extensions::UnloadedExtensionInfo>(&details));
+      content::Details<extensions::UnloadedExtensionReason>(reason));
 
   for (content::RenderProcessHost::iterator i(
           content::RenderProcessHost::AllHostsIterator());
@@ -339,7 +337,7 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
   if (is_extension_loaded) {
     // To upgrade an extension in place, unload the old one and then load the
     // new one.  ReloadExtension disables the extension, which is sufficient.
-    UnloadExtension(extension->id(), UnloadedExtensionInfo::REASON_UPDATE);
+    UnloadExtension(extension->id(), UnloadedExtensionReason::UPDATE);
   }
 
   if (extension_prefs_->IsExtensionBlacklisted(extension->id())) {
@@ -586,7 +584,7 @@ void AtomExtensionSystem::RegisterExtensionWithRequestContexts(
 
 void AtomExtensionSystem::UnregisterExtensionWithRequestContexts(
     const std::string& extension_id,
-    const extensions::UnloadedExtensionInfo::Reason reason) {
+    const extensions::UnloadedExtensionReason reason) {
   BrowserThread::PostTask(
       BrowserThread::IO,
       FROM_HERE,

@@ -69,9 +69,8 @@ class Extension : public gin::Wrappable<Extension>,
   void OnExtensionReady(content::BrowserContext* browser_context,
                         const extensions::Extension* extension) override;
   void OnExtensionUnloaded(content::BrowserContext* browser_context,
-                    const extensions::Extension* extension,
-                    extensions::UnloadedExtensionInfo::Reason reason) override;
-
+                           const extensions::Extension* extension,
+                           extensions::UnloadedExtensionReason reason) override;
 
   void SetURLHandler(gin::Arguments* args);
   void SetReverseURLHandler(gin::Arguments* args);
