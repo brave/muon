@@ -47,6 +47,7 @@ class Cookies : public mate::TrackableObject<Cookies> {
   Cookies(v8::Isolate* isolate, AtomBrowserContext* browser_context);
   ~Cookies() override;
 
+  void GetAll(const base::DictionaryValue& filter, const GetCallback& callback);
   void Get(const base::DictionaryValue& filter, const GetCallback& callback);
   void Remove(const GURL& url, const std::string& name,
               const base::Closure& callback);
