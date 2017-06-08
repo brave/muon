@@ -39,7 +39,7 @@ class SharedUserScriptMaster : public ExtensionRegistryObserver {
                          const Extension* extension) override;
   void OnExtensionUnloaded(content::BrowserContext* browser_context,
                            const Extension* extension,
-                           UnloadedExtensionInfo::Reason reason) override;
+                           UnloadedExtensionReason reason) override;
 
   // Gets an extension's scripts' metadata; i.e., gets a list of UserScript
   // objects that contains script info, but not the contents of the scripts.
