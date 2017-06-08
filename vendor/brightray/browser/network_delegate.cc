@@ -144,4 +144,24 @@ bool NetworkDelegate::OnCancelURLRequestWithPolicyViolatingReferrerHeader(
   return false;
 }
 
+bool NetworkDelegate::OnCanQueueReportingReport(
+    const url::Origin& origin) const {
+  return true;
+}
+
+bool NetworkDelegate::OnCanSendReportingReport(
+    const url::Origin& origin) const {
+  return true;
+}
+
+bool NetworkDelegate::OnCanSetReportingClient(const url::Origin& origin,
+                                              const GURL& endpoint) const {
+  return true;
+}
+
+bool NetworkDelegate::OnCanUseReportingClient(const url::Origin& origin,
+                                              const GURL& endpoint) const {
+  return true;
+}
+
 }  // namespace brightray
