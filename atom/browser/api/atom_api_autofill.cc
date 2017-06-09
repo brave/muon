@@ -570,8 +570,10 @@ void Autofill::OnLoginsChanged(
     const password_manager::PasswordStoreChangeList& changes) {
   password_manager::PasswordStore* store = GetPasswordStore();
   if (store) {
-    BravePasswordStoreConsumer* password_list_consumer = password_list_consumer_.get();
-    BravePasswordStoreConsumer* password_blacked_list_consumer = password_blacked_list_consumer_.get();
+    BravePasswordStoreConsumer* password_list_consumer =
+      password_list_consumer_.get();
+    BravePasswordStoreConsumer* password_blacked_list_consumer =
+      password_blacked_list_consumer_.get();
     if (password_list_consumer)
       store->GetAutofillableLogins(password_list_consumer);
     if (password_blacked_list_consumer)
