@@ -396,11 +396,6 @@ void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
   // renderer is guaranteed to know about it.
   registry_->TriggerOnLoaded(extension);
 
-  content::NotificationService::current()->Notify(
-      extensions::NOTIFICATION_EXTENSION_LOADED_DEPRECATED,
-      content::Source<content::BrowserContext>(browser_context_),
-      content::Details<const Extension>(extension));
-
   registry_->TriggerOnInstalled(extension, false);
 }
 
