@@ -42,7 +42,7 @@ WebContentsPreferences::WebContentsPreferences(
   copied.Delete("session");
 
   mate::ConvertFromV8(isolate, copied.GetHandle(), &web_preferences_);
-  web_contents->SetUserData(UserDataKey(), this);
+  web_contents->SetUserData(UserDataKey(), base::WrapUnique(this));
 
   instances_.push_back(this);
 }
