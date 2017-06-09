@@ -1247,7 +1247,8 @@ void NativeWindowViews::HandleKeyboardEvent(
         event.GetType() == blink::WebInputEvent::kRawKeyDown);
 
   // Show the submenu when "Alt+Key" is pressed.
-  if (event.GetType() == blink::WebInputEvent::kRawKeyDown && !IsAltKey(event) &&
+  if (event.GetType() == blink::WebInputEvent::kRawKeyDown &&
+      !IsAltKey(event) &&
       IsAltModifier(event)) {
     if (!menu_bar_visible_ &&
         (menu_bar_->GetAcceleratorIndex(event.windows_key_code) != -1))
@@ -1263,8 +1264,8 @@ void NativeWindowViews::HandleKeyboardEvent(
   if (event.GetType() == blink::WebInputEvent::kRawKeyDown && IsAltKey(event)) {
     // When a single Alt is pressed:
     menu_bar_alt_pressed_ = true;
-  } else if (event.GetType() == blink::WebInputEvent::kKeyUp && IsAltKey(event) &&
-             menu_bar_alt_pressed_) {
+  } else if (event.GetType() == blink::WebInputEvent::kKeyUp && IsAltKey(event)
+      && menu_bar_alt_pressed_) {
     // When a single Alt is released right after a Alt is pressed:
     menu_bar_alt_pressed_ = false;
     SetMenuBarVisibility(!menu_bar_visible_);

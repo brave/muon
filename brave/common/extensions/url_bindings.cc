@@ -294,7 +294,8 @@ void URLBindings::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
   std::string url_string = *v8::String::Utf8Value(args[0]);
   gin::Handle<WrappableGURL> gurl = gin::CreateHandle(
       context()->isolate(), new WrappableGURL(url_string));
-  args.GetReturnValue().Set(gurl->GetWrapper(context()->isolate()).ToLocalChecked());
+  args.GetReturnValue().Set(
+      gurl->GetWrapper(context()->isolate()).ToLocalChecked());
 }
 
 void URLBindings::FormatForDisplay(
