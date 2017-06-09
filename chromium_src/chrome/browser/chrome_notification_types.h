@@ -405,12 +405,6 @@ enum NotificationType {
   // the tab.
   NOTIFICATION_EXTENSION_LOCATION_BAR_UPDATED,
 
-  // DEPRECATED: Use ExtensionRegistry::AddObserver instead.
-  //
-  // Sent when a new extension is loaded. The details are an Extension, and
-  // the source is a Profile.
-  NOTIFICATION_EXTENSION_LOADED_DEPRECATED,
-
   // An error occurred while attempting to load an extension. The details are a
   // string with details about why the load failed.
   NOTIFICATION_EXTENSION_LOAD_ERROR,
@@ -446,16 +440,6 @@ enum NotificationType {
   // not user manageable.  The details are an Extension, and the source is a
   // Profile.
   NOTIFICATION_EXTENSION_UNINSTALL_NOT_ALLOWED,
-
-  // DEPRECATED: Use ExtensionRegistry::AddObserver instead.
-  //
-  // Sent when an extension is unloaded. This happens when an extension is
-  // uninstalled or disabled. The details are an UnloadedExtensionInfo, and
-  // the source is a Profile.
-  //
-  // Note that when this notification is sent, ExtensionService has already
-  // removed the extension from its internal state.
-  NOTIFICATION_EXTENSION_UNLOADED_DEPRECATED,
 
   // Sent when an Extension object is removed from ExtensionService. This
   // can happen when an extension is uninstalled, upgraded, or blacklisted,
