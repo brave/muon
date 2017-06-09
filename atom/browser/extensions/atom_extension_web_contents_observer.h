@@ -21,12 +21,14 @@ namespace extensions {
 class AtomExtensionWebContentsObserver
     : public ExtensionWebContentsObserver,
       public content::WebContentsUserData<AtomExtensionWebContentsObserver> {
+ public:
+  ~AtomExtensionWebContentsObserver() override;
+
  private:
   friend class content::WebContentsUserData<AtomExtensionWebContentsObserver>;
 
   explicit AtomExtensionWebContentsObserver(
       content::WebContents* web_contents);
-  ~AtomExtensionWebContentsObserver() override;
 
   void RenderViewCreated(content::RenderViewHost* render_view_host);
 
