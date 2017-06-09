@@ -82,6 +82,7 @@ void WebFrameBindings::Invalidate() {
   // only remove the spell check client when the main frame is invalidated
   if (!context()->web_frame()->Parent()) {
     context()->web_frame()->View()->SetSpellCheckClient(nullptr);
+    context()->web_frame()->SetTextCheckClient(nullptr);
     spell_check_client_.reset(nullptr);
   }
   ObjectBackedNativeHandler::Invalidate();
