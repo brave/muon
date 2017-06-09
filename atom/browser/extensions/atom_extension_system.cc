@@ -291,11 +291,6 @@ void AtomExtensionSystem::Shared::NotifyExtensionUnloaded(
     extensions::UnloadedExtensionReason reason) {
   registry_->TriggerOnUnloaded(extension, reason);
 
-  content::NotificationService::current()->Notify(
-      extensions::NOTIFICATION_EXTENSION_UNLOADED_DEPRECATED,
-      content::Source<content::BrowserContext>(browser_context_),
-      content::Details<extensions::UnloadedExtensionReason>(reason));
-
   for (content::RenderProcessHost::iterator i(
           content::RenderProcessHost::AllHostsIterator());
        !i.IsAtEnd(); i.Advance()) {
@@ -400,11 +395,6 @@ void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
   // NOTIFICATION_EXTENSION_LOADED_DEPRECATED, the
   // renderer is guaranteed to know about it.
   registry_->TriggerOnLoaded(extension);
-
-  content::NotificationService::current()->Notify(
-      extensions::NOTIFICATION_EXTENSION_LOADED_DEPRECATED,
-      content::Source<content::BrowserContext>(browser_context_),
-      content::Details<const Extension>(extension));
 
   registry_->TriggerOnInstalled(extension, false);
 }
