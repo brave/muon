@@ -130,9 +130,9 @@ void WebFrameBindings::RegisterEmbedderCustomElement(
 void WebFrameBindings::SetSpellCheckProvider(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
   if (context()->web_frame()->Parent()) {
-    extensions::console::AddMessage(context()->GetRenderFrame(),
-      content::CONSOLE_MESSAGE_LEVEL_WARNING,
-      "spellcheck provider can only be set by the main frame");
+    extensions::console::AddMessage(
+        context(), content::CONSOLE_MESSAGE_LEVEL_WARNING,
+        "spellcheck provider can only be set by the main frame");
     return;
   }
 
@@ -177,9 +177,9 @@ void WebFrameBindings::SetGlobal(
   v8::Context::Scope context_scope(main_context);
 
   if (!ContextCanAccessObject(main_context, main_context->Global(), false)) {
-    extensions::console::AddMessage(context()->GetRenderFrame(),
-      content::CONSOLE_MESSAGE_LEVEL_WARNING,
-      "cannot access global in main frame script context");
+    extensions::console::AddMessage(
+        context(), content::CONSOLE_MESSAGE_LEVEL_WARNING,
+        "cannot access global in main frame script context");
     return;
   }
 
