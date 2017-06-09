@@ -50,6 +50,8 @@ class BravePasswordManagerClient
       public autofill::mojom::PasswordManagerClient,
       public content::RenderWidgetHost::InputEventObserver {
  public:
+  BravePasswordManagerClient(content::WebContents* web_contents,
+                              autofill::AutofillClient* autofill_client);
   ~BravePasswordManagerClient() override;
 
   void Initialize(atom::api::WebContents* api_web_contents);
@@ -137,11 +139,6 @@ class BravePasswordManagerClient
   // A helper method to determine whether a save/update bubble can be shown
   // on this |url|.
   static bool CanShowBubbleOnURL(const GURL& url);
-
- protected:
-  // Callable for tests.
-  BravePasswordManagerClient(content::WebContents* web_contents,
-                              autofill::AutofillClient* autofill_client);
 
  private:
   friend class content::WebContentsUserData<BravePasswordManagerClient>;
