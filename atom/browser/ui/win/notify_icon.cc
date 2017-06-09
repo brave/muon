@@ -150,8 +150,8 @@ void NotifyIcon::PopUpContextMenu(const gfx::Point& pos,
   views::MenuRunner menu_runner(
       menu_model != nullptr ? menu_model : menu_model_,
       views::MenuRunner::CONTEXT_MENU | views::MenuRunner::HAS_MNEMONICS);
-  ignore_result(menu_runner.RunMenuAt(
-      NULL, NULL, rect, views::MENU_ANCHOR_TOPLEFT, ui::MENU_SOURCE_MOUSE));
+  menu_runner.RunMenuAt(NULL, NULL, rect, views::MENU_ANCHOR_TOPLEFT,
+                        ui::MENU_SOURCE_MOUSE);
 }
 
 void NotifyIcon::SetContextMenu(AtomMenuModel* menu_model) {
