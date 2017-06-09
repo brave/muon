@@ -38,12 +38,9 @@ void MenuDelegate::RunMenu(AtomMenuModel* model, views::MenuButton* button) {
   menu_runner_.reset(new views::MenuRunner(
       item,
       views::MenuRunner::CONTEXT_MENU | views::MenuRunner::HAS_MNEMONICS));
-  ignore_result(menu_runner_->RunMenuAt(
-      button->GetWidget()->GetTopLevelWidget(),
-      button,
-      bounds,
-      views::MENU_ANCHOR_TOPRIGHT,
-      ui::MENU_SOURCE_MOUSE));
+  menu_runner_->RunMenuAt(button->GetWidget()->GetTopLevelWidget(), button,
+                          bounds, views::MENU_ANCHOR_TOPRIGHT,
+                          ui::MENU_SOURCE_MOUSE);
 }
 
 void MenuDelegate::ExecuteCommand(int id) {
