@@ -183,11 +183,8 @@ std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
   if (entry && entry->GetFavicon().valid)
     tab_object->fav_icon_url.reset(
         new std::string(entry->GetFavicon().url.spec()));
-  if (tab_strip) {
-    WebContents* opener = tab_strip->GetOpenerOfWebContentsAt(tab_index);
-    if (opener)
-      tab_object->opener_tab_id.reset(new int(GetTabIdForExtensions(opener)));
-  }
+
+  tab_object->opener_tab_id.reset(new int(tab_helper->opener_tab_id()));
 
   return tab_object;
 }

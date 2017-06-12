@@ -106,6 +106,8 @@ class TabHelper : public content::WebContentsObserver,
     return values_.get();
   }
 
+  void SetOpener(int openerTabId);
+
   bool ExecuteScriptInTab(mate::Arguments* args);
 
   ScriptExecutor* script_executor() const {
@@ -124,6 +126,8 @@ class TabHelper : public content::WebContentsObserver,
 
   void SetPlaceholder(bool is_placeholder);
   bool is_placeholder() const { return is_placeholder_; }
+
+  int opener_tab_id() const { return opener_tab_id_; }
 
   // If the specified WebContents has a TabHelper (probably because it
   // was used as the contents of a tab), returns a tab id. This value is
@@ -197,6 +201,7 @@ class TabHelper : public content::WebContentsObserver,
   bool active_;
   bool is_placeholder_;
   bool window_closing_;
+  int opener_tab_id_;
 
   Browser* browser_;
 
