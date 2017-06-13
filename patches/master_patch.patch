@@ -959,7 +959,7 @@ index 67fdaf0e3730700b991f90f9a34b772450990f5c..aa8646551079b8f9d23a48e6f83c4238
    //
    // This gives the derived class an opportunity to perform additional
 diff --git a/components/guest_view/browser/guest_view_manager.cc b/components/guest_view/browser/guest_view_manager.cc
-index bc36a92f4ad97e84d65c5213acbb68fc89aae8d9..92f2f21ec947e1563ce5e554eb2734cf3fa9b14d 100644
+index bc36a92f4ad97e84d65c5213acbb68fc89aae8d9..9567f7f130181a40917751fff899b439b02f9b88 100644
 --- a/components/guest_view/browser/guest_view_manager.cc
 +++ b/components/guest_view/browser/guest_view_manager.cc
 @@ -68,6 +68,9 @@ class GuestViewManager::EmbedderRenderProcessHostObserver
@@ -1787,7 +1787,7 @@ index ef92f6776954883ab919722aad195e84eec383ad..32f2023a60654c2cb2bd3190eb135d09
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 3c12e67ab157eedaf21228288fdad29b23c01cf5..d4c8fb80db450bcafc53154971ca152318770d9e 100644
+index 6227d47f8dc056a2bada2b166dcee1b4d86d9237..f3f3b67a9b433d27a6fbedf066eb9ace96f24e61 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -177,7 +177,10 @@
@@ -1802,7 +1802,7 @@ index 3c12e67ab157eedaf21228288fdad29b23c01cf5..d4c8fb80db450bcafc53154971ca1523
      }, {
        "internal": true,
        "channel": "stable",
-@@ -508,6 +511,7 @@
+@@ -512,6 +515,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
@@ -1810,7 +1810,7 @@ index 3c12e67ab157eedaf21228288fdad29b23c01cf5..d4c8fb80db450bcafc53154971ca1523
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://oobe/*"
-@@ -526,6 +530,13 @@
+@@ -530,6 +534,13 @@
        "chrome://media-router/*",
        "chrome://oobe/*"
      ]
@@ -1824,7 +1824,7 @@ index 3c12e67ab157eedaf21228288fdad29b23c01cf5..d4c8fb80db450bcafc53154971ca1523
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -534,6 +545,7 @@
+@@ -538,6 +549,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
