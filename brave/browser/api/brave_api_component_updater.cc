@@ -149,6 +149,9 @@ void ComponentUpdater::RegisterComponent(mate::Arguments* args) {
   } else if (component_id == kHoneyId) {
     RegisterComponentForUpdate(
         kHoneyPublicKeyStr, registered_callback, ready_callback);
+  } else if (component_id == kPinterestId) {
+    RegisterComponentForUpdate(
+        kPinterestPublicKeyStr, registered_callback, ready_callback);
   } else if (component_id == kWidevineId) {
     brave::RegisterWidevineCdmComponent(
         g_browser_process->component_updater(),
