@@ -6,17 +6,19 @@
 
 #include <vector>
 
-#include "brave/utility/importer/brave_external_process_importer_bridge.h"
 #include "base/files/file_enumerator.h"
 #include "base/files/file_util.h"
 #include "base/macros.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/common/importer/imported_cookie_entry.h"
+#include "brave/utility/importer/brave_external_process_importer_bridge.h"
 #include "build/build_config.h"
 #include "chrome/grit/generated_resources.h"
+#include "components/autofill/core/common/password_form.h"
 #include "sql/connection.h"
 #include "sql/statement.h"
+#include "url/gurl.h"
 
 namespace brave {
 
@@ -38,18 +40,25 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
     ImportCookies();
     bridge_->NotifyItemEnded(importer::COOKIES);
   }
+  if ((items & importer::PASSWORDS) && !cancelled()) {
+    ImportSitePasswordPrefs();
+    bridge_->NotifyItemEnded(importer::PASSWORDS);
+  }
+
   bridge_->NotifyEnded();
 }
 
 
 void FirefoxImporter::ImportCookies() {
   base::FilePath file = source_path_.AppendASCII("cookies.sqlite");
-  if (!base::PathExists(file))
+  if (!base::PathExists(file)) {
     return;
+  }
 
   sql::Connection db;
-  if (!db.Open(file))
+  if (!db.Open(file)) {
     return;
+  }
 
   const char query[] =
       "SELECT baseDomain, name, value, host, path, expiry, isSecure, "
@@ -85,6 +94,45 @@ void FirefoxImporter::ImportCookies() {
   if (!cookies.empty() && !cancelled())
     static_cast<BraveExternalProcessImporterBridge*>(bridge_.get())->
         SetCookies(cookies);
+}
+
+void FirefoxImporter::ImportSitePasswordPrefs() {
+  base::FilePath file = source_path_.AppendASCII("permissions.sqlite");
+  if (!base::PathExists(file)) {
+    return;
+  }
+
+  sql::Connection db;
+  if (!db.Open(file)) {
+    return;
+  }
+
+  // See http://searchfox.org/mozilla-central/
+  // source/netwerk/base/nsIPermissionManager.idl#61
+  // DENY_ACTION=2
+  // EXPIRE_NEVER=0
+  const char query[] =
+      "SELECT origin FROM moz_perms "
+      "WHERE type='login-saving' AND permission=2 AND expireType=0";
+
+
+  std::vector<autofill::PasswordForm> forms;
+  sql::Statement s(db.GetUniqueStatement(query));
+
+  while (s.Step() && !cancelled()) {
+    autofill::PasswordForm form;
+    form.origin = GURL(s.ColumnString16(0));
+    form.signon_realm = form.origin.GetOrigin().spec();
+    form.blacklisted_by_user = true;
+
+    forms.push_back(form);
+  }
+
+  if (!cancelled()) {
+    for (size_t i = 0; i < forms.size(); ++i) {
+        bridge_->SetPasswordForm(forms[i]);
+    }
+  }
 }
 
 }  // namespace brave

@@ -907,10 +907,17 @@ index 7e05c4e04f8e61b418d373a73bd8901347df4c76..e7e6d9fa5e0d54c7755fe3a38eca6f70
    // Holds strings needed by the external importer because the resource
    // bundle isn't available to the external process.
 diff --git a/chrome/utility/importer/firefox_importer.cc b/chrome/utility/importer/firefox_importer.cc
-index 7f8d598bca0243e62f11d5d2ce50d8c25ba88764..d198d90e8872eb1d7a371aeaca6119c73a6cda1c 100644
+index 7f8d598bca0243e62f11d5d2ce50d8c25ba88764..72ea878a4e595a2761653dc108d2d9b448f3d965 100644
 --- a/chrome/utility/importer/firefox_importer.cc
 +++ b/chrome/utility/importer/firefox_importer.cc
-@@ -147,7 +147,6 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
+@@ -140,14 +140,12 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
+   if ((items & importer::PASSWORDS) && !cancelled()) {
+     bridge_->NotifyItemStarted(importer::PASSWORDS);
+     ImportPasswords();
+-    bridge_->NotifyItemEnded(importer::PASSWORDS);
+   }
+   if ((items & importer::AUTOFILL_FORM_DATA) && !cancelled()) {
+     bridge_->NotifyItemStarted(importer::AUTOFILL_FORM_DATA);
      ImportAutofillFormData();
      bridge_->NotifyItemEnded(importer::AUTOFILL_FORM_DATA);
    }

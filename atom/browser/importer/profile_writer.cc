@@ -17,10 +17,14 @@
 #include "brave/common/importer/imported_cookie_entry.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process_impl.h"
+#include "chrome/browser/password_manager/password_store_factory.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
 #include "components/autofill/core/browser/webdata/autofill_entry.h"
 #include "components/autofill/core/common/password_form.h"
+#include "components/keyed_service/core/service_access_type.h"
+#include "components/password_manager/core/browser/password_manager.h"
 #include "content/public/browser/browser_thread.h"
 
 #if defined(OS_WIN)
@@ -57,14 +61,11 @@ bool ProfileWriter::TemplateURLServiceIsLoaded() const {
 }
 
 void ProfileWriter::AddPasswordForm(const autofill::PasswordForm& form) {
-  if (importer_) {
-    base::DictionaryValue imported_form;
-    imported_form.SetString("signon_realm", form.signon_realm);
-    imported_form.SetString("username_value", form.username_value);
-    imported_form.SetString("password_value", form.password_value);
-
-    importer_->Emit("add-password-form", imported_form);
-  }
+    Profile* active_profile = ProfileManager::GetActiveUserProfile();
+    if (active_profile) {
+      PasswordStoreFactory::GetForProfile(
+          active_profile, ServiceAccessType::EXPLICIT_ACCESS)->AddLogin(form);
+    }
 }
 
 #if defined(OS_WIN)
