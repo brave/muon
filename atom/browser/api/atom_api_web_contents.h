@@ -452,6 +452,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
       const content::ResourceRequestDetails& details) override;
   void DidGetRedirectForResourceRequest(
       const content::ResourceRedirectDetails& details) override;
+  void DidStartLoading() override;
+  void DidStopLoading() override;
   void DidStartNavigation(
       content::NavigationHandle* navigation_handle) override;
   void DidFinishNavigation(
