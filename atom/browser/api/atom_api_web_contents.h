@@ -448,8 +448,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
                    int error_code,
                    const base::string16& error_description,
                    bool was_ignored_by_handler) override;
-  void DidStartLoading() override;
-  void DidStopLoading() override;
   void DidGetResourceResponseStart(
       const content::ResourceRequestDetails& details) override;
   void DidGetRedirectForResourceRequest(

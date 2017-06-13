@@ -1136,8 +1136,6 @@ void WebContents::DocumentLoadedInFrame(
 void WebContents::DidFinishLoad(content::RenderFrameHost* render_frame_host,
                                 const GURL& validated_url) {
   bool is_main_frame = !render_frame_host->GetParent();
-  Emit("did-frame-finish-load", is_main_frame);
-
   if (is_main_frame)
     Emit("did-finish-load", validated_url);
 }
@@ -1150,14 +1148,6 @@ void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
   bool is_main_frame = !render_frame_host->GetParent();
   Emit("did-fail-load", error_code, error_description, url,
       is_main_frame, was_ignored_by_handler);
-}
-
-void WebContents::DidStartLoading() {
-  Emit("did-start-loading");
-}
-
-void WebContents::DidStopLoading() {
-  Emit("did-stop-loading");
 }
 
 void WebContents::DidGetResourceResponseStart(
@@ -1212,9 +1202,6 @@ void WebContents::DidFinishNavigation(
   if (navigation_handle->HasCommitted() && !navigation_handle->IsErrorPage()) {
     bool is_in_page = navigation_handle->IsSameDocument();
     bool is_renderer_initiated = navigation_handle->IsRendererInitiated();
-    if (!is_in_page) {
-      Emit("load-commit", url, is_main_frame);
-    }
     if (is_main_frame && !is_in_page) {
       Emit("did-navigate", url, is_renderer_initiated);
     } else if (is_in_page) {
