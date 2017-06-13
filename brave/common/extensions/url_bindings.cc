@@ -330,20 +330,22 @@ void URLBindings::Parse(
 
   GURL gurl(url_string);
   gin::Dictionary dict = gin::Dictionary::CreateEmpty(isolate);
-  if (gurl.has_username())
-    dict.Set("auth", gurl.username() + (gurl.has_password()
-      ? ":" + gurl.password() : ""));
-  dict.Set("hash", gurl.ref());
-  dict.Set("hostname", gurl.host());
-  dict.Set("host", gurl.host() + ":" + gurl.port());
-  dict.Set("href", gurl.possibly_invalid_spec());
-  dict.Set("path", gurl.PathForRequest());
-  dict.Set("pathname", gurl.path());
-  dict.Set("port", gurl.port());
-  dict.Set("protocol", gurl.scheme());
-  dict.Set("query", gurl.query());
-  dict.Set("search", "?" + gurl.query());
-  dict.Set("origin", gurl.GetOrigin());
+  if (gurl.is_valid()) {
+    if (gurl.has_username())
+      dict.Set("auth", gurl.username() + (gurl.has_password()
+        ? ":" + gurl.password() : ""));
+    dict.Set("hash", gurl.ref());
+    dict.Set("hostname", gurl.host());
+    dict.Set("host", gurl.host() + ":" + gurl.port());
+    dict.Set("href", gurl.possibly_invalid_spec());
+    dict.Set("path", gurl.PathForRequest());
+    dict.Set("pathname", gurl.path());
+    dict.Set("port", gurl.port());
+    dict.Set("protocol", gurl.scheme());
+    dict.Set("query", gurl.query());
+    dict.Set("search", "?" + gurl.query());
+    dict.Set("origin", gurl.GetOrigin());
+  }
   args.GetReturnValue().Set(gin::ConvertToV8(isolate, dict));
 }
 
