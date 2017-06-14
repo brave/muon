@@ -645,8 +645,7 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!handle->IsInMainFrame())
     throttles.push_back(
-      base::MakeUnique<content::NavigationThrottle>(
-          extensions::ExtensionNavigationThrottle(handle)));
+        base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
 }
