@@ -339,6 +339,13 @@ BravePasswordManagerClient::GetPasswordStore() const {
              profile_, ServiceAccessType::EXPLICIT_ACCESS).get();
 }
 
+void BravePasswordManagerClient::CheckSafeBrowsingReputation(
+    const GURL& form_action,
+    const GURL& frame_url) {}
+
+void BravePasswordManagerClient::CheckProtectedPasswordEntry(
+    const std::string& password_saved_domain) {}
+
 password_manager::PasswordSyncState
 BravePasswordManagerClient::GetPasswordSyncState() const {
   return password_manager_util::GetPasswordSyncState(nullptr);
