@@ -62,9 +62,7 @@ scoped_refptr<RefcountedKeyedService>
     GetForProfile(profile->GetOriginalProfile());
 
   scoped_refptr<HostContentSettingsMap> settings_map(new HostContentSettingsMap(
-      profile->GetPrefs(),
-      profile->IsOffTheRecord(),
-      false));
+      profile->GetPrefs(), profile->IsOffTheRecord(), false, false));
 
   sync_preferences::PrefServiceSyncable* pref_service =
       profile->GetPrefs();
