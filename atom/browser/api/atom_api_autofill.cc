@@ -205,10 +205,19 @@ Autofill::Autofill(v8::Isolate* isolate,
   personal_data_manager_ =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
       browser_context_);
-  personal_data_manager_->AddObserver(this);
+  if (personal_data_manager_)
+    personal_data_manager_->AddObserver(this);
+  password_manager::PasswordStore* store = GetPasswordStore();
+  if (store)
+    store->AddObserver(this);
 }
 
 Autofill::~Autofill() {
+  if (personal_data_manager_)
+    personal_data_manager_->RemoveObserver(this);
+  password_manager::PasswordStore* store = GetPasswordStore();
+  if (store)
+    store->RemoveObserver(this);
 }
 
 Profile* Autofill::profile() {
@@ -474,8 +483,10 @@ void Autofill::GetAutofillableLogins(mate::Arguments* args) {
     return;
   }
   password_manager::PasswordStore* store = GetPasswordStore();
-  password_list_consumer_.reset(new BravePasswordStoreConsumer(callback));
-  store->GetAutofillableLogins(password_list_consumer_.get());
+  if (store) {
+    password_list_consumer_.reset(new BravePasswordStoreConsumer(callback));
+    store->GetAutofillableLogins(password_list_consumer_.get());
+  }
 }
 
 void Autofill::GetBlacklistLogins(mate::Arguments* args) {
@@ -485,9 +496,11 @@ void Autofill::GetBlacklistLogins(mate::Arguments* args) {
     return;
   }
   password_manager::PasswordStore* store = GetPasswordStore();
-  password_blacked_list_consumer_.reset(
-    new BravePasswordStoreConsumer(callback));
-  store->GetBlacklistLogins(password_blacked_list_consumer_.get());
+  if (store) {
+    password_blacked_list_consumer_.reset(
+      new BravePasswordStoreConsumer(callback));
+    store->GetBlacklistLogins(password_blacked_list_consumer_.get());
+  }
 }
 
 void Autofill::AddLogin(mate::Arguments* args) {
@@ -497,7 +510,8 @@ void Autofill::AddLogin(mate::Arguments* args) {
     return;
   }
   password_manager::PasswordStore* store = GetPasswordStore();
-  store->AddLogin(form);
+  if (store)
+    store->AddLogin(form);
 }
 
 void Autofill::UpdateLogin(mate::Arguments* args) {
@@ -507,7 +521,8 @@ void Autofill::UpdateLogin(mate::Arguments* args) {
     return;
   }
   password_manager::PasswordStore* store = GetPasswordStore();
-  store->UpdateLogin(form);
+  if (store)
+    store->UpdateLogin(form);
 }
 
 void Autofill::RemoveLogin(mate::Arguments* args) {
@@ -517,13 +532,15 @@ void Autofill::RemoveLogin(mate::Arguments* args) {
     return;
   }
   password_manager::PasswordStore* store = GetPasswordStore();
-  store->RemoveLogin(form);
+  if (store)
+    store->RemoveLogin(form);
 }
 
 void Autofill::ClearLogins() {
   password_manager::PasswordStore* store = GetPasswordStore();
-  store->RemoveLoginsCreatedBetween(base::Time(), base::Time::Max(),
-                                    base::Closure());
+  if (store)
+    store->RemoveLoginsCreatedBetween(base::Time(), base::Time::Max(),
+                                      base::Closure());
 }
 
 void Autofill::OnPersonalDataChanged() {
@@ -552,8 +569,16 @@ void Autofill::OnPersonalDataChanged() {
 void Autofill::OnLoginsChanged(
     const password_manager::PasswordStoreChangeList& changes) {
   password_manager::PasswordStore* store = GetPasswordStore();
-  store->GetAutofillableLogins(password_list_consumer_.get());
-  store->GetBlacklistLogins(password_blacked_list_consumer_.get());
+  if (store) {
+    BravePasswordStoreConsumer* password_list_consumer =
+      password_list_consumer_.get();
+    BravePasswordStoreConsumer* password_blacked_list_consumer =
+      password_blacked_list_consumer_.get();
+    if (password_list_consumer)
+      store->GetAutofillableLogins(password_list_consumer);
+    if (password_blacked_list_consumer)
+      store->GetBlacklistLogins(password_blacked_list_consumer);
+  }
 }
 
 // static

@@ -83,6 +83,10 @@ class BraveDataSource : public content::URLDataSource,
     return mime_type;
   }
 
+  bool ShouldReplaceExistingSource() const override {
+    return false;
+  }
+
   bool ShouldAddContentSecurityPolicy() const override {
     return false;
   }

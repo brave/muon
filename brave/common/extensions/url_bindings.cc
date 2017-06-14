@@ -294,7 +294,8 @@ void URLBindings::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
   std::string url_string = *v8::String::Utf8Value(args[0]);
   gin::Handle<WrappableGURL> gurl = gin::CreateHandle(
       context()->isolate(), new WrappableGURL(url_string));
-  args.GetReturnValue().Set(gurl->GetWrapper(context()->isolate()).ToLocalChecked());
+  args.GetReturnValue().Set(
+      gurl->GetWrapper(context()->isolate()).ToLocalChecked());
 }
 
 void URLBindings::FormatForDisplay(
@@ -329,19 +330,22 @@ void URLBindings::Parse(
 
   GURL gurl(url_string);
   gin::Dictionary dict = gin::Dictionary::CreateEmpty(isolate);
-  if (gurl.has_username())
-    dict.Set("auth", gurl.username() + (gurl.has_password() ? ":" + gurl.password() : ""));
-  dict.Set("hash", gurl.ref());
-  dict.Set("hostname", gurl.host());
-  dict.Set("host", gurl.host() + ":" + gurl.port());
-  dict.Set("href", gurl.possibly_invalid_spec());
-  dict.Set("path", gurl.PathForRequest());
-  dict.Set("pathname", gurl.path());
-  dict.Set("port", gurl.port());
-  dict.Set("protocol", gurl.scheme());
-  dict.Set("query", gurl.query());
-  dict.Set("search", "?" + gurl.query());
-  dict.Set("origin", gurl.GetOrigin());
+  if (gurl.is_valid()) {
+    if (gurl.has_username())
+      dict.Set("auth", gurl.username() + (gurl.has_password()
+        ? ":" + gurl.password() : ""));
+    dict.Set("hash", gurl.ref());
+    dict.Set("hostname", gurl.host());
+    dict.Set("host", gurl.host() + ":" + gurl.port());
+    dict.Set("href", gurl.possibly_invalid_spec());
+    dict.Set("path", gurl.PathForRequest());
+    dict.Set("pathname", gurl.path());
+    dict.Set("port", gurl.port());
+    dict.Set("protocol", gurl.scheme());
+    dict.Set("query", gurl.query());
+    dict.Set("search", "?" + gurl.query());
+    dict.Set("origin", gurl.GetOrigin());
+  }
   args.GetReturnValue().Set(gin::ConvertToV8(isolate, dict));
 }
 

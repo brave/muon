@@ -82,6 +82,7 @@ void WebFrameBindings::Invalidate() {
   // only remove the spell check client when the main frame is invalidated
   if (!context()->web_frame()->Parent()) {
     context()->web_frame()->View()->SetSpellCheckClient(nullptr);
+    context()->web_frame()->SetTextCheckClient(nullptr);
     spell_check_client_.reset(nullptr);
   }
   ObjectBackedNativeHandler::Invalidate();
@@ -144,6 +145,7 @@ void WebFrameBindings::SetSpellCheckProvider(
       new atom::api::SpellCheckClient(
           lang, auto_spell_correct_turned_on, GetIsolate(), provider));
   context()->web_frame()->View()->SetSpellCheckClient(spell_check_client.get());
+  context()->web_frame()->SetTextCheckClient(spell_check_client.get());
   spell_check_client_.swap(spell_check_client);
 }
 

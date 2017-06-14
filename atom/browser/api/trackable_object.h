@@ -16,6 +16,13 @@ namespace base {
 class SupportsUserData;
 }
 
+namespace atom {
+namespace api {
+class MenuMac;
+class MenuViews;
+}  // namespace api
+}  // namespace atom
+
 namespace mate {
 
 // Users should use TrackableObject instead.
@@ -45,6 +52,10 @@ class TrackableObjectBase {
   int32_t weak_map_id_;
 
  private:
+  // async menus will destroy themselves when closed
+  friend class atom::api::MenuMac;
+  friend class atom::api::MenuViews;
+
   void Destroy();
 
   base::Closure cleanup_;

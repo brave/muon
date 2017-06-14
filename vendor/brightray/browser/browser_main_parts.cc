@@ -29,6 +29,7 @@
 
 #if defined(TOOLKIT_VIEWS)
 #include "browser/views/views_delegate.h"
+#include "chrome/browser/ui/views/harmony/harmony_layout_provider.h"
 #endif
 
 #if defined(USE_X11)
@@ -186,7 +187,9 @@ void BrowserMainParts::ToolkitInitialized() {
 #endif
 
 #if defined(TOOLKIT_VIEWS)
-  views_delegate_.reset(new ViewsDelegate);
+  views_delegate_ = base::MakeUnique<ViewsDelegate>();
+ if (!views::LayoutProvider::Get())
+    layout_provider_ = ChromeLayoutProvider::CreateLayoutProvider();
 #endif
 
 #if defined(OS_WIN)

@@ -256,6 +256,28 @@ source_set("browser") {
     ]
   }
 
+  if (toolkit_views) {
+    sources += [
+      "//chrome/browser/ui/views/harmony/chrome_layout_provider.cc",
+      "//chrome/browser/ui/views/harmony/chrome_layout_provider.h",
+      "//chrome/browser/ui/views/harmony/chrome_typography.cc",
+      "//chrome/browser/ui/views/harmony/chrome_typography.h",
+      "//chrome/browser/ui/views/harmony/harmony_layout_provider.cc",
+      "//chrome/browser/ui/views/harmony/harmony_layout_provider.h",
+      "//chrome/browser/ui/views/harmony/harmony_typography_provider.cc",
+      "//chrome/browser/ui/views/harmony/harmony_typography_provider.h",
+    ]
+
+    deps += [
+      "//base",
+      "//skia",
+      "//ui/base",
+      "//ui/events",
+      "//ui/gfx",
+      "//ui/gfx/geometry",
+    ]
+  }
+
   if (is_mac) {
     sources += [
       "//chrome/browser/ui/certificate_viewer_mac.h",
@@ -555,6 +577,7 @@ source_set("web_data") {
     "//components/keyed_service/content",
     "//components/webdata_services",
     ":sync",
+    "//chrome/app:generated_resources",
   ]
 }
 

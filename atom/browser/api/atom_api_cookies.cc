@@ -215,6 +215,11 @@ Cookies::Cookies(v8::Isolate* isolate,
 Cookies::~Cookies() {
 }
 
+void Cookies::GetAll(const base::DictionaryValue& filter,
+                  const GetCallback& callback) {
+  Cookies::Get(filter, callback);
+}
+
 void Cookies::Get(const base::DictionaryValue& filter,
                   const GetCallback& callback) {
   std::unique_ptr<base::DictionaryValue> copied(filter.CreateDeepCopy());
@@ -255,9 +260,12 @@ void Cookies::BuildPrototype(v8::Isolate* isolate,
   mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
       .SetMethod("get", &Cookies::Get)
       .SetMethod("remove", &Cookies::Remove)
-      .SetMethod("set", &Cookies::Set);
+      .SetMethod("set", &Cookies::Set)
+      .SetMethod("getAll", &Cookies::GetAll);
 }
 
 }  // namespace api
 
 }  // namespace atom
+
+

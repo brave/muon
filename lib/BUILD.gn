@@ -51,7 +51,7 @@ action("lib") {
     "muon/module_system/commonjs.js",
     "util/base64-js.js",
     "util/buffer.js",
-    "util/ieee754.js"    
+    "util/ieee754.js"
   ]
 
   if (enable_extensions) {
