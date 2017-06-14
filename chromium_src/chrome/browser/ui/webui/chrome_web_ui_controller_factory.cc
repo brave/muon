@@ -99,8 +99,9 @@ class BraveDataSource : public content::URLDataSource,
     return true;
   }
 
-  bool ShouldServiceRequest(const net::URLRequest* request) const override {
-    GURL url = request->url();
+  bool ShouldServiceRequest(const GURL& url,
+                            content::ResourceContext* resource_context,
+                            int render_process_id) const override {
     return url.SchemeIs(content::kChromeUIScheme) && url.host() == "brave";
   }
 
