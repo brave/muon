@@ -91,7 +91,7 @@ index 296f829cbb3080a60e7c059c9947c85201550c6c..a691cd481eb3a9bce1a8750a860226a1
    goma_prefix = ""
  }
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 6279c3d65737f3744f68a255511a2d2f932cfd82..67dfe35b06f2a272e6e3e0727ab5b526e9672f6d 100644
+index 070d7c6008b1df85486014c538bc6e98b6771220..c26cad1e37ea14fabab1ff39c348cf1fd54d49e8 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
 @@ -33,6 +33,11 @@ if (is_android) {
@@ -437,10 +437,10 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..0d1f9efcb260f8c943ab24a4c23c14db
    }
  
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 958a29a8d6681e1be780b52c1a90e77952b167d0..f684f80ef241b25901f291b9af68470aff4a0f95 100644
+index 7f659bdcdccbce1044e3ee2f2d9295cdce20b02d..b22a1518d28b641ff358d00013536f6852572186 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
-@@ -550,6 +550,12 @@ static_library("common") {
+@@ -552,6 +552,12 @@ static_library("common") {
      ]
      public_deps += [ "//chrome/common:version_header" ]
    }
@@ -777,7 +777,7 @@ index ce885e05e62af97777314397c79d1f05aa0dc36a..c2b8a35bfdbd6a23ce288b2007dcb8ce
  }
  # Note: Update the test expectations in GetBaseMessageIdForMode.GoogleStringIds
 diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
-index bed32f454097fda9176a3939780a7eb3b0f4b394..8fa327a5101f6d2dbd17cc85d908e9e3ad8f53ae 100644
+index bed32f454097fda9176a3939780a7eb3b0f4b394..6518354eb5a1192979ba80868a9be16384873b80 100644
 --- a/chrome/renderer/BUILD.gn
 +++ b/chrome/renderer/BUILD.gn
 @@ -390,6 +390,23 @@ static_library("renderer") {
@@ -789,12 +789,12 @@ index bed32f454097fda9176a3939780a7eb3b0f4b394..8fa327a5101f6d2dbd17cc85d908e9e3
 +    include_dirs = [
 +      "//electron/chromium_src"
 +    ]
-+  
++
 +    sources -= [
 +      "content_settings_observer.cc",
 +      "content_settings_observer.h",
 +    ]
-+  
++
 +    if (enable_extensions) {
 +      sources -= [
 +        "extensions/chrome_extensions_dispatcher_delegate.cc",
@@ -863,7 +863,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 7f2ceae373795d33f95d79ba2f6dc98d17b03d60..e0e2d0ea973023e3d2444987ae582bddf8c72818 100644
+index 23a1662fd9aaef6735690b3c9b9dfd452f0c9abb..836a4aa717bdb002fdf5881c4bb186edc3370865 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -837,7 +837,7 @@ if (!is_android) {
@@ -1582,7 +1582,7 @@ index efe95f0a6e7492a295e168eaa7c62e2d5582fbc3..630cd4f33cf92d90c1866a4b4cfc2f14
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 627a0e570cb1c368107bfb95d1ba0099740adb0c..e60c7b862819b17c317a8e8a8cabfc2a2760eb43 100644
+index 7f4a8b07365c8220cc67f849f887d5a17282e1be..e4db502c3aa9f67fa4f3ae27874904a698891e5b 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1656,7 +1656,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
