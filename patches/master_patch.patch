@@ -1010,6 +1010,42 @@ index 1c68e13912c2dfa7cc842bab169029c58677811a..3731fe3df76b0ac1dbf155c221fc64e2
  }
  
  content::WebContents* GuestViewManager::GetGuestByInstanceIDSafely(
+diff --git a/components/history/core/browser/history_service.cc b/components/history/core/browser/history_service.cc
+index b9ebe00521add936bbbd9d22696e8edf2421a08b..1ff326737ef1047fd639f33742696cdbc9f784be 100644
+--- a/components/history/core/browser/history_service.cc
++++ b/components/history/core/browser/history_service.cc
+@@ -1023,6 +1023,17 @@ void HistoryService::DeleteURLsForTest(const std::vector<GURL>& urls) {
+                                            history_backend_, urls));
+ }
+ 
++void HistoryService::DeleteVisitedURLs() {
++  DCHECK(backend_task_runner_) << "History service being called after cleanup";
++  DCHECK(thread_checker_.CalledOnValidThread());
++
++  if (visit_delegate_) {
++    visit_delegate_->DeleteAllURLs();
++  } else {
++    LOG(WARNING) << "History service missing visit delegate";
++  }
++};
++
+ void HistoryService::ExpireHistoryBetween(
+     const std::set<GURL>& restrict_urls,
+     Time begin_time,
+diff --git a/components/history/core/browser/history_service.h b/components/history/core/browser/history_service.h
+index c89868c9b4f974503c737d8b635469b089cd8f10..efbf919cbe4b219b869c451e101209efab48c0a1 100644
+--- a/components/history/core/browser/history_service.h
++++ b/components/history/core/browser/history_service.h
+@@ -352,6 +352,9 @@ class HistoryService : public syncer::SyncableService, public KeyedService {
+   // URLs one by one is slow as it has to flush to disk each time.)
+   void DeleteURLsForTest(const std::vector<GURL>& urls);
+ 
++  // Purges database of visited links in the visit delegate
++  void DeleteVisitedURLs();
++
+   // Removes all visits in the selected time range (including the
+   // start time), updating the URLs accordingly. This deletes any
+   // associated data. This function also deletes the associated
 diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
 index d11d28dee8d067d142cf9b16f4130c1aeba63a03..1cc8f14d464bf4f20e69c7009fdfacb895eab605 100644
 --- a/components/printing/common/print_messages.h
