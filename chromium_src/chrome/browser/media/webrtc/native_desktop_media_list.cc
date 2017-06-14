@@ -46,7 +46,6 @@ gfx::ImageSkia ScaleDesktopFrame(std::unique_ptr<webrtc::DesktopFrame> frame,
 
   SkBitmap result;
   result.allocN32Pixels(scaled_rect.width(), scaled_rect.height(), true);
-  result.lockPixels();
 
   uint8* pixels_data = reinterpret_cast<uint8*>(result.getPixels());
   libyuv::ARGBScale(frame->data(), frame->stride(),
@@ -66,8 +65,6 @@ gfx::ImageSkia ScaleDesktopFrame(std::unique_ptr<webrtc::DesktopFrame> frame,
           0xff;
     }
   }
-
-  result.unlockPixels();
 
   return gfx::ImageSkia::CreateFrom1xBitmap(result);
 }
