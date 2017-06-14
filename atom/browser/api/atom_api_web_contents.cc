@@ -2035,12 +2035,8 @@ bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
 
 bool WebContents::SendIPCSharedMemory(const base::string16& channel,
                                       base::SharedMemory* shared_memory) {
-  auto process_handle = web_contents()->GetRenderProcessHost()->GetHandle();
-  if (!process_handle)
-    return false;
-
-  base::SharedMemoryHandle memory_handle;
-  if (!shared_memory->ShareToProcess(process_handle, &memory_handle))
+  base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
+  if (!memory_handle.IsValid())
     return false;
 
   return Send(
