@@ -30,7 +30,7 @@ namespace brave {
 class ExtensionInstallerTraits :
     public component_updater::ComponentInstallerTraits {
  public:
-  explicit ExtensionInstallerTraits(const std::string &public_key,
+  explicit ExtensionInstallerTraits(const std::string &base64_public_key,
                                     const ReadyCallback& ready_callback);
   ~ExtensionInstallerTraits() override {}
 
@@ -53,6 +53,8 @@ class ExtensionInstallerTraits :
   update_client::InstallerAttributes GetInstallerAttributes() const override;
 
   std::string public_key_;
+  std::string base64_public_key_;
+
   ReadyCallback ready_callback_;
   DISALLOW_COPY_AND_ASSIGN(ExtensionInstallerTraits);
 };

@@ -62,9 +62,11 @@ namespace {
 namespace brave {
 
 ExtensionInstallerTraits::ExtensionInstallerTraits(
-    const std::string &public_key,
+    const std::string &base64_public_key,
     const ReadyCallback& ready_callback) :
-    public_key_(public_key), ready_callback_(ready_callback) {
+    base64_public_key_(base64_public_key),
+    ready_callback_(ready_callback) {
+  base::Base64Decode(base64_public_key, &public_key_);
 }
 
 bool ExtensionInstallerTraits::RequiresNetworkEncryption() const {
@@ -101,9 +103,7 @@ bool ExtensionInstallerTraits::VerifyInstallation(
   // The manifest file will generate a random ID if we don't provide one.
   // We want to write one with the actual extensions public key so we get
   // the same extensionID which is generated from the public key.
-  std::string base64_public_key;
-  base::Base64Encode(public_key_, &base64_public_key);
-  if (!RewriteManifestFile(install_dir, manifest, base64_public_key)) {
+  if (!RewriteManifestFile(install_dir, manifest, base64_public_key_)) {
     return false;
   }
   return base::PathExists(
