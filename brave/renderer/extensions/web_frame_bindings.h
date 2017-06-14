@@ -25,10 +25,6 @@ class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
   virtual ~WebFrameBindings();
 
   void WebFrame(const v8::FunctionCallbackInfo<v8::Value>& args);
-  void RegisterElementResizeCallback(
-    const v8::FunctionCallbackInfo<v8::Value>& args);
-  void RegisterEmbedderCustomElement(
-    const v8::FunctionCallbackInfo<v8::Value>& args);
   void SetSpellCheckProvider(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   void SetZoomLevel(const v8::FunctionCallbackInfo<v8::Value>& args);

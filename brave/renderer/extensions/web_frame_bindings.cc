@@ -65,14 +65,6 @@ WebFrameBindings::WebFrameBindings(extensions::ScriptContext* context)
   RouteFunction(
       "setGlobal",
       base::Bind(&WebFrameBindings::SetGlobal, base::Unretained(this)));
-  RouteFunction(
-      "registerElementResizeCallback",
-      base::Bind(&WebFrameBindings::RegisterElementResizeCallback,
-          base::Unretained(this)));
-  RouteFunction(
-      "registerEmbedderCustomElement",
-      base::Bind(&WebFrameBindings::RegisterEmbedderCustomElement,
-          base::Unretained(this)));
 }
 
 WebFrameBindings::~WebFrameBindings() {
@@ -86,46 +78,6 @@ void WebFrameBindings::Invalidate() {
     spell_check_client_.reset(nullptr);
   }
   ObjectBackedNativeHandler::Invalidate();
-}
-
-void WebFrameBindings::RegisterElementResizeCallback(
-    const v8::FunctionCallbackInfo<v8::Value>& args) {
-  // There are two parameters.
-  CHECK_EQ(args.Length(), 2);
-  // Element Instance ID.
-  CHECK(args[0]->IsInt32());
-  // Callback function.
-  CHECK(args[1]->IsFunction());
-
-  int element_instance_id = args[0]->Int32Value();
-  // An element instance ID uniquely identifies a ExtensionsGuestViewContainer
-  // within a RenderView.
-  auto* guest_view_container =
-      static_cast<extensions::ExtensionsGuestViewContainer*>(
-          guest_view::GuestViewContainer::FromID(element_instance_id));
-  if (!guest_view_container)
-    return;
-
-  guest_view_container->RegisterElementResizeCallback(
-      args[1].As<v8::Function>(), args.GetIsolate());
-
-  args.GetReturnValue().Set(v8::Boolean::New(context()->isolate(), true));
-}
-
-void WebFrameBindings::RegisterEmbedderCustomElement(
-    const v8::FunctionCallbackInfo<v8::Value>& args) {
-  CHECK(args.Length() >= 1 &&
-        args[0]->IsString());
-
-  const base::string16 name = base::UTF8ToUTF16(mate::V8ToString(args[0]));
-  v8::Local<v8::Value> options =
-      static_cast<v8::Local<v8::Value>>(args[1]);
-
-  blink::WebExceptionCode c = 0;
-  args.GetReturnValue().Set(
-    context()->web_frame()->
-        GetDocument().RegisterEmbedderCustomElement(
-            blink::WebString::FromUTF16(name), options, c));
 }
 
 void WebFrameBindings::SetSpellCheckProvider(
@@ -207,19 +159,6 @@ void WebFrameBindings::SetZoomLevel(
   context()->web_frame()->View()->SetZoomLevel(level);
 }
 
-// double WebFrame::GetZoomLevel() const {
-//   return web_frame_->View()->ZoomLevel();
-// }
-
-// double WebFrame::SetZoomFactor(double factor) {
-//   return blink::WebView::zoomLevelToZoomFactor(SetZoomLevel(
-//       blink::WebView::zoomFactorToZoomLevel(factor)));
-// }
-
-// double WebFrame::GetZoomFactor() const {
-//   return blink::WebView::zoomLevelToZoomFactor(GetZoomLevel());
-// }
-
 void WebFrameBindings::SetZoomLevelLimits(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
   CHECK_EQ(args.Length(), 2);
@@ -229,14 +168,6 @@ void WebFrameBindings::SetZoomLevelLimits(
   float max_level = args[1].As<v8::Number>()->Value();
   context()->web_frame()->View()->ZoomLimitsChanged(min_level, max_level);
 }
-
-// float WebFrame::GetPageScaleFactor() {
-//   return web_frame_->View()->PageScaleFactor();
-// }
-
-// void WebFrame::SetPageScaleFactor(float factor) {
-//   web_frame_->View()->SetPageScaleFactor(factor);
-// }
 
 void WebFrameBindings::SetPageScaleLimits(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
@@ -249,13 +180,5 @@ void WebFrameBindings::SetPageScaleLimits(
   web_frame->View()->SetDefaultPageScaleLimits(min_scale, max_scale);
   web_frame->View()->SetIgnoreViewportTagScaleLimits(true);
 }
-
-// float WebFrame::GetTextZoomFactor() {
-//   return web_frame_->View()->TextZoomFactor();
-// }
-
-// void WebFrame::SetTextZoomFactor(float factor) {
-//   web_frame_->View()->SetTextZoomFactor(factor);
-// }
 
 }  // namespace brave
