@@ -882,7 +882,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index a4bac83b35eeaf65488431d2f90985078a7c1e48..bd28e18c65b20ff1153de3fd3b1a7f7a89f1b996 100644
+index a46e531b709b3c062a05888a4ff7c2e11123fcc2..75616fbd85e9ea909296a982dda9c220031b2adf 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -779,7 +779,7 @@ if (!is_android) {
@@ -1803,7 +1803,7 @@ index 1d35db54bdeae44770d385f3a3e92e9ce1e64393..8d9b99080ce8234c0bd21ce3b4e4f3c5
    is_elastic_overscroll_enabled_ = false;
  #endif
 diff --git a/extensions/browser/api/BUILD.gn b/extensions/browser/api/BUILD.gn
-index dcf2bdb8fe74c816c8e8e3cebfb90c819c72c6c2..edc42708dfffc89da64ca24496d7085d5a93edd0 100644
+index dcf2bdb8fe74c816c8e8e3cebfb90c819c72c6c2..45ddc3bcccf2b6169a90594e4a95be19df3cdb33 100644
 --- a/extensions/browser/api/BUILD.gn
 +++ b/extensions/browser/api/BUILD.gn
 @@ -25,6 +25,9 @@ source_set("api") {
