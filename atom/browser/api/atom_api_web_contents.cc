@@ -2551,6 +2551,7 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   content::WebContents* source = nullptr;
   if (opener_tab_id != -1) {
     source = extensions::TabHelper::GetTabById(opener_tab_id);
+    tab_helper->SetOpener(opener_tab_id);
   }
   if (!source)
     source = web_contents();

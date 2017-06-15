@@ -86,6 +86,7 @@ TabHelper::TabHelper(content::WebContents* contents)
       active_(false),
       is_placeholder_(false),
       window_closing_(false),
+      opener_tab_id_(TabStripModel::kNoTab),
       browser_(nullptr) {
   SessionTabHelper::CreateForWebContents(contents);
   SetWindowId(-1);
@@ -495,6 +496,10 @@ brave::TabViewGuest* TabHelper::guest() const {
 
 void TabHelper::SetTabValues(const base::DictionaryValue& values) {
   values_->MergeDictionary(&values);
+}
+
+void TabHelper::SetOpener(int openerTabId) {
+  opener_tab_id_ = openerTabId;
 }
 
 void TabHelper::RenderViewCreated(content::RenderViewHost* render_view_host) {
