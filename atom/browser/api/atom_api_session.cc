@@ -432,6 +432,8 @@ void Session::ClearHistory(mate::Arguments* args) {
                                         base::Time::Max(),
                                         callback,
                                         &task_tracker);
+  // Clear visited link state
+  history_service->DeleteVisitedURLs();
 }
 
 void Session::FlushStorageData() {

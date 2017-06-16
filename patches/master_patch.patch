@@ -590,7 +590,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@
+@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -882,7 +882,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index a4bac83b35eeaf65488431d2f90985078a7c1e48..bd28e18c65b20ff1153de3fd3b1a7f7a89f1b996 100644
+index a46e531b709b3c062a05888a4ff7c2e11123fcc2..75616fbd85e9ea909296a982dda9c220031b2adf 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -779,7 +779,7 @@ if (!is_android) {
@@ -1010,6 +1010,42 @@ index 1c68e13912c2dfa7cc842bab169029c58677811a..3731fe3df76b0ac1dbf155c221fc64e2
  }
  
  content::WebContents* GuestViewManager::GetGuestByInstanceIDSafely(
+diff --git a/components/history/core/browser/history_service.cc b/components/history/core/browser/history_service.cc
+index b9ebe00521add936bbbd9d22696e8edf2421a08b..1ff326737ef1047fd639f33742696cdbc9f784be 100644
+--- a/components/history/core/browser/history_service.cc
++++ b/components/history/core/browser/history_service.cc
+@@ -1023,6 +1023,17 @@ void HistoryService::DeleteURLsForTest(const std::vector<GURL>& urls) {
+                                            history_backend_, urls));
+ }
+ 
++void HistoryService::DeleteVisitedURLs() {
++  DCHECK(backend_task_runner_) << "History service being called after cleanup";
++  DCHECK(thread_checker_.CalledOnValidThread());
++
++  if (visit_delegate_) {
++    visit_delegate_->DeleteAllURLs();
++  } else {
++    LOG(WARNING) << "History service missing visit delegate";
++  }
++};
++
+ void HistoryService::ExpireHistoryBetween(
+     const std::set<GURL>& restrict_urls,
+     Time begin_time,
+diff --git a/components/history/core/browser/history_service.h b/components/history/core/browser/history_service.h
+index c89868c9b4f974503c737d8b635469b089cd8f10..efbf919cbe4b219b869c451e101209efab48c0a1 100644
+--- a/components/history/core/browser/history_service.h
++++ b/components/history/core/browser/history_service.h
+@@ -352,6 +352,9 @@ class HistoryService : public syncer::SyncableService, public KeyedService {
+   // URLs one by one is slow as it has to flush to disk each time.)
+   void DeleteURLsForTest(const std::vector<GURL>& urls);
+ 
++  // Purges database of visited links in the visit delegate
++  void DeleteVisitedURLs();
++
+   // Removes all visits in the selected time range (including the
+   // start time), updating the URLs accordingly. This deletes any
+   // associated data. This function also deletes the associated
 diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
 index d11d28dee8d067d142cf9b16f4130c1aeba63a03..1cc8f14d464bf4f20e69c7009fdfacb895eab605 100644
 --- a/components/printing/common/print_messages.h
@@ -1460,7 +1496,7 @@ diff --git a/components/printing/renderer/print_web_view_helper_mac.mm b/compone
 index 4c1c5b9a73ec45da4bf946e042c1d78429261610..8198c4ce9c37a89cc076dac54c0c36d09ab1b670 100644
 --- a/components/printing/renderer/print_web_view_helper_mac.mm
 +++ b/components/printing/renderer/print_web_view_helper_mac.mm
-@@ -74,7 +74,6 @@
+@@ -74,7 +74,6 @@ void PrintWebViewHelper::PrintPagesInternal(
    }
  }
  
@@ -1468,7 +1504,7 @@ index 4c1c5b9a73ec45da4bf946e042c1d78429261610..8198c4ce9c37a89cc076dac54c0c36d0
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -111,7 +110,6 @@
+@@ -111,7 +110,6 @@ bool PrintWebViewHelper::RenderPreviewPage(
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1515,7 +1551,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index e162dd03169f95f4b522650f4f585beef106850c..ca81d874d9c3bad150dde4480c4f97e04cfc48b0 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@ @interface SyntheticPinchEvent : NSObject
+@@ -21,7 +21,7 @@
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1528,7 +1564,7 @@ diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/cont
 index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb441971770 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -138,6 +138,12 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
+@@ -138,6 +138,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
  
  }  // namespace
  
@@ -1541,7 +1577,7 @@ index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb4
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -455,7 +461,9 @@ float FlipYFromRectToScreen(float y, float rect_height) {
+@@ -455,7 +461,9 @@ RenderWidgetHostViewMac::RenderWidgetHostViewMac(RenderWidgetHost* widget,
    background_layer_.reset([[CALayer alloc] init]);
    // Set the default color to be white. This is the wrong thing to do, but many
    // UI components expect this view to be opaque.
@@ -1551,7 +1587,7 @@ index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb4
    [cocoa_view_ setLayer:background_layer_];
    [cocoa_view_ setWantsLayer:YES];
  
-@@ -1856,7 +1864,14 @@ - (BOOL)acceptsMouseEventsWhenInactive {
+@@ -1856,7 +1864,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1566,7 +1602,7 @@ index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb4
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2028,6 +2043,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
+@@ -2028,6 +2043,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1574,7 +1610,7 @@ index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb4
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -2041,6 +2057,7 @@ - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
+@@ -2041,6 +2057,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1582,7 +1618,7 @@ index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb4
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2088,8 +2105,10 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+@@ -2088,8 +2105,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1593,7 +1629,7 @@ index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb4
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2449,14 +2468,18 @@ - (void)showLookUpDictionaryOverlayFromRange:(NSRange)range
+@@ -2449,14 +2468,18 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    // do so. For this reason, for now, we accept this non-ideal way of fixing the
    // point offset manually from the view bounds. This should be revisited when
    // fixing issues in TextInputClientMac (https://crbug.com/643233).
@@ -1612,7 +1648,7 @@ index 85ece52a001652a3414a47189b2711f215a66290..960abaeab72bbf45b8b460fbbaf1cdb4
          [self showLookUpDictionaryOverlayInternal:string
                                      baselinePoint:baselinePoint
                                         targetView:targetView];
-@@ -2835,6 +2858,11 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
+@@ -2835,6 +2858,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  + (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1652,7 +1688,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index 2b457494ab70022635a2033e92c34dad367d2f67..666dc60c3ca3ab88ec7721c32445a40f8c98375e 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -589,6 +589,7 @@ - (void)draggedImage:(NSImage*)anImage
+@@ -589,6 +589,7 @@ void WebContentsViewMac::CloseTab() {
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -1678,7 +1714,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index ff2c964a68d0b21d46a3b88b2ea6c3ff4d9d0a07..af043f6d204ee90ec54bc7df401a3bd6519b8541 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -347,6 +347,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
+@@ -347,6 +347,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  
@@ -1803,7 +1839,7 @@ index 1d35db54bdeae44770d385f3a3e92e9ce1e64393..8d9b99080ce8234c0bd21ce3b4e4f3c5
    is_elastic_overscroll_enabled_ = false;
  #endif
 diff --git a/extensions/browser/api/BUILD.gn b/extensions/browser/api/BUILD.gn
-index dcf2bdb8fe74c816c8e8e3cebfb90c819c72c6c2..edc42708dfffc89da64ca24496d7085d5a93edd0 100644
+index dcf2bdb8fe74c816c8e8e3cebfb90c819c72c6c2..45ddc3bcccf2b6169a90594e4a95be19df3cdb33 100644
 --- a/extensions/browser/api/BUILD.gn
 +++ b/extensions/browser/api/BUILD.gn
 @@ -25,6 +25,9 @@ source_set("api") {
