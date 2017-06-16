@@ -40,10 +40,10 @@ namespace atom {
 namespace {
 
 void CreateProxyResolverFactory(
-  net::interfaces::ProxyResolverFactoryRequest request) {
-    mojo::MakeStrongBinding(
-        base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
-        std::move(request));
+    const service_manager::BindSourceInfo& source_info,
+    net::interfaces::ProxyResolverFactoryRequest request) {
+  mojo::MakeStrongBinding(base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
+                          std::move(request));
 }
 
 class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
@@ -66,6 +66,7 @@ class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
 };
 
 void CreateResourceUsageReporter(
+    const service_manager::BindSourceInfo& source_info,
     mojo::InterfaceRequest<chrome::mojom::ResourceUsageReporter> request) {
   mojo::MakeStrongBinding(base::MakeUnique<ResourceUsageReporterImpl>(),
                           std::move(request));
