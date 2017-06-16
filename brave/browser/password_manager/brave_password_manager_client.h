@@ -141,6 +141,7 @@ class BravePasswordManagerClient
 
   static void BindCredentialManager(
       content::RenderFrameHost* render_frame_host,
+      const service_manager::BindSourceInfo& source_info,
       password_manager::mojom::CredentialManagerRequest request);
 
   // A helper method to determine whether a save/update bubble can be shown
