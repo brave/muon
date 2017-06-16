@@ -28,10 +28,12 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
   void Inspect(content::DevToolsAgentHost* agent_host) override {}
   base::DictionaryValue* HandleCommand(content::DevToolsAgentHost* agent_host,
                                        base::DictionaryValue* command) override;
-  std::string GetTargetType(content::RenderFrameHost* host) override
-    {return std::string();}
-  std::string GetTargetTitle(content::RenderFrameHost* host) override
-    {return std::string();}
+  std::string GetTargetType(content::WebContents* web_contents) override {
+    return std::string();
+  }
+  std::string GetTargetTitle(content::WebContents* web_contents) override {
+    return std::string();
+  }
   scoped_refptr<content::DevToolsAgentHost> CreateNewTarget(
     const GURL& url) override {return nullptr;}
   std::string GetDiscoveryPageHTML() override
