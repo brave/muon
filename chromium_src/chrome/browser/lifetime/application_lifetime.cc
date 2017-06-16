@@ -4,11 +4,15 @@
 
 #include "chrome/browser/lifetime/application_lifetime.h"
 
-namespace chrome {
+namespace browser_shutdown {
 
 void NotifyAppTerminating() {
   // NOOP
 }
+
+} // namespace browser_shutdown
+
+namespace chrome {
 
 void OnAppExiting() {
   // NOOP
