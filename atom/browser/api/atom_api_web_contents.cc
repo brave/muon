@@ -653,12 +653,6 @@ void WebContents::AddNewContents(content::WebContents* source,
   auto event = v8::Local<v8::Object>::Cast(
       mate::Event::Create(isolate()).ToV8());
 
-  if (disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB) {
-    auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
-    if (tab_helper)
-      tab_helper->SetActive(true);
-  }
-
   mate::EmitEvent(isolate(),
                   env->process_object(),
                   "add-new-contents",
@@ -680,6 +674,12 @@ void WebContents::AddNewContents(content::WebContents* source,
       guest->Destroy(true);
     } else {
       delete new_contents;
+    }
+  } else {
+    if (disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB) {
+      auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
+      if (tab_helper)
+        tab_helper->SetActive(true);
     }
   }
 }
@@ -2483,6 +2483,7 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   auto event = v8::Local<v8::Object>::Cast(
       mate::Event::Create(isolate()).ToV8());
 
+  // DEPRECATED
   mate::EmitEvent(isolate(),
                   env->process_object(),
                   "on-tab-created",
@@ -2491,9 +2492,6 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
   bool user_gesture = false;
   options.Get("userGesture", &user_gesture);
-
-  int opener_tab_id = -1;
-  options.Get("openerTabId", &opener_tab_id);
 
   auto tab_helper = extensions::TabHelper::FromWebContents(tab);
 
@@ -2547,6 +2545,20 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
     tab_helper->Discard();
   }
+
+  int windowId = -1;
+  if (options.Get("windowId", &windowId) && windowId != -1) {
+    auto api_window =
+        mate::TrackableObject<Window>::FromWeakMapID(isolate(), windowId);
+    if (api_window) {
+      // TODO(bridiver) - combine these two methods
+      tab_helper->SetWindowId(windowId);
+      tab_helper->SetBrowser(api_window->window()->browser());
+    }
+  }
+
+  int opener_tab_id = -1;
+  options.Get("openerTabId", &opener_tab_id);
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != -1) {
