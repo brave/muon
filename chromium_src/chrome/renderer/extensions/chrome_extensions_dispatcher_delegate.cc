@@ -19,11 +19,15 @@
 #include "brave/renderer/extensions/web_frame_bindings.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/crash_keys.h"
+#include "chrome/renderer/extensions/app_hooks_delegate.h"
 #include "chrome/grit/renderer_resources.h"  // NOLINT: This file is generated
 #include "content/public/common/bindings_policy.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_view.h"
 #include "extensions/common/extension.h"
+#include "extensions/common/feature_switch.h"
+#include "extensions/renderer/api_binding_hooks.h"
+#include "extensions/renderer/api_bindings_system.h"
 #include "extensions/renderer/css_native_handler.h"
 #include "extensions/renderer/i18n_custom_bindings.h"
 #include "extensions/renderer/lazy_background_page_native_handler.h"
@@ -254,4 +258,13 @@ void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
 void ChromeExtensionsDispatcherDelegate::OnActiveExtensionsUpdated(
     const std::set<std::string>& extension_ids) {
   crash_keys::SetActiveExtensions(extension_ids);
+}
+
+void ChromeExtensionsDispatcherDelegate::InitializeBindingsSystem(
+    extensions::Dispatcher* dispatcher,
+    extensions::APIBindingsSystem* bindings_system) {
+  DCHECK(extensions::FeatureSwitch::native_crx_bindings()->IsEnabled());
+  bindings_system->GetHooksForAPI("app")->SetDelegate(
+      base::MakeUnique<extensions::AppHooksDelegate>(
+          dispatcher, bindings_system->request_handler()));
 }
