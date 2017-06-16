@@ -1955,6 +1955,23 @@ index b068dd92e3ba16c6d3de7e19801bc0a6032726ba..3c8a90617b9a8c0d25ba48a2a60c3580
    if (!locked_pending_user_gesture_)
      return false;
  
+diff --git a/third_party/WebKit/public/platform/WebTouchPoint.h b/third_party/WebKit/public/platform/WebTouchPoint.h
+index d26611fd06608eca590cff13f7b6006a82146475..6421edec6f2f2f55575a7b259dea80917fbbac9b 100644
+--- a/third_party/WebKit/public/platform/WebTouchPoint.h
++++ b/third_party/WebKit/public/platform/WebTouchPoint.h
+@@ -31,9 +31,9 @@
+ #ifndef WebTouchPoint_h
+ #define WebTouchPoint_h
+ 
+-#include "public/platform/WebCommon.h"
+-#include "public/platform/WebFloatPoint.h"
+-#include "public/platform/WebPointerProperties.h"
++#include "WebCommon.h"
++#include "WebFloatPoint.h"
++#include "WebPointerProperties.h"
+ 
+ namespace blink {
+ 
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
 index e3eb76a3a45e2771da729a263bf0823c546a7eec..7b3cf48983ab81c76b84f09c21c884e2995ea037 100644
 --- a/third_party/boringssl/BUILD.generated.gni
