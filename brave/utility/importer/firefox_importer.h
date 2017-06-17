@@ -24,6 +24,7 @@ class FirefoxImporter : public ::FirefoxImporter {
   ~FirefoxImporter();
 
   void ImportCookies();
+  void ImportSitePasswordPrefs();
 
   base::FilePath source_path_;
 
