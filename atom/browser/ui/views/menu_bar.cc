@@ -53,9 +53,11 @@ MenuBar::MenuBar()
   UpdateMenuBarColor();
   SetLayoutManager(new views::BoxLayout(
       views::BoxLayout::kHorizontal, 0, 0, 0));
+  menu_delegate_ = new MenuDelegate(this);
 }
 
 MenuBar::~MenuBar() {
+  if (menu_delegate_) delete menu_delegate_;
 }
 
 void MenuBar::SetMenu(AtomMenuModel* model) {
@@ -151,8 +153,7 @@ void MenuBar::OnMenuButtonClicked(views::MenuButton* source,
     return;
   }
 
-  MenuDelegate menu_delegate(this);
-  menu_delegate.RunMenu(menu_model_->GetSubmenuModelAt(id), source);
+  menu_delegate_->RunMenu(menu_model_->GetSubmenuModelAt(id), source);
 }
 
 void MenuBar::OnNativeThemeChanged(const ui::NativeTheme* theme) {
