@@ -8,6 +8,7 @@
 #include <string>
 
 #include "atom/browser/api/trackable_object.h"
+#include "base/task/cancelable_task_tracker.h"
 #include "base/values.h"
 #include "content/public/browser/download_manager.h"
 #include "native_mate/handle.h"
@@ -106,6 +107,9 @@ class Session: public mate::TrackableObject<Session>,
 
   // The X-DevTools-Emulate-Network-Conditions-Client-Id.
   std::string devtools_network_emulation_client_id_;
+
+  // The task tracker for the HistoryService callbacks.
+  base::CancelableTaskTracker task_tracker_;
 
   AtomBrowserContext* browser_context_;
 
