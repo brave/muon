@@ -426,12 +426,11 @@ void Session::ClearHistory(mate::Arguments* args) {
           Profile::FromBrowserContext(browser_context()),
           ServiceAccessType::EXPLICIT_ACCESS);
 
-  base::CancelableTaskTracker task_tracker;
   history_service->ExpireHistoryBetween(std::set<GURL>(),
                                         base::Time(),
                                         base::Time::Max(),
                                         callback,
-                                        &task_tracker);
+                                        &task_tracker_);
 }
 
 void Session::FlushStorageData() {
