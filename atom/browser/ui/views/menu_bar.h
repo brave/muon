@@ -63,6 +63,7 @@ class MenuBar : public views::View,
   void UpdateMenuBarColor();
 
   SkColor background_color_;
+  MenuDelegate* menu_delegate_;
 
 #if defined(USE_X11)
   SkColor enabled_color_;
