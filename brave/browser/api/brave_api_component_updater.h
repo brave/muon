@@ -14,6 +14,8 @@
 #include "components/component_updater/component_updater_service.h"
 #include "native_mate/handle.h"
 
+const std::string kWidevineId("oimompecagnajdejgnnjijobebaeigek");  // NOLINT
+
 // Just used to give access to OnDemandUpdater since it's private.
 // Chromium has ComponentsUI which is a friend class, so we just
 // do this hack here to gain access.

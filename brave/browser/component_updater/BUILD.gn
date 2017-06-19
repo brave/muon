@@ -8,7 +8,6 @@ source_set("component_updater") {
   sources = [
     "brave_component_updater_configurator.cc",
     "brave_component_updater_configurator.h",
-    "default_extensions.h",
     "extension_installer_traits.cc",
     "extension_installer_traits.h",
     "widevine_cdm_component_installer.cc",
