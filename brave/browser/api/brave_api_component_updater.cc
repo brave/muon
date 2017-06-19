@@ -5,7 +5,6 @@
 #include "brave/browser/api/brave_api_component_updater.h"
 
 #include "base/base64.h"
-#include "brave/browser/component_updater/default_extensions.h"
 #include "brave/browser/component_updater/extension_installer_traits.h"
 #include "brave/browser/component_updater/widevine_cdm_component_installer.h"
 #include "chrome/browser/browser_process_impl.h"
@@ -126,25 +125,7 @@ void ComponentUpdater::RegisterComponent(mate::Arguments* args) {
 
   std::string public_key_string;
 
-  if (component_id == kOnePasswordId) {
-    base::Base64Encode(kOnePasswordPublicKeyStr, &public_key_string);
-  } else if (component_id == kDashlaneId) {
-    base::Base64Encode(kDashlanePublicKeyStr, &public_key_string);
-  } else if (component_id == kLastPassId) {
-    base::Base64Encode(kLastPassPublicKeyStr, &public_key_string);
-  } else if (component_id == kPDFJSId) {
-    base::Base64Encode(kPDFJSPublicKeyStr, &public_key_string);
-  } else if (component_id == kPocketId) {
-    base::Base64Encode(kPocketPublicKeyStr, &public_key_string);
-  } else if (component_id == kVimiumId) {
-    base::Base64Encode(kVimiumPublicKeyStr, &public_key_string);
-  } else if (component_id == kEnpassId) {
-    base::Base64Encode(kEnpassPublicKeyStr, &public_key_string);
-  } else if (component_id == kBitwardenId) {
-    base::Base64Encode(kBitwardenPublicKeyStr, &public_key_string);
-  } else if (component_id == kHoneyId) {
-    base::Base64Encode(kHoneyPublicKeyStr, &public_key_string);
-  } else if (component_id == kWidevineId) {
+  if (component_id == kWidevineId) {
     brave::RegisterWidevineCdmComponent(
         g_browser_process->component_updater(),
         registered_callback, ready_callback);
