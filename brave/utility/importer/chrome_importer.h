@@ -14,6 +14,7 @@
 #include "base/compiler_specific.h"
 #include "base/files/file_path.h"
 #include "base/macros.h"
+#include "base/nix/xdg_util.h"
 #include "build/build_config.h"
 #include "chrome/utility/importer/importer.h"
 #include "components/favicon_base/favicon_usage_data.h"
@@ -40,9 +41,12 @@ class ChromeImporter : public Importer {
  private:
   ~ChromeImporter() override;
 
+  static base::nix::DesktopEnvironment GetDesktopEnvironment();
+
   void ImportBookmarks();
   void ImportHistory();
   void ImportCookies();
+  void ImportPasswords();
 
   // Multiple URLs can share the same favicon; this is a map
   // of URLs -> IconIDs that we load as a temporary step before

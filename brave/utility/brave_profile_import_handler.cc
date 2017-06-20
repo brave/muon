@@ -8,10 +8,13 @@
 #include "brave/utility/brave_profile_import_handler.h"
 
 #include "base/bind.h"
+#include "base/command_line.h"
 #include "base/location.h"
 #include "base/memory/ptr_util.h"
 #include "base/memory/ref_counted.h"
 #include "base/single_thread_task_runner.h"
+#include "base/strings/string_util.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "build/build_config.h"
@@ -50,6 +53,12 @@ void BraveProfileImportHandler::StartImport(
   }
 
   items_to_import_ = items;
+
+  if (base::StartsWith(base::UTF16ToUTF8(source_profile.importer_name),
+                       "Chrome", base::CompareCase::SENSITIVE)) {
+    auto command_line = base::CommandLine::ForCurrentProcess();
+    command_line->AppendSwitch("import-chrome");
+  }
 
   // Create worker thread in which importer runs.
   import_thread_.reset(new base::Thread("import_thread"));

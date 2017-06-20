@@ -11,7 +11,10 @@
 #include "base/files/file_util.h"
 #include "base/json/json_reader.h"
 #include "base/macros.h"
+#include "base/memory/ref_counted.h"
 #include "base/strings/utf_string_conversions.h"
+#include "base/task_scheduler/post_task.h"
+#include "base/task_scheduler/task_traits.h"
 #include "base/values.h"
 #include "brave/common/importer/imported_cookie_entry.h"
 #include "build/build_config.h"
@@ -19,9 +22,29 @@
 #include "chrome/common/importer/importer_bridge.h"
 #include "chrome/common/importer/importer_url_row.h"
 #include "chrome/utility/importer/favicon_reencode.h"
+#include "components/autofill/core/common/password_form.h"
+#include "components/os_crypt/os_crypt.h"
+#include "components/password_manager/core/browser/login_database.h"
+#include "components/password_manager/core/common/password_manager_pref_names.h"
+#include "components/prefs/json_pref_store.h"
+#include "components/prefs/pref_filter.h"
 #include "sql/connection.h"
 #include "sql/statement.h"
 #include "url/gurl.h"
+
+#if defined(USE_X11)
+#if defined(USE_LIBSECRET)
+#include "chrome/browser/password_manager/native_backend_libsecret.h"
+#endif
+#include "chrome/browser/password_manager/native_backend_kwallet_x.h"
+#include "chrome/browser/password_manager/password_store_x.h"
+#include "components/os_crypt/key_storage_util_linux.h"
+
+base::nix::DesktopEnvironment ChromeImporter::GetDesktopEnvironment() {
+  std::unique_ptr<base::Environment> env(base::Environment::Create());
+  return base::nix::GetDesktopEnvironment(env.get());
+}
+#endif
 
 ChromeImporter::ChromeImporter() {
 }
@@ -55,6 +78,13 @@ void ChromeImporter::StartImport(const importer::SourceProfile& source_profile,
     ImportCookies();
     bridge_->NotifyItemEnded(importer::COOKIES);
   }
+
+  if ((items & importer::PASSWORDS) && !cancelled()) {
+    bridge_->NotifyItemStarted(importer::PASSWORDS);
+    ImportPasswords();
+    bridge_->NotifyItemEnded(importer::PASSWORDS);
+  }
+
   bridge_->NotifyEnded();
 }
 
@@ -248,6 +278,98 @@ void ChromeImporter::ImportCookies() {
   if (!cookies.empty() && !cancelled())
     static_cast<BraveExternalProcessImporterBridge*>(bridge_.get())->
         SetCookies(cookies);
+}
+
+void ChromeImporter::ImportPasswords() {
+#if !defined(USE_X11)
+  base::FilePath passwords_path =
+    source_path_.Append(
+      base::FilePath::StringType(FILE_PATH_LITERAL("Login Data")));
+
+  password_manager::LoginDatabase database(passwords_path);
+  if (!database.Init()) {
+    LOG(ERROR) << "LoginDatabase Init() failed";
+    return;
+  }
+
+  std::vector<std::unique_ptr<autofill::PasswordForm>> forms;
+  bool success = database.GetAutofillableLogins(&forms);
+  if (success) {
+    for (int i = 0; i < forms.size(); ++i) {
+      bridge_->SetPasswordForm(*forms[i].get());
+    }
+  }
+  std::vector<std::unique_ptr<autofill::PasswordForm>> blacklist;
+  success = database.GetBlacklistLogins(&blacklist);
+  if (success) {
+    for (int i = 0; i < blacklist.size(); ++i) {
+      bridge_->SetPasswordForm(*blacklist[i].get());
+    }
+  }
+#else
+  base::FilePath prefs_path =
+    source_path_.Append(
+      base::FilePath::StringType(FILE_PATH_LITERAL("Preferences")));
+  const base::Value *value;
+  scoped_refptr<base::SequencedTaskRunner> file_task_runner =
+    base::CreateSequencedTaskRunnerWithTraits(base::TaskTraits().MayBlock());
+  scoped_refptr<JsonPrefStore> prefs = new JsonPrefStore(
+      prefs_path, file_task_runner, std::unique_ptr<PrefFilter>());
+  int local_profile_id;
+  if (prefs->ReadPrefs() != PersistentPrefStore::PREF_READ_ERROR_NONE) {
+    return;
+  }
+  if (!prefs->GetValue(password_manager::prefs::kLocalProfileId, &value)) {
+    return;
+  }
+  if (!value->GetAsInteger(&local_profile_id)) {
+    return;
+  }
+
+  std::unique_ptr<PasswordStoreX::NativeBackend> backend;
+  base::nix::DesktopEnvironment desktop_env = GetDesktopEnvironment();
+
+  os_crypt::SelectedLinuxBackend selected_backend =
+      os_crypt::SelectBackend(std::string(), desktop_env);
+  if (!backend &&
+      (selected_backend == os_crypt::SelectedLinuxBackend::KWALLET ||
+      selected_backend == os_crypt::SelectedLinuxBackend::KWALLET5)) {
+    base::nix::DesktopEnvironment used_desktop_env =
+        selected_backend == os_crypt::SelectedLinuxBackend::KWALLET
+            ? base::nix::DESKTOP_ENVIRONMENT_KDE4
+            : base::nix::DESKTOP_ENVIRONMENT_KDE5;
+    backend.reset(new NativeBackendKWallet(local_profile_id,
+                                           used_desktop_env));
+  } else if (selected_backend == os_crypt::SelectedLinuxBackend::GNOME_ANY ||
+             selected_backend ==
+                 os_crypt::SelectedLinuxBackend::GNOME_KEYRING ||
+             selected_backend ==
+                 os_crypt::SelectedLinuxBackend::GNOME_LIBSECRET) {
+#if defined(USE_LIBSECRET)
+    if (!backend &&
+        (selected_backend == os_crypt::SelectedLinuxBackend::GNOME_ANY ||
+        selected_backend == os_crypt::SelectedLinuxBackend::GNOME_LIBSECRET)) {
+      backend.reset(new NativeBackendLibsecret(local_profile_id));
+    }
+#endif
+  }
+  if (backend && backend->Init()) {
+    std::vector<std::unique_ptr<autofill::PasswordForm>> forms;
+    bool success = backend->GetAutofillableLogins(&forms);
+    if (success) {
+      for (int i = 0; i < forms.size(); ++i) {
+        bridge_->SetPasswordForm(*forms[i].get());
+      }
+    }
+    std::vector<std::unique_ptr<autofill::PasswordForm>> blacklist;
+    success = backend->GetBlacklistLogins(&blacklist);
+    if (success) {
+      for (int i = 0; i < blacklist.size(); ++i) {
+        bridge_->SetPasswordForm(*blacklist[i].get());
+      }
+    }
+  }
+#endif
 }
 
 void ChromeImporter::RecursiveReadBookmarksFolder(
