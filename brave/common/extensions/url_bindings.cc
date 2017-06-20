@@ -343,7 +343,7 @@ void URLBindings::Parse(
     dict.Set("port", gurl.port());
     dict.Set("protocol", gurl.scheme() + (gurl.has_scheme() ? ":" : ""));
     dict.Set("query", gurl.query());
-    dict.Set("search", "?" + gurl.query());
+    dict.Set("search", (gurl.has_query() ? "?" : "") + gurl.query());
     dict.Set("origin", gurl.GetOrigin());
   }
   args.GetReturnValue().Set(gin::ConvertToV8(isolate, dict));
