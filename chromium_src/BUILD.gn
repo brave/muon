@@ -1,6 +1,7 @@
 import("//build/config/features.gni")
 import("//build/config/ui.gni")
 import("//build/config/crypto.gni")
+import("//components/os_crypt/features.gni")
 import("//extensions/features/features.gni")
 import("//media/media_options.gni")
 import("//ppapi/features/features.gni")
@@ -612,7 +613,10 @@ source_set("password_manager") {
     "//components/password_manager/content/browser",
     "//components/password_manager/core/browser",
     "//components/password_manager/core/common",
+    "//components/os_crypt",
   ]
+
+  defines = [ ]
 
   if (is_linux) {
     if (use_x11) {
@@ -624,6 +628,25 @@ source_set("password_manager") {
     if (use_dbus) {
       deps += [ "//dbus" ]
     }
+
+    if (use_gnome_keyring) {
+      sources += [
+        "//chrome/browser/password_manager/native_backend_gnome_x.cc",
+        "//chrome/browser/password_manager/native_backend_gnome_x.h",
+      ]
+        configs += [ "//components/os_crypt:gnome_keyring" ]
+    }
+
+    # libsecret hard depends on GLib.
+    if (use_glib) {
+      sources += [
+        "//chrome/browser/password_manager/native_backend_libsecret.cc",
+        "//chrome/browser/password_manager/native_backend_libsecret.h",
+      ]
+      defines += [ "USE_LIBSECRET" ]
+      deps += [ "//third_party/libsecret" ]
+    }
+
     sources += [
       "//chrome/browser/password_manager/native_backend_kwallet_x.h",
       "//chrome/browser/password_manager/native_backend_kwallet_x.cc",
