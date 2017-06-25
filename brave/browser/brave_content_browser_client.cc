@@ -27,6 +27,8 @@
 #include "chrome/common/render_messages.h"
 #include "chrome/common/renderer_configuration.mojom.h"
 #include "content/public/browser/storage_partition.h"
+#include "content/public/browser/web_contents_view_delegate.h"
+#include "content/public/browser/web_drag_dest_delegate.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/common/autofill_switches.h"
 #include "components/content_settings/core/browser/content_settings_utils.h"
@@ -44,6 +46,7 @@
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
 #include "gpu/config/gpu_switches.h"
+#include "net/base/filename_util.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
@@ -70,6 +73,45 @@ using extensions::AtomBrowserClientExtensionsPart;
 namespace brave {
 
 namespace {
+
+
+class BraveWebContentsViewDelegate : public content::WebContentsViewDelegate,
+                                     public content::WebDragDestDelegate {
+ public:
+  explicit BraveWebContentsViewDelegate(content::WebContents* web_contents) :
+      web_contents_(web_contents) {}
+  ~BraveWebContentsViewDelegate() override {}
+  content::WebDragDestDelegate* GetDragDestDelegate() override { return this; }
+  void DragInitialize(content::WebContents* contents) override {}
+  void OnDragOver() override {}
+  void OnDragEnter() override {}
+  void OnDragLeave() override {}
+  void OnDrop() override {
+    content::DropData* drop_data = web_contents_->GetDropData();
+
+    if (!drop_data)
+      return true;
+
+    if (web_contents_->GetWebUI()) {
+      for (const auto& file_info : drop_data->filenames) {
+        // add file path information for WebUI contexts in dataTransfer.items
+        // the full path will be in `item.type` and the name is returned
+        // by `getAsString`
+        base::string16 file_url =
+            base::UTF8ToUTF16(net::FilePathToFileURL(file_info.path).spec());
+        drop_data->custom_data[file_url] =
+            file_info.path.BaseName().LossyDisplayName();
+      }
+    }
+  }
+
+
+
+ private:
+  content::WebContents* web_contents_;
+
+  DISALLOW_COPY_AND_ASSIGN(BraveWebContentsViewDelegate);
+};
 
 // Cached version of the locale so we can return the locale on the I/O
 // thread.
@@ -162,12 +204,11 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
   CHECK(can_be_default || !partition_domain->empty());
 }
 
-// TODO(bridiver) - investigate this
-// content::WebContentsViewDelegate*
-//     ChromeContentBrowserClient::GetWebContentsViewDelegate(
-//         content::WebContents* web_contents) {
-//   return chrome::CreateWebContentsViewDelegate(web_contents);
-// }
+content::WebContentsViewDelegate*
+    BraveContentBrowserClient::GetWebContentsViewDelegate(
+        content::WebContents* web_contents) {
+  return new BraveWebContentsViewDelegate(web_contents);
+}
 
 void BraveContentBrowserClient::RegisterRenderFrameMojoInterfaces(
     service_manager::InterfaceRegistry* registry,
