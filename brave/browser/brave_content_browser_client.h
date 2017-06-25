@@ -40,6 +40,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
 
  protected:
   // content::ContentBrowserClient:
+  content::WebContentsViewDelegate* GetWebContentsViewDelegate(
+      content::WebContents* web_contents) override;
   void RegisterRenderFrameMojoInterfaces(
       service_manager::InterfaceRegistry* registry,
       content::RenderFrameHost* render_frame_host) override;
