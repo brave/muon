@@ -104,8 +104,9 @@ class BraveWebContentsViewDelegate : public content::WebContentsViewDelegate,
       }
     }
   }
-
-
+#if defined(USE_AURA)
+  virtual void OnReceiveDragData(const ui::OSExchangeData& data) {};
+#endif  // USE_AURA
 
  private:
   content::WebContents* web_contents_;
