@@ -90,7 +90,7 @@ class BraveWebContentsViewDelegate : public content::WebContentsViewDelegate,
     content::DropData* drop_data = web_contents_->GetDropData();
 
     if (!drop_data)
-      return true;
+      return;
 
     if (web_contents_->GetWebUI()) {
       for (const auto& file_info : drop_data->filenames) {
@@ -105,7 +105,7 @@ class BraveWebContentsViewDelegate : public content::WebContentsViewDelegate,
     }
   }
 #if defined(USE_AURA)
-  virtual void OnReceiveDragData(const ui::OSExchangeData& data) {};
+  void OnReceiveDragData(const ui::OSExchangeData& data) override {};
 #endif  // USE_AURA
 
  private:
