@@ -1480,7 +1480,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   if (options.Get("extraHeaders", &extra_headers))
     params.extra_headers = extra_headers;
 
-  bool should_replace_current_entry = false
+  bool should_replace_current_entry = false;
   if (options.Get("shouldReplaceCurrentEntry", &should_replace_current_entry)) {
     params.should_replace_current_entry = should_replace_current_entry;
   }
