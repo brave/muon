@@ -1178,12 +1178,12 @@ void WebContents::DidGetRedirectForResourceRequest(
 }
 
 void WebContents::DidStartLoading() {
-   Emit("did-start-loading");
- }
+  Emit("did-start-loading");
+}
 
- void WebContents::DidStopLoading() {
-   Emit("did-stop-loading");
- }
+void WebContents::DidStopLoading() {
+  Emit("did-stop-loading");
+}
 
 void WebContents::DidStartNavigation(
     content::NavigationHandle* navigation_handle) {

@@ -188,7 +188,8 @@ void TabViewGuest::DidFinishNavigation(
 void TabViewGuest::DidStartNavigation(
     content::NavigationHandle* navigation_handle) {
   // loadStart shouldn't be sent for same page navigations.
-  if (navigation_handle->IsSameDocument() || !navigation_handle->IsInMainFrame())
+  if (navigation_handle->IsSameDocument() ||
+      !navigation_handle->IsInMainFrame())
     return;
 
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());

@@ -10,7 +10,9 @@
     <includes>
       <include name="IDR_ELECTRON_REMOTE_BINDINGS_JS" file="renderer/api/remote.js" type="BINDATA" />
 
+      <include name="IDR_ELECTRON_BASE64_JS_BINDINGS_JS" file="util/base64-js.js" type="BINDATA" />
       <include name="IDR_ELECTRON_BUFFER_BINDINGS_JS" file="util/buffer.js" type="BINDATA" />
+      <include name="IDR_ELECTRON_IEEE754_BINDINGS_JS" file="util/ieee754.js" type="BINDATA" />
 
       <include name="IDR_ELECTRON_IS_PROMISE_BINDINGS_JS" file="common/api/is-promise.js" type="BINDATA" />
 
