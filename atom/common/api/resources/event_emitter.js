@@ -174,7 +174,7 @@ EventEmitter.prototype.emit = function emit(type) {
   if (!handler)
     return false;
 
-  if (domain && this !== process) {
+  if (domain) {
     domain.enter();
     needDomainExit = true;
   }
@@ -266,7 +266,7 @@ function _addListener(target, type, listener, prepend) {
         w.emitter = target;
         w.type = type;
         w.count = existing.length;
-        process.emitWarning(w);
+        console.warn(w);
       }
     }
   }
