@@ -182,8 +182,12 @@ void ChromeExtensionsDispatcherDelegate::PopulateSourceMap(
                              IDR_ATOM_WEB_FRAME_BINDINGS_JS);
   source_map->RegisterSource("remote",
                               IDR_ELECTRON_REMOTE_BINDINGS_JS);
+  source_map->RegisterSource("base64-js",
+                              IDR_ELECTRON_BASE64_JS_BINDINGS_JS);
   source_map->RegisterSource("buffer",
                               IDR_ELECTRON_BUFFER_BINDINGS_JS);
+  source_map->RegisterSource("ieee754",
+                              IDR_ELECTRON_IEEE754_BINDINGS_JS);
   source_map->RegisterSource("is-promise",
                               IDR_ELECTRON_IS_PROMISE_BINDINGS_JS);
   source_map->RegisterSource("callbacks-registry",
