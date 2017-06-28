@@ -215,6 +215,11 @@ Cookies::Cookies(v8::Isolate* isolate,
 Cookies::~Cookies() {
 }
 
+//TODO: 2017.06.29 klawler
+//Delete GetAll if possible (dependency in $MUON/lib/browser/api/extensions.js)
+//Verify or implement that sorting occurs on cookies by 1. path length 2. creation date
+//Possibly done here or in $MUON/lib/browser/api/extensions.js
+
 void Cookies::GetAll(const base::DictionaryValue& filter,
                   const GetCallback& callback) {
   Cookies::Get(filter, callback);
