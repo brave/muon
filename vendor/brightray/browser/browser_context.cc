@@ -122,11 +122,6 @@ void BrowserContext::RegisterInternalPrefs(PrefRegistrySimple* registry) {
   InspectableWebContentsImpl::RegisterPrefs(registry);
 }
 
-URLRequestContextGetter* BrowserContext::GetRequestContext() {
-  return static_cast<URLRequestContextGetter*>(
-      GetDefaultStoragePartition(this)->GetURLRequestContext());
-}
-
 net::URLRequestContextGetter* BrowserContext::CreateRequestContext(
     content::ProtocolHandlerMap* protocol_handlers,
     content::URLRequestInterceptorScopedVector protocol_interceptors) {

@@ -6,17 +6,16 @@
 
 #include <algorithm>
 
-#include "chrome/browser/devtools/devtools_network_controller_handle.h"
-#include "chrome/browser/devtools/devtools_network_transaction_factory.h"
-#include "browser/net_log.h"
-#include "browser/network_delegate.h"
-#include "common/switches.h"
-
 #include "base/command_line.h"
 #include "base/memory/ptr_util.h"
 #include "base/strings/string_util.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "base/threading/worker_pool.h"
+#include "browser/net_log.h"
+#include "browser/network_delegate.h"
+#include "chrome/browser/devtools/devtools_network_controller_handle.h"
+#include "chrome/browser/devtools/devtools_network_transaction_factory.h"
+#include "common/switches.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/cookie_store_factory.h"
 #include "content/public/common/content_switches.h"
@@ -355,7 +354,6 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
 
     std::unique_ptr<net::URLRequestJobFactory> job_factory =
         delegate_->CreateURLRequestJobFactory(&protocol_handlers_);
-    job_factory_ = job_factory.get();
 
     // Set up interceptors in the reverse order.
     std::unique_ptr<net::URLRequestJobFactory> top_job_factory =

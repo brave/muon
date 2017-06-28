@@ -347,12 +347,17 @@ BraveBrowserContext::CreateURLRequestJobFactory(
     content::ProtocolHandlerMap* protocol_handlers) {
   std::unique_ptr<net::URLRequestJobFactory> job_factory =
       AtomBrowserContext::CreateURLRequestJobFactory(protocol_handlers);
+
+  auto job_factory_impl =
+      static_cast<net::URLRequestJobFactoryImpl*>(job_factory.get());
+  static_cast<brightray::URLRequestContextGetter*>(GetRequestContext())->
+      set_job_factory(job_factory_impl);
+
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions::InfoMap* extension_info_map =
       extensions::AtomExtensionSystemFactory::GetInstance()->
         GetForBrowserContext(this)->info_map();
-  static_cast<net::URLRequestJobFactoryImpl*>(
-      job_factory.get())->SetProtocolHandler(
+  job_factory_impl->SetProtocolHandler(
           extensions::kExtensionScheme,
           extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),
                                                      extension_info_map));

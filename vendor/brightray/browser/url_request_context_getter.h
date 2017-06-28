@@ -25,6 +25,7 @@ class NetworkDelegate;
 class ProxyConfigService;
 class URLRequestContextStorage;
 class URLRequestJobFactory;
+class URLRequestJobFactoryImpl;
 }
 
 namespace brightray {
@@ -67,8 +68,10 @@ class URLRequestContextGetter : public net::URLRequestContextGetter {
   scoped_refptr<base::SingleThreadTaskRunner> GetNetworkTaskRunner() const override;
 
   net::HostResolver* host_resolver();
-  net::URLRequestJobFactory* job_factory() const { return job_factory_; }
-
+  net::URLRequestJobFactoryImpl* job_factory() const { return job_factory_; }
+  void set_job_factory(net::URLRequestJobFactoryImpl* job_factory) {
+    job_factory_  = job_factory;
+  }
   void NotifyContextShuttingDown();
  private:
   Delegate* delegate_;
@@ -92,7 +95,7 @@ class URLRequestContextGetter : public net::URLRequestContextGetter {
   content::ProtocolHandlerMap protocol_handlers_;
   content::URLRequestInterceptorScopedVector protocol_interceptors_;
 
-  net::URLRequestJobFactory* job_factory_;  // weak ref
+  net::URLRequestJobFactoryImpl* job_factory_;  // not owned
 
   bool shutting_down_;
 
