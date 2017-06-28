@@ -37,9 +37,6 @@ class BrowserContext : public content::BrowserContext,
     return weak_factory_.GetWeakPtr();
   }
 
-  // Get the request context, if there is no one, create it.
-  URLRequestContextGetter* GetRequestContext();
-
   // content::BrowserContext:
   std::unique_ptr<content::ZoomLevelDelegate> CreateZoomLevelDelegate(
       const base::FilePath& partition_path) override;

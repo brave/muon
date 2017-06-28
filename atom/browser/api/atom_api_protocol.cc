@@ -71,8 +71,10 @@ void RegisterStandardSchemes(const std::vector<std::string>& schemes) {
       atom::switches::kStandardSchemes, base::JoinString(schemes, ","));
 }
 
-Protocol::Protocol(v8::Isolate* isolate, AtomBrowserContext* browser_context)
-    : browser_context_(browser_context),
+Protocol::Protocol(v8::Isolate* isolate, Profile* profile)
+    : profile_(profile),
+      request_context_getter_(static_cast<brightray::URLRequestContextGetter*>(
+          profile->GetRequestContext())),
       weak_factory_(this) {
   Init(isolate);
 }
@@ -85,6 +87,42 @@ void Protocol::RegisterServiceWorkerSchemes(
   atom::AtomBrowserClient::SetCustomServiceWorkerSchemes(schemes);
 }
 
+// Register the protocol with certain request job.
+template<typename RequestJob>
+void Protocol::RegisterProtocol(const std::string& scheme,
+                      const Handler& handler,
+                      mate::Arguments* args) {
+  CompletionCallback callback;
+  args->GetNext(&callback);
+  content::BrowserThread::PostTaskAndReplyWithResult(
+      content::BrowserThread::IO, FROM_HERE,
+      base::Bind(&Protocol::RegisterProtocolInIO<RequestJob>,
+          request_context_getter_,
+          isolate(), scheme, handler),
+      base::Bind(&Protocol::OnIOCompleted,
+                 GetWeakPtr(), callback));
+}
+
+// static
+template<typename RequestJob>
+Protocol::ProtocolError Protocol::RegisterProtocolInIO(
+    scoped_refptr<brightray::URLRequestContextGetter> request_context_getter,
+    v8::Isolate* isolate,
+    const std::string& scheme,
+    const Handler& handler) {
+  auto job_factory = static_cast<net::URLRequestJobFactoryImpl*>(
+      request_context_getter->job_factory());
+  if (job_factory->IsHandledProtocol(scheme))
+    return PROTOCOL_REGISTERED;
+  std::unique_ptr<CustomProtocolHandler<RequestJob>> protocol_handler(
+      new CustomProtocolHandler<RequestJob>(
+          isolate, request_context_getter.get(), handler));
+  if (job_factory->SetProtocolHandler(scheme, std::move(protocol_handler)))
+    return PROTOCOL_OK;
+  else
+    return PROTOCOL_FAIL;
+}
+
 void Protocol::UnregisterProtocol(
     const std::string& scheme, mate::Arguments* args) {
   CompletionCallback callback;
@@ -92,7 +130,7 @@ void Protocol::UnregisterProtocol(
   content::BrowserThread::PostTaskAndReplyWithResult(
       content::BrowserThread::IO, FROM_HERE,
       base::Bind(&Protocol::UnregisterProtocolInIO,
-          make_scoped_refptr(browser_context_->GetRequestContext()), scheme),
+          request_context_getter_, scheme),
       base::Bind(&Protocol::OnIOCompleted,
                  GetWeakPtr(), callback));
 }
@@ -114,7 +152,7 @@ void Protocol::IsProtocolHandled(const std::string& scheme,
   content::BrowserThread::PostTaskAndReplyWithResult(
       content::BrowserThread::IO, FROM_HERE,
       base::Bind(&Protocol::IsProtocolHandledInIO,
-          make_scoped_refptr(browser_context_->GetRequestContext()), scheme),
+          request_context_getter_, scheme),
       callback);
 }
 
@@ -129,7 +167,7 @@ const base::ListValue*
 Protocol::GetNavigatorHandlers() {
   ProtocolHandlerRegistry* registry =
       ProtocolHandlerRegistryFactory::GetForBrowserContext(
-          browser_context_);
+          profile_);
   std::vector<std::string> protocols;
   registry->GetRegisteredProtocols(&protocols);
 
@@ -154,7 +192,7 @@ void Protocol::UnregisterNavigatorHandler(const std::string& scheme,
       ProtocolHandler::CreateProtocolHandler(scheme, GURL(spec));
   ProtocolHandlerRegistry* registry =
       ProtocolHandlerRegistryFactory::GetForBrowserContext(
-          browser_context_);
+          profile_);
   registry->RemoveHandler(handler);
 }
 
@@ -164,14 +202,14 @@ void Protocol::RegisterNavigatorHandler(const std::string& scheme,
       ProtocolHandler::CreateProtocolHandler(scheme, GURL(spec));
   ProtocolHandlerRegistry* registry =
       ProtocolHandlerRegistryFactory::GetForBrowserContext(
-          browser_context_);
+          profile_);
   registry->OnAcceptRegisterProtocolHandler(handler);
 }
 
 bool Protocol::IsNavigatorProtocolHandled(const std::string& scheme) {
   ProtocolHandlerRegistry* registry =
       ProtocolHandlerRegistryFactory::GetForBrowserContext(
-          browser_context_);
+          profile_);
   return registry->IsHandledProtocol(scheme);
 }
 
@@ -203,17 +241,11 @@ std::string Protocol::ErrorCodeToString(ProtocolError error) {
   }
 }
 
-net::URLRequestJobFactoryImpl* Protocol::GetJobFactoryInIO() const {
-  browser_context_->GetRequestContext()->GetURLRequestContext();  // Force init.
-  return static_cast<net::URLRequestJobFactoryImpl*>(
-      static_cast<brightray::URLRequestContextGetter*>(
-          browser_context_->GetRequestContext())->job_factory());
-}
-
 // static
 mate::Handle<Protocol> Protocol::Create(
-    v8::Isolate* isolate, AtomBrowserContext* browser_context) {
-  return mate::CreateHandle(isolate, new Protocol(isolate, browser_context));
+    v8::Isolate* isolate, content::BrowserContext* browser_context) {
+  return mate::CreateHandle(isolate,
+      new Protocol(isolate, Profile::FromBrowserContext(browser_context)));
 }
 
 // static

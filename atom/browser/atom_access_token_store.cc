@@ -6,9 +6,10 @@
 
 #include <utility>
 
-#include "atom/browser/atom_browser_context.h"
 #include "atom/common/google_api_key.h"
 #include "base/environment.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/profiles/profile_manager.h"
 #include "content/public/browser/browser_thread.h"
 #include "device/geolocation/geolocation_provider.h"
 
@@ -48,8 +49,8 @@ class TokenLoadingJob : public base::RefCountedThreadSafe<TokenLoadingJob> {
 
   void PerformWorkOnUIThread() {
     DCHECK_CURRENTLY_ON(BrowserThread::UI);
-    auto browser_context = AtomBrowserContext::From("", false);
-    request_context_getter_ = browser_context->GetRequestContext();
+    Profile* profile = ProfileManager::GetPrimaryUserProfile();
+    request_context_getter_ = profile->GetRequestContext();
   }
 
   void RespondOnOriginatingThread() {

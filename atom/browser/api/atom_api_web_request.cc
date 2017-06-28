@@ -4,13 +4,13 @@
 
 #include "atom/browser/api/atom_api_web_request.h"
 
-#include "atom/browser/atom_browser_context.h"
 #include "atom/browser/net/atom_network_delegate.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "base/files/file_path.h"
+#include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/browser_thread.h"
 #include "extensions/features/features.h"
 #include "native_mate/dictionary.h"
@@ -65,8 +65,8 @@ namespace atom {
 namespace api {
 
 WebRequest::WebRequest(v8::Isolate* isolate,
-                       AtomBrowserContext* browser_context)
-    : browser_context_(browser_context) {
+                       Profile* profile)
+    : profile_(profile) {
   Init(isolate);
 }
 
@@ -134,7 +134,7 @@ void WebRequest::Fetch(mate::Arguments* args) {
 
   net::URLFetcher* fetcher = net::URLFetcher::Create(url, request_type, this)
       .release();
-  fetcher->SetRequestContext(browser_context_->GetRequestContext());
+  fetcher->SetRequestContext(profile_->GetRequestContext());
   if (!payload.empty())
     fetcher->SetUploadData(payload_content_type, payload);
   if (!headers.IsEmpty())
@@ -190,7 +190,7 @@ void WebRequest::SetListener(Method method, Event type, mate::Arguments* args) {
       base::Bind(&WebRequest::SetListenerOnIOThread<Listener, Method, Event>,
         base::Unretained(this),
         scoped_refptr<net::URLRequestContextGetter>(
-          browser_context_->GetRequestContext()),
+          profile_->GetRequestContext()),
           method, type, patterns, listener));
 }
 
@@ -203,9 +203,10 @@ void WebRequest::HandleBehaviorChanged() {
 // static
 mate::Handle<WebRequest> WebRequest::Create(
     v8::Isolate* isolate,
-    AtomBrowserContext* browser_context) {
+    content::BrowserContext* browser_context) {
   DCHECK(browser_context);
-  return mate::CreateHandle(isolate, new WebRequest(isolate, browser_context));
+  return mate::CreateHandle(isolate,
+        new WebRequest(isolate, Profile::FromBrowserContext(browser_context)));
 }
 
 // static

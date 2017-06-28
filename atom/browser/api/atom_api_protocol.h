@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "atom/browser/api/trackable_object.h"
-#include "atom/browser/atom_browser_context.h"
 #include "base/callback.h"
 #include "base/memory/weak_ptr.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
@@ -26,6 +25,20 @@
 namespace base {
 class DictionaryValue;
 }
+
+namespace brightray {
+class URLRequestContextGetter;
+}
+
+namespace content {
+class BrowserContext;
+}
+
+namespace net {
+class URLRequestContextGetter;
+}
+
+class Profile;
 
 namespace atom {
 
@@ -42,13 +55,13 @@ class Protocol : public mate::TrackableObject<Protocol> {
   using BooleanCallback = base::Callback<void(bool)>;
 
   static mate::Handle<Protocol> Create(
-      v8::Isolate* isolate, AtomBrowserContext* browser_context);
+      v8::Isolate* isolate, content::BrowserContext* browser_context);
 
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
  protected:
-  Protocol(v8::Isolate* isolate, AtomBrowserContext* browser_context);
+  Protocol(v8::Isolate* isolate, Profile* profile);
   ~Protocol();
 
  private:
@@ -100,35 +113,14 @@ class Protocol : public mate::TrackableObject<Protocol> {
   template<typename RequestJob>
   void RegisterProtocol(const std::string& scheme,
                         const Handler& handler,
-                        mate::Arguments* args) {
-    CompletionCallback callback;
-    args->GetNext(&callback);
-    content::BrowserThread::PostTaskAndReplyWithResult(
-        content::BrowserThread::IO, FROM_HERE,
-        base::Bind(&Protocol::RegisterProtocolInIO<RequestJob>,
-            make_scoped_refptr(browser_context_->GetRequestContext()),
-            isolate(), scheme, handler),
-        base::Bind(&Protocol::OnIOCompleted,
-                   GetWeakPtr(), callback));
-  }
+                        mate::Arguments* args);
+
   template<typename RequestJob>
   static ProtocolError RegisterProtocolInIO(
       scoped_refptr<brightray::URLRequestContextGetter> request_context_getter,
       v8::Isolate* isolate,
       const std::string& scheme,
-      const Handler& handler) {
-    auto job_factory = static_cast<net::URLRequestJobFactoryImpl*>(
-        request_context_getter->job_factory());
-    if (job_factory->IsHandledProtocol(scheme))
-      return PROTOCOL_REGISTERED;
-    std::unique_ptr<CustomProtocolHandler<RequestJob>> protocol_handler(
-        new CustomProtocolHandler<RequestJob>(
-            isolate, request_context_getter.get(), handler));
-    if (job_factory->SetProtocolHandler(scheme, std::move(protocol_handler)))
-      return PROTOCOL_OK;
-    else
-      return PROTOCOL_FAIL;
-  }
+      const Handler& handler);
 
   // Unregister the protocol handler that handles |scheme|.
   void UnregisterProtocol(const std::string& scheme, mate::Arguments* args);
@@ -156,13 +148,12 @@ class Protocol : public mate::TrackableObject<Protocol> {
   // Convert error code to string.
   std::string ErrorCodeToString(ProtocolError error);
 
-  net::URLRequestJobFactoryImpl* GetJobFactoryInIO() const;
-
   base::WeakPtr<Protocol> GetWeakPtr() {
     return weak_factory_.GetWeakPtr();
   }
 
-  AtomBrowserContext* browser_context_;  // not owned
+  Profile* profile_;  // not owned
+  scoped_refptr<brightray::URLRequestContextGetter> request_context_getter_;
   base::WeakPtrFactory<Protocol> weak_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(Protocol);

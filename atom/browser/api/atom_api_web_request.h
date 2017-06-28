@@ -19,13 +19,17 @@
 #include "net/url_request/url_fetcher.h"
 #include "net/url_request/url_fetcher_delegate.h"
 
+namespace content {
+class BrowserContext;
+}
+
 namespace mate {
 class Dictionary;
 }  // namespace mate
 
-namespace atom {
+class Profile;
 
-class AtomBrowserContext;
+namespace atom {
 
 namespace api {
 
@@ -33,13 +37,13 @@ class WebRequest : public mate::TrackableObject<WebRequest>,
                    public net::URLFetcherDelegate {
  public:
   static mate::Handle<WebRequest> Create(v8::Isolate* isolate,
-                                         AtomBrowserContext* browser_context);
+                                      content::BrowserContext* browser_context);
 
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
  protected:
-  WebRequest(v8::Isolate* isolate, AtomBrowserContext* browser_context);
+  WebRequest(v8::Isolate* isolate, Profile* profile);
   ~WebRequest() override;
 
   typedef base::Callback<void(
@@ -64,7 +68,7 @@ class WebRequest : public mate::TrackableObject<WebRequest>,
   void SetListener(Method method, Event type, mate::Arguments* args);
 
  private:
-  AtomBrowserContext* browser_context_;
+  Profile* profile_;
   std::map<const net::URLFetcher*, FetchCallback> fetchers_;
 
   DISALLOW_COPY_AND_ASSIGN(WebRequest);
