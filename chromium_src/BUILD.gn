@@ -141,7 +141,7 @@ source_set("browser") {
     "chrome/browser/browser_shutdown.cc",
     "chrome/browser/chrome_notification_types.h",
     "chrome/browser/custom_handlers/protocol_handler_registry.cc",
-    "chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
+    "//chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
 
     # extensions
     "//chrome/browser/extensions/global_shortcut_listener.cc",

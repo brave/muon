@@ -5,7 +5,6 @@
 #include "chrome/browser/browser_process_impl.h"
 
 #include "atom/browser/api/atom_api_app.h"
-#include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 #include "base/command_line.h"
 #include "base/metrics/field_trial.h"
@@ -122,11 +121,11 @@ BrowserProcessImpl::component_updater(
   if (!component_updater.get()) {
     if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
       return NULL;
-    auto browser_context = atom::AtomBrowserContext::From("", false);
+    Profile* profile = ProfileManager::GetPrimaryUserProfile();
     scoped_refptr<update_client::Configurator> configurator =
         component_updater::MakeBraveComponentUpdaterConfigurator(
             base::CommandLine::ForCurrentProcess(),
-            browser_context->GetRequestContext(),
+            profile->GetRequestContext(),
             use_brave_server);
     // Creating the component updater does not do anything, components
     // need to be registered and Start() needs to be called.

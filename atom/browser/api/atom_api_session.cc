@@ -187,13 +187,11 @@ std::map<uint32_t, v8::Global<v8::Object>> g_sessions;
 
 class ResolveProxyHelper {
  public:
-  ResolveProxyHelper(AtomBrowserContext* browser_context,
+  ResolveProxyHelper(scoped_refptr<net::URLRequestContextGetter> context_getter,
                      const GURL& url,
                      Session::ResolveProxyCallback callback)
       : callback_(callback),
         original_thread_(base::ThreadTaskRunnerHandle::Get()) {
-    scoped_refptr<net::URLRequestContextGetter> context_getter =
-        browser_context->url_request_context_getter();
     context_getter->GetNetworkTaskRunner()->PostTask(
         FROM_HERE,
         base::Bind(&ResolveProxyHelper::ResolveProxy,
@@ -292,7 +290,7 @@ void DoCacheActionInIO(
     on_get_backend.Run(net::OK);
 }
 
-void SetProxyInIO(net::URLRequestContextGetter* getter,
+void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
                   const net::ProxyConfig& config,
                   const base::Closure& callback) {
   auto proxy_service = getter->GetURLRequestContext()->proxy_service();
@@ -348,26 +346,27 @@ void OnClearHistory() {}
 
 }  // namespace
 
-Session::Session(v8::Isolate* isolate, AtomBrowserContext* browser_context)
+Session::Session(v8::Isolate* isolate, Profile* profile)
     : devtools_network_emulation_client_id_(base::GenerateGUID()),
-      browser_context_(browser_context) {
+      profile_(profile),
+      request_context_getter_(profile->GetRequestContext()) {
   // Observe DownloadManger to get download notifications.
-  content::BrowserContext::GetDownloadManager(browser_context)->
+  content::BrowserContext::GetDownloadManager(profile)->
       AddObserver(this);
 
   Init(isolate);
-  AttachAsUserData(browser_context);
+  AttachAsUserData(profile);
 }
 
 Session::~Session() {
-  content::BrowserContext::GetDownloadManager(browser_context())->
+  content::BrowserContext::GetDownloadManager(profile_)->
       RemoveObserver(this);
   g_sessions.erase(weak_map_id());
 }
 
 std::string Session::Partition() {
   return static_cast<brave::BraveBrowserContext*>(
-      browser_context_)->partition_with_prefix();
+      profile_)->partition_with_prefix();
 }
 
 void Session::OnDownloadCreated(content::DownloadManager* manager,
@@ -388,14 +387,14 @@ void Session::OnDownloadCreated(content::DownloadManager* manager,
 }
 
 void Session::ResolveProxy(const GURL& url, ResolveProxyCallback callback) {
-  new ResolveProxyHelper(browser_context(), url, callback);
+  new ResolveProxyHelper(request_context_getter_, url, callback);
 }
 
 template<Session::CacheAction action>
 void Session::DoCacheAction(const net::CompletionCallback& callback) {
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&DoCacheActionInIO,
-                 base::RetainedRef(browser_context_->GetRequestContext()),
+                 request_context_getter_,
                  action,
                  callback));
 }
@@ -408,7 +407,7 @@ void Session::ClearStorageData(mate::Arguments* args) {
   args->GetNext(&callback);
 
   auto storage_partition =
-      content::BrowserContext::GetStoragePartition(browser_context(), nullptr);
+      content::BrowserContext::GetStoragePartition(profile_, nullptr);
   storage_partition->ClearData(
       options.storage_types, options.quota_types, options.origin,
       content::StoragePartition::OriginMatcherFunction(),
@@ -423,7 +422,7 @@ void Session::ClearHistory(mate::Arguments* args) {
 
   history::HistoryService* history_service =
       HistoryServiceFactory::GetForProfile(
-          Profile::FromBrowserContext(browser_context()),
+          profile_,
           ServiceAccessType::EXPLICIT_ACCESS);
 
   history_service->ExpireHistoryBetween(std::set<GURL>(),
@@ -435,19 +434,18 @@ void Session::ClearHistory(mate::Arguments* args) {
 
 void Session::FlushStorageData() {
   auto storage_partition =
-      content::BrowserContext::GetStoragePartition(browser_context(), nullptr);
+      content::BrowserContext::GetStoragePartition(profile_, nullptr);
   storage_partition->Flush();
 }
 
 void Session::SetProxy(const net::ProxyConfig& config,
                        const base::Closure& callback) {
-  auto getter = browser_context_->GetRequestContext();
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-      base::Bind(&SetProxyInIO, base::Unretained(getter), config, callback));
+      base::Bind(&SetProxyInIO, request_context_getter_, config, callback));
 }
 
 void Session::SetDownloadPath(const base::FilePath& path) {
-  browser_context_->prefs()->SetFilePath(
+  profile_->prefs()->SetFilePath(
       prefs::kDownloadDefaultDirectory, path);
 }
 
@@ -468,17 +466,17 @@ void Session::EnableNetworkEmulation(const mate::Dictionary& options) {
                                                  upload_throughput));
   }
 
-  browser_context_->network_controller_handle()->SetNetworkState(
+  profile_->network_controller_handle()->SetNetworkState(
       devtools_network_emulation_client_id_, std::move(conditions));
-  browser_context_->network_delegate()->SetDevToolsNetworkEmulationClientId(
+  profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
       devtools_network_emulation_client_id_);
 }
 
 void Session::DisableNetworkEmulation() {
   std::unique_ptr<DevToolsNetworkConditions> conditions;
-  browser_context_->network_controller_handle()->SetNetworkState(
+  profile_->network_controller_handle()->SetNetworkState(
       devtools_network_emulation_client_id_, std::move(conditions));
-  browser_context_->network_delegate()->SetDevToolsNetworkEmulationClientId(
+  profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
       std::string());
 }
 
@@ -492,7 +490,7 @@ void Session::SetCertVerifyProc(v8::Local<v8::Value> val,
 
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&SetCertVerifyProcInIO,
-                 make_scoped_refptr(browser_context_->GetRequestContext()),
+                 request_context_getter_,
                  proc));
 }
 
@@ -504,7 +502,7 @@ void Session::SetPermissionRequestHandler(v8::Local<v8::Value> val,
     return;
   }
   auto permission_manager = static_cast<brave::BravePermissionManager*>(
-      browser_context()->GetPermissionManager());
+      profile_->GetPermissionManager());
   permission_manager->SetPermissionRequestHandler(handler);
 }
 
@@ -514,27 +512,26 @@ void Session::ClearHostResolverCache(mate::Arguments* args) {
 
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&ClearHostResolverCacheInIO,
-                 base::RetainedRef(browser_context_->GetRequestContext()),
+                 request_context_getter_,
                  callback));
 }
 
 void Session::AllowNTLMCredentialsForDomains(const std::string& domains) {
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
       base::Bind(&AllowNTLMCredentialsForDomainsInIO,
-                 base::RetainedRef(browser_context_->GetRequestContext()),
+                 request_context_getter_,
                  domains));
 }
 
 void Session::SetEnableBrotli(bool enabled) {
-  auto getter = browser_context_->GetRequestContext();
-  getter->GetNetworkTaskRunner()->PostTask(
+  request_context_getter_->GetNetworkTaskRunner()->PostTask(
       FROM_HERE,
-      base::Bind(&SetEnableBrotliInIO, getter, enabled));
+      base::Bind(&SetEnableBrotliInIO, request_context_getter_, enabled));
 }
 
 v8::Local<v8::Value> Session::Cookies(v8::Isolate* isolate) {
   if (cookies_.IsEmpty()) {
-    auto handle = atom::api::Cookies::Create(isolate, browser_context());
+    auto handle = atom::api::Cookies::Create(isolate, profile_);
     cookies_.Reset(isolate, handle.ToV8());
   }
   return v8::Local<v8::Value>::New(isolate, cookies_);
@@ -542,7 +539,7 @@ v8::Local<v8::Value> Session::Cookies(v8::Isolate* isolate) {
 
 v8::Local<v8::Value> Session::Protocol(v8::Isolate* isolate) {
   if (protocol_.IsEmpty()) {
-    auto handle = atom::api::Protocol::Create(isolate, browser_context());
+    auto handle = atom::api::Protocol::Create(isolate, profile_);
     protocol_.Reset(isolate, handle.ToV8());
   }
   return v8::Local<v8::Value>::New(isolate, protocol_);
@@ -550,7 +547,7 @@ v8::Local<v8::Value> Session::Protocol(v8::Isolate* isolate) {
 
 v8::Local<v8::Value> Session::WebRequest(v8::Isolate* isolate) {
   if (web_request_.IsEmpty()) {
-    auto handle = atom::api::WebRequest::Create(isolate, browser_context());
+    auto handle = atom::api::WebRequest::Create(isolate, profile_);
     web_request_.Reset(isolate, handle.ToV8());
   }
   return v8::Local<v8::Value>::New(isolate, web_request_);
@@ -558,7 +555,7 @@ v8::Local<v8::Value> Session::WebRequest(v8::Isolate* isolate) {
 
 v8::Local<v8::Value> Session::UserPrefs(v8::Isolate* isolate) {
   if (user_prefs_.IsEmpty()) {
-    auto handle = atom::api::UserPrefs::Create(isolate, browser_context());
+    auto handle = atom::api::UserPrefs::Create(isolate, profile_);
     user_prefs_.Reset(isolate, handle.ToV8());
   }
   return v8::Local<v8::Value>::New(isolate, user_prefs_);
@@ -567,7 +564,7 @@ v8::Local<v8::Value> Session::UserPrefs(v8::Isolate* isolate) {
 v8::Local<v8::Value> Session::ContentSettings(v8::Isolate* isolate) {
   if (content_settings_.IsEmpty()) {
     auto handle =
-        atom::api::ContentSettings::Create(isolate, browser_context());
+        atom::api::ContentSettings::Create(isolate, profile_);
     content_settings_.Reset(isolate, handle.ToV8());
   }
   return v8::Local<v8::Value>::New(isolate, content_settings_);
@@ -575,7 +572,7 @@ v8::Local<v8::Value> Session::ContentSettings(v8::Isolate* isolate) {
 
 v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
   if (autofill_.IsEmpty()) {
-    auto handle = atom::api::Autofill::Create(isolate, browser_context());
+    auto handle = atom::api::Autofill::Create(isolate, profile_);
     autofill_.Reset(isolate, handle.ToV8());
   }
   return v8::Local<v8::Value>::New(isolate, autofill_);
@@ -584,7 +581,7 @@ v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
 v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (extensions_.IsEmpty()) {
-    auto handle = brave::api::Extension::Create(isolate, browser_context());
+    auto handle = brave::api::Extension::Create(isolate, profile_);
     extensions_.Reset(isolate, handle.ToV8());
   }
 #endif
@@ -594,22 +591,22 @@ v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
 bool Session::Equal(Session* session) const {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::ExtensionsBrowserClient::Get()->IsSameContext(
-                                        browser_context(),
+                                        profile_,
                                         session->browser_context());
 #else
-  return browser_context() == session->browser_context();
+  return profile_ == session->browser_context();
 #endif
 }
 
 // static
 mate::Handle<Session> Session::CreateFrom(
-    v8::Isolate* isolate, AtomBrowserContext* browser_context) {
+    v8::Isolate* isolate, content::BrowserContext* browser_context) {
   auto existing = TrackableObject::FromWrappedClass(isolate, browser_context);
   if (existing)
     return mate::CreateHandle(isolate, static_cast<Session*>(existing));
 
   auto handle = mate::CreateHandle(
-      isolate, new Session(isolate, browser_context));
+      isolate, new Session(isolate, Profile::FromBrowserContext(browser_context)));
 
   // The Sessions should never be garbage collected, since the common pattern is
   // to use partition strings, instead of using the Session object directly.

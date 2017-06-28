@@ -20,6 +20,10 @@ namespace base {
 class FilePath;
 }
 
+namespace content {
+class BrowserContext;
+}
+
 namespace mate {
 class Arguments;
 class Dictionary;
@@ -27,11 +31,12 @@ class Dictionary;
 
 namespace net {
 class ProxyConfig;
+class URLRequestContextGetter;
 }
 
-namespace atom {
+class Profile;
 
-class AtomBrowserContext;
+namespace atom {
 
 namespace api {
 
@@ -47,14 +52,14 @@ class Session: public mate::TrackableObject<Session>,
 
   // Gets or creates Session from the |browser_context|.
   static mate::Handle<Session> CreateFrom(
-      v8::Isolate* isolate, AtomBrowserContext* browser_context);
+      v8::Isolate* isolate, content::BrowserContext* browser_context);
 
   // Gets the Session of |partition|.
   static mate::Handle<Session> FromPartition(
       v8::Isolate* isolate, const std::string& partition,
       const base::DictionaryValue& options = base::DictionaryValue());
 
-  AtomBrowserContext* browser_context() const { return browser_context_; }
+  Profile* browser_context() const { return profile_; }
 
   // mate::TrackableObject:
   static void BuildPrototype(v8::Isolate* isolate,
@@ -88,7 +93,7 @@ class Session: public mate::TrackableObject<Session>,
   bool Equal(Session* session) const;
 
  protected:
-  Session(v8::Isolate* isolate, AtomBrowserContext* browser_context);
+  Session(v8::Isolate* isolate, Profile* browser_context);
   ~Session();
 
   // content::DownloadManager::Observer:
@@ -111,7 +116,8 @@ class Session: public mate::TrackableObject<Session>,
   // The task tracker for the HistoryService callbacks.
   base::CancelableTaskTracker task_tracker_;
 
-  AtomBrowserContext* browser_context_;
+  Profile* profile_;
+  scoped_refptr<net::URLRequestContextGetter> request_context_getter_;
 
   DISALLOW_COPY_AND_ASSIGN(Session);
 };
