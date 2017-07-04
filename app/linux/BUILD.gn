@@ -21,7 +21,7 @@ executable("electron_app") {
      "//electron:electron_framework_resources",
      "//electron:electron_app_resources",
      "//build/config:exe_and_shlib_deps",
-     "//build/linux:fontconfig",
+     "//third_party/fontconfig",
      "//chrome/common:version_header",
      "//components/crash/content/app",
      "//components/policy:generated",
