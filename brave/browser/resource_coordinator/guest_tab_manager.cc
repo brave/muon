@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "brave/browser/memory/guest_tab_manager.h"
+#include "brave/browser/resource_coordinator/guest_tab_manager.h"
 
 #include "atom/browser/extensions/tab_helper.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
@@ -33,7 +33,7 @@ void RestoreHelper::RemoveRestoreHelper() {
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(content::RestoreHelper);
 
-namespace memory {
+namespace resource_coordinator {
 
 GuestTabManager::GuestTabManager() : TabManager() {}
 
@@ -97,4 +97,4 @@ void GuestTabManager::ActiveTabChanged(content::WebContents* old_contents,
   }
 }
 
-}  // namespace memory
+}  // namespace resource_coordinator
