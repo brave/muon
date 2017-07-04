@@ -1,0 +1,21 @@
+source_set("tracking_protection") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  include_dirs = [
+    "//electron/vendor/tracking-protection",
+  ]
+
+  sources = [
+    "//electron/vendor/tracking-protection/TPParser.cpp",
+    "//electron/vendor/tracking-protection/TPParser.h",
+    "//electron/vendor/tracking-protection/TrackerData.h",
+    "//electron/vendor/tracking-protection/FirstPartyHost.h",
+  ]
+
+  deps = [
+    "//electron/vendor/hashset-cpp",
+  ]
+}
+

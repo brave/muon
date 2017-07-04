@@ -1,0 +1,24 @@
+source_set("ad_block") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  include_dirs = [
+    "//electron/vendor/ad-block",
+  ]
+
+  sources = [
+    "//electron/vendor/ad-block/ad_block_client.cc",
+    "//electron/vendor/ad-block/ad_block_client.h",
+    "//electron/vendor/ad-block/cosmetic_filter.cc",
+    "//electron/vendor/ad-block/cosmetic_filter.h",
+    "//electron/vendor/ad-block/filter.cc",
+    "//electron/vendor/ad-block/filter.h",
+  ]
+
+  deps = [
+    "//electron/vendor/bloom-filter-cpp",
+    "//electron/vendor/hashset-cpp",
+  ]
+}
+

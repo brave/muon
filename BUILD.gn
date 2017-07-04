@@ -367,6 +367,10 @@ source_set("native_mate") {
 
   deps = [
     "build/node",
+    "build/ad_block",
+    "build/tracking_protection",
+    "build/hashset_cpp",
+    "build/bloom_filter_cpp",
     "//third_party/WebKit/public:blink_headers",
   ]
 }

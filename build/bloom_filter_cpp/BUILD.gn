@@ -1,0 +1,16 @@
+source_set("bloom_filter_cpp") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  include_dirs = [
+    "//electron/vendor/bloom-filter-cpp",
+  ]
+
+  sources = [
+    "//electron/vendor/bloom-filter-cpp/BloomFilter.cpp",
+    "//electron/vendor/bloom-filter-cpp/BloomFilter.h",
+    "//electron/vendor/bloom-filter-cpp/hashFn.cpp",
+    "//electron/vendor/bloom-filter-cpp/hashFn.h",
+  ]
+}
