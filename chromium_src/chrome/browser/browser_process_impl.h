@@ -84,7 +84,7 @@ class BrowserProcessImpl : public BrowserProcess {
   component_updater::ComponentUpdateService* component_updater() override;
   extensions::EventRouterForwarder*
       extension_event_router_forwarder() override;
-  memory::TabManager* GetTabManager() override;
+  resource_coordinator::TabManager* GetTabManager() override;
   StatusTray* status_tray() override;
   message_center::MessageCenter* message_center() override;
   net_log::ChromeNetLog* net_log() override;
@@ -181,8 +181,8 @@ class BrowserProcessImpl : public BrowserProcess {
 
 #if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
   // Any change to this #ifdef must be reflected as well in
-  // chrome/browser/memory/tab_manager_browsertest.cc
-  std::unique_ptr<memory::TabManager> tab_manager_;
+  // chrome/browser/resource_coordinator/tab_manager_browsertest.cc
+  std::unique_ptr<resource_coordinator::TabManager> tab_manager_;
 #endif
 
   std::unique_ptr<PrefService> local_state_;
