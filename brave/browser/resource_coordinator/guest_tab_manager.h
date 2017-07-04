@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BRAVE_BROWSER_MEMORY_GUEST_TAB_MANAGER_H_
-#define BRAVE_BROWSER_MEMORY_GUEST_TAB_MANAGER_H_
+#ifndef BRAVE_BROWSER_RESOURCE_COORDINATOR_GUEST_TAB_MANAGER_H_
+#define BRAVE_BROWSER_RESOURCE_COORDINATOR_GUEST_TAB_MANAGER_H_
 
-#include "chrome/browser/memory/tab_manager.h"
+#include "chrome/browser/resource_coordinator/tab_manager.h"
 
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
@@ -26,7 +26,7 @@ class RestoreHelper : public WebContentsObserver,
 
 }  // namespace content
 
-namespace memory {
+namespace resource_coordinator {
 
 class GuestTabManager : public TabManager {
  public:
@@ -49,6 +49,6 @@ class GuestTabManager : public TabManager {
   DISALLOW_COPY_AND_ASSIGN(GuestTabManager);
 };
 
-}  // namespace memory
+}  // namespace resource_coordinator
 
-#endif  // BRAVE_BROWSER_MEMORY_GUEST_TAB_MANAGER_H_
+#endif  // BRAVE_BROWSER_RESOURCE_COORDINATOR_GUEST_TAB_MANAGER_H_
