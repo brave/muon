@@ -120,8 +120,8 @@ source_set("tab_manager") {
   ]
 
   sources = [
-    "memory/guest_tab_manager.cc",
-    "memory/guest_tab_manager.h",
+    "resource_coordinator/guest_tab_manager.cc",
+    "resource_coordinator/guest_tab_manager.h",
   ]
 
   deps = [
