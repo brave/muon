@@ -2353,9 +2353,8 @@ v8::Local<v8::Value> WebContents::TabValue() {
   std::unique_ptr<base::DictionaryValue> value(
     ExtensionTabUtil::CreateTabObject(web_contents())->ToValue().release());
 
-  std::unique_ptr<content::V8ValueConverter>
-      converter(content::V8ValueConverter::create());
-  return converter->ToV8Value(value.get(), isolate()->GetCurrentContext());
+  return content::V8ValueConverter::Create()->ToV8Value(
+      value.get(), isolate()->GetCurrentContext());
 }
 
 int32_t WebContents::ID() const {
