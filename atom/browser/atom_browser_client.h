@@ -12,6 +12,9 @@
 
 #include "brightray/browser/browser_client.h"
 #include "content/public/browser/render_process_host_observer.h"
+#include "net/cert/x509_certificate.h"
+#include "net/ssl/ssl_private_key.h"
+
 
 namespace content {
 class QuotaPermissionContext;
@@ -19,6 +22,8 @@ class ClientCertificateDelegate;
 }
 
 namespace net {
+class ClientCertIdentity;
+using ClientCertIdentityList = std::vector<std::unique_ptr<ClientCertIdentity>>;
 class SSLCertRequestInfo;
 }
 
@@ -67,7 +72,7 @@ class AtomBrowserClient : public brightray::BrowserClient,
   void SelectClientCertificate(
       content::WebContents* web_contents,
       net::SSLCertRequestInfo* cert_request_info,
-      net::CertificateList client_certs,
+      net::ClientCertIdentityList client_certs,
       std::unique_ptr<content::ClientCertificateDelegate> delegate) override;
   void ResourceDispatcherHostCreated() override;
   void GetAdditionalAllowedSchemesForFileSystem(

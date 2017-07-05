@@ -55,6 +55,7 @@
 #include "extensions/features/features.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
+#include "net/ssl/client_cert_identity.h"
 #include "net/ssl/ssl_cert_request_info.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/gfx/image/image.h"
@@ -461,7 +462,7 @@ void OnClientCertificateSelected(
   auto certs = net::X509Certificate::CreateCertificateListFromBytes(
       data.c_str(), data.length(), net::X509Certificate::FORMAT_AUTO);
   if (certs.size() > 0)
-    delegate->ContinueWithCertificate(certs[0].get());
+    delegate->ContinueWithCertificate(std::move(certs[0]), nullptr);
 }
 
 void PassLoginInformation(scoped_refptr<LoginHandler> login_handler,
@@ -637,7 +638,7 @@ void App::AllowCertificateError(
 void App::SelectClientCertificate(
     content::WebContents* web_contents,
     net::SSLCertRequestInfo* cert_request_info,
-    net::CertificateList client_certs,
+    net::ClientCertIdentityList client_certs,
     std::unique_ptr<content::ClientCertificateDelegate> delegate) {
   std::shared_ptr<content::ClientCertificateDelegate>
       shared_delegate(delegate.release());
@@ -648,8 +649,15 @@ void App::SelectClientCertificate(
       base::Bind(&OnClientCertificateSelected, isolate(), shared_delegate));
 
   // Default to first certificate from the platform store.
-  if (!prevent_default)
-    shared_delegate->ContinueWithCertificate(client_certs[0].get());
+  // The callback will own |client_certs[0]| and |shared_delegate|, keeping
+  // them alive until after ContinueWithCertificate is called.
+  if (!prevent_default) {
+    scoped_refptr<net::X509Certificate> cert = client_certs[0]->certificate();
+    net::ClientCertIdentity::SelfOwningAcquirePrivateKey(
+        std::move(client_certs[0]),
+        base::Bind(&content::ClientCertificateDelegate::ContinueWithCertificate,
+                   base::Passed(&shared_delegate), std::move(cert)));
+  }
 }
 
 void App::OnMaxBandwidthChanged(
