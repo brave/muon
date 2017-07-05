@@ -4,6 +4,8 @@
 
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
 
+#include <stdint.h>
+
 #include <string>
 #include <vector>
 
@@ -58,6 +60,7 @@ class BraveConfigurator : public update_client::Configurator {
       const override;
   PrefService* GetPrefService() const override;
   bool IsPerUserInstall() const override;
+  std::vector<uint8_t> GetRunActionKeyHash() const override;
 
  private:
   friend class base::RefCountedThreadSafe<BraveConfigurator>;
@@ -190,6 +193,10 @@ PrefService* BraveConfigurator::GetPrefService() const {
 
 bool BraveConfigurator::IsPerUserInstall() const {
   return false;
+}
+
+std::vector<uint8_t> BraveConfigurator::GetRunActionKeyHash() const {
+  return configurator_impl_.GetRunActionKeyHash();
 }
 
 }  // namespace
