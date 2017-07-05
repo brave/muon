@@ -211,29 +211,22 @@ content::WebContentsViewDelegate*
   return new BraveWebContentsViewDelegate(web_contents);
 }
 
-void BraveContentBrowserClient::ExposeInterfacesToFrame(
-    service_manager::BinderRegistry* registry,
-    content::RenderFrameHost* render_frame_host) {
+void ChromeContentBrowserClient::BindInterfaceRequestFromFrame(
+    content::RenderFrameHost* render_frame_host,
+    const service_manager::BindSourceInfo& source_info,
+    const std::string& interface_name,
+    mojo::ScopedMessagePipeHandle interface_pipe) {
+  if (!frame_interfaces_.get() && !frame_interfaces_parameterized_.get())
+    InitFrameInterfaces();
 
-  if (!render_frame_host->GetParent()) {
-    // Register mojo CredentialManager interface only for main frame.
-    registry->AddInterface(
-        base::Bind(&BravePasswordManagerClient::BindCredentialManager,
-                   render_frame_host));
+  if (frame_interfaces_parameterized_->CanBindInterface(interface_name)) {
+    frame_interfaces_parameterized_->BindInterface(source_info, interface_name,
+                                                   std::move(interface_pipe),
+                                                   render_frame_host);
+  } else if (frame_interfaces_->CanBindInterface(interface_name)) {
+    frame_interfaces_->BindInterface(source_info, interface_name,
+                                     std::move(interface_pipe));
   }
-  registry->AddInterface(
-      base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver,
-                 render_frame_host));
-
-  registry->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindPasswordManagerDriver,
-                 render_frame_host));
-
-  registry->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindSensitiveInputVisibilityService,
-                 render_frame_host));
 }
 
 void BraveContentBrowserClient::RenderProcessWillLaunch(
