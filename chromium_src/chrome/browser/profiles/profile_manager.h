@@ -19,11 +19,11 @@
 #include "base/macros.h"
 #include "base/memory/linked_ptr.h"
 #include "base/message_loop/message_loop.h"
-#include "base/threading/non_thread_safe.h"
+#include "base/threading/thread_checker.h"
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
 
-class ProfileManager : public base::NonThreadSafe {
+class ProfileManager {
  public:
   explicit ProfileManager(const base::FilePath& user_data_dir);
   ~ProfileManager();
@@ -161,6 +161,13 @@ class ProfileManager : public base::NonThreadSafe {
   // objects in a running instance of Chrome.
   typedef std::map<base::FilePath, linked_ptr<ProfileInfo> > ProfilesInfoMap;
   ProfilesInfoMap profiles_info_;
+
+  // TODO(chrome/browser/profiles/OWNERS): Usage of this in profile_manager.cc
+  // should likely be turned into DCHECK_CURRENTLY_ON(BrowserThread::UI) for
+  // consistency with surrounding code in the same file but that wasn't trivial
+  // enough to do as part of the mass refactor CL which introduced
+  // |thread_checker_|, ref. https://codereview.chromium.org/2907253003/#msg37.
+  THREAD_CHECKER(thread_checker_);
 
   DISALLOW_COPY_AND_ASSIGN(ProfileManager);
 };
