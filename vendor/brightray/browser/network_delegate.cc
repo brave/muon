@@ -123,6 +123,7 @@ bool NetworkDelegate::OnCanSetCookie(const net::URLRequest& request,
 }
 
 bool NetworkDelegate::OnCanAccessFile(const net::URLRequest& request,
+                                           const base::FilePath& original_path,
                                            const base::FilePath& path) const {
   return true;
 }
