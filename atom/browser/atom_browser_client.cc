@@ -6,6 +6,8 @@
 
 #include "atom/browser/atom_browser_client.h"
 
+#include "base/memory/ptr_util.h"
+
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/api/atom_api_protocol.h"
 #include "atom/browser/atom_browser_context.h"
@@ -232,11 +234,12 @@ void AtomBrowserClient::AllowCertificateError(
 void AtomBrowserClient::SelectClientCertificate(
     content::WebContents* web_contents,
     net::SSLCertRequestInfo* cert_request_info,
-    net::CertificateList client_certs,
+    net::ClientCertIdentityList client_certs,
     std::unique_ptr<content::ClientCertificateDelegate> delegate) {
   if (!client_certs.empty() && delegate_) {
     delegate_->SelectClientCertificate(web_contents, cert_request_info,
-                                       client_certs, std::move(delegate));
+                                       std::move(client_certs),
+                                       std::move(delegate));
   }
 }
 

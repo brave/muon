@@ -5,6 +5,7 @@
 #ifndef ATOM_COMMON_NATIVE_MATE_CONVERTERS_NET_CONVERTER_H_
 #define ATOM_COMMON_NATIVE_MATE_CONVERTERS_NET_CONVERTER_H_
 
+#include <memory>
 #include "base/memory/ref_counted.h"
 #include "native_mate/converter.h"
 
@@ -15,6 +16,7 @@ class ListValue;
 
 namespace net {
 class AuthChallengeInfo;
+class ClientCertIdentity;
 class HttpRequestHeaders;
 class HttpResponseHeaders;
 class URLRequest;
@@ -42,9 +44,21 @@ struct Converter<const net::AuthChallengeInfo*> {
 };
 
 template<>
+struct Converter<std::unique_ptr<net::ClientCertIdentity>> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+      const std::unique_ptr<net::ClientCertIdentity>& val);
+};
+
+template<>
 struct Converter<scoped_refptr<net::X509Certificate>> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
       const scoped_refptr<net::X509Certificate>& val);
+};
+
+template<>
+struct Converter<net::X509Certificate> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+      const net::X509Certificate& val);
 };
 
 }  // namespace mate
