@@ -102,7 +102,8 @@ class BravePasswordManagerClient
   void CheckSafeBrowsingReputation(const GURL& form_action,
                                    const GURL& frame_url) override;
   void CheckProtectedPasswordEntry(
-      const std::string& password_saved_domain) override;
+      const std::string& password_saved_domain,
+      bool password_field_exists) override;
   password_manager::PasswordSyncState GetPasswordSyncState() const override;
   bool WasLastNavigationHTTPError() const override;
   bool DidLastPageLoadEncounterSSLErrors() const override;
