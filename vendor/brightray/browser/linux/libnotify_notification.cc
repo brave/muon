@@ -7,7 +7,6 @@
 #include "base/files/file_enumerator.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
-#include "browser/notification_delegate.h"
 #include "chrome/browser/ui/libgtkui/skia_utils_gtk.h"
 #include "common/application_info.h"
 #include "third_party/skia/include/core/SkBitmap.h"
