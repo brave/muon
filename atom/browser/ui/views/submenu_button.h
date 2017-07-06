@@ -26,7 +26,7 @@ class SubmenuButton : public views::MenuButton {
   base::char16 accelerator() const { return accelerator_; }
 
   // views::MenuButton:
-  void OnPaint(gfx::Canvas* canvas) override;
+  void PaintButtonContents(gfx::Canvas* canvas) override;
 
  private:
   const gfx::FontList& GetFontList() const;
