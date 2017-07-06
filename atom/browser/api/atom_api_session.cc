@@ -606,7 +606,8 @@ mate::Handle<Session> Session::CreateFrom(
     return mate::CreateHandle(isolate, static_cast<Session*>(existing));
 
   auto handle = mate::CreateHandle(
-      isolate, new Session(isolate, Profile::FromBrowserContext(browser_context)));
+      isolate,
+      new Session(isolate, Profile::FromBrowserContext(browser_context)));
 
   // The Sessions should never be garbage collected, since the common pattern is
   // to use partition strings, instead of using the Session object directly.
