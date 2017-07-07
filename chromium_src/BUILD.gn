@@ -2,6 +2,7 @@ import("//build/config/features.gni")
 import("//build/config/ui.gni")
 import("//build/config/crypto.gni")
 import("//components/os_crypt/features.gni")
+import("//components/spellcheck/spellcheck_build_features.gni")
 import("//extensions/features/features.gni")
 import("//media/media_options.gni")
 import("//ppapi/features/features.gni")
@@ -100,8 +101,13 @@ source_set("renderer") {
     "//content/public/common",
     "//chrome/renderer",
     "//components/content_settings/core/common",
+    "//components/spellcheck:build_features",
     "//third_party/WebKit/public:blink_headers",
   ]
+
+  if (enable_spellcheck) {
+    deps += [ "//components/spellcheck/renderer:renderer" ]
+  }
 }
 
 source_set("browser") {
@@ -129,6 +135,7 @@ source_set("browser") {
     "//components/data_usage/core",
     "//components/prefs",
     "//components/ssl_config",
+    "//components/spellcheck:build_features",
     "//content/public/browser",
     "//electron/atom/browser",
   ]
@@ -383,6 +390,8 @@ source_set("browser") {
         "//chrome/browser/extensions/api/messaging/native_process_launcher.h",
         "//chrome/browser/extensions/api/messaging/native_process_launcher_posix.cc",
         "//chrome/browser/extensions/api/messaging/native_process_launcher_win.cc",
+        "//chrome/browser/extensions/api/spellcheck/spellcheck_api.cc",
+        "//chrome/browser/extensions/api/spellcheck/spellcheck_api.h",
         "//chrome/browser/extensions/api/tabs/tabs_constants.cc",
         "//chrome/browser/extensions/api/tabs/tabs_constants.h",
         "//chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.cc",
@@ -392,6 +401,7 @@ source_set("browser") {
       ]
 
       deps += [
+        "//components/spellcheck/browser",
         "//extensions/browser",
         "//rlz/features",
       ]
@@ -407,6 +417,30 @@ source_set("browser") {
       "//ppapi/host",
       "//ppapi/proxy",
     ]
+  }
+  if (enable_spellcheck) {
+    sources += [
+      "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
+      "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
+      "//chrome/browser/spellchecker/spellcheck_dictionary.h",
+      "//chrome/browser/spellchecker/spellcheck_factory.cc",
+      "//chrome/browser/spellchecker/spellcheck_factory.h",
+      "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc",
+      "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.h",
+      "//chrome/browser/spellchecker/spellcheck_message_filter.cc",
+      "//chrome/browser/spellchecker/spellcheck_message_filter.h",
+      "//chrome/browser/spellchecker/spellcheck_message_filter_platform_mac.cc",
+      "//chrome/browser/spellchecker/spellcheck_service.cc",
+      "//chrome/browser/spellchecker/spellcheck_service.h",
+    ]
+    deps += [
+      "//components/spellcheck/browser",
+      "//components/spellcheck/common:common",
+    ]
+
+    if (!is_android) {
+      deps += [ "//third_party/hunspell" ]
+    }
   }
 }
 

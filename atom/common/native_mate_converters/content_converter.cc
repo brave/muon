@@ -118,9 +118,11 @@ v8::Local<v8::Value> Converter<ContextMenuParamsWithWebContents>::ToV8(
   dict.Set("selectionText", params.selection_text);
   dict.Set("titleText", params.title_text);
   dict.Set("misspelledWord", params.misspelled_word);
+  dict.Set("dictionarySuggestions", params.dictionary_suggestions);
   dict.Set("frameCharset", params.frame_charset);
   dict.Set("inputFieldType", params.input_field_type);
   dict.Set("menuSourceType",  params.source_type);
+  dict.Set("properties", params.properties);
 
   if (params.custom_context.request_id || params.custom_context.is_pepper_menu)
     dict.Set("menu", MenuToV8(isolate, val.second, params.custom_context,

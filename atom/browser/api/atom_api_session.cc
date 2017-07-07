@@ -16,6 +16,7 @@
 #include "atom/browser/api/atom_api_cookies.h"
 #include "atom/browser/api/atom_api_download_item.h"
 #include "atom/browser/api/atom_api_protocol.h"
+#include "atom/browser/api/atom_api_spellchecker.h"
 #include "atom/browser/api/atom_api_user_prefs.h"
 #include "atom/browser/api/atom_api_web_request.h"
 #include "atom/browser/atom_browser_context.h"
@@ -578,6 +579,14 @@ v8::Local<v8::Value> Session::Autofill(v8::Isolate* isolate) {
   return v8::Local<v8::Value>::New(isolate, autofill_);
 }
 
+v8::Local<v8::Value> Session::SpellChecker(v8::Isolate* isolate) {
+  if (spell_checker_.IsEmpty()) {
+    auto handle = atom::api::SpellChecker::Create(isolate, profile_);
+    spell_checker_.Reset(isolate, handle.ToV8());
+  }
+  return v8::Local<v8::Value>::New(isolate, spell_checker_);
+}
+
 v8::Local<v8::Value> Session::Extensions(v8::Isolate* isolate) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (extensions_.IsEmpty()) {
@@ -664,7 +673,8 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetProperty("protocol", &Session::Protocol)
       .SetProperty("webRequest", &Session::WebRequest)
       .SetProperty("extensions", &Session::Extensions)
-      .SetProperty("autofill", &Session::Autofill);
+      .SetProperty("autofill", &Session::Autofill)
+      .SetProperty("spellChecker", &Session::SpellChecker);
 }
 
 }  // namespace api

@@ -31,6 +31,8 @@ namespace content {
 class RenderFrame;
 }
 
+class SpellCheck;
+
 namespace brave {
 
 class BraveContentRendererClient : public ChromeContentRendererClient {
@@ -53,6 +55,8 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
 
  private:
   atom::ContentSettingsManager* content_settings_manager_;  // not owned
+
+  std::unique_ptr<SpellCheck> spellcheck_;
 
   std::unique_ptr<ChromeRenderThreadObserver> chrome_observer_;
   std::unique_ptr<web_cache::WebCacheImpl> web_cache_impl_;

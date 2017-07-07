@@ -5,6 +5,7 @@
 #include "atom/browser/ui/atom_menu_model.h"
 
 #include "base/stl_util.h"
+#include "chrome/browser/renderer_context_menu/spelling_menu_observer.h"
 
 namespace atom {
 

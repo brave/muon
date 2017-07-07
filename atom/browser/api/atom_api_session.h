@@ -89,6 +89,7 @@ class Session: public mate::TrackableObject<Session>,
   v8::Local<v8::Value> WebRequest(v8::Isolate* isolate);
   v8::Local<v8::Value> UserPrefs(v8::Isolate* isolate);
   v8::Local<v8::Value> Autofill(v8::Isolate* isolate);
+  v8::Local<v8::Value> SpellChecker(v8::Isolate* isolate);
   v8::Local<v8::Value> Extensions(v8::Isolate* isolate);
   bool Equal(Session* session) const;
 
@@ -108,6 +109,7 @@ class Session: public mate::TrackableObject<Session>,
   v8::Global<v8::Value> user_prefs_;
   v8::Global<v8::Value> content_settings_;
   v8::Global<v8::Value> autofill_;
+  v8::Global<v8::Value> spell_checker_;
   v8::Global<v8::Value> extensions_;
 
   // The X-DevTools-Emulate-Network-Conditions-Client-Id.
