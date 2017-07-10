@@ -1839,6 +1839,25 @@ index 6227d47f8dc056a2bada2b166dcee1b4d86d9237..26bd7fdb704890c55d0c593d9e7a9002
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://oobe/*"
+diff --git a/extensions/renderer/module_system.cc b/extensions/renderer/module_system.cc
+index 7fba82b3c1e816eb03385209f780eefc57671356..128bbbaef3820c7a16d1f5e326c1d9ab7a7aa27f 100644
+--- a/extensions/renderer/module_system.cc
++++ b/extensions/renderer/module_system.cc
+@@ -452,11 +452,13 @@ void ModuleSystem::LazyFieldGetterInner(
+   // time, it means something went wrong. Bail out early rather than going
+   // through the initialization process again (since bindings may not expect to
+   // run multiple times).
++#ifdef MUON_CHROMIUM_BUILD
++  // broken commit in upstream see https://codereview.chromium.org/2835643004#msg23
+   if (!module_system->loaded_modules_.insert(name).second) {
+     Warn(isolate, "Previous API instantiation failed.");
+     return;
+   }
+-
++#endif
+   // Switch to our v8 context because we need functions created while running
+   // the require()d module to belong to our context, not the current one.
+   v8::Context::Scope context_scope(context);
 diff --git a/extensions/renderer/resources/guest_view/guest_view_container.js b/extensions/renderer/resources/guest_view/guest_view_container.js
 index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8c658431f 100644
 --- a/extensions/renderer/resources/guest_view/guest_view_container.js
