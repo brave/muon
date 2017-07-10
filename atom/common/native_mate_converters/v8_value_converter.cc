@@ -250,9 +250,9 @@ v8::Local<v8::Value> V8ValueConverter::ToV8Object(
 
 v8::Local<v8::Value> V8ValueConverter::ToArrayBuffer(
     v8::Isolate* isolate, const base::Value* value) const {
-  return node::Buffer::Copy(isolate,
-                            value->GetBuffer(),
-                            value->GetSize()).ToLocalChecked();
+  return node::Buffer::Copy(isolate, value->GetBlob().data(),
+                            value->GetBlob().size())
+      .ToLocalChecked();
 }
 
 base::Value* V8ValueConverter::FromV8ValueImpl(
@@ -450,7 +450,7 @@ base::Value* V8ValueConverter::FromV8Object(
       continue;
 
     result->SetWithoutPathExpansion(std::string(*name_utf8, name_utf8.length()),
-                                    child.release());
+                                    std::move(child));
   }
 
   return result.release();

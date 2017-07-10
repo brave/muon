@@ -270,9 +270,10 @@ void Extension::OnExtensionReady(content::BrowserContext* browser_context,
                   install_info);
 }
 
-void Extension::OnExtensionUnloaded(content::BrowserContext* browser_context,
-                            const extensions::Extension* extension,
-                            extensions::UnloadedExtensionInfo::Reason reason) {
+void Extension::OnExtensionUnloaded(
+    content::BrowserContext* browser_context,
+    const extensions::Extension* extension,
+    extensions::UnloadedExtensionReason reason) {
   node::Environment* env = node::Environment::GetCurrent(isolate());
   if (!env)
     return;

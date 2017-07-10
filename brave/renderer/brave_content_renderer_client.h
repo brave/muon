@@ -43,7 +43,6 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
   void RenderViewCreated(content::RenderView*) override;
   bool OverrideCreatePlugin(
       content::RenderFrame* render_frame,
-      blink::WebLocalFrame* frame,
       const blink::WebPluginParams& params,
       blink::WebPlugin** plugin) override;
   unsigned long long VisitedLinkHash(  // NOLINT

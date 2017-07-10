@@ -261,3 +261,7 @@ void ChromeExtensionsDispatcherDelegate::OnActiveExtensionsUpdated(
     const std::set<std::string>& extension_ids) {
   crash_keys::SetActiveExtensions(extension_ids);
 }
+
+void ChromeExtensionsDispatcherDelegate::InitializeBindingsSystem(
+    extensions::Dispatcher* dispatcher,
+    extensions::APIBindingsSystem* bindings_system) {}

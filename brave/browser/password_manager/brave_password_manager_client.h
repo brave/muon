@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "base/compiler_specific.h"
@@ -50,6 +51,8 @@ class BravePasswordManagerClient
       public autofill::mojom::PasswordManagerClient,
       public content::RenderWidgetHost::InputEventObserver {
  public:
+  BravePasswordManagerClient(content::WebContents* web_contents,
+                             autofill::AutofillClient* autofill_client);
   ~BravePasswordManagerClient() override;
 
   void Initialize(atom::api::WebContents* api_web_contents);
@@ -96,6 +99,14 @@ class BravePasswordManagerClient
       const override;
   PrefService* GetPrefs() override;
   password_manager::PasswordStore* GetPasswordStore() const override;
+#if defined(SAFE_BROWSING_DB_LOCAL)
+  safe_browsing::PasswordProtectionService* GetPasswordProtectionService()
+      const override;
+  void CheckSafeBrowsingReputation(const GURL& form_action,
+                                   const GURL& frame_url) override;
+  void CheckProtectedPasswordEntry(
+      const std::string& password_saved_domain) override;
+#endif
   password_manager::PasswordSyncState GetPasswordSyncState() const override;
   bool WasLastNavigationHTTPError() const override;
   bool DidLastPageLoadEncounterSSLErrors() const override;
@@ -130,16 +141,12 @@ class BravePasswordManagerClient
 
   static void BindCredentialManager(
       content::RenderFrameHost* render_frame_host,
+      const service_manager::BindSourceInfo& source_info,
       password_manager::mojom::CredentialManagerRequest request);
 
   // A helper method to determine whether a save/update bubble can be shown
   // on this |url|.
   static bool CanShowBubbleOnURL(const GURL& url);
-
- protected:
-  // Callable for tests.
-  BravePasswordManagerClient(content::WebContents* web_contents,
-                              autofill::AutofillClient* autofill_client);
 
  private:
   friend class content::WebContentsUserData<BravePasswordManagerClient>;

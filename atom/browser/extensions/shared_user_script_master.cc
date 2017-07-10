@@ -36,7 +36,7 @@ void SharedUserScriptMaster::OnExtensionLoaded(
 void SharedUserScriptMaster::OnExtensionUnloaded(
     content::BrowserContext* browser_context,
     const Extension* extension,
-    UnloadedExtensionInfo::Reason reason) {
+    UnloadedExtensionReason reason) {
   const UserScriptList& script_list =
       ContentScriptsInfo::GetContentScripts(extension);
   std::set<UserScriptIDPair> scripts_to_remove;

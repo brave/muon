@@ -27,8 +27,9 @@ class ExtensionService {
                         int disable_reasons) = 0;
   virtual void NotifyExtensionLoaded(
                                   const extensions::Extension* extension) = 0;
-  virtual void NotifyExtensionUnloaded(const extensions::Extension* extension,
-                         extensions::UnloadedExtensionInfo::Reason reason) = 0;
+  virtual void NotifyExtensionUnloaded(
+      const extensions::Extension* extension,
+      extensions::UnloadedExtensionReason reason) = 0;
   virtual const extensions::Extension* AddExtension(
                                   const extensions::Extension* extension) = 0;
   virtual const extensions::Extension* GetExtensionById(
@@ -77,7 +78,7 @@ class AtomExtensionSystem : public ExtensionSystem {
       const base::Closure& callback) override;
   void UnregisterExtensionWithRequestContexts(
       const std::string& extension_id,
-      const UnloadedExtensionInfo::Reason reason) override;
+      const UnloadedExtensionReason reason) override;
   const OneShotEvent& ready() const override;
   ContentVerifier* content_verifier() override;  // shared
   std::unique_ptr<ExtensionSet> GetDependentExtensions(
@@ -132,13 +133,12 @@ class AtomExtensionSystem : public ExtensionSystem {
     // terminated extensions if it is there.
     void UntrackTerminatedExtension(const std::string& id);
 
-    void UnloadExtension(
-        const std::string& extension_id,
-        extensions::UnloadedExtensionInfo::Reason reason);
+    void UnloadExtension(const std::string& extension_id,
+                         extensions::UnloadedExtensionReason reason);
 
     void NotifyExtensionLoaded(const Extension* extension) override;
     void NotifyExtensionUnloaded(const Extension* extension,
-                                UnloadedExtensionInfo::Reason reason) override;
+                                 UnloadedExtensionReason reason) override;
     const Extension* AddExtension(const Extension* extension) override;
     const Extension* GetExtensionById(
         const std::string& id,

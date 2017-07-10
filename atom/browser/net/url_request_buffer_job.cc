@@ -34,15 +34,19 @@ URLRequestBufferJob::URLRequestBufferJob(
 }
 
 void URLRequestBufferJob::StartAsync(std::unique_ptr<base::Value> options) {
-  const base::Value* binary = nullptr;
+  const base::Value::BlobStorage* blob = nullptr;
   if (options->IsType(base::Value::Type::DICTIONARY)) {
+    const base::Value* binary = nullptr;
     base::DictionaryValue* dict =
         static_cast<base::DictionaryValue*>(options.get());
     dict->GetString("mimeType", &mime_type_);
     dict->GetString("charset", &charset_);
     dict->GetBinary("data", &binary);
-  } else if (options->IsType(base::Value::Type::BINARY)) {
-    options->GetAsBinary(&binary);
+    if (binary) {
+      blob = &binary->GetBlob();
+    }
+  } else if (options->is_blob()) {
+    blob = &options->GetBlob();
   }
 
   if (mime_type_.empty()) {
@@ -54,15 +58,14 @@ void URLRequestBufferJob::StartAsync(std::unique_ptr<base::Value> options) {
 #endif
   }
 
-  if (!binary) {
+  if (!blob) {
     NotifyStartError(net::URLRequestStatus(
           net::URLRequestStatus::FAILED, net::ERR_NOT_IMPLEMENTED));
     return;
   }
 
   data_ = new base::RefCountedBytes(
-      reinterpret_cast<const unsigned char*>(binary->GetBuffer()),
-      binary->GetSize());
+      reinterpret_cast<const unsigned char*>(blob->data()), blob->size());
   status_code_ = net::HTTP_OK;
   net::URLRequestSimpleJob::Start();
 }

@@ -94,7 +94,6 @@ void AtomBrowserClient::OverrideWebkitPrefs(
     content::RenderViewHost* host, content::WebPreferences* prefs) {
   prefs->javascript_enabled = true;
   prefs->web_security_enabled = true;
-  prefs->javascript_can_open_windows_automatically = true;
   prefs->plugins_enabled = true;
   prefs->dom_paste_enabled = true;
   prefs->allow_scripts_to_close_windows = true;
@@ -142,7 +141,6 @@ void AtomBrowserClient::AppendExtraCommandLineSwitches(
       extensions::switches::kEnableEmbeddedExtensionOptions,
       extensions::switches::kEnableExperimentalExtensionApis,
       extensions::switches::kExtensionsOnChromeURLs,
-      extensions::switches::kIsolateExtensions,
       extensions::switches::kNativeCrxBindings,
       extensions::switches::kWhitelistedExtensionID,
 #endif
@@ -233,10 +231,11 @@ void AtomBrowserClient::AllowCertificateError(
 void AtomBrowserClient::SelectClientCertificate(
     content::WebContents* web_contents,
     net::SSLCertRequestInfo* cert_request_info,
+    net::CertificateList client_certs,
     std::unique_ptr<content::ClientCertificateDelegate> delegate) {
-  if (!cert_request_info->client_certs.empty() && delegate_) {
-    delegate_->SelectClientCertificate(
-        web_contents, cert_request_info, std::move(delegate));
+  if (!client_certs.empty() && delegate_) {
+    delegate_->SelectClientCertificate(web_contents, cert_request_info,
+                                       client_certs, std::move(delegate));
   }
 }
 

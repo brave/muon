@@ -16,6 +16,7 @@ class BraveProfileImportHandler : public ProfileImportHandler {
   ~BraveProfileImportHandler() override;
 
   static void Create(
+      const service_manager::BindSourceInfo& source_info,
       mojo::InterfaceRequest<chrome::mojom::ProfileImport> request);
 
  private:

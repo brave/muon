@@ -119,9 +119,8 @@ mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
   memcpy(shared_memory.memory(), pickle.data(), pickle.size());
   free(buf.first);
 
-  base::SharedMemoryHandle readonly_handle;
-  if (!shared_memory.ShareReadOnlyToProcess(base::GetCurrentProcessHandle(),
-                                            &readonly_handle)) {
+  base::SharedMemoryHandle readonly_handle = shared_memory.GetReadOnlyHandle();
+  if (!readonly_handle.IsValid()) {
     return mate::Handle<SharedMemoryWrapper>();
   }
 

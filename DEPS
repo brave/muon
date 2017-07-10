@@ -1,7 +1,7 @@
 use_relative_paths = True
 
 deps = {
-  "vendor/node": "https://github.com/brave/node.git@f51b9ab8ff446ca7b13be0de1bc12b854b23938d",
+  "vendor/node": "https://github.com/brave/node.git@88df98b8cbee4a6ee3ba30baaf27f16a81b2360a",
   "vendor/native_mate": "https://github.com/zcbenz/native-mate.git@ad0fd825663932ee3fa29ff935dfec99933bdd8c",
   "vendor/requests": "https://github.com/kennethreitz/requests@e4d59bedfd3c7f4f254f4f5d036587bcd8152458",
   "vendor/boto": "https://github.com/boto/boto@f7574aa6cc2c819430c1f05e9a1a1a666ef8169b",

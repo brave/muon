@@ -71,7 +71,6 @@
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/browser_plugin_guest_manager.h"
 #include "content/public/browser/favicon_status.h"
-#include "content/public/browser/memory_pressure_controller.h"
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "content/public/browser/navigation_details.h"
 #include "content/public/browser/navigation_entry.h"
@@ -619,19 +618,18 @@ bool WebContents::ShouldCreateWebContents(
       mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
 }
 
-void WebContents::WebContentsCreated(content::WebContents* source_contents,
-                                int opener_render_process_id,
-                                int opener_render_frame_id,
-                                const std::string& frame_name,
-                                const GURL& target_url,
-                                content::WebContents* new_contents) {
+void WebContents::WebContentsCreated(
+    content::WebContents* source_contents,
+    int opener_render_process_id,
+    int opener_render_frame_id,
+    const std::string& frame_name,
+    const GURL& target_url,
+    content::WebContents* new_contents,
+    const base::Optional<content::WebContents::CreateParams>& create_params) {
   if (guest_delegate_) {
-    guest_delegate_->WebContentsCreated(source_contents,
-                                        opener_render_process_id,
-                                        opener_render_frame_id,
-                                        frame_name,
-                                        target_url,
-                                        new_contents);
+    guest_delegate_->WebContentsCreated(
+        source_contents, opener_render_process_id, opener_render_frame_id,
+        frame_name, target_url, new_contents, create_params);
   }
 }
 
@@ -1388,7 +1386,7 @@ void WebContents::WebContentsDestroyed() {
 void WebContents::NavigationEntryCommitted(
     const content::LoadCommittedDetails& details) {
   Emit("navigation-entry-commited", details.entry->GetURL(),
-       details.is_in_page, details.did_replace_entry);
+       details.is_same_document, details.did_replace_entry);
 }
 
 int WebContents::GetID() const {
@@ -2037,12 +2035,8 @@ bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
 
 bool WebContents::SendIPCSharedMemory(const base::string16& channel,
                                       base::SharedMemory* shared_memory) {
-  auto process_handle = web_contents()->GetRenderProcessHost()->GetHandle();
-  if (!process_handle)
-    return false;
-
-  base::SharedMemoryHandle memory_handle;
-  if (!shared_memory->ShareToProcess(process_handle, &memory_handle))
+  base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
+  if (!memory_handle.IsValid())
     return false;
 
   return Send(
@@ -2064,7 +2058,8 @@ void WebContents::SendInputEvent(v8::Isolate* isolate,
   if (!host)
     return;
 
-  int type = mate::GetWebInputEventType(isolate, input_event);
+  blink::WebInputEvent::Type type =
+      mate::GetWebInputEventType(isolate, input_event);
   if (blink::WebInputEvent::IsMouseEventType(type)) {
     blink::WebMouseEvent mouse_event;
     if (mate::ConvertFromV8(isolate, input_event, &mouse_event)) {
@@ -2248,20 +2243,6 @@ void WebContents::OnMemoryPressure(
   if (memory_pressure_level ==
       base::MemoryPressureListener::MEMORY_PRESSURE_LEVEL_CRITICAL) {
     web_contents()->GetController().ClearAllScreenshots();
-  }
-
-  if (web_contents()->GetRenderProcessHost() &&
-      !web_contents()->GetRenderWidgetHostView()) {
-    content::MemoryPressureController::SendPressureNotification(
-      web_contents()->GetRenderProcessHost(), memory_pressure_level);
-    return;
-  }
-
-  // TODO(bridiver) only run once per render process
-  if (web_contents()->GetRenderWidgetHostView() &&
-      !web_contents()->GetRenderWidgetHostView()->HasFocus()) {
-    content::MemoryPressureController::SendPressureNotification(
-      web_contents()->GetRenderProcessHost(), memory_pressure_level);
   }
 }
 

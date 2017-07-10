@@ -48,7 +48,7 @@
 #include "gpu/config/gpu_switches.h"
 #include "net/base/filename_util.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
-#include "services/service_manager/public/cpp/interface_registry.h"
+#include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -211,8 +211,8 @@ content::WebContentsViewDelegate*
   return new BraveWebContentsViewDelegate(web_contents);
 }
 
-void BraveContentBrowserClient::RegisterRenderFrameMojoInterfaces(
-    service_manager::InterfaceRegistry* registry,
+void BraveContentBrowserClient::ExposeInterfacesToFrame(
+    service_manager::BinderRegistry* registry,
     content::RenderFrameHost* render_frame_host) {
 
   if (!render_frame_host->GetParent()) {
@@ -411,7 +411,6 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
       extensions::switches::kEnableEmbeddedExtensionOptions,
       extensions::switches::kEnableExperimentalExtensionApis,
       extensions::switches::kExtensionsOnChromeURLs,
-      extensions::switches::kIsolateExtensions,
       extensions::switches::kWhitelistedExtensionID,
 #endif
     };
@@ -449,8 +448,7 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
 }
 
 bool BraveContentBrowserClient::CanCreateWindow(
-    int opener_render_process_id,
-    int opener_render_frame_id,
+    content::RenderFrameHost* opener,
     const GURL& opener_url,
     const GURL& opener_top_level_frame_url,
     const GURL& source_origin,
@@ -462,7 +460,6 @@ bool BraveContentBrowserClient::CanCreateWindow(
     const blink::mojom::WindowFeatures& features,
     bool user_gesture,
     bool opener_suppressed,
-    content::ResourceContext* context,
     bool* no_javascript_access) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
@@ -648,8 +645,7 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!handle->IsInMainFrame())
     throttles.push_back(
-      base::MakeUnique<content::NavigationThrottle>(
-          extensions::ExtensionNavigationThrottle(handle)));
+        base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
 }

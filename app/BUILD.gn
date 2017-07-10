@@ -36,7 +36,6 @@ if (use_aura) {
 grit("brave_strings") {
   source = "brave_strings.grd"
   output_dir = "$root_gen_dir/brave"
-  use_qualified_include = true
   outputs = [
     "grit/brave_strings.h",
     "brave_strings.pak",
