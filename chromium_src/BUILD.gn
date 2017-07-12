@@ -228,6 +228,9 @@ source_set("browser") {
     "//chrome/browser/tab_contents/tab_util.h",
     "//chrome/browser/win/chrome_process_finder.cc",
     "//chrome/browser/win/chrome_process_finder.h",
+
+    "//chrome/browser/cache_stats_recorder.cc",
+    "//chrome/browser/cache_stats_recorder.h",
   ]
 
   if (is_win) {
