@@ -11,6 +11,7 @@
 
 #include "atom/browser/atom_browser_client.h"
 #include "extensions/features/features.h"
+#include "services/service_manager/public/cpp/binder_registry.h"
 
 namespace content {
 class PlatformNotificationService;
@@ -42,6 +43,14 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   // content::ContentBrowserClient:
   content::WebContentsViewDelegate* GetWebContentsViewDelegate(
       content::WebContents* web_contents) override;
+  void BindInterfaceRequest(
+      const service_manager::BindSourceInfo& source_info,
+      const std::string& interface_name,
+      mojo::ScopedMessagePipeHandle* interface_pipe) override;
+  void ExposeInterfacesToRenderer(
+      service_manager::BinderRegistry* registry,
+      content::AssociatedInterfaceRegistry* associated_registry,
+      content::RenderProcessHost* render_process_host) override;
   void ExposeInterfacesToFrame(
       service_manager::BinderRegistry* registry,
       content::RenderFrameHost* render_frame_host) override;
@@ -108,9 +117,6 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   base::FilePath GetShaderDiskCacheDirectory() override;
   gpu::GpuChannelEstablishFactory* GetGpuChannelEstablishFactory() override;
 
-  void RegisterInProcessServices(StaticServiceMap* apps) override;
-  void RegisterOutOfProcessServices(OutOfProcessServiceMap* apps) override;
-
   std::unique_ptr<base::Value> GetServiceManifestOverlay(
       base::StringPiece name) override;
 
@@ -129,6 +135,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   std::unique_ptr<extensions::AtomBrowserClientExtensionsPart> extensions_part_;
 #endif
+
+  service_manager::BinderRegistry gpu_binder_registry_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveContentBrowserClient);
 };
