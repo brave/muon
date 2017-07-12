@@ -69,6 +69,12 @@ var binding = {
       cb(details)
     })
     ipc.send('chrome-browser-action-get-badge-text', responseId, details)
+  },
+  enable: function (tabId) {
+    return
+  },
+  disable: function (tabId) {
+    return
   }
 }
 
