@@ -17,44 +17,23 @@ const asyncMethods = [
   'loadURL',
   'stop',
   'reload',
-  'reloadIgnoringCache',
-  'clearHistory',
-  'goBack',
-  'goForward',
-  'goToIndex',
-  'goToOffset',
-  'setUserAgent',
-  'inspectElement',
-  'setAudioMuted',
   'undo',
   'redo',
   'cut',
   'copy',
-  'paste',
   'pasteAndMatchStyle',
-  'delete',
-  'selectAll',
-  'unselect',
-  'replace',
   'replaceMisspelling',
   'findInPage',
   'stopFindInPage',
   'downloadURL',
-  'inspectServiceWorker',
   'print',
-  'printToPDF',
   'showCertificate',
   'showDefinitionForSelection',
-  'capturePage',
-  'setTabIndex',
-  'setWebRTCIPHandlingPolicy',
   'executeScriptInTab',
-  'setZoomLevel',
   'zoomIn',
   'zoomOut',
   'zoomReset',
   'enablePreferredSizeMode',
-  'close',
   'send',
   'getPreferredSize',
 ]
@@ -66,9 +45,6 @@ const syncMethods = [
 var WEB_VIEW_API_METHODS = [
   'attachGuest',
   'detachGuest',
-  // Returns Chrome's internal process ID for the guest web page's current
-  // process.
-  'getProcessId',
 ].concat(asyncMethods).concat(syncMethods)
 
 asyncMethods.forEach((method) => {
@@ -128,10 +104,6 @@ WebViewImpl.prototype.detachGuest = function () {
       this.guest = new GuestView('webview')
     })
   }
-}
-
-WebViewImpl.prototype.getProcessId = function() {
-  return this.processId
 }
 
 WebViewImpl.prototype.attachGuest = function (guestInstanceId) {
