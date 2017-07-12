@@ -14,10 +14,6 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
     return webFrameNatives.executeJavaScript(code)
   })
 
-  apiFunctions.setHandleRequest('setSpellCheckProvider', function(lang, autoCorrectEnabled, spellCheckProvider) {
-    return webFrameNatives.setSpellCheckProvider(lang, autoCorrectEnabled, spellCheckProvider)
-  })
-
   apiFunctions.setHandleRequest('setZoomLevel', function(level) {
     return webFrameNatives.setZoomLevel(level)
   })

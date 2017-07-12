@@ -19,6 +19,7 @@
 #include "content/public/common/content_constants.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_thread.h"
+#include "content/public/renderer/render_view.h"
 #include "components/autofill/content/renderer/autofill_agent.h"
 #include "components/autofill/content/renderer/password_autofill_agent.h"
 #include "components/autofill/content/renderer/password_generation_agent.h"
@@ -26,6 +27,7 @@
 #include "components/password_manager/content/renderer/credential_manager_client.h"
 #include "components/plugins/renderer/plugin_placeholder.h"
 #include "components/printing/renderer/print_web_view_helper.h"
+#include "components/spellcheck/spellcheck_build_features.h"
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
 #include "extensions/features/features.h"
@@ -43,6 +45,15 @@
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/renderer/extensions/chrome_extensions_renderer_client.h"
+#endif
+
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+#include "components/spellcheck/renderer/spellcheck.h"
+#include "components/spellcheck/renderer/spellcheck_provider.h"
+
+#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
+#include "components/spellcheck/renderer/spellcheck_panel.h"
+#endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #endif
 
 using autofill::AutofillAgent;
@@ -97,6 +108,13 @@ void BraveContentRendererClient::RenderThreadStarted() {
     WebSecurityPolicy::AddSchemeToBypassSecureContextWhitelist(
         WebString::FromUTF8(scheme));
   }
+
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  if (!spellcheck_) {
+    spellcheck_.reset(new SpellCheck());
+    thread->AddObserver(spellcheck_.get());
+  }
+#endif
 }
 
 unsigned long long BraveContentRendererClient::VisitedLinkHash(  // NOLINT
@@ -154,6 +172,10 @@ void BraveContentRendererClient::RenderFrameCreated(
   new printing::PrintWebViewHelper(
       render_frame, base::MakeUnique<BravePrintWebViewHelperDelegate>());
 #endif
+
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  new SpellCheckProvider(render_frame, spellcheck_.get());
+#endif
 }
 
 void BraveContentRendererClient::RenderViewCreated(
@@ -164,6 +186,19 @@ void BraveContentRendererClient::RenderViewCreated(
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
 
   new password_manager::CredentialManagerClient(render_view);
+
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  // This is a workaround keeping the behavior that, the Blink side spellcheck
+  // enabled state is initialized on RenderView creation.
+  // TODO(xiaochengh): Design better way to sync between Chrome-side and
+  // Blink-side spellcheck enabled states.  See crbug.com/710097.
+  if (SpellCheckProvider* provider =
+          SpellCheckProvider::Get(render_view->GetMainRenderFrame()))
+    provider->EnableSpellcheck(spellcheck_->IsSpellcheckEnabled());
+#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
+  new SpellCheckPanel(render_view);
+#endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
+#endif
 }
 
 bool BraveContentRendererClient::OverrideCreatePlugin(

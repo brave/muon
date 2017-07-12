@@ -278,8 +278,6 @@ source_set("renderer") {
   ]
 
   sources = [
-    "atom/renderer/api/atom_api_spell_check_client.cc",
-    "atom/renderer/api/atom_api_spell_check_client.h",
     "atom/renderer/content_settings_manager.cc",
     "atom/renderer/content_settings_manager.h",
     "brave/renderer/brave_content_renderer_client.cc",

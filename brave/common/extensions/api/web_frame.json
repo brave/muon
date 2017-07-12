@@ -19,33 +19,6 @@
         ]
       },
       {
-        "name": "setSpellCheckProvider",
-        "nocompile": true,
-        "type": "function",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "lang"
-          },
-          {
-            "type": "boolean",
-            "name": "autoCorrectEnabled"
-          },
-          {
-            "type": "object",
-            "name": "spellCheckProvider",
-            "properties": {
-              "spellCheck": {
-                "type": "function",
-                "parameters": [
-                  {"name": "word", "type": "string"}
-                ]
-              }
-            }
-          }
-        ]
-      },
-      {
         "name": "setZoomLevel",
         "nocompile": true,
         "type": "function",

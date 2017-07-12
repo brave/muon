@@ -35,7 +35,6 @@ const asyncMethods = [
   'delete',
   'selectAll',
   'unselect',
-  'replace',
   'replaceMisspelling',
   'findInPage',
   'stopFindInPage',
