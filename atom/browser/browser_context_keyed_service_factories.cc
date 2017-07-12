@@ -9,6 +9,8 @@
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/password_manager/password_store_factory.h"
+#include "chrome/browser/spellchecker/spellcheck_factory.h"
+#include "components/spellcheck/spellcheck_build_features.h"
 #include "extensions/features/features.h"
 #include "ppapi/features/features.h"
 #if BUILDFLAG(ENABLE_PLUGINS)
@@ -36,6 +38,10 @@
 #include "extensions/browser/extension_prefs_factory.h"
 #include "extensions/browser/process_manager_factory.h"
 #include "extensions/browser/renderer_startup_helper.h"
+#endif
+
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+#include "chrome/browser/extensions/api/spellcheck/spellcheck_api.h"
 #endif
 
 namespace atom {
@@ -67,6 +73,9 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   extensions::StorageFrontend::GetFactoryInstance();
   extensions::WebRequestAPI::GetFactoryInstance();
   extensions::AtomExtensionSystemFactory::GetInstance();
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  extensions::SpellcheckAPI::GetFactoryInstance();
+#endif
 #endif
   CookieSettingsFactory::GetInstance();
   HostContentSettingsMapFactory::GetInstance();
@@ -76,6 +85,9 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   ProtocolHandlerRegistryFactory::GetInstance();
   HistoryServiceFactory::GetInstance();
   PasswordStoreFactory::GetInstance();
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  SpellcheckServiceFactory::GetInstance();
+#endif
 }
 
 }  // namespace atom

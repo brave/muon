@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
-#include "atom/renderer/api/atom_api_spell_check_client.h"
 #include "base/strings/utf_string_conversions.h"
 #include "content/renderer/browser_plugin/browser_plugin.h"
 #include "content/renderer/browser_plugin/browser_plugin_manager.h"
 #include "extensions/renderer/console.h"
 #include "extensions/renderer/guest_view/extensions_guest_view_container.h"
 #include "extensions/renderer/script_context.h"
+#include "native_mate/scoped_persistent.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebScriptExecutionCallback.h"
@@ -47,10 +47,6 @@ WebFrameBindings::WebFrameBindings(extensions::ScriptContext* context)
       base::Bind(&WebFrameBindings::ExecuteJavaScript,
           base::Unretained(this)));
   RouteFunction(
-      "setSpellCheckProvider",
-      base::Bind(&WebFrameBindings::SetSpellCheckProvider,
-          base::Unretained(this)));
-  RouteFunction(
       "setZoomLevel",
       base::Bind(&WebFrameBindings::SetZoomLevel,
           base::Unretained(this)));
@@ -68,37 +64,6 @@ WebFrameBindings::WebFrameBindings(extensions::ScriptContext* context)
 }
 
 WebFrameBindings::~WebFrameBindings() {
-}
-
-void WebFrameBindings::Invalidate() {
-  // only remove the spell check client when the main frame is invalidated
-  if (!context()->web_frame()->Parent()) {
-    context()->web_frame()->View()->SetSpellCheckClient(nullptr);
-    context()->web_frame()->SetTextCheckClient(nullptr);
-    spell_check_client_.reset(nullptr);
-  }
-  ObjectBackedNativeHandler::Invalidate();
-}
-
-void WebFrameBindings::SetSpellCheckProvider(
-    const v8::FunctionCallbackInfo<v8::Value>& args) {
-  if (context()->web_frame()->Parent()) {
-    extensions::console::AddMessage(
-        context(), content::CONSOLE_MESSAGE_LEVEL_WARNING,
-        "spellcheck provider can only be set by the main frame");
-    return;
-  }
-
-  const std::string lang = mate::V8ToString(args[0].As<v8::String>());
-  bool auto_spell_correct_turned_on = args[1].As<v8::Boolean>()->Value();
-  v8::Local<v8::Object> provider = v8::Local<v8::Object>::Cast(args[2]);
-
-  std::unique_ptr<atom::api::SpellCheckClient> spell_check_client(
-      new atom::api::SpellCheckClient(
-          lang, auto_spell_correct_turned_on, GetIsolate(), provider));
-  context()->web_frame()->View()->SetSpellCheckClient(spell_check_client.get());
-  context()->web_frame()->SetTextCheckClient(spell_check_client.get());
-  spell_check_client_.swap(spell_check_client);
 }
 
 void WebFrameBindings::ExecuteJavaScript(

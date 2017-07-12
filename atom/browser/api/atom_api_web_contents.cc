@@ -59,6 +59,8 @@
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
+#include "chrome/browser/spellchecker/spellcheck_factory.h"
+#include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
@@ -949,7 +951,26 @@ bool WebContents::HandleContextMenu(const content::ContextMenuParams& params) {
     Emit("pepper-context-menu", std::make_pair(params, web_contents()));
     web_contents()->NotifyContextMenuClosed(params.custom_context);
   } else {
-    Emit("context-menu", std::make_pair(params, web_contents()));
+    // For forgetting custom dictionary option
+    content::ContextMenuParams new_params(params);
+    if (new_params.is_editable && new_params.misspelled_word.empty() &&
+        !new_params.selection_text.empty()) {
+      auto browser_context = web_contents()->GetBrowserContext();
+      if (browser_context) {
+        SpellcheckService* spellcheck =
+          SpellcheckServiceFactory::GetForContext(browser_context);
+        if (spellcheck) {
+          const std::string selection_text =
+            base::UTF16ToUTF8(new_params.selection_text);
+          if (spellcheck->GetCustomDictionary()->HasWord(selection_text)) {
+            new_params.properties.insert(
+              std::pair<std::string, std::string>
+                (std::string("customDictionaryWord"), selection_text));
+          }
+        }
+      }
+    }
+    Emit("context-menu", std::make_pair(new_params, web_contents()));
   }
 
   return true;

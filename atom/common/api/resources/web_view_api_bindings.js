@@ -22,7 +22,6 @@ const asyncMethods = [
   'cut',
   'copy',
   'pasteAndMatchStyle',
-  'replaceMisspelling',
   'findInPage',
   'stopFindInPage',
   'downloadURL',

@@ -37,6 +37,7 @@
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
+#include "components/spellcheck/spellcheck_build_features.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
@@ -65,6 +66,14 @@
 #include "services/ui/public/cpp/gpu/gpu.h"
 #include "ui/aura/mus/window_tree_client.h"
 #include "ui/views/mus/mus_client.h"
+#endif
+
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+#include "chrome/browser/spellchecker/spellcheck_message_filter.h"
+#endif
+
+#if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
+#include "components/spellcheck/browser/spellcheck_message_filter_platform.h"
 #endif
 
 using content::BrowserThread;
@@ -244,6 +253,13 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   host->AddFilter(new printing::PrintingMessageFilter(id, profile));
   host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
   host->AddFilter(new PluginInfoMessageFilter(id, profile));
+
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  host->AddFilter(new SpellCheckMessageFilter(id));
+#endif
+#if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
+  host->AddFilter(new SpellCheckMessageFilterPlatform(id));
+#endif
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_->RenderProcessWillLaunch(host);

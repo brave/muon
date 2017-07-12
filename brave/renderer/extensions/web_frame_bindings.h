@@ -11,12 +11,6 @@
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"
 
-namespace atom {
-namespace api {
-class SpellCheckClient;
-}
-}
-
 namespace brave {
 
 class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
@@ -25,7 +19,6 @@ class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
   virtual ~WebFrameBindings();
 
   void WebFrame(const v8::FunctionCallbackInfo<v8::Value>& args);
-  void SetSpellCheckProvider(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   void SetZoomLevel(const v8::FunctionCallbackInfo<v8::Value>& args);
   void SetZoomLevelLimits(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -33,12 +26,9 @@ class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
 
   void SetGlobal(const v8::FunctionCallbackInfo<v8::Value>& args);
   void ExecuteJavaScript(const v8::FunctionCallbackInfo<v8::Value>& args);
-  void Invalidate() override;
 
  private:
   void BindToGC(const v8::FunctionCallbackInfo<v8::Value>& args);
-
-  std::unique_ptr<atom::api::SpellCheckClient> spell_check_client_;
 
   DISALLOW_COPY_AND_ASSIGN(WebFrameBindings);
 };

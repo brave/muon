@@ -66,6 +66,8 @@ source_set("browser") {
     "api/atom_api_screen.h",
     "api/atom_api_session.cc",
     "api/atom_api_session.h",
+    "api/atom_api_spellchecker.cc",
+    "api/atom_api_spellchecker.h",
     "api/atom_api_system_preferences.cc",
     "api/atom_api_system_preferences.h",
     "api/atom_api_tray.cc",
