@@ -17,6 +17,7 @@
 #include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/grit/brave_resources.h"
 #include "brightray/browser/brightray_paths.h"
+#include "chrome/browser/cache_stats_recorder.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/plugins/plugin_info_message_filter.h"
 #include "chrome/browser/printing/printing_message_filter.h"
@@ -220,6 +221,30 @@ content::WebContentsViewDelegate*
   return new BraveWebContentsViewDelegate(web_contents);
 }
 
+void BraveContentBrowserClient::ExposeInterfacesToRenderer(
+    service_manager::BinderRegistry* registry,
+    content::AssociatedInterfaceRegistry* associated_registry,
+    content::RenderProcessHost* render_process_host) {
+  // The CacheStatsRecorder is an associated binding, instead of a
+  // non-associated one, because the sender (in the renderer process) posts the
+  // message after a time delay, in order to rate limit. The association
+  // protects against the render process host ID being recycled in that time
+  // gap between the preparation and the execution of that IPC.
+  associated_registry->AddInterface(
+      base::Bind(&CacheStatsRecorder::Create, render_process_host->GetID()));
+}
+
+void BraveContentBrowserClient::BindInterfaceRequest(
+    const service_manager::BindSourceInfo& source_info,
+    const std::string& interface_name,
+    mojo::ScopedMessagePipeHandle* interface_pipe) {
+  if (source_info.identity.name() == content::mojom::kGpuServiceName &&
+      gpu_binder_registry_.CanBindInterface(interface_name)) {
+    gpu_binder_registry_.BindInterface(source_info, interface_name,
+                                       std::move(*interface_pipe));
+  }
+}
+
 void BraveContentBrowserClient::ExposeInterfacesToFrame(
     service_manager::BinderRegistry* registry,
     content::RenderFrameHost* render_frame_host) {
@@ -412,6 +437,15 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
         extensions_part_->AppendExtraRendererCommandLineSwitches(
               command_line, process, process->GetBrowserContext());
       #endif
+
+      // TODO(bridiver) - change this if we enable chrome safebrowsing
+      // Disable client-side phishing detection in the renderer if it is
+      // disabled in the Profile preferences or the browser process.
+      // if (!prefs->GetBoolean(prefs::kSafeBrowsingEnabled) ||
+      //     !g_browser_process->safe_browsing_detection_service()) {
+      command_line->AppendSwitch(
+          switches::kDisableClientSidePhishingDetection);
+      // }
     }
 
     static const char* const kSwitchNames[] = {
@@ -421,14 +455,31 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
       autofill::switches::kEnableSuggestionsWithSubstringMatch,
       autofill::switches::kIgnoreAutocompleteOffForAutofill,
       autofill::switches::kLocalHeuristicsOnlyForPasswordGeneration,
+      autofill::switches::kShowAutofillSignatures,
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       extensions::switches::kAllowHTTPBackgroundPage,
       extensions::switches::kAllowLegacyExtensionManifests,
       extensions::switches::kEnableEmbeddedExtensionOptions,
       extensions::switches::kEnableExperimentalExtensionApis,
       extensions::switches::kExtensionsOnChromeURLs,
+      extensions::switches::kNativeCrxBindings,
       extensions::switches::kWhitelistedExtensionID,
+      extensions::switches::kYieldBetweenContentScriptRuns,
 #endif
+      switches::kAllowInsecureLocalhost,
+      switches::kDisableBundledPpapiFlash,
+      switches::kDisableCastStreamingHWEncoding,
+      switches::kDisableJavaScriptHarmonyShipping,
+      switches::kEnableBenchmarking,
+      switches::kEnableNetBenchmarking,
+      switches::kJavaScriptHarmony,
+      switches::kPpapiFlashArgs,
+      switches::kPpapiFlashPath,
+      switches::kPpapiFlashVersion,
+      switches::kProfilingAtStart,
+      switches::kProfilingFile,
+      switches::kProfilingFlush,
+      switches::kUnsafelyTreatInsecureOriginAsSecure,
     };
     command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
                                    arraysize(kSwitchNames));
@@ -598,25 +649,6 @@ BraveContentBrowserClient::GetGpuChannelEstablishFactory() {
     return views::MusClient::Get()->window_tree_client()->gpu();
 #endif
   return nullptr;
-}
-
-void BraveContentBrowserClient::RegisterInProcessServices(
-    StaticServiceMap* apps) {
-#if (ENABLE_MOJO_MEDIA_IN_BROWSER_PROCESS)
-  content::MojoApplicationInfo app_info;
-  app_info.application_factory = base::Bind(&media::CreateMojoMediaApplication);
-  apps->insert(std::make_pair("mojo:media", app_info));
-#endif
-}
-
-void BraveContentBrowserClient::RegisterOutOfProcessServices(
-      OutOfProcessServiceMap* services) {
-#if defined(ENABLE_MOJO_MEDIA_IN_UTILITY_PROCESS)
-  services->insert(std::make_pair("mojo:media",
-                              base::ASCIIToUTF16("Media App")));
-#endif
-  services->insert(std::make_pair(data_decoder::mojom::kServiceName,
-                                  base::ASCIIToUTF16("Image Decoder Service")));
 }
 
 bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
