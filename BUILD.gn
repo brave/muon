@@ -244,12 +244,19 @@ source_set("utility") {
     "//content/public/common",
   ]
 
+  defines = [ ]
+
   deps = [
     "chromium_src:importer",
     "//chrome/common",
     "//chrome/utility",
     "//third_party/protobuf:protobuf_lite",
   ]
+
+  if (use_glib) {
+    defines += [ "USE_LIBSECRET" ]
+    deps += [ "//third_party/libsecret" ]
+  }
 
   sources = [
     "atom/utility/atom_content_utility_client.cc",
