@@ -350,7 +350,8 @@ void BravePasswordManagerClient::CheckSafeBrowsingReputation(
     const GURL& frame_url) {}
 
 void BravePasswordManagerClient::CheckProtectedPasswordEntry(
-    const std::string& password_saved_domain) {}
+    const std::string& password_saved_domain,
+    bool password_field_exists) {}
 #endif
 
 password_manager::PasswordSyncState
