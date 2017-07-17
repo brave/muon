@@ -13,8 +13,6 @@
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
 #include "base/strings/utf_string_conversions.h"
-#include "base/task_scheduler/post_task.h"
-#include "base/task_scheduler/task_traits.h"
 #include "base/values.h"
 #include "brave/common/importer/imported_cookie_entry.h"
 #include "build/build_config.h"
@@ -295,14 +293,14 @@ void ChromeImporter::ImportPasswords() {
   std::vector<std::unique_ptr<autofill::PasswordForm>> forms;
   bool success = database.GetAutofillableLogins(&forms);
   if (success) {
-    for (int i = 0; i < forms.size(); ++i) {
+    for (size_t i = 0; i < forms.size(); ++i) {
       bridge_->SetPasswordForm(*forms[i].get());
     }
   }
   std::vector<std::unique_ptr<autofill::PasswordForm>> blacklist;
   success = database.GetBlacklistLogins(&blacklist);
   if (success) {
-    for (int i = 0; i < blacklist.size(); ++i) {
+    for (size_t i = 0; i < blacklist.size(); ++i) {
       bridge_->SetPasswordForm(*blacklist[i].get());
     }
   }
@@ -311,10 +309,7 @@ void ChromeImporter::ImportPasswords() {
     source_path_.Append(
       base::FilePath::StringType(FILE_PATH_LITERAL("Preferences")));
   const base::Value *value;
-  scoped_refptr<base::SequencedTaskRunner> file_task_runner =
-    base::CreateSequencedTaskRunnerWithTraits(base::TaskTraits().MayBlock());
-  scoped_refptr<JsonPrefStore> prefs = new JsonPrefStore(
-      prefs_path, file_task_runner, std::unique_ptr<PrefFilter>());
+  scoped_refptr<JsonPrefStore> prefs = new JsonPrefStore(prefs_path);
   int local_profile_id;
   if (prefs->ReadPrefs() != PersistentPrefStore::PREF_READ_ERROR_NONE) {
     return;
@@ -357,14 +352,14 @@ void ChromeImporter::ImportPasswords() {
     std::vector<std::unique_ptr<autofill::PasswordForm>> forms;
     bool success = backend->GetAutofillableLogins(&forms);
     if (success) {
-      for (int i = 0; i < forms.size(); ++i) {
+      for (size_t i = 0; i < forms.size(); ++i) {
         bridge_->SetPasswordForm(*forms[i].get());
       }
     }
     std::vector<std::unique_ptr<autofill::PasswordForm>> blacklist;
     success = backend->GetBlacklistLogins(&blacklist);
     if (success) {
-      for (int i = 0; i < blacklist.size(); ++i) {
+      for (size_t i = 0; i < blacklist.size(); ++i) {
         bridge_->SetPasswordForm(*blacklist[i].get());
       }
     }
