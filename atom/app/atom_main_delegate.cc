@@ -186,6 +186,38 @@ base::FilePath InitializeUserDataDir() {
   }
   PathService::Override(chrome::DIR_USER_DATA, user_data_dir);
 
+  // Setup NativeMessagingHosts to point to the default Chrome locations
+  // because that's where native apps will create them
+#if defined(OS_POSIX)
+  base::FilePath default_user_data_dir;
+  brave::GetDefaultUserDataDirectory(&default_user_data_dir);
+  std::vector<base::FilePath::StringType> components;
+  default_user_data_dir.GetComponents(&components);
+  // remove "brave"
+  components.pop_back();
+  base::FilePath chrome_user_data_dir(FILE_PATH_LITERAL("/"));
+  for (std::vector<base::FilePath::StringType>::iterator i =
+           components.begin() + 1; i != components.end(); ++i) {
+    chrome_user_data_dir = chrome_user_data_dir.Append(*i);
+  }
+  chrome_user_data_dir = chrome_user_data_dir.Append("Google/Chrome");
+  PathService::OverrideAndCreateIfNeeded(
+      chrome::DIR_USER_NATIVE_MESSAGING,
+      chrome_user_data_dir.Append(FILE_PATH_LITERAL("NativeMessagingHosts")),
+      false, true);
+
+  base::FilePath native_messaging_dir;
+#if defined(OS_MACOSX)
+  native_messaging_dir = base::FilePath(FILE_PATH_LITERAL(
+      "/Library/Google/Chrome/NativeMessagingHosts"));
+#else
+  native_messaging_dir = base::FilePath(FILE_PATH_LITERAL(
+      "/etc/opt/chrome/native-messaging-hosts"));
+#endif  // !defined(OS_MACOSX)
+  PathService::OverrideAndCreateIfNeeded(chrome::DIR_NATIVE_MESSAGING,
+      native_messaging_dir, false, true);
+#endif  // defined(OS_POSIX)
+
   return user_data_dir;
 }
 
