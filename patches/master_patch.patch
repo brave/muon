@@ -49,7 +49,7 @@ index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c
  }
 +}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
-index b417e76a3b0b9d985f1442503b7b9fd93d6f2e0f..235a6bfcfbaaf80f53fe9db10ef2a5738bc8a174 100644
+index f89dd0d1cd01781e28b7cf361e69d040772af51f..fac0db598646878f8c71644314894908c3f774bd 100644
 --- a/build/toolchain/mac/BUILD.gn
 +++ b/build/toolchain/mac/BUILD.gn
 @@ -245,13 +245,15 @@ template("mac_toolchain") {
@@ -70,7 +70,7 @@ index b417e76a3b0b9d985f1442503b7b9fd93d6f2e0f..235a6bfcfbaaf80f53fe9db10ef2a573
        default_output_extension = ".a"
        output_prefix = "lib"
 diff --git a/build/toolchain/win/BUILD.gn b/build/toolchain/win/BUILD.gn
-index 296f829cbb3080a60e7c059c9947c85201550c6c..a691cd481eb3a9bce1a8750a860226a1f899b24e 100644
+index 90777eb86ca085dc385c25a5779138fb2f8c6dac..63a93d7ea11ba71576e5600c45bcf56db9e08205 100644
 --- a/build/toolchain/win/BUILD.gn
 +++ b/build/toolchain/win/BUILD.gn
 @@ -6,6 +6,7 @@ import("//build/config/clang/clang.gni")
@@ -91,7 +91,7 @@ index 296f829cbb3080a60e7c059c9947c85201550c6c..a691cd481eb3a9bce1a8750a860226a1
    goma_prefix = ""
  }
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index fdc06eb9d5285cb25354b67878f3bf955b66c7a6..720c41e3c97b35ba8eaf23159d487cd7915de5d0 100644
+index ccd374424418ab203289e32d294106f54c090fc0..6ea77d987c8d0caf50251a0c0f869d8d05f84f81 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
 @@ -33,6 +33,11 @@ if (is_android) {
@@ -107,10 +107,10 @@ index fdc06eb9d5285cb25354b67878f3bf955b66c7a6..720c41e3c97b35ba8eaf23159d487cd7
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
-index aeb47167369f1c46911320b5f85984a1713faf7a..6c42724f98f2330ffa0a92c3f094972d16427b8f 100644
+index df2c387e5594ce51cfaebe3470ff9402e765ac9b..b1c8c0bca9bb5cf527b4ae4f6c6928592c59ae0d 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
 +++ b/chrome/browser/chrome_content_browser_manifest_overlay.json
-@@ -12,7 +12,7 @@
+@@ -13,7 +13,7 @@
            "extensions::StashService",
            "metrics::mojom::LeakDetector",
            "mojom::ModuleEventSink",
@@ -178,7 +178,7 @@ index 247d24220beb7d176b890d7c2d45bdd2dfd8db99..c270bba0fabb557e8d3d1df8ac166bbb
    ProfileWriter* const writer_;  // weak
    const base::WeakPtr<ExternalProcessImporterHost> host_;
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
-index d7f5ec811dd78f5a04b62d0e1f55d1a3a2108a97..4ebf27b41e426b91b88e6607ee976be53f87866f 100644
+index 9d81a019eacdbe354c8337d74e0cfb53e833ba7d..86fff6beac3022f83a0b3a88a41f0083a8273027 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
 @@ -59,13 +59,13 @@ namespace {
@@ -360,20 +360,20 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..0d1f9efcb260f8c943ab24a4c23c14db
    }
  
 diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
-index 85c08294cc5554a6fd736ce2f039de684613bea9..51eb406a16f1c4e7bd844ca723fde1ecc12bfcdc 100644
+index 1b84c5f0e4cd23ee45e4728f37baeb56fb67c93b..e6d21958271a389b31eebf219eb337bd81b68a78 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.cc
 +++ b/chrome/browser/resource_coordinator/tab_manager.cc
-@@ -603,7 +603,8 @@ void TabManager::AddTabStats(const TabStripModel* tab_strip_model,
-                              TabStatsList* stats_list) const {
+@@ -634,7 +634,8 @@ void TabManager::AddTabStats(const BrowserInfo& browser_info,
+   TabStripModel* tab_strip_model = browser_info.tab_strip_model;
    for (int i = 0; i < tab_strip_model->count(); i++) {
      WebContents* contents = tab_strip_model->GetWebContentsAt(i);
 -    if (!contents->IsCrashed()) {
 +    // TODO(bridiver) - temporary workaround for pinned and unloaded tabs
 +    if (contents && !contents->IsCrashed()) {
        TabStats stats;
-       stats.is_app = browser_is_app;
+       stats.is_app = browser_info.browser_is_app;
        stats.is_internal_page = IsInternalPage(contents->GetLastCommittedURL());
-@@ -694,6 +695,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
+@@ -729,6 +730,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
    }
  }
  
@@ -389,9 +389,9 @@ index 85c08294cc5554a6fd736ce2f039de684613bea9..51eb406a16f1c4e7bd844ca723fde1ec
 +}
 +
  WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
-   // Can't discard active index.
-   if (model->active_index() == index)
-@@ -713,8 +725,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+   WebContents* old_contents = model->GetWebContentsAt(index);
+ 
+@@ -744,8 +756,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
        "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
        old_contents->NeedToFireBeforeUnload());
  
@@ -401,8 +401,8 @@ index 85c08294cc5554a6fd736ce2f039de684613bea9..51eb406a16f1c4e7bd844ca723fde1ec
 +  WebContents* null_contents = CreateNullContents(model, old_contents);
    // Copy over the state from the navigation controller to preserve the
    // back/forward history and to continue to display the correct title/favicon.
-   null_contents->GetController().CopyStateFrom(old_contents->GetController(),
-@@ -744,7 +756,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
+   //
+@@ -786,7 +798,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
    // TODO(jamescook): This breaks script connections with other tabs.
    // Find a different approach that doesn't do that, perhaps based on navigation
    // to swappedout://.
@@ -413,10 +413,10 @@ index 85c08294cc5554a6fd736ce2f039de684613bea9..51eb406a16f1c4e7bd844ca723fde1ec
  
    return null_contents;
 diff --git a/chrome/browser/resource_coordinator/tab_manager.h b/chrome/browser/resource_coordinator/tab_manager.h
-index 3cd08c9805cdf1b94d247b258eccbf52a03d346f..8e6700b68d7d4f678a0c62d821baf4c78d6a2cf8 100644
+index aa5deb5fc5bd233b6b0e09d05b4b570afedcbbd3..afe9782bd007b81cc616bcfd722c8092bc431186 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.h
 +++ b/chrome/browser/resource_coordinator/tab_manager.h
-@@ -71,6 +71,11 @@ class TabManager : public TabStripModelObserver {
+@@ -80,6 +80,11 @@ class TabManager : public TabStripModelObserver,
    TabManager();
    ~TabManager() override;
  
@@ -428,7 +428,7 @@ index 3cd08c9805cdf1b94d247b258eccbf52a03d346f..8e6700b68d7d4f678a0c62d821baf4c7
    // Number of discard events since Chrome started.
    int discard_count() const { return discard_count_; }
  
-@@ -201,6 +206,7 @@ class TabManager : public TabStripModelObserver {
+@@ -237,6 +242,7 @@ class TabManager : public TabStripModelObserver,
    // This is needed so WebContentsData can call OnDiscardedStateChange, and
    // can use PurgeState.
    friend class WebContentsData;
@@ -437,10 +437,10 @@ index 3cd08c9805cdf1b94d247b258eccbf52a03d346f..8e6700b68d7d4f678a0c62d821baf4c7
    // Finds TabStripModel which has a WebContents whose id is the given
    // web_contents_id, and returns the WebContents index and the TabStripModel.
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 457f24c423864c10a0b7654086e7d6fa5ef0f146..109a7003a977dfc0db3bec237c3c36b7511305fd 100644
+index 385a9f8494d0c4efd06cb3e7f8a99dd1bc1916af..920583b1629959e5f43e9b9c012a99a64f988dbd 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
-@@ -506,6 +506,12 @@ static_library("common") {
+@@ -502,6 +502,12 @@ static_library("common") {
      ]
      public_deps += [ "//chrome/common:version_header" ]
    }
@@ -454,7 +454,7 @@ index 457f24c423864c10a0b7654086e7d6fa5ef0f146..109a7003a977dfc0db3bec237c3c36b7
  
  process_version("version_header") {
 diff --git a/chrome/common/chrome_constants.cc b/chrome/common/chrome_constants.cc
-index 94cdc2aeb7398a433b9afcfbbcfa87dd1e57b65d..7ce8db49362e499abcd93298468257cff9a32116 100644
+index e4ce7d5a3309cf00029a3c758fd40675f4807f29..172a9d35b05d344e3c425314dd5ba48b9feb751e 100644
 --- a/chrome/common/chrome_constants.cc
 +++ b/chrome/common/chrome_constants.cc
 @@ -10,11 +10,11 @@
@@ -777,10 +777,10 @@ index ce885e05e62af97777314397c79d1f05aa0dc36a..c2b8a35bfdbd6a23ce288b2007dcb8ce
  }
  # Note: Update the test expectations in GetBaseMessageIdForMode.GoogleStringIds
 diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
-index 81b0552089155a846b86c8216a9262d9d48e8271..a4fcd822dc752c18e0929d400022ddf3eb477e0d 100644
+index eec4b43c068339873a0bcf3b81b47510413063e6..dce4629dde2b37fc0ab911c038db5526f86bec40 100644
 --- a/chrome/renderer/BUILD.gn
 +++ b/chrome/renderer/BUILD.gn
-@@ -394,6 +394,23 @@ static_library("renderer") {
+@@ -397,6 +397,23 @@ static_library("renderer") {
        "resources/extensions/file_system_provider_custom_bindings.js",
      ]
    }
@@ -805,10 +805,10 @@ index 81b0552089155a846b86c8216a9262d9d48e8271..a4fcd822dc752c18e0929d400022ddf3
  
  static_library("test_support") {
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
-index 3a01ea6b6b03ad35f38994cada4e1dccc7cba233..2e1b5713298377485443eb32780041b7d5e53ce0 100644
+index c6f47b0ae678bbff097635fcf35d42468abfa87f..c992512271afebbce70598dcf3f0eafc3929e12f 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
 +++ b/chrome/renderer/chrome_content_renderer_client.cc
-@@ -1432,6 +1432,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
+@@ -1447,6 +1447,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
  #endif
  }
  
@@ -816,7 +816,7 @@ index 3a01ea6b6b03ad35f38994cada4e1dccc7cba233..2e1b5713298377485443eb32780041b7
  void ChromeContentRendererClient::RecordRappor(const std::string& metric,
                                                 const std::string& sample) {
    if (!rappor_recorder_) {
-@@ -1449,6 +1450,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
+@@ -1464,6 +1465,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
    }
    rappor_recorder_->RecordRapporURL(metric, url);
  }
@@ -825,10 +825,10 @@ index 3a01ea6b6b03ad35f38994cada4e1dccc7cba233..2e1b5713298377485443eb32780041b7
  void ChromeContentRendererClient::AddImageContextMenuProperties(
      const WebURLResponse& response,
 diff --git a/chrome/renderer/chrome_content_renderer_client.h b/chrome/renderer/chrome_content_renderer_client.h
-index ec6a8f40da6bcef6b5316d5f240b9863ac08e392..0267584c959bf1c583e44ce593aca3426c22c20c 100644
+index 2e78bdd20151cf672456f4cd835901bf4bce21b6..c35644b76886224a3f263260c189fc35b021103e 100644
 --- a/chrome/renderer/chrome_content_renderer_client.h
 +++ b/chrome/renderer/chrome_content_renderer_client.h
-@@ -173,9 +173,9 @@ class ChromeContentRendererClient : public content::ContentRendererClient {
+@@ -175,9 +175,9 @@ class ChromeContentRendererClient : public content::ContentRendererClient {
        content::RenderFrame* render_frame,
        const std::string& mime_type,
        const GURL& original_url) override;
@@ -863,10 +863,10 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 29840ec26d1fe9e708edc6b7b56bfbc968996646..ced178ded06861887f3f8fb405716e52623c31e5 100644
+index c4cbbe69ba2ed6c1156c76529002812634a76c1e..e013fe9736ee74862f2e9cd882ee83d1b389655b 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
-@@ -843,7 +843,7 @@ if (!is_android) {
+@@ -853,7 +853,7 @@ if (!is_android) {
        ]
      }
  
@@ -1004,7 +1004,7 @@ index bc36a92f4ad97e84d65c5213acbb68fc89aae8d9..9567f7f130181a40917751fff899b439
  
  // static
 diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
-index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e268535f0c24d2 100644
+index fd395915885d03c8eedf05883c433cda5a5a11ba..91995a17ae4a5c52107294e86f3357f0afc68c60 100644
 --- a/components/printing/common/print_messages.h
 +++ b/components/printing/common/print_messages.h
 @@ -214,7 +214,6 @@ IPC_STRUCT_TRAITS_BEGIN(PrintMsg_PrintPages_Params)
@@ -1037,7 +1037,7 @@ index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e26853
  
  // Messages sent from the renderer to the browser.
  
-@@ -431,13 +429,13 @@ IPC_SYNC_MESSAGE_ROUTED2_1(PrintHostMsg_CheckForCancel,
+@@ -432,13 +430,13 @@ IPC_SYNC_MESSAGE_ROUTED2_1(PrintHostMsg_CheckForCancel,
                             int32_t /* PrintPreviewUI ID */,
                             int /* request id */,
                             bool /* print preview cancelled */)
@@ -1052,7 +1052,7 @@ index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e26853
  
  // This is sent when there are invalid printer settings.
  IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
-@@ -446,11 +444,11 @@ IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
+@@ -447,11 +445,11 @@ IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintingFailed,
                      int /* document cookie */)
  
@@ -1066,7 +1066,7 @@ index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e26853
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
                      int /* document cookie */)
 diff --git a/components/printing/renderer/print_web_view_helper.cc b/components/printing/renderer/print_web_view_helper.cc
-index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f82911f2577cb 100644
+index ca63359c7dc6669a3c85285513dca86c7aa97b24..89c281043262cd8db18039796cd38379c8a70124 100644
 --- a/components/printing/renderer/print_web_view_helper.cc
 +++ b/components/printing/renderer/print_web_view_helper.cc
 @@ -320,7 +320,7 @@ bool PrintingNodeOrPdfFrame(const blink::WebLocalFrame* frame,
@@ -1105,7 +1105,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
  // Helper function to scale and round an integer value with a double valued
  // scaling.
-@@ -1032,9 +1032,9 @@ bool PrintWebViewHelper::OnMessageReceived(const IPC::Message& message) {
+@@ -1034,9 +1034,9 @@ bool PrintWebViewHelper::OnMessageReceived(const IPC::Message& message) {
  #endif
  #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
      IPC_MESSAGE_HANDLER(PrintMsg_InitiatePrintPreview, OnInitiatePrintPreview)
@@ -1116,7 +1116,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
      IPC_MESSAGE_HANDLER(PrintMsg_SetPrintingEnabled, OnSetPrintingEnabled)
      IPC_MESSAGE_UNHANDLED(handled = false)
    IPC_END_MESSAGE_MAP()
-@@ -1055,8 +1055,8 @@ void PrintWebViewHelper::OnDestruct() {
+@@ -1057,8 +1057,8 @@ void PrintWebViewHelper::OnDestruct() {
  
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
  void PrintWebViewHelper::OnPrintPages() {
@@ -1127,7 +1127,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
    blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
  
-@@ -1167,8 +1167,8 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
+@@ -1169,8 +1169,8 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
    ignore_css_margins_ = (margins_type != DEFAULT_MARGINS);
  }
  
@@ -1137,7 +1137,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
    if (ipc_nesting_level_ > 1)
      return;
  
-@@ -1176,6 +1176,10 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1178,6 +1178,10 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  
    UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
                              PREVIEW_EVENT_REQUESTED, PREVIEW_EVENT_MAX);
@@ -1148,20 +1148,18 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
    if (!print_preview_context_.source_frame()) {
      DidFinishPrinting(FAIL_PREVIEW);
-@@ -1184,6 +1188,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1186,25 +1190,32 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  
    if (!UpdatePrintSettings(print_preview_context_.source_frame(),
                             print_preview_context_.source_node(), settings)) {
 +#if 0
      if (print_preview_context_.last_error() != PREVIEW_ERROR_BAD_SETTING) {
-       Send(new PrintHostMsg_PrintPreviewInvalidPrinterSettings(
-           routing_id(), print_pages_params_
-@@ -1191,21 +1196,26 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
-                             : 0));
-       notify_browser_of_print_failure_ = false;  // Already sent.
+       DidFinishPrinting(INVALID_SETTINGS);
+     } else {
+       DidFinishPrinting(FAIL_PREVIEW);
      }
-+#endif  // 0
-     DidFinishPrinting(FAIL_PREVIEW);
++#endif // 0
++    DidFinishPrinting(FAIL_PREVIEW);
      return;
    }
  
@@ -1174,7 +1172,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
      if (SetOptionsFromPdfDocument(&options))
        Send(new PrintHostMsg_SetOptionsFromDocument(routing_id(), options));
    }
-+#endif  // 0
++#endif // 0
  
    is_print_ready_metafile_sent_ = false;
  
@@ -1183,7 +1181,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
    // PDF printer device supports alpha blending.
    print_pages_params_->params.supports_alpha_blend = true;
  
-@@ -1214,6 +1224,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1213,6 +1224,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
      NOTREACHED();
    }
    print_preview_context_.set_generate_draft_pages(generate_draft_pages);
@@ -1191,7 +1189,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
    PrepareFrameForPreviewDocument();
  }
-@@ -1221,7 +1232,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1220,7 +1232,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  void PrintWebViewHelper::PrepareFrameForPreviewDocument() {
    reset_prep_frame_view_ = false;
  
@@ -1200,7 +1198,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
      DidFinishPrinting(FAIL_PREVIEW);
      return;
    }
-@@ -1252,12 +1263,9 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
+@@ -1251,12 +1263,9 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
  }
  
  bool PrintWebViewHelper::CreatePreviewDocument() {
@@ -1214,7 +1212,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
    const PrintMsg_Print_Params& print_params = print_pages_params_->params;
    const std::vector<int>& pages = print_pages_params_->pages;
  
-@@ -1266,6 +1274,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1265,6 +1274,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
      return false;
    }
  
@@ -1222,7 +1220,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
    PageSizeMargins default_page_layout;
    double scale_factor =
        print_params.scale_factor >= kEpsilon ? print_params.scale_factor : 1.0f;
-@@ -1331,6 +1340,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1330,6 +1340,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
    Send(new PrintHostMsg_DidGetPreviewPageCount(routing_id(), params));
    if (CheckForCancel())
      return false;
@@ -1230,7 +1228,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
    while (!print_preview_context_.IsFinalPageRendered()) {
      int page_number = print_preview_context_.GetNextPageNumber();
-@@ -1338,9 +1348,6 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1337,9 +1348,6 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
      if (!RenderPreviewPage(page_number, print_params))
        return false;
  
@@ -1240,7 +1238,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
      // We must call PrepareFrameAndViewForPrint::FinishPrinting() (by way of
      // print_preview_context_.AllPagesRendered()) before calling
      // FinalizePrintReadyDocument() when printing a PDF because the plugin
-@@ -1362,7 +1369,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1361,7 +1369,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
    return true;
  }
  
@@ -1249,7 +1247,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -1391,7 +1398,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
+@@ -1390,7 +1398,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1258,7 +1256,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
  bool PrintWebViewHelper::FinalizePrintReadyDocument() {
    DCHECK(!is_print_ready_metafile_sent_);
-@@ -1421,11 +1428,10 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
+@@ -1420,11 +1428,10 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
    Send(new PrintHostMsg_MetafileReadyForPrinting(routing_id(), preview_params));
    return true;
  }
@@ -1272,33 +1270,37 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
    notify_browser_of_print_failure_ = false;
    if (!success)
      LOG(ERROR) << "Failure in OnPrintingDone";
-@@ -1570,8 +1576,8 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
+@@ -1570,7 +1577,7 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
        }
        break;
  
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
++#if BUILDFLAG(0)
      case FAIL_PREVIEW:
-+#if 0
-       int cookie =
-           print_pages_params_ ? print_pages_params_->params.document_cookie : 0;
        if (notify_browser_of_print_failure_) {
-@@ -1580,9 +1586,13 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
+         LOG(ERROR) << "CreatePreviewDocument failed";
+@@ -1578,14 +1585,19 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
        } else {
          Send(new PrintHostMsg_PrintPreviewCancelled(routing_id(), cookie));
        }
--      print_preview_context_.Failed(notify_browser_of_print_failure_);
-+#endif  // 0
 +      LOG(ERROR) << "PREVIEW FAILED.";
 +      if (print_pages_params_) {
 +        Send(new PrintHostMsg_PrintPreviewFailed(routing_id(),
 +                 print_pages_params_->params.document_cookie));
 +      }
+       print_preview_context_.Failed(notify_browser_of_print_failure_);
+       break;
++#endif  // 0
+     case INVALID_SETTINGS:
+       Send(new PrintHostMsg_PrintPreviewInvalidPrinterSettings(routing_id(),
+                                                                cookie));
+       print_preview_context_.Failed(false);
        break;
 -#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
    }
    prep_frame_view_.reset();
    print_pages_params_.reset();
-@@ -1746,6 +1756,7 @@ bool PrintWebViewHelper::SetOptionsFromPdfDocument(
+@@ -1749,6 +1761,7 @@ bool PrintWebViewHelper::SetOptionsFromPdfDocument(
    }
    return true;
  }
@@ -1306,7 +1308,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
  bool PrintWebViewHelper::UpdatePrintSettings(
      blink::WebLocalFrame* frame,
-@@ -1788,13 +1799,16 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1791,13 +1804,16 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      return false;
    }
  
@@ -1323,7 +1325,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
      // Validate expected print preview settings.
      if (!job_settings->GetInteger(kPreviewRequestID,
                                    &settings.params.preview_request_id) ||
-@@ -1809,6 +1823,13 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1812,6 +1828,13 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      UpdateFrameMarginsCssInfo(*job_settings);
      settings.params.print_scaling_option = GetPrintScalingOption(
          frame, node, source_is_html, *job_settings, settings.params);
@@ -1337,7 +1339,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
    }
  
    SetPrintPagesParams(settings);
-@@ -1817,12 +1838,9 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1820,12 +1843,9 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      return true;
  
    if (print_for_preview_)
@@ -1350,7 +1352,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
  void PrintWebViewHelper::GetPrintSettingsFromUser(
-@@ -2074,6 +2092,7 @@ bool PrintWebViewHelper::CheckForCancel() {
+@@ -2077,6 +2097,7 @@ bool PrintWebViewHelper::CheckForCancel() {
      notify_browser_of_print_failure_ = false;
    return cancel;
  }
@@ -1358,7 +1360,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  
  bool PrintWebViewHelper::PreviewPageRendered(int page_number,
                                               PdfMetafileSkia* metafile) {
-@@ -2095,6 +2114,7 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
+@@ -2098,6 +2119,7 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
      return false;
    }
  
@@ -1366,7 +1368,7 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
    PrintHostMsg_DidPreviewPage_Params preview_page_params;
    // Get the size of the resulting metafile.
    if (!CopyMetafileDataToSharedMem(
-@@ -2109,9 +2129,9 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
+@@ -2112,9 +2134,9 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
        print_pages_params_->params.preview_request_id;
  
    Send(new PrintHostMsg_DidPreviewPage(routing_id(), preview_page_params));
@@ -1378,20 +1380,21 @@ index b740f5b37fa541c102db54a596bfd866ae130196..b813285f2a6c0faefe500d65401f8291
  PrintWebViewHelper::PrintPreviewContext::PrintPreviewContext()
      : total_page_count_(0),
 diff --git a/components/printing/renderer/print_web_view_helper.h b/components/printing/renderer/print_web_view_helper.h
-index a6ad94b50fff6ec366b5a27f2512cd5a8bb5dd90..b977ae7bdb48dba8494c7d88f18e7b219318602d 100644
+index fc5e9648a330ff8bc3fc972a2b40bd56a10b1df8..eada5f07f5cd1a5c17386a4f554371c258012e44 100644
 --- a/components/printing/renderer/print_web_view_helper.h
 +++ b/components/printing/renderer/print_web_view_helper.h
-@@ -152,9 +152,7 @@ class PrintWebViewHelper
+@@ -152,10 +152,8 @@ class PrintWebViewHelper
      OK,
      FAIL_PRINT_INIT,
      FAIL_PRINT,
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
      FAIL_PREVIEW,
+     INVALID_SETTINGS,
 -#endif
    };
  
    enum PrintPreviewErrorBuckets {
-@@ -192,8 +190,8 @@ class PrintWebViewHelper
+@@ -193,8 +191,8 @@ class PrintWebViewHelper
  #endif  // BUILDFLAG(ENABLE_BASIC_PRINTING)
  #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
    void OnInitiatePrintPreview(bool has_selection);
@@ -1401,7 +1404,7 @@ index a6ad94b50fff6ec366b5a27f2512cd5a8bb5dd90..b977ae7bdb48dba8494c7d88f18e7b21
    void OnPrintingDone(bool success);
  
    // Get |page_size| and |content_area| information from
-@@ -206,7 +204,6 @@ class PrintWebViewHelper
+@@ -207,7 +205,6 @@ class PrintWebViewHelper
    // Update |ignore_css_margins_| based on settings.
    void UpdateFrameMarginsCssInfo(const base::DictionaryValue& settings);
  
@@ -1409,7 +1412,7 @@ index a6ad94b50fff6ec366b5a27f2512cd5a8bb5dd90..b977ae7bdb48dba8494c7d88f18e7b21
    // Prepare frame for creating preview document.
    void PrepareFrameForPreviewDocument();
  
-@@ -223,7 +220,6 @@ class PrintWebViewHelper
+@@ -224,7 +221,6 @@ class PrintWebViewHelper
  
    // Finalize the print ready preview document.
    bool FinalizePrintReadyDocument();
@@ -1417,7 +1420,7 @@ index a6ad94b50fff6ec366b5a27f2512cd5a8bb5dd90..b977ae7bdb48dba8494c7d88f18e7b21
  
    // Enable/Disable printing.
    void OnSetPrintingEnabled(bool enabled);
-@@ -257,6 +253,7 @@ class PrintWebViewHelper
+@@ -258,6 +254,7 @@ class PrintWebViewHelper
    // Set options for print preset from source PDF document.
    bool SetOptionsFromPdfDocument(
        PrintHostMsg_SetOptionsFromDocument_Params* options);
@@ -1425,7 +1428,7 @@ index a6ad94b50fff6ec366b5a27f2512cd5a8bb5dd90..b977ae7bdb48dba8494c7d88f18e7b21
  
    // Update the current print settings with new |passed_job_settings|.
    // |passed_job_settings| dictionary contains print job details such as printer
-@@ -264,7 +261,6 @@ class PrintWebViewHelper
+@@ -265,7 +262,6 @@ class PrintWebViewHelper
    bool UpdatePrintSettings(blink::WebLocalFrame* frame,
                             const blink::WebNode& node,
                             const base::DictionaryValue& passed_job_settings);
@@ -1433,7 +1436,7 @@ index a6ad94b50fff6ec366b5a27f2512cd5a8bb5dd90..b977ae7bdb48dba8494c7d88f18e7b21
  
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
    // Get final print settings from the user.
-@@ -373,6 +369,7 @@ class PrintWebViewHelper
+@@ -374,6 +370,7 @@ class PrintWebViewHelper
    // WARNING: |this| may be gone after this method returns when |type| is
    // PRINT_PREVIEW_SCRIPTED.
    void RequestPrintPreview(PrintPreviewRequestType type);
@@ -1441,7 +1444,7 @@ index a6ad94b50fff6ec366b5a27f2512cd5a8bb5dd90..b977ae7bdb48dba8494c7d88f18e7b21
  
    // Checks whether print preview should continue or not.
    // Returns true if canceling, false if continuing.
-@@ -384,7 +381,6 @@ class PrintWebViewHelper
+@@ -385,7 +382,6 @@ class PrintWebViewHelper
    // |metafile| is the rendered page. Otherwise |metafile| is NULL.
    // Returns true if print preview should continue, false on failure.
    bool PreviewPageRendered(int page_number, PdfMetafileSkia* metafile);
@@ -1470,10 +1473,10 @@ index a00cfa0a95f16e18757bd32b899d7a2eda700993..4608dc001172934658f92a1c6e328f23
  void PrintWebViewHelper::RenderPage(const PrintMsg_Print_Params& params,
                                      int page_number,
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
-index 7bdb162bdd31b7b16c6ace7e00d94556593e002d..56fc76ea90373e6ce369aadcb8a697ab2ef85ff3 100644
+index f6c00f3db4dca275b810a91a42a7e0de81e4254e..f846c6f97362b3d170fcc50c20b579b888de5b73 100644
 --- a/content/app/content_main_runner.cc
 +++ b/content/app/content_main_runner.cc
-@@ -623,7 +623,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
+@@ -615,7 +615,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
  
      InitializeV8IfNeeded(command_line, process_type);
  
@@ -1482,7 +1485,7 @@ index 7bdb162bdd31b7b16c6ace7e00d94556593e002d..56fc76ea90373e6ce369aadcb8a697ab
  #if defined(OS_WIN)
      bool should_enable_stack_dump = !process_type.empty();
  #else
-@@ -639,7 +639,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
+@@ -631,7 +631,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
              service_manager::switches::kDisableInProcessStackTraces)) {
        base::debug::EnableInProcessStackDumping();
      }
@@ -1505,10 +1508,10 @@ index 8a8ca22027a2b64924a07519ded88d07b9992801..e85be27ebfe2599ca48fd042afd37866
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
    // the filter might mutate it.
 diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-index e162dd03169f95f4b522650f4f585beef106850c..ca81d874d9c3bad150dde4480c4f97e04cfc48b0 100644
+index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493ff3c9050 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@
+@@ -22,7 +22,7 @@
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1518,10 +1521,10 @@ index e162dd03169f95f4b522650f4f585beef106850c..ca81d874d9c3bad150dde4480c4f97e0
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index ec313b3cb70319fc02b3d60ec514766ef3980895..0cc91eb552fbe368551c36282615c365673c5984 100644
+index febff77c923c76a9c5d16337e39a463d78f00ba3..b819d0c9c64dbe0f24aa0ee5d22a30e7b49fa7bc 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -138,6 +138,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
+@@ -140,6 +140,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
  
  }  // namespace
  
@@ -1534,7 +1537,7 @@ index ec313b3cb70319fc02b3d60ec514766ef3980895..0cc91eb552fbe368551c36282615c365
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1850,7 +1856,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1859,7 +1865,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1549,7 +1552,7 @@ index ec313b3cb70319fc02b3d60ec514766ef3980895..0cc91eb552fbe368551c36282615c365
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2024,6 +2037,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2033,6 +2046,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1557,7 +1560,7 @@ index ec313b3cb70319fc02b3d60ec514766ef3980895..0cc91eb552fbe368551c36282615c365
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -2037,6 +2051,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2046,6 +2060,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1565,7 +1568,7 @@ index ec313b3cb70319fc02b3d60ec514766ef3980895..0cc91eb552fbe368551c36282615c365
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2084,8 +2099,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2093,8 +2108,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1576,7 +1579,7 @@ index ec313b3cb70319fc02b3d60ec514766ef3980895..0cc91eb552fbe368551c36282615c365
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2842,6 +2859,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2933,6 +2950,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1589,10 +1592,10 @@ index ec313b3cb70319fc02b3d60ec514766ef3980895..0cc91eb552fbe368551c36282615c365
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 617f484c9048074e925e5c9f74e88c18fffacacc..a9579e371120183bab5120fff3ef95ec2bce6947 100644
+index ee340d9e2133406f202d7bed72474ad5c87bd423..b6651faa70b2dce96d0eaa67ba17df0c0959993d 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1657,7 +1657,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
+@@ -1662,7 +1662,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
    // This is set before initializing the render manager since
    // RenderFrameHostManager::Init calls back into us via its delegate to ask if
    // it should be hidden.
@@ -1602,7 +1605,7 @@ index 617f484c9048074e925e5c9f74e88c18fffacacc..a9579e371120183bab5120fff3ef95ec
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2208,7 +2209,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2213,7 +2214,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
@@ -1613,7 +1616,7 @@ index 617f484c9048074e925e5c9f74e88c18fffacacc..a9579e371120183bab5120fff3ef95ec
            : source_site_instance;
  
 diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/browser/web_contents/web_contents_view_mac.mm
-index f046623287bd6dfde3317038ffd33d2dd7f86446..b18bdf5253548b563232b14cbe3123ea459276e5 100644
+index 1062bb51622336d1a9060746c2f286543a75d98f..8d9fec2af182bf5a2f0c2d635f277059ca6ef0b4 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
 @@ -593,6 +593,7 @@ void WebContentsViewMac::CloseTab() {
@@ -1684,10 +1687,10 @@ index 71368bdd55039ddc76278e7b5706e30517ab8aae..526ce5d8a08002af28762ae54a9280ce
    values_[key] = base::NullableString16(value, false);
    ResetKeyIterator();
 diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
-index 27b37ef2e3e004c6ede64e8a63c9df8a0812b66c..52fe18ac3acf08ed06b30c622f487a0d9720e66e 100644
+index a850e12576abcc0e83df2b77384fcf440ca7da74..8ba0a4dc58fcd8837f526f249a9815ff2ef305f5 100644
 --- a/content/public/app/mojo/content_renderer_manifest.json
 +++ b/content/public/app/mojo/content_renderer_manifest.json
-@@ -38,6 +38,7 @@
+@@ -37,6 +37,7 @@
      "navigation:frame": {
        "provides": {
          "browser": [
@@ -1731,7 +1734,7 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
  
  // Details about a redirection of a resource request.
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 301ea0ef67a2c316fc7fa72afca62f0eebbd85a9..d788299436b8d2543294f796cb4ab4827df3a4ce 100644
+index 3ff4c7d8ba94469ae90f5a528899562a8555acfe..cc7e27c4ff94d43431bb20b999a112464fedf2c4 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
 @@ -469,8 +469,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
@@ -1744,10 +1747,10 @@ index 301ea0ef67a2c316fc7fa72afca62f0eebbd85a9..d788299436b8d2543294f796cb4ab482
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
 diff --git a/content/renderer/render_thread_impl.cc b/content/renderer/render_thread_impl.cc
-index 1cae4a698c351dfc455069a936563759cbbc2fd5..fa3dc1418784883553946646cc85050b723f5b50 100644
+index e22d4f20c752034543d7552d822e482f837347f8..57101df49cae7d3077dd30497947110446092510 100644
 --- a/content/renderer/render_thread_impl.cc
 +++ b/content/renderer/render_thread_impl.cc
-@@ -805,12 +805,12 @@ void RenderThreadImpl::Init(
+@@ -809,12 +809,12 @@ void RenderThreadImpl::Init(
        switches::kEnableGpuMemoryBufferCompositorResources);
  
  #if defined(OS_MACOSX)
@@ -1782,7 +1785,7 @@ index 0199c3356074ff8d88682386cb1aa512e59a4c1f..0a04887e6ce97d5e6037bb34c85babab
    content::WebContents* owner = guest->owner_web_contents();
    if (!owner)
 diff --git a/extensions/common/BUILD.gn b/extensions/common/BUILD.gn
-index e0529e1846dcec455b50107a314bfe069765c08b..0d9cc5e365dafaef6af8560360dc8e1df7600f34 100644
+index ffd76a7b089b7fdcc9517cfb1930612be3218a27..c4c7f3ba14dd2d75129c7ad2a5dda38c7f5cbce7 100644
 --- a/extensions/common/BUILD.gn
 +++ b/extensions/common/BUILD.gn
 @@ -289,6 +289,7 @@ if (enable_extensions) {
@@ -1794,7 +1797,7 @@ index e0529e1846dcec455b50107a314bfe069765c08b..0d9cc5e365dafaef6af8560360dc8e1d
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index dc2e8829855bef1094612caf5fd1738248d8179d..df221d01d0280d1a6fc534b0faaa9120195431f4 100644
+index 0fdc249a1e0d177f6373a88d9ed89fc6bb02c85f..8d10706506099a36263c1348afa478a8379a4579 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -177,7 +177,10 @@
@@ -1809,7 +1812,7 @@ index dc2e8829855bef1094612caf5fd1738248d8179d..df221d01d0280d1a6fc534b0faaa9120
      }, {
        "internal": true,
        "channel": "stable",
-@@ -520,6 +523,7 @@
+@@ -548,6 +551,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
@@ -1817,7 +1820,7 @@ index dc2e8829855bef1094612caf5fd1738248d8179d..df221d01d0280d1a6fc534b0faaa9120
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://oobe/*"
-@@ -538,6 +542,13 @@
+@@ -566,6 +570,13 @@
        "chrome://media-router/*",
        "chrome://oobe/*"
      ]
@@ -1831,7 +1834,7 @@ index dc2e8829855bef1094612caf5fd1738248d8179d..df221d01d0280d1a6fc534b0faaa9120
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -546,6 +557,7 @@
+@@ -574,6 +585,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
@@ -1840,10 +1843,10 @@ index dc2e8829855bef1094612caf5fd1738248d8179d..df221d01d0280d1a6fc534b0faaa9120
        "chrome://media-router/*",
        "chrome://oobe/*"
 diff --git a/extensions/renderer/module_system.cc b/extensions/renderer/module_system.cc
-index 7fba82b3c1e816eb03385209f780eefc57671356..128bbbaef3820c7a16d1f5e326c1d9ab7a7aa27f 100644
+index 07ec45a5ad851875fc8cbf7cbc69023f97e9225a..ac1ccee6f99e9e10b7eed10a60faf774a09a49ba 100644
 --- a/extensions/renderer/module_system.cc
 +++ b/extensions/renderer/module_system.cc
-@@ -452,11 +452,13 @@ void ModuleSystem::LazyFieldGetterInner(
+@@ -425,11 +425,13 @@ void ModuleSystem::LazyFieldGetterInner(
    // time, it means something went wrong. Bail out early rather than going
    // through the initialization process again (since bindings may not expect to
    // run multiple times).
@@ -1954,7 +1957,7 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index 3bf780dfaf2301fb890ab006cb76afcd3eca7032..b072e7ec34e7915cebe4265c60c8361435f56e9c 100644
+index b6be9cd445f98c39c799d2e3a54c3fcff9719552..40bd7c83d76a125ca23dfb5bebaf254d9d3bfe51 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 +++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 @@ -2509,7 +2509,7 @@ void HTMLMediaElement::setMuted(bool muted) {
@@ -1967,10 +1970,10 @@ index 3bf780dfaf2301fb890ab006cb76afcd3eca7032..b072e7ec34e7915cebe4265c60c83614
    if (GetWebMediaPlayer())
      GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index 821158595b5e8665f6f455151625950f8c901e4d..7f3954ea9651210f92f05e137af04301c7ab0dc3 100644
+index 5fbf9daf8b150748327b60b8a1c0e64a308985df..ecd6f1a41bf35f7cf61009c9c7fa0face5bdbf2b 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -251,6 +251,10 @@ void AutoplayPolicy::UnlockUserGesture() {
+@@ -257,6 +257,10 @@ void AutoplayPolicy::UnlockUserGesture() {
  }
  
  bool AutoplayPolicy::IsGestureNeededForPlayback() const {
@@ -1982,7 +1985,7 @@ index 821158595b5e8665f6f455151625950f8c901e4d..7f3954ea9651210f92f05e137af04301
      return false;
  
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
-index 38b68305d85ea9df02f8cc6f5ef5aaa39581965b..138e3a4c29577979736236f6223f9837074af465 100644
+index fab23921a1432cd0605e73190555797915589656..3e293d187687ecd469dfdf86c3e1400863bddb3b 100644
 --- a/third_party/boringssl/BUILD.generated.gni
 +++ b/third_party/boringssl/BUILD.generated.gni
 @@ -394,6 +394,24 @@ crypto_sources_ios_arm = [
@@ -2011,7 +2014,7 @@ index 38b68305d85ea9df02f8cc6f5ef5aaa39581965b..138e3a4c29577979736236f6223f9837
    "linux-aarch64/crypto/chacha/chacha-armv8.S",
    "linux-aarch64/crypto/fipsmodule/aesv8-armx64.S",
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index 6ac01254aa7bd91a6e5f03452fc2bc37893da569..bc551d953b297883db91a56737017a79e01dd2b1 100644
+index 9839ef9e5719ef3ddce6aeb2606bba2109be2688..a998d6a9a2982233a6e87e4eb483b80fb392b744 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
 @@ -42,7 +42,7 @@ config("no_asm_config") {
