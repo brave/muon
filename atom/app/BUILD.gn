@@ -24,7 +24,6 @@ source_set("app") {
   }
 
   deps = [
-    "//content/public/common:interfaces",
     "//content/public/common",
     "//components/rappor/public/interfaces",
     "//third_party/widevine/cdm:headers",
