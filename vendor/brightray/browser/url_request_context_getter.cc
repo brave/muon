@@ -330,7 +330,8 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     network_session_params.host_resolver = url_request_context_->host_resolver();
 
     http_network_session_.reset(
-        new net::HttpNetworkSession(network_session_params));
+        new net::HttpNetworkSession(getwork_session_params, null));
+
     std::unique_ptr<net::HttpCache::BackendFactory> backend;
     if (in_memory_) {
       backend = net::HttpCache::DefaultBackend::InMemory(0);
