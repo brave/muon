@@ -290,6 +290,7 @@ source_set("browser") {
     deps +=  [
       "//electron/chromium_src:menu_bar",
       "//chrome/browser/ui/libgtkui:libgtkui",
+      "//ui/events/platform/x11",
       "//electron/build:gtk3",
     ]
   }
