@@ -304,10 +304,9 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     storage_->set_ct_policy_enforcer(base::MakeUnique<net::CTPolicyEnforcer>());
 
     net::HttpNetworkSession::Params network_session_params;
-    net::URLRequestContextBuilder::SetHttpNetworkSessionComponents(
-        url_request_context_.get(), &network_session_params);
     network_session_params.ignore_certificate_errors = false;
 
+    // TODO(hferreiro): enable?
     // disable quic until webrequest filtering is added
     // https://github.com/brave/browser-laptop/issues/6831
     network_session_params.enable_quic = false;
@@ -325,15 +324,20 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     if (command_line.HasSwitch(switches::kHostRules)) {
       host_mapping_rules_.reset(new net::HostMappingRules);
       host_mapping_rules_->SetRulesFromString(command_line.GetSwitchValueASCII(switches::kHostRules));
-      network_session_params.host_mapping_rules = host_mapping_rules_.get();
+      network_session_params.host_mapping_rules = *host_mapping_rules_.get();
     }
+
+    net::HttpNetworkSession::Context network_session_context;
+    net::URLRequestContextBuilder::SetHttpNetworkSessionComponents(
+        url_request_context_.get(), &network_session_context);
 
     // Give |storage_| ownership at the end in case it's |mapped_host_resolver|.
     storage_->set_host_resolver(std::move(host_resolver));
-    network_session_params.host_resolver = url_request_context_->host_resolver();
+    network_session_context.host_resolver = url_request_context_->host_resolver();
 
     http_network_session_.reset(
-        new net::HttpNetworkSession(network_session_params));
+        new net::HttpNetworkSession(network_session_params, network_session_context));
+
     std::unique_ptr<net::HttpCache::BackendFactory> backend;
     if (in_memory_) {
       backend = net::HttpCache::DefaultBackend::InMemory(0);
