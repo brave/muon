@@ -627,12 +627,11 @@ void WebContents::WebContentsCreated(
     int opener_render_frame_id,
     const std::string& frame_name,
     const GURL& target_url,
-    content::WebContents* new_contents,
-    const base::Optional<content::WebContents::CreateParams>& create_params) {
+    content::WebContents* new_contents) {
   if (guest_delegate_) {
     guest_delegate_->WebContentsCreated(
         source_contents, opener_render_process_id, opener_render_frame_id,
-        frame_name, target_url, new_contents, create_params);
+        frame_name, target_url, new_contents);
   }
 }
 
