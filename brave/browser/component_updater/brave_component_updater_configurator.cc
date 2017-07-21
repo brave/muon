@@ -4,10 +4,12 @@
 
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "base/command_line.h"
+#include "base/environment.h"
 #include "base/strings/sys_string_conversions.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "base/version.h"
@@ -96,10 +98,15 @@ int BraveConfigurator::UpdateDelay() const {
 
 std::vector<GURL> BraveConfigurator::UpdateUrl() const {
   if (use_brave_server_) {
-    // For localhost of vault-updater
-    // return std::vector<GURL> {GURL("http://localhost:8192/extensions")};
-    return std::vector<GURL>
-        {GURL("https://laptop-updates.brave.com/extensions")};
+    std::unique_ptr<base::Environment> env(base::Environment::Create());
+    // Set this variable if you wanna use a local extension server
+    if (env->HasVar("LOCAL_EXTENSION_SERVER")) {
+      return std::vector<GURL> {GURL("http://localhost:8192/extensions")};
+    } else {
+      return std::vector<GURL> {
+          GURL("https://laptop-updates.brave.com/extensions")
+      };
+    }
   }
 
   // For Chrome's component store
