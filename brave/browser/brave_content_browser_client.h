@@ -54,6 +54,10 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   void ExposeInterfacesToFrame(
       service_manager::BinderRegistry* registry,
       content::RenderFrameHost* render_frame_host) override;
+  bool BindAssociatedInterfaceRequestFromFrame(
+      content::RenderFrameHost* render_frame_host,
+      const std::string& interface_name,
+      mojo::ScopedInterfaceEndpointHandle* handle) override;
   void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
   void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
                                       int child_process_id) override;

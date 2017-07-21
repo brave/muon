@@ -48,6 +48,7 @@
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
 #include "gpu/config/gpu_switches.h"
+#include "mojo/public/cpp/bindings/scoped_interface_endpoint_handle.h"
 #include "net/base/filename_util.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
@@ -249,12 +250,6 @@ void BraveContentBrowserClient::ExposeInterfacesToFrame(
     service_manager::BinderRegistry* registry,
     content::RenderFrameHost* render_frame_host) {
 
-  if (!render_frame_host->GetParent()) {
-    // Register mojo CredentialManager interface only for main frame.
-    registry->AddInterface(
-        base::Bind(&BravePasswordManagerClient::BindCredentialManager,
-                   render_frame_host));
-  }
   registry->AddInterface(
       base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver,
                  render_frame_host));
@@ -268,6 +263,22 @@ void BraveContentBrowserClient::ExposeInterfacesToFrame(
       base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
                      BindSensitiveInputVisibilityService,
                  render_frame_host));
+}
+
+bool BraveContentBrowserClient::BindAssociatedInterfaceRequestFromFrame(
+    content::RenderFrameHost* render_frame_host,
+    const std::string& interface_name,
+    mojo::ScopedInterfaceEndpointHandle* handle) {
+  // TODO(https://crbug.com/736357): Factor AssociatedInterfaceRegistryImpl out
+  // into content/public/ so it can be used here instead of this abomination.
+  if (interface_name == password_manager::mojom::CredentialManager::Name_) {
+    BravePasswordManagerClient::BindCredentialManager(
+        password_manager::mojom::CredentialManagerAssociatedRequest(
+            std::move(*handle)),
+        render_frame_host);
+    return true;
+  }
+  return false;
 }
 
 void BraveContentBrowserClient::RenderProcessWillLaunch(
