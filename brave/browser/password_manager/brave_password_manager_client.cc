@@ -54,6 +54,7 @@
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/web_contents.h"
@@ -306,6 +307,12 @@ void BravePasswordManagerClient::DidFinishNavigation(
   if (!navigation_handle->IsInMainFrame() || !navigation_handle->HasCommitted())
     return;
 
+  // From this point on, the CredentialManagerImpl will service API calls in the
+  // context of the new WebContents::GetLastCommittedURL, which may very well be
+  // cross-origin. Disconnect existing client, and drop pending requests.
+  if (!navigation_handle->IsSameDocument())
+    credential_manager_impl_.DisconnectBinding();
+
   password_reuse_detection_manager_.DidNavigateMainFrame(GetMainFrameURL());
   // After some navigations RenderViewHost persists and just adding the observer
   // will cause multiple call of OnInputEvent. Since Widget API doesn't allow to
@@ -527,12 +534,20 @@ const password_manager::LogManager* BravePasswordManagerClient::GetLogManager()
 
 // static
 void BravePasswordManagerClient::BindCredentialManager(
-    content::RenderFrameHost* render_frame_host,
-    const service_manager::BindSourceInfo& source_info,
-    password_manager::mojom::CredentialManagerRequest request) {
+    password_manager::mojom::CredentialManagerAssociatedRequest request,
+    content::RenderFrameHost* render_frame_host) {
+  // Only valid for the main frame.
+  if (render_frame_host->GetParent())
+    return;
+
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(render_frame_host);
   DCHECK(web_contents);
+
+  // Only valid for the currently committed RenderFrameHost, and not, e.g. old
+  // zombie RFH's being swapped out following cross-origin navigations.
+  if (web_contents->GetMainFrame() != render_frame_host)
+    return;
 
   BravePasswordManagerClient* instance =
       BravePasswordManagerClient::FromWebContents(web_contents);
