@@ -1771,10 +1771,10 @@ index 712980760b360728f432a865855a3813c0a0d9e3..991465651f18125ab73f891f4cb44156
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
 diff --git a/content/renderer/render_thread_impl.cc b/content/renderer/render_thread_impl.cc
-index d7a0de4e48c36f03c3d88bed2a2952944b809f37..1d797f3ea0dba47b33355bdf40aa23be85a5cee3 100644
+index 574acb32ff2ae46bb928656e2400e9b2b06f730c..c7988f64f2ccf162c69ac1b72f016e2f81b691c1 100644
 --- a/content/renderer/render_thread_impl.cc
 +++ b/content/renderer/render_thread_impl.cc
-@@ -793,12 +793,12 @@ void RenderThreadImpl::Init(
+@@ -795,12 +795,12 @@ void RenderThreadImpl::Init(
        switches::kEnableGpuMemoryBufferCompositorResources);
  
  #if defined(OS_MACOSX)
