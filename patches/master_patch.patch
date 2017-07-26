@@ -1782,6 +1782,19 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
  };
  
  // Details about a redirection of a resource request.
+diff --git a/content/public/common/web_preferences.cc b/content/public/common/web_preferences.cc
+index 1e00ba53c4afcab6ccc747c255b032dccc373eb2..2c4c9d33b94b78db19e5183f1d840bec9e980c4d 100644
+--- a/content/public/common/web_preferences.cc
++++ b/content/public/common/web_preferences.cc
+@@ -227,7 +227,7 @@ WebPreferences::WebPreferences()
+       presentation_receiver(false),
+       media_controls_enabled(true),
+       do_not_update_selection_on_mutating_selection_range(false),
+-#if defined(OS_ANDROID)
++#if defined(OS_ANDROID) || !defined(MUON_CHROMIUM_BUILD)
+       autoplay_policy(AutoplayPolicy::kUserGestureRequired) {
+ #else
+       autoplay_policy(AutoplayPolicy::kNoUserGestureRequired) {
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
 index 712980760b360728f432a865855a3813c0a0d9e3..991465651f18125ab73f891f4cb4415623d13de6 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
@@ -1965,6 +1978,19 @@ index bf0ece1e723ba1a0644961cfd3a01ce3c14c892a..5e7d3dbb9da51a5abb0447bc04c90c9b
                                    HolderIsFirstArgument);
    }
    static void SetAsFunctionHandler(v8::Isolate* isolate,
+diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
+index d3a6b60d6e5d4d92cb94a7931db490e8957832c6..e981edb9a274e15785ff579785e1f5d0a91467b0 100644
+--- a/media/base/media_switches.cc
++++ b/media/base/media_switches.cc
+@@ -290,7 +290,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
+     return command_line.GetSwitchValueASCII(switches::kAutoplayPolicy);
+ 
+ // The default value is platform dependent.
+-#if defined(OS_ANDROID)
++#if defined(OS_ANDROID) || !defined(MUON_CHROMIUM_BUILD)
+   return switches::autoplay::kUserGestureRequiredPolicy;
+ #else
+   return switches::autoplay::kNoUserGestureRequiredPolicy;
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
 index 95ba606a7e0fa239a9c8c62f19591ec6bb39097a..b4fece0421b282f4042250108426eb502ff9b4c9 100644
 --- a/net/http/http_util.cc
@@ -2005,34 +2031,35 @@ index 5374bf1652af381a1efc0cdfc96b56b883b716a0..b157bc09a570ca3dd492ffcfb03417e3
    }
  
    bool ShouldSelectReplacement() const {
-diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index 4586eb16224502b5ac6f3bfe50d7d5072b708562..ac8b4793be3b631023a16396a35ed7983e0916ba 100644
---- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-+++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-@@ -2495,7 +2495,7 @@ void HTMLMediaElement::setMuted(bool muted) {
-   if (!muted_ && !autoplay_policy_->RequestAutoplayUnmute())
-     pause();
- 
--  // This is called after the volumechange event to make sure isAutoplayingMuted
-+  // This is called after the volumechange event to make sure IsAutoplayingMuted
-   // returns the right value when webMediaPlayer receives the volume update.
-   if (GetWebMediaPlayer())
-     GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index b068dd92e3ba16c6d3de7e19801bc0a6032726ba..3c8a90617b9a8c0d25ba48a2a60c35805977bc82 100644
+index b068dd92e3ba16c6d3de7e19801bc0a6032726ba..ffeb2638d6f591ee9f34423c47a52bbe52a7b6f5 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -231,6 +231,10 @@ void AutoplayPolicy::UnlockUserGesture() {
- }
- 
- bool AutoplayPolicy::IsGestureNeededForPlayback() const {
-+  // MUON(darkdh): check autoplay setting
-+  if (!IsAutoplayAllowedPerSettings()) {
-+    return true;
-+  }
-   if (!locked_pending_user_gesture_)
+@@ -247,14 +247,16 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+   // - Data Saver is not enabled;
+   // - Preload was not disabled (low end devices);
+   // - Autoplay is enabled in settings;
+-  if (element_->IsHTMLVideoElement() && element_->muted() &&
+-      RuntimeEnabledFeatures::autoplayMutedVideosEnabled() &&
+-      !(element_->GetDocument().GetSettings() &&
+-        element_->GetDocument().GetSettings()->GetDataSaverEnabled()) &&
+-      !(element_->GetDocument().GetSettings() &&
+-        element_->GetDocument()
+-            .GetSettings()
+-            ->GetForcePreloadNoneForMediaElements()) &&
++  // if (element_->IsHTMLVideoElement() && element_->muted() &&
++  //     RuntimeEnabledFeatures::autoplayMutedVideosEnabled() &&
++  //     !(element_->GetDocument().GetSettings() &&
++  //       element_->GetDocument().GetSettings()->GetDataSaverEnabled()) &&
++  //     !(element_->GetDocument().GetSettings() &&
++  //       element_->GetDocument()
++  //           .GetSettings()
++  //           ->GetForcePreloadNoneForMediaElements()) &&
++  // MUON(darkdh): only check autoplay setting
++  if (element_->IsHTMLVideoElement() &&
+       IsAutoplayAllowedPerSettings()) {
      return false;
- 
+   }
 diff --git a/third_party/WebKit/public/platform/WebTouchPoint.h b/third_party/WebKit/public/platform/WebTouchPoint.h
 index d26611fd06608eca590cff13f7b6006a82146475..6421edec6f2f2f55575a7b259dea80917fbbac9b 100644
 --- a/third_party/WebKit/public/platform/WebTouchPoint.h
