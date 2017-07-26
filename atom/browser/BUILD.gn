@@ -293,6 +293,10 @@ source_set("browser") {
       "//ui/events/platform/x11",
       "//electron/build:gtk3",
     ]
+
+    if (is_component_build) {
+      deps += [ ":libgtkui" ]
+    }
   }
 
   if (use_aura) {
@@ -335,6 +339,21 @@ source_set("browser") {
       "extensions/shared_user_script_master.h",
       "extensions/tab_helper.cc",
       "extensions/tab_helper.h",
+    ]
+  }
+}
+
+if (is_component_build) {
+  static_library("libgtkui") {
+    complete_static_lib = true
+    sources = [
+      "$root_out_dir/obj/chrome/browser/ui/libgtkui/libgtk3ui/app_indicator_icon.o",
+      "$root_out_dir/obj/chrome/browser/ui/libgtkui/libgtk3ui/app_indicator_icon_menu.o",
+      "$root_out_dir/obj/chrome/browser/ui/libgtkui/libgtk3ui/gtk_util.o",
+      "$root_out_dir/obj/chrome/browser/ui/libgtkui/libgtk3ui/gtk_status_icon.o",
+      "$root_out_dir/obj/chrome/browser/ui/libgtkui/libgtk3ui/menu_util.o",
+      "$root_out_dir/obj/chrome/browser/ui/libgtkui/libgtk3ui/skia_utils_gtk.o",
+      "$root_out_dir/obj/chrome/browser/ui/libgtkui/libgtk3ui/unity_service.o",
     ]
   }
 }
