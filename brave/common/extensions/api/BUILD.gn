@@ -26,6 +26,7 @@ json_schema_api("api_registration") {
 
   deps = [
     ":api",
+    "//components/proximity_auth/public/interfaces",
     "//extensions/common",
   ]
 
