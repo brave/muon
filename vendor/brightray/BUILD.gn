@@ -154,6 +154,7 @@ source_set("browser") {
 
   deps = [
     "//third_party/WebKit/public:blink_headers",
+    "//components/cookie_config",
     "//content/shell:resources",
     "//net",
     ":common",

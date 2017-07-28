@@ -16,6 +16,7 @@
 #include "chrome/browser/devtools/devtools_network_controller_handle.h"
 #include "chrome/browser/devtools/devtools_network_transaction_factory.h"
 #include "common/switches.h"
+#include "components/cookie_config/cookie_store_util.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/cookie_store_factory.h"
 #include "content/public/common/content_switches.h"
@@ -199,6 +200,7 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     if (in_memory_) {
       auto cookie_config = content::CookieStoreConfig();
       cookie_config.cookieable_schemes = delegate_->GetCookieableSchemes();
+      cookie_config.crypto_delegate = cookie_config::GetCookieCryptoDelegate();
       cookie_store = content::CreateCookieStore(cookie_config);
     } else {
       auto cookie_config = content::CookieStoreConfig(
@@ -206,6 +208,7 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
           content::CookieStoreConfig::EPHEMERAL_SESSION_COOKIES,
           nullptr, nullptr);
       cookie_config.cookieable_schemes = delegate_->GetCookieableSchemes();
+      cookie_config.crypto_delegate = cookie_config::GetCookieCryptoDelegate();
       cookie_store = content::CreateCookieStore(cookie_config);
     }
     storage_->set_cookie_store(std::move(cookie_store));
