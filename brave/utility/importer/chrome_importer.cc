@@ -12,6 +12,7 @@
 #include "base/json/json_reader.h"
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
+#include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
 #include "brave/common/importer/imported_cookie_entry.h"
@@ -258,9 +259,18 @@ void ChromeImporter::ImportCookies() {
   std::vector<ImportedCookieEntry> cookies;
   while (s.Step() && !cancelled()) {
     ImportedCookieEntry cookie;
-    base::string16 host(base::UTF8ToUTF16("*"));
-    host.append(s.ColumnString16(0));
-    cookie.domain = s.ColumnString16(0);
+    base::string16 host;
+    base::string16 host_key = s.ColumnString16(0);
+    if (host_key.empty()) {
+      continue;
+    }
+    // Only append * for .domain
+    if (base::StartsWith(base::UTF16ToUTF8(host_key),
+                         ".", base::CompareCase::INSENSITIVE_ASCII)) {
+      host.append(base::UTF8ToUTF16("*"));
+    }
+    host.append(host_key);
+    cookie.domain = host_key;
     cookie.name = s.ColumnString16(1);
     cookie.value = s.ColumnString16(2);
     cookie.host = host;
@@ -269,6 +279,10 @@ void ChromeImporter::ImportCookies() {
       base::Time::FromDoubleT(chromeTimeToDouble((s.ColumnInt64(4))));
     cookie.secure = s.ColumnBool(5);
     cookie.httponly = s.ColumnBool(6);
+    // skip cookie not match strict secure rule
+    if (cookie.secure && cookie.httponly) {
+      continue;
+    }
 
     cookies.push_back(cookie);
   }
