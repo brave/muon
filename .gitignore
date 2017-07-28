@@ -15,7 +15,6 @@
 /vendor/npm/
 /vendor/node/
 /vendor/v8
-/vendor/native_mate/
 /vendor/llvm/
 /vendor/llvm-build/
 /vendor/.gclient
