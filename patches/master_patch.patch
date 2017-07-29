@@ -1,5 +1,5 @@
 diff --git a/base/threading/thread_restrictions.h b/base/threading/thread_restrictions.h
-index e9f801778ea0edf81a316d7eeb0a9c436c3cadcd..9a84622797d063d206c3eb25d09e09bb55f496ea 100644
+index 1ef8d6b1278380783c54e73ff5a41b29b9ef4254..4df581faed33efbdabe72089d4984e5b9b3041db 100644
 --- a/base/threading/thread_restrictions.h
 +++ b/base/threading/thread_restrictions.h
 @@ -31,6 +31,13 @@ class StatisticsProviderImpl;
@@ -16,7 +16,7 @@ index e9f801778ea0edf81a316d7eeb0a9c436c3cadcd..9a84622797d063d206c3eb25d09e09bb
  namespace content {
  class BrowserGpuChannelHostFactory;
  class BrowserGpuMemoryBufferManager;
-@@ -216,6 +223,9 @@ class BASE_EXPORT ThreadRestrictions {
+@@ -220,6 +227,9 @@ class BASE_EXPORT ThreadRestrictions {
    friend class ui::CommandBufferLocal;
    friend class ui::GpuState;
  
@@ -49,7 +49,7 @@ index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c
  }
 +}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
-index b417e76a3b0b9d985f1442503b7b9fd93d6f2e0f..235a6bfcfbaaf80f53fe9db10ef2a5738bc8a174 100644
+index f89dd0d1cd01781e28b7cf361e69d040772af51f..fac0db598646878f8c71644314894908c3f774bd 100644
 --- a/build/toolchain/mac/BUILD.gn
 +++ b/build/toolchain/mac/BUILD.gn
 @@ -245,13 +245,15 @@ template("mac_toolchain") {
@@ -70,7 +70,7 @@ index b417e76a3b0b9d985f1442503b7b9fd93d6f2e0f..235a6bfcfbaaf80f53fe9db10ef2a573
        default_output_extension = ".a"
        output_prefix = "lib"
 diff --git a/build/toolchain/win/BUILD.gn b/build/toolchain/win/BUILD.gn
-index 296f829cbb3080a60e7c059c9947c85201550c6c..a691cd481eb3a9bce1a8750a860226a1f899b24e 100644
+index 90777eb86ca085dc385c25a5779138fb2f8c6dac..63a93d7ea11ba71576e5600c45bcf56db9e08205 100644
 --- a/build/toolchain/win/BUILD.gn
 +++ b/build/toolchain/win/BUILD.gn
 @@ -6,6 +6,7 @@ import("//build/config/clang/clang.gni")
@@ -91,7 +91,7 @@ index 296f829cbb3080a60e7c059c9947c85201550c6c..a691cd481eb3a9bce1a8750a860226a1
    goma_prefix = ""
  }
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 070d7c6008b1df85486014c538bc6e98b6771220..c26cad1e37ea14fabab1ff39c348cf1fd54d49e8 100644
+index aa906c539f3499403232506252ddcd909ff9dc99..835de030550ce8cd89ed0d8b40a25bd238ba2d3b 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
 @@ -33,6 +33,11 @@ if (is_android) {
@@ -107,23 +107,23 @@ index 070d7c6008b1df85486014c538bc6e98b6771220..c26cad1e37ea14fabab1ff39c348cf1f
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
-index f03b03a8d44239fa2831c4d797c5a64b81efe7a8..8094b885eef4e9adfe5c72f19329abe4e73e95ab 100644
+index 92120fdb3aa0566f76544d41a059512a26e532ff..4be8e9992d95e35459e6ef31de76060c957cfc0d 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
 +++ b/chrome/browser/chrome_content_browser_manifest_overlay.json
-@@ -12,7 +12,7 @@
+@@ -13,7 +13,7 @@
            "extensions::StashService",
            "metrics::mojom::LeakDetector",
            "mojom::ModuleEventSink",
 -          "rappor::mojom::RapporRecorder",
-+          // "rappor::mojom::RapporRecorder",
-           "startup_metric_utils::mojom::StartupMetricHost",
-           "translate::mojom::ContentTranslateDriver"
-         ],
++//          "rappor::mojom::RapporRecorder",
+           "safe_browsing::mojom::SafeBrowsing",
+           "spellcheck::mojom::SpellCheckHost",
+           "spellcheck::mojom::SpellCheckPanelHost",
 diff --git a/chrome/browser/extensions/api/messaging/message_service.cc b/chrome/browser/extensions/api/messaging/message_service.cc
-index 801f3b6f7a52b8a693e14222ee87510defbfa38c..9a777a7830b83e055aeeb004f11cd672a37da6e1 100644
+index 9be1a4a326978d04fad84f3fcb518b1ee4cc2d64..0c06b13b16db1f503e42a271956a3516f9127f1d 100644
 --- a/chrome/browser/extensions/api/messaging/message_service.cc
 +++ b/chrome/browser/extensions/api/messaging/message_service.cc
-@@ -170,6 +170,11 @@ namespace {
+@@ -171,6 +171,11 @@ namespace {
  static content::RenderProcessHost* GetExtensionProcess(
      BrowserContext* context,
      const std::string& extension_id) {
@@ -177,85 +177,8 @@ index 247d24220beb7d176b890d7c2d45bdd2dfd8db99..c270bba0fabb557e8d3d1df8ac166bbb
  
    ProfileWriter* const writer_;  // weak
    const base::WeakPtr<ExternalProcessImporterHost> host_;
-diff --git a/chrome/browser/memory/tab_manager.cc b/chrome/browser/memory/tab_manager.cc
-index 0d161da8de6e11d4e46b076eff610b9943aa9103..8f5cc980d3800511fc8042071a71203b936958b2 100644
---- a/chrome/browser/memory/tab_manager.cc
-+++ b/chrome/browser/memory/tab_manager.cc
-@@ -603,7 +603,8 @@ void TabManager::AddTabStats(const TabStripModel* model,
-                              TabStatsList* stats_list) const {
-   for (int i = 0; i < model->count(); i++) {
-     WebContents* contents = model->GetWebContentsAt(i);
--    if (!contents->IsCrashed()) {
-+    // TODO(bridiver) - temporary workaround for pinned and unloaded tabs
-+    if (contents && !contents->IsCrashed()) {
-       TabStats stats;
-       stats.is_app = is_app;
-       stats.is_internal_page = IsInternalPage(contents->GetLastCommittedURL());
-@@ -693,6 +694,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
-   }
- }
- 
-+// MUON(bridiver): see tab_manager.h
-+WebContents* TabManager::CreateNullContents(
-+    TabStripModel* model, WebContents* old_contents) {
-+  return WebContents::Create(WebContents::CreateParams(model->profile()));
-+}
-+
-+// MUON(bridiver): see tab_manager.h
-+void TabManager::DestroyOldContents(WebContents* old_contents) {
-+  delete old_contents;
-+}
-+
- WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
-   // Can't discard active index.
-   if (model->active_index() == index)
-@@ -712,8 +724,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
-       "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
-       old_contents->NeedToFireBeforeUnload());
- 
--  WebContents* null_contents =
--      WebContents::Create(WebContents::CreateParams(model->profile()));
-+  // MUON(bridiver): see tab_manager.h
-+  WebContents* null_contents = CreateNullContents(model, old_contents);
-   // Copy over the state from the navigation controller to preserve the
-   // back/forward history and to continue to display the correct title/favicon.
-   null_contents->GetController().CopyStateFrom(old_contents->GetController());
-@@ -736,7 +748,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index, TabStripModel* model) {
-   // TODO(jamescook): This breaks script connections with other tabs.
-   // Find a different approach that doesn't do that, perhaps based on navigation
-   // to swappedout://.
--  delete old_contents;
-+  // MUON(bridiver): see tab_manager.h
-+  DestroyOldContents(old_contents);
-   recent_tab_discard_ = true;
- 
-   return null_contents;
-diff --git a/chrome/browser/memory/tab_manager.h b/chrome/browser/memory/tab_manager.h
-index 23c5c5fb3bf681e048440775f657da77e83efcea..759fc6ab99036f7f1f8c761f448823536c617e03 100644
---- a/chrome/browser/memory/tab_manager.h
-+++ b/chrome/browser/memory/tab_manager.h
-@@ -70,6 +70,11 @@ class TabManager : public TabStripModelObserver {
-   TabManager();
-   ~TabManager() override;
- 
-+  // MUON(bridiver): override to create/destroy guests webcontents
-+  virtual content::WebContents* CreateNullContents(
-+      TabStripModel* model, content::WebContents* old_contents);
-+  virtual void DestroyOldContents(content::WebContents* old_contents);
-+
-   // Number of discard events since Chrome started.
-   int discard_count() const { return discard_count_; }
- 
-@@ -187,6 +192,7 @@ class TabManager : public TabStripModelObserver {
-   // This is needed so WebContentsData can call OnDiscardedStateChange, and
-   // can use PurgeState.
-   friend class WebContentsData;
-+  friend class GuestTabManager;
- 
-   // Finds TabStripModel which has a WebContents whose id is the given
-   // web_contents_id, and returns the WebContents index and the TabStripModel.
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
-index d7f5ec811dd78f5a04b62d0e1f55d1a3a2108a97..4ebf27b41e426b91b88e6607ee976be53f87866f 100644
+index 9d81a019eacdbe354c8337d74e0cfb53e833ba7d..86fff6beac3022f83a0b3a88a41f0083a8273027 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
 @@ -59,13 +59,13 @@ namespace {
@@ -436,11 +359,87 @@ index 0da4a534c0adae8b0edd2ffeace9972ce3e63c6c..0d1f9efcb260f8c943ab24a4c23c14db
      }
    }
  
+diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
+index 64a34b713f9aedc892468b49ef6a9506632b8ef6..76ab6b39c79ca775c0d28c6e8012621177fbf110 100644
+--- a/chrome/browser/resource_coordinator/tab_manager.cc
++++ b/chrome/browser/resource_coordinator/tab_manager.cc
+@@ -637,7 +637,8 @@ void TabManager::AddTabStats(const BrowserInfo& browser_info,
+   TabStripModel* tab_strip_model = browser_info.tab_strip_model;
+   for (int i = 0; i < tab_strip_model->count(); i++) {
+     WebContents* contents = tab_strip_model->GetWebContentsAt(i);
+-    if (!contents->IsCrashed()) {
++    // TODO(bridiver) - temporary workaround for pinned and unloaded tabs
++    if (contents && !contents->IsCrashed()) {
+       TabStats stats;
+       stats.is_app = browser_info.browser_is_app;
+       stats.is_internal_page = IsInternalPage(contents->GetLastCommittedURL());
+@@ -737,6 +738,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
+   }
+ }
+ 
++// MUON(bridiver): see tab_manager.h
++WebContents* TabManager::CreateNullContents(
++    TabStripModel* model, WebContents* old_contents) {
++  return WebContents::Create(WebContents::CreateParams(model->profile()));
++}
++
++// MUON(bridiver): see tab_manager.h
++void TabManager::DestroyOldContents(WebContents* old_contents) {
++  delete old_contents;
++}
++
+ WebContents* TabManager::DiscardWebContentsAt(int index,
+                                               TabStripModel* model,
+                                               DiscardTabCondition condition) {
+@@ -754,8 +766,7 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
+       "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
+       old_contents->NeedToFireBeforeUnload());
+ 
+-  WebContents* null_contents =
+-      WebContents::Create(WebContents::CreateParams(model->profile()));
++  WebContents* null_contents = CreateNullContents(model, old_contents);
+   // Copy over the state from the navigation controller to preserve the
+   // back/forward history and to continue to display the correct title/favicon.
+   //
+@@ -814,7 +825,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
+   // TODO(jamescook): This breaks script connections with other tabs.
+   // Find a different approach that doesn't do that, perhaps based on navigation
+   // to swappedout://.
+-  delete old_contents;
++  // MUON(bridiver): see tab_manager.h
++  DestroyOldContents(old_contents);
+   recent_tab_discard_ = true;
+ 
+   return null_contents;
+diff --git a/chrome/browser/resource_coordinator/tab_manager.h b/chrome/browser/resource_coordinator/tab_manager.h
+index 1ad3f2519d3f5aa21257879665ce7e625e3d7820..52008353d809a628cba3ded3cf1f863eb639f65a 100644
+--- a/chrome/browser/resource_coordinator/tab_manager.h
++++ b/chrome/browser/resource_coordinator/tab_manager.h
+@@ -83,6 +83,11 @@ class TabManager : public TabStripModelObserver,
+   TabManager();
+   ~TabManager() override;
+ 
++  // MUON(bridiver): override to create/destroy guests webcontents
++  virtual content::WebContents* CreateNullContents(
++      TabStripModel* model, content::WebContents* old_contents);
++  virtual void DestroyOldContents(content::WebContents* old_contents);
++
+   // Number of discard events since Chrome started.
+   int discard_count() const { return discard_count_; }
+ 
+@@ -261,6 +266,7 @@ class TabManager : public TabStripModelObserver,
+   // This is needed so WebContentsData can call OnDiscardedStateChange, and
+   // can use PurgeState.
+   friend class WebContentsData;
++  friend class GuestTabManager;
+ 
+   // Finds TabStripModel which has a WebContents whose id is the given
+   // web_contents_id, and returns the WebContents index and the TabStripModel.
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 7f659bdcdccbce1044e3ee2f2d9295cdce20b02d..b22a1518d28b641ff358d00013536f6852572186 100644
+index 385a9f8494d0c4efd06cb3e7f8a99dd1bc1916af..920583b1629959e5f43e9b9c012a99a64f988dbd 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
-@@ -552,6 +552,12 @@ static_library("common") {
+@@ -502,6 +502,12 @@ static_library("common") {
      ]
      public_deps += [ "//chrome/common:version_header" ]
    }
@@ -454,7 +453,7 @@ index 7f659bdcdccbce1044e3ee2f2d9295cdce20b02d..b22a1518d28b641ff358d00013536f68
  
  process_version("version_header") {
 diff --git a/chrome/common/chrome_constants.cc b/chrome/common/chrome_constants.cc
-index 94cdc2aeb7398a433b9afcfbbcfa87dd1e57b65d..7ce8db49362e499abcd93298468257cff9a32116 100644
+index e4ce7d5a3309cf00029a3c758fd40675f4807f29..172a9d35b05d344e3c425314dd5ba48b9feb751e 100644
 --- a/chrome/common/chrome_constants.cc
 +++ b/chrome/common/chrome_constants.cc
 @@ -10,11 +10,11 @@
@@ -568,10 +567,10 @@ index 94cdc2aeb7398a433b9afcfbbcfa87dd1e57b65d..7ce8db49362e499abcd93298468257cf
      FPL("Chrome_StatusTrayWindow");
  #endif  // defined(OS_WIN)
 diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.mm
-index d0bbbf72ff0e356e424dc280eeb1441c990b5770..8e96ea5706f87ea98ba55fcb583b16a8035fa903 100644
+index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3ade1a5e1e 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -41,7 +41,9 @@ NSBundle* OuterAppBundleInternal() {
+@@ -40,7 +40,9 @@ NSBundle* OuterAppBundleInternal() {
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -777,10 +776,10 @@ index ce885e05e62af97777314397c79d1f05aa0dc36a..c2b8a35bfdbd6a23ce288b2007dcb8ce
  }
  # Note: Update the test expectations in GetBaseMessageIdForMode.GoogleStringIds
 diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
-index bed32f454097fda9176a3939780a7eb3b0f4b394..6518354eb5a1192979ba80868a9be16384873b80 100644
+index 56914c54d8f10b745de30cbde3cdd34ce67d8862..7a4aec4091066b3a9f952fe9a4509248e289477a 100644
 --- a/chrome/renderer/BUILD.gn
 +++ b/chrome/renderer/BUILD.gn
-@@ -390,6 +390,23 @@ static_library("renderer") {
+@@ -395,6 +395,23 @@ static_library("renderer") {
        "resources/extensions/file_system_provider_custom_bindings.js",
      ]
    }
@@ -805,10 +804,10 @@ index bed32f454097fda9176a3939780a7eb3b0f4b394..6518354eb5a1192979ba80868a9be163
  
  static_library("test_support") {
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
-index 51e8e616838f365f3447c388de5b5f6caa004056..b031544cc94e268aed292c3e189aa0656e7d18d5 100644
+index 9ebd9c5423073b41ec958f61b693a63db977e334..fd15be738e40058815eddc150f3dd44fe68abc67 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
 +++ b/chrome/renderer/chrome_content_renderer_client.cc
-@@ -1411,6 +1411,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
+@@ -1467,6 +1467,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
  #endif
  }
  
@@ -816,7 +815,7 @@ index 51e8e616838f365f3447c388de5b5f6caa004056..b031544cc94e268aed292c3e189aa065
  void ChromeContentRendererClient::RecordRappor(const std::string& metric,
                                                 const std::string& sample) {
    if (!rappor_recorder_) {
-@@ -1428,6 +1429,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
+@@ -1484,6 +1485,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
    }
    rappor_recorder_->RecordRapporURL(metric, url);
  }
@@ -825,10 +824,10 @@ index 51e8e616838f365f3447c388de5b5f6caa004056..b031544cc94e268aed292c3e189aa065
  void ChromeContentRendererClient::AddImageContextMenuProperties(
      const WebURLResponse& response,
 diff --git a/chrome/renderer/chrome_content_renderer_client.h b/chrome/renderer/chrome_content_renderer_client.h
-index dd11c11af11c2a34f816048d36b27b6fc1cfbcc3..c2c78d3aed330fa08f465e98bbd4bd3e22b4f82b 100644
+index 2e78bdd20151cf672456f4cd835901bf4bce21b6..c35644b76886224a3f263260c189fc35b021103e 100644
 --- a/chrome/renderer/chrome_content_renderer_client.h
 +++ b/chrome/renderer/chrome_content_renderer_client.h
-@@ -170,9 +170,9 @@ class ChromeContentRendererClient : public content::ContentRendererClient {
+@@ -175,9 +175,9 @@ class ChromeContentRendererClient : public content::ContentRendererClient {
        content::RenderFrame* render_frame,
        const std::string& mime_type,
        const GURL& original_url) override;
@@ -863,10 +862,10 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index c090e7af0ba143dd1c99132fb0ae8d26757a4cbc..b89caed97406cd0a378c07141d76d3dbc7f6a6fb 100644
+index 1a0baf3b89be8442c165ddc3a55c7e923733d7c2..6d0275c9bff28f5942bebbfe2719cd26c7725de8 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
-@@ -837,7 +837,7 @@ if (!is_android) {
+@@ -853,7 +853,7 @@ if (!is_android) {
        ]
      }
  
@@ -921,11 +920,11 @@ index c3f648f165483a2d618438c1a4ef1b35ad6fb10c..3c95e1256465b7b6a009d3bf7619c8f4
    FRIEND_TEST_ALL_PREFIXES(FirefoxImporterTest, ImportBookmarksV25);
    void ImportBookmarks();
 diff --git a/chrome/utility/profile_import_handler.h b/chrome/utility/profile_import_handler.h
-index 257467a99132986f56d3ce098515afab24db7941..d8135a059b8621dbe925574b806452211b076a9c 100644
+index 58d7d47f379b145d5eec6f711cc882430cd1db29..9867e255717e7f2a17c7b5d9b8f0627753a9ae9f 100644
 --- a/chrome/utility/profile_import_handler.h
 +++ b/chrome/utility/profile_import_handler.h
-@@ -38,6 +38,7 @@ class ProfileImportHandler : public chrome::mojom::ProfileImport {
-                      chrome::mojom::ProfileImportRequest request);
+@@ -36,6 +36,7 @@ class ProfileImportHandler : public chrome::mojom::ProfileImport {
+   static void Create(chrome::mojom::ProfileImportRequest request);
  
   private:
 +  friend class BraveProfileImportHandler;
@@ -1056,7 +1055,7 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
 diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
-index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e268535f0c24d2 100644
+index fd395915885d03c8eedf05883c433cda5a5a11ba..91995a17ae4a5c52107294e86f3357f0afc68c60 100644
 --- a/components/printing/common/print_messages.h
 +++ b/components/printing/common/print_messages.h
 @@ -214,7 +214,6 @@ IPC_STRUCT_TRAITS_BEGIN(PrintMsg_PrintPages_Params)
@@ -1089,7 +1088,7 @@ index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e26853
  
  // Messages sent from the renderer to the browser.
  
-@@ -431,13 +429,13 @@ IPC_SYNC_MESSAGE_ROUTED2_1(PrintHostMsg_CheckForCancel,
+@@ -432,13 +430,13 @@ IPC_SYNC_MESSAGE_ROUTED2_1(PrintHostMsg_CheckForCancel,
                             int32_t /* PrintPreviewUI ID */,
                             int /* request id */,
                             bool /* print preview cancelled */)
@@ -1104,7 +1103,7 @@ index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e26853
  
  // This is sent when there are invalid printer settings.
  IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
-@@ -446,11 +444,11 @@ IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
+@@ -447,11 +445,11 @@ IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintingFailed,
                      int /* document cookie */)
  
@@ -1118,7 +1117,7 @@ index 32b0451b60dd100d57ec67a31a94673f2ebd5359..ba98bd0c470bb155177bdd4fd0e26853
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
                      int /* document cookie */)
 diff --git a/components/printing/renderer/print_web_view_helper.cc b/components/printing/renderer/print_web_view_helper.cc
-index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3bb2e6f80b 100644
+index 3c9dfc0d1ed3fbceb6dacf663dd8fb4ee9f045d3..55b2350eaa5d46599c767ea4563895602ef00457 100644
 --- a/components/printing/renderer/print_web_view_helper.cc
 +++ b/components/printing/renderer/print_web_view_helper.cc
 @@ -320,7 +320,7 @@ bool PrintingNodeOrPdfFrame(const blink::WebLocalFrame* frame,
@@ -1157,7 +1156,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
  // Helper function to scale and round an integer value with a double valued
  // scaling.
-@@ -1028,9 +1028,9 @@ bool PrintWebViewHelper::OnMessageReceived(const IPC::Message& message) {
+@@ -1034,9 +1034,9 @@ bool PrintWebViewHelper::OnMessageReceived(const IPC::Message& message) {
  #endif
  #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
      IPC_MESSAGE_HANDLER(PrintMsg_InitiatePrintPreview, OnInitiatePrintPreview)
@@ -1168,7 +1167,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
      IPC_MESSAGE_HANDLER(PrintMsg_SetPrintingEnabled, OnSetPrintingEnabled)
      IPC_MESSAGE_UNHANDLED(handled = false)
    IPC_END_MESSAGE_MAP()
-@@ -1051,8 +1051,8 @@ void PrintWebViewHelper::OnDestruct() {
+@@ -1057,8 +1057,8 @@ void PrintWebViewHelper::OnDestruct() {
  
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
  void PrintWebViewHelper::OnPrintPages() {
@@ -1179,7 +1178,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
    blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
  
-@@ -1163,8 +1163,8 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
+@@ -1169,8 +1169,8 @@ void PrintWebViewHelper::UpdateFrameMarginsCssInfo(
    ignore_css_margins_ = (margins_type != DEFAULT_MARGINS);
  }
  
@@ -1189,7 +1188,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    if (ipc_nesting_level_ > 1)
      return;
  
-@@ -1172,6 +1172,10 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1178,6 +1178,10 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  
    UMA_HISTOGRAM_ENUMERATION("PrintPreview.PreviewEvent",
                              PREVIEW_EVENT_REQUESTED, PREVIEW_EVENT_MAX);
@@ -1200,20 +1199,18 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
    if (!print_preview_context_.source_frame()) {
      DidFinishPrinting(FAIL_PREVIEW);
-@@ -1180,6 +1184,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1186,25 +1190,31 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  
    if (!UpdatePrintSettings(print_preview_context_.source_frame(),
                             print_preview_context_.source_node(), settings)) {
 +#if 0
      if (print_preview_context_.last_error() != PREVIEW_ERROR_BAD_SETTING) {
-       Send(new PrintHostMsg_PrintPreviewInvalidPrinterSettings(
-           routing_id(), print_pages_params_
-@@ -1187,21 +1192,26 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
-                             : 0));
-       notify_browser_of_print_failure_ = false;  // Already sent.
+       DidFinishPrinting(INVALID_SETTINGS);
+     } else {
+       DidFinishPrinting(FAIL_PREVIEW);
      }
 +#endif  // 0
-     DidFinishPrinting(FAIL_PREVIEW);
++    DidFinishPrinting(FAIL_PREVIEW);
      return;
    }
  
@@ -1231,11 +1228,10 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    is_print_ready_metafile_sent_ = false;
  
 +#if 0
-+
    // PDF printer device supports alpha blending.
    print_pages_params_->params.supports_alpha_blend = true;
  
-@@ -1210,6 +1220,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1213,6 +1223,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
      NOTREACHED();
    }
    print_preview_context_.set_generate_draft_pages(generate_draft_pages);
@@ -1243,7 +1239,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
    PrepareFrameForPreviewDocument();
  }
-@@ -1217,7 +1228,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
+@@ -1220,7 +1231,7 @@ void PrintWebViewHelper::OnPrintPreview(const base::DictionaryValue& settings) {
  void PrintWebViewHelper::PrepareFrameForPreviewDocument() {
    reset_prep_frame_view_ = false;
  
@@ -1252,7 +1248,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
      DidFinishPrinting(FAIL_PREVIEW);
      return;
    }
-@@ -1248,12 +1259,9 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
+@@ -1251,12 +1262,9 @@ void PrintWebViewHelper::OnFramePreparedForPreviewDocument() {
  }
  
  bool PrintWebViewHelper::CreatePreviewDocument() {
@@ -1266,7 +1262,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    const PrintMsg_Print_Params& print_params = print_pages_params_->params;
    const std::vector<int>& pages = print_pages_params_->pages;
  
-@@ -1262,6 +1270,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1265,6 +1273,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
      return false;
    }
  
@@ -1274,7 +1270,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    PageSizeMargins default_page_layout;
    double scale_factor =
        print_params.scale_factor >= kEpsilon ? print_params.scale_factor : 1.0f;
-@@ -1327,6 +1336,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1330,6 +1339,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
    Send(new PrintHostMsg_DidGetPreviewPageCount(routing_id(), params));
    if (CheckForCancel())
      return false;
@@ -1282,7 +1278,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
    while (!print_preview_context_.IsFinalPageRendered()) {
      int page_number = print_preview_context_.GetNextPageNumber();
-@@ -1334,9 +1344,6 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1337,9 +1347,6 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
      if (!RenderPreviewPage(page_number, print_params))
        return false;
  
@@ -1292,7 +1288,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
      // We must call PrepareFrameAndViewForPrint::FinishPrinting() (by way of
      // print_preview_context_.AllPagesRendered()) before calling
      // FinalizePrintReadyDocument() when printing a PDF because the plugin
-@@ -1358,7 +1365,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
+@@ -1361,7 +1368,7 @@ bool PrintWebViewHelper::CreatePreviewDocument() {
    return true;
  }
  
@@ -1301,7 +1297,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  bool PrintWebViewHelper::RenderPreviewPage(
      int page_number,
      const PrintMsg_Print_Params& print_params) {
-@@ -1387,7 +1394,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
+@@ -1390,7 +1397,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
    }
    return PreviewPageRendered(page_number, draft_metafile.get());
  }
@@ -1310,7 +1306,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
  bool PrintWebViewHelper::FinalizePrintReadyDocument() {
    DCHECK(!is_print_ready_metafile_sent_);
-@@ -1417,11 +1424,10 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
+@@ -1420,11 +1427,10 @@ bool PrintWebViewHelper::FinalizePrintReadyDocument() {
    Send(new PrintHostMsg_MetafileReadyForPrinting(routing_id(), preview_params));
    return true;
  }
@@ -1324,21 +1320,20 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    notify_browser_of_print_failure_ = false;
    if (!success)
      LOG(ERROR) << "Failure in OnPrintingDone";
-@@ -1566,8 +1572,8 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
+@@ -1570,7 +1576,7 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
        }
        break;
  
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
-     case FAIL_PREVIEW:
 +#if 0
-       int cookie =
-           print_pages_params_ ? print_pages_params_->params.document_cookie : 0;
-       if (notify_browser_of_print_failure_) {
-@@ -1576,9 +1582,13 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
-       } else {
-         Send(new PrintHostMsg_PrintPreviewCancelled(routing_id(), cookie));
-       }
--      print_preview_context_.Failed(notify_browser_of_print_failure_);
+     case FAIL_PREVIEW:
+       if (!is_print_ready_metafile_sent_) {
+         if (notify_browser_of_print_failure_) {
+@@ -1585,9 +1591,13 @@ void PrintWebViewHelper::DidFinishPrinting(PrintingResult result) {
+     case INVALID_SETTINGS:
+       Send(new PrintHostMsg_PrintPreviewInvalidPrinterSettings(routing_id(),
+                                                                cookie));
+-      print_preview_context_.Failed(false);
 +#endif  // 0
 +      LOG(ERROR) << "PREVIEW FAILED.";
 +      if (print_pages_params_) {
@@ -1350,7 +1345,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    }
    prep_frame_view_.reset();
    print_pages_params_.reset();
-@@ -1742,6 +1752,7 @@ bool PrintWebViewHelper::SetOptionsFromPdfDocument(
+@@ -1751,6 +1761,7 @@ bool PrintWebViewHelper::SetOptionsFromPdfDocument(
    }
    return true;
  }
@@ -1358,7 +1353,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
  bool PrintWebViewHelper::UpdatePrintSettings(
      blink::WebLocalFrame* frame,
-@@ -1784,13 +1795,16 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1793,13 +1804,16 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      return false;
    }
  
@@ -1375,7 +1370,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
      // Validate expected print preview settings.
      if (!job_settings->GetInteger(kPreviewRequestID,
                                    &settings.params.preview_request_id) ||
-@@ -1805,6 +1819,13 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1814,6 +1828,13 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      UpdateFrameMarginsCssInfo(*job_settings);
      settings.params.print_scaling_option = GetPrintScalingOption(
          frame, node, source_is_html, *job_settings, settings.params);
@@ -1389,7 +1384,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    }
  
    SetPrintPagesParams(settings);
-@@ -1813,12 +1834,9 @@ bool PrintWebViewHelper::UpdatePrintSettings(
+@@ -1822,12 +1843,9 @@ bool PrintWebViewHelper::UpdatePrintSettings(
      return true;
  
    if (print_for_preview_)
@@ -1402,7 +1397,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
  #if BUILDFLAG(ENABLE_BASIC_PRINTING)
  void PrintWebViewHelper::GetPrintSettingsFromUser(
-@@ -2070,6 +2088,7 @@ bool PrintWebViewHelper::CheckForCancel() {
+@@ -2079,6 +2097,7 @@ bool PrintWebViewHelper::CheckForCancel() {
      notify_browser_of_print_failure_ = false;
    return cancel;
  }
@@ -1410,7 +1405,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  
  bool PrintWebViewHelper::PreviewPageRendered(int page_number,
                                               PdfMetafileSkia* metafile) {
-@@ -2091,6 +2110,7 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
+@@ -2100,6 +2119,7 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
      return false;
    }
  
@@ -1418,7 +1413,7 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
    PrintHostMsg_DidPreviewPage_Params preview_page_params;
    // Get the size of the resulting metafile.
    if (!CopyMetafileDataToSharedMem(
-@@ -2105,9 +2125,9 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
+@@ -2114,9 +2134,9 @@ bool PrintWebViewHelper::PreviewPageRendered(int page_number,
        print_pages_params_->params.preview_request_id;
  
    Send(new PrintHostMsg_DidPreviewPage(routing_id(), preview_page_params));
@@ -1430,15 +1425,16 @@ index 829b2dc1c65e9c2d5226592b3b33c16ee4070b8b..a28adcf4478dddd5089271b7a4755b3b
  PrintWebViewHelper::PrintPreviewContext::PrintPreviewContext()
      : total_page_count_(0),
 diff --git a/components/printing/renderer/print_web_view_helper.h b/components/printing/renderer/print_web_view_helper.h
-index c4339d474adba8a96ac7ded22102294404bc2cf5..660df3e8d9747be64f4463b4d54d7d6e76da9fd9 100644
+index fc5e9648a330ff8bc3fc972a2b40bd56a10b1df8..eada5f07f5cd1a5c17386a4f554371c258012e44 100644
 --- a/components/printing/renderer/print_web_view_helper.h
 +++ b/components/printing/renderer/print_web_view_helper.h
-@@ -153,9 +153,7 @@ class PrintWebViewHelper
+@@ -152,10 +152,8 @@ class PrintWebViewHelper
      OK,
      FAIL_PRINT_INIT,
      FAIL_PRINT,
 -#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
      FAIL_PREVIEW,
+     INVALID_SETTINGS,
 -#endif
    };
  
@@ -1522,10 +1518,10 @@ index a00cfa0a95f16e18757bd32b899d7a2eda700993..4608dc001172934658f92a1c6e328f23
  void PrintWebViewHelper::RenderPage(const PrintMsg_Print_Params& params,
                                      int page_number,
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
-index a677c9d2c6df30e78614b09d396372db33dff781..47edb643c0507958134edb146ac1b56474f714a7 100644
+index f6c00f3db4dca275b810a91a42a7e0de81e4254e..f846c6f97362b3d170fcc50c20b579b888de5b73 100644
 --- a/content/app/content_main_runner.cc
 +++ b/content/app/content_main_runner.cc
-@@ -624,7 +624,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
+@@ -615,7 +615,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
  
      InitializeV8IfNeeded(command_line, process_type);
  
@@ -1534,7 +1530,7 @@ index a677c9d2c6df30e78614b09d396372db33dff781..47edb643c0507958134edb146ac1b564
  #if defined(OS_WIN)
      bool should_enable_stack_dump = !process_type.empty();
  #else
-@@ -640,7 +640,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
+@@ -631,7 +631,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
              service_manager::switches::kDisableInProcessStackTraces)) {
        base::debug::EnableInProcessStackDumping();
      }
@@ -1544,10 +1540,10 @@ index a677c9d2c6df30e78614b09d396372db33dff781..47edb643c0507958134edb146ac1b564
      if (delegate_)
        delegate_->PreSandboxStartup();
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
-index bbbb37d8917d3987d9ea3514d9cac343dde8faeb..e3200b24a050d1f957896bb77ecf7afe38692ac4 100644
+index 9b9cfbdc53cfdaafcc311d5ee9146536331d600e..69bef89a1a6bcf6fece54463b2efd973a1ce7c46 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
 +++ b/content/browser/frame_host/render_frame_message_filter.cc
-@@ -481,7 +481,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
+@@ -507,7 +507,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
    PluginServiceFilter* filter = PluginServiceImpl::GetInstance()->GetFilter();
    std::vector<WebPluginInfo> plugins;
  
@@ -1557,10 +1553,10 @@ index bbbb37d8917d3987d9ea3514d9cac343dde8faeb..e3200b24a050d1f957896bb77ecf7afe
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
    // the filter might mutate it.
 diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-index e162dd03169f95f4b522650f4f585beef106850c..ca81d874d9c3bad150dde4480c4f97e04cfc48b0 100644
+index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493ff3c9050 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -21,7 +21,7 @@
+@@ -22,7 +22,7 @@
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1570,10 +1566,10 @@ index e162dd03169f95f4b522650f4f585beef106850c..ca81d874d9c3bad150dde4480c4f97e0
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index faedde4957615f443378c7d1c5f9681de78dbcc8..7507c38ddc19ad1ec752899c37c99e561f72c4e3 100644
+index 79e4cc1a047979ce1f6f8457f6c4f5ae6a691050..cc612d93d8d675a21a1bf9132ea4a9b82a614152 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -138,6 +138,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
+@@ -140,6 +140,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
  
  }  // namespace
  
@@ -1586,7 +1582,7 @@ index faedde4957615f443378c7d1c5f9681de78dbcc8..7507c38ddc19ad1ec752899c37c99e56
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1863,7 +1869,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1859,7 +1865,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1601,7 +1597,7 @@ index faedde4957615f443378c7d1c5f9681de78dbcc8..7507c38ddc19ad1ec752899c37c99e56
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2037,6 +2050,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2033,6 +2046,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1609,7 +1605,7 @@ index faedde4957615f443378c7d1c5f9681de78dbcc8..7507c38ddc19ad1ec752899c37c99e56
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -2050,6 +2064,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2046,6 +2060,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1617,7 +1613,7 @@ index faedde4957615f443378c7d1c5f9681de78dbcc8..7507c38ddc19ad1ec752899c37c99e56
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2097,8 +2112,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2093,8 +2108,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1628,7 +1624,7 @@ index faedde4957615f443378c7d1c5f9681de78dbcc8..7507c38ddc19ad1ec752899c37c99e56
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2856,6 +2873,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2933,6 +2950,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1641,10 +1637,10 @@ index faedde4957615f443378c7d1c5f9681de78dbcc8..7507c38ddc19ad1ec752899c37c99e56
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 1dd24658e82fe7c2daa2a2c2a185d001cf3b34c7..1fc43a600a0e59e3699846b5d87f39b9c23f3752 100644
+index 13cb8a2057443907e37647749d6e660fd889a618..fdbfe923ce0c96785c8be198a3e5ae29157a5b39 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1656,7 +1656,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
+@@ -1662,7 +1662,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
    // This is set before initializing the render manager since
    // RenderFrameHostManager::Init calls back into us via its delegate to ask if
    // it should be hidden.
@@ -1654,7 +1650,7 @@ index 1dd24658e82fe7c2daa2a2c2a185d001cf3b34c7..1fc43a600a0e59e3699846b5d87f39b9
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2201,7 +2202,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2217,7 +2218,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
@@ -1665,7 +1661,7 @@ index 1dd24658e82fe7c2daa2a2c2a185d001cf3b34c7..1fc43a600a0e59e3699846b5d87f39b9
            : source_site_instance;
  
 diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/browser/web_contents/web_contents_view_mac.mm
-index ebd0ce35c1c1aeae9462cafc348722bb01224b5e..2a3eebff50502a9a264fb9939a908f9283f22c86 100644
+index f256f69645536f9ca4a9d99c30d284da8ce7707e..5e67432e08b7486e385d2862cdc298bb2af722a7 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
 @@ -593,6 +593,7 @@ void WebContentsViewMac::CloseTab() {
@@ -1736,10 +1732,10 @@ index 71368bdd55039ddc76278e7b5706e30517ab8aae..526ce5d8a08002af28762ae54a9280ce
    values_[key] = base::NullableString16(value, false);
    ResetKeyIterator();
 diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
-index 9abc7058e5bc189cb8918ba53a1e59d23473f226..faa4b321fa5732831b05a8f464b72115dacee36f 100644
+index a850e12576abcc0e83df2b77384fcf440ca7da74..8ba0a4dc58fcd8837f526f249a9815ff2ef305f5 100644
 --- a/content/public/app/mojo/content_renderer_manifest.json
 +++ b/content/public/app/mojo/content_renderer_manifest.json
-@@ -38,6 +38,7 @@
+@@ -37,6 +37,7 @@
      "navigation:frame": {
        "provides": {
          "browser": [
@@ -1796,10 +1792,10 @@ index 1e00ba53c4afcab6ccc747c255b032dccc373eb2..2c4c9d33b94b78db19e5183f1d840bec
  #else
        autoplay_policy(AutoplayPolicy::kNoUserGestureRequired) {
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 712980760b360728f432a865855a3813c0a0d9e3..991465651f18125ab73f891f4cb4415623d13de6 100644
+index 3ff4c7d8ba94469ae90f5a528899562a8555acfe..cc7e27c4ff94d43431bb20b999a112464fedf2c4 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
-@@ -461,8 +461,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
+@@ -469,8 +469,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
  
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
@@ -1809,10 +1805,10 @@ index 712980760b360728f432a865855a3813c0a0d9e3..991465651f18125ab73f891f4cb44156
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
 diff --git a/content/renderer/render_thread_impl.cc b/content/renderer/render_thread_impl.cc
-index 574acb32ff2ae46bb928656e2400e9b2b06f730c..c7988f64f2ccf162c69ac1b72f016e2f81b691c1 100644
+index c26bd138973ccc4308e3bb66cc3b5fea4a640c77..3194099d02cf55a0ca9a5c8a4f898f6702bb0e21 100644
 --- a/content/renderer/render_thread_impl.cc
 +++ b/content/renderer/render_thread_impl.cc
-@@ -795,12 +795,12 @@ void RenderThreadImpl::Init(
+@@ -805,16 +805,16 @@ void RenderThreadImpl::Init(
        switches::kEnableGpuMemoryBufferCompositorResources);
  
  #if defined(OS_MACOSX)
@@ -1822,17 +1818,25 @@ index 574acb32ff2ae46bb928656e2400e9b2b06f730c..c7988f64f2ccf162c69ac1b72f016e2f
 -  Boolean value = CFPreferencesGetAppBooleanValue(
 -      key, kCFPreferencesCurrentApplication, &key_exists);
 -  is_elastic_overscroll_enabled_ = !key_exists || value;
-+  // base::ScopedCFTypeRef<CFStringRef> key(
-+  //     base::SysUTF8ToCFStringRef("NSScrollViewRubberbanding"));
-+  // Boolean key_exists = false;
-+  // Boolean value = CFPreferencesGetAppBooleanValue(
-+  //     key, kCFPreferencesCurrentApplication, &key_exists);
-+  // is_elastic_overscroll_enabled_ = !key_exists || value;
+-
+-  if (base::Process::IsAppNapEnabled()) {
+-    AppNapActivity::InitializeAppNapSupport();
+-  }
++//  base::ScopedCFTypeRef<CFStringRef> key(
++//      base::SysUTF8ToCFStringRef("NSScrollViewRubberbanding"));
++//  Boolean key_exists = false;
++//  Boolean value = CFPreferencesGetAppBooleanValue(
++//      key, kCFPreferencesCurrentApplication, &key_exists);
++//  is_elastic_overscroll_enabled_ = !key_exists || value;
++//
++//  if (base::Process::IsAppNapEnabled()) {
++//    AppNapActivity::InitializeAppNapSupport();
++//  }
  #else
    is_elastic_overscroll_enabled_ = false;
  #endif
 diff --git a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
-index 061480b5acd6431aa9abb7e02c98ebe5e881d7f9..f8288fa42f148651fd729dbce111c6c4151fe2b0 100644
+index 0199c3356074ff8d88682386cb1aa512e59a4c1f..0a04887e6ce97d5e6037bb34c85babab86287dba 100644
 --- a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
 +++ b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
 @@ -53,8 +53,10 @@ void ExtensionsGuestViewManagerDelegate::DispatchEvent(
@@ -1847,10 +1851,10 @@ index 061480b5acd6431aa9abb7e02c98ebe5e881d7f9..f8288fa42f148651fd729dbce111c6c4
    content::WebContents* owner = guest->owner_web_contents();
    if (!owner)
 diff --git a/extensions/common/BUILD.gn b/extensions/common/BUILD.gn
-index ef92f6776954883ab919722aad195e84eec383ad..32f2023a60654c2cb2bd3190eb135d0928749ac8 100644
+index ffd76a7b089b7fdcc9517cfb1930612be3218a27..c4c7f3ba14dd2d75129c7ad2a5dda38c7f5cbce7 100644
 --- a/extensions/common/BUILD.gn
 +++ b/extensions/common/BUILD.gn
-@@ -288,6 +288,7 @@ if (enable_extensions) {
+@@ -289,6 +289,7 @@ if (enable_extensions) {
        "//chrome:resources",
        "//components/crx_file",
        "//components/url_matcher",
@@ -1859,10 +1863,10 @@ index ef92f6776954883ab919722aad195e84eec383ad..32f2023a60654c2cb2bd3190eb135d09
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 6227d47f8dc056a2bada2b166dcee1b4d86d9237..26bd7fdb704890c55d0c593d9e7a9002e3a8bfe1 100644
+index fd9fff2355bb1ac15cdbe4eaaa0c6380c38e7470..2aa0a3463781d520403a0faa9af4738b56fd0935 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
-@@ -177,7 +177,10 @@
+@@ -181,7 +181,10 @@
      {
        "internal": true,
        "channel": "stable",
@@ -1874,7 +1878,7 @@ index 6227d47f8dc056a2bada2b166dcee1b4d86d9237..26bd7fdb704890c55d0c593d9e7a9002
      }, {
        "internal": true,
        "channel": "stable",
-@@ -512,6 +515,7 @@
+@@ -552,6 +555,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
@@ -1882,7 +1886,7 @@ index 6227d47f8dc056a2bada2b166dcee1b4d86d9237..26bd7fdb704890c55d0c593d9e7a9002
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://oobe/*"
-@@ -530,6 +534,13 @@
+@@ -570,6 +574,13 @@
        "chrome://media-router/*",
        "chrome://oobe/*"
      ]
@@ -1896,7 +1900,7 @@ index 6227d47f8dc056a2bada2b166dcee1b4d86d9237..26bd7fdb704890c55d0c593d9e7a9002
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -538,6 +549,7 @@
+@@ -578,6 +589,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
@@ -1905,10 +1909,10 @@ index 6227d47f8dc056a2bada2b166dcee1b4d86d9237..26bd7fdb704890c55d0c593d9e7a9002
        "chrome://media-router/*",
        "chrome://oobe/*"
 diff --git a/extensions/renderer/module_system.cc b/extensions/renderer/module_system.cc
-index 7fba82b3c1e816eb03385209f780eefc57671356..128bbbaef3820c7a16d1f5e326c1d9ab7a7aa27f 100644
+index 07ec45a5ad851875fc8cbf7cbc69023f97e9225a..ac1ccee6f99e9e10b7eed10a60faf774a09a49ba 100644
 --- a/extensions/renderer/module_system.cc
 +++ b/extensions/renderer/module_system.cc
-@@ -452,11 +452,13 @@ void ModuleSystem::LazyFieldGetterInner(
+@@ -425,11 +425,13 @@ void ModuleSystem::LazyFieldGetterInner(
    // time, it means something went wrong. Bail out early rather than going
    // through the initialization process again (since bindings may not expect to
    // run multiple times).
@@ -2007,10 +2011,10 @@ index 95ba606a7e0fa239a9c8c62f19591ec6bb39097a..b4fece0421b282f4042250108426eb50
  }
  
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
-index 2341999ae5493b1e205343963b41d8cbc68549de..25552307f59d70dbc9484a0edb241c21e0b67ebd 100644
+index 6df009b6557fb7ff5288b97410ab3f3f5eb8ddfb..f0f1b8c729925ef316a83d0a559c9062d7bf27a6 100644
 --- a/net/url_request/url_request_job.h
 +++ b/net/url_request/url_request_job.h
-@@ -269,6 +269,7 @@ class NET_EXPORT URLRequestJob : public base::PowerObserver {
+@@ -270,6 +270,7 @@ class NET_EXPORT URLRequestJob : public base::PowerObserver {
    void OnCallToDelegate();
    void OnCallToDelegateComplete();
  
@@ -2019,7 +2023,7 @@ index 2341999ae5493b1e205343963b41d8cbc68549de..25552307f59d70dbc9484a0edb241c21
    // |buf_size| bytes into |buf|.
    // Possible return values:
 diff --git a/third_party/WebKit/Source/core/editing/EditingBehavior.h b/third_party/WebKit/Source/core/editing/EditingBehavior.h
-index 5374bf1652af381a1efc0cdfc96b56b883b716a0..b157bc09a570ca3dd492ffcfb03417e32ffe30bc 100644
+index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f5492a19549e 100644
 --- a/third_party/WebKit/Source/core/editing/EditingBehavior.h
 +++ b/third_party/WebKit/Source/core/editing/EditingBehavior.h
 @@ -42,7 +42,7 @@ class CORE_EXPORT EditingBehavior {
@@ -2031,58 +2035,41 @@ index 5374bf1652af381a1efc0cdfc96b56b883b716a0..b157bc09a570ca3dd492ffcfb03417e3
    }
  
    bool ShouldSelectReplacement() const {
+diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
+index 049c8605bc63e52a14a8ac3b00d0e7d2b602c8eb..e9345a71ad6347ec456765f2e713416322bfe136 100644
+--- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
++++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
+@@ -2509,7 +2509,7 @@ void HTMLMediaElement::setMuted(bool muted) {
+   if (!muted_ && !autoplay_policy_->RequestAutoplayUnmute())
+     pause();
+ 
+-  // This is called after the volumechange event to make sure isAutoplayingMuted
++  // This is called after the volumechange event to make sure IsAutoplayingMuted
+   // returns the right value when webMediaPlayer receives the volume update.
+   if (GetWebMediaPlayer())
+     GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index b068dd92e3ba16c6d3de7e19801bc0a6032726ba..ffeb2638d6f591ee9f34423c47a52bbe52a7b6f5 100644
+index 5fbf9daf8b150748327b60b8a1c0e64a308985df..8566505ed3ff3aba1c16bab528a000c51484340b 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -247,14 +247,16 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
-   // - Data Saver is not enabled;
-   // - Preload was not disabled (low end devices);
-   // - Autoplay is enabled in settings;
--  if (element_->IsHTMLVideoElement() && element_->muted() &&
--      RuntimeEnabledFeatures::autoplayMutedVideosEnabled() &&
--      !(element_->GetDocument().GetSettings() &&
--        element_->GetDocument().GetSettings()->GetDataSaverEnabled()) &&
--      !(element_->GetDocument().GetSettings() &&
--        element_->GetDocument()
--            .GetSettings()
--            ->GetForcePreloadNoneForMediaElements()) &&
-+  // if (element_->IsHTMLVideoElement() && element_->muted() &&
-+  //     RuntimeEnabledFeatures::autoplayMutedVideosEnabled() &&
-+  //     !(element_->GetDocument().GetSettings() &&
-+  //       element_->GetDocument().GetSettings()->GetDataSaverEnabled()) &&
-+  //     !(element_->GetDocument().GetSettings() &&
-+  //       element_->GetDocument()
-+  //           .GetSettings()
-+  //           ->GetForcePreloadNoneForMediaElements()) &&
-+  // MUON(darkdh): only check autoplay setting
-+  if (element_->IsHTMLVideoElement() &&
-       IsAutoplayAllowedPerSettings()) {
+@@ -257,6 +257,11 @@ void AutoplayPolicy::UnlockUserGesture() {
+ }
+ 
+ bool AutoplayPolicy::IsGestureNeededForPlayback() const {
++  // MUON(darkdh): check autoplay setting
++  if (!IsAutoplayAllowedPerSettings()) {
++    return true;
++  }
++
+   if (!IsLockedPendingUserGesture())
      return false;
-   }
-diff --git a/third_party/WebKit/public/platform/WebTouchPoint.h b/third_party/WebKit/public/platform/WebTouchPoint.h
-index d26611fd06608eca590cff13f7b6006a82146475..6421edec6f2f2f55575a7b259dea80917fbbac9b 100644
---- a/third_party/WebKit/public/platform/WebTouchPoint.h
-+++ b/third_party/WebKit/public/platform/WebTouchPoint.h
-@@ -31,9 +31,9 @@
- #ifndef WebTouchPoint_h
- #define WebTouchPoint_h
- 
--#include "public/platform/WebCommon.h"
--#include "public/platform/WebFloatPoint.h"
--#include "public/platform/WebPointerProperties.h"
-+#include "WebCommon.h"
-+#include "WebFloatPoint.h"
-+#include "WebPointerProperties.h"
- 
- namespace blink {
  
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
-index e3eb76a3a45e2771da729a263bf0823c546a7eec..7b3cf48983ab81c76b84f09c21c884e2995ea037 100644
+index fab23921a1432cd0605e73190555797915589656..33f7699cbc6bd9ebdea0bd9a829b1f6b13e87aa3 100644
 --- a/third_party/boringssl/BUILD.generated.gni
 +++ b/third_party/boringssl/BUILD.generated.gni
-@@ -372,6 +372,24 @@ ssl_sources = [
-   "src/ssl/tls_record.c",
+@@ -371,6 +371,24 @@ ssl_sources = [
+   "src/ssl/tls_record.cc",
  ]
  
 +decrepit_sources = [
@@ -2103,14 +2090,14 @@ index e3eb76a3a45e2771da729a263bf0823c546a7eec..7b3cf48983ab81c76b84f09c21c884e2
 +  "src/decrepit/xts/xts.c",
 +]
 +
- crypto_sources_linux_aarch64 = [
-   "linux-aarch64/crypto/chacha/chacha-armv8.S",
-   "linux-aarch64/crypto/fipsmodule/aesv8-armx64.S",
+ crypto_sources_ios_aarch64 = [
+   "ios-aarch64/crypto/chacha/chacha-armv8.S",
+   "ios-aarch64/crypto/fipsmodule/aesv8-armx64.S",
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index ef900bce6a8ae8500611ca76c1898d71c349f081..bde0cd50d24289981e99d47a5f3fc5524dc4b2ef 100644
+index 9839ef9e5719ef3ddce6aeb2606bba2109be2688..a998d6a9a2982233a6e87e4eb483b80fb392b744 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
-@@ -41,7 +41,7 @@ config("no_asm_config") {
+@@ -42,7 +42,7 @@ config("no_asm_config") {
    defines = [ "OPENSSL_NO_ASM" ]
  }
  
