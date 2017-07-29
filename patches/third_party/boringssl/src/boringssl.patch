@@ -157,10 +157,10 @@ index 2de84f7d5dab71cf709fbf770308a2b691232b2e..435e92322108724617b52f6766052a69
  /* EVP_md5_sha1 is a TLS-specific |EVP_MD| which computes the concatenation of
   * MD5 and SHA-1, as used in TLS 1.1 and below. */
 diff --git a/include/openssl/nid.h b/include/openssl/nid.h
-index f023c1fd1edcfcdb391309fcbf3da4ada72e183e..2e367770445e7aa3cb1ac591c784cbcd8f776f1f 100644
+index bc0ee3388b12872a8bef6ae32984f83103075262..65982232c85fa2f94fd4a1213c1f3a790089e59f 100644
 --- a/include/openssl/nid.h
 +++ b/include/openssl/nid.h
-@@ -615,6 +615,12 @@ extern "C" {
+@@ -617,6 +617,12 @@ extern "C" {
  #define NID_ripemd160 117
  #define OBJ_ripemd160 1L, 3L, 36L, 3L, 2L, 1L
  
@@ -174,10 +174,10 @@ index f023c1fd1edcfcdb391309fcbf3da4ada72e183e..2e367770445e7aa3cb1ac591c784cbcd
  #define LN_ripemd160WithRSA "ripemd160WithRSA"
  #define NID_ripemd160WithRSA 119
 diff --git a/util/BUILD.toplevel b/util/BUILD.toplevel
-index be3fd96c90b33c460983438f2c068a0e825a4894..88bca9c6487443a723e48bd20b70146b47ae4a42 100644
+index 68a17a604383f93e9d5722c71d0883838a5e24af..22ca47ae5dc5786d23dd4b2f00a33ab2d4c6099e 100644
 --- a/util/BUILD.toplevel
 +++ b/util/BUILD.toplevel
-@@ -29,6 +29,7 @@ load(
+@@ -30,6 +30,7 @@ load(
      "ssl_cc_sources",
      "tool_sources",
      "tool_headers",
@@ -185,7 +185,7 @@ index be3fd96c90b33c460983438f2c068a0e825a4894..88bca9c6487443a723e48bd20b70146b
  )
  
  config_setting(
-@@ -121,6 +122,15 @@ cc_library(
+@@ -122,6 +123,15 @@ cc_library(
      deps = [":crypto"],
  )
  
@@ -202,12 +202,12 @@ index be3fd96c90b33c460983438f2c068a0e825a4894..88bca9c6487443a723e48bd20b70146b
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index d6d6cc6b7faf529f70cc7c32d57b233149115827..07abbf8c2fc89287ad8221c0e429bd4a8aa56ee8 100644
+index ef340e640f42c41da62e8f3fe2e88a1a3373ff5b..89d159e8c67b0e361f016fe1b23bc403db1afb23 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
-@@ -170,6 +170,14 @@ class Android(object):
+@@ -164,6 +164,14 @@ class Android(object):
        blueprint.write('    ],\n')
-       blueprint.write('}\n')
+       blueprint.write('}\n\n')
  
 +      blueprint.write('cc_defaults {\n')
 +      blueprint.write('    name: "libdecrepit_sources",\n')
@@ -220,7 +220,7 @@ index d6d6cc6b7faf529f70cc7c32d57b233149115827..07abbf8c2fc89287ad8221c0e429bd4a
      # Legacy Android.mk format, only used by Trusty in new branches
      with open('sources.mk', 'w+') as makefile:
        makefile.write(self.header)
-@@ -220,6 +228,7 @@ class Bazel(object):
+@@ -212,6 +220,7 @@ class Bazel(object):
        self.PrintVariableSection(out, 'crypto_sources', files['crypto'])
        self.PrintVariableSection(out, 'tool_sources', files['tool'])
        self.PrintVariableSection(out, 'tool_headers', files['tool_headers'])
@@ -228,7 +228,7 @@ index d6d6cc6b7faf529f70cc7c32d57b233149115827..07abbf8c2fc89287ad8221c0e429bd4a
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -350,6 +359,8 @@ class GN(object):
+@@ -269,6 +278,8 @@ class GN(object):
        self.PrintVariableSection(out, 'ssl_sources',
                                  files['ssl'] + files['ssl_headers'] +
                                  files['ssl_internal_headers'])
@@ -237,7 +237,7 @@ index d6d6cc6b7faf529f70cc7c32d57b233149115827..07abbf8c2fc89287ad8221c0e429bd4a
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -672,6 +683,21 @@ def main(platforms):
+@@ -556,6 +567,21 @@ def main(platforms):
    ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
@@ -259,11 +259,11 @@ index d6d6cc6b7faf529f70cc7c32d57b233149115827..07abbf8c2fc89287ad8221c0e429bd4a
  
    # Generate err_data.c
    with open('err_data.c', 'w+') as err_data:
-@@ -773,6 +799,7 @@ def main(platforms):
+@@ -618,6 +644,7 @@ def main(platforms):
        'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,
 +      'decrepit': decrepit_c_files,
-       'test': test_c_files,
        'test_support': test_support_c_files,
        'test_support_headers': test_support_h_files,
+   }
