@@ -187,6 +187,9 @@ source_set("browser") {
     "chrome/browser/background/background_mode_manager.cc",
     "//chrome/browser/background/background_mode_manager.h",
 
+    "//chrome/browser/chrome_device_client.cc",
+    "//chrome/browser/chrome_device_client.h",
+
     # extensions
     "//chrome/browser/extensions/global_shortcut_listener.cc",
     "//chrome/browser/extensions/global_shortcut_listener.h",
@@ -508,6 +511,10 @@ source_set("browser") {
         "//chrome/browser/extensions/extension_util.h",
         "chrome/browser/extensions/extension_tab_util.cc",
         "//chrome/browser/extensions/extension_tab_util.h",
+        "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.cc",
+        "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h",
+        "//chrome/browser/extensions/api/messaging/extension_message_port.cc",
+        "//chrome/browser/extensions/api/messaging/extension_message_port.h",
         "chrome/browser/extensions/api/messaging/incognito_connectability.cc",
         "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
         "//chrome/browser/extensions/api/messaging/chrome_messaging_delegate.cc",
@@ -534,10 +541,18 @@ source_set("browser") {
         "//chrome/browser/extensions/api/spellcheck/spellcheck_api.h",
         "//chrome/browser/extensions/api/tabs/tabs_constants.cc",
         "//chrome/browser/extensions/api/tabs/tabs_constants.h",
+        "//chrome/browser/extensions/api/tabs/windows_util.cc",
+        "//chrome/browser/extensions/api/tabs/windows_util.h",
         "//chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.cc",
         "//chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h",
+        "//chrome/browser/extensions/chrome_extension_function_details.cc",
+        "//chrome/browser/extensions/chrome_extension_function_details.h",
         "//chrome/browser/extensions/event_router_forwarder.cc",
         "//chrome/browser/extensions/event_router_forwarder.h",
+        "//chrome/browser/extensions/window_controller.cc",
+        "//chrome/browser/extensions/window_controller.h",
+        "//chrome/browser/extensions/window_controller_list.cc",
+        "//chrome/browser/extensions/window_controller_list.h",
       ]
 
       deps += [
