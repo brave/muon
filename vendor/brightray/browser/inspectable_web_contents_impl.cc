@@ -8,6 +8,7 @@
 #include "base/base64.h"
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
+#include "base/memory/ptr_util.h"
 #include "base/metrics/histogram.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/strings/pattern.h"
@@ -742,10 +743,10 @@ void InspectableWebContentsImpl::OnURLFetchComplete(const net::URLFetcher* sourc
   DCHECK(it != pending_requests_.end());
 
   base::DictionaryValue response;
-  auto* headers = new base::DictionaryValue();
+  auto headers = base::MakeUnique<base::DictionaryValue>();
   net::HttpResponseHeaders* rh = source->GetResponseHeaders();
   response.SetInteger("statusCode", rh ? rh->response_code() : 200);
-  response.Set("headers", headers);
+  response.Set("headers", std::move(headers));
 
   size_t iterator = 0;
   std::string name;
