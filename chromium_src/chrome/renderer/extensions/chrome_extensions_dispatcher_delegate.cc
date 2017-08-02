@@ -254,6 +254,10 @@ void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
         brave::URLBindings::API(context);
     muon->Set(v8::String::NewFromUtf8(context->isolate(), "url"), url);
 
+    v8::Local<v8::Object> shared_memory =
+        brave::SharedMemoryBindings::API(context);
+    muon->Set(v8::String::NewFromUtf8(context->isolate(), "shared_memory"),
+        shared_memory);
   }
 }
 
