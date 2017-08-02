@@ -159,6 +159,9 @@ std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
   std::unique_ptr<api::tabs::Tab> tab_object(new api::tabs::Tab);
   tab_object->id.reset(new int(GetTabIdForExtensions(contents)));
   tab_object->index = tab_helper->get_index();
+  if (tab_strip) {
+    tab_object->index = tab_strip->GetIndexOfWebContents(contents);
+  }
   tab_object->window_id = GetWindowIdOfTab(contents);
   tab_object->status.reset(new std::string(GetTabStatusText(is_loading)));
   tab_object->active = tab_helper->is_active();

@@ -991,6 +991,9 @@ void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
 
   if (owner_window() && owner_window()->browser())
     owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+
+  auto api_web_contents = CreateFrom(isolate(), contents);
+  api_web_contents->Emit("tab-detached-at", index);
 }
 
 void WebContents::ActiveTabChanged(content::WebContents* old_contents,
@@ -1003,6 +1006,35 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
     auto old_api_web_contents = CreateFrom(isolate(), old_contents);
     old_api_web_contents->Emit("set-active", false);
   }
+}
+
+void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
+                                content::WebContents* contents,
+                                int index,
+                                bool foreground) {
+  auto api_web_contents = CreateFrom(isolate(), contents);
+  api_web_contents->Emit("tab-inserted-at", index, foreground);
+}
+
+void WebContents::TabMoved(content::WebContents* contents,
+                           int from_index,
+                           int to_index) {
+  auto api_web_contents = CreateFrom(isolate(), contents);
+  api_web_contents->Emit("tab-moved", from_index, to_index);
+}
+
+void WebContents::TabClosingAt(TabStripModel* tab_strip_model,
+                               content::WebContents* contents,
+                               int index) {
+  auto api_web_contents = CreateFrom(isolate(), contents);
+  api_web_contents->Emit("tab-closing-at", index);
+}
+
+void WebContents::TabChangedAt(content::WebContents* contents,
+                               int index,
+                               TabChangeType change_type) {
+  auto api_web_contents = CreateFrom(isolate(), contents);
+  api_web_contents->Emit("tab-changed-at", index);
 }
 
 bool WebContents::OnGoToEntryOffset(int offset) {

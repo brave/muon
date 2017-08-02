@@ -80,7 +80,6 @@ TabHelper::TabHelper(content::WebContents* contents)
       values_(new base::DictionaryValue),
       script_executor_(
           new ScriptExecutor(contents, &script_execution_observers_)),
-      index_(TabStripModel::kNoTab),
       pinned_(false),
       discarded_(false),
       active_(false),
@@ -168,9 +167,8 @@ bool TabHelper::AttachGuest(int window_id, int index) {
 
   for (auto* browser : *BrowserList::GetInstance()) {
     if (browser->session_id().id() == window_id) {
-      index_ = index;
       browser->tab_strip_model()->ReplaceWebContentsAt(
-          GetTabStripIndex(window_id, index_), web_contents());
+          GetTabStripIndex(window_id, index), web_contents());
       return true;
     }
   }
@@ -187,7 +185,6 @@ content::WebContents* TabHelper::DetachGuest() {
         web_contents()->GetController());
 
     auto null_helper = FromWebContents(null_contents);
-    null_helper->index_ = index_;
     null_helper->pinned_ = pinned_;
     // transfer window closing state
     null_helper->window_closing_ = window_closing_;
@@ -263,7 +260,6 @@ void TabHelper::OnBrowserRemoved(Browser* browser) {
 
     browser_->tab_strip_model()->RemoveObserver(this);
     browser_ = nullptr;
-    index_ = TabStripModel::kNoTab;
   }
 }
 
@@ -318,7 +314,6 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   int guest_instance_id = old_guest->guest_instance_id();
 
   auto new_helper = FromWebContents(new_contents);
-  new_helper->index_ = index_;
   new_helper->pinned_ = pinned_;
 
   OnBrowserRemoved(old_browser);
@@ -360,7 +355,8 @@ void TabHelper::SetActive(bool active) {
       SetAutoDiscardable(true);
     }
 
-    if (browser_ && index_ != TabStripModel::kNoTab) {
+    int index = get_tab_strip_index();
+    if (browser_ && index != TabStripModel::kNoTab) {
       browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
       if (!IsDiscarded()) {
         web_contents()->WasShown();
