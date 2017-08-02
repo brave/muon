@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "atom/browser/native_window.h"
+#include "brave/browser/ui/brave_tab_strip_model_delegate.h"
 #include "build/build_config.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/devtools/devtools_window.h"
@@ -43,8 +44,10 @@ Browser::Browser(const CreateParams& params)
     : type_(params.type),
       profile_(params.profile),
       window_(params.window),
+      tab_strip_model_delegate_(new brave::BraveTabStripModelDelegate()),
       tab_strip_model_(
-          new TabStripModel(nullptr, params.profile)),
+          new TabStripModel(tab_strip_model_delegate_.get(),
+            params.profile)),
       app_name_(params.app_name),
       is_trusted_source_(params.trusted_source),
       initial_show_state_(params.initial_show_state),
