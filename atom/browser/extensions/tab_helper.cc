@@ -158,7 +158,7 @@ int TabHelper::GetTabStripIndex(int window_id, int index) {
     if (tab_helper &&
         tab_helper->get_index() == index &&
         tab_helper->window_id() == window_id)
-      return tab_helper->get_tab_strip_index();
+      return tab_helper->get_index();
   }
   return TabStripModel::kNoTab;
 }
@@ -187,7 +187,7 @@ content::WebContents* TabHelper::DetachGuest() {
         web_contents()->GetController());
 
     auto null_helper = FromWebContents(null_contents);
-    null_helper->index_ = index_;
+    null_helper->index_ = get_index();
     null_helper->pinned_ = pinned_;
     // transfer window closing state
     null_helper->window_closing_ = window_closing_;
@@ -197,7 +197,7 @@ content::WebContents* TabHelper::DetachGuest() {
 
     // Replace the detached tab with the null placeholder
     browser_->tab_strip_model()->ReplaceWebContentsAt(
-        get_tab_strip_index(), null_contents);
+        get_index(), null_contents);
 
     return null_contents;
   }
@@ -208,7 +208,7 @@ void TabHelper::DidAttach() {
   MaybeRequestWindowClose();
 
   if (active_) {
-    browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
+    browser_->tab_strip_model()->ActivateTabAt(get_index(), true);
     active_ = false;
   }
   if (is_placeholder()) {
@@ -284,7 +284,7 @@ void TabHelper::MaybeAttachOrCreatePinnedTab() {
   // content::WebContents* pinned_web_contents = nullptr;
   // for (auto* browser : *BrowserList::GetInstance()) {
   //   auto web_contents =
-  //       browser->tab_strip_model()->GetWebContentsAt(get_tab_strip_index());
+  //       browser->tab_strip_model()->GetWebContentsAt(get_index());
   //   if (web_contents) {
   //     auto tab_helper = FromWebContents(web_contents);
   //     if (!tab_helper->is_placeholder()) {
@@ -296,7 +296,7 @@ void TabHelper::MaybeAttachOrCreatePinnedTab() {
   // }
 
   // if (pinned_web_contents) {
-  //   browser_->tab_strip_model()->ReplaceWebContentsAt(get_tab_strip_index(),
+  //   browser_->tab_strip_model()->ReplaceWebContentsAt(get_index(),
   //                                                     pinned_web_contents);
   // } else {
     SetPlaceholder(false);
@@ -318,8 +318,9 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   int guest_instance_id = old_guest->guest_instance_id();
 
   auto new_helper = FromWebContents(new_contents);
-  new_helper->index_ = index_;
+  new_helper->index_ = get_index();
   new_helper->pinned_ = pinned_;
+  new_helper->opener_tab_id_ = opener_tab_id_;
 
   OnBrowserRemoved(old_browser);
   new_helper->UpdateBrowser(old_browser);
@@ -360,8 +361,8 @@ void TabHelper::SetActive(bool active) {
       SetAutoDiscardable(true);
     }
 
-    if (browser_ && index_ != TabStripModel::kNoTab) {
-      browser_->tab_strip_model()->ActivateTabAt(get_tab_strip_index(), true);
+    if (browser_) {
+      browser_->tab_strip_model()->ActivateTabAt(get_index(), true);
       if (!IsDiscarded()) {
         web_contents()->WasShown();
       }
@@ -401,15 +402,29 @@ void TabHelper::SetBrowser(Browser* browser) {
     return;
 
   if (browser_) {
-    if (get_tab_strip_index() != TabStripModel::kNoTab)
-      browser_->tab_strip_model()->DetachWebContentsAt(get_tab_strip_index());
+    if (get_index() != TabStripModel::kNoTab)
+      browser_->tab_strip_model()->DetachWebContentsAt(get_index());
 
     OnBrowserRemoved(browser_);
   }
 
   if (browser) {
     UpdateBrowser(browser);
-    browser_->tab_strip_model()->AppendWebContents(web_contents(), false);
+    if (opener_tab_id_ != TabStripModel::kNoTab && browser->tab_strip_model()) {
+      auto tab_strip = browser->tab_strip_model();
+    }
+
+    if (index_ == TabStripModel::kNoTab ||
+        index_ > browser_->tab_strip_model()->count()) {
+      index_ = browser_->tab_strip_model()->count();
+    }
+
+    int add_types = TabStripModel::ADD_NONE;
+    add_types |= active_ ? TabStripModel::ADD_ACTIVE : 0;
+    add_types |= opener_tab_id_ != TabStripModel::kNoTab ?
+      TabStripModel::ADD_INHERIT_OPENER : 0;
+    browser_->tab_strip_model()->InsertWebContentsAt(
+        index_, web_contents(), add_types);
   } else {
     browser_ = nullptr;
   }
@@ -461,7 +476,7 @@ void TabHelper::SetPinned(bool pinned) {
 
   pinned_ = pinned;
   if (browser()) {
-    browser()->tab_strip_model()->SetTabPinned(get_tab_strip_index(), pinned);
+    browser()->tab_strip_model()->SetTabPinned(get_index(), pinned);
   }
 
   if (pinned_) {
@@ -477,12 +492,16 @@ bool TabHelper::IsPinned() const {
 
 void TabHelper::SetTabIndex(int index) {
   index_ = index;
+  if (browser()) {
+    browser()->tab_strip_model()->MoveWebContentsAt(
+        get_index(), index, false);
+  }
 }
 
 bool TabHelper::is_active() const {
   if (browser()) {
-    return browser()->tab_strip_model()->
-        GetActiveWebContents() == web_contents();
+    return browser()->tab_strip_model()->GetActiveWebContents()==
+      web_contents();
   } else {
     return active_;
   }
@@ -498,8 +517,8 @@ void TabHelper::SetTabValues(const base::DictionaryValue& values) {
   values_->MergeDictionary(&values);
 }
 
-void TabHelper::SetOpener(int openerTabId) {
-  opener_tab_id_ = openerTabId;
+void TabHelper::SetOpener(int opener_tab_id) {
+  opener_tab_id_ = opener_tab_id;
 }
 
 void TabHelper::RenderViewCreated(content::RenderViewHost* render_view_host) {
@@ -680,11 +699,11 @@ void TabHelper::ExecuteScript(
       callback);
 }
 
-int TabHelper::get_tab_strip_index() const {
+int TabHelper::get_index() const {
   if (browser())
     return browser()->tab_strip_model()->GetIndexOfWebContents(web_contents());
 
-  return TabStripModel::kNoTab;
+  return index_;
 }
 
 // static
