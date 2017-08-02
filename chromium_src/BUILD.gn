@@ -185,6 +185,8 @@ source_set("browser") {
 
     "chrome/browser/ui/profile_error_dialog.cc",
 
+    "//chrome/browser/ui/web_contents_sizer.cc",
+    "//chrome/browser/ui/web_contents_sizer.h",
     "chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc",
     "//chrome/browser/ui/webui/chrome_web_ui_controller_factory.h",
 
@@ -788,9 +790,13 @@ source_set("tab_manager") {
     "//chrome/browser/memory_details_win.cc",
     "//chrome/browser/ui/browser_tab_strip_tracker.cc",
     "//chrome/browser/ui/browser_tab_strip_tracker.h",
-    "chrome/browser/ui/tabs/tab_strip_model.cc",
+    "//chrome/browser/ui/tabs/tab_strip_model.cc",
+    "//chrome/browser/ui/tabs/tab_strip_model.h",
+    "//chrome/browser/ui/tabs/tab_strip_model_delegate.h",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.h",
+    "//chrome/browser/ui/tabs/tab_strip_model_order_controller.cc",
+    "//chrome/browser/ui/tabs/tab_strip_model_order_controller.h",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.cc",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.h",
   ]

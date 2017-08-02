@@ -213,7 +213,7 @@ class Browser : public content::WebContentsDelegate {
   // This Browser's window.
   BrowserWindow* window_;
 
-  // std::unique_ptr<TabStripModelDelegate> tab_strip_model_delegate_;
+  std::unique_ptr<TabStripModelDelegate> tab_strip_model_delegate_;
   std::unique_ptr<TabStripModel> tab_strip_model_;
 
   // The application name that is also the name of the window to the shell.

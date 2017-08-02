@@ -120,7 +120,7 @@ class TabHelper : public content::WebContentsObserver,
 
   brave::TabViewGuest* guest() const;
 
-  int get_index() const { return index_; }
+  int get_index() const;
   bool is_pinned() const { return pinned_; }
   bool is_active() const;
 
@@ -157,7 +157,6 @@ class TabHelper : public content::WebContentsObserver,
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
                              int index) override;
-  int get_tab_strip_index() const;
 
   void OnBrowserRemoved(Browser* browser) override;
   void OnBrowserSetLastActive(Browser* browser) override;
