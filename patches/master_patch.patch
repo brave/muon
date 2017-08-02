@@ -862,7 +862,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 1a0baf3b89be8442c165ddc3a55c7e923733d7c2..6d0275c9bff28f5942bebbfe2719cd26c7725de8 100644
+index e9f62eff42741e7b8298053499f4ba0d67cda7d0..74d5059ffd7aa508fc98d34685b19ab943189671 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -853,7 +853,7 @@ if (!is_android) {
@@ -931,27 +931,8 @@ index 58d7d47f379b145d5eec6f711cc882430cd1db29..9867e255717e7f2a17c7b5d9b8f06277
    // chrome::mojom::ProfileImport:
    void StartImport(const importer::SourceProfile& source_profile,
                     uint16_t items,
-diff --git a/components/guest_view/browser/guest_view_base.cc b/components/guest_view/browser/guest_view_base.cc
-index 27570202e8e5cca632e560fe5b22920aeb2c5742..3ac3b8c7b81c095b3b2264ff18431852de060a1b 100644
---- a/components/guest_view/browser/guest_view_base.cc
-+++ b/components/guest_view/browser/guest_view_base.cc
-@@ -432,8 +432,13 @@ void GuestViewBase::DidDetach() {
-   owner_web_contents()->Send(new GuestViewMsg_GuestDetached(
-       element_instance_id_));
-   element_instance_id_ = kInstanceIDNone;
--  if (!CanRunInDetachedState())
-+  if (!CanRunInDetachedState()) {
-     Destroy(true);
-+  } else {
-+    // Give the derived class an opportunity to perform some actions.
-+    DidDetachFromEmbedder();
-+  }
-+
- }
- 
- WebContents* GuestViewBase::GetOwnerWebContents() const {
 diff --git a/components/guest_view/browser/guest_view_base.h b/components/guest_view/browser/guest_view_base.h
-index 67fdaf0e3730700b991f90f9a34b772450990f5c..aa8646551079b8f9d23a48e6f83c42389009cf91 100644
+index 70fa25235c54f395cb3026f278b6d2c641901107..f344ddafb147a69aa82e252ed4de87c685c260c9 100644
 --- a/components/guest_view/browser/guest_view_base.h
 +++ b/components/guest_view/browser/guest_view_base.h
 @@ -242,6 +242,9 @@ class GuestViewBase : public content::BrowserPluginGuestDelegate,
@@ -1637,7 +1618,7 @@ index 79e4cc1a047979ce1f6f8457f6c4f5ae6a691050..cc612d93d8d675a21a1bf9132ea4a9b8
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 13cb8a2057443907e37647749d6e660fd889a618..fdbfe923ce0c96785c8be198a3e5ae29157a5b39 100644
+index effd1bee8a12bccf0407f85180bc2817f3a9efa6..7dc9f3a98de779b1a8ad1b71888e2ce9fdb36bce 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1662,7 +1662,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -2036,7 +2017,7 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index 049c8605bc63e52a14a8ac3b00d0e7d2b602c8eb..e9345a71ad6347ec456765f2e713416322bfe136 100644
+index 5be4065214fc8cc976f58c2b85f2441b04745648..e6406090db866a7b5e60cdee4b45381f18e025c2 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 +++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 @@ -2509,7 +2509,7 @@ void HTMLMediaElement::setMuted(bool muted) {
