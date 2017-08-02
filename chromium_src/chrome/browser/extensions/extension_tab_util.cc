@@ -162,7 +162,7 @@ std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
   tab_object->window_id = GetWindowIdOfTab(contents);
   tab_object->status.reset(new std::string(GetTabStatusText(is_loading)));
   tab_object->active = tab_helper->is_active();
-  tab_object->selected = tab_helper->is_active();
+  tab_object->selected = tab_object->active;
   tab_object->highlighted = tab_strip && tab_strip->IsTabSelected(tab_index);
   tab_object->pinned = tab_helper->is_pinned();
   tab_object->audible.reset(new bool(contents->WasRecentlyAudible()));
