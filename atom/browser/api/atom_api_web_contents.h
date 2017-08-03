@@ -33,6 +33,7 @@ class AtomAutofillClient;
 
 namespace base {
 class SharedMemory;
+class SharedMemoryHandle;
 }
 
 namespace blink {
@@ -515,6 +516,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void OnRendererMessageSync(const base::string16& channel,
                              const base::ListValue& args,
                              IPC::Message* message);
+
+  void OnRendererMessageShared(const base::string16& channel,
+                               const base::SharedMemoryHandle& shared_memory);
 
   v8::Global<v8::Value> session_;
   v8::Global<v8::Value> devtools_web_contents_;
