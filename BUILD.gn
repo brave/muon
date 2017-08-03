@@ -197,6 +197,10 @@ group("child_dependencies") {
 source_set("common") {
   public_deps = [ "atom/common" ]
 
+  public_configs = [
+    "build:electron_config",
+  ]
+
   include_dirs = [
     # force this to appear before the chromium root src dir
     "chromium_src",
