@@ -13,6 +13,7 @@
 #include "atom/grit/atom_resources.h"  // NOLINT: This file is generated
 #include "atom/grit/electron_api_resources.h"  // NOLINT: This file is generated
 #include "base/win/windows_version.h"
+#include "brave/common/extensions/shared_memory_bindings.h"
 #include "brave/common/extensions/url_bindings.h"
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
 #include "brave/renderer/extensions/content_settings_bindings.h"
