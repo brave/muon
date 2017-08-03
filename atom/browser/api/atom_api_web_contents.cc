@@ -1323,6 +1323,7 @@ bool WebContents::OnMessageReceived(const IPC::Message& message) {
     IPC_MESSAGE_HANDLER(AtomViewHostMsg_Message, OnRendererMessage)
     IPC_MESSAGE_HANDLER_DELAY_REPLY(AtomViewHostMsg_Message_Sync,
                                     OnRendererMessageSync)
+    IPC_MESSAGE_HANDLER(AtomViewHostMsg_Message_Shared, OnRendererMessageShared)
     IPC_MESSAGE_HANDLER_CODE(ViewHostMsg_SetCursor, OnCursorChange,
       handled = false)
     IPC_MESSAGE_UNHANDLED(handled = false)
@@ -2470,6 +2471,17 @@ void WebContents::OnRendererMessageSync(const base::string16& channel,
                                         IPC::Message* message) {
   // webContents.emit(channel, new Event(sender, message), args...);
   EmitWithSender(base::UTF16ToUTF8(channel), web_contents(), message, args);
+}
+
+void WebContents::OnRendererMessageShared(const base::string16& channel,
+                                         const base::SharedMemoryHandle& handle) {
+  std::vector<v8::Local<v8::Value>> args = {
+    mate::StringToV8(isolate(), channel),
+    brave::SharedMemoryWrapper::CreateFrom(isolate(), handle).ToV8(),
+  };
+
+  // webContents.emit(channel, new Event(), args...);
+  Emit("ipc-message", args);
 }
 
 // static
