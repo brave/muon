@@ -78,7 +78,10 @@ source_set("common") {
 }
 
 source_set("renderer") {
-  configs += [ ":chromium_src_config" ]
+  configs += [
+    "//electron/build:electron_config",
+    ":chromium_src_config",
+  ]
 
   include_dirs = [
     # force this to appear before the chromium root src dir
