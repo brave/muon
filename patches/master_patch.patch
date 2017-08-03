@@ -1003,6 +1003,31 @@ index bc36a92f4ad97e84d65c5213acbb68fc89aae8d9..9567f7f130181a40917751fff899b439
  }
  
  // static
+diff --git a/components/os_crypt/key_storage_libsecret.cc b/components/os_crypt/key_storage_libsecret.cc
+index ea034fd48c08de6f5f755fbffb962390ec8dd7b2..ae6d1fcf40d24c89941e1717c306982555156ca5 100644
+--- a/components/os_crypt/key_storage_libsecret.cc
++++ b/components/os_crypt/key_storage_libsecret.cc
+@@ -5,6 +5,7 @@
+ #include "components/os_crypt/key_storage_libsecret.h"
+ 
+ #include "base/base64.h"
++#include "base/command_line.h"
+ #include "base/rand_util.h"
+ #include "base/strings/string_number_conversions.h"
+ #include "components/os_crypt/libsecret_util_linux.h"
+@@ -75,6 +76,12 @@ std::string KeyStorageLibsecret::AddRandomPasswordInLibsecret() {
+ std::string KeyStorageLibsecret::GetKey() {
+   GError* error = nullptr;
+   LibsecretAttributesBuilder attrs;
++  const char *kApplicationName;
++  if (base::CommandLine::ForCurrentProcess()->HasSwitch("import-chrome")) {
++    kApplicationName = "chrome";
++  } else {
++    kApplicationName = ::kApplicationName;
++  }
+   attrs.Append("application", kApplicationName);
+   GList* search_results = LibsecretLoader::secret_service_search_sync(
+       nullptr /* default secret service */, &kKeystoreSchemaV2, attrs.Get(),
 diff --git a/components/os_crypt/keychain_password_mac.mm b/components/os_crypt/keychain_password_mac.mm
 index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4cc43b2beb 100644
 --- a/components/os_crypt/keychain_password_mac.mm

@@ -23,6 +23,8 @@
 #include "chrome/utility/importer/favicon_reencode.h"
 #include "components/autofill/core/common/password_form.h"
 #include "components/os_crypt/os_crypt.h"
+#include "components/cookie_config/cookie_store_util.h"
+#include "net/extras/sqlite/cookie_crypto_delegate.h"
 #include "components/password_manager/core/browser/login_database.h"
 #include "components/password_manager/core/common/password_manager_pref_names.h"
 #include "components/prefs/json_pref_store.h"
@@ -252,7 +254,7 @@ void ChromeImporter::ImportCookies() {
 
   const char query[] =
     "SELECT host_key, name, value, path, expires_utc, secure, httponly, "
-    "encrypted_value FROM cookies WHERE length(encrypted_value) = 0";
+    "encrypted_value FROM cookies";
 
   sql::Statement s(db.GetUniqueStatement(query));
 
@@ -272,7 +274,6 @@ void ChromeImporter::ImportCookies() {
     host.append(host_key);
     cookie.domain = host_key;
     cookie.name = s.ColumnString16(1);
-    cookie.value = s.ColumnString16(2);
     cookie.host = host;
     cookie.path = s.ColumnString16(3);
     cookie.expiry_date =
@@ -282,6 +283,18 @@ void ChromeImporter::ImportCookies() {
     // skip cookie not match strict secure rule
     if (cookie.secure && cookie.httponly) {
       continue;
+    }
+    std::string encrypted_value = s.ColumnString(7);
+    net::CookieCryptoDelegate* delegate =
+      cookie_config::GetCookieCryptoDelegate();
+    std::string value;
+    if (!encrypted_value.empty() && delegate) {
+      if (!delegate->DecryptString(encrypted_value, &value)) {
+        continue;
+      }
+      cookie.value = base::UTF8ToUTF16(value);
+    } else {
+      cookie.value = s.ColumnString16(2);
     }
 
     cookies.push_back(cookie);
