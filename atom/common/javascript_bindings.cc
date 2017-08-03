@@ -147,8 +147,10 @@ void JavascriptBindings::IPCSendShared(mate::Arguments* args,
     return;
 
   base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
-  if (!memory_handle.IsValid())
-    return false;
+  if (!memory_handle.IsValid()) {
+    args->ThrowError("Could not create shared memory handle");
+    return;
+  }
 
   bool success = Send(new AtomViewHostMsg_Message_Shared(
       render_view()->GetRoutingID(), channel, memory_handle));
