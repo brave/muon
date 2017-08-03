@@ -125,7 +125,7 @@ source_set("browser") {
     ":favicon",
     ":history",
     ":password_manager",
-    "chrome/browser/safe_browsing",
+    "//chrome/browser/safe_browsing",
     ":sessions",
     ":web_data",
     "//electron/brave/browser:tab_manager",
