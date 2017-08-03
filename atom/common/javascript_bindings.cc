@@ -12,6 +12,8 @@
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "base/memory/shared_memory.h"
+#include "base/memory/shared_memory_handle.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_view.h"
@@ -138,6 +140,23 @@ void JavascriptBindings::IPCSend(mate::Arguments* args,
     args->ThrowError("Unable to send AtomViewHostMsg_Message");
 }
 
+void JavascriptBindings::IPCSendShared(mate::Arguments* args,
+            const base::string16& channel,
+            base::SharedMemory* shared_memory) {
+  if (!is_valid() || !render_view())
+    return;
+
+  base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
+  if (!memory_handle.IsValid())
+    return false;
+
+  bool success = Send(new AtomViewHostMsg_Message_Shared(
+      render_view()->GetRoutingID(), channel, memory_handle));
+
+  if (!success)
+    args->ThrowError("Unable to send AtomViewHostMsg_Message_Shared");
+}
+
 base::string16 JavascriptBindings::IPCSendSync(mate::Arguments* args,
                         const base::string16& channel,
                         const base::ListValue& arguments) {
@@ -169,6 +188,8 @@ void JavascriptBindings::GetBinding(
   ipc.SetMethod("send", base::Bind(&JavascriptBindings::IPCSend,
       base::Unretained(this)));
   ipc.SetMethod("sendSync", base::Bind(&JavascriptBindings::IPCSendSync,
+      base::Unretained(this)));
+  ipc.SetMethod("sendShared", base::Bind(&JavascriptBindings::IPCSendShared,
       base::Unretained(this)));
   binding.Set("ipc", ipc.GetHandle());
 
