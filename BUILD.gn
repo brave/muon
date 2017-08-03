@@ -250,6 +250,7 @@ source_set("utility") {
     "chromium_src:importer",
     "//chrome/common",
     "//chrome/utility",
+    "//components/cookie_config",
     "//third_party/protobuf:protobuf_lite",
   ]
 
