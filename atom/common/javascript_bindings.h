@@ -5,11 +5,15 @@
 #ifndef ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 #define ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 
-#include "base/memory/shared_memory_handle.h"
 #include "content/public/renderer/render_view_observer.h"
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"
+
+namespace base {
+class SharedMemory;
+class SharedMemoryHandle;
+}
 
 namespace mate {
 class Arguments;
@@ -27,6 +31,9 @@ class JavascriptBindings : public content::RenderViewObserver,
   void GetBinding(const v8::FunctionCallbackInfo<v8::Value>& args);
 
  private:
+  void IPCSendShared(mate::Arguments* args,
+            const base::string16& channel,
+            base::SharedMemory* shared_memory);
   base::string16 IPCSendSync(mate::Arguments* args,
                         const base::string16& channel,
                         const base::ListValue& arguments);

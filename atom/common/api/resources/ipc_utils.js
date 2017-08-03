@@ -12,6 +12,10 @@ if (!ipcRenderer) {
     return ipc.send('ipc-message', $Array.slice(args))
   }
 
+  ipcRenderer.sendShared = function (channel, shared) {
+    return ipc.sendShared(channel, shared)
+  }
+
   ipcRenderer.sendSync = function () {
     var args
     args = 1 <= arguments.length ? $Array.slice(arguments, 0) : []
@@ -51,6 +55,7 @@ exports.$set('on', ipcRenderer.on.bind(ipcRenderer))
 exports.$set('once', ipcRenderer.once.bind(ipcRenderer))
 exports.$set('send', ipcRenderer.send.bind(ipcRenderer))
 exports.$set('sendSync', ipcRenderer.sendSync.bind(ipcRenderer))
+exports.$set('sendShared', ipcRenderer.sendShared.bind(ipcRenderer))
 exports.$set('sendToHost', ipcRenderer.sendToHost.bind(ipcRenderer))
 exports.$set('emit', ipcRenderer.emit.bind(ipcRenderer))
 
