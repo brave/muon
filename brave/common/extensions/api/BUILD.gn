@@ -28,6 +28,8 @@ json_schema_api("api_registration") {
     ":api",
     "//components/proximity_auth/public/interfaces",
     "//extensions/common",
+    "//extensions/common",
+    "//chrome/browser/safe_browsing",
   ]
 
   deps += schema_dependencies

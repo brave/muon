@@ -61,6 +61,7 @@ source_set("browser") {
     "//components/sync_preferences",
     "//components/visitedlink/browser",
     "//components/visitedlink/common",
+    "//components/safe_browsing/",
     "//content/public/common:service_names",
     "//device/usb/mojo",
     "//device/usb/public/interfaces",
