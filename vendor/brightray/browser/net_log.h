@@ -7,8 +7,10 @@
 
 #include "base/files/scoped_file.h"
 #include "net/log/net_log.h"
-#include "net/log/file_net_log_observer.h"
-#include "net/url_request/url_request_context.h"
+
+namespace net {
+class FileNetLogObserver;
+}
 
 namespace brightray {
 
@@ -17,11 +19,11 @@ class NetLog : public net::NetLog {
   NetLog();
   ~NetLog() override;
 
-  void StartLogging(net::URLRequestContext* url_request_context);
+  void StartLogging();
 
  private:
   base::ScopedFILE log_file_;
-  net::FileNetLogObserver write_to_file_observer_;
+  std::unique_ptr<net::FileNetLogObserver> file_net_log_observer_;
 
   DISALLOW_COPY_AND_ASSIGN(NetLog);
 };
