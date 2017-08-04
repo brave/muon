@@ -9,6 +9,11 @@
 #include "net/log/net_log.h"
 #include "net/log/file_net_log_observer.h"
 #include "net/url_request/url_request_context.h"
+#include "net/log/net_log.h"
+
+namespace net {
+class FileNetLogObserver;
+}
 
 namespace brightray {
 
@@ -21,7 +26,7 @@ class NetLog : public net::NetLog {
 
  private:
   base::ScopedFILE log_file_;
-  net::FileNetLogObserver write_to_file_observer_;
+  std::unique_ptr<net::FileNetLogObserver> file_net_log_observer_;
 
   DISALLOW_COPY_AND_ASSIGN(NetLog);
 };
