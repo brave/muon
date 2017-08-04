@@ -329,8 +329,11 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     storage_->set_host_resolver(std::move(host_resolver));
     network_session_params.host_resolver = url_request_context_->host_resolver();
 
+  const net::HttpNetworkSession::Context* network_session_context =
+      url_request_context_->GetURLRequestContext()
+          ->GetNetworkSessionContext();
     http_network_session_.reset(
-        new net::HttpNetworkSession(getwork_session_params, null));
+        new net::HttpNetworkSession(network_session_params, network_session_context));
 
     std::unique_ptr<net::HttpCache::BackendFactory> backend;
     if (in_memory_) {
