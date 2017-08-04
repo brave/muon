@@ -2085,3 +2085,32 @@ index 9e744b9940e2c79366fae21f5652ee0fce830637..143385a2831ca5221a68b99bba65dc29
        ]
        #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
      } else if (is_posix && !is_mac) {
+diff --git a/third_party/widevine/cdm/stub/manifest.json b/third_party/widevine/cdm/stub/manifest.json
+index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c22e9cff2 100644
+--- a/third_party/widevine/cdm/stub/manifest.json
++++ b/third_party/widevine/cdm/stub/manifest.json
+@@ -24,6 +24,11 @@
+       "os": "mac",
+       "arch": "x64",
+       "sub_package_path": "_platform_specific/mac_x64/"
++    },
++    {
++      "os": "linux",
++      "arch": "x64",
++      "sub_package_path": "_platform_specific/linux_x64/"
+     }
+   ]
+ }
+diff --git a/third_party/widevine/cdm/widevine_cdm_common.h b/third_party/widevine/cdm/widevine_cdm_common.h
+index f411b9d6e97df4d8914b6f7b65968dabaf064fbc..6453f98def80ad77d35f52bc3756a4b139dea15b 100644
+--- a/third_party/widevine/cdm/widevine_cdm_common.h
++++ b/third_party/widevine/cdm/widevine_cdm_common.h
+@@ -59,7 +59,7 @@ const char kCdmSupportedCodecVp9[] = "vp9.0";
+ const char kCdmSupportedCodecAvc1[] = "avc1";
+ #endif  // BUILDFLAG(USE_PROPRIETARY_CODECS)
+ 
+-#if defined(OS_MACOSX) || defined(OS_WIN)
++#if defined(OS_MACOSX) || defined(OS_WIN) || defined(OS_LINUX)
+ // CDM is installed by the component installer instead of the Chrome installer.
+ #define WIDEVINE_CDM_IS_COMPONENT
+ #endif  // defined(OS_MACOSX) || defined(OS_WIN)
