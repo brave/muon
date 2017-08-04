@@ -39,25 +39,9 @@ void NetLog::StartLogging(net::URLRequestContext* url_request_context) {
   auto command_line = base::CommandLine::ForCurrentProcess();
   if (!command_line->HasSwitch(switches::kLogNetLog))
     return;
-
-  base::FilePath log_path = command_line->GetSwitchValuePath(switches::kLogNetLog);
-#if defined(OS_WIN)
-  log_file_.reset(_wfopen(log_path.value().c_str(), L"w"));
-#elif defined(OS_POSIX)
-  log_file_.reset(fopen(log_path.value().c_str(), "w"));
-#endif
-
-  if (!log_file_) {
-    LOG(ERROR) << "Could not open file: " << log_path.value()
-               << "for net logging";
-    return;
-  }
-
-  std::unique_ptr<base::Value> constants(GetConstants());
-  write_to_file_observer_.StartObserving(this,
-                                         std::move(log_file_),
-                                         constants.get(),
-                                         url_request_context);
+  // WIP
+  net::NetLogCaptureMode capture_mode;
+  write_to_file_observer_.StartObserving(this, capture_mode);
 }
 
 }  // namespace brightray
