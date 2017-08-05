@@ -9,6 +9,7 @@
 #include "base/memory/ptr_util.h"
 #include "base/values.h"
 #include "content/public/common/content_switches.h"
+#include "net/log/file_net_log_observer.h"
 #include "net/log/net_log_util.h"
 
 namespace brightray {
@@ -40,9 +41,12 @@ void NetLog::StartLogging(net::URLRequestContext* url_request_context) {
   auto command_line = base::CommandLine::ForCurrentProcess();
   if (!command_line->HasSwitch(switches::kLogNetLog))
     return;
-  // WIP
-  net::NetLogCaptureMode capture_mode;
-  write_to_file_observer_.StartObserving(this, capture_mode);
+
+  net::NetLogCaptureMode capture_mode = net::NetLogCaptureMode::Default();
+
+  file_net_log_observer_ = net::FileNetLogObserver::CreateUnbounded(
+      log_path, GetShellConstants(app_name));
+  file_net_log_observer_->StartObserving(this, capture_mode);
 }
 
 }  // namespace brightray
