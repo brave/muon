@@ -16,6 +16,7 @@
 namespace content {
 class PlatformNotificationService;
 class NavigationHandle;
+class RenderFrameHost;
 }
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -51,9 +52,10 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       service_manager::BinderRegistry* registry,
       content::AssociatedInterfaceRegistry* associated_registry,
       content::RenderProcessHost* render_process_host) override;
-  void ExposeInterfacesToFrame(
-      service_manager::BinderRegistry* registry,
-      content::RenderFrameHost* render_frame_host) override;
+  void BindInterfaceRequestFromFrame(
+      content::RenderFrameHost* render_frame_host,
+      const std::string& interface_name,
+      mojo::ScopedMessagePipeHandle interface_pipe) override;
   bool BindAssociatedInterfaceRequestFromFrame(
       content::RenderFrameHost* render_frame_host,
       const std::string& interface_name,
@@ -141,6 +143,10 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
 #endif
 
   service_manager::BinderRegistry gpu_binder_registry_;
+  std::unique_ptr<service_manager::BinderRegistry> frame_interfaces_;
+  std::unique_ptr<
+      service_manager::BinderRegistryWithArgs<content::RenderFrameHost*>>
+      frame_interfaces_parameterized_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveContentBrowserClient);
 };
