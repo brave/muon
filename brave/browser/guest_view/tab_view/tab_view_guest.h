@@ -63,7 +63,6 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void CreateWebContents(
     const base::DictionaryValue& create_params,
     const WebContentsCreatedCallback& callback) final;
-  bool CanRunInDetachedState() const final;
   void DidAttachToEmbedder() final;
   void DidDetachFromEmbedder() final;
   bool ZoomPropagatesFromEmbedderToGuest() const final;
