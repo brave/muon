@@ -75,7 +75,6 @@ class ContentSettingsObserver
                   const blink::WebURL& image_url) override;
   bool AllowIndexedDB(const blink::WebString& name,
                       const blink::WebSecurityOrigin& origin) override;
-  bool AllowPlugins(bool enabled_per_settings) override;
   bool AllowScript(bool enabled_per_settings) override;
   bool AllowScriptFromSource(bool enabled_per_settings,
                              const blink::WebURL& script_url) override;
