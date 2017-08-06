@@ -384,7 +384,7 @@ void BraveBrowserContext::CreateProfilePrefs(
     overlay_pref_names_.push_back("app_state");
     overlay_pref_names_.push_back(extensions::pref_names::kPrefContentSettings);
     overlay_pref_names_.push_back(prefs::kPartitionPerHostZoomLevels);
-    std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr
+    std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
     user_prefs_.reset(
         original_context()->user_prefs()->CreateIncognitoPrefService(
           extension_prefs, overlay_pref_names_, std::move(delegate)));
