@@ -384,16 +384,18 @@ void BraveBrowserContext::CreateProfilePrefs(
     overlay_pref_names_.push_back("app_state");
     overlay_pref_names_.push_back(extensions::pref_names::kPrefContentSettings);
     overlay_pref_names_.push_back(prefs::kPartitionPerHostZoomLevels);
+    std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
     user_prefs_.reset(
         original_context()->user_prefs()->CreateIncognitoPrefService(
-          extension_prefs, overlay_pref_names_));
+          extension_prefs, overlay_pref_names_, std::move(delegate)));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else if (HasParentContext()) {
     // overlay pref names only apply to incognito
+    std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
     std::vector<const char*> overlay_pref_names;
     user_prefs_.reset(
             original_context()->user_prefs()->CreateIncognitoPrefService(
-              extension_prefs, overlay_pref_names));
+              extension_prefs, overlay_pref_names, std::move(delegate)));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
     pref_registry_->RegisterDictionaryPref("app_state");
