@@ -235,11 +235,7 @@ void AtomExtensionSystem::Shared::EnableExtension(
 
   NotifyExtensionLoaded(extension);
 
-  // Notify listeners that the extension was enabled.
-  content::NotificationService::current()->Notify(
-      extensions::NOTIFICATION_EXTENSION_ENABLED,
-      content::Source<content::BrowserContext>(browser_context_),
-      content::Details<const Extension>(extension));
+  MaybeSpinUpLazyBackgroundPage(extension);
 }
 
 void AtomExtensionSystem::Shared::DisableExtension(
@@ -579,6 +575,32 @@ void AtomExtensionSystem::UnregisterExtensionWithRequestContexts(
       BrowserThread::IO,
       FROM_HERE,
       base::Bind(&InfoMap::RemoveExtension, info_map(), extension_id, reason));
+}
+
+void AtomExtensionSystem::MaybeSpinUpLazyBackgroundPage(
+    const Extension* extension) {
+  if (!extensions::BackgroundInfo::HasLazyBackgroundPage(extension))
+    return;
+
+  // For orphaned devtools, we will reconnect devtools to it later in
+  // DidCreateRenderViewForBackgroundPage().
+  OrphanedDevTools::iterator iter = orphaned_dev_tools_.find(extension->id());
+  bool has_orphaned_dev_tools = iter != orphaned_dev_tools_.end();
+
+  // Reloading component extension does not trigger install, so RuntimeAPI won't
+  // be able to detect its loading. Therefore, we need to spin up its lazy
+  // background page.
+  bool is_component_extension =
+      Manifest::IsComponentLocation(extension->location());
+
+  if (!has_orphaned_dev_tools && !is_component_extension)
+    return;
+
+  // Wake up the event page by posting a dummy task.
+  extensions::LazyBackgroundTaskQueue* queue =
+      extensions::LazyBackgroundTaskQueue::Get(profile_);
+  queue->AddPendingTask(profile_, extension->id(),
+                        base::Bind(&DoNothingWithExtensionHost));
 }
 
 }  // namespace extensions
