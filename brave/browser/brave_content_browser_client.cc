@@ -241,7 +241,7 @@ void BraveContentBrowserClient::BindInterfaceRequest(
     mojo::ScopedMessagePipeHandle* interface_pipe) {
   if (source_info.identity.name() == content::mojom::kGpuServiceName &&
       gpu_binder_registry_.CanBindInterface(interface_name)) {
-    gpu_binder_registry_.BindInterface(source_info, interface_name,
+    gpu_binder_registry_.BindInterface(interface_name,
                                        std::move(*interface_pipe));
   }
 }
