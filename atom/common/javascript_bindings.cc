@@ -270,7 +270,7 @@ void JavascriptBindings::OnSharedBrowserMessage(const base::string16& channel,
       concatenated_args.insert(concatenated_args.end(),
                                 args_vector.begin(), args_vector.end());
 
-  context()->module_system()->CallModuleMethod("ipc_utils",
+  context()->module_system()->CallModuleMethodSafe("ipc_utils",
                                   "emit",
                                   concatenated_args.size(),
                                   &concatenated_args.front());
@@ -298,7 +298,7 @@ void JavascriptBindings::OnBrowserMessage(bool all_frames,
       concatenated_args.insert(concatenated_args.end(),
                                 args_vector.begin(), args_vector.end());
 
-  context()->module_system()->CallModuleMethod("ipc_utils",
+  context()->module_system()->CallModuleMethodSafe("ipc_utils",
                                   "emit",
                                   concatenated_args.size(),
                                   &concatenated_args.front());
