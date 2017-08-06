@@ -410,7 +410,7 @@ bool ContentSettingsObserver::AllowStorage(bool local) {
     return false;
 
   StoragePermissionsKey key(
-      blink::WebStringToGURL(frame->GetDocument().GetSecurityOrigin().ToString()),
+      blink::WebStringToGURL(frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin().ToString()),
       local);
   std::map<StoragePermissionsKey, bool>::const_iterator permissions =
       cached_storage_permissions_.find(key);
@@ -516,7 +516,7 @@ bool ContentSettingsObserver::AllowAutoplay(bool default_value) {
         content_settings_manager_->GetSetting(
                           GetOriginOrURL(frame),
                           blink::WebStringToGURL(
-                              frame->GetDocument().GetSecurityOrigin().ToString()),
+                              frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin().ToString()),
                           "autoplay",
                           allow) != CONTENT_SETTING_BLOCK;
   }
@@ -579,8 +579,8 @@ bool ContentSettingsObserver::IsWhitelistedForContentSettings() const {
   }
 
   return IsWhitelistedForContentSettings(
-      web_frame->GetDocument().GetSecurityOrigin(),
-      web_frame->GetDocument().Url());
+      web_frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin(),
+      web_frame->ToWebLocalFrame()->GetDocument().Url());
 }
 
 bool ContentSettingsObserver::IsWhitelistedForContentSettings(
