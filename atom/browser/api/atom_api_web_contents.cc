@@ -1586,7 +1586,7 @@ void WebContents::DownloadURL(const GURL& url,
     content::BrowserContext::GetDownloadManager(browser_context);
 
   auto params = content::DownloadUrlParameters::CreateForWebContentsMainFrame(
-          web_contents(), url);
+          web_contents(), url, NO_TRAFFIC_ANNOTATION_YET);
   if (prompt_for_location)
     params->set_prompt(prompt_for_location);
 
