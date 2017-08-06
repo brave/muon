@@ -234,12 +234,6 @@ void AtomExtensionSystem::Shared::EnableExtension(
   registry_->RemoveDisabled(extension->id());
 
   NotifyExtensionLoaded(extension);
-
-  // Notify listeners that the extension was enabled.
-  content::NotificationService::current()->Notify(
-      extensions::NOTIFICATION_EXTENSION_ENABLED,
-      content::Source<content::BrowserContext>(browser_context_),
-      content::Details<const Extension>(extension));
 }
 
 void AtomExtensionSystem::Shared::DisableExtension(
