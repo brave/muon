@@ -33,7 +33,6 @@ BraveProfileImportHandler::~BraveProfileImportHandler() {}
 
 // static
 void BraveProfileImportHandler::Create(
-    const service_manager::BindSourceInfo& source_info,
     mojo::InterfaceRequest<chrome::mojom::ProfileImport> request) {
   mojo::MakeStrongBinding(base::MakeUnique<BraveProfileImportHandler>(),
                           std::move(request));
