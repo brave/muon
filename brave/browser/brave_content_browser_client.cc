@@ -246,23 +246,17 @@ void BraveContentBrowserClient::BindInterfaceRequest(
   }
 }
 
-void BraveContentBrowserClient::ExposeInterfacesToFrame(
-    service_manager::BinderRegistry* registry,
-    content::RenderFrameHost* render_frame_host) {
+void BraveContentBrowserClient::BindInterfaceRequestFromFrame(
+    content::RenderFrameHost* render_frame_host,
+    const std::string& interface_name,
+    mojo::ScopedMessagePipeHandle interface_pipe) {
+  if (!frame_interfaces_.get() && !frame_interfaces_parameterized_.get())
+    InitFrameInterfaces();
 
-  registry->AddInterface(
-      base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver,
-                 render_frame_host));
-
-  registry->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindPasswordManagerDriver,
-                 render_frame_host));
-
-  registry->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindSensitiveInputVisibilityService,
-                 render_frame_host));
+  if (!frame_interfaces_parameterized_->TryBindInterface(
+          interface_name, &interface_pipe, render_frame_host)) {
+    frame_interfaces_->TryBindInterface(interface_name, &interface_pipe);
+  }
 }
 
 bool BraveContentBrowserClient::BindAssociatedInterfaceRequestFromFrame(
@@ -707,6 +701,18 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
         base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
+}
+
+void BraveContentBrowserClient::InitFrameInterfaces() {
+  frame_interfaces_ = base::MakeUnique<service_manager::BinderRegistry>();
+  frame_interfaces_parameterized_ = base::MakeUnique<
+      service_manager::BinderRegistryWithArgs<content::RenderFrameHost*>>();
+
+  frame_interfaces_parameterized_->AddInterface(
+      base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver));
+  frame_interfaces_parameterized_->AddInterface(
+      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
+                     BindPasswordManagerDriver));
 }
 
 }  // namespace brave
