@@ -20,7 +20,7 @@ std::unique_ptr<base::DictionaryValue> GetConstants() {
   std::unique_ptr<base::DictionaryValue> constants = net::GetNetConstants();
 
   // Adding client information to constants dictionary.
-  auto* client_info = base::MakeUnique<base::DictionaryValue>();
+  auto client_info = base::MakeUnique<base::DictionaryValue>();
   client_info->SetString(
       "command_line",
       base::CommandLine::ForCurrentProcess()->GetCommandLineString());
@@ -42,10 +42,11 @@ void NetLog::StartLogging(net::URLRequestContext* url_request_context) {
   if (!command_line->HasSwitch(switches::kLogNetLog))
     return;
 
+  base::FilePath log_path = command_line->GetSwitchValuePath(switches::kLogNetLog);
   net::NetLogCaptureMode capture_mode = net::NetLogCaptureMode::Default();
 
   file_net_log_observer_ = net::FileNetLogObserver::CreateUnbounded(
-      log_path, GetShellConstants(app_name));
+      log_path, GetConstants());
   file_net_log_observer_->StartObserving(this, capture_mode);
 }
 
