@@ -71,7 +71,7 @@
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
-#include "chrome/browser/spellchecker/spellcheck_message_filter.h"
+#include "chrome/browser/spellchecker/spell_check_host_impl.h"
 #endif
 
 #if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
