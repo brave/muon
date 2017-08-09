@@ -229,7 +229,8 @@ source_set("common") {
   deps = [
     "chromium_src:common",
     ":electron_version_header",
-    "//components/url_formatter"
+    "//components/url_formatter",
+    "//content/public/child",
   ]
 
   if (enable_extensions) {
