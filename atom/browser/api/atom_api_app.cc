@@ -649,7 +649,8 @@ void App::SelectClientCertificate(
 
   // Default to first certificate from the platform store.
   if (!prevent_default)
-    shared_delegate->ContinueWithCertificate(client_certs[0].get());
+    // WIP
+    shared_delegate->ContinueWithCertificate(client_certs[0].get(), nullptr);
 }
 
 void App::OnMaxBandwidthChanged(
