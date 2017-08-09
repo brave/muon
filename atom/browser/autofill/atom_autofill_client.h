@@ -95,7 +95,7 @@ class AtomAutofillClient
   bool ShouldShowSigninPromo() override { return false; };
   void StartSigninFlow() override {};
   void ShowHttpNotSecureExplanation() override {};
-
+  bool IsAutofillSupported() override { return true; }
 
   // content::WebContentsObserver implementation.
   void WebContentsDestroyed() override;
