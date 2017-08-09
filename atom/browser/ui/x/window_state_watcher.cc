@@ -6,23 +6,18 @@
 
 #include <X11/Xlib.h>
 
+#include "ui/base/x/x11_util.h"
 #include "ui/events/platform/platform_event_source.h"
 
 namespace atom {
 
 namespace {
 
-const char* kAtomsToCache[] = {
-  "_NET_WM_STATE",
-  NULL,
-};
-
 }  // namespace
 
 WindowStateWatcher::WindowStateWatcher(NativeWindowViews* window)
     : window_(window),
       widget_(window->GetAcceleratedWidget()),
-      atom_cache_(gfx::GetXDisplay(), kAtomsToCache),
       was_minimized_(false),
       was_maximized_(false) {
   ui::PlatformEventSource::GetInstance()->AddPlatformEventObserver(this);
@@ -70,7 +65,7 @@ void WindowStateWatcher::DidProcessEvent(const ui::PlatformEvent& event) {
 
 bool WindowStateWatcher::IsWindowStateEvent(const ui::PlatformEvent& event) {
   ::Atom changed_atom = event->xproperty.atom;
-  return (changed_atom == atom_cache_.GetAtom("_NET_WM_STATE") &&
+  return (changed_atom == ui::GetAtom("_NET_WM_STATE") &&
           event->type == PropertyNotify &&
           event->xproperty.window == widget_);
 }
