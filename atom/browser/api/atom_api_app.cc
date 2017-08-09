@@ -461,7 +461,7 @@ void OnClientCertificateSelected(
   auto certs = net::X509Certificate::CreateCertificateListFromBytes(
       data.c_str(), data.length(), net::X509Certificate::FORMAT_AUTO);
   if (certs.size() > 0)
-    delegate->ContinueWithCertificate(certs[0].get());
+    delegate->ContinueWithCertificate(std::move(certs[0].get()));
 }
 
 void PassLoginInformation(scoped_refptr<LoginHandler> login_handler,
