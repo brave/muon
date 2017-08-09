@@ -8,6 +8,8 @@
 
 #include "base/memory/shared_memory.h"
 #include "base/pickle.h"
+#include "content/child/child_thread_impl.h"
+#include "content/public/child/child_thread.h"
 #include "extensions/renderer/script_context.h"
 #include "native_mate/arguments.h"
 #include "native_mate/converter.h"
@@ -15,6 +17,9 @@
 #include "native_mate/wrappable.h"
 #include "url/gurl.h"
 #include "v8/include/v8.h"
+
+using content::ChildThread;
+using content::ChildThreadImpl;
 
 namespace mate {
 
@@ -105,21 +110,31 @@ mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
   pickle.WriteBytes(buf.first, buf.second);
 
   // Create the shared memory object.
-  base::SharedMemory shared_memory;
+  std::unique_ptr<base::SharedMemory> shared_memory;
+  if (ChildThread::Get()) {
+    shared_memory = ChildThreadImpl::AllocateSharedMemory(pickle.size());
+  } else {
+    shared_memory.reset(new base::SharedMemory);
 
-  base::SharedMemoryCreateOptions options;
-  options.size = pickle.size();
-  options.share_read_only = true;
-  if (!shared_memory.Create(options) || !shared_memory.Map(pickle.size())) {
+    base::SharedMemoryCreateOptions options;
+    options.size = pickle.size();
+    options.share_read_only = true;
+    if (!shared_memory->Create(options)) {
+      free(buf.first);
+      return mate::Handle<SharedMemoryWrapper>();
+    }
+  }
+
+  if (!shared_memory.get() || !shared_memory->Map(pickle.size())) {
     free(buf.first);
     return mate::Handle<SharedMemoryWrapper>();
   }
 
   // Copy the pickle to shared memory.
-  memcpy(shared_memory.memory(), pickle.data(), pickle.size());
+  memcpy(shared_memory->memory(), pickle.data(), pickle.size());
   free(buf.first);
 
-  base::SharedMemoryHandle readonly_handle = shared_memory.GetReadOnlyHandle();
+  base::SharedMemoryHandle readonly_handle = shared_memory->GetReadOnlyHandle();
   if (!readonly_handle.IsValid()) {
     return mate::Handle<SharedMemoryWrapper>();
   }
