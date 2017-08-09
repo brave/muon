@@ -461,7 +461,7 @@ void OnClientCertificateSelected(
   auto certs = net::X509Certificate::CreateCertificateListFromBytes(
       data.c_str(), data.length(), net::X509Certificate::FORMAT_AUTO);
   if (certs.size() > 0)
-    delegate->ContinueWithCertificate(certs[0].get());
+    delegate->ContinueWithCertificate(certs[0].get(), nullptr);
 }
 
 void PassLoginInformation(scoped_refptr<LoginHandler> login_handler,
@@ -649,7 +649,8 @@ void App::SelectClientCertificate(
 
   // Default to first certificate from the platform store.
   if (!prevent_default)
-    shared_delegate->ContinueWithCertificate(client_certs[0].get());
+    shared_delegate->ContinueWithCertificate(std::move(
+        client_certs[0].get()), nullptr);
 }
 
 void App::OnMaxBandwidthChanged(
