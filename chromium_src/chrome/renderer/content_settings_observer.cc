@@ -59,7 +59,7 @@ GURL GetOriginOrURL(const WebFrame* frame) {
   // WebRemoteFrame which does not have a document(), and the WebRemoteFrame's
   // URL is not replicated.
   if (top_origin == "null")
-    return frame->Top()->GetDocument().Url();
+    return frame->Top()->ToWebLocalFrame()->GetDocument().Url();
   return blink::WebStringToGURL(top_origin);
 }
 
