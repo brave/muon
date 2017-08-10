@@ -637,14 +637,10 @@ source_set("password_manager") {
     "//chrome/browser/password_manager/password_manager_util_win.cc",
     "//chrome/browser/password_manager/password_store_factory.cc",
     "//chrome/browser/password_manager/password_store_factory.h",
-    "//chrome/browser/password_manager/password_store_mac.h",
-    "//chrome/browser/password_manager/password_store_mac.cc",
     "//chrome/browser/password_manager/password_store_proxy_mac.h",
     "//chrome/browser/password_manager/password_store_proxy_mac.cc",
     "//chrome/browser/password_manager/password_store_win.h",
     "//chrome/browser/password_manager/password_store_win.cc",
-    "//chrome/browser/password_manager/simple_password_store_mac.h",
-    "//chrome/browser/password_manager/simple_password_store_mac.cc",
   ]
 
   deps = [
