@@ -117,8 +117,12 @@ void JavascriptBindings::DeleteHiddenValue(v8::Isolate* isolate,
   if (!is_valid() || !render_view())
     return;
 
-  v8::Local<v8::Context> main_context =
-      render_view()->GetWebView()->MainFrame()->MainWorldScriptContext();
+  v8::Local<v8::Context> main_context = render_view()
+                                          ->GetWebView()
+                                          ->MainFrame()
+                                          ->ToWebLocalFrame()
+                                          ->MainWorldScriptContext();
+
 
   v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
   // Actually deleting the value would make force the object into
