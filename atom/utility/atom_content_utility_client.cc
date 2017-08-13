@@ -11,7 +11,6 @@
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
 #include "brave/utility/brave_profile_import_handler.h"
-#include "chrome/common/chrome_utility_messages.h"
 #include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
 #include "chrome/utility/utility_message_handler.h"
