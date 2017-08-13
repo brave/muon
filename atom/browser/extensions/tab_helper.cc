@@ -14,7 +14,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_browser_context.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
-#include "brave/browser/memory/guest_tab_manager.h"
+#include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
@@ -42,7 +42,7 @@
 
 using brave::BraveBrowserContext;
 using guest_view::GuestViewManager;
-using memory::TabManager;
+using resource_coordinator::TabManager;
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
 
