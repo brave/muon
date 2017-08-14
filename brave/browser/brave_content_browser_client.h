@@ -16,6 +16,7 @@
 namespace content {
 class PlatformNotificationService;
 class NavigationHandle;
+class RenderFrameHost;
 }
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -142,6 +143,10 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
 #endif
 
   service_manager::BinderRegistry gpu_binder_registry_;
+  std::unique_ptr<service_manager::BinderRegistry> frame_interfaces_;
+  std::unique_ptr<
+      service_manager::BinderRegistryWithArgs<content::RenderFrameHost*>>
+      frame_interfaces_parameterized_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveContentBrowserClient);
 };
