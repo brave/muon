@@ -68,6 +68,11 @@ class BraveBrowserContext : public Profile {
   net::NetworkDelegate* CreateNetworkDelegate() override;
   content::BrowserPluginGuestManager* GetGuestManager() override;
 
+  content::BrowsingDataRemoverDelegate* GetBrowsingDataRemoverDelegate()
+      override {
+    return nullptr;
+  }
+
   // atom::AtomBrowserContext
   atom::AtomNetworkDelegate* network_delegate() override;
 
