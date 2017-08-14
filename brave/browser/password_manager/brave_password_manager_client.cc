@@ -16,6 +16,7 @@
 #include "base/metrics/field_trial.h"
 #include "base/metrics/histogram_macros.h"
 #include "build/build_config.h"
+#include "chrome/browser/browser_process.h"
 #include "chrome/browser/browsing_data/browsing_data_helper.h"
 #include "chrome/browser/password_manager/password_store_factory.h"
 #include "chrome/browser/profiles/profile.h"
@@ -61,6 +62,7 @@
 #include "extensions/features/features.h"
 #include "google_apis/gaia/gaia_urls.h"
 #include "net/base/url_util.h"
+#include "services/metrics/public/cpp/ukm_recorder.h"
 #include "third_party/re2/src/re2/re2.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -69,6 +71,7 @@
 
 using password_manager::ContentPasswordManagerDriverFactory;
 using password_manager::PasswordManagerInternalsService;
+using password_manager::PasswordManagerMetricsRecorder;
 using sessions::SerializedNavigationEntry;
 
 // Shorten the name to spare line breaks. The code provides enough context
@@ -301,10 +304,22 @@ void BravePasswordManagerClient::PasswordWasAutofilled(
 void BravePasswordManagerClient::HidePasswordGenerationPopup() {
 }
 
+PasswordManagerMetricsRecorder&
+BravePasswordManagerClient::GetMetricsRecorder() {
+  if (!metrics_recorder_) {
+    metrics_recorder_.emplace(GetUkmRecorder(), GetUkmSourceId(),
+                              GetMainFrameURL());
+  }
+  return metrics_recorder_.value();
+}
+
 void BravePasswordManagerClient::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   if (!navigation_handle->IsInMainFrame() || !navigation_handle->HasCommitted())
     return;
+
+  if (!navigation_handle->IsSameDocument())
+    ukm_source_id_.reset();
 
   // From this point on, the CredentialManagerImpl will service API calls in the
   // context of the new WebContents::GetLastCommittedURL, which may very well be
@@ -359,6 +374,22 @@ void BravePasswordManagerClient::CheckProtectedPasswordEntry(
     const std::string& password_saved_domain,
     bool password_field_exists) {}
 #endif
+
+ukm::UkmRecorder* BravePasswordManagerClient::GetUkmRecorder() {
+  return g_browser_process->ukm_recorder();
+}
+
+ukm::SourceId BravePasswordManagerClient::GetUkmSourceId() {
+  // TODO(crbug.com/732846): The UKM Source should be recycled (e.g. from the
+  // web contents), once the UKM framework provides a mechanism for that.
+  if (!ukm_source_id_) {
+    ukm_source_id_ = ukm::UkmRecorder::GetNewSourceID();
+    ukm::UkmRecorder* ukm_recorder = GetUkmRecorder();
+    if (ukm_recorder)
+      ukm_recorder->UpdateSourceURL(*ukm_source_id_, GetMainFrameURL());
+  }
+  return *ukm_source_id_;
+}
 
 password_manager::PasswordSyncState
 BravePasswordManagerClient::GetPasswordSyncState() const {
