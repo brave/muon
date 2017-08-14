@@ -184,7 +184,7 @@ content::WebContents* TabHelper::DetachGuest() {
         browser_->tab_strip_model(), web_contents());
 
     null_contents->GetController().CopyStateFrom(
-        web_contents()->GetController());
+        web_contents()->GetController(), false);
 
     auto null_helper = FromWebContents(null_contents);
     null_helper->index_ = index_;
