@@ -79,8 +79,7 @@ void TabViewGuest::WebContentsCreated(
     int opener_render_frame_id,
     const std::string& frame_name,
     const GURL& target_url,
-    WebContents* new_contents,
-    const base::Optional<content::WebContents::CreateParams>& create_params) {
+    WebContents* new_contents) {
   CHECK_EQ(source_contents, web_contents());
 
   auto* guest = TabViewGuest::FromWebContents(new_contents);
@@ -291,7 +290,7 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
     } else if (attached() && clone_) {
       clone_ = false;
       web_contents()->GetController().CopyStateFrom(
-          GetOpener()->web_contents()->GetController());
+          GetOpener()->web_contents()->GetController(), false);
     }
   }
 
