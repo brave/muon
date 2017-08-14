@@ -54,9 +54,8 @@ void log_and_clear_error(GError* error, const char* context) {
 }  // namespace
 
 // static
-Notification* Notification::Create(NotificationDelegate* delegate,
-                                   NotificationPresenter* presenter) {
-  return new LibnotifyNotification(delegate, presenter);
+Notification* Notification::Create(NotificationPresenter* presenter) {
+  return new LibnotifyNotification(presenter);
 }
 
 // static
@@ -74,9 +73,8 @@ bool LibnotifyNotification::Initialize() {
   return true;
 }
 
-LibnotifyNotification::LibnotifyNotification(NotificationDelegate* delegate,
-                                             NotificationPresenter* presenter)
-    : Notification(delegate, presenter),
+LibnotifyNotification::LibnotifyNotification(NotificationPresenter* presenter)
+    : Notification(presenter),
       notification_(nullptr) {
 }
 
@@ -139,7 +137,6 @@ void LibnotifyNotification::Show(const base::string16& title,
     return;
   }
 
-  delegate()->NotificationDisplayed();
 }
 
 void LibnotifyNotification::Dismiss() {

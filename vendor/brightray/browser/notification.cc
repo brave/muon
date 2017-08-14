@@ -4,15 +4,12 @@
 
 #include "browser/notification.h"
 
-#include "browser/notification_delegate.h"
 #include "browser/notification_presenter.h"
 
 namespace brightray {
 
-Notification::Notification(NotificationDelegate* delegate,
-                           NotificationPresenter* presenter)
-    : delegate_(delegate),
-      presenter_(presenter),
+Notification::Notification(NotificationPresenter* presenter)
+    : presenter_(presenter),
       weak_factory_(this) {
 }
 

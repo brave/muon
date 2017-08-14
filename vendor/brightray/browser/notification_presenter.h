@@ -20,8 +20,7 @@ class NotificationPresenter {
 
   virtual ~NotificationPresenter();
 
-  base::WeakPtr<Notification> CreateNotification(
-      NotificationDelegate* delegate);
+  base::WeakPtr<Notification> CreateNotification();
 
   std::set<Notification*> notifications() const { return notifications_; }
 

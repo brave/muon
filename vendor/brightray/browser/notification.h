@@ -38,12 +38,10 @@ class Notification {
     return weak_factory_.GetWeakPtr();
   }
 
-  NotificationDelegate* delegate() const { return delegate_; }
   NotificationPresenter* presenter() const { return presenter_; }
 
  protected:
-  Notification(NotificationDelegate* delegate,
-               NotificationPresenter* presenter);
+  Notification(NotificationPresenter* presenter);
   virtual ~Notification();
 
   // delete this.
@@ -54,10 +52,8 @@ class Notification {
 
   // Can only be called by NotificationPresenter, the caller is responsible of
   // freeing the returned instance.
-  static Notification* Create(NotificationDelegate* delegate,
-                              NotificationPresenter* presenter);
+  static Notification* Create(NotificationPresenter* presenter);
 
-  NotificationDelegate* delegate_;
   NotificationPresenter* presenter_;
 
   base::WeakPtrFactory<Notification> weak_factory_;

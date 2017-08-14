@@ -12,7 +12,6 @@
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
 #include "browser/notification.h"
-#include "browser/notification_delegate_adapter.h"
 #include "browser/notification_presenter.h"
 #include "content/public/browser/permission_type.h"
 #include "content/public/browser/render_frame_host.h"
@@ -59,7 +58,6 @@ void OnWebNotificationAllowed(
     brightray::BrowserClient* browser_client,
     const SkBitmap& icon,
     const content::PlatformNotificationData& data,
-    std::unique_ptr<content::DesktopNotificationDelegate> delegate,
     const base::WeakPtr<NotificationProxy> notification_proxy,
     bool allowed) {
   if (!allowed)
@@ -67,11 +65,8 @@ void OnWebNotificationAllowed(
   auto presenter = browser_client->GetNotificationPresenter();
   if (!presenter)
     return;
-  std::unique_ptr<brightray::NotificationDelegateAdapter> adapter(
-      new brightray::NotificationDelegateAdapter(std::move(delegate)));
-  auto notification = presenter->CreateNotification(adapter.get());
+  auto notification = presenter->CreateNotification();
   if (notification) {
-    ignore_result(adapter.release());  // it will release itself automatically.
     notification->Show(data.title, data.body, data.tag,
         data.icon, icon, data.silent);
     if (notification_proxy)
@@ -113,7 +108,6 @@ void PlatformNotificationServiceImpl::DisplayNotification(
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
     const content::NotificationResources& notification_resources,
-    std::unique_ptr<content::DesktopNotificationDelegate> delegate,
     base::Closure* cancel_callback) {
   // cancel_callback must be set when this method returns, but the
   // RequestPermission callback may run asynchronously so we use
@@ -125,7 +119,6 @@ void PlatformNotificationServiceImpl::DisplayNotification(
              BraveContentBrowserClient::Get(),
              notification_resources.notification_icon,
              notification_data,
-             base::Passed(&delegate),
              notification_proxy->AsWeakPtr());
 
   // TODO(bridiver) - there is a memory leak on mac because CocoaNotification
