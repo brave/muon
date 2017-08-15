@@ -18,11 +18,24 @@
 #include "gin/object_template_builder.h"
 #include "gin/wrappable.h"
 #include "url/gurl.h"
+#include "extensions/renderer/v8_helpers.h"
 #include "v8/include/v8.h"
+#include "net/base/escape.h"
+
+using extensions::v8_helpers::SetProperty;
+using extensions::v8_helpers::IsTrue;
 
 namespace brave {
 
 namespace {
+
+bool SetReadOnlyProperty(v8::Local<v8::Context> context,
+                        v8::Local<v8::Object> object,
+                        v8::Local<v8::String> key,
+                        v8::Local<v8::Value> value) {
+  return IsTrue(object->DefineOwnProperty(context, key, value,
+      static_cast<v8::PropertyAttribute>(v8::ReadOnly)));
+}
 
 class WrappableGURL : public GURL,
                       public gin::Wrappable<WrappableGURL> {
@@ -281,6 +294,62 @@ v8::Local<v8::Object> URLBindings::API(extensions::ScriptContext* context) {
         url_api, "formatForDisplay", "muon_url", "FormatForDisplay");
   context->module_system()->SetNativeLazyField(
         url_api, "parse", "muon_url", "Parse");
+
+  v8::Local<v8::Context> v8_context = context->v8_context();
+  v8::Isolate* isolate = v8_context->GetIsolate();
+
+  // Define unescape rule enum types (see src/net/base/escape.h)
+  v8::Local<v8::Object> unescape_rules = v8::Object::New(isolate);
+  SetReadOnlyProperty(v8_context, unescape_rules,
+      v8::String::NewFromUtf8(isolate, "NONE",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      gin::Converter<net::UnescapeRule::Type>::ToV8(
+          isolate, net::UnescapeRule::NONE));
+
+  SetReadOnlyProperty(v8_context, unescape_rules,
+      v8::String::NewFromUtf8(isolate, "NORMAL",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      gin::Converter<net::UnescapeRule::Type>::ToV8(
+          isolate, net::UnescapeRule::NORMAL));
+
+  SetReadOnlyProperty(v8_context, unescape_rules,
+      v8::String::NewFromUtf8(isolate, "SPACES",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      gin::Converter<net::UnescapeRule::Type>::ToV8(
+          isolate, net::UnescapeRule::SPACES));
+
+  SetReadOnlyProperty(v8_context, unescape_rules,
+      v8::String::NewFromUtf8(isolate, "PATH_SEPARATORS",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      gin::Converter<net::UnescapeRule::Type>::ToV8(
+          isolate, net::UnescapeRule::PATH_SEPARATORS));
+
+  SetReadOnlyProperty(v8_context, unescape_rules,
+      v8::String::NewFromUtf8(isolate,
+        "URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      gin::Converter<net::UnescapeRule::Type>::ToV8(
+          isolate,
+          net::UnescapeRule::URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS));
+
+  SetReadOnlyProperty(v8_context, unescape_rules,
+      v8::String::NewFromUtf8(isolate, "SPOOFING_AND_CONTROL_CHARS",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      gin::Converter<net::UnescapeRule::Type>::ToV8(
+          isolate, net::UnescapeRule::SPOOFING_AND_CONTROL_CHARS));
+
+  SetReadOnlyProperty(v8_context, unescape_rules,
+      v8::String::NewFromUtf8(isolate, "REPLACE_PLUS_WITH_SPACE",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      gin::Converter<net::UnescapeRule::Type>::ToV8(
+          isolate, net::UnescapeRule::REPLACE_PLUS_WITH_SPACE));
+
+  // Expose Unescape rules
+  SetReadOnlyProperty(v8_context, url_api,
+      v8::String::NewFromUtf8(isolate, "unescapeRules",
+          v8::NewStringType::kNormal).ToLocalChecked(),
+      unescape_rules);
+
   return url_api;
 }
 
@@ -301,17 +370,26 @@ void URLBindings::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
 void URLBindings::FormatForDisplay(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
   auto isolate = context()->isolate();
-  if (args.Length() != 1) {
+
+  if (args.Length() < 1) {
     isolate->ThrowException(v8::String::NewFromUtf8(
         isolate, "`url` is a required field"));
     return;
   }
-
   std::string url_string = *v8::String::Utf8Value(args[0]);
+
+  net::UnescapeRule::Type unescape_rules = net::UnescapeRule::NONE;
+  if (args.Length() > 1) {
+    if (!gin::Converter<net::UnescapeRule::Type>::FromV8(
+          isolate, args[1], &unescape_rules)) {
+      isolate->ThrowException(v8::String::NewFromUtf8(
+        isolate, "`unescape_rules` has an invalid value"));
+    }
+  }
 
   base::string16 formatted_url = url_formatter::FormatUrl(GURL(url_string),
       url_formatter::kFormatUrlOmitUsernamePassword,
-      net::UnescapeRule::SPACES, nullptr, nullptr, nullptr);
+      unescape_rules, nullptr, nullptr, nullptr);
 
   args.GetReturnValue().Set(gin::ConvertToV8(isolate, formatted_url));
 }
