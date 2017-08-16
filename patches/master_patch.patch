@@ -656,16 +656,16 @@ diff --git a/chrome/common/importer/profile_import.mojom b/chrome/common/importe
 index f366a941273f0807405743f1365fdaf3a549cddc..35d5a90c778adfa67597866c31a91bc79dad3ab6 100644
 --- a/chrome/common/importer/profile_import.mojom
 +++ b/chrome/common/importer/profile_import.mojom
-@@ -16,6 +16,9 @@ struct ImportedBookmarkEntry;
+@@ -15,6 +15,9 @@ struct ImportedBookmarkEntry;
+ [Native]
  struct ImporterAutofillFormDataEntry;
  
- [Native]
++[Native]
 +struct ImportedCookieEntry;
 +
-+[Native]
+ [Native]
  struct SearchEngineInfo;
  
- [Native]
 @@ -63,6 +66,8 @@ interface ProfileImportObserver {
    OnAutofillFormDataImportStart(uint32 total_autofill_form_data_entry_count);
    OnAutofillFormDataImportGroup(
@@ -1979,10 +1979,10 @@ index bf0ece1e723ba1a0644961cfd3a01ce3c14c892a..5e7d3dbb9da51a5abb0447bc04c90c9b
    }
    static void SetAsFunctionHandler(v8::Isolate* isolate,
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index d3a6b60d6e5d4d92cb94a7931db490e8957832c6..e981edb9a274e15785ff579785e1f5d0a91467b0 100644
+index c612c4a36d9718cefa1f99d77adf2f9c0710b03a..4d34b69dbb94087e27f1503bb785948c66788287 100644
 --- a/media/base/media_switches.cc
 +++ b/media/base/media_switches.cc
-@@ -290,7 +290,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
+@@ -286,7 +286,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
      return command_line.GetSwitchValueASCII(switches::kAutoplayPolicy);
  
  // The default value is platform dependent.
