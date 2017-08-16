@@ -8,6 +8,7 @@
 
 #include "atom/browser/browser.h"
 #include "atom/browser/extensions/api/atom_extensions_api_client.h"
+#include "atom/browser/extensions/atom_component_extension_resource_manager.h"
 #include "atom/browser/extensions/atom_extension_host_delegate.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
@@ -227,24 +228,6 @@ class AtomRuntimeAPIDelegate : public RuntimeAPIDelegate {
 
  private:
   DISALLOW_COPY_AND_ASSIGN(AtomRuntimeAPIDelegate);
-};
-
-class AtomComponentExtensionResourceManager
-    : public ComponentExtensionResourceManager {
- public:
-  AtomComponentExtensionResourceManager() {}
-  ~AtomComponentExtensionResourceManager() override {};
-
-  bool IsComponentExtensionResource(
-      const base::FilePath& extension_path,
-      const base::FilePath& resource_path,
-      int* resource_id) const override {
-    // TODO(bridiver) - bundle extension resources
-    return false;
-  };
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(AtomComponentExtensionResourceManager);
 };
 
 AtomExtensionsBrowserClient::AtomExtensionsBrowserClient()

@@ -12,13 +12,15 @@
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/api/event_emitter_caller.h"
-#include "brave/common/converters/callback_converter.h"
-#include "brave/common/converters/gurl_converter.h"
-#include "brave/common/converters/file_path_converter.h"
-#include "brave/common/converters/value_converter.h"
 #include "atom/common/node_includes.h"
 #include "base/files/file_path.h"
+#include "base/json/json_string_value_serializer.h"
 #include "base/strings/string_util.h"
+#include "brave/common/converters/callback_converter.h"
+#include "brave/common/converters/file_path_converter.h"
+#include "brave/common/converters/gurl_converter.h"
+#include "brave/common/converters/value_converter.h"
+#include "chrome/common/chrome_paths.h"
 #include "components/prefs/pref_service.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
@@ -28,6 +30,7 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/child/v8_value_converter.h"
 #include "content/public/common/url_constants.h"
+#include "extensions/browser/component_extension_resource_manager.h"
 #include "extensions/browser/extension_host.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
@@ -37,9 +40,14 @@
 #include "extensions/common/extension.h"
 #include "extensions/common/disable_reason.h"
 #include "extensions/common/file_util.h"
+#include "extensions/common/manifest_constants.h"
 #include "extensions/common/manifest_handlers/background_info.h"
 #include "extensions/common/one_shot_event.h"
+#include "extensions/strings/grit/extensions_strings.h"
 #include "gin/dictionary.h"
+#include "ui/base/l10n/l10n_util.h"
+#include "ui/base/resource/resource_bundle.h"
+
 
 using base::Callback;
 using content::BrowserURLHandler;
@@ -98,10 +106,26 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
     return NULL;
 
   std::vector<extensions::InstallWarning> warnings;
-  if (!extensions::file_util::ValidateExtension(extension.get(),
-                                                error,
-                                                &warnings))
-    return NULL;
+
+  int resource_id;
+  const extensions::ComponentExtensionResourceManager*
+      component_extension_resource_manager =
+          extensions::ExtensionsBrowserClient::Get()
+              ->GetComponentExtensionResourceManager();
+
+  if (!(component_extension_resource_manager &&
+      component_extension_resource_manager->IsComponentExtensionResource(
+          path,
+          base::FilePath(extensions::kManifestFilename),
+          &resource_id))) {
+    // Component extensions contained inside the resources pak fail manifest validation
+    // so we skip validation. 
+    if (!extensions::file_util::ValidateExtension(extension.get(),
+                                                  error,
+                                                  &warnings)) {
+      return NULL;
+    }
+  }
   extension->AddInstallWarnings(warnings);
 
   return extension;
@@ -155,6 +179,50 @@ Extension::~Extension() {
   }
 }
 
+std::unique_ptr<base::DictionaryValue> Extension::LoadManifest(
+    const base::FilePath& extension_root,
+    std::string* error) {
+  int resource_id;
+  const extensions::ComponentExtensionResourceManager*
+      component_extension_resource_manager =
+          extensions::ExtensionsBrowserClient::Get()
+              ->GetComponentExtensionResourceManager();
+
+  if (component_extension_resource_manager &&
+      component_extension_resource_manager->IsComponentExtensionResource(
+          extension_root,
+          base::FilePath(extensions::kManifestFilename),
+          &resource_id)) {
+    const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+    base::StringPiece manifest_contents = rb.GetRawDataResource(resource_id);
+
+    JSONStringValueDeserializer deserializer(manifest_contents);
+    std::unique_ptr<base::Value> root(deserializer.Deserialize(NULL, error));
+    if (!root.get()) {
+      if (error->empty()) {
+        // If |error| is empty, than the file could not be read.
+        // It would be cleaner to have the JSON reader give a specific error
+        // in this case, but other code tests for a file error with
+        // error->empty().  For now, be consistent.
+        *error = l10n_util::GetStringUTF8(IDS_EXTENSION_MANIFEST_UNREADABLE);
+      } else {
+        *error = base::StringPrintf(
+            "%s  %s", extensions::manifest_errors::kManifestParseError, error->c_str());
+      }
+      return NULL;
+    }
+
+    if (!root->IsType(base::Value::Type::DICTIONARY)) {
+      *error = l10n_util::GetStringUTF8(IDS_EXTENSION_MANIFEST_INVALID);
+      return NULL;
+    }
+
+    return base::DictionaryValue::From(std::move(root));
+  } else {
+    return extensions::file_util::LoadManifest(extension_root, error);
+  }
+}
+
 void Extension::LoadOnFILEThread(const base::FilePath path,
     std::unique_ptr<base::DictionaryValue> manifest,
     extensions::Manifest::Location manifest_location,
@@ -163,7 +231,7 @@ void Extension::LoadOnFILEThread(const base::FilePath path,
 
   std::string error;
   if (manifest->empty()) {
-    manifest = extensions::file_util::LoadManifest(path, &error);
+    manifest = LoadManifest(path, &error);
   }
 
   if (!manifest || !error.empty()) {

@@ -82,6 +82,8 @@ class Extension : public gin::Wrappable<Extension>,
   v8::Isolate* isolate_;  // not owned
   BraveBrowserContext* browser_context_;
 
+  std::unique_ptr<base::DictionaryValue> LoadManifest(const base::FilePath& extension_root, std::string* error);
+
   DISALLOW_COPY_AND_ASSIGN(Extension);
 };
 

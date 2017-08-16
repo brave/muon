@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "atom/browser/extensions/atom_component_extension_resource_manager.h"
 #include "base/compiler_specific.h"
 #include "base/lazy_instance.h"
 #include "base/macros.h"
@@ -29,7 +30,6 @@ class BrowserContext;
 namespace extensions {
 
 class AtomProcessManagerDelegate;
-class AtomComponentExtensionResourceManager;
 class ExtensionsAPIClient;
 
 // Implementation of BrowserClient for Chrome, which includes
