@@ -1,6 +1,6 @@
 {
   "name": "electron",
-  "version": "4.6.0+60.0.3112.78",
+  "version": "4.6.1+60.0.3112.101",
   "devDependencies": {
     "asar": "^0.11.0",
     "electabul": "~0.0.4",
