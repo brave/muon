@@ -655,16 +655,16 @@ diff --git a/chrome/common/importer/profile_import.mojom b/chrome/common/importe
 index f366a941273f0807405743f1365fdaf3a549cddc..35d5a90c778adfa67597866c31a91bc79dad3ab6 100644
 --- a/chrome/common/importer/profile_import.mojom
 +++ b/chrome/common/importer/profile_import.mojom
-@@ -15,6 +15,9 @@ struct ImportedBookmarkEntry;
- [Native]
+@@ -16,6 +16,9 @@ struct ImportedBookmarkEntry;
  struct ImporterAutofillFormDataEntry;
  
-+[Native]
+ [Native]
 +struct ImportedCookieEntry;
 +
- [Native]
++[Native]
  struct SearchEngineInfo;
  
+ [Native]
 @@ -63,6 +66,8 @@ interface ProfileImportObserver {
    OnAutofillFormDataImportStart(uint32 total_autofill_form_data_entry_count);
    OnAutofillFormDataImportGroup(
