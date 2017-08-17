@@ -120,6 +120,7 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
   std::unique_ptr<ExtensionApiFrameIdMapHelper>
   CreateExtensionApiFrameIdMapHelper(
       ExtensionApiFrameIdMap* map) override;
+  bool IsLockScreenContext(content::BrowserContext* context) override;
 
  private:
   friend struct base::LazyInstanceTraitsBase<AtomExtensionsBrowserClient>;
