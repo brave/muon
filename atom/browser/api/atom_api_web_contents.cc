@@ -2473,8 +2473,9 @@ void WebContents::OnRendererMessageSync(const base::string16& channel,
   EmitWithSender(base::UTF16ToUTF8(channel), web_contents(), message, args);
 }
 
-void WebContents::OnRendererMessageShared(const base::string16& channel,
-                                         const base::SharedMemoryHandle& handle) {
+void
+WebContents::OnRendererMessageShared(const base::string16& channel,
+                                     const base::SharedMemoryHandle& handle) {
   std::vector<v8::Local<v8::Value>> args = {
     mate::StringToV8(isolate(), channel),
     brave::SharedMemoryWrapper::CreateFrom(isolate(), handle).ToV8(),
