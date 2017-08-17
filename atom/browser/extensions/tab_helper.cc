@@ -435,7 +435,8 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 bool TabHelper::Discard() {
   if (guest()->attached()) {
     int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-    return !!GetTabManager()->DiscardTabById(web_contents_id);
+    return !!GetTabManager()->DiscardTabById(web_contents_id,
+                                             TabManager::kProactiveShutdown);
   } else {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
