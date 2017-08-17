@@ -504,4 +504,14 @@ void AtomExtensionsBrowserClient::AttachExtensionTaskManagerTag(
     ViewType view_type) {
 }
 
+bool AtomExtensionsBrowserClient::IsLockScreenContext(
+    content::BrowserContext* context) {
+#if defined(OS_CHROMEOS)
+  return chomeos::ProfileHelper::IsLockScreenAppProfile(
+      Profile::FromBrowserContext(context));
+#else
+  return false;
+#endif
+}
+
 }  // namespace extensions
