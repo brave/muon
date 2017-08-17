@@ -174,7 +174,7 @@ int AtomExtensionsNetworkDelegate::OnHeadersReceived(
       base::Bind(&AtomExtensionsNetworkDelegate::OnHeadersReceivedInternal,
           base::Unretained(this),
           request,
-          original_response_headers,
+          base::RetainedRef(original_response_headers),
           override_response_headers,
           allowed_unsafe_redirect_url);
 

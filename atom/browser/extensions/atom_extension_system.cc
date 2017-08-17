@@ -561,7 +561,7 @@ void AtomExtensionSystem::RegisterExtensionWithRequestContexts(
   BrowserThread::PostTaskAndReply(
       BrowserThread::IO, FROM_HERE,
       base::Bind(&InfoMap::AddExtension, info_map(),
-                 extension, install_time, incognito_enabled,
+                 base::RetainedRef(extension), install_time, incognito_enabled,
                  notifications_disabled),
       callback);
 }
