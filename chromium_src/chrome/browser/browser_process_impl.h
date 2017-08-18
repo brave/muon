@@ -141,6 +141,7 @@ class BrowserProcessImpl : public BrowserProcess {
 #if (defined(OS_WIN) || defined(OS_LINUX)) && !defined(OS_CHROMEOS)
   void StartAutoupdateTimer() override;
 #endif
+  prefs::InProcessPrefServiceFactory* pref_service_factory() const override;
 
  private:
   base::ThreadChecker thread_checker_;
