@@ -371,6 +371,11 @@ DownloadStatusUpdater* BrowserProcessImpl::download_status_updater() {
   return nullptr;
 }
 
+prefs::InProcessPrefServiceFactory* BrowserProcessImpl::pref_service_factory() const {
+  NOTIMPLEMENTED();
+  return nullptr;
+}
+
 DownloadRequestLimiter* BrowserProcessImpl::download_request_limiter() {
   NOTIMPLEMENTED();
   return nullptr;
