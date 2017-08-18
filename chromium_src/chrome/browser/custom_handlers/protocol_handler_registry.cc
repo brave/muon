@@ -177,7 +177,7 @@ ProtocolHandlerRegistry::JobInterceptorFactory::JobInterceptorFactory(
     IOThreadDelegate* io_thread_delegate)
     : io_thread_delegate_(io_thread_delegate) {
   DCHECK(io_thread_delegate_.get());
-  DetachFromThread();
+  DETACH_FROM_THREAD(thread_checker_);
 }
 
 ProtocolHandlerRegistry::JobInterceptorFactory::~JobInterceptorFactory() {
