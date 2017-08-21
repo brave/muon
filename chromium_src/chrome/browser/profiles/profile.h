@@ -65,6 +65,38 @@ class Profile : public atom::AtomBrowserContext {
     MAX_CREATE_STATUS  // For histogram display.
   };
 
+  enum CreateMode {
+    CREATE_MODE_SYNCHRONOUS,
+    CREATE_MODE_ASYNCHRONOUS
+  };
+
+  enum ExitType {
+    // A normal shutdown. The user clicked exit/closed last window of the
+    // profile.
+    EXIT_NORMAL,
+
+    // The exit was the result of the system shutting down.
+    EXIT_SESSION_ENDED,
+
+    EXIT_CRASHED,
+  };
+
+  enum ProfileType {
+    REGULAR_PROFILE,  // Login user's normal profile
+    INCOGNITO_PROFILE,  // Login user's off-the-record profile
+    GUEST_PROFILE,  // Guest session's profile
+  };
+
+  class Delegate {
+   public:
+    virtual ~Delegate();
+
+    // Called when creation of the profile is finished.
+    virtual void OnProfileCreated(Profile* profile,
+                                  bool success,
+                                  bool is_new_profile) = 0;
+  };
+
   Profile(const std::string& partition, bool in_memory,
                      const base::DictionaryValue& options);
   ~Profile() override;
@@ -133,6 +165,13 @@ class Profile : public atom::AtomBrowserContext {
   GetDevToolsNetworkControllerHandle() = 0;
 
   virtual bool IsGuestSession() const;
+
+  bool IsNewProfile();
+  virtual void SetExitType(ExitType exit_type) = 0;
+
+  // Returns sequenced task runner where browser context dependent I/O
+  // operations should be performed.
+  virtual scoped_refptr<base::SequencedTaskRunner> GetIOTaskRunner() = 0;
 
  private:
   // bool restored_last_session_;

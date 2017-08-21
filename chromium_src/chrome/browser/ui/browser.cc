@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "atom/browser/native_window.h"
+#include "base/command_line.h"
 #include "brave/browser/ui/brave_tab_strip_model_delegate.h"
 #include "build/build_config.h"
 #include "chrome/browser/chrome_notification_types.h"
@@ -20,7 +21,18 @@
 #include "chrome/browser/lifetime/scoped_keep_alive.h"
 #include "chrome/browser/ui/browser_list.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/common/chrome_switches.h"
 #include "content/public/browser/notification_service.h"
+
+namespace {
+
+// Is the fast tab unload experiment enabled?
+bool IsFastTabUnloadEnabled() {
+  return base::CommandLine::ForCurrentProcess()->HasSwitch(
+      switches::kEnableFastUnload);
+}
+
+}  // namespace
 
 Browser::CreateParams::CreateParams(Profile* profile)
     : type(TYPE_TABBED),
@@ -96,6 +108,10 @@ bool Browser::CanSupportWindowFeature(WindowFeature feature) const {
 bool Browser::TryToCloseWindow(bool skip_beforeunload,
     const base::Callback<void(bool)>& on_close_confirmed) {
   on_close_confirmed.Run(true);
+  return false;
+}
+
+bool Browser::TabsNeedBeforeUnloadFired() {
   return false;
 }
 

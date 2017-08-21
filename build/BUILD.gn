@@ -27,20 +27,32 @@ declare_args() {
   electron_google_api_endpoint = ""
 }
 
+# be warned changing these will cause a full rebuild!!
+muon_include_dirs_ = [
+  "//electron/chromium_src",
+  "//electron",
+  "$root_gen_dir/electron",
+  "//electron/vendor/brightray",
+  "//electron/vendor",
+]
+
+config("muon_include_dirs") {
+  include_dirs = muon_include_dirs_
+}
+
+
 config("electron_config") {
-  include_dirs = [
-    "//electron",
+  include_dirs = muon_include_dirs_ + [
     "//skia/config",
     "//third_party/skia/include/core",
-    "$root_gen_dir/electron",
-    "//electron/vendor/brightray",
+    "$root_gen_dir/chrome",
+    "$root_gen_dir/components/strings",
     "//electron/vendor/native_mate",
     "//electron/vendor/node/src",
     "//electron/vendor/node/deps/http_parser",
     "//electron/vendor/node/deps/uv/include",
     # The `node.h` is using `#include"ares.h"`.
     "//electron/vendor/node/deps/cares/include",
-    "//electron/vendor",
   ]
 
   defines = [
