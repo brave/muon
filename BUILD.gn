@@ -197,15 +197,6 @@ group("child_dependencies") {
 source_set("common") {
   public_deps = [ "atom/common" ]
 
-  public_configs = [
-    "build:electron_config",
-  ]
-
-  include_dirs = [
-    # force this to appear before the chromium root src dir
-    "chromium_src",
-  ]
-
   sources = [
     "brave/common/brave_paths.cc",
     "brave/common/brave_paths.h",
@@ -283,11 +274,6 @@ source_set("utility") {
 source_set("renderer") {
   public_configs = [
     "build:electron_config",
-  ]
-
-  include_dirs = [
-    # force this to appear before the chromium root src dir
-    "chromium_src",
   ]
 
   sources = [

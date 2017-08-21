@@ -26,24 +26,49 @@ index 1ef8d6b1278380783c54e73ff5a41b29b9ef4254..4df581faed33efbdabe72089d4984e5b
    // END ALLOWED USAGE.
    // BEGIN USAGE THAT NEEDS TO BE FIXED.
    friend class ::chromeos::BlockingMethodCaller;  // http://crbug.com/125360
-diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..3f14c8d49fc7c6b3e0ab0950a80ab09c1e3c004f 100644
---- a/build/config/chrome_build.gni
-+++ b/build/config/chrome_build.gni
-@@ -11,8 +11,11 @@ declare_args() {
-   # Break chrome.dll into multple pieces based on process type. Only available
-   # on Windows.
-   is_multi_dll_chrome = is_win && !is_component_build
--}
+diff --git a/build/config/BUILDCONFIG.gn b/build/config/BUILDCONFIG.gn
+index fa4ec72c87c2ffe25353ab9e750cc2fd63c934e4..fa31891e545d9c8578ed2f052223789139b64e55 100644
+--- a/build/config/BUILDCONFIG.gn
++++ b/build/config/BUILDCONFIG.gn
+@@ -150,6 +150,8 @@ declare_args() {
+   host_toolchain = ""
  
+   # DON'T ADD MORE FLAGS HERE. Read the comment above.
 +  # Build chromium without muon flags
 +  muon_chromium_build = false
+ }
+ 
+ declare_args() {
+@@ -521,6 +523,15 @@ default_compiler_configs = [
+   "//build/config/compiler:runtime_library",
+   "//build/config/sanitizers:default_sanitizer_flags",
+ ]
++
++if (!muon_chromium_build) {
++  default_compiler_configs -= [ "//build/config/compiler:default_include_dirs" ]
++  default_compiler_configs += [
++    "//electron/build:muon_include_dirs",
++    "//build/config/compiler:default_include_dirs"
++  ]
 +}
++
+ if (is_win) {
+   default_compiler_configs += [
+     "//build/config/win:default_crt",
+diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..b4bff28a0cca5273121f8393ed206c7745dd7cb6 100644
+--- a/build/config/chrome_build.gni
++++ b/build/config/chrome_build.gni
+@@ -12,7 +12,7 @@ declare_args() {
+   # on Windows.
+   is_multi_dll_chrome = is_win && !is_component_build
+ }
+-
 +declare_args() {
  # Refers to the subdirectory for branding in various places including
  # chrome/app/theme.
  if (is_chrome_branded) {
-@@ -20,3 +23,4 @@ if (is_chrome_branded) {
+@@ -20,3 +20,4 @@ if (is_chrome_branded) {
  } else {
    branding_path_component = "chromium"
  }
@@ -829,10 +854,6 @@ index 56914c54d8f10b745de30cbde3cdd34ce67d8862..7a4aec4091066b3a9f952fe9a4509248
    }
 +
 +  if (!muon_chromium_build) {
-+    include_dirs = [
-+      "//electron/chromium_src"
-+    ]
-+
 +    sources -= [
 +      "content_settings_observer.cc",
 +      "content_settings_observer.h",
