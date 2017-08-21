@@ -77,3 +77,7 @@ double Profile::GetDefaultZoomLevelForProfile() {
       ->GetHostZoomMap()
       ->GetDefaultZoomLevel();
 }
+
+bool Profile::IsGuestSession() const {
+  return is_guest_profile_;
+}
