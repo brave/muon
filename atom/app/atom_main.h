@@ -5,6 +5,19 @@
 #ifndef ATOM_APP_ATOM_MAIN_H_
 #define ATOM_APP_ATOM_MAIN_H_
 
+#include "build/build_config.h"
+
+#if defined(OS_WIN)
+#include <crtdbg.h>
+struct AssertionDialogAvoider {
+  AssertionDialogAvoider() {
+    _CrtSetReportMode(_CRT_ASSERT, 0);
+  }
+};
+
+const AssertionDialogAvoider AssertionDialogAvoider{};
+#endif
+
 #if defined(OS_MACOSX)
 extern "C" {
 __attribute__((visibility("default")))
