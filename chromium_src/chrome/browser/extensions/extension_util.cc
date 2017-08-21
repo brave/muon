@@ -163,12 +163,6 @@ bool IsExtensionIdle(const std::string& extension_id,
   return true;
 }
 
-GURL GetSiteForExtensionId(const std::string& extension_id,
-                           content::BrowserContext* context) {
-  return content::SiteInstance::GetSiteForURL(
-      context, Extension::GetBaseURLFromExtensionId(extension_id));
-}
-
 std::unique_ptr<base::DictionaryValue> GetExtensionInfo(
     const Extension* extension) {
   DCHECK(extension);
