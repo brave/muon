@@ -8,11 +8,6 @@ source_set("browser") {
     "//electron/build:electron_config",
   ]
 
-  include_dirs = [
-    # make sure chromium_src comes before the chrome src root
-    "//electron/chromium_src",
-  ]
-
   public_deps = [
     "//content/public/browser",
     "//content/public/common",
@@ -335,11 +330,6 @@ source_set("browser") {
 source_set("importer") {
   public_configs = [
     "//electron/build:electron_config"
-  ]
-
-  include_dirs = [
-    # make sure chromium_src comes before the chrome src root
-    "//electron/chromium_src",
   ]
 
   sources = [

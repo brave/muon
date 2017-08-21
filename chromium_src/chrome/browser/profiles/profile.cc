@@ -38,6 +38,9 @@ Profile::Profile(const std::string& partition, bool in_memory,
 Profile::~Profile() {
 }
 
+Profile::Delegate::~Delegate() {
+}
+
 // static
 Profile* Profile::FromBrowserContext(content::BrowserContext* browser_context) {
   // This is safe; this is the only implementation of the browser context.
@@ -81,3 +84,13 @@ double Profile::GetDefaultZoomLevelForProfile() {
 bool Profile::IsGuestSession() const {
   return false;
 }
+
+bool Profile::IsNewProfile() {
+  // The profile has been shut down if the prefs were loaded from disk, unless
+  // first-run autoimport wrote them and reloaded the pref service.
+  // TODO(crbug.com/660346): revisit this when crbug.com/22142 (unifying the
+  // profile import code) is fixed.
+  return GetOriginalProfile()->GetPrefs()->GetInitializationStatus() ==
+      PrefService::INITIALIZATION_STATUS_CREATED_NEW_PREF_STORE;
+}
+
