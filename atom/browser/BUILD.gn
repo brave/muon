@@ -289,15 +289,6 @@ source_set("browser") {
       "ui/drag_util_views.cc",
     ]
   }
-  if (enable_webrtc) {
-    sources += [
-      "api/atom_api_desktop_capturer.cc",
-      "api/atom_api_desktop_capturer.h",
-    ]
-    deps += [
-      "//third_party/webrtc/modules/desktop_capture",
-    ]
-  }
 
   if (enable_extensions) {
     sources += [
