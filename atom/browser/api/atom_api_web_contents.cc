@@ -59,6 +59,7 @@
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
+#include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
@@ -487,6 +488,10 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
     }
+
+    if (ResourceCoordinatorWebContentsObserver::IsEnabled())
+      ResourceCoordinatorWebContentsObserver::CreateForWebContents(
+          web_contents);
   }
 
   Init(isolate);
