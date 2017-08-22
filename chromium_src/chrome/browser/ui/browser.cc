@@ -21,23 +21,44 @@
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "content/public/browser/notification_service.h"
 
-Browser::CreateParams::CreateParams(Profile* profile)
+Browser::CreateParams::CreateParams(Profile* profile, bool user_gesture)
     : type(TYPE_TABBED),
       profile(profile),
       trusted_source(false),
       initial_show_state(ui::SHOW_STATE_DEFAULT),
       is_session_restore(false),
+      user_gesture(user_gesture),
       window(NULL) {}
 
-Browser::CreateParams::CreateParams(Type type, Profile* profile)
+Browser::CreateParams::CreateParams(Type type,
+                                    Profile* profile,
+				    bool user_gesture)
     : type(type),
       profile(profile),
       trusted_source(false),
       initial_show_state(ui::SHOW_STATE_DEFAULT),
       is_session_restore(false),
+      user_gesture(user_gesture),
       window(NULL) {}
 
 Browser::CreateParams::CreateParams(const CreateParams& other) = default;
+
+// static
+Browser::CreateParams Browser::CreateParams::CreateForApp(
+    const std::string& app_name,
+    bool trusted_source,
+    const gfx::Rect& window_bounds,
+    Profile* profile,
+    bool user_gesture) {
+  DCHECK(!app_name.empty());
+
+  CreateParams params(TYPE_POPUP, profile, user_gesture);
+  params.app_name = app_name;
+  params.trusted_source = trusted_source;
+  params.initial_bounds = window_bounds;
+
+  return params;
+}
 
 Browser::Browser(const CreateParams& params)
     : type_(params.type),

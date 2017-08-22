@@ -49,6 +49,21 @@ class PrefChangeRegistrar;
 // http://dev.chromium.org/developers/design-documents/profile-architecture
 class Profile : public atom::AtomBrowserContext {
  public:
+  enum CreateStatus {
+    // Profile services were not created due to a local error (e.g., disk full).
+    CREATE_STATUS_LOCAL_FAIL,
+    // Profile services were not created due to a remote error (e.g., network
+    // down during limited-user registration).
+    CREATE_STATUS_REMOTE_FAIL,
+    // Profile created but before initializing extensions and promo resources.
+    CREATE_STATUS_CREATED,
+    // Profile is created, extensions and promo resources are initialized.
+    CREATE_STATUS_INITIALIZED,
+    // Profile creation (supervised-user registration, generally) was canceled
+    // by the user.
+    CREATE_STATUS_CANCELED,
+    MAX_CREATE_STATUS  // For histogram display.
+  };
 
   Profile(const std::string& partition, bool in_memory,
                      const base::DictionaryValue& options);
@@ -119,8 +134,13 @@ class Profile : public atom::AtomBrowserContext {
 
   virtual bool IsGuestSession() const;
 
+  // Did the user restore the last session? This is set by SessionRestore.
+  void set_restored_last_session(bool restored_last_session) {
+    restored_last_session_ = restored_last_session;
+  }
+
  private:
-  // bool restored_last_session_;
+  bool restored_last_session_;
 
   // Used to prevent the notification that this Profile is destroyed from
   // being sent twice.
