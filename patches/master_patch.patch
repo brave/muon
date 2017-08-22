@@ -177,6 +177,34 @@ index 247d24220beb7d176b890d7c2d45bdd2dfd8db99..c270bba0fabb557e8d3d1df8ac166bbb
  
    ProfileWriter* const writer_;  // weak
    const base::WeakPtr<ExternalProcessImporterHost> host_;
+diff --git a/chrome/browser/password_manager/password_store_factory.cc b/chrome/browser/password_manager/password_store_factory.cc
+index c812fec4514e6cbefc38543ea18aea1531a735a4..318444bd521ab6ecd3022668a994d315b702cc03 100644
+--- a/chrome/browser/password_manager/password_store_factory.cc
++++ b/chrome/browser/password_manager/password_store_factory.cc
+@@ -116,8 +116,10 @@ PasswordStoreFactory::PasswordStoreFactory()
+ #if defined(SYNC_PASSWORD_REUSE_DETECTION_ENABLED)
+   // TODO(crbug.com/715987). Remove when PasswordReuseDetector is decoupled
+   // from PasswordStore.
++#if defined(MUON_CHROMIUM_BUILD)
+   DependsOn(SigninManagerFactory::GetInstance());
+ #endif
++#endif
+ }
+ 
+ PasswordStoreFactory::~PasswordStoreFactory() {}
+@@ -281,8 +283,12 @@ PasswordStoreFactory::BuildServiceInstanceFor(
+ #if defined(OS_WIN) || defined(OS_MACOSX) || \
+     (defined(OS_LINUX) && !defined(OS_CHROMEOS))
+   std::unique_ptr<password_manager::PasswordStoreSigninNotifier> notifier =
++#if defined(MUON_CHROMIUM_BUILD)
+       base::MakeUnique<password_manager::PasswordStoreSigninNotifierImpl>(
+           profile);
++#else
++      nullptr;
++#endif
+   ps->SetPasswordStoreSigninNotifier(std::move(notifier));
+ #endif
+ 
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index 9d81a019eacdbe354c8337d74e0cfb53e833ba7d..86fff6beac3022f83a0b3a88a41f0083a8273027 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
