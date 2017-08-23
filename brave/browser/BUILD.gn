@@ -149,6 +149,7 @@ source_set("apis") {
     "api/navigation_controller.h",
     "api/navigation_handle.cc",
     "api/navigation_handle.h",
+    "ui/brave_tab_strip_model_delegate.cc",
   ]
 
   deps = [
