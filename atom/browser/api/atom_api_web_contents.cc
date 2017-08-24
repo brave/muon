@@ -646,6 +646,28 @@ void WebContents::AddNewContents(content::WebContents* source,
     user_gesture = true;
   }
 
+  if (disposition != WindowOpenDisposition::NEW_WINDOW &&
+      disposition != WindowOpenDisposition::NEW_POPUP) {
+    auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
+    if (tab_helper->get_index() == TabStripModel::kNoTab) {
+      ::Browser* browser = nullptr;
+      if (tab_helper->window_id() != -1) {
+        browser = tab_helper->browser();
+      } else {
+        browser = owner_window()->browser();
+      }
+      if (browser) {
+        int index =
+          browser->tab_strip_model()->order_controller()->
+            DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                    tab_helper->is_active() ?
+                                      TabStripModel::ADD_ACTIVE :
+                                      TabStripModel::ADD_NONE);
+        tab_helper->SetTabIndex(index);
+      }
+    }
+  }
+
   node::Environment* env = node::Environment::GetCurrent(isolate());
   if (!env) {
     return;
@@ -2574,6 +2596,9 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
     tab_helper->SetAutoDiscardable(autoDiscardable);
   }
 
+  int opener_tab_id = TabStripModel::kNoTab;
+    options.Get("openerTabId", &opener_tab_id);
+
   bool discarded = false;
   if (options.Get("discarded", &discarded) && discarded && !active) {
     std::string url;
@@ -2615,28 +2640,19 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
       // TODO(bridiver) - combine these two methods
       tab_helper->SetWindowId(window_id);
       tab_helper->SetBrowser(api_window->window()->browser());
-      tab_strip = api_window->window()->browser()->tab_strip_model();
     }
   }
-
-  int opener_tab_id = TabStripModel::kNoTab;
-  options.Get("openerTabId", &opener_tab_id);
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != TabStripModel::kNoTab) {
     source = extensions::TabHelper::GetTabById(opener_tab_id);
     tab_helper->SetOpener(opener_tab_id);
-    if (!tab_strip) {
-      tab_strip = owner_window()->browser()->tab_strip_model();
-    }
-    int index = tab_strip->order_controller()->
-      DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-        active ? TabStripModel::ADD_ACTIVE : TabStripModel::ADD_NONE);
-    tab_helper->SetTabIndex(index);
   }
 
   if (!source)
     source = web_contents();
+
+  tab_helper->SetTabIndex(index);
 
   bool was_blocked = false;
   AddNewContents(source,
