@@ -156,6 +156,20 @@ base::FilePath InitializeUserDataDir() {
     command_line->AppendSwitchPath(switches::kUserDataDir, user_data_dir);
   }
 
+#if defined(OS_WIN)
+  if (user_data_dir.empty()) {
+    HMODULE hModule = GetModuleHandleW(NULL);
+    WCHAR path[MAX_PATH];
+    GetModuleFileNameW(hModule, path, MAX_PATH);
+    base::FilePath file_path(path);
+    base::FilePath::StringPieceType user_data_dir_string =
+      file_path.BaseName().RemoveExtension().value();
+    base::FilePath app_data_dir;
+    brave::GetDefaultAppDataDirectory(&app_data_dir);
+    user_data_dir = app_data_dir.Append(user_data_dir_string);
+  }
+#endif
+
   // next check the user-data-dir switch
   if (user_data_dir.empty() ||
       command_line->HasSwitch(switches::kUserDataDir)) {
