@@ -649,8 +649,10 @@ void WebContents::AddNewContents(content::WebContents* source,
   if (disposition != WindowOpenDisposition::NEW_WINDOW &&
       disposition != WindowOpenDisposition::NEW_POPUP) {
     auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
-    if (tab_helper->get_index() == TabStripModel::kNoTab) {
+    if (tab_helper &&
+        tab_helper->get_index() == TabStripModel::kNoTab) {
       ::Browser* browser = nullptr;
+      bool active = disposition == WindowOpenDisposition::NEW_FOREGROUND_TAB;
       if (tab_helper->window_id() != -1) {
         browser = tab_helper->browser();
       } else {
@@ -660,10 +662,11 @@ void WebContents::AddNewContents(content::WebContents* source,
         int index =
           browser->tab_strip_model()->order_controller()->
             DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                    tab_helper->is_active() ?
-                                      TabStripModel::ADD_ACTIVE :
-                                      TabStripModel::ADD_NONE);
+                                    active ?
+                                    TabStripModel::ADD_ACTIVE :
+                                    TabStripModel::ADD_NONE);
         tab_helper->SetTabIndex(index);
+        tab_helper->SetActive(active);
       }
     }
   }
@@ -2631,28 +2634,30 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
     tab_helper->Discard();
   }
 
-  TabStripModel *tab_strip = nullptr;
   int window_id = -1;
+  ::Browser *browser = nullptr;
   if (options.Get("windowId", &window_id) && window_id != -1) {
     auto api_window =
         mate::TrackableObject<Window>::FromWeakMapID(isolate(), window_id);
     if (api_window) {
-      // TODO(bridiver) - combine these two methods
+      browser = api_window->window()->browser();
       tab_helper->SetWindowId(window_id);
-      tab_helper->SetBrowser(api_window->window()->browser());
     }
   }
+  if (!browser) {
+    browser = owner_window()->browser();
+  }
+
+  tab_helper->SetOpener(opener_tab_id);
+  tab_helper->SetBrowser(browser);
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != TabStripModel::kNoTab) {
     source = extensions::TabHelper::GetTabById(opener_tab_id);
-    tab_helper->SetOpener(opener_tab_id);
   }
 
   if (!source)
     source = web_contents();
-
-  tab_helper->SetTabIndex(index);
 
   bool was_blocked = false;
   AddNewContents(source,
