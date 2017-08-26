@@ -22,6 +22,7 @@
 #include "chrome/browser/ui/browser_list.h"
 #include "chrome/browser/ui/tab_contents/tab_contents_iterator.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_order_controller.h"
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
@@ -414,15 +415,28 @@ void TabHelper::SetBrowser(Browser* browser) {
       auto tab_strip = browser->tab_strip_model();
     }
 
-    if (index_ == TabStripModel::kNoTab ||
-        index_ > browser_->tab_strip_model()->count()) {
+    // When there is an opener tab and the index is not currently valid,
+    // we don't want to overwrite the index with the last tab index because
+    // the index will be determined by the opener tab.
+    bool is_invalid_tab_index = index_ == TabStripModel::kNoTab ||
+      index_ > browser_->tab_strip_model()->count();
+    if (opener_tab_id_ == TabStripModel::kNoTab &&
+        is_invalid_tab_index) {
       index_ = browser_->tab_strip_model()->count();
+    } else if (is_invalid_tab_index) {
+      index_ =
+        browser_->tab_strip_model()->order_controller()->
+        DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                active_ ?
+                                TabStripModel::ADD_ACTIVE :
+                                TabStripModel::ADD_NONE);
     }
 
     int add_types = TabStripModel::ADD_NONE;
     add_types |= active_ ? TabStripModel::ADD_ACTIVE : 0;
     add_types |= opener_tab_id_ != TabStripModel::kNoTab ?
       TabStripModel::ADD_INHERIT_OPENER : 0;
+
     browser_->tab_strip_model()->InsertWebContentsAt(
         index_, web_contents(), add_types);
   } else {
