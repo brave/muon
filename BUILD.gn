@@ -198,8 +198,6 @@ source_set("common") {
   public_deps = [ "atom/common" ]
 
   sources = [
-    "brave/common/brave_paths.cc",
-    "brave/common/brave_paths.h",
     "brave/common/extensions/asar_source_map.cc",
     "brave/common/extensions/asar_source_map.h",
     "brave/common/extensions/file_bindings.cc",

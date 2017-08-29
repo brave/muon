@@ -1,44 +1,24 @@
-// Copyright (c) 2013 GitHub, Inc.
-// Use of this source code is governed by the MIT license that can be
+// Copyright 2017 The Brave Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <map>
-#include <string>
-
-#include "atom/common/crash_reporter/crash_reporter.h"
 #include "base/bind.h"
+#include "muon/app/muon_crash_reporter_client.h"
+#include "native_mate/converter.h"
 #include "native_mate/dictionary.h"
 
 #include "atom/common/node_includes.h"
 
-using crash_reporter::CrashReporter;
-
-namespace mate {
-
-template<>
-struct Converter<CrashReporter::UploadReportResult> {
-  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-      const CrashReporter::UploadReportResult& reports) {
-    mate::Dictionary dict(isolate, v8::Object::New(isolate));
-    dict.Set("date", v8::Date::New(isolate, reports.first*1000.0));
-    dict.Set("id", reports.second);
-    return dict.GetHandle();
-  }
-};
-
-}  // namespace mate
-
 namespace {
-
 
 void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
                 v8::Local<v8::Context> context, void* priv) {
   mate::Dictionary dict(context->GetIsolate(), exports);
-  auto report = base::Unretained(CrashReporter::GetInstance());
-  dict.SetMethod("start",
-                 base::Bind(&CrashReporter::Start, report));
-  dict.SetMethod("_getUploadedReports",
-                 base::Bind(&CrashReporter::GetUploadedReports, report));
+  dict.SetMethod("setEnabled",
+                 base::Bind(MuonCrashReporterClient::SetCrashReportingEnabled));
+  // TODO(bridiver) - make this available in the renderer process
+  dict.SetMethod("setCrashKeyValue",
+                 base::Bind(MuonCrashReporterClient::SetCrashKeyValue));
 }
 
 }  // namespace

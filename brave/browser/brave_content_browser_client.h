@@ -60,6 +60,12 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       content::RenderFrameHost* render_frame_host,
       const std::string& interface_name,
       mojo::ScopedInterfaceEndpointHandle* handle) override;
+#if defined(OS_POSIX) && !defined(OS_MACOSX)
+  void GetAdditionalMappedFilesForChildProcess(
+      const base::CommandLine& command_line,
+      int child_process_id,
+      content::FileDescriptorInfo* mappings) override;
+#endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
   void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
   void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
                                       int child_process_id) override;

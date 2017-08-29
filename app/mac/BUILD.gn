@@ -302,7 +302,9 @@ target(_dll_target_type, "electron_dll") {
   deps = [
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
+    "//base",
     "//chrome/common:constants",
+    "//chrome/common:version_header",
     "//components/crash/content/app",
     "//components/policy:generated",
     "//content/public/app:both",

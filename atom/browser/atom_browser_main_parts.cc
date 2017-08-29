@@ -23,13 +23,22 @@
 #include "base/files/file_util.h"
 #include "base/memory/memory_pressure_monitor.h"
 #include "base/path_service.h"
+#include "base/profiler/scoped_tracker.h"
+#include "base/profiler/stack_sampling_profiler.h"
 #include "base/threading/thread_task_runner_handle.h"
-#include "brightray/browser/brightray_paths.h"
+#include "base/time/default_tick_clock.h"
+#include "base/trace_event/trace_event.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
 #include "chrome/browser/browser_process_impl.h"
+#include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
+#include "chrome/common/chrome_paths.h"
+#include "chrome/common/chrome_result_codes.h"
+#include "chrome/common/chrome_switches.h"
+#include "components/metrics/profiler/content/content_tracking_synchronizer_delegate.h"
+#include "components/metrics/profiler/tracking_synchronizer.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
@@ -38,8 +47,13 @@
 #include "content/public/common/content_switches.h"
 #include "device/geolocation/geolocation_delegate.h"
 #include "device/geolocation/geolocation_provider.h"
+#include "muon/app/muon_crash_reporter_client.h"
 #include "v8/include/v8.h"
 #include "v8/include/v8-debug.h"
+
+#if defined(OS_MACOSX)
+#include <Security/Security.h>
+#endif  // defined(OS_MACOSX)
 
 #if defined(OS_LINUX)
 #include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
@@ -53,9 +67,50 @@
 #if defined(USE_X11)
 #include "chrome/browser/ui/libgtkui/gtk_util.h"
 #include "ui/events/devices/x11/touch_factory_x11.h"
+#include "ui/views/linux_ui/linux_ui.h"
+#endif
+
+#if defined(USE_AURA)
+#include "chrome/browser/lifetime/application_lifetime.h"
+#include "content/public/common/service_manager_connection.h"
+#include "services/service_manager/runner/common/client_util.h"
+#include "ui/display/display.h"
+#include "ui/display/screen.h"
+#include "ui/views/widget/desktop_aura/desktop_screen.h"
+#endif
+
+#if defined(OS_WIN)
+#include "base/win/pe_image.h"
+#include "base/win/registry.h"
+#include "base/win/win_util.h"
+#include "base/win/windows_version.h"
+#include "base/win/wrapped_window_proc.h"
 #endif
 
 namespace atom {
+
+namespace {
+
+#if defined(OS_MACOSX)
+OSStatus KeychainCallback(SecKeychainEvent keychain_event,
+                          SecKeychainCallbackInfo* info, void* context) {
+  return noErr;
+}
+#endif  // defined(OS_MACOSX)
+
+#if defined(OS_WIN)
+void InitializeWindowProcExceptions() {
+  // Get the breakpad pointer
+  base::win::WinProcExceptionFilter exception_filter =
+      reinterpret_cast<base::win::WinProcExceptionFilter>(::GetProcAddress(
+          ::GetModuleHandle(chrome::kChromeElfDllName), "CrashForException"));
+  CHECK(exception_filter);
+  exception_filter = base::win::SetWinProcExceptionFilter(exception_filter);
+  DCHECK(!exception_filter);
+}
+#endif  // defined (OS_WIN)
+
+}  // namespace
 
 // A provider of Geolocation services to override AccessTokenStore.
 class AtomGeolocationDelegate : public device::GeolocationDelegate {
@@ -78,8 +133,11 @@ void Erase(T* container, typename T::iterator iter) {
 // static
 AtomBrowserMainParts* AtomBrowserMainParts::self_ = nullptr;
 
-AtomBrowserMainParts::AtomBrowserMainParts()
+AtomBrowserMainParts::AtomBrowserMainParts(
+    const content::MainFunctionParams& parameters)
     : exit_code_(nullptr),
+      parameters_(parameters),
+      parsed_command_line_(parameters.command_line),
       browser_(new Browser),
       node_bindings_(NodeBindings::Create()),
       atom_bindings_(new AtomBindings),
@@ -131,24 +189,72 @@ void AtomBrowserMainParts::PreEarlyInitialization() {
 }
 
 int AtomBrowserMainParts::PreCreateThreads() {
+  TRACE_EVENT0("startup", "AtomBrowserMainParts::PreCreateThreads")
+
+  base::FilePath user_data_dir;
+  if (!PathService::Get(chrome::DIR_USER_DATA, &user_data_dir))
+    return chrome::RESULT_CODE_MISSING_DATA;
+
+  // Force MediaCaptureDevicesDispatcher to be created on UI thread.
+  brightray::MediaCaptureDevicesDispatcher::GetInstance();
   scoped_refptr<base::SequencedTaskRunner> local_state_task_runner =
       JsonPrefStore::GetTaskRunnerForFile(
           base::FilePath(chrome::kLocalStorePoolName),
           content::BrowserThread::GetBlockingPool());
 
-  fake_browser_process_.reset(
-      new BrowserProcessImpl(local_state_task_runner.get()));
-  fake_browser_process_->PreCreateThreads();
+  {
+    TRACE_EVENT0("startup",
+      "AtomBrowserMainParts::PreCreateThreads:InitBrowswerProcessImpl");
+    fake_browser_process_.reset(
+        new BrowserProcessImpl(local_state_task_runner.get()));
+  }
 
-  local_state_ = g_browser_process->local_state();
+  if (parsed_command_line_.HasSwitch(switches::kEnableProfiling)) {
+    TRACE_EVENT0("startup",
+        "AtomBrowserMainParts::PreCreateThreads:InitProfiling");
+    // User wants to override default tracking status.
+    std::string flag =
+      parsed_command_line_.GetSwitchValueASCII(switches::kEnableProfiling);
+    // Default to basic profiling (no parent child support).
+    tracked_objects::ThreadData::Status status =
+          tracked_objects::ThreadData::PROFILING_ACTIVE;
+    if (flag.compare("0") != 0)
+      status = tracked_objects::ThreadData::DEACTIVATED;
+    tracked_objects::ThreadData::InitializeAndSetTrackingStatus(status);
+  }
 
-  // Force MediaCaptureDevicesDispatcher to be created on UI thread.
-  brightray::MediaCaptureDevicesDispatcher::GetInstance();
+  // Initialize tracking synchronizer system.
+  tracking_synchronizer_ = new metrics::TrackingSynchronizer(
+      base::MakeUnique<base::DefaultTickClock>(),
+      base::Bind(&metrics::ContentTrackingSynchronizerDelegate::Create));
+
+#if defined(OS_MACOSX)
+  // Get the Keychain API to register for distributed notifications on the main
+  // thread, which has a proper CFRunloop, instead of later on the I/O thread,
+  // which doesn't. This ensures those notifications will get delivered
+  // properly. See issue 37766.
+  // (Note that the callback mask here is empty. I don't want to register for
+  // any callbacks, I just want to initialize the mechanism.)
+  SecKeychainAddCallback(&KeychainCallback, 0, NULL);
+#endif  // defined(OS_MACOSX)
 
   device::GeolocationProvider::SetGeolocationDelegate(
       new AtomGeolocationDelegate());
 
-  return BrowserMainParts::PreCreateThreads();
+  fake_browser_process_->PreCreateThreads();
+
+  MuonCrashReporterClient::InitCrashReporting();
+
+#if defined(USE_AURA)
+  // The screen may have already been set in test initialization.
+  if (!display::Screen::GetScreen())
+    display::Screen::SetScreenInstance(views::CreateDesktopScreen());
+#if defined(USE_X11)
+  views::LinuxUI::instance()->UpdateDeviceScaleFactor();
+#endif
+#endif
+
+  return content::RESULT_CODE_NORMAL_EXIT;;
 }
 
 void AtomBrowserMainParts::PostEarlyInitialization() {
@@ -171,7 +277,25 @@ void AtomBrowserMainParts::IdleHandler() {
   base::allocator::ReleaseFreeMemory();
 }
 
+#if defined(OS_WIN)
+void AtomBrowserMainParts::PreMainMessageLoopStart() {
+  brightray::BrowserMainParts::PreMainMessageLoopStart();
+  if (!parameters_.ui_task) {
+    // Make sure that we know how to handle exceptions from the message loop.
+    InitializeWindowProcExceptions();
+  }
+}
+#endif
+
 void AtomBrowserMainParts::PreMainMessageLoopRun() {
+#if defined(USE_AURA)
+  if (content::ServiceManagerConnection::GetForProcess() &&
+      service_manager::ServiceManagerIsRemote()) {
+    content::ServiceManagerConnection::GetForProcess()->
+        SetConnectionLostClosure(base::Bind(&chrome::SessionEnding));
+  }
+#endif
+
   fake_browser_process_->PreMainMessageLoopRun();
 
   content::WebUIControllerFactory::RegisterFactory(
@@ -194,7 +318,6 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   // Wrap the uv loop with global env.
   node_bindings_->set_uv_env(env);
-
 #if defined(USE_X11)
   ui::TouchFactory::SetTouchDeviceListFromCommandLine();
 #endif
@@ -211,7 +334,7 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   // Make sure the userData directory is created.
   base::FilePath user_data;
-  if (PathService::Get(brightray::DIR_USER_DATA, &user_data))
+  if (PathService::Get(chrome::DIR_USER_DATA, &user_data))
     base::CreateDirectoryAndGetError(user_data, nullptr);
 
   // PreProfileInit
@@ -292,7 +415,21 @@ void AtomBrowserMainParts::PostMainMessageLoopRun() {
     callback.Run();
   }
 
+  restart_last_session_ = browser_shutdown::ShutdownPreThreadsStop();
+
   fake_browser_process_->StartTearDown();
+}
+
+void AtomBrowserMainParts::PostDestroyThreads() {
+  int restart_flags = restart_last_session_
+                          ? browser_shutdown::RESTART_LAST_SESSION
+                          : browser_shutdown::NO_FLAGS;
+
+  // browser_shutdown takes care of deleting browser_process, so we need to
+  // release it.
+  ignore_result(fake_browser_process_.release());
+
+  browser_shutdown::ShutdownPostThreadsStop(restart_flags);
 }
 
 }  // namespace atom
