@@ -28,6 +28,9 @@ const char kMaximizable[]    = "maximizable";
 const char kFullScreenable[] = "fullscreenable";
 const char kClosable[]       = "closable";
 const char kFullscreen[]     = "fullscreen";
+const char kAppVersion[]     = "muon-app-version";
+const char kAppChannel[]     = "muon-app-channel";
+const char kUserDataDirName[]     = "user-data-dir-name";
 
 // Whether the window should show in taskbar.
 const char kSkipTaskbar[] = "skipTaskbar";

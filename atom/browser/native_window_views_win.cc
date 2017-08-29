@@ -4,6 +4,7 @@
 
 #include "atom/browser/browser.h"
 #include "atom/browser/native_window_views.h"
+#include "chrome/browser/lifetime/application_lifetime.h"
 #include "content/public/browser/browser_accessibility_state.h"
 
 namespace atom {
@@ -91,6 +92,9 @@ bool NativeWindowViews::PreHandleMSG(
   NotifyWindowMessage(message, w_param, l_param);
 
   switch (message) {
+    case WM_ENDSESSION:
+      chrome::SessionEnding();
+      return true;
     // Screen readers send WM_GETOBJECT in order to get the accessibility
     // object, so take this opportunity to push Chromium into accessible
     // mode if it isn't already, always say we didn't handle the message

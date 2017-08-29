@@ -34,8 +34,48 @@ config("chromium_src_config") {
   }
 }
 
+source_set("app") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
 
+  sources = []
+
+  if (is_win) {
+    sources += [
+      "//chrome/app/chrome_crash_reporter_client_win.cc",
+      "//chrome/app/chrome_crash_reporter_client_win.h",
+    ]
+  } else {
+    sources += [
+      "//chrome/app/chrome_crash_reporter_client.cc",
+      "//chrome/app/chrome_crash_reporter_client.h",
+      "//chrome/app/chrome_crash_reporter_client_mac.mm",
+    ]
+  }
+
+  deps = [
+    "//base",
+    "//chrome/common",
+    "//chrome/installer",
+    "//components/metrics",
+    "//components/crash/content/app",
+    "//components/crash/content/browser",
+    "//content/public/common",
   ]
+
+  if (is_win) {
+    deps += [
+      "//chrome_elf",
+    ]
+  }
+
+  if (is_linux) {
+    deps += [
+      "//components/upload_list",
+      "//components/version_info",
+    ]
+  }
+}
 
 source_set("common") {
   configs += [ "//electron/build:electron_config" ]
@@ -97,6 +137,7 @@ source_set("browser") {
 
   deps = [
     ":bookmarks",
+    ":crashes_ui",
     ":devtools",
     ":favicon",
     ":history",
@@ -106,9 +147,11 @@ source_set("browser") {
     ":web_data",
     "chrome/browser/safe_browsing",
     "//electron/brave/browser:tab_manager",
+    "//base",
     "//chrome/common",
     "//chrome/utility",
     "//components/certificate_transparency",
+    "//components/crash/content/app",
     "//components/data_usage/core",
     "//components/prefs",
     "//components/ssl_config",
@@ -241,6 +284,18 @@ source_set("browser") {
     "//chrome/browser/cache_stats_recorder.h",
   ]
 
+  if (is_win || is_mac) {
+    sources += [
+      "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.cc",
+      "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.h",
+    ]
+  }
+
+  deps += [
+    "//components/crash/content/app",
+    "//components/crash/core/browser",
+  ]
+
   if (is_win) {
     sources += [
       "//chrome/browser/win/browser_util.h",
@@ -318,10 +373,6 @@ source_set("browser") {
       "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
       "chrome/browser/media/webrtc/media_stream_capture_indicator.cc",
       "chrome/browser/media/webrtc/media_stream_capture_indicator.h",
-      "chrome/browser/media/webrtc/desktop_media_list.h",
-      "chrome/browser/media/webrtc/desktop_media_list_observer.h",
-      "chrome/browser/media/webrtc/native_desktop_media_list.cc",
-      "chrome/browser/media/webrtc/native_desktop_media_list.h",
     ]
 
     public_deps += [
@@ -461,6 +512,24 @@ source_set("browser") {
       deps += [ "//third_party/hunspell" ]
     }
   }
+}
+
+source_set("crashes_ui") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
+
+  sources = [
+    "//chrome/browser/ui/webui/crashes_ui.cc",
+    "//chrome/browser/ui/webui/crashes_ui.h",
+    "//chrome/browser/crash_upload_list/crash_upload_list.cc",
+    "//chrome/browser/crash_upload_list/crash_upload_list.h",
+  ]
+
+  deps = [
+    ":metrics",
+    ":sessions",
+    "//third_party/protobuf:protobuf_lite",
+  ]
 }
 
 source_set("menu_bar") {
@@ -744,15 +813,27 @@ source_set("metrics") {
     "//chrome/browser/metrics/thread_watcher.h",
     "//chrome/browser/metrics/thread_watcher_report_hang.cc",
     "//chrome/browser/metrics/thread_watcher_report_hang.h",
+
+    "//chrome/installer/util/google_update_settings.h",
+    "//chrome/browser/google/google_update_settings_posix.cc",
   ]
+
+  if (is_win) {
+    sources += [
+      "chrome/installer/util/muon_distribution.cc",
+      "chrome/installer/util/muon_distribution.h",
+    ]
+  }
 
   deps = [
     "//base",
+    "//chrome/browser/metrics/variations:chrome_ui_string_overrider_factory",
     "//chrome/common",
     "//components/metrics",
     "//components/metrics_services_manager",
     "//components/version_info",
     "//content/public/browser",
+    "//third_party/crashpad/crashpad/client:client",
   ]
 }
 
@@ -810,6 +891,10 @@ source_set("lifetime") {
     "//chrome/browser/lifetime/application_lifetime.cc",
     "//chrome/browser/lifetime/application_lifetime.h",
     "//chrome/browser/lifetime/application_lifetime_mac.mm",
+
+    "//chrome/browser/notifications/notification_ui_manager.h",
+    "chrome/browser/notifications/notification_ui_manager_stub.cc",
+    "chrome/browser/notifications/notification_ui_manager_stub.h"
   ]
 
   if (use_aura) {
@@ -926,6 +1011,7 @@ source_set("sessions") {
   ]
 
   deps = [
+    "//chrome/app:generated_resources",
     "//third_party/icu",
     "//third_party/protobuf:protobuf_lite",
   ]

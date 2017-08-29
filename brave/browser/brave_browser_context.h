@@ -76,7 +76,8 @@ class BraveBrowserContext : public Profile {
   // atom::AtomBrowserContext
   atom::AtomNetworkDelegate* network_delegate() override;
 
-  // Profile
+  // Profile implementation:
+  scoped_refptr<base::SequencedTaskRunner> GetIOTaskRunner() override;
   net::URLRequestContextGetter* GetRequestContext() override;
 
   BraveBrowserContext* original_context();
@@ -124,6 +125,7 @@ class BraveBrowserContext : public Profile {
   GetDevToolsNetworkControllerHandle() override {
     return network_controller_handle();
   }
+  void SetExitType(ExitType exit_type) override;
 
  private:
   void OnPrefsLoaded(bool success);
@@ -156,6 +158,8 @@ class BraveBrowserContext : public Profile {
   scoped_refptr<WebDatabaseService> web_database_;
   std::unique_ptr<ProtocolHandlerRegistry::JobInterceptorFactory>
       protocol_handler_interceptor_;
+
+  Profile::Delegate* delegate_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveBrowserContext);
 };

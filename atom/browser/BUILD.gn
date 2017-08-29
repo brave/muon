@@ -22,9 +22,16 @@ source_set("browser") {
 
   deps = [
     "//electron:common",
+    "//electron/muon/app",
+    # @todo(bridiver) fix circular dep
+    # "//electron/chromium_src:browser",
+    "//base",
+    "//chrome/common:constants",
     "//storage/browser",
     "//storage/common",
     "//components/prefs",
+    "//components/metrics",
+    "//components/metrics:profiler_content",
     ":importer",
   ]
 
@@ -176,6 +183,10 @@ source_set("browser") {
       ":mac_auto_updater",
     ]
 
+    libs = [
+      "Security.framework",
+    ]
+
     sources += [
       "api/atom_api_system_preferences_mac.mm",
       "common_web_contents_delegate_mac.mm",
@@ -224,7 +235,11 @@ source_set("browser") {
       "ui/views/submenu_button.h",
     ]
 
-    deps += [ "//ui/wm" ]
+    deps += [
+      "//services/service_manager/public/cpp",
+      "//ui/wm",
+      "//ui/display",
+    ]
   }
   if (is_win) {
     sources += [
