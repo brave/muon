@@ -198,10 +198,10 @@ source_set("common") {
   public_deps = [ "atom/common" ]
 
   sources = [
-    "brave/common/brave_paths.cc",
-    "brave/common/brave_paths.h",
     "brave/common/extensions/asar_source_map.cc",
     "brave/common/extensions/asar_source_map.h",
+    "brave/common/extensions/crash_reporter_bindings.cc",
+    "brave/common/extensions/crash_reporter_bindings.h",
     "brave/common/extensions/file_bindings.cc",
     "brave/common/extensions/file_bindings.h",
     "brave/common/extensions/path_bindings.cc",
@@ -220,6 +220,7 @@ source_set("common") {
   deps = [
     "chromium_src:common",
     ":electron_version_header",
+    "//base",
     "//components/url_formatter",
     "//content/public/child",
   ]

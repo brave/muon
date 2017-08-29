@@ -80,17 +80,16 @@ executable("electron_exe") {
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
     "//base",
-    "//breakpad:breakpad_handler",
-    "//breakpad:breakpad_sender",
     "//chrome/browser:chrome_process_finder",
     "//chrome/common:constants",
-    "//chrome/install_static:install_static_util",
+    "//chrome/common:version_header",
+    "//chrome/install_static:secondary_module",
+    "//chrome_elf",
     "//components/crash/content/app:run_as_crashpad_handler",
     "//components/flags_ui:switches",
     "//content:sandbox_helper_win",
     "//chrome/common:features",
     "//third_party/cld",
-    "//components/crash/content/app",
     "//components/policy:generated",
     "//content/app/resources",
     "//net:net_resources",
@@ -225,6 +224,7 @@ copy("dist_widevine_resources") {
 
 copy("dist_resources") {
   sources = [
+    "$root_out_dir/chrome_elf.dll",
     "$root_out_dir/xinput1_3.dll",
     "$root_shlib_dir/libEGL.dll",
     "$root_shlib_dir/libGLESv2.dll",
@@ -237,6 +237,7 @@ copy("dist_resources") {
 
   public_deps = [
     ":external_binaries",
+    "//chrome_elf",
     "//third_party/angle:copy_compiler_dll",
     "//third_party/angle:libEGL",
     "//third_party/angle:libGLESv2",

@@ -37,8 +37,6 @@
 #include "base/path_service.h"
 #include "base/nix/xdg_util.h"
 #include "base/threading/thread_task_runner_handle.h"
-#include "brave/common/brave_paths.h"
-#include "browser/brightray_paths.h"
 #include "chrome/browser/ui/libgtkui/gtk_ui.h"
 #include "ui/base/x/x11_util.h"
 #include "ui/base/x/x11_util_internal.h"
@@ -81,13 +79,6 @@ bool g_in_x11_io_error_handler = false;
 // Number of seconds to wait for UI thread to get an IO error if we get it on
 // the background thread.
 const int kWaitForUIThreadSeconds = 10;
-void OverrideLinuxAppDataPath(base::FilePath & path) {
-  if (PathService::Get(DIR_APP_DATA, &path))
-    return;
-
-  if (brave::GetDefaultUserDataDirectory(&path))
-    PathService::Override(DIR_APP_DATA, path);
-}
 
 int BrowserX11ErrorHandler(Display* d, XErrorEvent* error) {
   if (!g_in_x11_io_error_handler) {
@@ -165,12 +156,6 @@ void BrowserMainParts::PreEarlyInitialization() {
 
 #if defined(USE_X11)
   views::LinuxUI::SetInstance(BuildGtkUi());
-  base::FilePath path = base::FilePath();
-  OverrideLinuxAppDataPath(path);
-  if (path.empty()) {
-    LOG(ERROR) << "Could not set linux app data path";
-  }
-
   // Installs the X11 error handlers for the browser process used during
   // startup. They simply print error messages and exit because
   // we can't shutdown properly while creating and initializing services.
@@ -244,17 +229,6 @@ void BrowserMainParts::PostMainMessageLoopRun() {
   ui::SetX11ErrorHandlers(X11EmptyErrorHandler, X11EmptyIOErrorHandler);
 #endif
   DevToolsManagerDelegate::StopHttpHandler();
-}
-
-int BrowserMainParts::PreCreateThreads() {
-#if defined(USE_AURA)
-  display::Screen* screen = views::CreateDesktopScreen();
-  display::Screen::SetScreenInstance(screen);
-#if defined(USE_X11)
-  views::LinuxUI::instance()->UpdateDeviceScaleFactor();
-#endif
-#endif
-  return 0;
 }
 
 void BrowserMainParts::PostDestroyThreads() {

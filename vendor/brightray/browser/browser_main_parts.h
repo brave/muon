@@ -39,7 +39,6 @@ class BrowserMainParts : public content::BrowserMainParts {
   void PreMainMessageLoopRun() override;
   void PostMainMessageLoopStart() override;
   void PostMainMessageLoopRun() override;
-  int PreCreateThreads() override;
   void PostDestroyThreads() override;
 
  private:

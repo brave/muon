@@ -27,10 +27,10 @@ index 1ef8d6b1278380783c54e73ff5a41b29b9ef4254..4df581faed33efbdabe72089d4984e5b
    // BEGIN USAGE THAT NEEDS TO BE FIXED.
    friend class ::chromeos::BlockingMethodCaller;  // http://crbug.com/125360
 diff --git a/build/config/BUILDCONFIG.gn b/build/config/BUILDCONFIG.gn
-index fa4ec72c87c2ffe25353ab9e750cc2fd63c934e4..fa31891e545d9c8578ed2f052223789139b64e55 100644
+index de3f35f124aadd66ea21c3870651f7962f98f2cb..e2e7aeaf931102e61515d506fc0f063d70953d8d 100644
 --- a/build/config/BUILDCONFIG.gn
 +++ b/build/config/BUILDCONFIG.gn
-@@ -150,6 +150,8 @@ declare_args() {
+@@ -151,6 +151,8 @@ declare_args() {
    host_toolchain = ""
  
    # DON'T ADD MORE FLAGS HERE. Read the comment above.
@@ -39,11 +39,10 @@ index fa4ec72c87c2ffe25353ab9e750cc2fd63c934e4..fa31891e545d9c8578ed2f0522237891
  }
  
  declare_args() {
-@@ -521,6 +523,15 @@ default_compiler_configs = [
+@@ -521,6 +523,13 @@ default_compiler_configs = [
    "//build/config/compiler:runtime_library",
    "//build/config/sanitizers:default_sanitizer_flags",
  ]
-+
 +if (!muon_chromium_build) {
 +  default_compiler_configs -= [ "//build/config/compiler:default_include_dirs" ]
 +  default_compiler_configs += [
@@ -51,24 +50,25 @@ index fa4ec72c87c2ffe25353ab9e750cc2fd63c934e4..fa31891e545d9c8578ed2f0522237891
 +    "//build/config/compiler:default_include_dirs"
 +  ]
 +}
-+
  if (is_win) {
    default_compiler_configs += [
      "//build/config/win:default_crt",
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..b4bff28a0cca5273121f8393ed206c7745dd7cb6 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..bd0345335b129a059d507e69a9d4e8de3c7eebee 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
-@@ -12,7 +12,7 @@ declare_args() {
+@@ -11,12 +11,15 @@ declare_args() {
+   # Break chrome.dll into multple pieces based on process type. Only available
    # on Windows.
    is_multi_dll_chrome = is_win && !is_component_build
++  branding_path_component = ""
  }
--
-+declare_args() {
+ 
  # Refers to the subdirectory for branding in various places including
  # chrome/app/theme.
++if (branding_path_component == "") {
  if (is_chrome_branded) {
-@@ -20,3 +20,4 @@ if (is_chrome_branded) {
+   branding_path_component = "google_chrome"
  } else {
    branding_path_component = "chromium"
  }
@@ -131,6 +131,23 @@ index aa906c539f3499403232506252ddcd909ff9dc99..835de030550ce8cd89ed0d8b40a25bd2
  }
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+diff --git a/chrome/app/chrome_crash_reporter_client_win.cc b/chrome/app/chrome_crash_reporter_client_win.cc
+index b3cc3d549ae01118891afc96ec2f605773a1e8a4..bfff26d41c532c38ab56a50973614b6d8f381f1f 100644
+--- a/chrome/app/chrome_crash_reporter_client_win.cc
++++ b/chrome/app/chrome_crash_reporter_client_win.cc
+@@ -93,6 +93,12 @@ size_t RegisterCrashKeysHelper() {
+   // For now these need to be kept relatively up to date with those in
+   // chrome/common/crash_keys.cc::RegisterChromeCrashKeys().
+   static constexpr base::debug::CrashKey kFixedKeys[] = {
++#if !defined(MUON_CHROMIUM_BUILD)
++      {"javascript-info", kHugeSize},
++      {"_version", kSmallSize},
++      {"muon-version", kSmallSize},
++      {"node-env", kSmallSize},
++#endif
+       {kMetricsClientId, kSmallSize},
+       {kChannel, kSmallSize},
+       {kActiveURL, kLargeSize},
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
 index 92120fdb3aa0566f76544d41a059512a26e532ff..4be8e9992d95e35459e6ef31de76060c957cfc0d 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
@@ -202,6 +219,26 @@ index 247d24220beb7d176b890d7c2d45bdd2dfd8db99..c270bba0fabb557e8d3d1df8ac166bbb
  
    ProfileWriter* const writer_;  // weak
    const base::WeakPtr<ExternalProcessImporterHost> host_;
+diff --git a/chrome/browser/metrics/metrics_reporting_state.cc b/chrome/browser/metrics/metrics_reporting_state.cc
+index 183a1e7a246c01a1500a9a05e055f892deaffe56..5172ed442244f26a674c650705d96282ae6ec836 100644
+--- a/chrome/browser/metrics/metrics_reporting_state.cc
++++ b/chrome/browser/metrics/metrics_reporting_state.cc
+@@ -60,6 +60,7 @@ void SetMetricsReporting(bool to_update_pref,
+   g_browser_process->local_state()->SetBoolean(
+       metrics::prefs::kMetricsReportingEnabled, updated_pref);
+ 
++#if defined(MUON_CHROMIUM_BUILD)
+   UpdateMetricsPrefsOnPermissionChange(updated_pref);
+ 
+   // Uses the current state of whether reporting is enabled to enable services.
+@@ -71,6 +72,7 @@ void SetMetricsReporting(bool to_update_pref,
+   } else {
+     RecordMetricsReportingHistogramValue(METRICS_REPORTING_ERROR);
+   }
++#endif
+   if (!callback_fn.is_null())
+     callback_fn.Run(updated_pref);
+ }
 diff --git a/chrome/browser/password_manager/password_store_factory.cc b/chrome/browser/password_manager/password_store_factory.cc
 index c812fec4514e6cbefc38543ea18aea1531a735a4..bbc165ad1b910b2d96b92163511519326092a9fe 100644
 --- a/chrome/browser/password_manager/password_store_factory.cc
@@ -508,7 +545,7 @@ index 385a9f8494d0c4efd06cb3e7f8a99dd1bc1916af..920583b1629959e5f43e9b9c012a99a6
  
  process_version("version_header") {
 diff --git a/chrome/common/chrome_constants.cc b/chrome/common/chrome_constants.cc
-index e4ce7d5a3309cf00029a3c758fd40675f4807f29..172a9d35b05d344e3c425314dd5ba48b9feb751e 100644
+index e4ce7d5a3309cf00029a3c758fd40675f4807f29..051d9946bad14304e1947cf56f5fda18c1a4171d 100644
 --- a/chrome/common/chrome_constants.cc
 +++ b/chrome/common/chrome_constants.cc
 @@ -10,11 +10,11 @@
@@ -531,16 +568,16 @@ index e4ce7d5a3309cf00029a3c758fd40675f4807f29..172a9d35b05d344e3c425314dd5ba48b
  #if defined(OS_WIN)
  const base::FilePath::CharType kBrowserProcessExecutableNameChromium[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  const base::FilePath::CharType kBrowserProcessExecutableName[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  const base::FilePath::CharType kHelperProcessExecutableNameChromium[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  const base::FilePath::CharType kHelperProcessExecutableName[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  #elif defined(OS_MACOSX)
  const base::FilePath::CharType kBrowserProcessExecutableNameChromium[] =
      FPL(CHROMIUM_PRODUCT_STRING);
@@ -569,16 +606,16 @@ index e4ce7d5a3309cf00029a3c758fd40675f4807f29..172a9d35b05d344e3c425314dd5ba48b
  #if defined(OS_WIN)
  const base::FilePath::CharType kBrowserProcessExecutablePathChromium[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  const base::FilePath::CharType kBrowserProcessExecutablePath[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  const base::FilePath::CharType kHelperProcessExecutablePathChromium[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  const base::FilePath::CharType kHelperProcessExecutablePath[] =
 -    FPL("chrome.exe");
-+    FPL("Brave.exe");
++    FPL("brave.exe");
  #elif defined(OS_MACOSX)
  const base::FilePath::CharType kBrowserProcessExecutablePathChromium[] =
      FPL(CHROMIUM_PRODUCT_STRING ".app/Contents/MacOS/" CHROMIUM_PRODUCT_STRING);
@@ -610,17 +647,15 @@ index e4ce7d5a3309cf00029a3c758fd40675f4807f29..172a9d35b05d344e3c425314dd5ba48b
  #endif  // OS_*
  
  #if defined(OS_MACOSX)
-@@ -121,8 +121,8 @@ const base::FilePath::CharType kFrameworkExecutableName[] =
+@@ -121,7 +121,7 @@ const base::FilePath::CharType kFrameworkExecutableName[] =
  #endif  // OS_MACOSX
  
  #if defined(OS_WIN)
 -const base::FilePath::CharType kBrowserResourcesDll[] = FPL("chrome.dll");
--const base::FilePath::CharType kChromeElfDllName[] = FPL("chrome_elf.dll");
-+const base::FilePath::CharType kBrowserResourcesDll[] = FPL("Brave.dll");
-+const base::FilePath::CharType kChromeElfDllName[] = FPL("Brave_elf.dll");
++const base::FilePath::CharType kBrowserResourcesDll[] = FPL("brave.dll");
+ const base::FilePath::CharType kChromeElfDllName[] = FPL("chrome_elf.dll");
  const base::FilePath::CharType kStatusTrayWindowClass[] =
      FPL("Chrome_StatusTrayWindow");
- #endif  // defined(OS_WIN)
 diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.mm
 index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3ade1a5e1e 100644
 --- a/chrome/common/chrome_paths_mac.mm
@@ -666,6 +701,23 @@ index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e45
  #define LASTCHANGE_STRING "@LASTCHANGE@"
 +
 +#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
+diff --git a/chrome/common/crash_keys.cc b/chrome/common/crash_keys.cc
+index effec5c3de01b203b07e71477b5fd24eb62c4a5e..c6e5787e7998a101602e934c511ec070fed528aa 100644
+--- a/chrome/common/crash_keys.cc
++++ b/chrome/common/crash_keys.cc
+@@ -99,6 +99,12 @@ size_t RegisterChromeCrashKeys() {
+   //     RegisterWebViewCrashKeys(),
+   // chromecast/crash/cast_crash_keys.cc::RegisterCastCrashKeys().
+   base::debug::CrashKey fixed_keys[] = {
++#if !defined(MUON_CHROMIUM_BUILD)
++    {"javascript-info", kHugeSize},
++    {"_version", kSmallSize},
++    {"muon-version", kSmallSize},
++    {"node-env", kSmallSize},
++#endif
+ #if defined(OS_MACOSX) || defined(OS_WIN)
+     {kMetricsClientId, kSmallSize},
+ #else
 diff --git a/chrome/common/importer/edge_importer_utils_win.cc b/chrome/common/importer/edge_importer_utils_win.cc
 index c2abd64b2d7c5166c1fdbaaf782974cb4bcc5e53..eb59bbe098dabd0edd3d9d8e24befe1006e56b8b 100644
 --- a/chrome/common/importer/edge_importer_utils_win.cc
@@ -799,6 +851,56 @@ index 317ea8faa3989a74f4f6e075df18cd83f856d402..93e2355ed30a6b89246e390c57928e31
  
  namespace {
  
+diff --git a/chrome/install_static/user_data_dir.cc b/chrome/install_static/user_data_dir.cc
+index b5f779d03cfec8ce1db9354d85020acaa10c3a5b..04db5469f8b3705bbf0c36fe6eef5ce1aeaa3355 100644
+--- a/chrome/install_static/user_data_dir.cc
++++ b/chrome/install_static/user_data_dir.cc
+@@ -74,6 +74,10 @@ bool GetUserDataDirectoryUsingProcessCommandLine(
+ // Unify this with the Browser Distribution code.
+ bool GetDefaultUserDataDirectory(const InstallConstants& mode,
+                                  std::wstring* result) {
++#if !defined(MUON_CHROMIUM_BUILD)
++  result->append(GetEnvironmentString16(L"CHROME_USER_DATA_DIR"));
++  return true;
++#endif
+   // This environment variable should be set on Windows Vista and later
+   // (https://msdn.microsoft.com/library/windows/desktop/dd378457.aspx).
+   std::wstring user_data_dir = GetEnvironmentString16(L"LOCALAPPDATA");
+diff --git a/chrome/installer/util/browser_distribution.cc b/chrome/installer/util/browser_distribution.cc
+index ac6a3e41ef2c4e82eab088b39abc0d17c4db0f0e..5149d6638b5146d8dc21aed5cc508d613c26fd69 100644
+--- a/chrome/installer/util/browser_distribution.cc
++++ b/chrome/installer/util/browser_distribution.cc
+@@ -20,6 +20,10 @@
+ #include "chrome/installer/util/l10n_string_util.h"
+ #include "chrome/installer/util/non_updating_app_registration_data.h"
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++#include "chrome/installer/util/muon_distribution.h"
++#endif
++
+ namespace {
+ 
+ // The BrowserDistribution object is never freed.
+@@ -55,6 +59,7 @@ BrowserDistribution* BrowserDistribution::GetOrCreateBrowserDistribution(
+ BrowserDistribution* BrowserDistribution::GetDistribution() {
+   BrowserDistribution* dist = NULL;
+ 
++#if defined(MUON_CHROMIUM_BUILD)
+ #if defined(GOOGLE_CHROME_BUILD)
+   dist = GetOrCreateBrowserDistribution<GoogleChromeDistribution>(
+       &g_browser_distribution);
+@@ -62,7 +67,10 @@ BrowserDistribution* BrowserDistribution::GetDistribution() {
+   dist = GetOrCreateBrowserDistribution<BrowserDistribution>(
+       &g_browser_distribution);
+ #endif
+-
++#else
++  dist = GetOrCreateBrowserDistribution<MuonDistribution>(
++      &g_browser_distribution);
++#endif
+   return dist;
+ }
+ 
 diff --git a/chrome/installer/util/prebuild/create_string_rc.py b/chrome/installer/util/prebuild/create_string_rc.py
 index ce885e05e62af97777314397c79d1f05aa0dc36a..c2b8a35bfdbd6a23ce288b2007dcb8ce7fee8657 100755
 --- a/chrome/installer/util/prebuild/create_string_rc.py
@@ -844,10 +946,10 @@ index ce885e05e62af97777314397c79d1f05aa0dc36a..c2b8a35bfdbd6a23ce288b2007dcb8ce
  }
  # Note: Update the test expectations in GetBaseMessageIdForMode.GoogleStringIds
 diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
-index 56914c54d8f10b745de30cbde3cdd34ce67d8862..7a4aec4091066b3a9f952fe9a4509248e289477a 100644
+index 56914c54d8f10b745de30cbde3cdd34ce67d8862..c7f762c3d3ee5995c752924b96b91eb6f6803e6e 100644
 --- a/chrome/renderer/BUILD.gn
 +++ b/chrome/renderer/BUILD.gn
-@@ -395,6 +395,23 @@ static_library("renderer") {
+@@ -395,6 +395,19 @@ static_library("renderer") {
        "resources/extensions/file_system_provider_custom_bindings.js",
      ]
    }
@@ -995,6 +1097,97 @@ index 58d7d47f379b145d5eec6f711cc882430cd1db29..9867e255717e7f2a17c7b5d9b8f06277
    // chrome::mojom::ProfileImport:
    void StartImport(const importer::SourceProfile& source_profile,
                     uint16_t items,
+diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
+index 2199920ee79326a1dcd79e44c7fc33753b2d7262..f82a9936e0f45af3b13c7a033b7d957a2f62b0a7 100644
+--- a/components/crash/content/app/breakpad_linux.cc
++++ b/components/crash/content/app/breakpad_linux.cc
+@@ -87,8 +87,10 @@ namespace breakpad {
+ 
+ namespace {
+ 
+-#if !defined(OS_CHROMEOS)
+-const char kUploadURL[] = "https://clients2.google.com/cr/report";
++#if !defined(OS_CHROMEOS) && defined(MUON_CHROMIUM_BUILD)
++  const char kUploadURL[] = "https://clients2.google.com/cr/report";
++#else
++  const char kUploadURL[] = "https://laptop-updates.brave.com/1/crashes";
+ #endif
+ 
+ bool g_is_crash_reporter_enabled = false;
+@@ -1358,6 +1360,7 @@ void ExecUploadProcessOrTerminate(const BreakpadInfo& info,
+     header_content_type,
+     post_file,
+     kUploadURL,
++    "--quiet",
+     "--timeout=10",  // Set a timeout so we don't hang forever.
+     "--tries=1",     // Don't retry if the upload fails.
+     "-O",  // Output reply to the file descriptor path.
+@@ -1411,6 +1414,9 @@ size_t WaitForCrashReportUploadProcess(int fd, size_t bytes_to_read,
+ // |buf| should be |expected_len| + 1 characters in size and nullptr terminated.
+ bool IsValidCrashReportId(const char* buf, size_t bytes_read,
+                           size_t expected_len) {
++#if !defined(MUON_CHROMIUM_BUILD)
++  return my_strcmp(buf, "OK") == 0;
++#endif
+   if (bytes_read != expected_len) {
+     static const char msg[] = "Unexpected crash report id length\n";
+     WriteLog(msg, sizeof(msg) - 1);
+@@ -1891,8 +1897,13 @@ void HandleCrashDump(const BreakpadInfo& info) {
+       if (upload_child > 0) {
+         IGNORE_RET(sys_close(fds[1]));  // Close write end of pipe.
+ 
++#if defined(MUON_CHROMIUM_BUILD)
+         const size_t kCrashIdLength = 16;
++#else
++        const size_t kCrashIdLength = 2;
++#endif
+         char id_buf[kCrashIdLength + 1];
++
+         size_t bytes_read =
+             WaitForCrashReportUploadProcess(fds[0], kCrashIdLength, id_buf);
+         HandleCrashReportId(id_buf, bytes_read, kCrashIdLength);
+diff --git a/components/crash/content/app/crashpad_mac.mm b/components/crash/content/app/crashpad_mac.mm
+index 3bae07e14c690869515c4ce233988addad12f1c1..3ad9825f406bc10e21579cccb5677651cf780ae5 100644
+--- a/components/crash/content/app/crashpad_mac.mm
++++ b/components/crash/content/app/crashpad_mac.mm
+@@ -53,6 +53,8 @@ base::FilePath PlatformCrashpadInitialization(bool initial_client,
+       // Only allow the possibility of report upload in official builds. This
+       // crash server won't have symbols for any other build types.
+       std::string url = "https://clients2.google.com/cr/report";
++#elif !defined(MUON_CHROMIUM_BUILD)
++      std::string url = "https://brave-laptop-updates.herokuapp.com/1/crashes";
+ #else
+       std::string url;
+ #endif
+diff --git a/components/crash/content/app/crashpad_win.cc b/components/crash/content/app/crashpad_win.cc
+index 2c25a0b26fd33ffeaf2f23683a3a199f31973d5e..0af9ab62df8e874c838c9cee40985977b033e88a 100644
+--- a/components/crash/content/app/crashpad_win.cc
++++ b/components/crash/content/app/crashpad_win.cc
+@@ -79,6 +79,8 @@ base::FilePath PlatformCrashpadInitialization(bool initial_client,
+ 
+ #if defined(GOOGLE_CHROME_BUILD)
+     std::string url = "https://clients2.google.com/cr/report";
++#elif !defined(MUON_CHROMIUM_BUILD)
++    std::string url = "https://laptop-updates.brave.com/1/crashes";
+ #else
+     std::string url;
+ #endif
+diff --git a/components/crash/core/browser/resources/crashes.js b/components/crash/core/browser/resources/crashes.js
+index dbd2ae8df59756c61d28091cff70098c897db8f4..84fbc695c817c87deb902d8b6f69d3f1ec762ccb 100644
+--- a/components/crash/core/browser/resources/crashes.js
++++ b/components/crash/core/browser/resources/crashes.js
+@@ -105,9 +105,9 @@ function updateCrashList(
+         // https://bugs.chromium.org/p/monorail/issues/detail?id=1488 is done.
+         labels: 'Restrict-View-EditIssue,Stability-Crash,User-Submitted',
+       };
+-      var href = 'https://code.google.com/p/chromium/issues/entry';
++      var href = 'https://github.com/brave/browser-laptop/issues/new';
+       for (var param in params) {
+-        href = appendParam(href, param, params[param]);
++        // href = appendParam(href, param, params[param]);
+       }
+       link.href = href;
+       link.target = '_blank';
 diff --git a/components/guest_view/browser/guest_view_base.cc b/components/guest_view/browser/guest_view_base.cc
 index 24ec4b67e72b1490f6572f4367e6233e57c0a373..01b6de185a40771b27ec4647f74e343cb378f930 100644
 --- a/components/guest_view/browser/guest_view_base.cc
@@ -1065,6 +1258,19 @@ index bc36a92f4ad97e84d65c5213acbb68fc89aae8d9..9567f7f130181a40917751fff899b439
  }
  
  // static
+diff --git a/components/metrics/metrics_service_accessor.cc b/components/metrics/metrics_service_accessor.cc
+index 467210af09ccba687fad513c5a43047a43a7e5a0..a109474bc5988060884257bfeca93a8360c40529 100644
+--- a/components/metrics/metrics_service_accessor.cc
++++ b/components/metrics/metrics_service_accessor.cc
+@@ -16,7 +16,7 @@ namespace metrics {
+ // static
+ bool MetricsServiceAccessor::IsMetricsReportingEnabled(
+     PrefService* pref_service) {
+-#if defined(GOOGLE_CHROME_BUILD)
++#if defined(GOOGLE_CHROME_BUILD) || !defined(MUON_CHROMIUM_BUILD)
+   // In official builds, disable metrics when reporting field trials are
+   // forced; otherwise, use the value of the user's preference to determine
+   // whether to enable metrics reporting.
 diff --git a/components/os_crypt/key_storage_libsecret.cc b/components/os_crypt/key_storage_libsecret.cc
 index ea034fd48c08de6f5f755fbffb962390ec8dd7b2..ae6d1fcf40d24c89941e1717c306982555156ca5 100644
 --- a/components/os_crypt/key_storage_libsecret.cc
@@ -2109,28 +2315,6 @@ index 7c357257534573d6bcfd80daa6928527a5e8bf49..72f6430e2639ca9a332d2e86c394828b
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
-diff --git a/net/BUILD.gn b/net/BUILD.gn
-index 62145ac928a694a37cb9fe0e3f48e6cd3ea0b434..f70a0404af0024118cdbdd6a15cf76f41ef8179f 100644
---- a/net/BUILD.gn
-+++ b/net/BUILD.gn
-@@ -65,7 +65,7 @@ config("net_internal_config") {
-   if (use_kerberos) {
-     defines += [ "USE_KERBEROS" ]
-     if (is_android) {
--      include_dirs = [ "/usr/include/kerberosV" ]
-+      include_dirs += [ "/usr/include/kerberosV" ]
-     }
-   }
- 
-@@ -1737,6 +1737,8 @@ component("net") {
-       "//third_party/zlib",
-     ]
- 
-+    include_dirs = [ "$root_gen_dir" ]
-+
-     if (!use_kerberos) {
-       sources -= [
-         "http/http_auth_handler_negotiate.cc",
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
 index 95ba606a7e0fa239a9c8c62f19591ec6bb39097a..b4fece0421b282f4042250108426eb502ff9b4c9 100644
 --- a/net/http/http_util.cc
@@ -2279,6 +2463,22 @@ index 9839ef9e5719ef3ddce6aeb2606bba2109be2688..a998d6a9a2982233a6e87e4eb483b80f
  
  # Windows' assembly is built with Yasm. The other platforms use the platform
  # assembler.
+diff --git a/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc b/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
+index d77cdbadc482ab5bee13e1026869bc9f52c415a3..561ac592c7ac0498f6d82a61d8fe621281f760a3 100644
+--- a/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
++++ b/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
+@@ -268,7 +268,11 @@ void CrashReportUploadThread::ProcessPendingReport(
+         // If the most recent upload attempt occurred within the past hour,
+         // don’t attempt to upload the new report. If it happened longer ago,
+         // attempt to upload the report.
++#if defined(MUON_CHROMIUM_BUILD)
+         const int kUploadAttemptIntervalSeconds = 60 * 60;  // 1 hour
++#else
++        const int kUploadAttemptIntervalSeconds = 1 * 60;  // 1 min
++#endif
+         if (now - last_upload_attempt_time < kUploadAttemptIntervalSeconds) {
+           database_->SkipReportUpload(
+               report.uuid, Metrics::CrashSkippedReason::kUploadThrottled);
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
 index 9e744b9940e2c79366fae21f5652ee0fce830637..143385a2831ca5221a68b99bba65dc2927a241ac 100644
 --- a/third_party/widevine/cdm/BUILD.gn
