@@ -60,14 +60,6 @@ void InitializeResourceBundle(const std::string& locale) {
 
   ui::ResourceBundle& bundle = ui::ResourceBundle::GetSharedInstance();
   bundle.AddDataPackFromPath(path, ui::SCALE_FACTOR_NONE);
-#if !defined(OS_MACOSX)
-  bundle.AddDataPackFromPath(
-      pak_dir.Append(FILE_PATH_LITERAL("chrome_100_percent.pak")),
-      ui::SCALE_FACTOR_100P);
-  bundle.AddDataPackFromPath(
-      pak_dir.Append(FILE_PATH_LITERAL("chrome_200_percent.pak")),
-      ui::SCALE_FACTOR_200P);
-#endif
 }
 
 
