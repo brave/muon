@@ -32,6 +32,10 @@ class AtomContentClient : public brightray::ContentClient {
   bool AllowScriptExtensionForServiceWorker(const GURL& script_url) override;
   content::OriginTrialPolicy* GetOriginTrialPolicy() override;
 
+  void AddContentDecryptionModules(
+      std::vector<content::CdmInfo>* cdms,
+      std::vector<content::CdmHostFilePath>* cdm_host_file_paths) override;
+
  private:
   std::unique_ptr<ChromeOriginTrialPolicy> origin_trial_policy_;
   DISALLOW_COPY_AND_ASSIGN(AtomContentClient);
