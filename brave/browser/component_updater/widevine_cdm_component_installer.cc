@@ -107,6 +107,11 @@ const char kCdmHostVersionsName[] = "x-cdm-host-versions";
 //  The list is passed to other parts of Chrome.
 const char kCdmCodecsListName[] = "x-cdm-codecs";
 
+// TODO(xhwang): Move this to a common place if needed.
+const base::FilePath::CharType kSignatureFileExtension[] =
+    FILE_PATH_LITERAL(".sig");
+
+
 // Widevine CDM is packaged as a multi-CRX. Widevine CDM binaries are located in
 // _platform_specific/<platform_arch> folder in the package. This function
 // returns the platform-specific subdirectory that is part of that multi-CRX.
@@ -355,22 +360,31 @@ void WidevineCdmComponentInstallerTraits::UpdateCdmAdapter(
   DCHECK(!chromium_version.empty());
 
   // If we are not using bundled CDM and we don't have a valid adapter, create
-  // the version file and copy the CDM adapter from |adapter_source_path| to
-  // |adapter_install_path|.
+  // the version file, copy the CDM adapter signature file, and copy the CDM
+  // adapter.
   if (adapter_install_path != adapter_source_path &&
       !HasValidAdapter(adapter_version_path, adapter_install_path,
                        chromium_version)) {
+    if (!base::CopyFile(adapter_source_path, adapter_install_path)) {
+      PLOG(WARNING) << "Failed to copy Widevine CDM adapter.";
+      return;
+    }
+
+    // Generate the version file.
     int bytes_written = base::WriteFile(
         adapter_version_path, chromium_version.data(), chromium_version.size());
     if (bytes_written < 0 ||
         static_cast<size_t>(bytes_written) != chromium_version.size()) {
       PLOG(WARNING) << "Failed to write Widevine CDM adapter version file.";
-      // Ignore version file writing failure and try to copy the CDM adapter.
+      // Ignore version file writing failure.
     }
 
-    if (!base::CopyFile(adapter_source_path, adapter_install_path)) {
-      PLOG(WARNING) << "Failed to copy Widevine CDM adapter.";
-      return;
+    // Copy Widevine CDM adapter signature file.
+    if (!base::CopyFile(
+            adapter_source_path.AddExtension(kSignatureFileExtension),
+            adapter_install_path.AddExtension(kSignatureFileExtension))) {
+      PLOG(WARNING) << "Failed to copy Widevine CDM adapter signature file.";
+      // The sig file may be missing or the copy failed. Ignore the failure.
     }
   }
 
