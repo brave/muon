@@ -234,23 +234,19 @@ void AtomContentClient::AddContentDecryptionModules(
 #if BUILDFLAG(ENABLE_CDM_HOST_VERIFICATION)
   if (cdm_host_file_paths) {
 #if defined(OS_WIN)
-  static const base::FilePath::CharType* const kUnversionedFiles[] = {
-      FILE_PATH_LITERAL("brave.exe")};
   base::FilePath brave_exe_dir;
   if (!PathService::Get(base::DIR_EXE, &brave_exe_dir))
     NOTREACHED();
-  cdm_host_file_paths->reserve(arraysize(kUnversionedFiles));
+  base::FilePath file_path;
+  if (!PathService::Get(base::FILE_EXE, &file_path))
+    NOTREACHED();
+  cdm_host_file_paths->reserve(1);
 
-  // Signature files are always in the version directory.
-  for (size_t i = 0; i < arraysize(kUnversionedFiles); ++i) {
-    base::FilePath file_path = brave_exe_dir.Append(kUnversionedFiles[i]);
-    base::FilePath sig_path =
-        GetSigFilePath(brave_exe_dir.Append(kUnversionedFiles[i]));
-    VLOG(1) << __func__ << ": unversioned file " << i << " at "
-             << file_path.value() << ", signature file " << sig_path.value();
-    cdm_host_file_paths->push_back(
-      content::CdmHostFilePath(file_path, sig_path));
-  }
+  base::FilePath sig_path =
+    GetSigFilePath(file_path);
+  VLOG(1) << __func__ << ": unversioned file " << " at "
+    << file_path.value() << ", signature file " << sig_path.value();
+  cdm_host_file_paths->push_back(content::CdmHostFilePath(file_path, sig_path));
 #elif defined(OS_MACOSX)
   base::FilePath brave_framework_path =
       base::mac::FrameworkBundlePath().Append(chrome::kFrameworkExecutableName);
