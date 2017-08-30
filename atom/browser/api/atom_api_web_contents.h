@@ -340,6 +340,22 @@ class WebContents : public mate::TrackableObject<WebContents>,
                         content::WebContents* new_contents,
                         int index,
                         int reason) override;
+  void TabInsertedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* contents,
+                     int index,
+                     bool foreground) override;
+  void TabMoved(content::WebContents* contents,
+                int from_index,
+                int to_index) override;
+  void TabClosingAt(TabStripModel* tab_strip_model,
+                    content::WebContents* contents,
+                    int index) override;
+  void TabChangedAt(content::WebContents* contents,
+                    int index,
+                    TabChangeType change_type) override;
+  void TabStripEmpty() override;
+  void TabSelectionChanged(TabStripModel* tab_strip_model,
+                           const ui::ListSelectionModel& old_model) override;
 
   // content::WebContentsDelegate:
   void RegisterProtocolHandler(content::WebContents* web_contents,

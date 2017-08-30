@@ -64,6 +64,7 @@
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_order_controller.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "components/autofill/core/browser/autofill_manager.h"
@@ -645,6 +646,31 @@ void WebContents::AddNewContents(content::WebContents* source,
     user_gesture = true;
   }
 
+  if (disposition != WindowOpenDisposition::NEW_WINDOW &&
+      disposition != WindowOpenDisposition::NEW_POPUP) {
+    auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
+    if (tab_helper &&
+        tab_helper->get_index() == TabStripModel::kNoTab) {
+      ::Browser* browser = nullptr;
+      bool active = disposition == WindowOpenDisposition::NEW_FOREGROUND_TAB;
+      if (tab_helper->window_id() != -1) {
+        browser = tab_helper->browser();
+      } else {
+        browser = owner_window()->browser();
+      }
+      if (browser) {
+        int index =
+          browser->tab_strip_model()->order_controller()->
+            DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                    active ?
+                                    TabStripModel::ADD_ACTIVE :
+                                    TabStripModel::ADD_NONE);
+        tab_helper->SetTabIndex(index);
+        tab_helper->SetActive(active);
+      }
+    }
+  }
+
   node::Environment* env = node::Environment::GetCurrent(isolate());
   if (!env) {
     return;
@@ -1007,9 +1033,9 @@ void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
 void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
   if (contents != web_contents())
     return;
-
   if (owner_window() && owner_window()->browser())
     owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+  Emit("tab-detached-at", index);
 }
 
 void WebContents::ActiveTabChanged(content::WebContents* old_contents,
@@ -1023,6 +1049,49 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
     old_api_web_contents->Emit("set-active", false);
   }
 }
+
+void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
+                                content::WebContents* contents,
+                                int index,
+                                bool foreground) {
+  if (contents != web_contents())
+    return;
+  Emit("tab-inserted-at", index, foreground);
+}
+
+void WebContents::TabMoved(content::WebContents* contents,
+                           int from_index,
+                           int to_index) {
+  if (contents != web_contents())
+    return;
+  Emit("tab-moved", from_index, to_index);
+}
+
+void WebContents::TabClosingAt(TabStripModel* tab_strip_model,
+                               content::WebContents* contents,
+                               int index) {
+  if (contents != web_contents())
+    return;
+  Emit("tab-closing-at", index);
+}
+
+void WebContents::TabChangedAt(content::WebContents* contents,
+                               int index,
+                               TabChangeType change_type) {
+  if (contents != web_contents())
+    return;
+  Emit("tab-changed-at", index);
+}
+
+void WebContents::TabStripEmpty() {
+  Emit("tab-strip-empty");
+}
+
+void WebContents::TabSelectionChanged(TabStripModel* tab_strip_model,
+                                      const ui::ListSelectionModel& old_model) {
+  Emit("tab-selection-changed");
+}
+
 
 bool WebContents::OnGoToEntryOffset(int offset) {
   GoToOffset(offset);
@@ -1344,11 +1413,9 @@ void WebContents::SetOwnerWindow(NativeWindow* new_owner_window) {
   if (owner_window() == new_owner_window)
     return;
 
-  if (IsGuest()) {
-    if (owner_window())
-      owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
-    new_owner_window->browser()->tab_strip_model()->AddObserver(this);
-  }
+  if (owner_window())
+    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+  new_owner_window->browser()->tab_strip_model()->AddObserver(this);
 
   SetOwnerWindow(web_contents(), new_owner_window);
 }
@@ -2017,8 +2084,6 @@ void WebContents::SetTabIndex(int index) {
   if (tab_helper)
     tab_helper->SetTabIndex(index);
 #endif
-
-  Emit("set-tab-index", index);
 }
 
 void WebContents::SetPinned(bool pinned) {
@@ -2473,8 +2538,9 @@ void WebContents::OnRendererMessageSync(const base::string16& channel,
   EmitWithSender(base::UTF16ToUTF8(channel), web_contents(), message, args);
 }
 
-void WebContents::OnRendererMessageShared(const base::string16& channel,
-                                         const base::SharedMemoryHandle& handle) {
+void WebContents::OnRendererMessageShared(
+    const base::string16& channel,
+    const base::SharedMemoryHandle& handle) {
   std::vector<v8::Local<v8::Value>> args = {
     mate::StringToV8(isolate(), channel),
     brave::SharedMemoryWrapper::CreateFrom(isolate(), handle).ToV8(),
@@ -2533,6 +2599,9 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
     tab_helper->SetAutoDiscardable(autoDiscardable);
   }
 
+  int opener_tab_id = TabStripModel::kNoTab;
+    options.Get("openerTabId", &opener_tab_id);
+
   bool discarded = false;
   if (options.Get("discarded", &discarded) && discarded && !active) {
     std::string url;
@@ -2565,25 +2634,28 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
     tab_helper->Discard();
   }
 
-  int windowId = -1;
-  if (options.Get("windowId", &windowId) && windowId != -1) {
+  int window_id = -1;
+  ::Browser *browser = nullptr;
+  if (options.Get("windowId", &window_id) && window_id != -1) {
     auto api_window =
-        mate::TrackableObject<Window>::FromWeakMapID(isolate(), windowId);
+        mate::TrackableObject<Window>::FromWeakMapID(isolate(), window_id);
     if (api_window) {
-      // TODO(bridiver) - combine these two methods
-      tab_helper->SetWindowId(windowId);
-      tab_helper->SetBrowser(api_window->window()->browser());
+      browser = api_window->window()->browser();
+      tab_helper->SetWindowId(window_id);
     }
   }
+  if (!browser) {
+    browser = owner_window()->browser();
+  }
 
-  int opener_tab_id = -1;
-  options.Get("openerTabId", &opener_tab_id);
+  tab_helper->SetOpener(opener_tab_id);
+  tab_helper->SetBrowser(browser);
 
   content::WebContents* source = nullptr;
-  if (opener_tab_id != -1) {
+  if (opener_tab_id != TabStripModel::kNoTab) {
     source = extensions::TabHelper::GetTabById(opener_tab_id);
-    tab_helper->SetOpener(opener_tab_id);
   }
+
   if (!source)
     source = web_contents();
 
