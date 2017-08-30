@@ -10,20 +10,26 @@
 #include "atom/common/atom_version.h"
 #include "atom/common/options_switches.h"
 #include "atom/common/pepper_flash_util.h"
+#include "base/base_paths.h"
 #include "base/command_line.h"
 #include "base/debug/crash_logging.h"
+#include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/mac/bundle_locations.h"
 #include "base/memory/ptr_util.h"
+#include "base/path_service.h"
 #include "base/strings/string16.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
+#include "chrome/common/chrome_constants.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/crash_keys.h"
 #include "chrome/common/extensions/extension_process_policy.h"
 #include "chrome/common/secure_origin_whitelist.h"
+#include "content/public/common/cdm_info.h"
 #include "content/public/common/content_constants.h"
 #include "content/public/common/pepper_plugin_info.h"
 #include "content/public/common/user_agent.h"
@@ -40,6 +46,52 @@
 #include "extensions/common/constants.h"
 #include "extensions/common/features/feature_util.h"
 #endif
+
+#if defined(WIDEVINE_CDM_AVAILABLE) && BUILDFLAG(ENABLE_PEPPER_CDMS) && \
+    !defined(WIDEVINE_CDM_IS_COMPONENT)
+#define WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT
+#include "chrome/common/widevine_cdm_constants.h"
+#endif
+
+#if BUILDFLAG(ENABLE_CDM_HOST_VERIFICATION)
+#include "chrome/common/media/cdm_host_file_path.h"
+#endif
+
+#if defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
+bool IsWidevineAvailable(base::FilePath* adapter_path,
+                         base::FilePath* cdm_path,
+                         std::vector<std::string>* codecs_supported) {
+  static enum {
+    NOT_CHECKED,
+    FOUND,
+    NOT_FOUND,
+  } widevine_cdm_file_check = NOT_CHECKED;
+  // TODO(jrummell): We should add a new path for DIR_WIDEVINE_CDM and use that
+  // to locate the CDM and the CDM adapter.
+  if (PathService::Get(chrome::FILE_WIDEVINE_CDM_ADAPTER, adapter_path)) {
+    *cdm_path = adapter_path->DirName().AppendASCII(
+        base::GetNativeLibraryName(kWidevineCdmLibraryName));
+    if (widevine_cdm_file_check == NOT_CHECKED) {
+      widevine_cdm_file_check =
+          (base::PathExists(*adapter_path) && base::PathExists(*cdm_path))
+              ? FOUND
+              : NOT_FOUND;
+    }
+    if (widevine_cdm_file_check == FOUND) {
+      // Add the supported codecs as if they came from the component manifest.
+      // This list must match the CDM that is being bundled with Chrome.
+      codecs_supported->push_back(kCdmSupportedCodecVp8);
+      codecs_supported->push_back(kCdmSupportedCodecVp9);
+#if BUILDFLAG(USE_PROPRIETARY_CODECS)
+      codecs_supported->push_back(kCdmSupportedCodecAvc1);
+#endif  // BUILDFLAG(USE_PROPRIETARY_CODECS)
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif  // defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
 
 namespace atom {
 
@@ -140,6 +192,76 @@ content::OriginTrialPolicy* AtomContentClient::GetOriginTrialPolicy() {
 void AtomContentClient::AddPepperPlugins(
     std::vector<content::PepperPluginInfo>* plugins) {
   AddPepperFlashFromCommandLine(plugins);
+}
+
+// TODO(xhwang): Move this to a common place if needed.
+const base::FilePath::CharType kSignatureFileExtension[] =
+    FILE_PATH_LITERAL(".sig");
+
+// Returns the signature file path given the |file_path|. This function should
+// only be used when the signature file and the file are located in the same
+// directory.
+base::FilePath GetSigFilePath(const base::FilePath& file_path) {
+  return file_path.AddExtension(kSignatureFileExtension);
+}
+
+void AtomContentClient::AddContentDecryptionModules(
+    std::vector<content::CdmInfo>* cdms,
+    std::vector<content::CdmHostFilePath>* cdm_host_file_paths) {
+  if (cdms) {
+// TODO(jrummell): Need to have a better flag to indicate systems Widevine
+// is available on. For now we continue to use ENABLE_PEPPER_CDMS so that
+// we can experiment between pepper and mojo.
+#if defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
+    base::FilePath adapter_path;
+    base::FilePath cdm_path;
+    std::vector<std::string> codecs_supported;
+    if (IsWidevineAvailable(&adapter_path, &cdm_path, &codecs_supported)) {
+      // CdmInfo needs |path| to be the actual Widevine library,
+      // not the adapter, so adjust as necessary. It will be in the
+      // same directory as the installed adapter.
+      const base::Version version(WIDEVINE_CDM_VERSION_STRING);
+      DCHECK(version.IsValid());
+      cdms->push_back(content::CdmInfo(kWidevineCdmType, version, cdm_path,
+                                       codecs_supported));
+    }
+#endif  // defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
+
+    // TODO(jrummell): Add External Clear Key CDM for testing, if it's
+    // available.
+  }
+
+#if BUILDFLAG(ENABLE_CDM_HOST_VERIFICATION)
+  if (cdm_host_file_paths) {
+#if defined(OS_WIN)
+  base::FilePath brave_exe_dir;
+  if (!PathService::Get(base::DIR_EXE, &brave_exe_dir))
+    NOTREACHED();
+  base::FilePath file_path;
+  if (!PathService::Get(base::FILE_EXE, &file_path))
+    NOTREACHED();
+  cdm_host_file_paths->reserve(1);
+
+  base::FilePath sig_path =
+    GetSigFilePath(file_path);
+  VLOG(1) << __func__ << ": unversioned file " << " at "
+    << file_path.value() << ", signature file " << sig_path.value();
+  cdm_host_file_paths->push_back(content::CdmHostFilePath(file_path, sig_path));
+#elif defined(OS_MACOSX)
+  base::FilePath brave_framework_path =
+      base::mac::FrameworkBundlePath().Append(chrome::kFrameworkExecutableName);
+
+  base::FilePath brave_framework_sig_path = GetSigFilePath(
+      brave_framework_path.Append(chrome::kFrameworkExecutableName));
+
+  VLOG(1) << __func__
+           << ": brave_framework_path=" << brave_framework_path.value()
+           << ", signature_path=" << brave_framework_sig_path.value();
+  cdm_host_file_paths->push_back(
+      content::CdmHostFilePath(brave_framework_path, brave_framework_sig_path));
+#endif
+  }
+#endif
 }
 
 }  // namespace atom
