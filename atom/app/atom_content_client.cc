@@ -248,17 +248,7 @@ void AtomContentClient::AddContentDecryptionModules(
     << file_path.value() << ", signature file " << sig_path.value();
   cdm_host_file_paths->push_back(content::CdmHostFilePath(file_path, sig_path));
 #elif defined(OS_MACOSX)
-  base::FilePath brave_framework_path =
-      base::mac::FrameworkBundlePath().Append(chrome::kFrameworkExecutableName);
-
-  base::FilePath brave_framework_sig_path = GetSigFilePath(
-      brave_framework_path.Append(chrome::kFrameworkExecutableName));
-
-  VLOG(1) << __func__
-           << ": brave_framework_path=" << brave_framework_path.value()
-           << ", signature_path=" << brave_framework_sig_path.value();
-  cdm_host_file_paths->push_back(
-      content::CdmHostFilePath(brave_framework_path, brave_framework_sig_path));
+  chrome::AddCdmHostFilePaths(cdm_host_file_paths);
 #endif
   }
 #endif
