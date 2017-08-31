@@ -91,7 +91,7 @@ index 296f829cbb3080a60e7c059c9947c85201550c6c..a691cd481eb3a9bce1a8750a860226a1
    goma_prefix = ""
  }
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 070d7c6008b1df85486014c538bc6e98b6771220..c26cad1e37ea14fabab1ff39c348cf1fd54d49e8 100644
+index 070d7c6008b1df85486014c538bc6e98b6771220..7e3dfd343e5af0564edd18d2a99903e79c5ed024 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
 @@ -33,6 +33,11 @@ if (is_android) {
@@ -106,6 +106,17 @@ index 070d7c6008b1df85486014c538bc6e98b6771220..c26cad1e37ea14fabab1ff39c348cf1f
  }
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+@@ -1011,6 +1016,10 @@ if (is_win) {
+ 
+     create_bundle("widevine_resources_bundle") {
+       output_name = "Widevine Resources.bundle"
++      # MUON(darkdh): output collision prevention
++      if (!muon_chromium_build) {
++        output_name = "$output_name.dummy"
++      }
+       bundle_root_dir = "$root_build_dir/$output_name/Contents"
+       bundle_resources_dir = bundle_root_dir + "/Resources"
+ 
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
 index f03b03a8d44239fa2831c4d797c5a64b81efe7a8..8094b885eef4e9adfe5c72f19329abe4e73e95ab 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
@@ -732,6 +743,19 @@ index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b35962
      @"Google Chrome": @"Google Chrome",
      @"Google Chrome Canary": @"Google Chrome",
    };
+diff --git a/chrome/common/media/cdm_host_file_path.cc b/chrome/common/media/cdm_host_file_path.cc
+index 317ea8faa3989a74f4f6e075df18cd83f856d402..93e2355ed30a6b89246e390c57928e31c5490870 100644
+--- a/chrome/common/media/cdm_host_file_path.cc
++++ b/chrome/common/media/cdm_host_file_path.cc
+@@ -20,7 +20,7 @@
+ 
+ namespace chrome {
+ 
+-#if defined(GOOGLE_CHROME_BUILD)
++#if defined(GOOGLE_CHROME_BUILD) || !defined(MUON_CHROMIUM_BUILD)
+ 
+ namespace {
+ 
 diff --git a/chrome/installer/util/prebuild/create_string_rc.py b/chrome/installer/util/prebuild/create_string_rc.py
 index ce885e05e62af97777314397c79d1f05aa0dc36a..c2b8a35bfdbd6a23ce288b2007dcb8ce7fee8657 100755
 --- a/chrome/installer/util/prebuild/create_string_rc.py
