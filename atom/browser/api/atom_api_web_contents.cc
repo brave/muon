@@ -2122,12 +2122,22 @@ bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
 
 bool WebContents::SendIPCSharedMemory(const base::string16& channel,
                                       base::SharedMemory* shared_memory) {
-  base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
+  base::SharedMemoryHandle memory_handle = shared_memory->TakeHandle();
   if (!memory_handle.IsValid())
     return false;
 
-  return Send(
+  bool success = Send(
       new AtomViewMsg_Message_Shared(routing_id(), channel, memory_handle));
+
+  if (!success && memory_handle.IsValid()) {
+    // cleanup if the send failed
+    std::unique_ptr<base::SharedMemory>
+        temp(new base::SharedMemory(memory_handle, true));
+    temp->Unmap();
+    temp->Close();
+  }
+
+  return success;
 }
 
 bool WebContents::SendIPCMessage(bool all_frames,
