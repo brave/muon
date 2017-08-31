@@ -59,6 +59,7 @@
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
+#include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
@@ -487,6 +488,10 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
     }
+
+    if (ResourceCoordinatorWebContentsObserver::IsEnabled())
+      ResourceCoordinatorWebContentsObserver::CreateForWebContents(
+          web_contents);
   }
 
   Init(isolate);
@@ -579,6 +584,7 @@ bool WebContents::DidAddMessageToConsole(content::WebContents* source,
 
 bool WebContents::ShouldCreateWebContents(
     content::WebContents* web_contents,
+    content::RenderFrameHost* opener,
     content::SiteInstance* source_site_instance,
     int32_t route_id,
     int32_t main_frame_route_id,
@@ -627,12 +633,11 @@ void WebContents::WebContentsCreated(
     int opener_render_frame_id,
     const std::string& frame_name,
     const GURL& target_url,
-    content::WebContents* new_contents,
-    const base::Optional<content::WebContents::CreateParams>& create_params) {
+    content::WebContents* new_contents) {
   if (guest_delegate_) {
     guest_delegate_->WebContentsCreated(
         source_contents, opener_render_process_id, opener_render_frame_id,
-        frame_name, target_url, new_contents, create_params);
+        frame_name, target_url, new_contents);
   }
 }
 
@@ -1336,7 +1341,7 @@ void WebContents::DidUpdateFaviconURL(
     const std::vector<content::FaviconURL>& urls) {
   std::set<GURL> unique_urls;
   for (const auto& iter : urls) {
-    if (iter.icon_type != content::FaviconURL::FAVICON)
+    if (iter.icon_type != content::FaviconURL::IconType::kFavicon)
       continue;
     const GURL& url = iter.icon_url;
     if (url.is_valid())
@@ -1586,7 +1591,7 @@ void WebContents::DownloadURL(const GURL& url,
     content::BrowserContext::GetDownloadManager(browser_context);
 
   auto params = content::DownloadUrlParameters::CreateForWebContentsMainFrame(
-          web_contents(), url);
+          web_contents(), url, NO_TRAFFIC_ANNOTATION_YET);
   if (prompt_for_location)
     params->set_prompt(prompt_for_location);
 
@@ -2353,9 +2358,8 @@ v8::Local<v8::Value> WebContents::TabValue() {
   std::unique_ptr<base::DictionaryValue> value(
     ExtensionTabUtil::CreateTabObject(web_contents())->ToValue().release());
 
-  std::unique_ptr<content::V8ValueConverter>
-      converter(content::V8ValueConverter::create());
-  return converter->ToV8Value(value.get(), isolate()->GetCurrentContext());
+  return content::V8ValueConverter::Create()->ToV8Value(
+      value.get(), isolate()->GetCurrentContext());
 }
 
 int32_t WebContents::ID() const {

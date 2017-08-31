@@ -256,7 +256,8 @@ void Extension::OnExtensionReady(content::BrowserContext* browser_context,
   install_info.Set("version", extension->VersionString());
   install_info.Set("description", extension->description());
   auto manifest_copy = extension->manifest()->value()->CreateDeepCopy();
-  std::unique_ptr<V8ValueConverter> converter(V8ValueConverter::create());
+  std::unique_ptr<V8ValueConverter> converter = V8ValueConverter::Create();
+
   install_info.Set("manifest", converter->ToV8Value(manifest_copy.get(),
       isolate()->GetCurrentContext()));
 

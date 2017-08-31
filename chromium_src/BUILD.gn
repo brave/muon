@@ -139,6 +139,7 @@ source_set("browser") {
     "//components/prefs",
     "//components/ssl_config",
     "//components/spellcheck:build_features",
+    "//components/safe_browsing:csd_proto",
     "//content/public/browser",
     "//electron/atom/browser",
   ]
@@ -428,6 +429,8 @@ source_set("browser") {
   }
   if (enable_spellcheck) {
     sources += [
+      "//chrome/browser/spellchecker/spell_check_host_impl.cc",
+      "//chrome/browser/spellchecker/spell_check_host_impl.h",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
       "//chrome/browser/spellchecker/spellcheck_dictionary.h",
@@ -435,8 +438,6 @@ source_set("browser") {
       "//chrome/browser/spellchecker/spellcheck_factory.h",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.h",
-      "//chrome/browser/spellchecker/spellcheck_message_filter.cc",
-      "//chrome/browser/spellchecker/spellcheck_message_filter.h",
       "//chrome/browser/spellchecker/spellcheck_message_filter_platform_mac.cc",
       "//chrome/browser/spellchecker/spellcheck_service.cc",
       "//chrome/browser/spellchecker/spellcheck_service.h",
@@ -647,8 +648,6 @@ source_set("password_manager") {
     "//chrome/browser/password_manager/password_store_proxy_mac.cc",
     "//chrome/browser/password_manager/password_store_win.h",
     "//chrome/browser/password_manager/password_store_win.cc",
-    "//chrome/browser/password_manager/simple_password_store_mac.h",
-    "//chrome/browser/password_manager/simple_password_store_mac.cc",
   ]
 
   deps = [
@@ -779,12 +778,18 @@ source_set("tab_manager") {
     "chrome/browser/lifetime/application_lifetime.cc",
     "//chrome/browser/memory/oom_memory_details.cc",
     "//chrome/browser/memory/oom_memory_details.h",
-    "//chrome/browser/memory/tab_manager.cc",
-    "//chrome/browser/memory/tab_manager.h",
-    "//chrome/browser/memory/tab_manager_web_contents_data.cc",
-    "//chrome/browser/memory/tab_manager_web_contents_data.h",
-    "//chrome/browser/memory/tab_stats.cc",
-    "//chrome/browser/memory/tab_stats.h",
+    "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.cc",
+    "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h",
+    "//chrome/browser/resource_coordinator/tab_manager.cc",
+    "//chrome/browser/resource_coordinator/tab_manager.h",
+    "//chrome/browser/resource_coordinator/tab_manager_grc_tab_signal_observer.cc",
+    "//chrome/browser/resource_coordinator/tab_manager_grc_tab_signal_observer.h",
+    "//chrome/browser/resource_coordinator/tab_manager_stats_collector.cc",
+    "//chrome/browser/resource_coordinator/tab_manager_stats_collector.h",
+    "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.cc",
+    "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.h",
+    "//chrome/browser/resource_coordinator/tab_stats.cc",
+    "//chrome/browser/resource_coordinator/tab_stats.h",
     "//chrome/browser/memory_details.cc",
     "//chrome/browser/memory_details.h",
     "//chrome/browser/memory_details_linux.cc",
@@ -829,6 +834,8 @@ source_set("sessions") {
     "chrome/browser/profiles/profile_manager.h",
     "chrome/browser/profiles/profiles_state.cc",
     "chrome/browser/profiles/profiles_state.h",
+    "chrome/browser/sessions/session_restore.cc",
+    "//chrome/browser/sessions/session_restore.h",
     "//chrome/browser/sessions/session_tab_helper.cc",
     "//chrome/browser/sessions/session_tab_helper.h",
     "//chrome/browser/profiles/sql_init_error_message_ids.cc",

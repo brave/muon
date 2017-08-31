@@ -2,6 +2,8 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include <utility>
+
 #include "atom/browser/atom_browser_main_parts.h"
 
 #include "atom/browser/api/trackable_object.h"
@@ -38,6 +40,15 @@
 #include "device/geolocation/geolocation_provider.h"
 #include "v8/include/v8.h"
 #include "v8/include/v8-debug.h"
+
+#if defined(OS_LINUX)
+#include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
+#include "chrome/common/chrome_paths_internal.h"
+#include "chrome/common/chrome_switches.h"
+#include "components/os_crypt/key_storage_config_linux.h"
+#include "components/os_crypt/os_crypt.h"
+#include "ui/base/l10n/l10n_util.h"
+#endif
 
 #if defined(USE_X11)
 #include "chrome/browser/ui/libgtkui/gtk_util.h"
@@ -205,6 +216,23 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   // PreProfileInit
   EnsureBrowserContextKeyedServiceFactoriesBuilt();
+  auto command_line = base::CommandLine::ForCurrentProcess();
+#if defined(OS_LINUX)
+  std::unique_ptr<os_crypt::Config> config(new os_crypt::Config());
+  // Forward to os_crypt the flag to use a specific password store.
+  config->store =
+      command_line->GetSwitchValueASCII(switches::kPasswordStore);
+  // Forward the product name
+  config->product_name = l10n_util::GetStringUTF8(IDS_PRODUCT_NAME);
+  // OSCrypt may target keyring, which requires calls from the main thread.
+  config->main_thread_runner = content::BrowserThread::GetTaskRunnerForThread(
+      content::BrowserThread::UI);
+  // OSCrypt can be disabled in a special settings file.
+  config->should_use_preference =
+      command_line->HasSwitch(switches::kEnableEncryptionSelection);
+  chrome::GetDefaultUserDataDirectory(&config->user_data_path);
+  OSCrypt::SetConfig(std::move(config));
+#endif
 
   browser_context_ = ProfileManager::GetActiveUserProfile();
   brightray::BrowserMainParts::PreMainMessageLoopRun();
@@ -224,8 +252,6 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   Browser::Get()->DidFinishLaunching(*empty_info);
 #endif
 
-  // we want to allow the app to override the command line before running this
-  auto command_line = base::CommandLine::ForCurrentProcess();
   // auto feature_list = base::FeatureList::GetInstance();
   base::FeatureList::InitializeInstance(
       command_line->GetSwitchValueASCII(switches::kEnableFeatures),
