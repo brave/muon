@@ -6,6 +6,7 @@
 #define ATOM_COMMON_NATIVE_MATE_CONVERTERS_NET_CONVERTER_H_
 
 #include <memory>
+
 #include "base/memory/ref_counted.h"
 #include "native_mate/converter.h"
 
