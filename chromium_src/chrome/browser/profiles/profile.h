@@ -147,8 +147,6 @@ class Profile : public atom::AtomBrowserContext {
   // true or false, so that calls can be nested.
   // int accessibility_pause_level_;
 
-  bool is_guest_profile_;
-
   // A non-browsing profile not associated to a user. Sample use: User-Manager.
   // bool is_system_profile_;
 
