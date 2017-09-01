@@ -1160,15 +1160,9 @@ index fd395915885d03c8eedf05883c433cda5a5a11ba..91995a17ae4a5c52107294e86f3357f0
  IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
                      int /* document cookie */)
 diff --git a/components/printing/renderer/print_web_view_helper.cc b/components/printing/renderer/print_web_view_helper.cc
-index 3c9dfc0d1ed3fbceb6dacf663dd8fb4ee9f045d3..2459269e8ec539d33c7109ea89b2372c867b8dd3 100644
+index 3c9dfc0d1ed3fbceb6dacf663dd8fb4ee9f045d3..62faae3d602a22296a723d01ddb0bcb4bc14fd09 100644
 --- a/components/printing/renderer/print_web_view_helper.cc
 +++ b/components/printing/renderer/print_web_view_helper.cc
-@@ -1,4 +1,4 @@
--// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-+/// Copyright (c) 2012 The Chromium Authors. All rights reserved.
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- 
 @@ -320,7 +320,7 @@ bool PrintingNodeOrPdfFrame(const blink::WebLocalFrame* frame,
    return plugin && plugin->SupportsPaginatedPrint();
  }
