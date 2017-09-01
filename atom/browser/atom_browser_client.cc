@@ -6,8 +6,6 @@
 
 #include "atom/browser/atom_browser_client.h"
 
-#include "base/memory/ptr_util.h"
-
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/api/atom_api_protocol.h"
 #include "atom/browser/atom_browser_context.h"
@@ -22,6 +20,7 @@
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
 #include "base/files/file_util.h"
+#include "base/memory/ptr_util.h"
 #include "base/stl_util.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
