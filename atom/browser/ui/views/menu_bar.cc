@@ -11,6 +11,7 @@
 #include "atom/browser/ui/views/menu_delegate.h"
 #include "atom/browser/ui/views/submenu_button.h"
 #include "ui/base/models/menu_model.h"
+#include "ui/gfx/geometry/insets.h"
 #include "ui/views/background.h"
 #include "ui/views/layout/box_layout.h"
 
@@ -52,7 +53,7 @@ MenuBar::MenuBar()
       menu_model_(NULL) {
   UpdateMenuBarColor();
   SetLayoutManager(new views::BoxLayout(
-      views::BoxLayout::kHorizontal, 0, 0, 0));
+      views::BoxLayout::kHorizontal));
   menu_delegate_ = new MenuDelegate(this);
 }
 
@@ -167,7 +168,7 @@ void MenuBar::UpdateMenuBarColor() {
   GetMenuBarColor(&enabled_color_, &disabled_color_, &highlight_color_,
                   &hover_color_, &background_color_);
 #endif
-  set_background(views::Background::CreateSolidBackground(background_color_));
+  SetBackground(views::CreateSolidBackground(background_color_));
 }
 
 }  // namespace atom

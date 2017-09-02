@@ -33,7 +33,6 @@ BraveProfileImportHandler::~BraveProfileImportHandler() {}
 
 // static
 void BraveProfileImportHandler::Create(
-    const service_manager::BindSourceInfo& source_info,
     mojo::InterfaceRequest<chrome::mojom::ProfileImport> request) {
   mojo::MakeStrongBinding(base::MakeUnique<BraveProfileImportHandler>(),
                           std::move(request));
@@ -73,6 +72,7 @@ void BraveProfileImportHandler::StartImport(
       *localized_strings,
       ThreadSafeProfileImportObserverPtr::Create(std::move(observer)));
   import_thread_->task_runner()->PostTask(
-      FROM_HERE, base::Bind(&Importer::StartImport, importer_,
-                            source_profile, items, base::RetainedRef(bridge_)));
+      FROM_HERE, base::BindOnce(&Importer::StartImport, importer_,
+                                source_profile, items,
+                                base::RetainedRef(bridge_)));
 }

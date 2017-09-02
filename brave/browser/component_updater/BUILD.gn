@@ -18,5 +18,6 @@ source_set("component_updater") {
     "//third_party/widevine/cdm:headers",
     "//components/component_updater",
     "//components/update_client",
+    "//content/public/common/"
   ]
 }
