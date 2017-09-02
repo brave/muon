@@ -504,4 +504,9 @@ void AtomExtensionsBrowserClient::AttachExtensionTaskManagerTag(
     ViewType view_type) {
 }
 
+bool AtomExtensionsBrowserClient::IsLockScreenContext(
+    content::BrowserContext* context) {
+  return false;
+}
+
 }  // namespace extensions

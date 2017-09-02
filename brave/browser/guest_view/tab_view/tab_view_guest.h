@@ -45,8 +45,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
       int opener_render_frame_id,
       const std::string& frame_name,
       const GURL& target_url,
-      content::WebContents* new_contents,
-      const base::Optional<content::WebContents::CreateParams>& create_params)
+      content::WebContents* new_contents)
       override;
   content::WebContents* OpenURLFromTab(
     content::WebContents* source,
@@ -64,7 +63,6 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void CreateWebContents(
     const base::DictionaryValue& create_params,
     const WebContentsCreatedCallback& callback) final;
-  bool CanRunInDetachedState() const final;
   void DidAttachToEmbedder() final;
   void DidDetachFromEmbedder() final;
   bool ZoomPropagatesFromEmbedderToGuest() const final;

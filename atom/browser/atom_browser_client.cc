@@ -20,6 +20,7 @@
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
 #include "base/files/file_util.h"
+#include "base/memory/ptr_util.h"
 #include "base/stl_util.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
@@ -38,6 +39,7 @@
 #include "content/public/common/content_switches.h"
 #include "content/public/common/web_preferences.h"
 #include "extensions/features/features.h"
+#include "net/ssl/client_cert_identity.h"
 #include "net/ssl/ssl_cert_request_info.h"
 #include "ppapi/host/ppapi_host.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -231,11 +233,12 @@ void AtomBrowserClient::AllowCertificateError(
 void AtomBrowserClient::SelectClientCertificate(
     content::WebContents* web_contents,
     net::SSLCertRequestInfo* cert_request_info,
-    net::CertificateList client_certs,
+    net::ClientCertIdentityList client_certs,
     std::unique_ptr<content::ClientCertificateDelegate> delegate) {
   if (!client_certs.empty() && delegate_) {
     delegate_->SelectClientCertificate(web_contents, cert_request_info,
-                                       client_certs, std::move(delegate));
+                                       std::move(client_certs),
+                                       std::move(delegate));
   }
 }
 

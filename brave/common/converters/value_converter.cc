@@ -23,7 +23,7 @@ bool Converter<base::DictionaryValue>::FromV8(Isolate* isolate,
                                               Local<Value> val,
                                               base::DictionaryValue* out) {
   std::unique_ptr<content::V8ValueConverter>
-      converter(content::V8ValueConverter::create());
+      converter(content::V8ValueConverter::Create());
   std::unique_ptr<base::Value> value(converter->FromV8Value(
       val, isolate->GetCurrentContext()));
   if (value && value->IsType(base::Value::Type::DICTIONARY)) {
@@ -38,7 +38,7 @@ Local<Value> Converter<base::DictionaryValue>::ToV8(
     Isolate* isolate,
     const base::DictionaryValue& val) {
   std::unique_ptr<content::V8ValueConverter>
-      converter(content::V8ValueConverter::create());
+      converter(content::V8ValueConverter::Create());
   return converter->ToV8Value(&val, isolate->GetCurrentContext());
 }
 
@@ -46,7 +46,7 @@ bool Converter<base::ListValue>::FromV8(Isolate* isolate,
                                         Local<Value> val,
                                         base::ListValue* out) {
   std::unique_ptr<content::V8ValueConverter>
-      converter(content::V8ValueConverter::create());
+      converter(content::V8ValueConverter::Create());
   std::unique_ptr<base::Value> value(converter->FromV8Value(
       val, isolate->GetCurrentContext()));
   if (value->IsType(base::Value::Type::LIST)) {
@@ -61,7 +61,7 @@ Local<Value> Converter<base::ListValue>::ToV8(
     Isolate* isolate,
     const base::ListValue& val) {
   std::unique_ptr<content::V8ValueConverter>
-      converter(content::V8ValueConverter::create());
+      converter(content::V8ValueConverter::Create());
   return converter->ToV8Value(&val, isolate->GetCurrentContext());
 }
 

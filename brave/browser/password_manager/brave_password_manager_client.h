@@ -12,12 +12,14 @@
 
 #include "base/compiler_specific.h"
 #include "base/macros.h"
+#include "base/optional.h"
 #include "brave/browser/password_manager/brave_credentials_filter.h"
 #include "components/autofill/content/common/autofill_driver.mojom.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #include "components/password_manager/content/browser/credential_manager_impl.h"
 #include "components/password_manager/core/browser/password_manager.h"
 #include "components/password_manager/core/browser/password_manager_client.h"
+#include "components/password_manager/core/browser/password_manager_metrics_recorder.h"
 #include "components/password_manager/core/browser/password_reuse_detection_manager.h"
 #include "components/prefs/pref_member.h"
 #include "content/public/browser/render_widget_host.h"
@@ -105,7 +107,9 @@ class BravePasswordManagerClient
   void CheckSafeBrowsingReputation(const GURL& form_action,
                                    const GURL& frame_url) override;
   void CheckProtectedPasswordEntry(
-      const std::string& password_saved_domain) override;
+      const std::string& password_saved_domain,
+      bool password_field_exists) override;
+
 #endif
   password_manager::PasswordSyncState GetPasswordSyncState() const override;
   bool WasLastNavigationHTTPError() const override;
@@ -131,6 +135,12 @@ class BravePasswordManagerClient
                                 const autofill::PasswordForm& form) override;
   void GenerationAvailableForForm(const autofill::PasswordForm& form) override;
   void HidePasswordGenerationPopup() override;
+
+  password_manager::PasswordManagerMetricsRecorder& GetMetricsRecorder()
+      override;
+
+  ukm::UkmRecorder* GetUkmRecorder() override;
+  ukm::SourceId GetUkmSourceId() override;
 
   static void CreateForWebContentsWithAutofillClient(
       content::WebContents* contents,
@@ -219,6 +229,17 @@ class BravePasswordManagerClient
   std::unique_ptr<password_manager::PasswordFormManager> form_to_save_;
 
   atom::api::WebContents* api_web_contents_;
+
+
+  // If set, this stores a ukm::SourceId that is bound to the last committed
+  // navigation of the tab owning this BravePasswordManagerClient.
+  base::Optional<ukm::SourceId> ukm_source_id_;
+
+  // Recorder of metrics that is associated with the last committed navigation
+  // of the WebContents owning this BravePasswordManagerClient. May be unset at
+  // times. Sends statistics on destruction.
+  base::Optional<password_manager::PasswordManagerMetricsRecorder>
+      metrics_recorder_;
 
   DISALLOW_COPY_AND_ASSIGN(BravePasswordManagerClient);
 };

@@ -22,6 +22,7 @@
 #include "net/cert/x509_certificate.h"
 #include "net/http/http_request_headers.h"
 #include "net/http/http_response_headers.h"
+#include "net/ssl/client_cert_identity.h"
 #include "net/url_request/url_request.h"
 
 #include "atom/common/node_includes.h"
@@ -41,22 +42,34 @@ v8::Local<v8::Value> Converter<const net::AuthChallengeInfo*>::ToV8(
 }
 
 // static
+v8::Local<v8::Value> Converter<std::unique_ptr<net::ClientCertIdentity>>::ToV8(
+    v8::Isolate* isolate, const std::unique_ptr<net::ClientCertIdentity>& val) {
+  return ConvertToV8(isolate, *val->certificate());
+}
+
+// static
 v8::Local<v8::Value> Converter<scoped_refptr<net::X509Certificate>>::ToV8(
     v8::Isolate* isolate, const scoped_refptr<net::X509Certificate>& val) {
+  return ConvertToV8(isolate, *val);
+}
+
+// static
+v8::Local<v8::Value> Converter<net::X509Certificate>::ToV8(
+    v8::Isolate* isolate, const net::X509Certificate& val) {
   mate::Dictionary dict(isolate, v8::Object::New(isolate));
   std::string encoded_data;
   net::X509Certificate::GetPEMEncoded(
-      val->os_cert_handle(), &encoded_data);
+      val.os_cert_handle(), &encoded_data);
   dict.Set("data", encoded_data);
-  dict.Set("issuerName", val->issuer().GetDisplayName());
-  dict.Set("subjectName", val->subject().GetDisplayName());
-  dict.Set("serialNumber", base::HexEncode(val->serial_number().data(),
-                                           val->serial_number().size()));
-  dict.Set("validStart", val->valid_start().ToDoubleT());
-  dict.Set("validExpiry", val->valid_expiry().ToDoubleT());
+  dict.Set("issuerName", val.issuer().GetDisplayName());
+  dict.Set("subjectName", val.subject().GetDisplayName());
+  dict.Set("serialNumber", base::HexEncode(val.serial_number().data(),
+                                           val.serial_number().size()));
+  dict.Set("validStart", val.valid_start().ToDoubleT());
+  dict.Set("validExpiry", val.valid_expiry().ToDoubleT());
   dict.Set("fingerprint",
            net::HashValue(
-              val->CalculateFingerprint256(val->os_cert_handle())).ToString());
+              val.CalculateFingerprint256(val.os_cert_handle())).ToString());
 
   return dict.GetHandle();
 }

@@ -373,6 +373,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
                               const base::string16& source_id) override;
   bool ShouldCreateWebContents(
       content::WebContents* web_contents,
+      content::RenderFrameHost* opener,
       content::SiteInstance* source_site_instance,
       int32_t route_id,
       int32_t main_frame_route_id,
@@ -389,8 +390,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
       int opener_render_frame_id,
       const std::string& frame_name,
       const GURL& target_url,
-      content::WebContents* new_contents,
-      const base::Optional<content::WebContents::CreateParams>& create_params)
+      content::WebContents* new_contents)
       override;
   void AddNewContents(content::WebContents* source,
                       content::WebContents* new_contents,

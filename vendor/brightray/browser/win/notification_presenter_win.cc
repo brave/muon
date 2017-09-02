@@ -10,7 +10,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/win/windows_version.h"
 #include "browser/win/windows_toast_notification.h"
-#include "content/public/browser/desktop_notification_delegate.h"
 #include "content/public/common/platform_notification_data.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/gfx/codec/png_codec.h"
