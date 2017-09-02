@@ -131,6 +131,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
     CreateThrottlesForNavigation(
       content::NavigationHandle* handle) override;
 
+  bool IsHandledURL(const GURL& url) override;
+
  protected:
   bool IsValidStoragePartitionId(
     content::BrowserContext* browser_context,

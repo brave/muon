@@ -51,6 +51,7 @@
 #include "gpu/config/gpu_switches.h"
 #include "mojo/public/cpp/bindings/scoped_interface_endpoint_handle.h"
 #include "net/base/filename_util.h"
+#include "net/url_request/url_request.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
@@ -711,6 +712,30 @@ void BraveContentBrowserClient::InitFrameInterfaces() {
   frame_interfaces_parameterized_->AddInterface(
       base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
                      BindPasswordManagerDriver));
+}
+
+bool BraveContentBrowserClient::IsHandledURL(const GURL& url) {
+  if (!url.is_valid())
+    return false;
+  // Keep in sync with ProtocolHandlers added by
+  // AtomBrowserContext::GetURLRequestContext().
+  static const char* const kProtocolList[] = {
+      url::kDataScheme,
+      url::kFileScheme,
+      url::kFtpScheme,
+      content::kChromeDevToolsScheme,
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+      extensions::kExtensionScheme,
+#endif
+      content::kChromeUIScheme,
+      url::kAboutScheme,
+  };
+
+  for (size_t i = 0; i < arraysize(kProtocolList); ++i) {
+    if (url.scheme() == kProtocolList[i])
+      return true;
+  }
+  return net::URLRequest::IsHandledProtocol(url.scheme());
 }
 
 }  // namespace brave
