@@ -14,7 +14,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_browser_context.h"
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
-#include "brave/browser/memory/guest_tab_manager.h"
+#include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
@@ -43,7 +43,7 @@
 
 using brave::BraveBrowserContext;
 using guest_view::GuestViewManager;
-using memory::TabManager;
+using resource_coordinator::TabManager;
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(extensions::TabHelper);
 
@@ -185,7 +185,7 @@ content::WebContents* TabHelper::DetachGuest() {
         browser_->tab_strip_model(), web_contents());
 
     null_contents->GetController().CopyStateFrom(
-        web_contents()->GetController());
+        web_contents()->GetController(), false);
 
     auto null_helper = FromWebContents(null_contents);
     null_helper->index_ = get_index();
@@ -464,7 +464,8 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 bool TabHelper::Discard() {
   if (guest()->attached()) {
     int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-    return !!GetTabManager()->DiscardTabById(web_contents_id);
+    return !!GetTabManager()->DiscardTabById(web_contents_id,
+                                             TabManager::kProactiveShutdown);
   } else {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());

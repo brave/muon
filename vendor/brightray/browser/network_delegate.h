@@ -59,6 +59,7 @@ class NetworkDelegate : public net::NetworkDelegate {
                       const std::string& cookie_line,
                       net::CookieOptions* options) override;
   bool OnCanAccessFile(const net::URLRequest& request,
+                       const base::FilePath& original_path,
                        const base::FilePath& path) const override;
   bool OnCanEnablePrivacyMode(
       const GURL& url,

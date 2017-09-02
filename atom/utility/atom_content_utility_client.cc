@@ -11,7 +11,6 @@
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
 #include "brave/utility/brave_profile_import_handler.h"
-#include "chrome/common/chrome_utility_messages.h"
 #include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
 #include "chrome/utility/utility_message_handler.h"
@@ -43,7 +42,6 @@ namespace atom {
 namespace {
 
 void CreateProxyResolverFactory(
-    const service_manager::BindSourceInfo& source_info,
     net::interfaces::ProxyResolverFactoryRequest request) {
   mojo::MakeStrongBinding(base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
                           std::move(request));
@@ -69,7 +67,6 @@ class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
 };
 
 void CreateResourceUsageReporter(
-    const service_manager::BindSourceInfo& source_info,
     mojo::InterfaceRequest<chrome::mojom::ResourceUsageReporter> request) {
   mojo::MakeStrongBinding(base::MakeUnique<ResourceUsageReporterImpl>(),
                           std::move(request));

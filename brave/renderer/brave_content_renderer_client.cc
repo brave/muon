@@ -175,6 +175,9 @@ void BraveContentRendererClient::RenderFrameCreated(
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   new SpellCheckProvider(render_frame, spellcheck_.get());
+#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
+  new SpellCheckPanel(render_frame);
+#endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #endif
 }
 
@@ -195,9 +198,6 @@ void BraveContentRendererClient::RenderViewCreated(
   if (SpellCheckProvider* provider =
           SpellCheckProvider::Get(render_view->GetMainRenderFrame()))
     provider->EnableSpellcheck(spellcheck_->IsSpellcheckEnabled());
-#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-  new SpellCheckPanel(render_view);
-#endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #endif
 }
 

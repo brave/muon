@@ -59,7 +59,7 @@ GURL GetOriginOrURL(const WebFrame* frame) {
   // WebRemoteFrame which does not have a document(), and the WebRemoteFrame's
   // URL is not replicated.
   if (top_origin == "null")
-    return frame->Top()->GetDocument().Url();
+    return frame->Top()->ToWebLocalFrame()->GetDocument().Url();
   return blink::WebStringToGURL(top_origin);
 }
 
@@ -347,10 +347,6 @@ bool ContentSettingsObserver::AllowIndexedDB(const WebString& name,
   return allow;
 }
 
-bool ContentSettingsObserver::AllowPlugins(bool enabled_per_settings) {
-  return enabled_per_settings;
-}
-
 bool ContentSettingsObserver::AllowScript(bool enabled_per_settings) {
   if (IsWhitelistedForContentSettings())
     return true;
@@ -410,7 +406,7 @@ bool ContentSettingsObserver::AllowStorage(bool local) {
     return false;
 
   StoragePermissionsKey key(
-      blink::WebStringToGURL(frame->GetDocument().GetSecurityOrigin().ToString()),
+      blink::WebStringToGURL(frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin().ToString()),
       local);
   std::map<StoragePermissionsKey, bool>::const_iterator permissions =
       cached_storage_permissions_.find(key);
@@ -516,7 +512,7 @@ bool ContentSettingsObserver::AllowAutoplay(bool default_value) {
         content_settings_manager_->GetSetting(
                           GetOriginOrURL(frame),
                           blink::WebStringToGURL(
-                              frame->GetDocument().GetSecurityOrigin().ToString()),
+                              frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin().ToString()),
                           "autoplay",
                           allow) != CONTENT_SETTING_BLOCK;
   }
@@ -579,8 +575,8 @@ bool ContentSettingsObserver::IsWhitelistedForContentSettings() const {
   }
 
   return IsWhitelistedForContentSettings(
-      web_frame->GetDocument().GetSecurityOrigin(),
-      web_frame->GetDocument().Url());
+      web_frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin(),
+      web_frame->ToWebLocalFrame()->GetDocument().Url());
 }
 
 bool ContentSettingsObserver::IsWhitelistedForContentSettings(

@@ -39,6 +39,7 @@
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #include "components/spellcheck/spellcheck_build_features.h"
+#include "components/variations/variations_switches.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
@@ -71,7 +72,7 @@
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
-#include "chrome/browser/spellchecker/spellcheck_message_filter.h"
+#include "chrome/browser/spellchecker/spell_check_host_impl.h"
 #endif
 
 #if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
@@ -241,28 +242,22 @@ void BraveContentBrowserClient::BindInterfaceRequest(
     mojo::ScopedMessagePipeHandle* interface_pipe) {
   if (source_info.identity.name() == content::mojom::kGpuServiceName &&
       gpu_binder_registry_.CanBindInterface(interface_name)) {
-    gpu_binder_registry_.BindInterface(source_info, interface_name,
+    gpu_binder_registry_.BindInterface(interface_name,
                                        std::move(*interface_pipe));
   }
 }
 
-void BraveContentBrowserClient::ExposeInterfacesToFrame(
-    service_manager::BinderRegistry* registry,
-    content::RenderFrameHost* render_frame_host) {
+void BraveContentBrowserClient::BindInterfaceRequestFromFrame(
+    content::RenderFrameHost* render_frame_host,
+    const std::string& interface_name,
+    mojo::ScopedMessagePipeHandle interface_pipe) {
+  if (!frame_interfaces_.get() && !frame_interfaces_parameterized_.get())
+    InitFrameInterfaces();
 
-  registry->AddInterface(
-      base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver,
-                 render_frame_host));
-
-  registry->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindPasswordManagerDriver,
-                 render_frame_host));
-
-  registry->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindSensitiveInputVisibilityService,
-                 render_frame_host));
+  if (!frame_interfaces_parameterized_->TryBindInterface(
+          interface_name, &interface_pipe, render_frame_host)) {
+    frame_interfaces_->TryBindInterface(interface_name, &interface_pipe);
+  }
 }
 
 bool BraveContentBrowserClient::BindAssociatedInterfaceRequestFromFrame(
@@ -290,9 +285,6 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
   host->AddFilter(new PluginInfoMessageFilter(id, profile));
 
-#if BUILDFLAG(ENABLE_SPELLCHECK)
-  host->AddFilter(new SpellCheckMessageFilter(id));
-#endif
 #if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
   host->AddFilter(new SpellCheckMessageFilterPlatform(id));
 #endif
@@ -481,7 +473,7 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
       switches::kDisableBundledPpapiFlash,
       switches::kDisableCastStreamingHWEncoding,
       switches::kDisableJavaScriptHarmonyShipping,
-      switches::kEnableBenchmarking,
+      variations::switches::kEnableBenchmarking,
       switches::kEnableNetBenchmarking,
       switches::kJavaScriptHarmony,
       switches::kPpapiFlashArgs,
@@ -707,6 +699,18 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
         base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
+}
+
+void BraveContentBrowserClient::InitFrameInterfaces() {
+  frame_interfaces_ = base::MakeUnique<service_manager::BinderRegistry>();
+  frame_interfaces_parameterized_ = base::MakeUnique<
+      service_manager::BinderRegistryWithArgs<content::RenderFrameHost*>>();
+
+  frame_interfaces_parameterized_->AddInterface(
+      base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver));
+  frame_interfaces_parameterized_->AddInterface(
+      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
+                     BindPasswordManagerDriver));
 }
 
 }  // namespace brave

@@ -351,8 +351,9 @@ void ChromeImporter::ImportPasswords() {
   std::unique_ptr<PasswordStoreX::NativeBackend> backend;
   base::nix::DesktopEnvironment desktop_env = GetDesktopEnvironment();
 
+  // WIP proper kEnableEncryptionSelection
   os_crypt::SelectedLinuxBackend selected_backend =
-      os_crypt::SelectBackend(std::string(), desktop_env);
+      os_crypt::SelectBackend(std::string(), true, desktop_env);
   if (!backend &&
       (selected_backend == os_crypt::SelectedLinuxBackend::KWALLET ||
       selected_backend == os_crypt::SelectedLinuxBackend::KWALLET5)) {

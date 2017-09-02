@@ -62,8 +62,8 @@ void ContentSettingsBindings::GetCurrentSetting(
   bool incognito = args[1].As<v8::Boolean>()->Value();
 
   auto render_view = context()->GetRenderFrame()->GetRenderView();
-  GURL main_frame_url =
-      render_view->GetWebView()->MainFrame()->GetDocument().Url();
+  GURL main_frame_url = render_view
+      ->GetWebView()->MainFrame()->ToWebLocalFrame()->GetDocument().Url();
 
   ContentSetting setting =
     atom::ContentSettingsManager::GetInstance()->GetSetting(
