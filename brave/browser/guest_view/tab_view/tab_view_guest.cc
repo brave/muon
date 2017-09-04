@@ -290,7 +290,7 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
     } else if (attached() && clone_) {
       clone_ = false;
       web_contents()->GetController().CopyStateFrom(
-          GetOpener()->web_contents()->GetController(), false);
+          GetOpener()->web_contents()->GetController(), true);
     }
   }
 
