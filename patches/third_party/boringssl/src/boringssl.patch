@@ -157,7 +157,7 @@ index 2de84f7d5dab71cf709fbf770308a2b691232b2e..435e92322108724617b52f6766052a69
  /* EVP_md5_sha1 is a TLS-specific |EVP_MD| which computes the concatenation of
   * MD5 and SHA-1, as used in TLS 1.1 and below. */
 diff --git a/include/openssl/nid.h b/include/openssl/nid.h
-index bc0ee3388b12872a8bef6ae32984f83103075262..65982232c85fa2f94fd4a1213c1f3a790089e59f 100644
+index afeb2dea4e0464082fa72fd1404f9321eb656dec..2c3c842cb4a21e937993132f7a7cfbae2c18c5db 100644
 --- a/include/openssl/nid.h
 +++ b/include/openssl/nid.h
 @@ -617,6 +617,12 @@ extern "C" {
@@ -174,19 +174,19 @@ index bc0ee3388b12872a8bef6ae32984f83103075262..65982232c85fa2f94fd4a1213c1f3a79
  #define LN_ripemd160WithRSA "ripemd160WithRSA"
  #define NID_ripemd160WithRSA 119
 diff --git a/util/BUILD.toplevel b/util/BUILD.toplevel
-index 68a17a604383f93e9d5722c71d0883838a5e24af..22ca47ae5dc5786d23dd4b2f00a33ab2d4c6099e 100644
+index af7bd303fc1667eaa1a04dcbdd7571f57211248d..5329144d931a572c68804a641283955526a784eb 100644
 --- a/util/BUILD.toplevel
 +++ b/util/BUILD.toplevel
-@@ -30,6 +30,7 @@ load(
-     "ssl_cc_sources",
+@@ -29,6 +29,7 @@ load(
+     "ssl_sources",
      "tool_sources",
      "tool_headers",
 +    "decrepit_sources",
  )
  
  config_setting(
-@@ -122,6 +123,15 @@ cc_library(
-     deps = [":crypto"],
+@@ -137,6 +138,15 @@ cc_library(
+     ],
  )
  
 +cc_library(
@@ -202,7 +202,7 @@ index 68a17a604383f93e9d5722c71d0883838a5e24af..22ca47ae5dc5786d23dd4b2f00a33ab2
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index ef340e640f42c41da62e8f3fe2e88a1a3373ff5b..89d159e8c67b0e361f016fe1b23bc403db1afb23 100644
+index 4feb4df8ea3f30313365d5b2e5cfcc4899ae8445..80868fc3dddc7e063d230973ab56d07c03fcff10 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
 @@ -164,6 +164,14 @@ class Android(object):

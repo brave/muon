@@ -1,8 +1,8 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 494ba22f2934d6418f36afc471c47f431bf5d7b1..b3025def092496e14a067efaa193d456dfe0d6f3 100644
+index 2e1f7c8babec56563108c376752c52bd5c7dc9b4..42676de085e373e17cb5c13d8921383a78c8190e 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -157,7 +157,13 @@ config("internal_config") {
+@@ -164,7 +164,13 @@ config("internal_config") {
  
    include_dirs = [ "." ]
  
