@@ -2035,10 +2035,10 @@ index 5be4065214fc8cc976f58c2b85f2441b04745648..e6406090db866a7b5e60cdee4b45381f
    if (GetWebMediaPlayer())
      GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index 5fbf9daf8b150748327b60b8a1c0e64a308985df..d9a520b1db4c331bd2beceb2dc29cf02b29230ff 100644
+index 5fbf9daf8b150748327b60b8a1c0e64a308985df..61b5e74d04b68884b8317315b3245d6a48636c3d 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -231,6 +231,10 @@ void AutoplayPolicy::UnlockUserGesture() {
+@@ -257,6 +257,10 @@ void AutoplayPolicy::UnlockUserGesture() {
  }
  
  bool AutoplayPolicy::IsGestureNeededForPlayback() const {
@@ -2046,7 +2046,7 @@ index 5fbf9daf8b150748327b60b8a1c0e64a308985df..d9a520b1db4c331bd2beceb2dc29cf02
 +  if (!IsAutoplayAllowedPerSettings()) {
 +    return true;
 +  }
-   if (!locked_pending_user_gesture_)
+   if (!IsLockedPendingUserGesture())
      return false;
  
 diff --git a/third_party/WebKit/public/platform/WebTouchPoint.h b/third_party/WebKit/public/platform/WebTouchPoint.h
