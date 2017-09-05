@@ -455,10 +455,19 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   // Intialize security state client.
   SecurityStateTabHelper::CreateForWebContents(web_contents);
 
+  std::string name;
+  options.Get("name", &name);
+
   if (!IsBackgroundPage()) {
     // Initialize the tab helper
     extensions::TabHelper::CreateForWebContents(web_contents);
 
+    if (name == "browserAction") {
+      // hack for browserAction
+      // see TabHelper::SetBrowser
+      auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
+      tab_helper->SetTabIndex(-2);
+    }
     // Initialize zoom
     zoom::ZoomController::CreateForWebContents(web_contents);
     brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
