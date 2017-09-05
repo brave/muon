@@ -906,7 +906,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index d6c99fc6523e792fd00641f62809499ac8408eb0..db9d180d9be632191fdcb6f6c266d567d0fc7719 100644
+index e6d33d29798a2c381f10ef82f7dc97cdd4bea89c..adac60ea0ee4ba2a77ac0d2fd3f26546ec242479 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -853,7 +853,7 @@ if (!is_android) {
@@ -1631,10 +1631,10 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 2f5ef2190d818b325c9c2c8fd0fc5ecd63df2047..76b4b4feaa2a9f7184eebb17d275ce0955351275 100644
+index 1ff9dfd84764771743b2134ed109a2caa52f02e1..957e764ff086a5ea1639e4700aed8a528cc86ec6 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
-@@ -1638,8 +1638,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
+@@ -1644,8 +1644,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
                            ? delegated_frame_host_->SurfaceIdAtPoint(
                                  delegate, point_in_pixels, transformed_point)
                            : viz::SurfaceId();
@@ -1731,10 +1731,10 @@ index 79e4cc1a047979ce1f6f8457f6c4f5ae6a691050..cc612d93d8d675a21a1bf9132ea4a9b8
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index effd1bee8a12bccf0407f85180bc2817f3a9efa6..7dc9f3a98de779b1a8ad1b71888e2ce9fdb36bce 100644
+index 7e017d13be525de671aaa7be335076b996e3525e..dfb56f80938b074474c663436297b073ed270740 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1662,7 +1662,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
+@@ -1663,7 +1663,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
    // This is set before initializing the render manager since
    // RenderFrameHostManager::Init calls back into us via its delegate to ask if
    // it should be hidden.
@@ -1744,7 +1744,7 @@ index effd1bee8a12bccf0407f85180bc2817f3a9efa6..7dc9f3a98de779b1a8ad1b71888e2ce9
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2217,7 +2218,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2218,7 +2219,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
@@ -1873,10 +1873,10 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
  
  // Details about a redirection of a resource request.
 diff --git a/content/public/common/web_preferences.cc b/content/public/common/web_preferences.cc
-index 767e91cc80ba987e26c6a8f3ac572fbdf5d4d693..44d2cb69d275912fac68a83a13cbd61fda6c859c 100644
+index d4ca2a11c2ad4f6b42076a17643a5db484a9e4e7..d3c10ebf3a11c46c05f19f73cc8fb23cfaa787cc 100644
 --- a/content/public/common/web_preferences.cc
 +++ b/content/public/common/web_preferences.cc
-@@ -221,7 +221,7 @@ WebPreferences::WebPreferences()
+@@ -222,7 +222,7 @@ WebPreferences::WebPreferences()
        presentation_receiver(false),
        media_controls_enabled(true),
        do_not_update_selection_on_mutating_selection_range(false),
