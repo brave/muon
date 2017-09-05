@@ -430,6 +430,10 @@ void TabHelper::SetBrowser(Browser* browser) {
                                 active_ ?
                                 TabStripModel::ADD_ACTIVE :
                                 TabStripModel::ADD_NONE);
+    } else if (index_ < TabStripModel::kNoTab) {
+      // hack for browserAction
+      // TODO(bridiver) - use extension view
+      return;
     }
 
     int add_types = TabStripModel::ADD_NONE;
