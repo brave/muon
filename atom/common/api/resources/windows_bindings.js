@@ -1,6 +1,7 @@
-var binding = require('binding').Binding.create('windows')
-
-var ipc = require('ipc_utils')
+var ipc = require('ipc_utils');
+var binding = require('binding').Binding.create('windows');
+var process = requireNative('process');
+var extensionId = process.GetExtensionId();
 
 var id = 1;
 
@@ -21,7 +22,7 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('create', function (createData, cb) {
-    console.warn('chrome.windows.create is not supported yet')
+    ipc.send('chrome-windows-create', extensionId, createData)
   })
 
   apiFunctions.setHandleRequest('getCurrent', function () {
