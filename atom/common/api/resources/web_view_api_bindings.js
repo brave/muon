@@ -98,7 +98,7 @@ const attachWindow = WebViewImpl.prototype.attachWindow$
 WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
   if (this.guest.getId() === opt_guestInstanceId &&
       this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
-    return
+    return true
   }
   const guestInstanceId = opt_guestInstanceId || this.guest.getId()
 
