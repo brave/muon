@@ -240,6 +240,9 @@ void TabViewGuest::CreateWebContents(
 
   mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
+  std::string name;
+  if (params.GetString("name", &name))
+    options.Set("name", name);
   std::string partition;
   params.GetString("partition", &partition);
   base::DictionaryValue partition_options;
