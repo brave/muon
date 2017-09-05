@@ -30,6 +30,7 @@
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/plugin_service.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
@@ -600,9 +601,10 @@ void NativeWindow::DidFirstVisuallyNonEmptyPaint() {
       base::Bind(&NativeWindow::NotifyReadyToShow, GetWeakPtr()));
 }
 
-bool NativeWindow::OnMessageReceived(const IPC::Message& message) {
+bool NativeWindow::OnMessageReceived(const IPC::Message& message,
+                                     content::RenderFrameHost* sender) {
   bool handled = true;
-  IPC_BEGIN_MESSAGE_MAP(NativeWindow, message)
+  IPC_BEGIN_MESSAGE_MAP_WITH_PARAM(NativeWindow, message, sender)
     IPC_MESSAGE_HANDLER(ExtensionHostMsg_UpdateDraggableRegions,
                         UpdateDraggableRegions)
     IPC_MESSAGE_UNHANDLED(handled = false)
@@ -612,11 +614,14 @@ bool NativeWindow::OnMessageReceived(const IPC::Message& message) {
 }
 
 void NativeWindow::UpdateDraggableRegions(
+    content::RenderFrameHost* sender,
     const std::vector<extensions::DraggableRegion>& regions) {
   // Draggable region is not supported for non-frameless window.
   if (has_frame_)
     return;
-  draggable_region_ = DraggableRegionsToSkRegion(regions);
+
+  if (!sender->GetParent())
+    draggable_region_ = DraggableRegionsToSkRegion(regions);
 }
 
 void NativeWindow::ScheduleUnresponsiveEvent(int ms) {

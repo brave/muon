@@ -139,6 +139,7 @@ class NativeWindowMac : public NativeWindow,
   gfx::Rect ContentBoundsToWindowBounds(const gfx::Rect& bounds);
   gfx::Rect WindowBoundsToContentBounds(const gfx::Rect& bounds);
   void UpdateDraggableRegions(
+      content::RenderFrameHost* sender,
       const std::vector<DraggableRegion>& regions) override;
 
   void ShowWindowButton(NSWindowButton button);
