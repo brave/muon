@@ -1538,6 +1538,20 @@ index f6c00f3db4dca275b810a91a42a7e0de81e4254e..f846c6f97362b3d170fcc50c20b579b8
  
      if (delegate_)
        delegate_->PreSandboxStartup();
+diff --git a/content/browser/browser_plugin/browser_plugin_guest.cc b/content/browser/browser_plugin/browser_plugin_guest.cc
+index 964c9a093a3b0bb07191863e1a0fb3d165046a8e..94316dfe690c367e0b2a7ccce0238b97f93a62d9 100644
+--- a/content/browser/browser_plugin/browser_plugin_guest.cc
++++ b/content/browser/browser_plugin/browser_plugin_guest.cc
+@@ -867,6 +867,9 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
+     rwhv->UnregisterFrameSinkId();
+ 
+   delegate_->DidDetach();
++
++  // MUON(bbondy): Make sure GetGuestProxyRoutingID gets new info on re-attach
++  guest_proxy_routing_id_ = MSG_ROUTING_NONE;
+ }
+ 
+ void BrowserPluginGuest::OnDragStatusUpdate(int browser_plugin_instance_id,
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index 9b9cfbdc53cfdaafcc311d5ee9146536331d600e..69bef89a1a6bcf6fece54463b2efd973a1ce7c46 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
