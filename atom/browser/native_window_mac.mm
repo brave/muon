@@ -17,6 +17,7 @@
 #include "brightray/browser/mac/event_dispatching_window.h"
 #include "content/public/browser/browser_accessibility_state.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
@@ -1228,10 +1229,13 @@ gfx::Rect NativeWindowMac::WindowBoundsToContentBounds(
 }
 
 void NativeWindowMac::UpdateDraggableRegions(
+    content::RenderFrameHost* sender,
     const std::vector<DraggableRegion>& regions) {
-  NativeWindow::UpdateDraggableRegions(regions);
-  draggable_regions_ = regions;
-  UpdateDraggableRegionViews(regions);
+  if (!sender->GetParent()) {
+    NativeWindow::UpdateDraggableRegions(sender, regions);
+    draggable_regions_ = regions;
+    UpdateDraggableRegionViews(regions);
+  }
 }
 
 void NativeWindowMac::ShowWindowButton(NSWindowButton button) {
