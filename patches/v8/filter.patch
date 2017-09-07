@@ -17,6 +17,37 @@ index 2e1f7c8babec56563108c376752c52bd5c7dc9b4..42676de085e373e17cb5c13d8921383a
      defines = [ "BUILDING_V8_SHARED" ]
    }
  }
+diff --git a/include/v8.h b/include/v8.h
+index 5a994430db1834e1bb3f1bd9edf70e2a6d248f9c..b68eaaacffaa72816270bf9400a067db614bec30 100644
+--- a/include/v8.h
++++ b/include/v8.h
+@@ -7204,6 +7204,9 @@ class V8_EXPORT Isolate {
+   V8_DEPRECATE_SOON("CpuProfiler should be created with CpuProfiler::New call.",
+                     CpuProfiler* GetCpuProfiler());
+ 
++  /** Returns the ArrayBuffer::Allocator used in this isolate. */
++  ArrayBuffer::Allocator* GetArrayBufferAllocator();
++
+   /** Returns true if this isolate has a current context. */
+   bool InContext();
+ 
+diff --git a/src/api.cc b/src/api.cc
+index 01fdbd666769af970cbd93e440a80e750e10d9fe..6c1a034d5102777c579088f286e7076c0cd5b45e 100644
+--- a/src/api.cc
++++ b/src/api.cc
+@@ -8329,6 +8329,12 @@ CpuProfiler* Isolate::GetCpuProfiler() {
+ }
+ 
+ 
++ArrayBuffer::Allocator* Isolate::GetArrayBufferAllocator() {
++  i::Isolate* isolate = reinterpret_cast<i::Isolate*>(this);
++  return isolate->array_buffer_allocator();
++}
++
++
+ bool Isolate::InContext() {
+   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(this);
+   return isolate->context() != NULL;
 diff --git a/src/profiler/profiler-listener.cc b/src/profiler/profiler-listener.cc
 index 169b12da0770c12b24d5881a85b87853668437cc..fe9ec80a86a506bfd989c781e71c35bc12e5bef2 100644
 --- a/src/profiler/profiler-listener.cc
