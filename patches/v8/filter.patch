@@ -1,5 +1,5 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 2e1f7c8babec56563108c376752c52bd5c7dc9b4..42676de085e373e17cb5c13d8921383a78c8190e 100644
+index deedf82d11b7c53b6082af95ff6325e5e5b57f35..135118a28300d48c68191f415a0dc38661d18653 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -164,7 +164,13 @@ config("internal_config") {
@@ -18,10 +18,10 @@ index 2e1f7c8babec56563108c376752c52bd5c7dc9b4..42676de085e373e17cb5c13d8921383a
    }
  }
 diff --git a/include/v8.h b/include/v8.h
-index 5a994430db1834e1bb3f1bd9edf70e2a6d248f9c..b68eaaacffaa72816270bf9400a067db614bec30 100644
+index 189eed5e65c451b2c4af2f9c13dff5e58673d1a1..d24d64f76d6c0beac1efffde91c19a2d687310ac 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -7204,6 +7204,9 @@ class V8_EXPORT Isolate {
+@@ -7208,6 +7208,9 @@ class V8_EXPORT Isolate {
    V8_DEPRECATE_SOON("CpuProfiler should be created with CpuProfiler::New call.",
                      CpuProfiler* GetCpuProfiler());
  
@@ -32,10 +32,10 @@ index 5a994430db1834e1bb3f1bd9edf70e2a6d248f9c..b68eaaacffaa72816270bf9400a067db
    bool InContext();
  
 diff --git a/src/api.cc b/src/api.cc
-index 01fdbd666769af970cbd93e440a80e750e10d9fe..6c1a034d5102777c579088f286e7076c0cd5b45e 100644
+index d676a7426c69e7bc0226c33879aee34c6c2d1e5a..d6aa48505627e72ea882ad29d4da9dd7e3446df2 100644
 --- a/src/api.cc
 +++ b/src/api.cc
-@@ -8329,6 +8329,12 @@ CpuProfiler* Isolate::GetCpuProfiler() {
+@@ -8311,6 +8311,12 @@ CpuProfiler* Isolate::GetCpuProfiler() {
  }
  
  
