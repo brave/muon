@@ -26,8 +26,6 @@ action("lib") {
     "browser/api/menu-item.js",
     "browser/api/menu-item-roles.js",
     "browser/api/navigation-controller.js",
-    "browser/api/power-monitor.js",
-    "browser/api/power-save-blocker.js",
     "browser/api/protocol.js",
     "browser/api/session.js",
     "browser/api/screen.js",
