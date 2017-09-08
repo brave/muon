@@ -203,11 +203,11 @@ node::Environment* NodeBindings::CreateEnvironment(
 
   node::DebugOptions debug_options;
   for (size_t i = 0; i < args.size(); ++i) {
-    debug_options.ParseOption(args[i]);
+    debug_options.ParseOption(c_argv[0], args[i]);
   }
   if (debug_options.inspector_enabled()) {
     // always enable the inspector
-    debug_options.ParseOption("--inspect");
+    debug_options.ParseOption(c_argv[0], "--inspect");
     env->inspector_agent()->Start(
         gin::V8Platform::Get(), nullptr, debug_options);
   }
