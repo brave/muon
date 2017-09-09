@@ -7,7 +7,7 @@
 
 namespace brightray {
 
-NotificationDelegate::NotificationDelegate(const std::string& notification_id)
+NotificationDelegate::NotificationDelegate(std::string notification_id)
     : notification_id_(notification_id) {
 }
 

@@ -26,6 +26,7 @@ CocoaNotification::CocoaNotification(NotificationDelegate* delegate,
 CocoaNotification::~CocoaNotification() {
   [NSUserNotificationCenter.defaultUserNotificationCenter
       removeDeliveredNotification:notification_];
+  delegate()->NotificationClosed();
 }
 
 void CocoaNotification::Show(const base::string16& title,
