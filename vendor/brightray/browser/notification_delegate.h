@@ -14,7 +14,7 @@ namespace brightray {
 class NotificationDelegate {
  public:
   NotificationDelegate();
-  NotificationDelegate(const std::string& notification_id);
+  NotificationDelegate(std::string notification_id);
   virtual ~NotificationDelegate() {}
 
   // The native Notification object is destroyed.
@@ -28,7 +28,7 @@ class NotificationDelegate {
   virtual void NotificationDisplayed();
 
  private:
-  const std::string& notification_id_;
+  const std::string notification_id_;
 
 DISALLOW_COPY_AND_ASSIGN(NotificationDelegate);
 };
