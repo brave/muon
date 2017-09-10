@@ -234,6 +234,19 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
   // gap between the preparation and the execution of that IPC.
   associated_registry->AddInterface(
       base::Bind(&CacheStatsRecorder::Create, render_process_host->GetID()));
+
+  scoped_refptr<base::SingleThreadTaskRunner> ui_task_runner =
+      content::BrowserThread::GetTaskRunnerForThread(
+          content::BrowserThread::UI);
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  registry->AddInterface(
+      base::Bind(&SpellCheckHostImpl::Create, render_process_host->GetID()),
+      ui_task_runner);
+#endif
+#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
+  registry->AddInterface(base::Bind(&SpellCheckPanelHostImpl::Create),
+      ui_task_runner);
+#endif
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
