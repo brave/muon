@@ -431,8 +431,6 @@ source_set("browser") {
     sources += [
       "//chrome/browser/spellchecker/spell_check_host_impl.cc",
       "//chrome/browser/spellchecker/spell_check_host_impl.h",
-      "//chrome/browser/spellchecker/spell_check_panel_host_impl.cc",
-      "//chrome/browser/spellchecker/spell_check_panel_host_impl.h",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
       "//chrome/browser/spellchecker/spellcheck_dictionary.h",
@@ -448,6 +446,13 @@ source_set("browser") {
       "//components/spellcheck/browser",
       "//components/spellcheck/common:common",
     ]
+
+    if (has_spellcheck_panel) {
+      souces += [
+        "//chrome/browser/spellchecker/spell_check_panel_host_impl.cc",
+        "//chrome/browser/spellchecker/spell_check_panel_host_impl.h",
+      ]
+    }
 
     if (!is_android) {
       deps += [ "//third_party/hunspell" ]
