@@ -9,7 +9,6 @@
 #include "atom/browser/api/atom_api_protocol.h"
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/atom_download_manager_delegate.h"
-#include "atom/browser/atom_permission_manager.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/net/asar/asar_protocol_handler.h"
 #include "atom/browser/net/atom_cert_verifier.h"
@@ -135,12 +134,6 @@ AtomBrowserContext::GetDownloadManagerDelegate() {
         new AtomDownloadManagerDelegate(download_manager));
   }
   return download_manager_delegate_.get();
-}
-
-content::PermissionManager* AtomBrowserContext::GetPermissionManager() {
-  if (!permission_manager_.get())
-    permission_manager_.reset(new AtomPermissionManager);
-  return permission_manager_.get();
 }
 
 std::unique_ptr<net::CertVerifier> AtomBrowserContext::CreateCertVerifier() {
