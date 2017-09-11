@@ -8,7 +8,6 @@
 #include "browser/browser_client.h"
 #include "browser/inspectable_web_contents_impl.h"
 #include "browser/network_delegate.h"
-#include "browser/permission_manager.h"
 #include "browser/special_storage_policy.h"
 #include "common/application_info.h"
 
@@ -179,12 +178,6 @@ content::PushMessagingService* BrowserContext::GetPushMessagingService() {
 
 content::SSLHostStateDelegate* BrowserContext::GetSSLHostStateDelegate() {
   return nullptr;
-}
-
-content::PermissionManager* BrowserContext::GetPermissionManager() {
-  if (!permission_manager_.get())
-    permission_manager_.reset(new PermissionManager);
-  return permission_manager_.get();
 }
 
 content::BackgroundSyncController* BrowserContext::GetBackgroundSyncController() {
