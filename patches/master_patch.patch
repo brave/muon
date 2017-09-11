@@ -1630,6 +1630,35 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  @property(readonly) NSTimeInterval timestamp;
  
  @end
+diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
+index 2f5ef2190d818b325c9c2c8fd0fc5ecd63df2047..76b4b4feaa2a9f7184eebb17d275ce0955351275 100644
+--- a/content/browser/renderer_host/render_widget_host_view_aura.cc
++++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
+@@ -1638,8 +1638,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
+                           ? delegated_frame_host_->SurfaceIdAtPoint(
+                                 delegate, point_in_pixels, transformed_point)
+                           : viz::SurfaceId();
+-  *transformed_point =
++
++  // MUON(bbondy): When the point hasn't changed, avoid the double floor
++  // convert from pixels to DIP, which can change the input point from a
++  // couple of pixels. This can cause problems for other parts in the code
++  // like SelectionController which does an exact point comparison.  The
++  // double conversion causes a problem in particular when the DPI is not a
++  // multiple of 100.
++  // For example at 175% DPI 21 * 1.75 = 36.75, floored gives 36.
++  // Then the second DIP convert: 36 / 1.75 = 20.57, floored gives 20.
++  // Same point but we lost a pixel in that case.
++  // See: https://github.com/brave/browser-laptop/issues/8472
++  if (point_in_pixels == *transformed_point) {
++    *transformed_point = point;
++  } else {
++    *transformed_point =
+       gfx::ConvertPointToDIP(device_scale_factor_, *transformed_point);
++  }
+ 
+   // It is possible that the renderer has not yet produced a surface, in which
+   // case we return our current namespace.
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
 index 79e4cc1a047979ce1f6f8457f6c4f5ae6a691050..cc612d93d8d675a21a1bf9132ea4a9b82a614152 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
