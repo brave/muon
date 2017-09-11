@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "atom/browser/atom_permission_manager.h"
+#include "brave/browser/brave_permission_manager.h"
 #include "brightray/browser/media/media_stream_devices_controller.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_process_host.h"
@@ -57,7 +57,7 @@ void WebContentsPermissionHelper::RequestPermission(
     const base::Callback<void(bool)>& callback,
     const GURL& security_origin, bool user_gesture) {
   auto rfh = web_contents_->GetMainFrame();
-  auto permission_manager = static_cast<AtomPermissionManager*>(
+  auto permission_manager = static_cast<brave::BravePermissionManager*>(
       web_contents_->GetBrowserContext()->GetPermissionManager());
   GURL origin;
   if (security_origin.is_empty()) {
