@@ -448,7 +448,7 @@ source_set("browser") {
     ]
 
     if (has_spellcheck_panel) {
-      souces += [
+      sources += [
         "//chrome/browser/spellchecker/spell_check_panel_host_impl.cc",
         "//chrome/browser/spellchecker/spell_check_panel_host_impl.h",
       ]
