@@ -35,6 +35,12 @@ bool WebContentsDestroyed(int render_process_id, int render_frame_id) {
   return contents->IsBeingDestroyed();
 }
 
+void PermissionStatusCallbackWrapper(const base::Callback<void(
+                    blink::mojom::PermissionStatus)>& callback,
+                    const std::vector<blink::mojom::PermissionStatus>& status) {
+  callback.Run(status.front());
+}
+
 }  // namespace
 
 BravePermissionManager::BravePermissionManager()
@@ -47,11 +53,8 @@ BravePermissionManager::~BravePermissionManager() {
 void BravePermissionManager::SetPermissionRequestHandler(
     const RequestHandler& handler) {
   if (handler.is_null() && !pending_requests_.empty()) {
-    for (const auto& request : pending_requests_) {
-      if (!WebContentsDestroyed(
-          request.second.render_process_id, request.second.render_frame_id))
-        request.second.callback.Run(blink::mojom::PermissionStatus::DENIED);
-    }
+    for (const auto& request : pending_requests_)
+      CancelPermissionRequest(request.first);
     pending_requests_.clear();
   }
   request_handler_ = handler;
@@ -63,18 +66,27 @@ int BravePermissionManager::RequestPermission(
     const GURL& requesting_origin,
     bool user_gesture,
     const base::Callback<void(
-        blink::mojom::PermissionStatus)>& response_callback) {
+          blink::mojom::PermissionStatus)>& response_callback) {
+
+  auto callback =
+      base::Bind(PermissionStatusCallbackWrapper, response_callback);
+  return RequestPermissions({ permission }, render_frame_host,
+      requesting_origin, user_gesture, callback);
+}
+
+int BravePermissionManager::RequestPermissions(
+    const std::vector<content::PermissionType>& permissions,
+    content::RenderFrameHost* render_frame_host,
+    const GURL& requesting_origin,
+    bool user_gesture,
+    const base::Callback<void(
+    const std::vector<blink::mojom::PermissionStatus>&)>& response_callback) {
   int render_frame_id = MSG_ROUTING_NONE;
   int render_process_id = MSG_ROUTING_NONE;
   GURL url;
   // web notifications do not currently have an available render_frame_host
   if (render_frame_host) {
     render_process_id = render_frame_host->GetProcess()->GetID();
-
-    if (permission == content::PermissionType::MIDI_SYSEX) {
-      content::ChildProcessSecurityPolicy::GetInstance()->
-          GrantSendMidiSysExMessage(render_process_id);
-    }
 
     content::WebContents* web_contents =
         content::WebContents::FromRenderFrameHost(render_frame_host);
@@ -84,6 +96,14 @@ int BravePermissionManager::RequestPermission(
       url = web_contents->GetURL();
     }
   }
+  std::vector<blink::mojom::PermissionStatus> permissionStatuses;
+  for (auto permission : permissions) {
+    if (permission == content::PermissionType::MIDI_SYSEX) {
+      content::ChildProcessSecurityPolicy::GetInstance()->
+          GrantSendMidiSysExMessage(render_frame_host->GetProcess()->GetID());
+    }
+    permissionStatuses.push_back(blink::mojom::PermissionStatus::GRANTED);
+  }
 
   if (!request_handler_.is_null()) {
     ++request_id_;
@@ -92,28 +112,27 @@ int BravePermissionManager::RequestPermission(
                                request_id_,
                                requesting_origin,
                                response_callback);
-
     pending_requests_[request_id_] =
-        { render_process_id, render_frame_id, callback };
-
-    request_handler_.Run(requesting_origin, url, permission, callback);
+        { render_process_id, render_frame_id, callback, permissions.size() };
+    request_handler_.Run(requesting_origin, url, permissions, callback);
     return request_id_;
   }
 
-  response_callback.Run(blink::mojom::PermissionStatus::GRANTED);
+  response_callback.Run(permissionStatuses);
   return kNoPendingOperation;
 }
 
 void BravePermissionManager::OnPermissionResponse(
     int request_id,
     const GURL& origin,
-    const base::Callback<void(blink::mojom::PermissionStatus)>& callback,
-    blink::mojom::PermissionStatus status) {
+    const ResponseCallback& callback,
+    const std::vector<blink::mojom::PermissionStatus>& status) {
   auto request = pending_requests_.find(request_id);
   if (request != pending_requests_.end()) {
     if (!WebContentsDestroyed(
-        request->second.render_process_id, request->second.render_frame_id))
+        request->second.render_process_id, request->second.render_frame_id)) {
       callback.Run(status);
+    }
     pending_requests_.erase(request);
   }
 }
@@ -123,11 +142,39 @@ void BravePermissionManager::CancelPermissionRequest(int request_id) {
   if (request != pending_requests_.end()) {
     if (!WebContentsDestroyed(
         request->second.render_process_id, request->second.render_frame_id)) {
-      request->second.callback.Run(blink::mojom::PermissionStatus::DENIED);
-    } else {
-      pending_requests_.erase(request);
+      std::vector<blink::mojom::PermissionStatus> permissionStatuses;
+      for (int i = 0; i < request->second.size; i++) {
+        permissionStatuses.push_back(blink::mojom::PermissionStatus::DENIED);
+      }
+      request->second.callback.Run(permissionStatuses);
     }
+    pending_requests_.erase(request);
   }
+}
+
+void BravePermissionManager::ResetPermission(
+    content::PermissionType permission,
+    const GURL& requesting_origin,
+    const GURL& embedding_origin) {
+}
+
+blink::mojom::PermissionStatus BravePermissionManager::GetPermissionStatus(
+    content::PermissionType permission,
+    const GURL& requesting_origin,
+    const GURL& embedding_origin) {
+  return blink::mojom::PermissionStatus::GRANTED;
+}
+
+int BravePermissionManager::SubscribePermissionStatusChange(
+    content::PermissionType permission,
+    const GURL& requesting_origin,
+    const GURL& embedding_origin,
+    const base::Callback<void(blink::mojom::PermissionStatus)>& callback) {
+  return -1;
+}
+
+void BravePermissionManager::UnsubscribePermissionStatusChange(
+    int subscription_id) {
 }
 
 }  // namespace brave
