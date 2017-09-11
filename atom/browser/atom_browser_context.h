@@ -15,7 +15,6 @@
 namespace atom {
 
 class AtomDownloadManagerDelegate;
-class AtomPermissionManager;
 
 class AtomBrowserContext : public brightray::BrowserContext {
  public:
@@ -38,7 +37,6 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
   // content::BrowserContext:
   content::DownloadManagerDelegate* GetDownloadManagerDelegate() override;
-  content::PermissionManager* GetPermissionManager() override;
 
   // brightray::BrowserContext:
   void RegisterPrefs(PrefRegistrySimple* pref_registry) override;
@@ -53,7 +51,6 @@ class AtomBrowserContext : public brightray::BrowserContext {
 
  private:
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;
-  std::unique_ptr<AtomPermissionManager> permission_manager_;
   bool use_cache_;
 
   // Managed by brightray::BrowserContext.
