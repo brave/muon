@@ -22,8 +22,6 @@ class SpecialStoragePolicy;
 
 namespace brightray {
 
-class PermissionManager;
-
 class BrowserContext : public content::BrowserContext,
                        public brightray::URLRequestContextGetter::Delegate {
  public:
@@ -119,7 +117,6 @@ class BrowserContext : public content::BrowserContext,
   scoped_refptr<URLRequestContextGetter> url_request_getter_;
   scoped_refptr<storage::SpecialStoragePolicy> storage_policy_;
   std::unique_ptr<PrefService> prefs_;
-  std::unique_ptr<PermissionManager> permission_manager_;
 
   base::WeakPtrFactory<BrowserContext> weak_factory_;
 
