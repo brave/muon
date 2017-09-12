@@ -143,7 +143,7 @@ void BravePermissionManager::CancelPermissionRequest(int request_id) {
     if (!WebContentsDestroyed(
         request->second.render_process_id, request->second.render_frame_id)) {
       std::vector<blink::mojom::PermissionStatus> permissionStatuses;
-      for (int i = 0; i < request->second.size; i++) {
+      for (size_t i = 0; i < request->second.size; i++) {
         permissionStatuses.push_back(blink::mojom::PermissionStatus::DENIED);
       }
       request->second.callback.Run(permissionStatuses);
