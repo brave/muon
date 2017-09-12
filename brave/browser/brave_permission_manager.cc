@@ -67,7 +67,6 @@ int BravePermissionManager::RequestPermission(
     bool user_gesture,
     const base::Callback<void(
           blink::mojom::PermissionStatus)>& response_callback) {
-
   auto callback =
       base::Bind(PermissionStatusCallbackWrapper, response_callback);
   return RequestPermissions({ permission }, render_frame_host,
