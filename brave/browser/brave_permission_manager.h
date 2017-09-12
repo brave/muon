@@ -2,8 +2,8 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#ifndef BRAVE_BROWSER_ATOM_PERMISSION_MANAGER_H_
-#define BRAVE_BROWSER_ATOM_PERMISSION_MANAGER_H_
+#ifndef BRAVE_BROWSER_BRAVE_PERMISSION_MANAGER_H_
+#define BRAVE_BROWSER_BRAVE_PERMISSION_MANAGER_H_
 
 #include <map>
 #include <vector>
@@ -16,7 +16,6 @@ class WebContents;
 }
 
 namespace brave {
-
 class BravePermissionManager : public content::PermissionManager {
  public:
   BravePermissionManager();
@@ -92,4 +91,4 @@ class BravePermissionManager : public content::PermissionManager {
 
 }  // namespace brave
 
-#endif  // BRAVE_BROWSER_ATOM_PERMISSION_MANAGER_H_
+#endif  // BRAVE_BROWSER_BRAVE_PERMISSION_MANAGER_H_
