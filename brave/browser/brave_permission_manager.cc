@@ -146,8 +146,11 @@ void BravePermissionManager::CancelPermissionRequest(int request_id) {
         permissionStatuses.push_back(blink::mojom::PermissionStatus::DENIED);
       }
       request->second.callback.Run(permissionStatuses);
+      // We should not erase from the map here because the callback which calls
+      // BravePermissionManager::OnPermissionResponse will remove.
+    } else {
+      pending_requests_.erase(request);
     }
-    pending_requests_.erase(request);
   }
 }
 
