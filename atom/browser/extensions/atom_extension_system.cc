@@ -36,6 +36,7 @@
 #include "extensions/browser/runtime_data.h"
 #include "extensions/browser/service_worker_manager.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
+#include "extensions/common/disable_reason.h"
 #include "extensions/common/extension_messages.h"
 #include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/shared_module_info.h"
@@ -249,8 +250,8 @@ void AtomExtensionSystem::Shared::DisableExtension(
   const Extension* extension = GetInstalledExtension(extension_id);
 
   if (extension &&
-      !(disable_reasons & Extension::DISABLE_RELOAD) &&
-      !(disable_reasons & Extension::DISABLE_UPDATE_REQUIRED_BY_POLICY) &&
+      !(disable_reasons & disable_reason::DISABLE_RELOAD) &&
+      !(disable_reasons & disable_reason::DISABLE_UPDATE_REQUIRED_BY_POLICY) &&
       extension->location() != Manifest::EXTERNAL_COMPONENT &&
       extension->location() != Manifest::UNPACKED) {
     return;
