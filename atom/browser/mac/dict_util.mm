@@ -75,8 +75,7 @@ std::unique_ptr<base::DictionaryValue> NSDictionaryToDictionaryValue(
 
     id value = [dict objectForKey:key];
     if ([value isKindOfClass:[NSString class]]) {
-      result->SetStringWithoutPathExpansion(
-          str_key, base::SysNSStringToUTF8(value));
+      result->SetKey(str_key, base::Value(base::SysNSStringToUTF8(value)));
     } else if ([value isKindOfClass:[NSNumber class]]) {
       const char* objc_type = [value objCType];
       if (strcmp(objc_type, @encode(BOOL)) == 0 ||
@@ -103,9 +102,7 @@ std::unique_ptr<base::DictionaryValue> NSDictionaryToDictionaryValue(
         result->SetWithoutPathExpansion(str_key,
                                         base::MakeUnique<base::Value>());
     } else {
-      result->SetStringWithoutPathExpansion(
-          str_key,
-          base::SysNSStringToUTF8([value description]));
+      result->SetKey(str_key, base::Value(base::SysNSStringToUTF8([value description])));
     }
   }
 

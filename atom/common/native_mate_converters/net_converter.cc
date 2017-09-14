@@ -127,7 +127,7 @@ void FillRequestDetails(base::DictionaryValue* details,
   details->SetString("method", request->method());
   std::string url;
   if (!request->url_chain().empty()) url = request->url().spec();
-  details->SetStringWithoutPathExpansion("url", url);
+  details->SetKey("url", base::Value(url));
   details->SetString("referrer", request->referrer());
   std::unique_ptr<base::ListValue> list(new base::ListValue);
   GetUploadData(list.get(), request);
