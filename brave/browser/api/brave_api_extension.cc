@@ -35,6 +35,7 @@
 #include "extensions/browser/notification_types.h"
 #include "extensions/browser/process_manager.h"
 #include "extensions/common/extension.h"
+#include "extensions/common/disable_reason.h"
 #include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/background_info.h"
 #include "extensions/common/one_shot_event.h"
@@ -292,7 +293,7 @@ void Extension::Disable(const std::string& extension_id) {
   if (extension_service && extensions::ExtensionRegistry::Get(
         browser_context_)->GetInstalledExtension(extension_id)) {
     extension_service->DisableExtension(
-        extension_id, extensions::Extension::DISABLE_USER_ACTION);
+        extension_id, extensions::disable_reason::DISABLE_USER_ACTION);
   }
 }
 
