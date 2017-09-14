@@ -92,11 +92,7 @@ net::HttpCache::BackendFactory*
 URLRequestContextGetter::Delegate::CreateHttpCacheBackendFactory(const base::FilePath& base_path) {
   base::FilePath cache_path = base_path.Append(FILE_PATH_LITERAL("Cache"));
   return new net::HttpCache::DefaultBackend(
-      net::DISK_CACHE,
-      net::CACHE_BACKEND_DEFAULT,
-      cache_path,
-      0,
-      BrowserThread::GetTaskRunnerForThread(BrowserThread::CACHE));
+      net::DISK_CACHE, net::CACHE_BACKEND_DEFAULT, cache_path, 0);
 }
 
 std::unique_ptr<net::CertVerifier>
