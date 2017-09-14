@@ -262,7 +262,7 @@ bool AtomMainDelegate::BasicStartupComplete(int* exit_code) {
   chrome::RegisterPathProvider();
 
   ContentSettingsPattern::SetNonWildcardDomainNonPortScheme(
-      extensions::kExtensionScheme);
+      {extensions::kExtensionScheme}, 1);
 
 #if defined(OS_MACOSX)
   SetUpBundleOverrides();
