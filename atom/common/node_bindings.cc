@@ -18,6 +18,7 @@
 #include "base/files/file_path.h"
 #include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
+#include "base/run_loop.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/content_paths.h"
 #include "gin/public/v8_platform.h"
@@ -264,7 +265,7 @@ void NodeBindings::UvRunOnce() {
   // Deal with uv events.
   int r = uv_run(uv_loop_, UV_RUN_NOWAIT);
   if (r == 0)
-    message_loop_->QuitWhenIdle();  // Quit from uv.
+    base::RunLoop::QuitCurrentWhenIdleDeprecated();  // Quit from uv.
 
   // Tell the worker thread to continue polling.
   uv_sem_post(&embed_sem_);
