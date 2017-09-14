@@ -11,7 +11,6 @@
 
 #include "base/command_line.h"
 #include "base/strings/sys_string_conversions.h"
-#include "base/threading/sequenced_worker_pool.h"
 #include "base/version.h"
 #if defined(OS_WIN)
 #include "base/win/win_util.h"
@@ -20,7 +19,6 @@
 #include "components/component_updater/configurator_impl.h"
 #include "components/prefs/pref_service.h"
 #include "components/update_client/component_patcher_operation.h"
-#include "content/public/browser/browser_thread.h"
 #include "net/url_request/url_request_context_getter.h"
 
 
@@ -56,8 +54,6 @@ class BraveConfigurator : public update_client::Configurator {
   bool EnabledComponentUpdates() const override;
   bool EnabledBackgroundDownloader() const override;
   bool EnabledCupSigning() const override;
-  scoped_refptr<base::SequencedTaskRunner> GetSequencedTaskRunner()
-      const override;
   PrefService* GetPrefService() const override;
   bool IsPerUserInstall() const override;
   std::vector<uint8_t> GetRunActionKeyHash() const override;
@@ -173,18 +169,6 @@ bool BraveConfigurator::EnabledCupSigning() const {
     return false;
   }
   return configurator_impl_.EnabledCupSigning();
-}
-
-// Returns a task runner to run blocking tasks. The task runner continues to run
-// after the browser shuts down, until the OS terminates the process. This
-// imposes certain requirements for the code using the task runner, such as
-// not accessing any global browser state while the code is running.
-scoped_refptr<base::SequencedTaskRunner>
-BraveConfigurator::GetSequencedTaskRunner() const {
-  return content::BrowserThread::GetBlockingPool()
-      ->GetSequencedTaskRunnerWithShutdownBehavior(
-          base::SequencedWorkerPool::GetSequenceToken(),
-          base::SequencedWorkerPool::CONTINUE_ON_SHUTDOWN);
 }
 
 PrefService* BraveConfigurator::GetPrefService() const {
