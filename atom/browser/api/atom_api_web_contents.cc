@@ -2017,8 +2017,8 @@ void WebContents::ShowCertificate() {
       web_contents()->GetController().GetVisibleEntry()->GetSSL().certificate;
   if (!certificate)
     return;
-  web_contents()->GetDelegate()->ShowCertificateViewerInDevTools(
-      web_contents(), certificate);
+  // web_contents()->GetDelegate()->ShowCertificateViewerInDevTools(
+  //     web_contents(), certificate);
 }
 
 void WebContents::ShowDefinitionForSelection() {
