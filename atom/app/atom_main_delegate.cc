@@ -81,6 +81,11 @@
 
 namespace atom {
 
+const char* const AtomMainDelegate::kNonWildcardDomainNonPortSchemes[] = {
+    extensions::kExtensionScheme};
+const size_t AtomMainDelegate::kNonWildcardDomainNonPortSchemesSize =
+    arraysize(kNonWildcardDomainNonPortSchemes);
+
 namespace {
 
 const char* kRelauncherProcess = "relauncher";
@@ -261,8 +266,8 @@ bool AtomMainDelegate::BasicStartupComplete(int* exit_code) {
 
   chrome::RegisterPathProvider();
 
-  ContentSettingsPattern::SetNonWildcardDomainNonPortScheme(
-      {extensions::kExtensionScheme}, 1);
+  ContentSettingsPattern::SetNonWildcardDomainNonPortSchemes(
+      kNonWildcardDomainNonPortSchemes, kNonWildcardDomainNonPortSchemesSize);
 
 #if defined(OS_MACOSX)
   SetUpBundleOverrides();
