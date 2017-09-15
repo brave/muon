@@ -158,7 +158,7 @@ void GetUploadData(base::ListValue* upload_data_list,
       const net::UploadFileElementReader* file_reader =
           reader->AsFileReader();
       auto file_path = file_reader->path().AsUTF8Unsafe();
-      upload_data_dict->SetStringWithoutPathExpansion("file", file_path);
+      upload_data_dict->SetKey("file", base::Value(file_path));
     }
     upload_data_list->Append(std::move(upload_data_dict));
   }
