@@ -60,7 +60,6 @@ BrowserProcessImpl::BrowserProcessImpl(
     local_state_task_runner_(local_state_task_runner),
     tearing_down_(false),
     created_profile_manager_(false),
-    created_local_state_(false),
     locale_(l10n_util::GetApplicationLocale("")) {
   g_browser_process = this;
 
@@ -187,8 +186,7 @@ printing::PrintJobManager* BrowserProcessImpl::print_job_manager() {
 }
 
 void BrowserProcessImpl::CreateLocalState() {
-  DCHECK(!created_local_state_ && !local_state_);
-  created_local_state_ = true;
+  DCHECK(!local_state_);
 
   base::FilePath local_state_path;
   CHECK(PathService::Get(chrome::FILE_LOCAL_STATE, &local_state_path));
@@ -205,15 +203,12 @@ void BrowserProcessImpl::CreateLocalState() {
                         local_state_task_runner_.get(),
                         std::unique_ptr<PrefFilter>()));
   local_state_ = factory.Create(pref_registry.get());
-}
-
-bool BrowserProcessImpl::created_local_state() const {
-  return created_local_state_;
+  DCHECK(local_state_);
 }
 
 PrefService* BrowserProcessImpl::local_state() {
   DCHECK(thread_checker_.CalledOnValidThread());
-  if (!created_local_state_)
+  if (!local_state_)
     CreateLocalState();
   return local_state_.get();
 }
