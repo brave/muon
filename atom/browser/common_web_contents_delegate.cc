@@ -320,17 +320,6 @@ bool CommonWebContentsDelegate::IsFullscreenForTabOrPending(
   return html_fullscreen_;
 }
 
-void CommonWebContentsDelegate::ShowCertificateViewerInDevTools(
-    content::WebContents* web_contents,
-    scoped_refptr<net::X509Certificate> certificate) {
-  // TODO(Anthony): Support linux certificate viewing modal
-#if !defined(OS_LINUX)
-  ::ShowCertificateViewer(web_contents_->GetWebContents(),
-                          owner_window_->GetNativeWindow(),
-                          certificate.get());
-#endif
-}
-
 blink::WebSecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
     content::WebContents* web_contents,
     content::SecurityStyleExplanations* security_style_explanations) {
