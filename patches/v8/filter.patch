@@ -18,10 +18,10 @@ index deedf82d11b7c53b6082af95ff6325e5e5b57f35..135118a28300d48c68191f415a0dc386
    }
  }
 diff --git a/include/v8.h b/include/v8.h
-index 189eed5e65c451b2c4af2f9c13dff5e58673d1a1..d24d64f76d6c0beac1efffde91c19a2d687310ac 100644
+index eec2256aeab0259890925121aea55b3c04ed9811..6feee1d4455faf0e61419be6abcb0b28b2d8eb64 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -7208,6 +7208,9 @@ class V8_EXPORT Isolate {
+@@ -7213,6 +7213,9 @@ class V8_EXPORT Isolate {
    V8_DEPRECATE_SOON("CpuProfiler should be created with CpuProfiler::New call.",
                      CpuProfiler* GetCpuProfiler());
  

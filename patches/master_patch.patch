@@ -890,7 +890,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 345d0bc51239ed42cd93b18b174440f1b094c47c..da3cfeed71898c113e0b145c8555714edba3396f 100644
+index b9b8add6f6febf8cd4cde8b02eccf1b74f6f4794..33e3f469d248cb92f69058602c1ff6b9baf53534 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -861,7 +861,7 @@ if (!is_android) {
@@ -1251,7 +1251,7 @@ index 84897ae416fa61fddac742ab804d1f914636e064..8c28e44da23933cb1c62e11cff9966b7
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 5b54c7614dcb21a8fc17d3ca51bfa234a16b4810..6940faac593f2e99911efcba44768c7528348ebf 100644
+index b46cec9804d10209c855cce6cac4a169ff65eb32..f02f154bb0e86e4318934fdbc7fd58a1b02ffd20 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1737,7 +1737,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -1264,7 +1264,7 @@ index 5b54c7614dcb21a8fc17d3ca51bfa234a16b4810..6940faac593f2e99911efcba44768c75
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2288,7 +2289,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2295,7 +2296,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
@@ -1393,10 +1393,10 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
  
  // Details about a redirection of a resource request.
 diff --git a/content/public/common/web_preferences.cc b/content/public/common/web_preferences.cc
-index a9c7b7d8c3aecd3cc2153f5346d7994531df2542..39ed870ce3a231dad8302964812e28d35f568d1d 100644
+index 528e7996e03c1e0cfa0fc71704f0f39ea58abf74..bbcc41ae6457dd00a70e1b31736060e67469421d 100644
 --- a/content/public/common/web_preferences.cc
 +++ b/content/public/common/web_preferences.cc
-@@ -222,7 +222,7 @@ WebPreferences::WebPreferences()
+@@ -223,7 +223,7 @@ WebPreferences::WebPreferences()
        presentation_receiver(false),
        media_controls_enabled(true),
        do_not_update_selection_on_mutating_selection_range(false),
@@ -1596,7 +1596,7 @@ index decaf349faab373934f2cc9d407fc2611aca5b09..307f60e128af68121d7dad623a7064a4
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
-index 95ba606a7e0fa239a9c8c62f19591ec6bb39097a..b4fece0421b282f4042250108426eb502ff9b4c9 100644
+index 98abf9631d60acba3a5dc9639866ded93756dba0..521106fac12522254c822afeaf8c7ad981980eba 100644
 --- a/net/http/http_util.cc
 +++ b/net/http/http_util.cc
 @@ -58,8 +58,8 @@ static size_t FindStringEnd(const std::string& line, size_t start, char delim) {
