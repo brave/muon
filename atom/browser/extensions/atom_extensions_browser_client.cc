@@ -45,7 +45,7 @@
 #include "extensions/browser/extension_function_registry.h"
 #include "extensions/browser/extension_prefs.h"
 #include "extensions/browser/extension_util.h"
-#include "extensions/browser/mojo/service_registration.h"
+#include "extensions/browser/mojo/interface_registration.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/browser/updater/null_extension_cache.h"
 #include "extensions/browser/url_request_util.h"
@@ -451,10 +451,12 @@ AtomExtensionsBrowserClient::GetComponentExtensionResourceManager() {
   return resource_manager_.get();
 }
 
-void AtomExtensionsBrowserClient::RegisterMojoServices(
+void AtomExtensionsBrowserClient::RegisterExtensionInterfaces(
+    service_manager::BinderRegistryWithArgs<
+        content::RenderFrameHost*>* registry,
     content::RenderFrameHost* render_frame_host,
     const Extension* extension) const {
-  RegisterServicesForFrame(render_frame_host, extension);
+  RegisterInterfacesForExtension(registry, render_frame_host, extension);
 }
 
 void AtomExtensionsBrowserClient::BroadcastEventToRenderers(
