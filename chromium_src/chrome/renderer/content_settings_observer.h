@@ -91,6 +91,10 @@ class ContentSettingsObserver
   void DidNotAllowPlugins() override;
   void DidNotAllowScript() override;
 
+  bool allow_running_insecure_content() const {
+    return allow_running_insecure_content_;
+  }
+
  private:
   void DidRunInsecureContent(GURL resouce_url);
   void DidBlockRunInsecureContent(GURL resouce_url);
