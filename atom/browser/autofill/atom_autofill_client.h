@@ -52,7 +52,6 @@ class AtomAutofillClient
   PrefService* GetPrefs() override;
   syncer::SyncService* GetSyncService() override;
   IdentityProvider* GetIdentityProvider() override;
-  rappor::RapporServiceImpl* GetRapporServiceImpl() override;
   ukm::UkmRecorder* GetUkmRecorder() override;
   void ShowAutofillSettings() override;
   void ShowUnmaskPrompt(const CreditCard& card,
