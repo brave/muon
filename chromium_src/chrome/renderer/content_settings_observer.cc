@@ -68,7 +68,8 @@ GURL GetOriginOrURL(const WebFrame* frame) {
 ContentSettingsObserver::ContentSettingsObserver(
     content::RenderFrame* render_frame,
     extensions::Dispatcher* extension_dispatcher,
-    bool should_whitelist)
+    bool should_whitelist,
+    service_manager::BinderRegistry* registry)
     : content::RenderFrameObserver(render_frame),
       content::RenderFrameObserverTracker<ContentSettingsObserver>(
           render_frame),
