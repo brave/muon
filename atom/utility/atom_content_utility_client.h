@@ -31,6 +31,7 @@ class AtomContentUtilityClient : public content::ContentUtilityClient {
   // content::ContentUtilityClient:
   void UtilityThreadStarted() override;
   bool OnMessageReceived(const IPC::Message& message) override;
+  void RegisterServices(StaticServiceMap* services) override;
 
   static void PreSandboxStartup();
 
