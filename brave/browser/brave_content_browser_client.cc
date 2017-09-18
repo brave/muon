@@ -27,8 +27,10 @@
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/env_vars.h"
+#include "chrome/common/importer/profile_import.mojom.h"
 #include "chrome/common/render_messages.h"
 #include "chrome/common/renderer_configuration.mojom.h"
+#include "chrome/grit/generated_resources.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents_view_delegate.h"
 #include "content/public/browser/web_drag_dest_delegate.h"
@@ -312,6 +314,13 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
       ui_task_runner);
 #endif
 #endif
+}
+
+void BraveContentBrowserClient::RegisterOutOfProcessServices(
+    OutOfProcessServiceMap* services) {
+  (*services)[chrome::mojom::kProfileImportServiceName] = {
+      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME),
+      content::SANDBOX_TYPE_NO_SANDBOX};
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(

@@ -10,7 +10,8 @@
 #include "base/files/file_path.h"
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
-#include "brave/utility/brave_profile_import_handler.h"
+#include "brave/utility/importer/brave_profile_import_service.h"
+#include "chrome/common/importer/profile_import.mojom.h"
 #include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
 #include "chrome/utility/utility_message_handler.h"
@@ -110,8 +111,6 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
         base::ThreadTaskRunnerHandle::Get());
     registry->AddInterface(base::Bind(CreateResourceUsageReporter),
                            base::ThreadTaskRunnerHandle::Get());
-    registry->AddInterface(base::Bind(&BraveProfileImportHandler::Create),
-                           base::ThreadTaskRunnerHandle::Get());
   }
 
   connection->AddConnectionFilter(
@@ -129,6 +128,15 @@ bool AtomContentUtilityClient::OnMessageReceived(
   }
 
   return false;
+}
+
+void AtomContentUtilityClient::RegisterServices(
+    AtomContentUtilityClient::StaticServiceMap* services) {
+  service_manager::EmbeddedServiceInfo profile_import_info;
+  profile_import_info.factory =
+    base::Bind(&BraveProfileImportService::CreateService);
+  services->emplace(chrome::mojom::kProfileImportServiceName,
+                    profile_import_info);
 }
 
 // static

@@ -5,7 +5,7 @@
 #include <memory>
 #include <utility>
 
-#include "brave/utility/brave_profile_import_handler.h"
+#include "brave/utility/importer/brave_profile_import_impl.h"
 
 #include "base/bind.h"
 #include "base/command_line.h"
@@ -17,28 +17,22 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread.h"
 #include "base/threading/thread_task_runner_handle.h"
-#include "build/build_config.h"
 #include "brave/utility/importer/brave_external_process_importer_bridge.h"
-#include "chrome/utility/importer/importer.h"
 #include "brave/utility/importer/importer_creator.h"
+#include "build/build_config.h"
+#include "chrome/utility/importer/importer.h"
 #include "content/public/utility/utility_thread.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
 
 using chrome::mojom::ThreadSafeProfileImportObserverPtr;
 
-BraveProfileImportHandler::BraveProfileImportHandler() :
-    ProfileImportHandler() {}
+BraveProfileImportImpl::BraveProfileImportImpl(
+    std::unique_ptr<service_manager::ServiceContextRef> service_ref)
+    : ProfileImportImpl(std::move(service_ref)) {}
 
-BraveProfileImportHandler::~BraveProfileImportHandler() {}
+BraveProfileImportImpl::~BraveProfileImportImpl() {}
 
-// static
-void BraveProfileImportHandler::Create(
-    mojo::InterfaceRequest<chrome::mojom::ProfileImport> request) {
-  mojo::MakeStrongBinding(base::MakeUnique<BraveProfileImportHandler>(),
-                          std::move(request));
-}
-
-void BraveProfileImportHandler::StartImport(
+void BraveProfileImportImpl::StartImport(
     const importer::SourceProfile& source_profile,
     uint16_t items,
     std::unique_ptr<base::DictionaryValue> localized_strings,
