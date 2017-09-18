@@ -7,8 +7,6 @@
 
 #include <memory>
 
-#include "chrome/utility/profile_import_handler.h"
-
 // Dispatches IPCs for out of process profile import.
 class BraveProfileImportHandler : public ProfileImportHandler {
  public:

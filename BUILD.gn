@@ -275,8 +275,8 @@ source_set("utility") {
     "brave/utility/importer/firefox_importer.h",
     "brave/utility/importer/importer_creator.cc",
     "brave/utility/importer/importer_creator.h",
-    "brave/utility/brave_profile_import_handler.cc",
-    "brave/utility/brave_profile_import_handler.h",
+    #"brave/utility/brave_profile_import_handler.cc",
+    #"brave/utility/brave_profile_import_handler.h",
   ]
 }
 
