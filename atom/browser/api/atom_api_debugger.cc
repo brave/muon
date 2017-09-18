@@ -135,7 +135,8 @@ void Debugger::SendCommand(mate::Arguments* args) {
   request.SetInteger("id", request_id);
   request.SetString("method", method);
   if (!command_params.empty())
-    request.Set("params", base::MakeUnique<base::Value>(command_params));
+    request.Set("params",
+                base::MakeUnique<base::Value>(command_params.Clone()));
 
   std::string json_args;
   base::JSONWriter::Write(request, &json_args);
