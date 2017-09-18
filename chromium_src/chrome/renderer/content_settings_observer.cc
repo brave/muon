@@ -73,7 +73,9 @@ ContentSettingsObserver::ContentSettingsObserver(
     : content::RenderFrameObserver(render_frame),
       content::RenderFrameObserverTracker<ContentSettingsObserver>(
           render_frame),
+#if BUILDFLAG(ENABLE_EXTENSIONS)
       extension_dispatcher_(extension_dispatcher),
+#endif
       content_settings_manager_(NULL),
       allow_running_insecure_content_(false),
       is_interstitial_page_(false),
