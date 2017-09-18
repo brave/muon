@@ -92,9 +92,8 @@ class AtomAutofillClient
       const CreditCard& card,
       const base::Closure& callback) override {};
   bool ShouldShowSigninPromo() override { return false; };
-  void StartSigninFlow() override {};
-  void ShowHttpNotSecureExplanation() override {};
   bool IsAutofillSupported() override { return true; }
+  void ExecuteCommand(int id) override {}
 
   // content::WebContentsObserver implementation.
   void WebContentsDestroyed() override;
