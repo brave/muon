@@ -120,10 +120,6 @@ IdentityProvider* AtomAutofillClient::GetIdentityProvider() {
   return identity_provider_.get();
 }
 
-rappor::RapporServiceImpl* AtomAutofillClient::GetRapporServiceImpl() {
-  return nullptr;
-}
-
 ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
   return g_browser_process->ukm_recorder();
 }
