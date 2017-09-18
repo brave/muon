@@ -45,6 +45,8 @@ class BrowserClient : public content::ContentBrowserClient {
   net::NetLog* GetNetLog() override;
   base::FilePath GetDefaultDownloadDirectory() override;
   content::DevToolsManagerDelegate* GetDevToolsManagerDelegate() override;
+  virtual void RegisterOutOfProcessServices(
+      OutOfProcessServiceMap* services) override {}
 
  protected:
   // Subclasses should override this to provide their own BrowserMainParts

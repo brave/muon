@@ -263,12 +263,14 @@ source_set("utility") {
     "brave/utility/importer/chrome_importer.h",
     "brave/utility/importer/brave_external_process_importer_bridge.cc",
     "brave/utility/importer/brave_external_process_importer_bridge.h",
+    "brave/utility/importer/brave_profile_import_impl.cc",
+    "brave/utility/importer/brave_profile_import_impl.h",
+    "brave/utility/importer/brave_profile_import_service.cc",
+    "brave/utility/importer/brave_profile_import_service.h",
     "brave/utility/importer/firefox_importer.cc",
     "brave/utility/importer/firefox_importer.h",
     "brave/utility/importer/importer_creator.cc",
     "brave/utility/importer/importer_creator.h",
-    "brave/utility/brave_profile_import_handler.cc",
-    "brave/utility/brave_profile_import_handler.h",
   ]
 }
 
