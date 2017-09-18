@@ -12,6 +12,7 @@
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "content/public/renderer/render_frame_observer.h"
 #include "content/public/renderer/render_frame_observer_tracker.h"
+#include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/WebKit/public/platform/WebContentSettingsClient.h"
 
 class GURL;
@@ -38,7 +39,8 @@ class ContentSettingsObserver
  public:
   ContentSettingsObserver(content::RenderFrame* render_frame,
                           extensions::Dispatcher* extension_dispatcher,
-                          bool should_whitelist);
+                          bool should_whitelist,
+                          service_manager::BinderRegistry* registry);
   ~ContentSettingsObserver() override;
 
   void SetContentSettingRules(
