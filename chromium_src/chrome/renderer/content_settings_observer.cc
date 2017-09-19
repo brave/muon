@@ -22,7 +22,6 @@
 #include "third_party/WebKit/public/platform/WebContentSettingCallbacks.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
 #include "third_party/WebKit/public/platform/WebURL.h"
-#include "third_party/WebKit/public/web/WebDataSource.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
 #include "third_party/WebKit/public/web/WebFrameClient.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
@@ -39,7 +38,6 @@
 #endif
 
 using blink::WebContentSettingCallbacks;
-using blink::WebDataSource;
 using blink::WebDocument;
 using blink::WebFrame;
 using blink::WebSecurityOrigin;
