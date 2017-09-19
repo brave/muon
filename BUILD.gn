@@ -302,8 +302,8 @@ source_set("renderer") {
 
   if (enable_basic_printing) {
     sources += [
-      "brave/renderer/printing/brave_print_web_view_helper_delegate.cc",
-      "brave/renderer/printing/brave_print_web_view_helper_delegate.h",
+      "brave/renderer/printing/brave_print_render_frame_helper_delegate.cc",
+      "brave/renderer/printing/brave_print_render_frame_helper_delegate.h",
     ]
 
     deps += [
