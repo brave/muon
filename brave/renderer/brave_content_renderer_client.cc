@@ -5,7 +5,7 @@
 #include "brave/renderer/brave_content_renderer_client.h"
 
 #include "atom/renderer/content_settings_manager.h"
-#include "brave/renderer/printing/brave_print_web_view_helper_delegate.h"
+#include "brave/renderer/printing/brave_print_render_frame_helper_delegate.h"
 #include "chrome/common/render_messages.h"
 #include "chrome/common/secure_origin_whitelist.h"
 #include "chrome/renderer/chrome_render_frame_observer.h"
@@ -26,7 +26,7 @@
 #include "components/network_hints/renderer/prescient_networking_dispatcher.h"
 #include "components/password_manager/content/renderer/credential_manager_client.h"
 #include "components/plugins/renderer/plugin_placeholder.h"
-#include "components/printing/renderer/print_web_view_helper.h"
+#include "components/printing/renderer/print_render_frame_helper.h"
 #include "components/spellcheck/spellcheck_build_features.h"
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
@@ -175,8 +175,8 @@ void BraveContentRendererClient::RenderFrameCreated(
   new AutofillAgent(render_frame, password_autofill_agent,
                     password_generation_agent, registry);
 #if BUILDFLAG(ENABLE_PRINTING)
-  new printing::PrintWebViewHelper(
-      render_frame, base::MakeUnique<BravePrintWebViewHelperDelegate>());
+  new printing::PrintRenderFrameHelper(
+      render_frame, base::MakeUnique<BravePrintRenderFrameHelperDelegate>());
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
