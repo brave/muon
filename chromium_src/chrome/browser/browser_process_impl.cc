@@ -493,6 +493,12 @@ IOThread* BrowserProcessImpl::io_thread() {
   return nullptr;
 }
 
+SystemNetworkContextManager*
+BrowserProcessImpl::system_network_context_manager() {
+  NOTIMPLEMENTED();
+  return nullptr;
+}
+
 WatchDogThread* BrowserProcessImpl::watchdog_thread() {
   NOTIMPLEMENTED();
   return nullptr;
