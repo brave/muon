@@ -100,7 +100,7 @@ BravePasswordManagerClient::BravePasswordManagerClient(
       password_manager_(this),
       password_reuse_detection_manager_(this),
       driver_factory_(nullptr),
-      credential_manager_impl_(web_contents, this),
+      credential_manager_(this),
       password_manager_client_bindings_(web_contents, this),
       observer_(nullptr),
       credentials_filter_() {
@@ -321,11 +321,12 @@ void BravePasswordManagerClient::DidFinishNavigation(
   if (!navigation_handle->IsSameDocument())
     ukm_source_id_.reset();
 
-  // From this point on, the CredentialManagerImpl will service API calls in the
-  // context of the new WebContents::GetLastCommittedURL, which may very well be
-  // cross-origin. Disconnect existing client, and drop pending requests.
+  // From this point on, the ContentCredentialManager will service API calls in
+  // the context of the new WebContents::GetLastCommittedURL, which may very
+  // well be cross-origin. Disconnect existing client, and drop pending
+  // requests.
   if (!navigation_handle->IsSameDocument())
-    credential_manager_impl_.DisconnectBinding();
+    credential_manager_.DisconnectBinding();
 
   password_reuse_detection_manager_.DidNavigateMainFrame(GetMainFrameURL());
   // After some navigations RenderViewHost persists and just adding the observer
@@ -589,7 +590,7 @@ void BravePasswordManagerClient::BindCredentialManager(
   if (!instance)
     return;
 
-  instance->credential_manager_impl_.BindRequest(std::move(request));
+  instance->credential_manager_.BindRequest(std::move(request));
 }
 
 // static
