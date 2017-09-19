@@ -123,6 +123,7 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
   CreateExtensionApiFrameIdMapHelper(
       ExtensionApiFrameIdMap* map) override;
   bool IsLockScreenContext(content::BrowserContext* context) override;
+  std::string GetApplicationLocale() override;
 
  private:
   friend struct base::LazyInstanceTraitsBase<AtomExtensionsBrowserClient>;

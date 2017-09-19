@@ -511,4 +511,8 @@ bool AtomExtensionsBrowserClient::IsLockScreenContext(
   return false;
 }
 
+std::string AtomExtensionsBrowserClient::GetApplicationLocale() {
+  return g_browser_process->GetApplicationLocale();
+}
+
 }  // namespace extensions
