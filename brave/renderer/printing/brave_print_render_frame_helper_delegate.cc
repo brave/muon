@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "brave/renderer/printing/brave_print_web_view_helper_delegate.h"
+#include "brave/renderer/printing/brave_print_render_frame_helper_delegate.h"
 
 #include <vector>
 
@@ -16,25 +16,25 @@
 #include "third_party/WebKit/public/web/WebElement.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 
-BravePrintWebViewHelperDelegate::~BravePrintWebViewHelperDelegate() {
+BravePrintRenderFrameHelperDelegate::~BravePrintRenderFrameHelperDelegate() {
 }
 
-bool BravePrintWebViewHelperDelegate::CancelPrerender(
+bool BravePrintRenderFrameHelperDelegate::CancelPrerender(
     content::RenderFrame* render_frame) {
   return false;
 }
 
 // Return the PDF object element if |frame| is the out of process PDF extension.
-blink::WebElement BravePrintWebViewHelperDelegate::GetPdfElement(
+blink::WebElement BravePrintRenderFrameHelperDelegate::GetPdfElement(
         blink::WebLocalFrame* frame) {
   return blink::WebElement();
 }
 
-bool BravePrintWebViewHelperDelegate::IsPrintPreviewEnabled() {
+bool BravePrintRenderFrameHelperDelegate::IsPrintPreviewEnabled() {
   return false;
 }
 
-bool BravePrintWebViewHelperDelegate::OverridePrint(
+bool BravePrintRenderFrameHelperDelegate::OverridePrint(
     blink::WebLocalFrame* frame) {
   return false;
 }
