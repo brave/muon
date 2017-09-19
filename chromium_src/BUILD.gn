@@ -547,7 +547,12 @@ source_set("devtools") {
   configs += [ ":chromium_src_config" ]
 
   sources = [
-    # devtools
+    "//chrome/browser/devtools/devtools_contents_resizing_strategy.cc",
+    "//chrome/browser/devtools/devtools_contents_resizing_strategy.h",
+    "//chrome/browser/devtools/devtools_embedder_message_dispatcher.cc",
+    "//chrome/browser/devtools/devtools_embedder_message_dispatcher.h",
+    "//chrome/browser/devtools/devtools_file_system_indexer.cc",
+    "//chrome/browser/devtools/devtools_file_system_indexer.h",
     "//chrome/browser/devtools/devtools_network_conditions.cc",
     "//chrome/browser/devtools/devtools_network_conditions.h",
     "//chrome/browser/devtools/devtools_network_controller.cc",
@@ -566,6 +571,8 @@ source_set("devtools") {
     "//chrome/browser/devtools/devtools_network_upload_data_stream.h",
     "//chrome/browser/devtools/devtools_protocol.cc",
     "//chrome/browser/devtools/devtools_protocol.h",
+    "//chrome/browser/devtools/url_constants.cc",
+    "//chrome/browser/devtools/url_constants.h",
     "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.cc",
     "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.h",
   ]

@@ -1,7 +1,7 @@
 #ifndef BROWSER_VIEWS_INSPECTABLE_WEB_CONTENTS_VIEW_VIEWS_H_
 #define BROWSER_VIEWS_INSPECTABLE_WEB_CONTENTS_VIEW_VIEWS_H_
 
-#include "browser/devtools_contents_resizing_strategy.h"
+#include "chrome/browser/devtools/devtools_contents_resizing_strategy.h"
 #include "browser/inspectable_web_contents_view.h"
 
 #include "base/compiler_specific.h"
