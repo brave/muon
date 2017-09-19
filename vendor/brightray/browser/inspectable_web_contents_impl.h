@@ -8,8 +8,8 @@
 
 #include "browser/inspectable_web_contents.h"
 
-#include "browser/devtools_contents_resizing_strategy.h"
-#include "browser/devtools_embedder_message_dispatcher.h"
+#include "chrome/browser/devtools/devtools_contents_resizing_strategy.h"
+#include "chrome/browser/devtools/devtools_embedder_message_dispatcher.h"
 
 #include "base/memory/weak_ptr.h"
 #include "content/public/browser/devtools_agent_host.h"
@@ -72,7 +72,29 @@ class InspectableWebContentsImpl :
 
   void OnURLFetchComplete(const net::URLFetcher* source);
  private:
+
   // DevToolsEmbedderMessageDispacher::Delegate
+  void SetEyeDropperActive(bool active) override {}
+  void ShowCertificateViewer(const std::string& cert_chain) override {}
+  void SetDevicesDiscoveryConfig(
+      bool discover_usb_devices,
+      bool port_forwarding_enabled,
+      const std::string& port_forwarding_config,
+      bool network_discovery_enabled,
+      const std::string& network_discovery_config) override {};
+  void PerformActionOnRemotePage(const std::string& page_id,
+                                 const std::string& action) override {}
+  void OpenRemotePage(const std::string& browser_id,
+                              const std::string& url) override {};
+  void OpenNodeFrontend() override {};
+  void RecordEnumeratedHistogram(const std::string& name,
+                                 int sample,
+                                 int boundary_value) override {};
+  void Reattach(const DispatchCallback& callback) override {};
+  void ReadyForTest() override {};
+  void RegisterExtensionsAPI(const std::string& origin,
+                             const std::string& script) override {};
+
   void ActivateWindow() override;
   void CloseWindow() override;
   void LoadCompleted() override;
@@ -108,7 +130,6 @@ class InspectableWebContentsImpl :
   void SetDevicesUpdatesEnabled(bool enabled) override;
   void DispatchProtocolMessageFromDevToolsFrontend(
       const std::string& message) override;
-  void RecordActionUMA(const std::string& name, int action) override;
   void SendJsonRequest(const DispatchCallback& callback,
                        const std::string& browser_id,
                        const std::string& url) override;

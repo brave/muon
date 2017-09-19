@@ -21,6 +21,8 @@
 #include "browser/inspectable_web_contents_delegate.h"
 #include "browser/inspectable_web_contents_view.h"
 #include "browser/inspectable_web_contents_view_delegate.h"
+#include "chrome/browser/devtools/url_constants.h"
+#include "chrome/common/url_constants.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/scoped_user_pref_update.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -30,12 +32,15 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/common/user_agent.h"
 #include "ipc/ipc_channel.h"
+#include "net/base/escape.h"
+#include "net/base/url_util.h"
 #include "net/http/http_response_headers.h"
 #include "net/url_request/url_fetcher.h"
 #include "net/url_request/url_fetcher_delegate.h"
 #include "net/url_request/url_fetcher_response_writer.h"
 #include "ui/display/display.h"
 #include "ui/display/screen.h"
+
 
 namespace brightray {
 
@@ -44,17 +49,6 @@ namespace {
 const double kPresetZoomFactors[] = { 0.25, 0.333, 0.5, 0.666, 0.75, 0.9, 1.0,
                                       1.1, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0,
                                       5.0 };
-
-const char kChromeUIDevToolsURL[] =
-    "chrome-devtools://devtools/bundled/inspector.html?"
-    "remoteBase=%s&"
-    "can_dock=%s&"
-    "toolbarColor=rgba(223,223,223,1)&"
-    "textColor=rgba(0,0,0,1)&"
-    "experiments=true";
-const char kChromeUIDevToolsRemoteFrontendBase[] =
-    "https://chrome-devtools-frontend.appspot.com/";
-const char kChromeUIDevToolsRemoteFrontendPath[] = "serve_file";
 
 const char kDevToolsBoundsPref[] = "brightray.devtools.bounds";
 const char kDevToolsZoomPref[] = "brightray.devtools.zoom";
@@ -120,24 +114,173 @@ double GetNextZoomLevel(double level, bool out) {
   return level;
 }
 
+GURL SanitizeFrontendURL(
+    const GURL& url,
+    const std::string& scheme,
+    const std::string& host,
+    const std::string& path,
+    bool allow_query);
+
+std::string SanitizeRevision(const std::string& revision) {
+  for (size_t i = 0; i < revision.length(); i++) {
+    if (!(revision[i] == '@' && i == 0)
+        && !(revision[i] >= '0' && revision[i] <= '9')
+        && !(revision[i] >= 'a' && revision[i] <= 'z')
+        && !(revision[i] >= 'A' && revision[i] <= 'Z')) {
+      return std::string();
+    }
+  }
+  return revision;
+}
+
+std::string SanitizeFrontendPath(const std::string& path) {
+  for (size_t i = 0; i < path.length(); i++) {
+    if (path[i] != '/' && path[i] != '-' && path[i] != '_'
+        && path[i] != '.' && path[i] != '@'
+        && !(path[i] >= '0' && path[i] <= '9')
+        && !(path[i] >= 'a' && path[i] <= 'z')
+        && !(path[i] >= 'A' && path[i] <= 'Z')) {
+      return std::string();
+    }
+  }
+  return path;
+}
+
+std::string SanitizeEndpoint(const std::string& value) {
+  if (value.find('&') != std::string::npos
+      || value.find('?') != std::string::npos)
+    return std::string();
+  return value;
+}
+
+std::string SanitizeRemoteBase(const std::string& value) {
+  GURL url(value);
+  std::string path = url.path();
+  std::vector<std::string> parts = base::SplitString(
+      path, "/", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
+  std::string revision = parts.size() > 2 ? parts[2] : "";
+  revision = SanitizeRevision(revision);
+  path = base::StringPrintf("/%s/%s/", kRemoteFrontendPath, revision.c_str());
+  return SanitizeFrontendURL(url, url::kHttpsScheme,
+                             kRemoteFrontendDomain, path, false).spec();
+}
+
+std::string SanitizeRemoteFrontendURL(const std::string& value) {
+  GURL url(net::UnescapeURLComponent(value,
+      net::UnescapeRule::SPACES | net::UnescapeRule::PATH_SEPARATORS |
+      net::UnescapeRule::URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS |
+      net::UnescapeRule::REPLACE_PLUS_WITH_SPACE));
+  std::string path = url.path();
+  std::vector<std::string> parts = base::SplitString(
+      path, "/", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
+  std::string revision = parts.size() > 2 ? parts[2] : "";
+  revision = SanitizeRevision(revision);
+  std::string filename = parts.size() ? parts[parts.size() - 1] : "";
+  if (filename != "devtools.html")
+    filename = "inspector.html";
+  path = base::StringPrintf("/serve_rev/%s/%s",
+                            revision.c_str(), filename.c_str());
+  std::string sanitized = SanitizeFrontendURL(url, url::kHttpsScheme,
+      kRemoteFrontendDomain, path, true).spec();
+  return net::EscapeQueryParamValue(sanitized, false);
+}
+
+std::string SanitizeFrontendQueryParam(
+    const std::string& key,
+    const std::string& value) {
+  // Convert boolean flags to true.
+  if (key == "can_dock" || key == "debugFrontend" || key == "experiments" ||
+      key == "isSharedWorker" || key == "v8only" || key == "remoteFrontend" ||
+      key == "nodeFrontend")
+    return "true";
+
+  // Pass connection endpoints as is.
+  if (key == "ws" || key == "service-backend")
+    return SanitizeEndpoint(value);
+
+  // Only support undocked for old frontends.
+  if (key == "dockSide" && value == "undocked")
+    return value;
+
+  if (key == "panel" && (value == "elements" || value == "console"))
+    return value;
+
+  if (key == "remoteBase")
+    return SanitizeRemoteBase(value);
+
+  if (key == "remoteFrontendUrl")
+    return SanitizeRemoteFrontendURL(value);
+
+  return std::string();
+}
+
+GURL SanitizeFrontendURL(
+    const GURL& url,
+    const std::string& scheme,
+    const std::string& host,
+    const std::string& path,
+    bool allow_query) {
+  std::vector<std::string> query_parts;
+  if (allow_query) {
+    for (net::QueryIterator it(url); !it.IsAtEnd(); it.Advance()) {
+      std::string value = SanitizeFrontendQueryParam(it.GetKey(),
+          it.GetValue());
+      if (!value.empty()) {
+        query_parts.push_back(
+            base::StringPrintf("%s=%s", it.GetKey().c_str(), value.c_str()));
+      }
+    }
+  }
+  std::string query =
+      query_parts.empty() ? "" : "?" + base::JoinString(query_parts, "&");
+  std::string constructed = base::StringPrintf("%s://%s%s%s",
+      scheme.c_str(), host.c_str(), path.c_str(), query.c_str());
+  GURL result = GURL(constructed);
+  if (!result.is_valid())
+    return GURL();
+  return result;
+}
+
+GURL SanitizeFrontendURL(const GURL& url) {
+  return SanitizeFrontendURL(url, content::kChromeDevToolsScheme,
+      chrome::kChromeUIDevToolsHost, SanitizeFrontendPath(url.path()), true);
+}
+
 GURL GetRemoteBaseURL() {
   return GURL(base::StringPrintf(
       "%s%s/%s/",
-      kChromeUIDevToolsRemoteFrontendBase,
-      kChromeUIDevToolsRemoteFrontendPath,
+      kRemoteFrontendBase,
+      kRemoteFrontendPath,
       content::GetWebKitRevision().c_str()));
 }
 
-GURL GetDevToolsURL(
-    bool can_dock,
-    const std::string& dock_state) {
-  auto url_string =
-      base::StringPrintf(kChromeUIDevToolsURL,
-                         GetRemoteBaseURL().spec().c_str(),
-                         can_dock ? "true" : "");
-  if (!dock_state.empty())
-    url_string += "&settings={\"currentDockState\":\"\\\"" + dock_state + "\\\"\"}&";
-  return GURL(url_string);
+GURL GetDevToolsURL(bool can_dock,
+                                    const std::string& panel) {
+  std::string url(chrome::kChromeUIDevToolsURL);
+  std::string url_string(url +
+                         ((url.find("?") == std::string::npos) ? "?" : "&"));
+  // switch (frontend_type) {
+  //   case kFrontendRemote:
+  //     url_string += "&remoteFrontend=true";
+  //     break;
+  //   case kFrontendWorker:
+  //     url_string += "&isSharedWorker=true";
+  //     break;
+  //   case kFrontendNode:
+  //     url_string += "&nodeFrontend=true";
+  //   // Fall through
+  //   case kFrontendV8:
+  //     url_string += "&v8only=true";
+  //     break;
+  //   case kFrontendDefault:
+  //   default:
+  //     break;
+  // }
+
+  url_string += "&remoteBase=" + GetRemoteBaseURL().spec();
+  if (can_dock)
+    url_string += "&can_dock=true";
+  return SanitizeFrontendURL(GURL(url_string));
 }
 
 // FetchDelegate -------------------------------------------------------------
@@ -571,13 +714,6 @@ void InspectableWebContentsImpl::DispatchProtocolMessageFromDevToolsFrontend(
 
   if (agent_host_.get())
     agent_host_->DispatchProtocolMessage(this, message);
-}
-
-void InspectableWebContentsImpl::RecordActionUMA(const std::string& name, int action) {
-  if (name == kDevToolsActionTakenHistogram)
-    UMA_HISTOGRAM_ENUMERATION(name, action, kDevToolsActionTakenBoundary);
-  else if (name == kDevToolsPanelShownHistogram)
-    UMA_HISTOGRAM_ENUMERATION(name, action, kDevToolsPanelShownBoundary);
 }
 
 void InspectableWebContentsImpl::SendJsonRequest(const DispatchCallback& callback,
