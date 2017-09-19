@@ -91,6 +91,7 @@ class BrowserProcessImpl : public BrowserProcess {
 
   // NOTIMPLEMENTED
   void EndSession() override;
+  void FlushLocalStateAndReply(base::OnceClosure reply) override;
   metrics_services_manager::MetricsServicesManager*
   GetMetricsServicesManager() override;
   net::URLRequestContextGetter* system_request_context() override;
