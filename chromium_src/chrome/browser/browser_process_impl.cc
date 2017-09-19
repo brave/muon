@@ -264,6 +264,10 @@ void BrowserProcessImpl::EndSession() {
   NOTIMPLEMENTED();
 }
 
+void BrowserProcessImpl::FlushLocalStateAndReply(base::OnceClosure reply) {
+  NOTIMPLEMENTED();
+}
+
 net_log::ChromeNetLog* BrowserProcessImpl::net_log() {
   NOTIMPLEMENTED();
   return nullptr;
