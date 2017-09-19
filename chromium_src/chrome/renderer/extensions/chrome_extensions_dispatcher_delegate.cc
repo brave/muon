@@ -214,8 +214,8 @@ void ChromeExtensionsDispatcherDelegate::PopulateSourceMap(
                              IDR_ATOM_PROTOCOL_BINDINGS_JS);
   source_map->RegisterSource("ChromeSetting", IDR_CHROME_SETTING_JS);
   source_map->RegisterSource("ContentSetting", IDR_CONTENT_SETTING_JS);
-  source_map->RegisterSource("ChromeDirectSetting",
-                             IDR_CHROME_DIRECT_SETTING_JS);
+  source_map->RegisterSource("EasyUnlockProximityRequired",
+                             IDR_EASY_UNLOCK_PROXIMITY_REQUIRED_JS);
   source_map->RegisterSource("webViewInternal",
       IDR_ATOM_WEB_VIEW_INTERNAL_BINDINGS_JS);
   source_map->RegisterSource("tabViewInternal",
