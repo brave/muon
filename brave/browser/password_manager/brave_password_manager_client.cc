@@ -221,6 +221,13 @@ bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
   return true;
 }
 
+void BravePasswordManagerClient::ShowManualFallbackForSaving(
+    std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+    bool has_generated_password,
+    bool is_update) {}
+
+void BravePasswordManagerClient::HideManualFallbackForSaving() {}
+
 bool BravePasswordManagerClient::PromptUserToChooseCredentials(
     std::vector<std::unique_ptr<autofill::PasswordForm>> local_forms,
     const GURL& origin,
