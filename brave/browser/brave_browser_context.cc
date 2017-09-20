@@ -173,9 +173,9 @@ BraveBrowserContext::~BraveBrowserContext() {
   }
 
   if (!IsOffTheRecord() && !HasParentContext()) {
-    autofill_data_->ShutdownOnUIThread();
+    autofill_data_->ShutdownOnUISequence();
 #if defined(OS_WIN)
-    password_data_->ShutdownOnUIThread();
+    password_data_->ShutdownOnUISequence();
 #endif
     web_database_->ShutdownDatabase();
 
