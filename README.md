@@ -52,4 +52,4 @@ You can ask questions and interact with the community in the following
 locations:
 - [The Brave Community](https://community.brave.com/)
 - [`community`](https://bravesoftware.slack.com) channel on Brave Software's Slack
-- [`brave`](https://electronhq.slack.com) channel on Electron HQ's Slack
+- [`developers-muon`](https://discord.gg/k57tYrS) channel in our Brave Discord server
