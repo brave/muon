@@ -905,7 +905,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index e6d33d29798a2c381f10ef82f7dc97cdd4bea89c..adac60ea0ee4ba2a77ac0d2fd3f26546ec242479 100644
+index c6263a1e17d947474c4790aa4d017a9e8f146f2d..83ad0a11d72288340adbaab39e010a8a8c28261f 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -853,7 +853,7 @@ if (!is_android) {
@@ -1730,7 +1730,7 @@ index 79e4cc1a047979ce1f6f8457f6c4f5ae6a691050..cc612d93d8d675a21a1bf9132ea4a9b8
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 7e017d13be525de671aaa7be335076b996e3525e..dfb56f80938b074474c663436297b073ed270740 100644
+index d927e85156ef314a8d5b56ca7e4a09ff64a765f2..a22de5edabc9d6c15463173c68d93c4418d4f490 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1663,7 +1663,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -1743,7 +1743,7 @@ index 7e017d13be525de671aaa7be335076b996e3525e..dfb56f80938b074474c663436297b073
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2218,7 +2219,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2225,7 +2226,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
