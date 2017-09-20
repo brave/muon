@@ -5,84 +5,66 @@
 An example of showing a dialog to select multiple files and directories:
 
 ```javascript
-const {dialog} = require('electron')
-console.log(dialog.showOpenDialog({properties: ['openFile', 'openDirectory', 'multiSelections']}))
-```
-
-The Dialog is opened from Electron's main thread. If you want to use the dialog
-object from a renderer process, remember to access it using the remote:
-
-```javascript
-const {dialog} = require('electron').remote
-console.log(dialog)
+const {dialog, BrowserWindow} = require('electron')
+dialog.showDialog(BrowserWindow.getFocusedWindow(),
+                              {type: 'select-saveas-file'},
+                              (files) => {
+                                console.log(files)
+                              })
 ```
 
 ## Methods
 
 The `dialog` module has the following methods:
 
-### `dialog.showOpenDialog([browserWindow, ]options[, callback])`
+### `dialog.showDialog(browserWindow, options, callback)`
 
-* `browserWindow` BrowserWindow (optional)
+* `browserWindow` BrowserWindow
 * `options` Object
-  * `title` String
   * `defaultPath` String
-  * `buttonLabel` String - Custom label for the confirmation button, when
-    left empty the default label will be used.
-  * `filters` Array
-  * `properties` Array - Contains which features the dialog should use, can
-    contain `openFile`, `openDirectory`, `multiSelections`, `createDirectory`
-    and `showHiddenFiles`.
-* `callback` Function (optional)
+  * `extensions` Array - Array of grouped array of extensions
+  * `extensionDescriptionOverrides` Array  - Overrides the system descriptions
+    of the specified extensions. Entries correspond to `extensions`;
+    if left blank the system descriptions will be used.
+  * `includeAllFiles` Boollean - Show all files in extensions
+  * `type` String - Indicates which features the dialog should use, can
+    be `select-folder`, `select-upload-folder`, `select-saveas-file`,
+    `select-open-file` and `select-open-multi-file`.
+* `callback` Function
 
 On success this method returns an array of file paths chosen by the user,
 otherwise it returns `undefined`.
 
-The `filters` specifies an array of file types that can be displayed or
-selected when you want to limit the user to a specific type. For example:
+The `extensions` specifies an array of file types that can be displayed or
+selected when you want to limit the user to a specific type.
+The first element of `extensions` array will be default extension.
+For example:
 
 ```javascript
 {
-  filters: [
-    {name: 'Images', extensions: ['jpg', 'png', 'gif']},
-    {name: 'Movies', extensions: ['mkv', 'avi', 'mp4']},
-    {name: 'Custom File Type', extensions: ['as']},
-    {name: 'All Files', extensions: ['*']}
-  ]
+  extensions: [['jpg', 'png', 'gif'], ['html', htm'], ['txt']]
 }
 ```
 
 The `extensions` array should contain extensions without wildcards or dots (e.g.
-`'png'` is good but `'.png'` and `'*.png'` are bad). To show all files, use the
-`'*'` wildcard (no other wildcard is supported).
+`'png'` is good but `'.png'` and `'*.png'` are bad).
+
+You can override system descriptions of extensions
+```javascript
+{
+  extensions: [['jpg', 'png', 'gif'], ['html', htm'], ['txt'], ['brave']],
+  extensionDescriptionOverrides: ['IMAGE', '', 'text file', 'Amazing Ext']
+}
+```
 
 If a `callback` is passed, the API call will be asynchronous and the result
 will be passed via `callback(filenames)`
 
-**Note:** On Windows and Linux an open dialog can not be both a file selector
-and a directory selector, so if you set `properties` to
-`['openFile', 'openDirectory']` on these platforms, a directory selector will be
-shown.
+For `select-saveas-file`, the filename will be the first element of the
+filename array(filename[0])
 
-### `dialog.showSaveDialog([browserWindow, ]options[, callback])`
-
-* `browserWindow` BrowserWindow (optional)
-* `options` Object
-  * `title` String
-  * `defaultPath` String
-  * `buttonLabel` String - Custom label for the confirmation button, when
-    left empty the default label will be used.
-  * `filters` Array
-* `callback` Function (optional)
-
-On success this method returns the path of the file chosen by the user,
-otherwise it returns `undefined`.
-
-The `filters` specifies an array of file types that can be displayed, see
-`dialog.showOpenDialog` for an example.
-
-If a `callback` is passed, the API call will be asynchronous and the result
-will be passed via `callback(filename)`
+If you don't specify `defaultPath`, it will be your download path (set by
+`download.default_directory` user prefs).
 
 ### `dialog.showMessageBox([browserWindow, ]options[, callback])`
 

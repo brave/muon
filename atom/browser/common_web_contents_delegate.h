@@ -112,6 +112,16 @@ class CommonWebContentsDelegate
 #endif
 
  private:
+  void OnSaveFileSelected(const std::string& url,
+                          const std::string& content,
+                          const std::vector<base::FilePath>& paths);
+  void OnSaveFileSelectionCancelled(const std::string url);
+
+  void OnAddFileSelected(const std::vector<base::FilePath>& paths);
+  void OnAddFileSelectionCancelled();
+
+  void DevToolsAddFileSystemInteral(const base::FilePath& path);
+
   // Callback for when DevToolsSaveToFile has completed.
   void OnDevToolsSaveToFile(const std::string& url);
 
@@ -164,6 +174,8 @@ class CommonWebContentsDelegate
       scoped_refptr<DevToolsFileSystemIndexer::FileSystemIndexingJob>>
       DevToolsIndexingJobsMap;
   DevToolsIndexingJobsMap devtools_indexing_jobs_;
+
+  base::WeakPtrFactory<CommonWebContentsDelegate> weak_ptr_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(CommonWebContentsDelegate);
 };
