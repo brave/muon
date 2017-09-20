@@ -192,7 +192,7 @@ index c812fec4514e6cbefc38543ea18aea1531a735a4..bbc165ad1b910b2d96b9216351151932
  }
  
  PasswordStoreFactory::~PasswordStoreFactory() {}
-@@ -278,6 +280,7 @@ PasswordStoreFactory::BuildServiceInstanceFor(
+@@ -278,12 +280,14 @@ PasswordStoreFactory::BuildServiceInstanceFor(
        ps.get(), profile->GetPrefs(),
        make_scoped_refptr(profile->GetRequestContext()));
  
@@ -200,14 +200,13 @@ index c812fec4514e6cbefc38543ea18aea1531a735a4..bbc165ad1b910b2d96b9216351151932
  #if defined(OS_WIN) || defined(OS_MACOSX) || \
      (defined(OS_LINUX) && !defined(OS_CHROMEOS))
    std::unique_ptr<password_manager::PasswordStoreSigninNotifier> notifier =
-@@ -285,6 +288,7 @@ PasswordStoreFactory::BuildServiceInstanceFor(
+       base::MakeUnique<password_manager::PasswordStoreSigninNotifierImpl>(
            profile);
    ps->SetPasswordStoreSigninNotifier(std::move(notifier));
- #endif
 +#endif
+ #endif
  
    return ps;
- }
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index 9d81a019eacdbe354c8337d74e0cfb53e833ba7d..86fff6beac3022f83a0b3a88a41f0083a8273027 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
@@ -686,16 +685,16 @@ diff --git a/chrome/common/importer/profile_import.mojom b/chrome/common/importe
 index f366a941273f0807405743f1365fdaf3a549cddc..35d5a90c778adfa67597866c31a91bc79dad3ab6 100644
 --- a/chrome/common/importer/profile_import.mojom
 +++ b/chrome/common/importer/profile_import.mojom
-@@ -16,6 +16,9 @@ struct ImportedBookmarkEntry;
+@@ -15,6 +15,9 @@ struct ImportedBookmarkEntry;
+ [Native]
  struct ImporterAutofillFormDataEntry;
  
- [Native]
++[Native]
 +struct ImportedCookieEntry;
 +
-+[Native]
+ [Native]
  struct SearchEngineInfo;
  
- [Native]
 @@ -63,6 +66,8 @@ interface ProfileImportObserver {
    OnAutofillFormDataImportStart(uint32 total_autofill_form_data_entry_count);
    OnAutofillFormDataImportGroup(
@@ -906,7 +905,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index e6d33d29798a2c381f10ef82f7dc97cdd4bea89c..adac60ea0ee4ba2a77ac0d2fd3f26546ec242479 100644
+index c6263a1e17d947474c4790aa4d017a9e8f146f2d..83ad0a11d72288340adbaab39e010a8a8c28261f 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -853,7 +853,7 @@ if (!is_android) {
@@ -1731,7 +1730,7 @@ index 79e4cc1a047979ce1f6f8457f6c4f5ae6a691050..cc612d93d8d675a21a1bf9132ea4a9b8
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 7e017d13be525de671aaa7be335076b996e3525e..dfb56f80938b074474c663436297b073ed270740 100644
+index d927e85156ef314a8d5b56ca7e4a09ff64a765f2..a22de5edabc9d6c15463173c68d93c4418d4f490 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1663,7 +1663,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -1744,7 +1743,7 @@ index 7e017d13be525de671aaa7be335076b996e3525e..dfb56f80938b074474c663436297b073
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2218,7 +2219,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2225,7 +2226,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
