@@ -221,6 +221,28 @@ bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
   return true;
 }
 
+void BravePasswordManagerClient::ShowManualFallbackForSaving(
+    std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+    bool has_generated_password,
+    bool is_update) {
+  if (!CanShowBubbleOnURL(web_contents()->GetLastCommittedURL()))
+    return;
+
+  PasswordsClientUIDelegate* manager_passwords_ui_controller =
+      PasswordsClientUIDelegateFromWebContents(web_contents());
+  manager_passwords_ui_controller->OnShowManualFallbackForSaving(
+      std::move(form_to_save), has_generated_password, is_update);
+}
+
+void BravePasswordManagerClient::HideManualFallbackForSaving() {
+  if (!CanShowBubbleOnURL(web_contents()->GetLastCommittedURL()))
+    return;
+
+  PasswordsClientUIDelegate* manager_passwords_ui_controller =
+      PasswordsClientUIDelegateFromWebContents(web_contents());
+  manager_passwords_ui_controller->OnHideManualFallbackForSaving();
+}
+
 bool BravePasswordManagerClient::PromptUserToChooseCredentials(
     std::vector<std::unique_ptr<autofill::PasswordForm>> local_forms,
     const GURL& origin,

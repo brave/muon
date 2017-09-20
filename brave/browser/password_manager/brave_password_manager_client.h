@@ -76,6 +76,11 @@ class BravePasswordManagerClient
   bool PromptUserToSaveOrUpdatePassword(
       std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
       bool update_password) override;
+  void ShowManualFallbackForSaving(
+      std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+      bool has_generated_password,
+      bool is_update) override;
+  void HideManualFallbackForSaving() override;
   bool PromptUserToChooseCredentials(
       std::vector<std::unique_ptr<autofill::PasswordForm>> local_forms,
       const GURL& origin,
