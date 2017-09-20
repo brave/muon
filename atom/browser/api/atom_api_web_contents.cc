@@ -255,9 +255,6 @@ struct Converter<blink::WebSecurityStyle> {
       case blink::kWebSecurityStyleInsecure:
         type = "broken";
         break;
-      case blink::kWebSecurityStyleWarning:
-        type = "warning";
-        break;
       case blink::kWebSecurityStyleSecure:
         type = "secure";
         break;
@@ -277,8 +274,6 @@ struct Converter<blink::WebSecurityStyle> {
       *out = blink::kWebSecurityStyleNeutral;
     } else if (type == "broken") {
       *out = blink::kWebSecurityStyleInsecure;
-    } else if (type == "warning") {
-      *out = blink::kWebSecurityStyleWarning;
     } else if (type == "secure") {
       *out = blink::kWebSecurityStyleSecure;
     } else {
