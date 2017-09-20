@@ -54,10 +54,10 @@ index de3f35f124aadd66ea21c3870651f7962f98f2cb..e2e7aeaf931102e61515d506fc0f063d
    default_compiler_configs += [
      "//build/config/win:default_crt",
 diff --git a/build/config/chrome_build.gni b/build/config/chrome_build.gni
-index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..d8934f992d9d1e1b32f5d1eede364bb33131b6c3 100644
+index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..bd0345335b129a059d507e69a9d4e8de3c7eebee 100644
 --- a/build/config/chrome_build.gni
 +++ b/build/config/chrome_build.gni
-@@ -11,6 +11,7 @@ declare_args() {
+@@ -11,12 +11,15 @@ declare_args() {
    # Break chrome.dll into multple pieces based on process type. Only available
    # on Windows.
    is_multi_dll_chrome = is_win && !is_component_build
@@ -65,6 +65,14 @@ index c649018a7a0aeb20caeb2bf37c60d57c48630f1b..d8934f992d9d1e1b32f5d1eede364bb3
  }
  
  # Refers to the subdirectory for branding in various places including
+ # chrome/app/theme.
++if (branding_path_component == "") {
+ if (is_chrome_branded) {
+   branding_path_component = "google_chrome"
+ } else {
+   branding_path_component = "chromium"
+ }
++}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
 index f89dd0d1cd01781e28b7cf361e69d040772af51f..fac0db598646878f8c71644314894908c3f774bd 100644
 --- a/build/toolchain/mac/BUILD.gn
