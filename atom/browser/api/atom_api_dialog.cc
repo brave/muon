@@ -8,29 +8,57 @@
 
 #include "atom/browser/api/atom_api_window.h"
 #include "atom/browser/native_window.h"
-#include "atom/browser/ui/file_dialog.h"
 #include "atom/browser/ui/message_box.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/image_converter.h"
+#include "base/bind.h"
+#include "base/path_service.h"
+#include "chrome/browser/extensions/api/file_system/file_entry_picker.h"
+#include "chrome/common/chrome_paths.h"
 #include "native_mate/dictionary.h"
+#include "vendor/brightray/browser/inspectable_web_contents.h"
 
 #include "atom/common/node_includes.h"
+
+namespace file_dialog {
+
+typedef base::Callback<void(
+    bool result, const std::vector<base::FilePath>& paths)> DialogCallback;
+
+struct DialogSettings {
+  atom::NativeWindow* parent_window = nullptr;
+  base::FilePath default_path;
+  std::vector<std::vector<base::FilePath::StringType>> extensions;
+  std::vector<base::string16> extension_description_overrides;
+  ui::SelectFileDialog::Type type;
+  bool include_all_files = true;
+};
+}  // namespace file_dialog
 
 namespace mate {
 
 template<>
-struct Converter<file_dialog::Filter> {
+struct Converter<ui::SelectFileDialog::Type> {
   static bool FromV8(v8::Isolate* isolate,
                      v8::Local<v8::Value> val,
-                     file_dialog::Filter* out) {
-    mate::Dictionary dict;
-    if (!ConvertFromV8(isolate, val, &dict))
+                     ui::SelectFileDialog::Type* out) {
+    std::string type;
+    if (!ConvertFromV8(isolate, val, &type))
       return false;
-    if (!dict.Get("name", &(out->first)))
-      return false;
-    if (!dict.Get("extensions", &(out->second)))
-      return false;
+    if (type == "select-folder") {
+        *out = ui::SelectFileDialog::SELECT_FOLDER;
+    } else if (type == "select-upload-folder") {
+        *out = ui::SelectFileDialog::SELECT_UPLOAD_FOLDER;
+    } else if (type == "select-saveas-file") {
+        *out = ui::SelectFileDialog::SELECT_SAVEAS_FILE;
+    } else if (type == "select-open-file") {
+        *out = ui::SelectFileDialog::SELECT_OPEN_FILE;
+    } else if (type == "select-open-multi-file") {
+        *out = ui::SelectFileDialog::SELECT_OPEN_MULTI_FILE;
+    } else {
+        *out = ui::SelectFileDialog::SELECT_NONE;
+    }
     return true;
   }
 };
@@ -44,11 +72,12 @@ struct Converter<file_dialog::DialogSettings> {
     if (!ConvertFromV8(isolate, val, &dict))
       return false;
     dict.Get("window", &(out->parent_window));
-    dict.Get("title", &(out->title));
-    dict.Get("buttonLabel", &(out->button_label));
     dict.Get("defaultPath", &(out->default_path));
-    dict.Get("filters", &(out->filters));
-    dict.Get("properties", &(out->properties));
+    dict.Get("type", &(out->type));
+    dict.Get("extensions", &(out->extensions));
+    dict.Get("extensionDescriptionOverrides",
+             &(out->extension_description_overrides));
+    dict.Get("includeAllFiles", &(out->include_all_files));
     return true;
   }
 };
@@ -84,34 +113,58 @@ void ShowMessageBox(int type,
   }
 }
 
-void ShowOpenDialog(const file_dialog::DialogSettings& settings,
-                    mate::Arguments* args) {
-  v8::Local<v8::Value> peek = args->PeekNext();
-  file_dialog::OpenDialogCallback callback;
-  if (mate::Converter<file_dialog::OpenDialogCallback>::FromV8(args->isolate(),
-                                                               peek,
-                                                               &callback)) {
-    file_dialog::ShowOpenDialog(settings, callback);
-  } else {
-    std::vector<base::FilePath> paths;
-    if (file_dialog::ShowOpenDialog(settings, &paths))
-      args->Return(paths);
-  }
+void OnShowDialogSelected(const file_dialog::DialogCallback& callback,
+                          const std::vector<base::FilePath>& paths) {
+  DCHECK(!paths.empty());
+  callback.Run(true, paths);
 }
 
-void ShowSaveDialog(const file_dialog::DialogSettings& settings,
-                    mate::Arguments* args) {
+void OnShowDialogCancelled(const file_dialog::DialogCallback& callback) {
+  std::vector<base::FilePath> files;
+  files.push_back(base::FilePath());
+  callback.Run(false, files);
+}
+
+void ShowDialog(const file_dialog::DialogSettings& settings,
+                mate::Arguments* args) {
   v8::Local<v8::Value> peek = args->PeekNext();
-  file_dialog::SaveDialogCallback callback;
-  if (mate::Converter<file_dialog::SaveDialogCallback>::FromV8(args->isolate(),
-                                                               peek,
-                                                               &callback)) {
-    file_dialog::ShowSaveDialog(settings, callback);
-  } else {
-    base::FilePath path;
-    if (file_dialog::ShowSaveDialog(settings, &path))
-      args->Return(path);
+  file_dialog::DialogCallback callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback` is a required field");
+    return;
   }
+
+  ui::SelectFileDialog::FileTypeInfo file_type_info;
+  for (size_t i = 0; i < settings.extensions.size(); ++i) {
+    file_type_info.extensions.push_back(settings.extensions[i]);
+  }
+  if (file_type_info.extensions.empty()) {
+    base::FilePath::StringType extension =
+      settings.default_path.FinalExtension();
+    if (!extension.empty()) {
+      file_type_info.extensions.push_back(
+        std::vector<base::FilePath::StringType>());
+      extension.erase(extension.begin());  // drop the .
+      file_type_info.extensions[0].push_back(extension);
+    }
+  }
+
+  base::FilePath default_path = settings.default_path;
+  if (default_path.empty()) {
+    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path);
+  }
+  file_type_info.include_all_files = settings.include_all_files;
+  file_type_info.extension_description_overrides =
+    settings.extension_description_overrides;
+  file_type_info.allowed_paths =
+    ui::SelectFileDialog::FileTypeInfo::NATIVE_OR_DRIVE_PATH;
+  new extensions::FileEntryPicker(
+    settings.parent_window->inspectable_web_contents()->GetWebContents(),
+    default_path,
+    file_type_info,
+    settings.type,
+    base::Bind(&OnShowDialogSelected, callback),
+    base::Bind(&OnShowDialogCancelled, callback));
 }
 
 void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
@@ -119,8 +172,7 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   mate::Dictionary dict(context->GetIsolate(), exports);
   dict.SetMethod("showMessageBox", &ShowMessageBox);
   dict.SetMethod("showErrorBox", &atom::ShowErrorBox);
-  dict.SetMethod("showOpenDialog", &ShowOpenDialog);
-  dict.SetMethod("showSaveDialog", &ShowSaveDialog);
+  dict.SetMethod("showDialog", &ShowDialog);
 }
 
 }  // namespace

@@ -12,17 +12,19 @@
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/native_window.h"
-#include "atom/browser/ui/file_dialog.h"
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/common/atom_constants.h"
 #include "base/files/file_util.h"
+#include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_javascript_dialog_manager.h"
 #include "chrome/browser/certificate_viewer.h"
+#include "chrome/browser/extensions/api/file_system/file_entry_picker.h"
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_dialogs.h"
+#include "chrome/common/chrome_paths.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/pref_registry/pref_registry_syncable.h"
@@ -171,7 +173,8 @@ bool IsDevToolsFileSystemAdded(
 CommonWebContentsDelegate::CommonWebContentsDelegate()
     : html_fullscreen_(false),
       native_fullscreen_(false),
-      devtools_file_system_indexer_(new DevToolsFileSystemIndexer) {
+      devtools_file_system_indexer_(new DevToolsFileSystemIndexer),
+      weak_ptr_factory_(this) {
 }
 
 CommonWebContentsDelegate::~CommonWebContentsDelegate() {
@@ -329,25 +332,25 @@ void CommonWebContentsDelegate::DevToolsSaveToFile(
   auto it = saved_files_.find(url);
   if (it != saved_files_.end() && !save_as) {
     path = it->second;
-  } else {
-    file_dialog::DialogSettings settings;
-    settings.parent_window = owner_window();
-    settings.title = url;
-    settings.default_path = base::FilePath::FromUTF8Unsafe(url);
-    if (!file_dialog::ShowSaveDialog(settings, &path)) {
-      base::Value url_value(url);
-      web_contents_->CallClientFunction(
-          "DevToolsAPI.canceledSaveURL", &url_value, nullptr, nullptr);
-      return;
-    }
-  }
-
-  saved_files_[url] = path;
-  BrowserThread::PostTaskAndReply(
+    saved_files_[url] = path;
+    BrowserThread::PostTaskAndReply(
       BrowserThread::FILE, FROM_HERE,
       base::Bind(&WriteToFile, path, content),
       base::Bind(&CommonWebContentsDelegate::OnDevToolsSaveToFile,
                  base::Unretained(this), url));
+  } else {
+    base::FilePath default_path;
+    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path);
+    default_path = default_path.Append(base::FilePath::FromUTF8Unsafe(url));
+    new extensions::FileEntryPicker(
+      GetWebContents(), default_path,
+      ui::SelectFileDialog::FileTypeInfo(),
+      ui::SelectFileDialog::SELECT_SAVEAS_FILE,
+      base::Bind(&CommonWebContentsDelegate::OnSaveFileSelected,
+                 weak_ptr_factory_.GetWeakPtr(), url, content),
+      base::Bind(&CommonWebContentsDelegate::OnSaveFileSelectionCancelled,
+                 weak_ptr_factory_.GetWeakPtr(), url));
+  }
 }
 
 void CommonWebContentsDelegate::DevToolsAppendToFile(
@@ -394,37 +397,18 @@ void CommonWebContentsDelegate::DevToolsRequestFileSystems() {
 
 void CommonWebContentsDelegate::DevToolsAddFileSystem(
     const base::FilePath& file_system_path) {
-  base::FilePath path = file_system_path;
-  if (path.empty()) {
-    std::vector<base::FilePath> paths;
-    file_dialog::DialogSettings settings;
-    settings.parent_window = owner_window();
-    settings.properties = file_dialog::FILE_DIALOG_OPEN_DIRECTORY;
-    if (!file_dialog::ShowOpenDialog(settings, &paths))
-      return;
-
-    path = paths[0];
+  if (file_system_path.empty()) {
+    new extensions::FileEntryPicker(
+      GetWebContents(), file_system_path,
+      ui::SelectFileDialog::FileTypeInfo(),
+      ui::SelectFileDialog::SELECT_UPLOAD_FOLDER,
+      base::Bind(&CommonWebContentsDelegate::OnAddFileSelected,
+                 weak_ptr_factory_.GetWeakPtr()),
+      base::Bind(&CommonWebContentsDelegate::OnAddFileSelectionCancelled,
+                 weak_ptr_factory_.GetWeakPtr()));
+  } else {
+    DevToolsAddFileSystemInteral(file_system_path);
   }
-
-  std::string file_system_id = RegisterFileSystem(GetDevToolsWebContents(),
-                                                  path);
-  if (IsDevToolsFileSystemAdded(GetDevToolsWebContents(), path.AsUTF8Unsafe()))
-    return;
-
-  FileSystem file_system = CreateFileSystemStruct(GetDevToolsWebContents(),
-                                                 file_system_id,
-                                                 path.AsUTF8Unsafe());
-  std::unique_ptr<base::DictionaryValue> file_system_value(
-      CreateFileSystemValue(file_system));
-
-  auto pref_service = GetPrefService(GetDevToolsWebContents());
-  DictionaryPrefUpdate update(pref_service, prefs::kDevToolsFileSystemPaths);
-  update.Get()->SetWithoutPathExpansion(
-      path.AsUTF8Unsafe(), base::MakeUnique<base::Value>());
-
-  web_contents_->CallClientFunction("DevToolsAPI.fileSystemAdded",
-                                    file_system_value.get(),
-                                    nullptr, nullptr);
 }
 
 void CommonWebContentsDelegate::DevToolsRemoveFileSystem(
@@ -499,6 +483,52 @@ void CommonWebContentsDelegate::DevToolsSearchInPath(
                  base::Unretained(this),
                  request_id,
                  file_system_path));
+}
+
+void CommonWebContentsDelegate::OnSaveFileSelected(
+    const std::string& url,
+    const std::string& content,
+    const std::vector<base::FilePath>& paths) {
+  DCHECK(!paths.empty());
+  WriteToFile(paths[0], content);
+  OnDevToolsSaveToFile(url);
+}
+void CommonWebContentsDelegate::OnSaveFileSelectionCancelled(
+    const std::string url) {
+  base::Value url_value(url);
+  web_contents_->CallClientFunction(
+    "DevToolsAPI.canceledSaveURL", &url_value, nullptr, nullptr);
+}
+
+void CommonWebContentsDelegate::OnAddFileSelected(
+    const std::vector<base::FilePath>& paths) {
+  DCHECK(!paths.empty());
+  DevToolsAddFileSystemInteral(paths[0]);
+}
+
+void CommonWebContentsDelegate::OnAddFileSelectionCancelled() {}
+
+void CommonWebContentsDelegate::DevToolsAddFileSystemInteral(
+    const base::FilePath& path) {
+  std::string file_system_id = RegisterFileSystem(GetDevToolsWebContents(),
+                                                  path);
+  if (IsDevToolsFileSystemAdded(GetDevToolsWebContents(), path.AsUTF8Unsafe()))
+    return;
+
+  FileSystem file_system = CreateFileSystemStruct(GetDevToolsWebContents(),
+                                                 file_system_id,
+                                                 path.AsUTF8Unsafe());
+  std::unique_ptr<base::DictionaryValue> file_system_value(
+      CreateFileSystemValue(file_system));
+
+  auto pref_service = GetPrefService(GetDevToolsWebContents());
+  DictionaryPrefUpdate update(pref_service, prefs::kDevToolsFileSystemPaths);
+  update.Get()->SetWithoutPathExpansion(
+      path.AsUTF8Unsafe(), base::MakeUnique<base::Value>());
+
+  web_contents_->CallClientFunction("DevToolsAPI.fileSystemAdded",
+                                    file_system_value.get(),
+                                    nullptr, nullptr);
 }
 
 void CommonWebContentsDelegate::OnDevToolsSaveToFile(

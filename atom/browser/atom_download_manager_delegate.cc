@@ -5,12 +5,12 @@
 #include "atom/browser/atom_download_manager_delegate.h"
 
 #include <string>
+#include <vector>
 
-#include "atom/browser/api/atom_api_download_item.h"
 #include "atom/browser/native_window.h"
-#include "atom/browser/ui/file_dialog.h"
 #include "base/bind.h"
 #include "base/files/file_util.h"
+#include "chrome/browser/extensions/api/file_system/file_entry_picker.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_service.h"
@@ -18,6 +18,8 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/download_manager.h"
 #include "net/base/filename_util.h"
+#include "net/base/mime_util.h"
+#include "vendor/brightray/browser/inspectable_web_contents.h"
 
 namespace atom {
 
@@ -51,6 +53,50 @@ void AtomDownloadManagerDelegate::GetItemSavePath(content::DownloadItem* item,
                                                                     item);
   if (download && !download->GetSavePath().empty())
     *path = download->GetSavePath();
+}
+
+bool AtomDownloadManagerDelegate::GetItemExtension(
+    content::DownloadItem* item,
+    base::FilePath::StringType* extension) {
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::Locker locker(isolate);
+  v8::HandleScope handle_scope(isolate);
+  api::DownloadItem* download = api::DownloadItem::FromWrappedClass(isolate,
+                                                                    item);
+  if (download && !download->GetMimeType().empty())
+      return net::GetPreferredExtensionForMimeType(
+            download->GetMimeType(), extension);
+  return false;
+}
+
+void AtomDownloadManagerDelegate:: OnDownloadItemSelected(
+    const content::DownloadTargetCallback& callback,
+    api::DownloadItem* download_item,
+    const std::vector<base::FilePath>& paths) {
+  DCHECK(!paths.empty());
+  // Remember the last selected download directory.
+  Profile* profile = static_cast<Profile*>(
+      download_manager_->GetBrowserContext());
+  profile->GetPrefs()->SetFilePath(prefs::kDownloadDefaultDirectory,
+                                   paths[0].DirName());
+  if (download_item)
+    download_item->SetSavePath(paths[0]);
+
+  callback.Run(paths[0],
+               content::DownloadItem::TARGET_DISPOSITION_PROMPT,
+               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, paths[0],
+               content::DOWNLOAD_INTERRUPT_REASON_NONE);
+}
+
+void AtomDownloadManagerDelegate::OnDownloadItemSelectionCancelled(
+    const content::DownloadTargetCallback& callback,
+    content::DownloadItem* item) {
+  item->Remove();
+  base::FilePath path;
+  callback.Run(path,
+               content::DownloadItem::TARGET_DISPOSITION_PROMPT,
+               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+               content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
 }
 
 void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
@@ -89,30 +135,33 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
   GetItemSavePath(item, &path);
 
   // Show save dialog if save path was not set already on item
-  file_dialog::DialogSettings settings;
-  settings.parent_window = window;
-  settings.title = item->GetURL().spec();
-  settings.default_path = target_path;
-  if (path.empty() && file_dialog::ShowSaveDialog(settings, &path)) {
-    // Remember the last selected download directory.
-    Profile* profile = static_cast<Profile*>(
-        download_manager_->GetBrowserContext());
-    profile->GetPrefs()->SetFilePath(prefs::kDownloadDefaultDirectory,
-                                          path.DirName());
+  ui::SelectFileDialog::FileTypeInfo file_type_info;
+  if (path.empty()) {
+    std::vector<base::FilePath::StringType> extensions;
+    base::FilePath::StringType extension;
+    if (GetItemExtension(item, &extension)) {
+      extensions.push_back(extension);
+      file_type_info.extensions.push_back(extensions);
+    }
+    file_type_info.include_all_files = true;
+    new extensions::FileEntryPicker(
+      window->inspectable_web_contents()->GetWebContents(),
+      target_path,
+      file_type_info,
+      ui::SelectFileDialog::SELECT_SAVEAS_FILE,
+      base::Bind(&AtomDownloadManagerDelegate::OnDownloadItemSelected,
+                 base::Unretained(this), callback, download_item),
+      base::Bind(&AtomDownloadManagerDelegate::OnDownloadItemSelectionCancelled,
+                 base::Unretained(this), callback, item));
+  } else {
+    if (download_item)
+      download_item->SetSavePath(path);
+
+    callback.Run(path,
+                 content::DownloadItem::TARGET_DISPOSITION_PROMPT,
+                 content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 content::DOWNLOAD_INTERRUPT_REASON_NONE);
   }
-
-  if (path.empty())
-    item->Remove();
-
-  if (download_item)
-    download_item->SetSavePath(path);
-
-  callback.Run(path,
-               content::DownloadItem::TARGET_DISPOSITION_PROMPT,
-               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
-               path.empty()
-                  ? content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED
-                  : content::DOWNLOAD_INTERRUPT_REASON_NONE);
 }
 
 void AtomDownloadManagerDelegate::Shutdown() {

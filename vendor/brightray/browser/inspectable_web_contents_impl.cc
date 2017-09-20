@@ -690,10 +690,9 @@ void InspectableWebContentsImpl::RequestFileSystems() {
 }
 
 void InspectableWebContentsImpl::AddFileSystem(
-    const std::string& file_system_path) {
+    const std::string& type) {
   if (delegate_)
-    delegate_->DevToolsAddFileSystem(
-        base::FilePath::FromUTF8Unsafe(file_system_path));
+    delegate_->DevToolsAddFileSystem(base::FilePath());
 }
 
 void InspectableWebContentsImpl::RemoveFileSystem(

@@ -6,7 +6,9 @@
 #define ATOM_BROWSER_ATOM_DOWNLOAD_MANAGER_DELEGATE_H_
 
 #include <string>
+#include <vector>
 
+#include "atom/browser/api/atom_api_download_item.h"
 #include "base/memory/weak_ptr.h"
 #include "chrome/browser/download/download_path_reservation_tracker.h"
 #include "content/public/browser/download_manager_delegate.h"
@@ -41,6 +43,18 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate {
  private:
   // Get the save path set on the associated api::DownloadItem object
   void GetItemSavePath(content::DownloadItem* item, base::FilePath* path);
+
+  bool GetItemExtension(content::DownloadItem* item,
+                         base::FilePath::StringType* extension);
+
+  void OnDownloadItemSelected(const content::DownloadTargetCallback& callback,
+                              api::DownloadItem* download_item,
+                              const std::vector<base::FilePath>& paths);
+
+  void OnDownloadItemSelectionCancelled(
+      const content::DownloadTargetCallback& callback,
+      content::DownloadItem* item);
+
 
   content::DownloadManager* download_manager_;
   base::WeakPtrFactory<AtomDownloadManagerDelegate> weak_ptr_factory_;
