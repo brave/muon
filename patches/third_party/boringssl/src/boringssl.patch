@@ -21,7 +21,7 @@ index fc8e24b65c4c6f379072f3756703d318747e9526..106f3a9103333e1cc6a2eff6666e980e
  
    return NULL;
 diff --git a/crypto/digest_extra/digest_extra.c b/crypto/digest_extra/digest_extra.c
-index b18759afb0cd0aa5a01fdabc8b73233b6df149b1..1dc230da4ad178478eb62c30ff67642a439259ce 100644
+index ab7ff5934e413e0437b8a246852e54d3ec1d5e09..4efc14575858cfd2a7cb33b1111708f6f8ccf35c 100644
 --- a/crypto/digest_extra/digest_extra.c
 +++ b/crypto/digest_extra/digest_extra.c
 @@ -82,6 +82,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
@@ -31,9 +31,9 @@ index b18759afb0cd0aa5a01fdabc8b73233b6df149b1..1dc230da4ad178478eb62c30ff67642a
 +    {NID_ripemd160, EVP_ripemd160, SN_ripemd160, LN_ripemd160},
 +    {NID_ripemd160, EVP_ripemd160, SN_ripemd, LN_ripemd},
 +    {NID_ripemd160, EVP_ripemd160, SN_rmd160, LN_rmd160},
-     /* As a remnant of signing |EVP_MD|s, OpenSSL returned the corresponding
-      * hash function when given a signature OID. To avoid unintended lax parsing
-      * of hash OIDs, this is no longer supported for lookup by OID or NID.
+     // As a remnant of signing |EVP_MD|s, OpenSSL returned the corresponding
+     // hash function when given a signature OID. To avoid unintended lax parsing
+     // of hash OIDs, this is no longer supported for lookup by OID or NID.
 @@ -100,6 +103,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
       LN_sha384WithRSAEncryption},
      {NID_undef, EVP_sha512, SN_sha512WithRSAEncryption,
@@ -43,7 +43,7 @@ index b18759afb0cd0aa5a01fdabc8b73233b6df149b1..1dc230da4ad178478eb62c30ff67642a
  
  const EVP_MD* EVP_get_digestbynid(int nid) {
 diff --git a/decrepit/evp/evp_do_all.c b/decrepit/evp/evp_do_all.c
-index 621c0b11701ffb0a61c5a8ae7585f96289b20438..43983f2a1ebb8fc8e6650be5f7ebcdc5d7a9139e 100644
+index 38b8f9f78f76050174096740596ac59a0fe18757..34bd1c7ead08562b526bf990fd17913876e8d4c1 100644
 --- a/decrepit/evp/evp_do_all.c
 +++ b/decrepit/evp/evp_do_all.c
 @@ -26,6 +26,7 @@ void EVP_CIPHER_do_all_sorted(void (*callback)(const EVP_CIPHER *cipher,
@@ -79,7 +79,7 @@ index 621c0b11701ffb0a61c5a8ae7585f96289b20438..43983f2a1ebb8fc8e6650be5f7ebcdc5
    callback(EVP_sha224(), "sha224", NULL, arg);
    callback(EVP_sha256(), "sha256", NULL, arg);
 diff --git a/decrepit/ripemd/ripemd.c b/decrepit/ripemd/ripemd.c
-index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..2b3e69e080e2eeb4a8a937254d846325ebe91977 100644
+index 275d439768b7d75219fce86392ac28c3fa3747fd..60bbeb998809212a43a65ea0bbe2a537418de905 100644
 --- a/decrepit/ripemd/ripemd.c
 +++ b/decrepit/ripemd/ripemd.c
 @@ -56,9 +56,13 @@
@@ -145,7 +145,7 @@ index ab9bc32dfb109a04d6cd7fbdbca424cb590f0b75..2b3e69e080e2eeb4a8a937254d846325
  
    if (!RIPEMD160_Init(&ctx)) {
 diff --git a/include/openssl/digest.h b/include/openssl/digest.h
-index 2de84f7d5dab71cf709fbf770308a2b691232b2e..435e92322108724617b52f6766052a691caf3bf3 100644
+index ad6dd507e674f7954c1b1e2f50196a99c540ad61..6f913278bfa661337f807b45720ab89fc874069e 100644
 --- a/include/openssl/digest.h
 +++ b/include/openssl/digest.h
 @@ -83,6 +83,7 @@ OPENSSL_EXPORT const EVP_MD *EVP_sha224(void);
@@ -154,10 +154,10 @@ index 2de84f7d5dab71cf709fbf770308a2b691232b2e..435e92322108724617b52f6766052a69
  OPENSSL_EXPORT const EVP_MD *EVP_sha512(void);
 +OPENSSL_EXPORT const EVP_MD *EVP_ripemd160(void);
  
- /* EVP_md5_sha1 is a TLS-specific |EVP_MD| which computes the concatenation of
-  * MD5 and SHA-1, as used in TLS 1.1 and below. */
+ // EVP_md5_sha1 is a TLS-specific |EVP_MD| which computes the concatenation of
+ // MD5 and SHA-1, as used in TLS 1.1 and below.
 diff --git a/include/openssl/nid.h b/include/openssl/nid.h
-index bc0ee3388b12872a8bef6ae32984f83103075262..65982232c85fa2f94fd4a1213c1f3a790089e59f 100644
+index afeb2dea4e0464082fa72fd1404f9321eb656dec..2c3c842cb4a21e937993132f7a7cfbae2c18c5db 100644
 --- a/include/openssl/nid.h
 +++ b/include/openssl/nid.h
 @@ -617,6 +617,12 @@ extern "C" {
@@ -174,19 +174,19 @@ index bc0ee3388b12872a8bef6ae32984f83103075262..65982232c85fa2f94fd4a1213c1f3a79
  #define LN_ripemd160WithRSA "ripemd160WithRSA"
  #define NID_ripemd160WithRSA 119
 diff --git a/util/BUILD.toplevel b/util/BUILD.toplevel
-index 68a17a604383f93e9d5722c71d0883838a5e24af..22ca47ae5dc5786d23dd4b2f00a33ab2d4c6099e 100644
+index af7bd303fc1667eaa1a04dcbdd7571f57211248d..5329144d931a572c68804a641283955526a784eb 100644
 --- a/util/BUILD.toplevel
 +++ b/util/BUILD.toplevel
-@@ -30,6 +30,7 @@ load(
-     "ssl_cc_sources",
+@@ -29,6 +29,7 @@ load(
+     "ssl_sources",
      "tool_sources",
      "tool_headers",
 +    "decrepit_sources",
  )
  
  config_setting(
-@@ -122,6 +123,15 @@ cc_library(
-     deps = [":crypto"],
+@@ -137,6 +138,15 @@ cc_library(
+     ],
  )
  
 +cc_library(
@@ -202,7 +202,7 @@ index 68a17a604383f93e9d5722c71d0883838a5e24af..22ca47ae5dc5786d23dd4b2f00a33ab2
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index ef340e640f42c41da62e8f3fe2e88a1a3373ff5b..89d159e8c67b0e361f016fe1b23bc403db1afb23 100644
+index 4feb4df8ea3f30313365d5b2e5cfcc4899ae8445..80868fc3dddc7e063d230973ab56d07c03fcff10 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
 @@ -164,6 +164,14 @@ class Android(object):
