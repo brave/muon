@@ -2128,6 +2128,27 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
    }
  
    bool ShouldSelectReplacement() const {
+diff --git a/third_party/WebKit/Source/core/frame/LocalFrame.cpp b/third_party/WebKit/Source/core/frame/LocalFrame.cpp
+index 72aaf883fc1980ced78ad4a175136fb60077d6a4..7fd884997059264105c03b7f5f0566ee7895948d 100644
+--- a/third_party/WebKit/Source/core/frame/LocalFrame.cpp
++++ b/third_party/WebKit/Source/core/frame/LocalFrame.cpp
+@@ -1091,7 +1091,15 @@ WebPluginContainerImpl* LocalFrame::GetWebPluginContainer(Node* node) const {
+   }
+ 
+   if (node) {
+-    return node->GetWebPluginContainer();
++    WebPluginContainerImpl* container = node->GetWebPluginContainer();
++    if (container) {
++      return container;
++    }
++    DCHECK(GetDocument());
++    node = GetDocument()->FocusedElement();
++    if (node) {
++      return node->GetWebPluginContainer();
++    }
+   }
+   return nullptr;
+ }
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 index 5be4065214fc8cc976f58c2b85f2441b04745648..e6406090db866a7b5e60cdee4b45381f18e025c2 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
