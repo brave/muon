@@ -31,6 +31,7 @@ class MuonCrashReporterClient : public ChromeCrashReporterClient {
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
   void GetProductNameAndVersion(const char** product_name,
                                 const char** version) override;
+  bool HandleCrashDump(const char* crashdump_filename) override;
 #endif
 
 #if defined(OS_WIN) || defined(OS_MACOSX)

@@ -56,6 +56,11 @@ void MuonCrashReporterClient::GetProductNameAndVersion(
   *product_name = name.c_str();
   *product_version = version.c_str();
 }
+
+bool MuonCrashReporterClient::HandleCrashDump(const char* crashdump_filename) {
+  return !MuonCrashReporterClient::GetCollectStatsConsent();
+}
+
 #endif
 
 #if defined(OS_WIN) || defined(OS_MACOSX)
