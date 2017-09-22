@@ -93,7 +93,6 @@
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/child/v8_value_converter.h"
-#include "content/public/common/context_menu_params.h"
 #include "content/public/common/window_container_type.mojom.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
@@ -977,19 +976,32 @@ void WebContents::RendererResponsive(content::WebContents* source) {
     owner_window()->RendererResponsive(source);
 }
 
+bool WebContents::OnContextMenuShow() {
+  if (web_contents()->IsShowingContextMenu())
+    return false;
+
+  web_contents()->SetShowingContextMenu(true);
+  return true;
+}
+
+void WebContents::OnContextMenuClose() {
+  web_contents()->SetShowingContextMenu(false);
+  web_contents()->NotifyContextMenuClosed(context_menu_params_.custom_context);
+}
+
 bool WebContents::HandleContextMenu(const content::ContextMenuParams& params) {
+  context_menu_params_ = content::ContextMenuParams(params);
+
 #if BUILDFLAG(ENABLE_PLUGINS)
     if (params.custom_context.request_id &&
         !params.custom_context.is_pepper_menu) {
       Emit("enable-pepper-menu", std::make_pair(params, web_contents()));
-      web_contents()->NotifyContextMenuClosed(params.custom_context);
       return true;
     }
 #endif
 
   if (params.custom_context.is_pepper_menu) {
     Emit("pepper-context-menu", std::make_pair(params, web_contents()));
-    web_contents()->NotifyContextMenuClosed(params.custom_context);
   } else {
     // For forgetting custom dictionary option
     content::ContextMenuParams new_params(params);
@@ -2521,6 +2533,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
                   &WebContents::EnablePreferredSizeMode)
       .SetMethod("authorizePlugin",
                   &WebContents::AuthorizePlugin)
+      .SetMethod("onContextMenuShow", &WebContents::OnContextMenuShow)
+      .SetMethod("onContextMenuClose", &WebContents::OnContextMenuClose)
 #if BUILDFLAG(ENABLE_EXTENSIONS)
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
       .SetMethod("isBackgroundPage", &WebContents::IsBackgroundPage)

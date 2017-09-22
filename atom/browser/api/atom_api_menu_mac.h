@@ -23,9 +23,11 @@ class MenuMac : public Menu {
   MenuMac(v8::Isolate* isolate, v8::Local<v8::Object> wrapper);
 
   void PopupAt(
-      Window* window, int x, int y, int positioning_item) override;
+      Window* window, int x, int y, int positioning_item,
+      const base::Callback<void(int)>& callback) override;
   void PopupOnUI(const base::WeakPtr<NativeWindow>& native_window,
-                 int32_t window_id, int x, int y, int positioning_item);
+                 int32_t window_id, int x, int y, int positioning_item,
+                 CloseCallback callback);
   void ClosePopupAt(int32_t window_id) override;
 
  private:

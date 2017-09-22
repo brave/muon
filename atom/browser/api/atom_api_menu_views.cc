@@ -23,7 +23,8 @@ MenuViews::MenuViews(v8::Isolate* isolate, v8::Local<v8::Object> wrapper)
 }
 
 void MenuViews::PopupAt(
-    Window* window, int x, int y, int positioning_item) {
+    Window* window, int x, int y, int positioning_item,
+    CloseCallback callback) {
   NativeWindow* native_window = static_cast<NativeWindow*>(window->window());
   if (!native_window)
     return;
@@ -50,8 +51,7 @@ void MenuViews::PopupAt(
 
   // Show the menu.
   int32_t window_id = window->ID();
-  auto close_callback = base::Bind(
-      &MenuViews::ClosePopupAt, weak_factory_.GetWeakPtr(), window_id);
+  auto close_callback = base::Bind(callback, window_id);
   menu_runners_[window_id] = std::unique_ptr<MenuRunner>(new MenuRunner(
       model(), flags, close_callback));
   menu_runners_[window_id]->RunMenuAt(
