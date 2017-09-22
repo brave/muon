@@ -158,10 +158,6 @@ source_set("browser") {
   ]
 
   if (is_linux) {
-    include_dirs = [
-      "/usr/include",
-    ]
-
     deps += [
       "//electron/build:gtk3",
     ]
