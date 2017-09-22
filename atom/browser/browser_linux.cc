@@ -90,6 +90,12 @@ bool Browser::RemoveAsDefaultProtocolClient(const std::string& protocol,
 // otherwise it sets Brave as the default handler application for |protocol|.
 bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
                                          mate::Arguments* args) {
+  std::string desktop_name;
+  if (!args->GetNext(&desktop_name)) {
+    args->ThrowError("`desktop name` is a required field");
+    return false;
+  }
+
   std::unique_ptr<base::Environment> env(base::Environment::Create());
 
   std::vector<std::string> argv;
@@ -101,8 +107,7 @@ bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
     argv.push_back(kXdgSettingsDefaultSchemeHandler);
     argv.push_back(protocol);
   }
-  // TODO(Anthony): Make it configurable
-  argv.push_back("brave.desktop");
+  argv.push_back(desktop_name.c_str());
 
   int exit_code;
   bool ran_ok = LaunchXdgUtility(argv, &exit_code);
@@ -118,6 +123,12 @@ bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
 // |protocol|.
 bool Browser::IsDefaultProtocolClient(const std::string& protocol,
                                       mate::Arguments* args) {
+  std::string desktop_name;
+  if (!args->GetNext(&desktop_name)) {
+    args->ThrowError("`desktop name` is a required field");
+    return false;
+  }
+
   base::ThreadRestrictions::AssertIOAllowed();
 
   std::unique_ptr<base::Environment> env(base::Environment::Create());
@@ -131,8 +142,8 @@ bool Browser::IsDefaultProtocolClient(const std::string& protocol,
     argv.push_back(kXdgSettingsDefaultSchemeHandler);
     argv.push_back(protocol);
   }
-  // TODO(Anthony): Make it configurable
-  argv.push_back("brave.desktop");
+
+  argv.push_back(desktop_name.c_str());
 
   std::string reply;
   int success_code;
