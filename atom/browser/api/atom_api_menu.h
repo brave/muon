@@ -29,6 +29,8 @@ class Menu : public mate::TrackableObject<Menu>,
              public AtomMenuModel::Delegate,
              public MenuObserver {
  public:
+  typedef const base::Callback<void(int)>& CloseCallback;
+
   static mate::WrappableBase* New(mate::Arguments* args);
 
   static void BuildPrototype(v8::Isolate* isolate,
@@ -63,7 +65,8 @@ class Menu : public mate::TrackableObject<Menu>,
   void MenuWillShow(ui::SimpleMenuModel* source) override;
 
   virtual void PopupAt(
-    Window* window, int x, int y, int positioning_item) = 0;
+    Window* window, int x, int y, int positioning_item,
+    CloseCallback callback) = 0;
   virtual void ClosePopupAt(int32_t window_id) = 0;
 
   std::unique_ptr<AtomMenuModel> model_;

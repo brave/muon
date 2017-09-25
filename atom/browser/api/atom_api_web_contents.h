@@ -19,6 +19,7 @@
 #include "content/common/view_messages.h"
 #include "content/public/browser/service_worker_context.h"
 #include "content/public/browser/web_contents_observer.h"
+#include "content/public/common/context_menu_params.h"
 #include "content/public/common/favicon_url.h"
 #include "extensions/features/features.h"
 #include "native_mate/handle.h"
@@ -426,6 +427,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
       content::WebContents* source,
       const content::WebContentsUnresponsiveState& unresponsive_state) override;
   void RendererResponsive(content::WebContents* source) override;
+  bool OnContextMenuShow();
+  void OnContextMenuClose();
   bool HandleContextMenu(const content::ContextMenuParams& params) override;
   bool OnGoToEntryOffset(int offset) override;
   void FindReply(content::WebContents* web_contents,
@@ -552,6 +555,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool is_being_destroyed_;
 
   guest_view::GuestViewBase* guest_delegate_;  // not owned
+
+  // the context menu params for the current context menu;
+  content::ContextMenuParams context_menu_params_;
 
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
   DISALLOW_COPY_AND_ASSIGN(WebContents);

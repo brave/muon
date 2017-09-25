@@ -2182,6 +2182,18 @@ index 5fbf9daf8b150748327b60b8a1c0e64a308985df..d9a520b1db4c331bd2beceb2dc29cf02
        IsAutoplayAllowedPerSettings()) {
      return false;
    }
+diff --git a/third_party/WebKit/Source/web/WebViewImpl.cpp b/third_party/WebKit/Source/web/WebViewImpl.cpp
+index f7fc7dd686a5f25e7c6fdabd760fedc7a4a2ccfe..f2ffd987885cb032357c4176d0e4394b060b577e 100644
+--- a/third_party/WebKit/Source/web/WebViewImpl.cpp
++++ b/third_party/WebKit/Source/web/WebViewImpl.cpp
+@@ -3457,6 +3457,7 @@ void WebViewImpl::DidCloseContextMenu() {
+   LocalFrame* frame = page_->GetFocusController().FocusedFrame();
+   if (frame)
+     frame->Selection().SetCaretBlinkingSuspended(false);
++  page_->GetContextMenuController().ClearContextMenu();
+ }
+ 
+ void WebViewImpl::HidePopups() {
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
 index fab23921a1432cd0605e73190555797915589656..33f7699cbc6bd9ebdea0bd9a829b1f6b13e87aa3 100644
 --- a/third_party/boringssl/BUILD.generated.gni
