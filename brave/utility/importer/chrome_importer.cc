@@ -280,10 +280,6 @@ void ChromeImporter::ImportCookies() {
       base::Time::FromDoubleT(chromeTimeToDouble((s.ColumnInt64(4))));
     cookie.secure = s.ColumnBool(5);
     cookie.httponly = s.ColumnBool(6);
-    // skip cookie not match strict secure rule
-    if (cookie.secure && cookie.httponly) {
-      continue;
-    }
     std::string encrypted_value = s.ColumnString(7);
     net::CookieCryptoDelegate* delegate =
       cookie_config::GetCookieCryptoDelegate();
