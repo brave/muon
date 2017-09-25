@@ -28,20 +28,22 @@ MenuMac::MenuMac(v8::Isolate* isolate, v8::Local<v8::Object> wrapper)
 }
 
 void MenuMac::PopupAt(
-    Window* window, int x, int y, int positioning_item) {
+    Window* window, int x, int y, int positioning_item,
+    CloseCallback callback) {
   NativeWindow* native_window = window->window();
   if (!native_window)
     return;
 
   auto popup = base::Bind(&MenuMac::PopupOnUI, weak_factory_.GetWeakPtr(),
                           native_window->GetWeakPtr(), window->ID(), x, y,
-                          positioning_item);
+                          positioning_item, callback);
 
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, popup);
 }
 
 void MenuMac::PopupOnUI(const base::WeakPtr<NativeWindow>& native_window,
-                        int32_t window_id, int x, int y, int positioning_item) {
+                        int32_t window_id, int x, int y, int positioning_item,
+                        CloseCallback callback) {
   if (!native_window)
     return;
   brightray::InspectableWebContents* web_contents =
@@ -49,8 +51,7 @@ void MenuMac::PopupOnUI(const base::WeakPtr<NativeWindow>& native_window,
   if (!web_contents || !web_contents->GetWebContents())
     return;
 
-  auto close_callback = base::Bind(&MenuMac::ClosePopupAt,
-                                   weak_factory_.GetWeakPtr(), window_id);
+  auto close_callback = base::Bind(callback, window_id);
   popup_controllers_[window_id] = base::scoped_nsobject<AtomMenuController>(
       [[AtomMenuController alloc] initWithModel:model()
                           useDefaultAccelerator:NO]);
