@@ -177,11 +177,11 @@ void ProfileWriter::AddCookies(
     for (const ImportedCookieEntry& cookie_entry : cookies) {
       base::DictionaryValue* cookie = new base::DictionaryValue();
       base::string16 url;
-      if (cookie_entry.httponly) {
-        url.append(base::UTF8ToUTF16("http://"));
+      if (cookie_entry.secure) {
+        url.append(base::UTF8ToUTF16("https://"));
         url.append(cookie_entry.host);
       } else {
-        url.append(base::UTF8ToUTF16("https://"));
+        url.append(base::UTF8ToUTF16("http://"));
         url.append(cookie_entry.host);
       }
       cookie->SetString("url", url);
