@@ -413,7 +413,7 @@ void URLBindings::Parse(
       dict.Set("auth", gurl.username() + (gurl.has_password()
         ? ":" + gurl.password() : ""));
     dict.Set("hash", (gurl.has_ref() ? "#" : "") + gurl.ref());
-    dict.Set("hostname", gurl.host());
+    dict.Set("hostname", gurl.HostNoBrackets());
     dict.Set("host", gurl.host() + (gurl.has_port() ? ":" + gurl.port() : ""));
     dict.Set("href", gurl.possibly_invalid_spec());
     dict.Set("path", gurl.PathForRequest());
