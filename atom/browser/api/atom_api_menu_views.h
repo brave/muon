@@ -23,7 +23,8 @@ class MenuViews : public Menu {
 
  protected:
   void PopupAt(
-      Window* window, int x, int y, int positioning_item) override;
+      Window* window, int x, int y, int positioning_item,
+      CloseCallback callback) override;
   void ClosePopupAt(int32_t window_id) override;
 
  private:
