@@ -538,6 +538,8 @@
       # stdlibc++ as standard library. This is intended to use for instrumented
       # builds.
       'use_custom_libcxx%': 0,
+      'libcxx_prefix%': '../../buildtools/third_party/libc++/trunk',
+      'libcxxabi_prefix%': '../../buildtools/third_party/libc++abi/trunk',
 
       # Use the provided profiled order file to link Chrome image with it.
       # This makes Chrome faster by better using CPU cache when executing code.
@@ -1210,6 +1212,8 @@
     'use_instrumented_libraries%': '<(use_instrumented_libraries)',
     'use_prebuilt_instrumented_libraries%': '<(use_prebuilt_instrumented_libraries)',
     'use_custom_libcxx%': '<(use_custom_libcxx)',
+    'libcxx_prefix%': '<(libcxx_prefix)',
+    'libcxxabi_prefix%': '<(libcxxabi_prefix)',
     'order_profiling%': '<(order_profiling)',
     'order_text_section%': '<(order_text_section)',
     'enable_extensions%': '<(enable_extensions)',
@@ -1885,6 +1889,7 @@
       }],
       ['OS=="linux"', {
         'clang%': 1,
+        'use_custom_libcxx%': 1,
         'conditions': [
           ['target_arch=="arm64"', {
             # Temporarily disable nacl and tcmalloc on arm64 linux to get
@@ -4567,8 +4572,13 @@
             ],
           }],
           ['use_custom_libcxx==1', {
-            'dependencies': [
-              '<(DEPTH)/buildtools/third_party/libc++/libc++.gyp:libcxx_proxy',
+            'cflags_cc': [
+              '-nostdinc++',
+              '-isystem<(libcxx_prefix)/include',
+              '-isystem<(libcxxabi_prefix)/include',
+            ],
+            'ldflags': [
+              '-nostdinc++',
             ],
           }],
           ['order_profiling!=0 and OS=="android"', {
