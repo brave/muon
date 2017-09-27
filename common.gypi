@@ -4295,7 +4295,7 @@
               # typeof() (a GNU extension).
               # TODO(thakis): Eventually switch this to c++11 instead,
               # http://crbug.com/427584
-              '-std=gnu++11',
+              '-std=gnu++14',
             ],
           }],
           ['clang==1 and chromeos==1', {
@@ -4307,7 +4307,7 @@
           ['clang==0 and host_clang==1', {
             'target_conditions': [
               ['_toolset=="host"', {
-                'cflags_cc': [ '-std=gnu++11', ],
+                'cflags_cc': [ '-std=gnu++14', ],
               }],
             ],
           }],
@@ -4702,7 +4702,7 @@
             'target_conditions': [
               ['_toolset=="target"', {
                 'cflags_cc': [
-                  '-std=gnu++11',
+                  '-std=gnu++14',
                   # See comment for -Wno-c++11-narrowing.
                   '-Wno-narrowing',
                 ],
@@ -4713,7 +4713,7 @@
             'target_conditions': [
               ['_toolset=="host"', {
                 'cflags_cc': [
-                  '-std=gnu++11',
+                  '-std=gnu++14',
                   # See comment for -Wno-c++11-narrowing.
                   '-Wno-narrowing',
                 ],
