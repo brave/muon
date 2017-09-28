@@ -409,10 +409,14 @@ WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options)
 }
 
 WebContents::~WebContents() {
-  // The WebContentsDestroyed will not be called automatically because we
-  // unsubscribe from webContents before destroying it. So we have to manually
-  // call it here to make sure "destroyed" event is emitted.
-  WebContentsDestroyed();
+  if (guest_delegate_ && web_contents() != NULL) {
+    guest_delegate_->Destroy(true);
+  } else {
+    // The WebContentsDestroyed will not be called automatically because we
+    // unsubscribe from webContents before destroying it. So we have to manually
+    // call it here to make sure "destroyed" event is emitted.
+    WebContentsDestroyed();
+  }
 }
 
 void WebContents::CreateWebContents(v8::Isolate* isolate,
