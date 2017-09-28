@@ -72,7 +72,10 @@ class TrackableObject : public TrackableObjectBase,
  public:
   // Mark the JS object as destroyed.
   void MarkDestroyed() {
-    Wrappable<T>::GetWrapper()->SetAlignedPointerInInternalField(0, nullptr);
+    v8::Local<v8::Object> wrapper = Wrappable<T>::GetWrapper();
+    if (!wrapper.IsEmpty()) {
+      Wrappable<T>::GetWrapper()->SetAlignedPointerInInternalField(0, nullptr);
+    }
   }
 
   // Finds out the TrackableObject from its ID in weak map.
