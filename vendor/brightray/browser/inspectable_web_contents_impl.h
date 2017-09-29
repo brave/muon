@@ -16,7 +16,7 @@
 #include "content/public/browser/devtools_frontend_host.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
-#include "net/url_request/url_fetcher_delegate.h"
+#include "net/url_request/url_fetcher.h"
 #include "ui/gfx/geometry/rect.h"
 
 class PrefService;
@@ -36,8 +36,7 @@ class InspectableWebContentsImpl :
     public content::DevToolsAgentHostClient,
     public content::WebContentsObserver,
     public content::WebContentsDelegate,
-    public DevToolsEmbedderMessageDispatcher::Delegate,
-    public net::URLFetcherDelegate {
+    public DevToolsEmbedderMessageDispatcher::Delegate {
  public:
   static void RegisterPrefs(PrefRegistrySimple* pref_registry);
 
@@ -70,6 +69,8 @@ class InspectableWebContentsImpl :
   void UpdateDevToolsZoomLevel(double level);
 
   void WebContentsDestroyed() override;
+
+  void OnURLFetchComplete(const net::URLFetcher* source);
  private:
   // DevToolsEmbedderMessageDispacher::Delegate
   void ActivateWindow() override;
@@ -165,9 +166,6 @@ class InspectableWebContentsImpl :
   void EnumerateDirectory(content::WebContents* source,
                           int request_id,
                           const base::FilePath& path) override;
-
-  // net::URLFetcherDelegate:
-  void OnURLFetchComplete(const net::URLFetcher* source) override;
 
   void SendMessageAck(int request_id,
                       const base::Value* arg1);
