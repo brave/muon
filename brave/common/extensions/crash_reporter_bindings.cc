@@ -4,6 +4,8 @@
 
 #include "brave/common/extensions/crash_reporter_bindings.h"
 
+#include <memory>
+
 #include "base/debug/dump_without_crashing.h"
 #include "extensions/renderer/script_context.h"
 #include "extensions/renderer/v8_helpers.h"
