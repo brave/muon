@@ -89,18 +89,19 @@ BrowserContext::BrowserContext(const std::string& partition, bool in_memory)
 }
 
 BrowserContext::~BrowserContext() {
-  BrowserThread::PostTask(
-      BrowserThread::IO, FROM_HERE,
-      base::Bind(&URLRequestContextGetter::NotifyContextShuttingDown,
-        base::RetainedRef(url_request_getter_)));
+  if (BrowserThread::IsMessageLoopValid(BrowserThread::IO)) {
+    BrowserThread::PostTask(
+        BrowserThread::IO, FROM_HERE,
+        base::BindOnce(&URLRequestContextGetter::NotifyContextShuttingDown,
+                       base::Passed(&url_request_getter_)));
+    BrowserThread::DeleteSoon(BrowserThread::IO,
+                              FROM_HERE,
+                              resource_context_.release());
 
-  BrowserThread::DeleteSoon(BrowserThread::IO,
-                            FROM_HERE,
-                            resource_context_.release());
-
-  BrowserThread::DeleteSoon(BrowserThread::IO,
-                            FROM_HERE,
-                            network_controller_handle_.release());
+    BrowserThread::DeleteSoon(BrowserThread::IO,
+                              FROM_HERE,
+                              network_controller_handle_.release());
+  }
 }
 
 void BrowserContext::InitPrefs(
