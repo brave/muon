@@ -202,13 +202,8 @@ source_set("browser") {
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
 
-	"//chrome/browser/prefs/chrome_command_line_pref_store.cc",
+    "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
-
-    "chrome/browser/media/webrtc/media_capture_devices_dispatcher.cc",
-    "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
-    "chrome/browser/media/webrtc/media_stream_capture_indicator.cc",
-    "chrome/browser/media/webrtc/media_stream_capture_indicator.h",
 
     "//chrome/browser/site_details.cc",
     "//chrome/browser/site_details.h",
