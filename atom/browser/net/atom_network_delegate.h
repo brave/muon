@@ -11,6 +11,7 @@
 #include <string>
 
 #include "base/callback.h"
+#include "base/memory/weak_ptr.h"
 #include "base/synchronization/lock.h"
 #include "base/values.h"
 #include "brightray/browser/network_delegate.h"
@@ -118,6 +119,8 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
   std::map<uint64_t, net::CompletionCallback> callbacks_;
 
   base::Lock lock_;
+
+  base::WeakPtrFactory<AtomNetworkDelegate> weak_factory_;
 
   // Client id for devtools network emulation.
   std::string client_id_;
