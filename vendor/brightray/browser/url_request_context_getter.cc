@@ -15,6 +15,8 @@
 #include "browser/network_delegate.h"
 #include "chrome/browser/devtools/devtools_network_controller_handle.h"
 #include "chrome/browser/devtools/devtools_network_transaction_factory.h"
+#include "chrome/browser/net/chrome_mojo_proxy_resolver_factory.h"
+#include "chrome/common/chrome_switches.h"
 #include "common/switches.h"
 #include "components/cookie_config/cookie_store_util.h"
 #include "content/public/browser/browser_thread.h"
@@ -38,7 +40,7 @@
 #include "net/proxy/proxy_config_service.h"
 #include "net/proxy/proxy_script_fetcher_impl.h"
 #include "net/proxy/proxy_service.h"
-#include "net/proxy/proxy_service_v8.h"
+#include "net/proxy/proxy_service_mojo.h"
 #include "net/ssl/channel_id_service.h"
 #include "net/ssl/default_channel_id_store.h"
 #include "net/ssl/ssl_config_service_defaults.h"
@@ -233,7 +235,6 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     }
 
     // --proxy-server
-    net::DhcpProxyScriptFetcherFactory dhcp_factory;
     if (command_line.HasSwitch(switches::kNoProxyServer)) {
       storage_->set_proxy_service(net::ProxyService::CreateDirect());
     } else if (command_line.HasSwitch(switches::kProxyServer)) {
@@ -250,14 +251,32 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
       storage_->set_proxy_service(net::ProxyService::CreateFixed(
           proxy_config));
     } else {
-      storage_->set_proxy_service(
-          net::CreateProxyServiceUsingV8ProxyResolver(
+      bool use_v8 = !command_line.HasSwitch(::switches::kWinHttpProxyResolver);
+
+      std::unique_ptr<net::ProxyService> proxy_service;
+      if (use_v8) {
+        std::unique_ptr<net::DhcpProxyScriptFetcher> dhcp_proxy_script_fetcher;
+        net::DhcpProxyScriptFetcherFactory dhcp_factory;
+        dhcp_proxy_script_fetcher = dhcp_factory.Create(url_request_context_.get());
+
+        proxy_service = net::CreateProxyServiceUsingMojoFactory(
+              ChromeMojoProxyResolverFactory::GetInstance(),
               std::move(proxy_config_service_),
               new net::ProxyScriptFetcherImpl(url_request_context_.get()),
-              dhcp_factory.Create(url_request_context_.get()),
-              host_resolver.get(),
-              nullptr,
-              url_request_context_->network_delegate()));
+              std::move(dhcp_proxy_script_fetcher), host_resolver.get(),
+              net_log_,
+              url_request_context_->network_delegate());
+      } else {
+        proxy_service = net::ProxyService::CreateUsingSystemProxyResolver(
+            std::move(proxy_config_service_),
+            net_log_);
+      }
+
+      proxy_service->set_quick_check_enabled(true);
+      proxy_service->set_sanitize_url_policy(
+          net::ProxyService::SanitizeUrlPolicy::SAFE);
+
+      storage_->set_proxy_service(std::move(proxy_service));
     }
 
     std::vector<std::string> schemes;

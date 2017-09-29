@@ -169,6 +169,9 @@ source_set("browser") {
     "//chrome/browser/lifetime/scoped_keep_alive.cc",
     "//chrome/browser/lifetime/scoped_keep_alive.h",
 
+    "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
+    "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
+
     "chrome/browser/media/webrtc/media_capture_devices_dispatcher.cc",
     "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
     "chrome/browser/media/webrtc/media_stream_capture_indicator.cc",
@@ -287,6 +290,8 @@ source_set("browser") {
 
     deps += [
       "//base",
+      "//net:extras",
+      "//net:net_browser_services",
       "//skia",
       "//ui/base",
       "//ui/events",
