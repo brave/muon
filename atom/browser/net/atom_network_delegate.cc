@@ -248,7 +248,7 @@ void ReadFromResponseObject(const base::DictionaryValue& response,
 
 }  // namespace
 
-AtomNetworkDelegate::AtomNetworkDelegate() {
+AtomNetworkDelegate::AtomNetworkDelegate() : weak_factory_(this) {
 }
 
 AtomNetworkDelegate::~AtomNetworkDelegate() {
@@ -425,7 +425,7 @@ int AtomNetworkDelegate::HandleResponseEvent(
 
   ResponseCallback response =
       base::Bind(&AtomNetworkDelegate::OnListenerResultInUI<Out>,
-                 base::Unretained(this), request->identifier(), out);
+                 weak_factory_.GetWeakPtr(), request->identifier(), out);
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,
       base::Bind(RunResponseListener, info.listener, base::Passed(&details),
@@ -469,7 +469,7 @@ void AtomNetworkDelegate::OnListenerResultInUI(
   BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(&AtomNetworkDelegate::OnListenerResultInIO<T>,
-                 base::Unretained(this),  id, out, base::Passed(&copy)));
+                 weak_factory_.GetWeakPtr(), id, out, base::Passed(&copy)));
 }
 
 }  // namespace atom
