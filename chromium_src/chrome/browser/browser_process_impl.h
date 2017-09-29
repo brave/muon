@@ -91,6 +91,7 @@ class BrowserProcessImpl : public BrowserProcess {
 
   // NOTIMPLEMENTED
   void EndSession() override;
+  void FlushLocalStateAndReply(base::OnceClosure reply) override;
   metrics_services_manager::MetricsServicesManager*
   GetMetricsServicesManager() override;
   net::URLRequestContextGetter* system_request_context() override;
@@ -99,6 +100,7 @@ class BrowserProcessImpl : public BrowserProcess {
   NotificationUIManager* notification_ui_manager() override;
   NotificationPlatformBridge* notification_platform_bridge() override;
   IOThread* io_thread() override;
+  SystemNetworkContextManager* system_network_context_manager() override;
   WatchDogThread* watchdog_thread() override;
   policy::BrowserPolicyConnector* browser_policy_connector() override;
   policy::PolicyService* policy_service() override;
@@ -129,7 +131,6 @@ class BrowserProcessImpl : public BrowserProcess {
   component_updater::SupervisedUserWhitelistInstaller*
   supervised_user_whitelist_installer() override;
   MediaFileSystemRegistry* media_file_system_registry() override;
-  bool created_local_state() const override;
 #if BUILDFLAG(ENABLE_WEBRTC)
   WebRtcLogUploader* webrtc_log_uploader() override;
 #endif
@@ -154,7 +155,6 @@ class BrowserProcessImpl : public BrowserProcess {
   const scoped_refptr<base::SequencedTaskRunner> local_state_task_runner_;
   bool tearing_down_;
   bool created_profile_manager_;
-  bool created_local_state_;
 
   std::unique_ptr<printing::PrintJobManager> print_job_manager_;
 #if BUILDFLAG(ENABLE_EXTENSIONS)

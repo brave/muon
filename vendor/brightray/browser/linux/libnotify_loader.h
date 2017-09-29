@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include <libnotify/notify.h>
+#include "libnotify/notify.h"
 
 class LibNotifyLoader {
  public:

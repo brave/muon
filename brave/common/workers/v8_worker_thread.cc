@@ -122,7 +122,7 @@ void V8WorkerThread::LoadModule() {
                     base::Unretained(app()),
                     GetThreadId(),
                     "No source for require(" + module_name_ + ")"));
-    base::MessageLoop::current()->QuitNow();
+    base::RunLoop::QuitCurrentDeprecated();
     return;
   }
 

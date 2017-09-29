@@ -64,7 +64,7 @@ source_set("common") {
   if (enable_extensions) {
     sources += [
       "chrome/common/extensions/chrome_extensions_client.cc",
-      "chrome/common/extensions/chrome_extensions_client.h",
+      "//chrome/common/extensions/chrome_extensions_client.h",
     ]
 
     deps += [
@@ -384,14 +384,8 @@ source_set("browser") {
         "//chrome/browser/extensions/extension_util.h",
         "chrome/browser/extensions/extension_tab_util.cc",
         "//chrome/browser/extensions/extension_tab_util.h",
-        "//chrome/browser/extensions/api/messaging/extension_message_port.cc",
-        "//chrome/browser/extensions/api/messaging/extension_message_port.h",
         "chrome/browser/extensions/api/messaging/incognito_connectability.cc",
         "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
-        "//chrome/browser/extensions/api/messaging/message_property_provider.cc",
-        "//chrome/browser/extensions/api/messaging/message_property_provider.h",
-        "//chrome/browser/extensions/api/messaging/message_service.cc",
-        "//chrome/browser/extensions/api/messaging/message_service.h",
         "//chrome/browser/extensions/api/messaging/native_message_port.cc",
         "//chrome/browser/extensions/api/messaging/native_message_port.h",
         "//chrome/browser/extensions/api/messaging/native_messaging_host_manifest.cc",
@@ -820,6 +814,8 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tabs/tab_utils.h",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.cc",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.h",
+    "//components/ukm/ukm_interface.cc",
+    "//components/ukm/ukm_interface.h",
   ]
 
   public_deps = [

@@ -94,11 +94,7 @@ net::HttpCache::BackendFactory*
 URLRequestContextGetter::Delegate::CreateHttpCacheBackendFactory(const base::FilePath& base_path) {
   base::FilePath cache_path = base_path.Append(FILE_PATH_LITERAL("Cache"));
   return new net::HttpCache::DefaultBackend(
-      net::DISK_CACHE,
-      net::CACHE_BACKEND_DEFAULT,
-      cache_path,
-      0,
-      BrowserThread::GetTaskRunnerForThread(BrowserThread::CACHE));
+      net::DISK_CACHE, net::CACHE_BACKEND_DEFAULT, cache_path, 0);
 }
 
 std::unique_ptr<net::CertVerifier>
@@ -207,8 +203,7 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     } else {
       auto cookie_config = content::CookieStoreConfig(
           base_path_.Append(FILE_PATH_LITERAL("Cookies")),
-          content::CookieStoreConfig::EPHEMERAL_SESSION_COOKIES,
-          nullptr, nullptr);
+          content::CookieStoreConfig::EPHEMERAL_SESSION_COOKIES, nullptr);
       cookie_config.cookieable_schemes = delegate_->GetCookieableSchemes();
       cookie_config.crypto_delegate = cookie_config::GetCookieCryptoDelegate();
       cookie_store = content::CreateCookieStore(cookie_config);

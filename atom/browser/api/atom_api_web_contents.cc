@@ -254,9 +254,6 @@ struct Converter<blink::WebSecurityStyle> {
       case blink::kWebSecurityStyleInsecure:
         type = "broken";
         break;
-      case blink::kWebSecurityStyleWarning:
-        type = "warning";
-        break;
       case blink::kWebSecurityStyleSecure:
         type = "secure";
         break;
@@ -276,8 +273,6 @@ struct Converter<blink::WebSecurityStyle> {
       *out = blink::kWebSecurityStyleNeutral;
     } else if (type == "broken") {
       *out = blink::kWebSecurityStyleInsecure;
-    } else if (type == "warning") {
-      *out = blink::kWebSecurityStyleWarning;
     } else if (type == "secure") {
       *out = blink::kWebSecurityStyleSecure;
     } else {
@@ -1261,11 +1256,10 @@ void WebContents::DidFinishLoad(content::RenderFrameHost* render_frame_host,
 void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
                               const GURL& url,
                               int error_code,
-                              const base::string16& error_description,
-                              bool was_ignored_by_handler) {
+                              const base::string16& error_description) {
   bool is_main_frame = !render_frame_host->GetParent();
   Emit("did-fail-load", error_code, error_description, url,
-      is_main_frame, was_ignored_by_handler);
+      is_main_frame);
 }
 
 void WebContents::DidGetResourceResponseStart(
@@ -2017,8 +2011,8 @@ void WebContents::ShowCertificate() {
       web_contents()->GetController().GetVisibleEntry()->GetSSL().certificate;
   if (!certificate)
     return;
-  web_contents()->GetDelegate()->ShowCertificateViewerInDevTools(
-      web_contents(), certificate);
+  // web_contents()->GetDelegate()->ShowCertificateViewerInDevTools(
+  //     web_contents(), certificate);
 }
 
 void WebContents::ShowDefinitionForSelection() {

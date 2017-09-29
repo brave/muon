@@ -18,6 +18,7 @@
 #include "brave/common/extensions/api/behavior_features.h"
 #include "brave/common/extensions/api/manifest_features.h"
 #include "brave/common/extensions/api/permission_features.h"
+#include "chrome/common/chrome_content_client.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/extensions/api/extension_action/action_info.h"
 #include "chrome/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
@@ -216,6 +217,10 @@ std::set<base::FilePath> ChromeExtensionsClient::GetBrowserImagePaths(
 bool ChromeExtensionsClient::ExtensionAPIEnabledInExtensionServiceWorkers()
     const {
   return false;
+}
+
+std::string ChromeExtensionsClient::GetUserAgent() const {
+  return ::GetUserAgent();
 }
 
 // static

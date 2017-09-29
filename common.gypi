@@ -538,6 +538,8 @@
       # stdlibc++ as standard library. This is intended to use for instrumented
       # builds.
       'use_custom_libcxx%': 0,
+      'libcxx_prefix%': '../../buildtools/third_party/libc++/trunk',
+      'libcxxabi_prefix%': '../../buildtools/third_party/libc++abi/trunk',
 
       # Use the provided profiled order file to link Chrome image with it.
       # This makes Chrome faster by better using CPU cache when executing code.
@@ -1210,6 +1212,8 @@
     'use_instrumented_libraries%': '<(use_instrumented_libraries)',
     'use_prebuilt_instrumented_libraries%': '<(use_prebuilt_instrumented_libraries)',
     'use_custom_libcxx%': '<(use_custom_libcxx)',
+    'libcxx_prefix%': '<(libcxx_prefix)',
+    'libcxxabi_prefix%': '<(libcxxabi_prefix)',
     'order_profiling%': '<(order_profiling)',
     'order_text_section%': '<(order_text_section)',
     'enable_extensions%': '<(enable_extensions)',
@@ -1885,6 +1889,7 @@
       }],
       ['OS=="linux"', {
         'clang%': 1,
+        'use_custom_libcxx%': 1,
         'conditions': [
           ['target_arch=="arm64"', {
             # Temporarily disable nacl and tcmalloc on arm64 linux to get
@@ -2034,9 +2039,9 @@
       }],
 
       ['enable_plugins==1 and (OS=="linux" or OS=="mac" or OS=="win") and chromecast==0', {
-        'enable_pepper_cdms%': 1,
+        'enable_library_cdms%': 1,
       }, {
-        'enable_pepper_cdms%': 0,
+        'enable_library_cdms%': 0,
       }],
 
       ['OS=="android" or chromecast==1', {
@@ -2711,8 +2716,8 @@
       ['enable_viewport==1', {
         'defines': ['ENABLE_VIEWPORT'],
       }],
-      ['enable_pepper_cdms==1', {
-        'defines': ['ENABLE_PEPPER_CDMS'],
+      ['enable_library_cdms==1', {
+        'defines': ['ENABLE_LIBRARY_CDMS'],
       }],
       ['enable_browser_cdms==1', {
         'defines': ['ENABLE_BROWSER_CDMS'],
@@ -4290,7 +4295,7 @@
               # typeof() (a GNU extension).
               # TODO(thakis): Eventually switch this to c++11 instead,
               # http://crbug.com/427584
-              '-std=gnu++11',
+              '-std=gnu++14',
             ],
           }],
           ['clang==1 and chromeos==1', {
@@ -4302,7 +4307,7 @@
           ['clang==0 and host_clang==1', {
             'target_conditions': [
               ['_toolset=="host"', {
-                'cflags_cc': [ '-std=gnu++11', ],
+                'cflags_cc': [ '-std=gnu++14', ],
               }],
             ],
           }],
@@ -4567,8 +4572,13 @@
             ],
           }],
           ['use_custom_libcxx==1', {
-            'dependencies': [
-              '<(DEPTH)/buildtools/third_party/libc++/libc++.gyp:libcxx_proxy',
+            'cflags_cc': [
+              '-nostdinc++',
+              '-isystem<(libcxx_prefix)/include',
+              '-isystem<(libcxxabi_prefix)/include',
+            ],
+            'ldflags': [
+              '-nostdinc++',
             ],
           }],
           ['order_profiling!=0 and OS=="android"', {
@@ -4692,7 +4702,7 @@
             'target_conditions': [
               ['_toolset=="target"', {
                 'cflags_cc': [
-                  '-std=gnu++11',
+                  '-std=gnu++14',
                   # See comment for -Wno-c++11-narrowing.
                   '-Wno-narrowing',
                 ],
@@ -4703,7 +4713,7 @@
             'target_conditions': [
               ['_toolset=="host"', {
                 'cflags_cc': [
-                  '-std=gnu++11',
+                  '-std=gnu++14',
                   # See comment for -Wno-c++11-narrowing.
                   '-Wno-narrowing',
                 ],

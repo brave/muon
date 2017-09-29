@@ -22,6 +22,9 @@ base::FilePath GetResourcesPakFilePathByName(const std::string resource_name);
 
 class AtomMainDelegate : public brightray::MainDelegate {
  public:
+  static const char* const kNonWildcardDomainNonPortSchemes[];
+  static const size_t kNonWildcardDomainNonPortSchemesSize;
+
   AtomMainDelegate();
 
   // |exe_entry_point_ticks| is the time at which the main function of the

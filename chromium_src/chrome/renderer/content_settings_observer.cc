@@ -22,7 +22,6 @@
 #include "third_party/WebKit/public/platform/WebContentSettingCallbacks.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
 #include "third_party/WebKit/public/platform/WebURL.h"
-#include "third_party/WebKit/public/web/WebDataSource.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
 #include "third_party/WebKit/public/web/WebFrameClient.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
@@ -39,7 +38,6 @@
 #endif
 
 using blink::WebContentSettingCallbacks;
-using blink::WebDataSource;
 using blink::WebDocument;
 using blink::WebFrame;
 using blink::WebSecurityOrigin;
@@ -68,11 +66,14 @@ GURL GetOriginOrURL(const WebFrame* frame) {
 ContentSettingsObserver::ContentSettingsObserver(
     content::RenderFrame* render_frame,
     extensions::Dispatcher* extension_dispatcher,
-    bool should_whitelist)
+    bool should_whitelist,
+    service_manager::BinderRegistry* registry)
     : content::RenderFrameObserver(render_frame),
       content::RenderFrameObserverTracker<ContentSettingsObserver>(
           render_frame),
+#if BUILDFLAG(ENABLE_EXTENSIONS)
       extension_dispatcher_(extension_dispatcher),
+#endif
       content_settings_manager_(NULL),
       allow_running_insecure_content_(false),
       is_interstitial_page_(false),

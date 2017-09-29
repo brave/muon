@@ -158,7 +158,6 @@ windows_manifest("electron_manifest") {
     default_compatibility_manifest,
     dpi_aware_manifest,
   ]
-  type = "exe"
 }
 
 process_version_rc_template("electron_exe_version") {

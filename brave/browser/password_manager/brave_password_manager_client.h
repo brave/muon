@@ -15,8 +15,8 @@
 #include "base/optional.h"
 #include "brave/browser/password_manager/brave_credentials_filter.h"
 #include "components/autofill/content/common/autofill_driver.mojom.h"
+#include "components/password_manager/content/browser/content_credential_manager.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
-#include "components/password_manager/content/browser/credential_manager_impl.h"
 #include "components/password_manager/core/browser/password_manager.h"
 #include "components/password_manager/core/browser/password_manager_client.h"
 #include "components/password_manager/core/browser/password_manager_metrics_recorder.h"
@@ -76,6 +76,11 @@ class BravePasswordManagerClient
   bool PromptUserToSaveOrUpdatePassword(
       std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
       bool update_password) override;
+  void ShowManualFallbackForSaving(
+      std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+      bool has_generated_password,
+      bool is_update) override;
+  void HideManualFallbackForSaving() override;
   bool PromptUserToChooseCredentials(
       std::vector<std::unique_ptr<autofill::PasswordForm>> local_forms,
       const GURL& origin,
@@ -206,7 +211,7 @@ class BravePasswordManagerClient
   // As a mojo service, will be registered into service registry
   // of the main frame host by ChromeContentBrowserClient
   // once main frame host was created.
-  password_manager::CredentialManagerImpl credential_manager_impl_;
+  password_manager::ContentCredentialManager credential_manager_;
 
   content::WebContentsFrameBindingSet<autofill::mojom::PasswordManagerClient>
       password_manager_client_bindings_;

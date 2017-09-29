@@ -5,7 +5,7 @@
 #include "brave/renderer/brave_content_renderer_client.h"
 
 #include "atom/renderer/content_settings_manager.h"
-#include "brave/renderer/printing/brave_print_web_view_helper_delegate.h"
+#include "brave/renderer/printing/brave_print_render_frame_helper_delegate.h"
 #include "chrome/common/render_messages.h"
 #include "chrome/common/secure_origin_whitelist.h"
 #include "chrome/renderer/chrome_render_frame_observer.h"
@@ -26,7 +26,7 @@
 #include "components/network_hints/renderer/prescient_networking_dispatcher.h"
 #include "components/password_manager/content/renderer/credential_manager_client.h"
 #include "components/plugins/renderer/plugin_placeholder.h"
-#include "components/printing/renderer/print_web_view_helper.h"
+#include "components/printing/renderer/print_render_frame_helper.h"
 #include "components/spellcheck/spellcheck_build_features.h"
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
@@ -134,6 +134,10 @@ BraveContentRendererClient::GetPrescientNetworking() {
 
 void BraveContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
+  ChromeRenderFrameObserver* render_frame_observer =
+      new ChromeRenderFrameObserver(render_frame);
+  service_manager::BinderRegistry* registry = render_frame_observer->registry();
+
   bool should_whitelist_for_content_settings = false;
   extensions::Dispatcher* ext_dispatcher = NULL;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -141,7 +145,8 @@ void BraveContentRendererClient::RenderFrameCreated(
       ChromeExtensionsRendererClient::GetInstance()->extension_dispatcher();
 #endif
   ContentSettingsObserver* content_settings = new ContentSettingsObserver(
-      render_frame, ext_dispatcher, should_whitelist_for_content_settings);
+      render_frame, ext_dispatcher, should_whitelist_for_content_settings,
+      registry);
   if (chrome_observer_.get()) {
     content_settings->SetContentSettingRules(
         chrome_observer_->content_setting_rules());
@@ -153,7 +158,7 @@ void BraveContentRendererClient::RenderFrameCreated(
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   ChromeExtensionsRendererClient::GetInstance()->RenderFrameCreated(
-      render_frame);
+      render_frame, registry);
 #endif
 
 #if BUILDFLAG(ENABLE_PLUGINS)
@@ -163,20 +168,21 @@ void BraveContentRendererClient::RenderFrameCreated(
   new NetErrorHelper(render_frame);
 
   PasswordAutofillAgent* password_autofill_agent =
-      new PasswordAutofillAgent(render_frame);
+      new PasswordAutofillAgent(render_frame, registry);
   PasswordGenerationAgent* password_generation_agent =
-      new PasswordGenerationAgent(render_frame, password_autofill_agent);
+      new PasswordGenerationAgent(render_frame, password_autofill_agent,
+                                  registry);
   new AutofillAgent(render_frame, password_autofill_agent,
-                    password_generation_agent);
+                    password_generation_agent, registry);
 #if BUILDFLAG(ENABLE_PRINTING)
-  new printing::PrintWebViewHelper(
-      render_frame, base::MakeUnique<BravePrintWebViewHelperDelegate>());
+  new printing::PrintRenderFrameHelper(
+      render_frame, base::MakeUnique<BravePrintRenderFrameHelperDelegate>());
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   new SpellCheckProvider(render_frame, spellcheck_.get());
 #if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-  new SpellCheckPanel(render_frame);
+  new SpellCheckPanel(render_frame, registry);
 #endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #endif
 }

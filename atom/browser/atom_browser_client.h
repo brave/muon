@@ -47,6 +47,9 @@ class AtomBrowserClient : public brightray::BrowserClient,
   static void SetCustomServiceWorkerSchemes(
       const std::vector<std::string>& schemes);
 
+  virtual void RegisterOutOfProcessServices(
+      OutOfProcessServiceMap* services) override {}
+
  protected:
   // content::ContentBrowserClient:
   content::SpeechRecognitionManagerDelegate*
