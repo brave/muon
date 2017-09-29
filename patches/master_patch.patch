@@ -890,7 +890,7 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    return nullptr;
  }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 73d46b9ee5f32f5e3e7984d0e5cb7c9e2cac1068..4c9d169816d0e0c1738708464258b58113c065e0 100644
+index 3dc16c61c387ab0f7799107f7880f8452820bbfd..0ca1a6134f9f5e9328fb9554d7e6366bbc181f0a 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -862,7 +862,7 @@ if (!is_android) {
@@ -1287,10 +1287,10 @@ index b46cec9804d10209c855cce6cac4a169ff65eb32..f02f154bb0e86e4318934fdbc7fd58a1
            : source_site_instance;
  
 diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/browser/web_contents/web_contents_view_mac.mm
-index a9111f9d9cefcb74450efef8e287b04c29675d7b..cecad97281d948f7e2f63af12782aa6e1ed2a691 100644
+index 92b48b7116363e0f2c09f573011645cfb28fe097..73b62524f2b14d0f6633d36cffb2000285ef2a9f 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -583,6 +583,7 @@ void WebContentsViewMac::CloseTab() {
+@@ -584,6 +584,7 @@ void WebContentsViewMac::CloseTab() {
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
