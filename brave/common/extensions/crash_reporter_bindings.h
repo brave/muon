@@ -18,7 +18,7 @@ namespace brave {
 
 class CrashReporterBindings : public extensions::ObjectBackedNativeHandler {
  public:
-  CrashReporterBindings(extensions::ScriptContext* context);
+  explicit CrashReporterBindings(extensions::ScriptContext* context);
   ~CrashReporterBindings() override;
 
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);

@@ -514,8 +514,8 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
     // Make logs go to the right file.
     switches::kUserDataDir,
     atom::options::kUserDataDirName,
-    atom::options::kAppVersion, // version for renderer crash keys
-    atom::options::kAppChannel, // channel for renderer crash keys
+    atom::options::kAppVersion,  // version for renderer crash keys
+    atom::options::kAppChannel,  // channel for renderer crash keys
   };
   command_line->CopySwitchesFrom(browser_command_line, kCommonSwitchNames,
                                  arraysize(kCommonSwitchNames));

@@ -58,7 +58,6 @@
 #if defined(OS_LINUX)
 #include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
 #include "chrome/common/chrome_paths_internal.h"
-#include "chrome/common/chrome_switches.h"
 #include "components/os_crypt/key_storage_config_linux.h"
 #include "components/os_crypt/os_crypt.h"
 #include "ui/base/l10n/l10n_util.h"
