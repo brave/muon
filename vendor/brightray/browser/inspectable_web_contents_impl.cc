@@ -32,6 +32,7 @@
 #include "ipc/ipc_channel.h"
 #include "net/http/http_response_headers.h"
 #include "net/url_request/url_fetcher.h"
+#include "net/url_request/url_fetcher_delegate.h"
 #include "net/url_request/url_fetcher_response_writer.h"
 #include "ui/display/display.h"
 #include "ui/display/screen.h"
@@ -137,6 +138,29 @@ GURL GetDevToolsURL(
   if (!dock_state.empty())
     url_string += "&settings={\"currentDockState\":\"\\\"" + dock_state + "\\\"\"}&";
   return GURL(url_string);
+}
+
+// FetchDelegate -------------------------------------------------------------
+
+class FetchDelegate : public net::URLFetcherDelegate {
+ public:
+  explicit FetchDelegate(base::WeakPtr<InspectableWebContentsImpl> bindings);
+
+ private:
+  void OnURLFetchComplete(const net::URLFetcher* source) override;
+
+  base::WeakPtr<InspectableWebContentsImpl> bindings_;
+};
+
+FetchDelegate::FetchDelegate(base::WeakPtr<InspectableWebContentsImpl> bindings) :
+    bindings_(bindings) {}
+
+void FetchDelegate::OnURLFetchComplete(const net::URLFetcher* source) {
+  if (bindings_) {
+    bindings_->OnURLFetchComplete(source);
+  }
+
+  delete this;
 }
 
 // ResponseWriter -------------------------------------------------------------
@@ -435,8 +459,9 @@ void InspectableWebContentsImpl::LoadNetworkResource(
 
   auto browser_context = static_cast<BrowserContext*>(devtools_web_contents_->GetBrowserContext());
 
-  net::URLFetcher* fetcher =
-      (net::URLFetcher::Create(gurl, net::URLFetcher::GET, this)).release();
+  net::URLFetcher* fetcher = (
+      net::URLFetcher::Create(gurl, net::URLFetcher::GET,
+          new FetchDelegate(weak_factory_.GetWeakPtr()))).release();
   pending_requests_[fetcher] = callback;
   fetcher->SetRequestContext(browser_context->url_request_context_getter());
   fetcher->SetExtraRequestHeaders(headers);
