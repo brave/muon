@@ -90,6 +90,13 @@ void WebFrameBindings::SetGlobal(
       isolate, array, &path);
   v8::Local<v8::Object> value = v8::Local<v8::Object>::Cast(args[1]);
 
+  if (value->IsNull() || value->IsUndefined()) {
+    extensions::console::AddMessage(
+        context(), content::CONSOLE_MESSAGE_LEVEL_WARNING,
+        "cannot set path on null or undefined value");
+    return;
+  }
+
   v8::Local<v8::Context> main_context =
       context()->web_frame()->MainWorldScriptContext();
   v8::Context::Scope context_scope(main_context);
@@ -108,10 +115,16 @@ void WebFrameBindings::SetGlobal(
          ++iter) {
     if (iter == path.begin()) {
       obj = v8::Handle<v8::Object>::Cast(main_context->Global()->Get(*iter));
-    } else if (iter == path.end()-1) {
+    } else if (iter == path.end() - 1) {
       obj->Set(*iter, value);
     } else {
       obj = v8::Handle<v8::Object>::Cast(obj->Get(*iter));
+    }
+    if ((obj->IsNull() || obj->IsUndefined()) && iter != path.end() - 1) {
+      extensions::console::AddMessage(
+          context(), content::CONSOLE_MESSAGE_LEVEL_WARNING,
+          "invalid path for setGlobal");
+      return;
     }
   }
 }
