@@ -21,6 +21,7 @@
 #include "base/threading/thread_checker.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
+#include "components/prefs/pref_change_registrar.h"
 #include "extensions/features/features.h"
 #include "net/log/net_log.h"
 
@@ -75,7 +76,7 @@ class BrowserProcessImpl : public BrowserProcess {
   atom::api::App* app() { return app_; }
 
   void ResourceDispatcherHostCreated() override;
-  metrics::MetricsService* metrics_service() override { return NULL; };
+  metrics::MetricsService* metrics_service() override;
   PrefService* local_state() override;
   ProfileManager* profile_manager() override;
   ukm::UkmRecorder* ukm_recorder() override;
@@ -149,9 +150,15 @@ class BrowserProcessImpl : public BrowserProcess {
   void CreateLocalState();
   void CreateProfileManager();
   void CreateStatusTray();
+  void CreateNotificationUIManager();
+  void ApplyMetricsReportingPolicy();
 
+  std::unique_ptr<metrics_services_manager::MetricsServicesManager>
+      metrics_services_manager_;
 
   const scoped_refptr<base::SequencedTaskRunner> local_state_task_runner_;
+  PrefChangeRegistrar pref_change_registrar_;
+
   bool tearing_down_;
   bool created_profile_manager_;
   bool created_local_state_;
@@ -162,6 +169,9 @@ class BrowserProcessImpl : public BrowserProcess {
       extension_event_router_forwarder_;
   std::unique_ptr<extensions::ExtensionsBrowserClient> extensions_browser_client_;
 #endif
+
+  bool created_notification_ui_manager_;
+  std::unique_ptr<NotificationUIManager> notification_ui_manager_;
 
   std::string locale_;
 

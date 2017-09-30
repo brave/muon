@@ -24,12 +24,11 @@ source_set("app") {
   }
 
   deps = [
+    "//chrome/child",
+    "//chrome/common",
+    "//electron/muon/app",
     "//content/public/common",
     "//components/rappor/public/interfaces",
     "//third_party/widevine/cdm:headers",
   ]
-
-  if (is_win) {
-    deps += [ "//chrome/child" ] # breakpad
-  }
 }

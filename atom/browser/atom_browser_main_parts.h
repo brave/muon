@@ -10,15 +10,22 @@
 #include <string>
 
 #include "base/callback.h"
+#include "base/command_line.h"
 #include "base/memory/memory_pressure_listener.h"
 #include "base/timer/timer.h"
 #include "brightray/browser/browser_main_parts.h"
+#include "build/build_config.h"
 #include "content/public/browser/browser_context.h"
+#include "content/public/common/main_function_params.h"
 
 class BrowserProcessImpl;
 
 namespace brightray {
 class BrowserContext;
+}
+
+namespace metrics {
+class TrackingSynchronizer;
 }
 
 class PrefService;
@@ -34,7 +41,7 @@ class BridgeTaskRunner;
 
 class AtomBrowserMainParts : public brightray::BrowserMainParts {
  public:
-  AtomBrowserMainParts();
+  explicit AtomBrowserMainParts(const content::MainFunctionParams& parameters);
   virtual ~AtomBrowserMainParts();
 
   static AtomBrowserMainParts* Get();
@@ -61,7 +68,8 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   bool MainMessageLoopRun(int* result_code) override;
   void PostMainMessageLoopStart() override;
   void PostMainMessageLoopRun() override;
-#if defined(OS_MACOSX)
+  void PostDestroyThreads() override;
+#if defined(OS_MACOSX) || defined(OS_WIN)
   void PreMainMessageLoopStart() override;
 #endif
 
@@ -92,6 +100,9 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   // Pointer to exit code.
   int* exit_code_;
 
+  const content::MainFunctionParams parameters_;
+  const base::CommandLine& parsed_command_line_;
+
   std::unique_ptr<Browser> browser_;
   std::unique_ptr<JavascriptEnvironment> js_env_;
   std::unique_ptr<NodeBindings> node_bindings_;
@@ -100,7 +111,10 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   base::Timer gc_timer_;
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
 
-  PrefService* local_state_;
+  scoped_refptr<metrics::TrackingSynchronizer> tracking_synchronizer_;
+
+  // Members needed across shutdown methods.
+  bool restart_last_session_ = false;
 
   // List of callbacks should be executed before destroying JS env.
   std::list<base::Closure> destructors_;

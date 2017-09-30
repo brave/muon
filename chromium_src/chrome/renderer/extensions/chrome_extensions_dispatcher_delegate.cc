@@ -13,6 +13,7 @@
 #include "atom/grit/atom_resources.h"  // NOLINT: This file is generated
 #include "atom/grit/electron_api_resources.h"  // NOLINT: This file is generated
 #include "base/win/windows_version.h"
+#include "brave/common/extensions/crash_reporter_bindings.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
 #include "brave/common/extensions/url_bindings.h"
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
@@ -259,6 +260,13 @@ void ChromeExtensionsDispatcherDelegate::RequireAdditionalModules(
         brave::SharedMemoryBindings::API(context);
     muon->Set(v8::String::NewFromUtf8(context->isolate(), "shared_memory"),
         shared_memory);
+    muon->Set(v8::String::NewFromUtf8(context->isolate(), "sharedMemory"),
+        shared_memory);
+
+    v8::Local<v8::Object> crash_reporter =
+        brave::CrashReporterBindings::API(context);
+    muon->Set(v8::String::NewFromUtf8(context->isolate(), "crashReporter"),
+        crash_reporter);
   }
 }
 

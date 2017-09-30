@@ -9,6 +9,16 @@
 
 class BrowserWindow : public ui::BaseWindow {
  public:
+  enum AvatarBubbleMode {
+    AVATAR_BUBBLE_MODE_DEFAULT,
+    AVATAR_BUBBLE_MODE_ACCOUNT_MANAGEMENT,
+    AVATAR_BUBBLE_MODE_SIGNIN,
+    AVATAR_BUBBLE_MODE_ADD_ACCOUNT,
+    AVATAR_BUBBLE_MODE_REAUTH,
+    AVATAR_BUBBLE_MODE_CONFIRM_SIGNIN,
+    AVATAR_BUBBLE_MODE_SHOW_ERROR,
+  };
+
   virtual ~BrowserWindow() {}
   virtual bool IsVisibleOnAllWorkspaces() { return false; }
   virtual std::string GetWorkspace() { return std::string(); }

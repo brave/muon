@@ -28,6 +28,7 @@
 #include "atom/common/node_includes.h"
 #include "atom/common/options_switches.h"
 #include "atom/common/pepper_flash_util.h"
+#include "base/base_paths.h"
 #include "base/command_line.h"
 #include "base/environment.h"
 #include "base/files/file_path.h"
@@ -38,7 +39,6 @@
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/common/workers/v8_worker_thread.h"
 #include "brave/common/workers/worker_bindings.h"
-#include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/browser_process_impl.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/component_updater/component_updater_paths.h"
@@ -388,14 +388,8 @@ namespace {
 
 // Return the path constant from string.
 int GetPathConstant(const std::string& name) {
-  if (name == "appData")
-    return brightray::DIR_APP_DATA;
-  else if (name == "userData")
-    return brightray::DIR_USER_DATA;
-  else if (name == "cache")
-    return brightray::DIR_CACHE;
-  else if (name == "userCache")
-    return brightray::DIR_USER_CACHE;
+  if (name == "userData")
+    return chrome::DIR_USER_DATA;
   else if (name == "home")
     return base::DIR_HOME;
   else if (name == "temp")
@@ -727,7 +721,7 @@ bool App::MakeSingleInstance(
     return false;
 
   base::FilePath user_dir;
-  PathService::Get(brightray::DIR_USER_DATA, &user_dir);
+  PathService::Get(chrome::DIR_USER_DATA, &user_dir);
   process_singleton_.reset(new ProcessSingleton(
       user_dir, base::Bind(NotificationCallbackWrapper, callback)));
 

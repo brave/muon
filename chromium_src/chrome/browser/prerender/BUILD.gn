@@ -1,7 +1,4 @@
 source_set("prerender") {
-  configs += [ "//electron/chromium_src:chromium_src_config" ]
-  include_dirs = [ "//electron/chromium_src" ] # force this to appear before the chromium src dir
-
   sources = [
     "prerender_contents.cc",
     "prerender_manager.cc",
