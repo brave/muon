@@ -1,6 +1,6 @@
 source_set("safe_browsing") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ "//electron/chromium_src:chromium_src_config" ]
-  include_dirs = [ "//electron/chromium_src" ] # force this to appear before the chromium src dir
 
   sources = [
     "safe_browsing_service.cc",

@@ -156,6 +156,7 @@ class Browser : public content::WebContentsDelegate {
   bool TryToCloseWindow(bool skip_beforeunload,
       const base::Callback<void(bool)>& on_close_confirmed);
 
+  bool TabsNeedBeforeUnloadFired();
   // Clears the results of any beforeunload confirmation dialogs triggered by a
   // TryToCloseWindow call.
   void ResetTryToCloseWindow();

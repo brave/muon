@@ -17,6 +17,7 @@
 #include "base/message_loop/message_loop.h"
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
+#include "brave/common/extensions/crash_reporter_bindings.h"
 #include "brave/common/extensions/file_bindings.h"
 #include "brave/common/extensions/path_bindings.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
@@ -165,6 +166,7 @@ JavascriptEnvironment::JavascriptEnvironment()
   v8::Local<v8::Object> shared_memory =
       brave::SharedMemoryBindings::API(script_context_.get());
   muon->Set(v8::String::NewFromUtf8(isolate_, "shared_memory"), shared_memory);
+  muon->Set(v8::String::NewFromUtf8(isolate_, "sharedMemory"), shared_memory);
 
   v8::Local<v8::Object> file =
       brave::FileBindings::API(script_context_.get());
@@ -173,6 +175,10 @@ JavascriptEnvironment::JavascriptEnvironment()
   v8::Local<v8::Object> url =
       brave::URLBindings::API(script_context_.get());
   muon->Set(v8::String::NewFromUtf8(isolate_, "url"), url);
+
+  v8::Local<v8::Object> crash_reporter =
+      brave::CrashReporterBindings::API(script_context_.get());
+  muon->Set(v8::String::NewFromUtf8(isolate_, "crashReporter"), crash_reporter);
 }
 
 JavascriptEnvironment::~JavascriptEnvironment() {

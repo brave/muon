@@ -40,9 +40,6 @@ REFERENCE_MODULE(atom_browser_component_updater);
 REFERENCE_MODULE(atom_browser_content_tracing);
 REFERENCE_MODULE(atom_browser_dialog);
 REFERENCE_MODULE(atom_browser_debugger);
-#if defined(ENABLE_WEBRTC)
-REFERENCE_MODULE(atom_browser_desktop_capturer);
-#endif
 REFERENCE_MODULE(atom_browser_download_item);
 REFERENCE_MODULE(atom_browser_importer);
 REFERENCE_MODULE(atom_browser_menu);
@@ -55,7 +52,6 @@ REFERENCE_MODULE(atom_browser_web_contents);
 REFERENCE_MODULE(atom_browser_window);
 REFERENCE_MODULE(atom_common_asar);
 REFERENCE_MODULE(atom_common_clipboard);
-REFERENCE_MODULE(atom_common_crash_reporter);
 REFERENCE_MODULE(atom_common_native_image);
 REFERENCE_MODULE(atom_common_screen);
 REFERENCE_MODULE(atom_common_shell);

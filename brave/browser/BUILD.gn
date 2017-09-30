@@ -11,11 +11,6 @@ source_set("browser") {
     "//electron/build:electron_config",
   ]
 
-  include_dirs = [
-    # make sure chromium_src comes before the chrome src root
-    "//electron/chromium_src",
-  ]
-
   sources = [
     # "api"
     "guest_view/tab_view/tab_view_guest.h",
@@ -51,6 +46,7 @@ source_set("browser") {
     "//electron/atom/browser",
     "//electron/chromium_src:browser",
     "//electron:common",
+    "//electron/muon/app",
     "//chrome/common",
     "//components/autofill/content/browser:risk_proto",
     "//components/autofill/content/browser",
@@ -74,6 +70,13 @@ source_set("browser") {
     "//third_party/WebKit/public:image_resources",
     "//third_party/WebKit/public:resources",
   ]
+
+  if (is_linux) {
+    deps += [
+      "//components/crash/content/app",
+      "//components/crash/content/browser",
+    ]
+  }
 
   if (enable_basic_printing || enable_print_preview) {
     deps += [
@@ -101,18 +104,6 @@ source_set("browser") {
       "//extensions/browser",
     ]
   }
-
-  if (is_posix && !is_mac) {
-    sources += [
-      # "//chrome/app/chrome_crash_reporter_client.cc",
-      # "//chrome/app/chrome_crash_reporter_client.h",
-    ]
-    deps += [
-      "//components/crash/content/app",
-      "//components/crash/content/browser",
-      "//components/version_info:generate_version_info",
-    ]
-  }
 }
 
 source_set("tab_manager") {
@@ -134,11 +125,6 @@ source_set("tab_manager") {
 source_set("apis") {
   configs += [
     "//electron/build:electron_config",
-  ]
-
-  include_dirs = [
-    # make sure chromium_src comes before the chrome src root
-    "//electron/chromium_src",
   ]
 
   sources = [

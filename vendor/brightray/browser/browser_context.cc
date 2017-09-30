@@ -4,11 +4,11 @@
 
 #include "browser/browser_context.h"
 
-#include "browser/brightray_paths.h"
 #include "browser/browser_client.h"
 #include "browser/inspectable_web_contents_impl.h"
 #include "browser/network_delegate.h"
 #include "browser/special_storage_policy.h"
+#include "chrome/common/chrome_paths.h"
 #include "common/application_info.h"
 
 #include "base/files/file_path.h"
@@ -77,7 +77,7 @@ BrowserContext::BrowserContext(const std::string& partition, bool in_memory)
       resource_context_(new ResourceContext),
       storage_policy_(new SpecialStoragePolicy),
       weak_factory_(this) {
-  PathService::Get(DIR_USER_DATA, &path_);
+  PathService::Get(chrome::DIR_USER_DATA, &path_);
 
   if (!in_memory_ && !partition.empty())
     path_ = path_.Append(FILE_PATH_LITERAL("Partitions"))

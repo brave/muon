@@ -28,7 +28,10 @@ tweak_info_plist("electron_app_plist") {
     "--keystone=$_keystone_arg",
     "--scm=1",
     "--bundle_id=$chrome_mac_bundle_id",
-    "--version=$electron_version.0",
+    "--version-overrides=MAJOR=$electron_version_major",
+    "--version-overrides=MINOR=$electron_version_minor",
+    "--version-overrides=BUILD=$electron_version_build",
+    "--version-overrides=PATCH=0",
   ]
 }
 
@@ -302,7 +305,9 @@ target(_dll_target_type, "electron_dll") {
   deps = [
     "//electron:browser_dependencies",
     "//electron:child_dependencies",
+    "//base",
     "//chrome/common:constants",
+    "//chrome/common:version_header",
     "//components/crash/content/app",
     "//components/policy:generated",
     "//content/public/app:both",

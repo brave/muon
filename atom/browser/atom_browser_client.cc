@@ -121,83 +121,31 @@ std::string AtomBrowserClient::GetApplicationLocale() {
 void AtomBrowserClient::AppendExtraCommandLineSwitches(
     base::CommandLine* command_line,
     int process_id) {
-  const base::CommandLine& browser_command_line =
-      *base::CommandLine::ForCurrentProcess();
-
   std::string process_type = command_line->GetSwitchValueASCII("type");
 
-  // Copy following switches to child process.
-  static const char* const kCommonSwitchNames[] = {
-    switches::kStandardSchemes,
-    ::switches::kUserAgent,
-    ::switches::kUserDataDir,  // Make logs go to the right file.
-  };
-  command_line->CopySwitchesFrom(
-      *base::CommandLine::ForCurrentProcess(),
-      kCommonSwitchNames, arraysize(kCommonSwitchNames));
-
   if (process_type == ::switches::kRendererProcess) {
-    static const char* const kSwitchNames[] = {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-      extensions::switches::kAllowHTTPBackgroundPage,
-      extensions::switches::kAllowLegacyExtensionManifests,
-      extensions::switches::kEnableEmbeddedExtensionOptions,
-      extensions::switches::kEnableExperimentalExtensionApis,
-      extensions::switches::kExtensionsOnChromeURLs,
-      extensions::switches::kNativeCrxBindings,
-      extensions::switches::kWhitelistedExtensionID,
-#endif
-      ::switches::kAllowInsecureLocalhost,
-      ::switches::kPpapiFlashArgs,
-      ::switches::kPpapiFlashPath,
-      ::switches::kPpapiFlashVersion,
-    };
-
-    command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
-                                   arraysize(kSwitchNames));
-
-  // The registered service worker schemes.
-  if (!g_custom_service_worker_schemes.empty())
-    command_line->AppendSwitchASCII(switches::kRegisterServiceWorkerSchemes,
-                                    g_custom_service_worker_schemes);
+    // The registered service worker schemes.
+    if (!g_custom_service_worker_schemes.empty())
+      command_line->AppendSwitchASCII(switches::kRegisterServiceWorkerSchemes,
+                                      g_custom_service_worker_schemes);
 
 #if defined(OS_WIN)
-  // Append --app-user-model-id.
-  PWSTR current_app_id;
-  if (SUCCEEDED(GetCurrentProcessExplicitAppUserModelID(&current_app_id))) {
-    command_line->AppendSwitchNative(switches::kAppUserModelId, current_app_id);
-    CoTaskMemFree(current_app_id);
-  }
+    // Append --app-user-model-id.
+    PWSTR current_app_id;
+    if (SUCCEEDED(GetCurrentProcessExplicitAppUserModelID(&current_app_id))) {
+      command_line->AppendSwitchNative(
+          switches::kAppUserModelId, current_app_id);
+      CoTaskMemFree(current_app_id);
+    }
 #endif
 
-  content::WebContents* web_contents = GetWebContentsFromProcessID(process_id);
-  if (!web_contents)
-    return;
+    content::WebContents* web_contents =
+        GetWebContentsFromProcessID(process_id);
+    if (!web_contents)
+      return;
 
-  WebContentsPreferences::AppendExtraCommandLineSwitches(
-      web_contents, command_line);
-  } else if (process_type == ::switches::kUtilityProcess) {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-    static const char* const kSwitchNames[] = {
-      extensions::switches::kAllowHTTPBackgroundPage,
-      extensions::switches::kEnableExperimentalExtensionApis,
-      extensions::switches::kExtensionsOnChromeURLs,
-      extensions::switches::kWhitelistedExtensionID,
-    };
-
-    command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
-                                   arraysize(kSwitchNames));
-#endif
-  } else if (process_type == ::switches::kZygoteProcess) {
-    static const char* const kSwitchNames[] = {
-      // Load (in-process) Pepper plugins in-process in the zygote pre-sandbox.
-      ::switches::kDisableBundledPpapiFlash,
-      ::switches::kPpapiFlashPath,
-      ::switches::kPpapiFlashVersion,
-    };
-
-    command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
-                                   arraysize(kSwitchNames));
+    WebContentsPreferences::AppendExtraCommandLineSwitches(
+        web_contents, command_line);
   }
 }
 
@@ -257,8 +205,8 @@ void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
 }
 
 brightray::BrowserMainParts* AtomBrowserClient::OverrideCreateBrowserMainParts(
-    const content::MainFunctionParams&) {
-  return new AtomBrowserMainParts;
+    const content::MainFunctionParams& params) {
+  return new AtomBrowserMainParts(params);
 }
 
 void AtomBrowserClient::WebNotificationAllowed(

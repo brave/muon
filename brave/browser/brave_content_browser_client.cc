@@ -8,6 +8,7 @@
 
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
+#include "atom/common/options_switches.h"
 #include "base/base_switches.h"
 #include "base/json/json_reader.h"
 #include "base/lazy_instance.h"
@@ -16,7 +17,6 @@
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/grit/brave_resources.h"
-#include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/cache_stats_recorder.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/plugins/plugin_info_message_filter.h"
@@ -24,7 +24,9 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
 #include "chrome/browser/speech/tts_message_filter.h"
+#include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
+#include "chrome/common/env_vars.h"
 #include "chrome/common/render_messages.h"
 #include "chrome/common/renderer_configuration.mojom.h"
 #include "content/public/browser/storage_partition.h"
@@ -44,12 +46,14 @@
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
+#include "content/public/common/content_descriptors.h"
 #include "content/public/common/service_names.mojom.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
 #include "gpu/config/gpu_switches.h"
 #include "mojo/public/cpp/bindings/scoped_interface_endpoint_handle.h"
+#include "muon/app/muon_crash_reporter_client.h"
 #include "net/base/filename_util.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
@@ -82,6 +86,12 @@
 #include "components/spellcheck/browser/spellcheck_message_filter_platform.h"
 #endif
 
+#if defined(OS_POSIX) && !defined(OS_MACOSX)
+#include "base/debug/leak_annotations.h"
+#include "components/crash/content/app/breakpad_linux.h"
+#include "components/crash/content/browser/crash_handler_host_linux.h"
+#endif
+
 using content::BrowserThread;
 using extensions::AtomBrowserClientExtensionsPart;
 
@@ -89,6 +99,58 @@ namespace brave {
 
 namespace {
 
+#if defined(OS_POSIX) && !defined(OS_MACOSX)
+// TODO(bridiver) - move this to muon_crash_reporter_client
+breakpad::CrashHandlerHostLinux* CreateCrashHandlerHost(
+    const std::string& process_type) {
+  base::FilePath dumps_path;
+  PathService::Get(chrome::DIR_CRASH_DUMPS, &dumps_path);
+  {
+    ANNOTATE_SCOPED_MEMORY_LEAK;
+    bool upload = (getenv(env_vars::kHeadless) == NULL);
+    breakpad::CrashHandlerHostLinux* crash_handler =
+        new breakpad::CrashHandlerHostLinux(process_type, dumps_path, upload);
+    crash_handler->StartUploaderThread();
+    return crash_handler;
+  }
+}
+
+int GetCrashSignalFD(const base::CommandLine& command_line) {
+  // Extensions have the same process type as renderers.
+  if (command_line.HasSwitch(extensions::switches::kExtensionProcess)) {
+    static breakpad::CrashHandlerHostLinux* crash_handler = NULL;
+    if (!crash_handler)
+      crash_handler = CreateCrashHandlerHost("extension");
+    return crash_handler->GetDeathSignalSocket();
+  }
+
+  std::string process_type =
+      command_line.GetSwitchValueASCII(switches::kProcessType);
+
+  if (process_type == switches::kRendererProcess) {
+    static breakpad::CrashHandlerHostLinux* crash_handler = NULL;
+    if (!crash_handler)
+      crash_handler = CreateCrashHandlerHost(process_type);
+    return crash_handler->GetDeathSignalSocket();
+  }
+
+  if (process_type == switches::kPpapiPluginProcess) {
+    static breakpad::CrashHandlerHostLinux* crash_handler = NULL;
+    if (!crash_handler)
+      crash_handler = CreateCrashHandlerHost(process_type);
+    return crash_handler->GetDeathSignalSocket();
+  }
+
+  if (process_type == switches::kGpuProcess) {
+    static breakpad::CrashHandlerHostLinux* crash_handler = NULL;
+    if (!crash_handler)
+      crash_handler = CreateCrashHandlerHost(process_type);
+    return crash_handler->GetDeathSignalSocket();
+  }
+
+  return -1;
+}
+#endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
 
 class BraveWebContentsViewDelegate : public content::WebContentsViewDelegate,
                                      public content::WebDragDestDelegate {
@@ -292,6 +354,18 @@ bool BraveContentBrowserClient::BindAssociatedInterfaceRequestFromFrame(
   return false;
 }
 
+#if defined(OS_POSIX) && !defined(OS_MACOSX)
+void BraveContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
+    const base::CommandLine& command_line,
+    int child_process_id,
+    content::FileDescriptorInfo* mappings) {
+  int crash_signal_fd = GetCrashSignalFD(command_line);
+  if (crash_signal_fd >= 0) {
+    mappings->Share(kCrashDumpSignal, crash_signal_fd);
+  }
+}
+#endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
+
 void BraveContentBrowserClient::RenderProcessWillLaunch(
     content::RenderProcessHost* host) {
   int id = host->GetID();
@@ -428,12 +502,7 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
     int child_process_id) {
   atom::AtomBrowserClient::AppendExtraCommandLineSwitches(
       command_line, child_process_id);
-
-#if defined(OS_POSIX) && !defined(OS_MACOSX)
-//  if (breakpad::IsCrashReporterEnabled()) {
-//    command_line->AppendSwitch(switches::kEnableCrashReporter);
-//  }
-#endif
+  MuonCrashReporterClient::AppendExtraCommandLineSwitches(command_line);
 
   std::string process_type =
       command_line->GetSwitchValueASCII(switches::kProcessType);
@@ -442,7 +511,11 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
 
   static const char* const kCommonSwitchNames[] = {
     switches::kUserAgent,
-    switches::kUserDataDir,  // Make logs go to the right file.
+    // Make logs go to the right file.
+    switches::kUserDataDir,
+    atom::options::kUserDataDirName,
+    atom::options::kAppVersion,  // version for renderer crash keys
+    atom::options::kAppChannel,  // channel for renderer crash keys
   };
   command_line->CopySwitchesFrom(browser_command_line, kCommonSwitchNames,
                                  arraysize(kCommonSwitchNames));
@@ -656,7 +729,7 @@ bool BraveContentBrowserClient::ShouldAllowOpenURL(
 
 base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
   base::FilePath user_data_dir;
-  PathService::Get(brightray::DIR_USER_DATA, &user_data_dir);
+  PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   DCHECK(!user_data_dir.empty());
   return user_data_dir.Append(FILE_PATH_LITERAL("ShaderCache"));
 }

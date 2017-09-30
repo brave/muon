@@ -45,6 +45,9 @@ extern const char kBackgroundColor[];
 extern const char kHasShadow[];
 extern const char kFocusable[];
 extern const char kWebPreferences[];
+extern const char kAppVersion[];
+extern const char kAppChannel[];
+extern const char kUserDataDirName[];
 
 // WebPreferences.
 extern const char kZoomFactor[];

@@ -25,114 +25,26 @@
 #include "base/trace_event/trace_event.h"
 #include "build/build_config.h"
 #include "atom/browser/atom_browser_context.h"
-// #include "chrome/browser/bookmarks/bookmark_model_factory.h"
-// #include "chrome/browser/bookmarks/startup_task_runner_service_factory.h"
 #include "chrome/browser/browser_process.h"
-// #include "chrome/browser/chrome_notification_types.h"
-// #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
-// #include "chrome/browser/download/download_service.h"
-// #include "chrome/browser/download/download_service_factory.h"
-// #include "chrome/browser/invalidation/profile_invalidation_provider_factory.h"
-// #include "chrome/browser/net/spdyproxy/data_reduction_proxy_chrome_settings.h"
-// #include "chrome/browser/net/spdyproxy/data_reduction_proxy_chrome_settings_factory.h"
-// #include "chrome/browser/password_manager/password_manager_setting_migrator_service_factory.h"
-// #include "chrome/browser/password_manager/password_store_factory.h"
-// #include "chrome/browser/prefs/incognito_mode_prefs.h"
-// #include "chrome/browser/profiles/bookmark_model_loaded_observer.h"
-// #include "chrome/browser/profiles/profile_attributes_entry.h"
-// #include "chrome/browser/profiles/profile_attributes_storage.h"
-// #include "chrome/browser/profiles/profile_avatar_icon_util.h"
-// #include "chrome/browser/profiles/profile_destroyer.h"
-// #include "chrome/browser/profiles/profile_info_cache.h"
-// #include "chrome/browser/profiles/profile_metrics.h"
+#include "chrome/browser/chrome_notification_types.h"
+#include "chrome/browser/profiles/profile_info_cache.h"
 #include "chrome/browser/profiles/profiles_state.h"
-// #include "chrome/browser/sessions/session_service_factory.h"
-// #include "chrome/browser/signin/account_fetcher_service_factory.h"
-// #include "chrome/browser/signin/account_reconcilor_factory.h"
-// #include "chrome/browser/signin/account_tracker_service_factory.h"
-// #include "chrome/browser/signin/cross_device_promo.h"
-// #include "chrome/browser/signin/cross_device_promo_factory.h"
-// #include "chrome/browser/signin/gaia_cookie_manager_service_factory.h"
-// #include "chrome/browser/signin/signin_manager_factory.h"
-// #include "chrome/browser/sync/profile_sync_service_factory.h"
-// #include "chrome/browser/ui/browser.h"
-// #include "chrome/browser/ui/browser_list.h"
-// #include "chrome/browser/ui/sync/sync_promo_ui.h"
-// #include "chrome/common/chrome_constants.h"
-// #include "chrome/common/chrome_paths_internal.h"
-// #include "chrome/common/chrome_switches.h"
-// #include "chrome/common/logging_chrome.h"
-// #include "chrome/common/pref_names.h"
-// #include "chrome/common/url_constants.h"
-// #include "chrome/grit/generated_resources.h"
-// #include "components/bookmarks/browser/bookmark_model.h"
-// #include "components/bookmarks/browser/startup_task_runner_service.h"
-// #include "components/bookmarks/common/bookmark_pref_names.h"
-// #include "components/browser_sync/browser/profile_sync_service.h"
-// #include "components/content_settings/core/browser/host_content_settings_map.h"
-// #include "components/invalidation/impl/profile_invalidation_provider.h"
-// #include "components/invalidation/public/invalidation_service.h"
-// #include "components/password_manager/core/browser/password_store.h"
-// #include "components/password_manager/sync/browser/password_manager_setting_migrator_service.h"
-// #include "components/prefs/pref_service.h"
-// #include "components/prefs/scoped_user_pref_update.h"
-// #include "components/search_engines/default_search_manager.h"
-// #include "components/signin/core/browser/account_fetcher_service.h"
-// #include "components/signin/core/browser/account_tracker_service.h"
-// #include "components/signin/core/browser/gaia_cookie_manager_service.h"
-// #include "components/signin/core/browser/signin_manager.h"
-// #include "components/signin/core/common/profile_management_switches.h"
-// #include "components/signin/core/common/signin_pref_names.h"
-// #include "components/sync/base/stop_source.h"
+#include "chrome/browser/ui/browser_list.h"
 #include "content/public/browser/browser_thread.h"
-// #include "content/public/browser/notification_service.h"
+#include "content/public/browser/notification_service.h"
 #include "content/public/common/content_switches.h"
-// #include "extensions/features/features.h"
-// #include "net/http/http_transaction_factory.h"
-// #include "net/url_request/url_request_context.h"
-// #include "net/url_request/url_request_context_getter.h"
-// #include "net/url_request/url_request_job.h"
-// #include "ui/base/l10n/l10n_util.h"
+#include "extensions/features/features.h"
 
-// #if BUILDFLAG(ENABLE_EXTENSIONS)
-// #include "chrome/browser/extensions/extension_service.h"
-// #include "extensions/browser/extension_registry.h"
-// #include "extensions/browser/extension_system.h"
-// #include "extensions/common/extension_set.h"
-// #include "extensions/common/manifest.h"
-// #endif
-
-// #if defined(ENABLE_SUPERVISED_USERS)
-// #include "chrome/browser/supervised_user/child_accounts/child_account_service.h"
-// #include "chrome/browser/supervised_user/child_accounts/child_account_service_factory.h"
-// #include "chrome/browser/supervised_user/supervised_user_service.h"
-// #include "chrome/browser/supervised_user/supervised_user_service_factory.h"
-// #endif
-
-// #if defined(OS_ANDROID)
-// #include "chrome/browser/ntp_snippets/content_suggestions_service_factory.h"
-// #endif
-
-// #if defined(OS_CHROMEOS)
-// #include "chrome/browser/browser_process_platform_part_chromeos.h"
-// #include "chrome/browser/chromeos/profiles/profile_helper.h"
-// #include "chromeos/chromeos_switches.h"
-// #include "chromeos/dbus/cryptohome_client.h"
-// #include "chromeos/dbus/dbus_thread_manager.h"
-// #include "components/user_manager/user.h"
-// #include "components/user_manager/user_manager.h"
-// #endif
-
-// #if !defined(OS_ANDROID) && !defined(OS_IOS) && !defined(OS_CHROMEOS)
-// #include "chrome/browser/profiles/profile_statistics.h"
-// #include "chrome/browser/profiles/profile_statistics_factory.h"
-// #endif
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+#include "extensions/browser/extension_system.h"
+#endif
 
 using base::UserMetricsAction;
 using content::BrowserThread;
 
 ProfileManager::ProfileManager(const base::FilePath& user_data_dir)
-    : user_data_dir_(user_data_dir) {
+    : user_data_dir_(user_data_dir),
+      browser_list_observer_(this) {
 }
 
 ProfileManager::~ProfileManager() {
@@ -160,6 +72,49 @@ ProfileManager::~ProfileManager() {
 
   profiles_info_.clear();
 }
+
+void ProfileManager::Observe(
+    int type,
+    const content::NotificationSource& source,
+    const content::NotificationDetails& details) {}
+
+void ProfileManager::OnProfileCreated(Profile* profile,
+                                      bool success,
+                                      bool is_new_profile) {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+  if (!profile->IsOffTheRecord() &&
+      !GetProfileByPath(profile->GetPath())) {
+    AddProfile(profile);
+  }
+
+  DoFinalInit(profile, false);
+}
+
+void ProfileManager::DoFinalInit(Profile* profile, bool go_off_the_record) {
+  TRACE_EVENT0("browser", "ProfileManager::DoFinalInit");
+
+  DoFinalInitForServices(profile, go_off_the_record);
+  DoFinalInitLogging(profile);
+
+  content::NotificationService::current()->Notify(
+      chrome::NOTIFICATION_PROFILE_ADDED,
+      content::Source<Profile>(profile),
+      content::NotificationService::NoDetails());
+}
+
+void ProfileManager::DoFinalInitForServices(Profile* profile,
+                                            bool go_off_the_record) {
+  TRACE_EVENT0("browser", "ProfileManager::DoFinalInitForServices");
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  bool extensions_enabled = !go_off_the_record;
+
+  extensions::ExtensionSystem::Get(profile)->InitForRegularProfile(
+      extensions_enabled);
+#endif
+}
+
+void ProfileManager::DoFinalInitLogging(Profile* profile) {}
 
 // static
 Profile* ProfileManager::GetLastUsedProfile() {
@@ -283,6 +238,13 @@ Profile* ProfileManager::GetProfileByPath(const base::FilePath& path) const {
                                                  : nullptr;
 }
 
+Profile* ProfileManager::CreateProfileAsyncHelper(const base::FilePath& path,
+                                                  Delegate* delegate) {
+  NOTIMPLEMENTED();
+  return nullptr;
+}
+
+
 Profile* ProfileManager::CreateProfileHelper(const base::FilePath& path) {
   TRACE_EVENT0("browser", "ProfileManager::CreateProfileHelper");
   SCOPED_UMA_HISTOGRAM_TIMER("Profile.CreateProfileHelperTime");
@@ -351,6 +313,11 @@ ProfileManager::ProfileInfo* ProfileManager::GetProfileInfoByPath(
   return (iter == profiles_info_.end()) ? NULL : iter->second.get();
 }
 
+// static
+void ProfileManager::NukeDeletedProfilesFromDisk() {
+  // TODO(bridiver)
+}
+
 ProfileManager::ProfileInfo::ProfileInfo(
     Profile* profile,
     bool created)
@@ -361,3 +328,23 @@ ProfileManager::ProfileInfo::ProfileInfo(
 ProfileManager::ProfileInfo::~ProfileInfo() {
   delete profile.release();
 }
+
+ProfileManager::BrowserListObserver::BrowserListObserver(
+    ProfileManager* manager)
+    : profile_manager_(manager) {
+  CHECK(profile_manager_);
+  BrowserList::AddObserver(this);
+}
+
+ProfileManager::BrowserListObserver::~BrowserListObserver() {
+  BrowserList::RemoveObserver(this);
+}
+
+void ProfileManager::BrowserListObserver::OnBrowserAdded(
+    Browser* browser) {}
+
+void ProfileManager::BrowserListObserver::OnBrowserRemoved(
+    Browser* browser) {}
+
+void ProfileManager::BrowserListObserver::OnBrowserSetLastActive(
+    Browser* browser) {}

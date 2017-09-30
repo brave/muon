@@ -116,6 +116,11 @@ AtomContentClient::AtomContentClient() {
 AtomContentClient::~AtomContentClient() {
 }
 
+void AtomContentClient::SetActiveURL(const GURL& url) {
+  base::debug::SetCrashKeyValue(crash_keys::kActiveURL,
+                                url.possibly_invalid_spec());
+}
+
 void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {
   base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendorID,
       base::StringPrintf("0x%04x", gpu_info.gpu.vendor_id));

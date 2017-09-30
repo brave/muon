@@ -16,6 +16,7 @@
 #include "base/files/file_util.h"
 #include "base/memory/weak_ptr.h"
 #include "base/path_service.h"
+#include "base/trace_event/trace_event.h"
 #include "base/version.h"
 #include "components/component_updater/component_updater_paths.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"

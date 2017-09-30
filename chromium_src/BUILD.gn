@@ -10,19 +10,6 @@ import("//printing/features/features.gni")
 import("//rlz/features/features.gni")
 
 config("chromium_src_config") {
-  include_dirs = [
-    "//electron/chromium_src",
-    "//electron",
-    "//electron/vendor",
-    "//electron/vendor/brightray",
-    rebase_path(".", "//"),
-    root_gen_dir,
-    "$root_gen_dir/chrome",
-    "$root_gen_dir/components/strings",
-    "//skia/config",
-    "//third_party/skia/include/core",
-  ]
-
   if (is_clang) {
     cflags = [
       "-Wno-error",
@@ -47,16 +34,52 @@ config("chromium_src_config") {
   }
 }
 
-source_set("common") {
-  configs += [
-    ":chromium_src_config",
-    "//electron/build:electron_config",
+source_set("app") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
+
+  sources = []
+
+  if (is_win) {
+    sources += [
+      "//chrome/app/chrome_crash_reporter_client_win.cc",
+      "//chrome/app/chrome_crash_reporter_client_win.h",
+    ]
+  } else {
+    sources += [
+      "//chrome/app/chrome_crash_reporter_client.cc",
+      "//chrome/app/chrome_crash_reporter_client.h",
+      "//chrome/app/chrome_crash_reporter_client_mac.mm",
+    ]
+  }
+
+  deps = [
+    "//base",
+    "//chrome/common",
+    "//chrome/installer",
+    "//components/metrics",
+    "//components/crash/content/app",
+    "//components/crash/content/browser",
+    "//content/public/common",
   ]
 
-  include_dirs = [
-    # force this to appear before the chromium root src dir
-    ".",
-  ]
+  if (is_win) {
+    deps += [
+      "//chrome_elf",
+    ]
+  }
+
+  if (is_linux) {
+    deps += [
+      "//components/upload_list",
+      "//components/version_info",
+    ]
+  }
+}
+
+source_set("common") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
 
   sources = []
   deps = []
@@ -78,15 +101,8 @@ source_set("common") {
 }
 
 source_set("renderer") {
-  configs += [
-    "//electron/build:electron_config",
-    ":chromium_src_config",
-  ]
-
-  include_dirs = [
-    # force this to appear before the chromium root src dir
-    ".",
-  ]
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
 
   sources = [
     "chrome/renderer/content_settings_observer.cc",
@@ -114,45 +130,54 @@ source_set("renderer") {
 }
 
 source_set("browser") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
 
-  include_dirs = [
-    # force this to appear before the chromium root src dir
-    ".",
-  ]
-
   public_deps = []
+
   deps = [
     ":bookmarks",
+    ":crashes_ui",
     ":devtools",
     ":favicon",
     ":history",
+    ":metrics",
     ":password_manager",
-    "chrome/browser/safe_browsing",
     ":sessions",
     ":web_data",
+    "chrome/browser/safe_browsing",
     "//electron/brave/browser:tab_manager",
+    "//base",
     "//chrome/common",
     "//chrome/utility",
     "//components/certificate_transparency",
+    "//components/crash/content/app",
     "//components/data_usage/core",
     "//components/prefs",
     "//components/ssl_config",
     "//components/spellcheck:build_features",
     "//components/safe_browsing:csd_proto",
+    "//components/storage_monitor",
     "//content/public/browser",
     "//electron/atom/browser",
   ]
 
   sources = [
+    "chrome/browser/about_flags.cc",
+    "//chrome/browser/about_flags.h",
     "//chrome/browser/browser_process.cc",
     "//chrome/browser/browser_process.h",
     "chrome/browser/browser_process_impl.cc",
     "chrome/browser/browser_process_impl.h",
-    "chrome/browser/browser_shutdown.cc",
-    "chrome/browser/chrome_notification_types.h",
+    "//chrome/browser/browser_shutdown.cc",
+    "//chrome/browser/chrome_notification_types.h",
     "chrome/browser/custom_handlers/protocol_handler_registry.cc",
+    "//chrome/browser/custom_handlers/protocol_handler_registry.h",
     "//chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
+    "//chrome/browser/custom_handlers/protocol_handler_registry_factory.h",
+
+    "chrome/browser/background/background_mode_manager.cc",
+    "//chrome/browser/background/background_mode_manager.h",
 
     # extensions
     "//chrome/browser/extensions/global_shortcut_listener.cc",
@@ -161,6 +186,11 @@ source_set("browser") {
     "//chrome/browser/extensions/global_shortcut_listener_mac.mm",
     "//chrome/browser/extensions/global_shortcut_listener_win.cc",
     "//chrome/browser/extensions/global_shortcut_listener_win.h",
+
+    "chrome/browser/first_run/first_run.cc",
+    "//chrome/browser/first_run/first_run.h",
+    "//chrome/browser/first_run/upgrade_util.h",
+    "chrome/browser/first_run/upgrade_util.cc",
 
     "//chrome/browser/lifetime/keep_alive_registry.cc",
     "//chrome/browser/lifetime/keep_alive_registry.h",
@@ -172,10 +202,8 @@ source_set("browser") {
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
 
-    "chrome/browser/media/webrtc/media_capture_devices_dispatcher.cc",
-    "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
-    "chrome/browser/media/webrtc/media_stream_capture_indicator.cc",
-    "chrome/browser/media/webrtc/media_stream_capture_indicator.h",
+    "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
+    "//chrome/browser/prefs/chrome_command_line_pref_store.h",
 
     "//chrome/browser/site_details.cc",
     "//chrome/browser/site_details.h",
@@ -184,7 +212,7 @@ source_set("browser") {
     "//chrome/browser/ui/browser_list.cc",
     "//chrome/browser/ui/browser_list.h",
     "chrome/browser/ui/browser.cc",
-    "chrome/browser/ui/browser.h",
+    "//chrome/browser/ui/browser.h",
     "chrome/browser/ui/browser_otr_state.cc",
 
     "chrome/browser/ui/profile_error_dialog.cc",
@@ -209,8 +237,10 @@ source_set("browser") {
     "//chrome/browser/speech/tts_platform.cc",
     "//chrome/browser/speech/tts_platform.h",
     "//chrome/browser/speech/tts_win.cc",
-    "chrome/browser/ui/browser_dialogs.h",
+    "//chrome/browser/ui/browser_dialogs.h",
     "chrome/browser/ui/simple_message_box.cc",
+    "chrome/browser/ui/user_manager.cc",
+    "//chrome/browser/ui/user_manager.h",
     "//chrome/browser/ui/cocoa/color_chooser_mac.mm",
     "//chrome/browser/ui/zoom/chrome_zoom_level_prefs.cc",
     "//chrome/browser/ui/zoom/chrome_zoom_level_prefs.h",
@@ -249,8 +279,22 @@ source_set("browser") {
     "//chrome/browser/cache_stats_recorder.h",
   ]
 
+  if (is_win || is_mac) {
+    sources += [
+      "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.cc",
+      "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.h",
+    ]
+  }
+
+  deps += [
+    "//components/crash/content/app",
+    "//components/crash/core/browser",
+  ]
+
   if (is_win) {
     sources += [
+      "//chrome/browser/win/browser_util.h",
+      "//chrome/browser/win/browser_util.cc",
       "//chrome/browser/platform_util_aura.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
@@ -320,10 +364,10 @@ source_set("browser") {
 
   if (enable_webrtc) {
     sources += [
-      "chrome/browser/media/webrtc/desktop_media_list.h",
-      "chrome/browser/media/webrtc/desktop_media_list_observer.h",
-      "chrome/browser/media/webrtc/native_desktop_media_list.cc",
-      "chrome/browser/media/webrtc/native_desktop_media_list.h",
+      "chrome/browser/media/webrtc/media_capture_devices_dispatcher.cc",
+      "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
+      "chrome/browser/media/webrtc/media_stream_capture_indicator.cc",
+      "chrome/browser/media/webrtc/media_stream_capture_indicator.h",
     ]
 
     public_deps += [
@@ -465,9 +509,27 @@ source_set("browser") {
   }
 }
 
-source_set("menu_bar") {
+source_set("crashes_ui") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "//chrome/browser/ui/webui/crashes_ui.cc",
+    "//chrome/browser/ui/webui/crashes_ui.h",
+    "//chrome/browser/crash_upload_list/crash_upload_list.cc",
+    "//chrome/browser/crash_upload_list/crash_upload_list.h",
+  ]
+
+  deps = [
+    ":metrics",
+    ":sessions",
+    "//third_party/protobuf:protobuf_lite",
+  ]
+}
+
+source_set("menu_bar") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
 
   sources = [
     "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.cc",
@@ -485,8 +547,8 @@ source_set("menu_bar") {
 }
 
 source_set("devtools") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     # devtools
@@ -529,8 +591,8 @@ source_set("devtools") {
 }
 
 source_set("importer") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     "//chrome/browser/importer/external_process_importer_client.cc",
@@ -551,8 +613,6 @@ source_set("importer") {
     "//chrome/browser/importer/in_process_importer_bridge.h",
     "//chrome/browser/importer/profile_writer.cc",
     "//chrome/browser/importer/profile_writer.h",
-    "chrome/browser/first_run/first_run.cc",
-    "//chrome/browser/first_run/first_run.h",
   ]
 
   deps = [
@@ -563,8 +623,8 @@ source_set("importer") {
 }
 
 source_set("bookmarks") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   if (is_win) {
     cflags = [ "/wd4172", ]
@@ -585,8 +645,8 @@ source_set("bookmarks") {
 }
 
 source_set("search_engines") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     "chrome/browser/search_engines/template_url_service_factory.cc",
@@ -604,8 +664,8 @@ source_set("search_engines") {
 }
 
 source_set("sync") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     "chrome/browser/sync/glue/sync_start_util.cc",
@@ -620,8 +680,8 @@ source_set("sync") {
 }
 
 source_set("web_data") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     "//chrome/browser/web_data_service_factory.cc",
@@ -638,8 +698,8 @@ source_set("web_data") {
 }
 
 source_set("password_manager") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   if (is_win) {
     all_dependent_configs = [ "//chrome/browser:browser_win_linker_flags" ]
@@ -661,9 +721,12 @@ source_set("password_manager") {
   ]
 
   deps = [
+    "//base",
     "//components/password_manager/content/browser",
     "//components/password_manager/core/browser",
     "//components/password_manager/core/common",
+    "//components/prefs",
+    "//content/public/browser",
     "//components/os_crypt",
   ]
 
@@ -706,8 +769,8 @@ source_set("password_manager") {
 }
 
 source_set("favicon") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     "//chrome/browser/favicon/chrome_favicon_client.cc",
@@ -732,9 +795,46 @@ source_set("favicon") {
   ]
 }
 
-source_set("search") {
+source_set("metrics") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
+
+  sources = [
+    "//chrome/browser/metrics/chrome_metrics_service_accessor.cc",
+    "//chrome/browser/metrics/chrome_metrics_service_accessor.h",
+    "//chrome/browser/metrics/metrics_reporting_state.cc",
+    "//chrome/browser/metrics/metrics_reporting_state.h",
+    "//chrome/browser/metrics/thread_watcher.cc",
+    "//chrome/browser/metrics/thread_watcher.h",
+    "//chrome/browser/metrics/thread_watcher_report_hang.cc",
+    "//chrome/browser/metrics/thread_watcher_report_hang.h",
+
+    "//chrome/installer/util/google_update_settings.h",
+    "//chrome/browser/google/google_update_settings_posix.cc",
+  ]
+
+  if (is_win) {
+    sources += [
+      "chrome/installer/util/muon_distribution.cc",
+      "chrome/installer/util/muon_distribution.h",
+    ]
+  }
+
+  deps = [
+    "//base",
+    "//chrome/browser/metrics/variations:chrome_ui_string_overrider_factory",
+    "//chrome/common",
+    "//components/metrics",
+    "//components/metrics_services_manager",
+    "//components/version_info",
+    "//content/public/browser",
+    "//third_party/crashpad/crashpad/client:client",
+  ]
+}
+
+source_set("search") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
 
   sources = [
     "chrome/browser/search/search.cc",
@@ -746,8 +846,8 @@ source_set("search") {
 }
 
 source_set("history") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     "//chrome/browser/history/chrome_history_backend_client.cc",
@@ -772,11 +872,53 @@ source_set("history") {
   ]
 }
 
+source_set("lifetime") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
+
+  sources = [
+    "chrome/browser/download/download_core_service.cc",
+    "//chrome/browser/download/download_core_service.h",
+    "chrome/browser/lifetime/browser_close_manager.cc",
+    "//chrome/browser/lifetime/browser_close_manager.h",
+    "//chrome/browser/lifetime/termination_notification.cc",
+    "//chrome/browser/lifetime/termination_notification.h",
+    "//chrome/browser/lifetime/application_lifetime.cc",
+    "//chrome/browser/lifetime/application_lifetime.h",
+    "//chrome/browser/lifetime/application_lifetime_mac.mm",
+
+    "//chrome/browser/notifications/notification_ui_manager.h",
+    "chrome/browser/notifications/notification_ui_manager_stub.cc",
+    "chrome/browser/notifications/notification_ui_manager_stub.h"
+  ]
+
+  if (use_aura) {
+    sources += [
+      "//chrome/browser/lifetime/application_lifetime_aura.cc",
+    ]
+  }
+
+  deps = [
+    "//base",
+    ":sessions",
+    "//chrome/common",
+    "//components/metrics",
+    "//components/prefs",
+    "//content/public/browser",
+  ]
+
+  if (is_win) {
+    deps += [
+      ":metrics",
+    ]
+  }
+}
+
 source_set("tab_manager") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
   configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
 
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
   sources = [
     "//chrome/browser/defaults.cc",
     "//chrome/browser/defaults.h",
@@ -785,7 +927,6 @@ source_set("tab_manager") {
     "//chrome/browser/engagement/site_engagement_score.cc",
     "//chrome/browser/engagement/site_engagement_score.h",
     "chrome/browser/engagement/site_engagement_service.cc",
-    "chrome/browser/lifetime/application_lifetime.cc",
     "//chrome/browser/memory/oom_memory_details.cc",
     "//chrome/browser/memory/oom_memory_details.h",
     "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.cc",
@@ -827,11 +968,15 @@ source_set("tab_manager") {
     "//chrome/common",
     "//third_party/WebKit/public:blink_headers",
   ]
+
+  deps = [
+    ":lifetime",
+  ]
 }
 
 source_set("sessions") {
+  configs += [ "//electron/build:electron_config" ]
   configs += [ ":chromium_src_config" ]
-  include_dirs = [ "." ] # force this to appear before the chromium src dir
 
   sources = [
     "//chrome/browser/profiles/incognito_helpers.cc",
@@ -839,11 +984,13 @@ source_set("sessions") {
     "chrome/browser/profiles/profile.cc",
     "chrome/browser/profiles/profile.h",
     "chrome/browser/profiles/profile_io_data.cc",
-    "chrome/browser/profiles/profile_io_data.h",
+    "//chrome/browser/profiles/profile_io_data.h",
     "chrome/browser/profiles/profile_manager.cc",
-    "chrome/browser/profiles/profile_manager.h",
+    "//chrome/browser/profiles/profile_manager.h",
+    "chrome/browser/profiles/profile_metrics.cc",
+    "//chrome/browser/profiles/profile_metrics.h",
     "chrome/browser/profiles/profiles_state.cc",
-    "chrome/browser/profiles/profiles_state.h",
+    "//chrome/browser/profiles/profiles_state.h",
     "chrome/browser/sessions/session_restore.cc",
     "//chrome/browser/sessions/session_restore.h",
     "//chrome/browser/sessions/session_tab_helper.cc",
@@ -859,6 +1006,7 @@ source_set("sessions") {
   ]
 
   deps = [
+    "//chrome/app:generated_resources",
     "//third_party/icu",
     "//third_party/protobuf:protobuf_lite",
   ]
