@@ -88,6 +88,7 @@ class BrowserProcessImpl : public BrowserProcess {
   resource_coordinator::TabManager* GetTabManager() override;
   StatusTray* status_tray() override;
   message_center::MessageCenter* message_center() override;
+  void FlushLocalStateAndReply(base::OnceClosure reply) override;
   net_log::ChromeNetLog* net_log() override;
 
   // NOTIMPLEMENTED
