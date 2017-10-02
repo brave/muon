@@ -132,19 +132,17 @@ index ffbe312d99645bb93b9e8d66653cea2b44dbe597..af32f98aa3e1272a52ac5a66b50217fe
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
 diff --git a/chrome/app/chrome_crash_reporter_client_win.cc b/chrome/app/chrome_crash_reporter_client_win.cc
-index b3cc3d549ae01118891afc96ec2f605773a1e8a4..bfff26d41c532c38ab56a50973614b6d8f381f1f 100644
+index b2329c1c2ffa811b240d7e6528b1561ef77b36e5..4c1a73c3058803b8660cf414b6fbf01876994172 100644
 --- a/chrome/app/chrome_crash_reporter_client_win.cc
 +++ b/chrome/app/chrome_crash_reporter_client_win.cc
-@@ -93,6 +93,12 @@ size_t RegisterCrashKeysHelper() {
+@@ -94,6 +94,10 @@ size_t RegisterCrashKeysHelper() {
    // For now these need to be kept relatively up to date with those in
    // chrome/common/crash_keys.cc::RegisterChromeCrashKeys().
    static constexpr base::debug::CrashKey kFixedKeys[] = {
-+#if !defined(MUON_CHROMIUM_BUILD)
 +      {"javascript-info", kHugeSize},
 +      {"_version", kSmallSize},
 +      {"muon-version", kSmallSize},
 +      {"node-env", kSmallSize},
-+#endif
        {kMetricsClientId, kSmallSize},
        {kChannel, kSmallSize},
        {kActiveURL, kLargeSize},
@@ -931,10 +929,10 @@ index d7734d8883c3e438ece3d509b7bb331931831178..6e6cdda19c271de7e5429db02b3e17b2
  }
  # Note: Update the test expectations in GetBaseMessageIdForMode.GoogleStringIds
 diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
-index 82318fb223a441fc0085f152857f8d14641a4aa7..b106e7f0116af967e9205a778861d1014a11f611 100644
+index 82318fb223a441fc0085f152857f8d14641a4aa7..c8549a97d80dcf32572198f833dc1d8ab62b8663 100644
 --- a/chrome/renderer/BUILD.gn
 +++ b/chrome/renderer/BUILD.gn
-@@ -394,6 +394,23 @@ static_library("renderer") {
+@@ -394,6 +394,19 @@ static_library("renderer") {
        "resources/extensions/file_system_provider_custom_bindings.js",
      ]
    }
@@ -1132,23 +1130,23 @@ index 2199920ee79326a1dcd79e44c7fc33753b2d7262..f82a9936e0f45af3b13c7a033b7d957a
              WaitForCrashReportUploadProcess(fds[0], kCrashIdLength, id_buf);
          HandleCrashReportId(id_buf, bytes_read, kCrashIdLength);
 diff --git a/components/crash/content/app/crashpad_mac.mm b/components/crash/content/app/crashpad_mac.mm
-index 3bae07e14c690869515c4ce233988addad12f1c1..3ad9825f406bc10e21579cccb5677651cf780ae5 100644
+index 485c2b4b3e98244f6303c92394dd0f6eab7263c6..5b530d7a32df23537d3b59e03f3729759a937254 100644
 --- a/components/crash/content/app/crashpad_mac.mm
 +++ b/components/crash/content/app/crashpad_mac.mm
-@@ -53,6 +53,8 @@ base::FilePath PlatformCrashpadInitialization(bool initial_client,
+@@ -55,6 +55,8 @@
        // Only allow the possibility of report upload in official builds. This
        // crash server won't have symbols for any other build types.
        std::string url = "https://clients2.google.com/cr/report";
 +#elif !defined(MUON_CHROMIUM_BUILD)
-+      std::string url = "https://brave-laptop-updates.herokuapp.com/1/crashes";
++      std::string url = "https://laptop-updates.brave.com/1/crashes";
  #else
        std::string url;
  #endif
 diff --git a/components/crash/content/app/crashpad_win.cc b/components/crash/content/app/crashpad_win.cc
-index 2c25a0b26fd33ffeaf2f23683a3a199f31973d5e..0af9ab62df8e874c838c9cee40985977b033e88a 100644
+index bb5c09732c2031955009bc1f20c8d943cafaebfc..c8429ac000c4a9037f748ba17362483abfebafcb 100644
 --- a/components/crash/content/app/crashpad_win.cc
 +++ b/components/crash/content/app/crashpad_win.cc
-@@ -79,6 +79,8 @@ base::FilePath PlatformCrashpadInitialization(bool initial_client,
+@@ -82,6 +82,8 @@ base::FilePath PlatformCrashpadInitialization(
  
  #if defined(GOOGLE_CHROME_BUILD)
      std::string url = "https://clients2.google.com/cr/report";
@@ -1971,7 +1969,7 @@ index c75fb7c2bb7e4bca737b53f729477223facee72d..8b1b404defa1987b67ae73a535df040e
  # Windows' assembly is built with Yasm. The other platforms use the platform
  # assembler.
 diff --git a/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc b/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
-index d77cdbadc482ab5bee13e1026869bc9f52c415a3..561ac592c7ac0498f6d82a61d8fe621281f760a3 100644
+index 19d25ab54b9c1ee4cd640049ff0bcecb80236e1f..ed85488eedc0657e3bfafdfdd6eccb00df4627f9 100644
 --- a/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
 +++ b/third_party/crashpad/crashpad/handler/crash_report_upload_thread.cc
 @@ -268,7 +268,11 @@ void CrashReportUploadThread::ProcessPendingReport(
@@ -1979,9 +1977,9 @@ index d77cdbadc482ab5bee13e1026869bc9f52c415a3..561ac592c7ac0498f6d82a61d8fe6212
          // don’t attempt to upload the new report. If it happened longer ago,
          // attempt to upload the report.
 +#if defined(MUON_CHROMIUM_BUILD)
-         const int kUploadAttemptIntervalSeconds = 60 * 60;  // 1 hour
+         constexpr int kUploadAttemptIntervalSeconds = 60 * 60;  // 1 hour
 +#else
-+        const int kUploadAttemptIntervalSeconds = 1 * 60;  // 1 min
++        constexpr int kUploadAttemptIntervalSeconds = 1 * 60;  // 1 min
 +#endif
          if (now - last_upload_attempt_time < kUploadAttemptIntervalSeconds) {
            database_->SkipReportUpload(
