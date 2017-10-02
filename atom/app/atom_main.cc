@@ -148,7 +148,8 @@ int main(int argc, const char* argv[]) {
   if (process_type == crash_reporter::switches::kCrashpadHandler) {
     crash_reporter::SetupFallbackCrashHandling(*command_line);
     return crash_reporter::RunAsCrashpadHandler(
-        *base::CommandLine::ForCurrentProcess(), switches::kProcessType);
+        *base::CommandLine::ForCurrentProcess(), user_data_dir,
+        switches::kProcessType, switches::kUserDataDir);
   } else if (process_type == crash_reporter::switches::kFallbackCrashHandler) {
     return RunFallbackCrashHandler(*command_line);
   }
