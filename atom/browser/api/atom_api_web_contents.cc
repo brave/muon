@@ -52,6 +52,7 @@
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/certificate_viewer.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/favicon/favicon_utils.h"
@@ -2003,12 +2004,16 @@ void WebContents::StopFindInPage(content::StopFindAction action) {
 }
 
 void WebContents::ShowCertificate() {
+  // TODO(Anthony): Support linux certificate viewing modal
+#if !defined(OS_LINUX)
   scoped_refptr<net::X509Certificate> certificate =
       web_contents()->GetController().GetVisibleEntry()->GetSSL().certificate;
   if (!certificate)
     return;
-  // web_contents()->GetDelegate()->ShowCertificateViewerInDevTools(
-  //     web_contents(), certificate);
+  ShowCertificateViewer(web_contents(),
+                        web_contents()->GetTopLevelNativeWindow(),
+                        certificate.get());
+#endif
 }
 
 void WebContents::ShowDefinitionForSelection() {
