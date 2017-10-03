@@ -961,6 +961,14 @@ source_set("tab_manager") {
     "//components/ukm/ukm_interface.h",
   ]
 
+  if (is_linux || is_win) {
+    sources += [
+      "chrome/browser/feature_engagement/new_tab/new_tab_tracker.h",
+      "chrome/browser/feature_engagement/new_tab/new_tab_tracker_factory.cc",
+      "chrome/browser/feature_engagement/new_tab/new_tab_tracker_factory.h",
+    ]
+  }
+
   public_deps = [
     "//chrome/browser/engagement:mojo_bindings",
     "//chrome/common",
