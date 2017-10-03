@@ -11,6 +11,7 @@
 #include "atom/browser/extensions/tab_helper.h"
 #include "base/memory/ptr_util.h"
 #include "brave/browser/guest_view/brave_guest_view_manager_delegate.h"
+#include "chrome/browser/extensions/api/messaging/chrome_messaging_delegate.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/browser/api/management/management_api_delegate.h"
 #include "extensions/browser/api/storage/local_value_store_cache.h"
@@ -179,6 +180,12 @@ AtomExtensionsAPIClient::CreateGuestViewManagerDelegate(
 void AtomExtensionsAPIClient::AttachWebContentsHelpers(
     content::WebContents* web_contents) const {
   AtomExtensionWebContentsObserver::CreateForWebContents(web_contents);
+}
+
+MessagingDelegate* AtomExtensionsAPIClient::GetMessagingDelegate() {
+  if (!messaging_delegate_)
+    messaging_delegate_ = base::MakeUnique<ChromeMessagingDelegate>();
+  return messaging_delegate_.get();
 }
 
 std::unique_ptr<WebRequestEventRouterDelegate>
