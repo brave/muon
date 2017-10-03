@@ -773,6 +773,8 @@ BraveContentBrowserClient::GetServiceManifestOverlay(base::StringPiece name) {
     id = IDR_CHROME_CONTENT_BROWSER_MANIFEST_OVERLAY;
   else if (name == content::mojom::kGpuServiceName)
     id = IDR_CHROME_CONTENT_GPU_MANIFEST_OVERLAY;
+  else if (name == content::mojom::kPackagedServicesServiceName)
+    id = IDR_CHROME_CONTENT_PACKAGED_SERVICES_MANIFEST_OVERLAY;
   else if (name == content::mojom::kPluginServiceName)
     id = IDR_CHROME_CONTENT_PLUGIN_MANIFEST_OVERLAY;
   else if (name == content::mojom::kRendererServiceName)
