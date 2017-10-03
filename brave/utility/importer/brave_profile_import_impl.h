@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BRAVE_UTILITY_BRAVE_PROFILE_IMPORT_IMPL_H_
-#define BRAVE_UTILITY_BRAVE_PROFILE_IMPORT_IMPL_H_
+#ifndef BRAVE_UTILITY_IMPORTER_BRAVE_PROFILE_IMPORT_IMPL_H_
+#define BRAVE_UTILITY_IMPORTER_BRAVE_PROFILE_IMPORT_IMPL_H_
 
 #include <memory>
 
@@ -25,4 +25,4 @@ class BraveProfileImportImpl : public ProfileImportImpl {
   DISALLOW_COPY_AND_ASSIGN(BraveProfileImportImpl);
 };
 
-#endif  // BRAVE_UTILITY_BRAVE_PROFILE_IMPORT_IMPL_H_
+#endif  // BRAVE_UTILITY_IMPORTER_BRAVE_PROFILE_IMPORT_IMPL_H_
