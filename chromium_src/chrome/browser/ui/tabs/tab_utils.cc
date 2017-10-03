@@ -25,4 +25,16 @@ bool AreAllTabsMuted(const TabStripModel& tab_strip,
   return false;
 }
 
+void SetSitesMuted(const TabStripModel& tab_strip,
+                   const std::vector<int>& indices,
+                   const bool mute) {
+  NOTREACHED();
+}
+
+bool AreAllSitesMuted(const TabStripModel& tab_strip,
+                      const std::vector<int>& indices) {
+  NOTREACHED();
+  return false;
+}
+
 }  // namespace chrome
