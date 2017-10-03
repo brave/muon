@@ -10,7 +10,7 @@
 #include "base/files/file_path.h"
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
-#include "brave/utility/importer/brave_profile_import_service.h"
+#include "chrome/utility/importer/profile_import_service.h"
 #include "chrome/common/importer/profile_import.mojom.h"
 #include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
@@ -134,7 +134,7 @@ void AtomContentUtilityClient::RegisterServices(
     AtomContentUtilityClient::StaticServiceMap* services) {
   service_manager::EmbeddedServiceInfo profile_import_info;
   profile_import_info.factory =
-    base::Bind(&BraveProfileImportService::CreateService);
+    base::Bind(&ProfileImportService::CreateService);
   services->emplace(chrome::mojom::kProfileImportServiceName,
                     profile_import_info);
 }
