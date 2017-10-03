@@ -41,6 +41,10 @@ class AtomExtensionsAPIClient : public ExtensionsAPIClient {
           observers,
       std::map<settings_namespace::Namespace,
           ValueStoreCache*>* caches) override;
+  MessagingDelegate* GetMessagingDelegate() override;
+
+ private:
+  std::unique_ptr<MessagingDelegate> messaging_delegate_;
 };
 
 }  // namespace extensions
