@@ -77,6 +77,15 @@ grit("brave_resources") {
     "brave_resources.pak",
   ]
 
+  grit_flags = [
+    "-E",
+    "root_gen_dir=" + rebase_path(root_gen_dir),
+  ]
+
+  deps = [
+    "app:brave_content_manifest_overlays",
+  ]
+
   resource_ids = "//electron/resource_ids"
 }
 
@@ -265,8 +274,6 @@ source_set("utility") {
     "brave/utility/importer/brave_external_process_importer_bridge.h",
     "brave/utility/importer/brave_profile_import_impl.cc",
     "brave/utility/importer/brave_profile_import_impl.h",
-    "brave/utility/importer/brave_profile_import_service.cc",
-    "brave/utility/importer/brave_profile_import_service.h",
     "brave/utility/importer/firefox_importer.cc",
     "brave/utility/importer/firefox_importer.h",
     "brave/utility/importer/importer_creator.cc",
