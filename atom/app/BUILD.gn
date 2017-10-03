@@ -31,6 +31,9 @@ source_set("app") {
   ]
 
   if (is_win) {
-    deps += [ "//chrome/child" ] # breakpad
+    deps += [
+      "//chrome/child",
+      "//components/crash/content/app:crash_export_thunks",
+    ] # breakpad
   }
 }

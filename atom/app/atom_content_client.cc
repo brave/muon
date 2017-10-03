@@ -117,27 +117,7 @@ AtomContentClient::AtomContentClient() {
 AtomContentClient::~AtomContentClient() {
 }
 
-void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendorID,
-      base::StringPrintf("0x%04x", gpu_info.gpu.vendor_id));
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDeviceID,
-      base::StringPrintf("0x%04x", gpu_info.gpu.device_id));
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDriverVersion,
-      gpu_info.driver_version);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUPixelShaderVersion,
-      gpu_info.pixel_shader_version);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVertexShaderVersion,
-      gpu_info.vertex_shader_version);
-#if defined(OS_MACOSX)
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUGLVersion,
-      gpu_info.gl_version);
-#elif defined(OS_POSIX)
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendor,
-      gpu_info.gl_vendor);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPURenderer,
-      gpu_info.gl_renderer);
-#endif
-}
+void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {}
 
 std::string AtomContentClient::GetProduct() const {
   return "Chrome/" CHROME_VERSION_STRING;
