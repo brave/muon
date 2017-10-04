@@ -21,10 +21,10 @@ index fc8e24b65c4c6f379072f3756703d318747e9526..106f3a9103333e1cc6a2eff6666e980e
  
    return NULL;
 diff --git a/crypto/digest_extra/digest_extra.c b/crypto/digest_extra/digest_extra.c
-index ab7ff5934e413e0437b8a246852e54d3ec1d5e09..4efc14575858cfd2a7cb33b1111708f6f8ccf35c 100644
+index 4b4bb38135e6089eaf6f47afda0199567a2397ef..d17d1dc5e6e01fc190267ffc5cf4fca4f42de3cd 100644
 --- a/crypto/digest_extra/digest_extra.c
 +++ b/crypto/digest_extra/digest_extra.c
-@@ -82,6 +82,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+@@ -81,6 +81,9 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
      {NID_sha384, EVP_sha384, SN_sha384, LN_sha384},
      {NID_sha512, EVP_sha512, SN_sha512, LN_sha512},
      {NID_md5_sha1, EVP_md5_sha1, SN_md5_sha1, LN_md5_sha1},
@@ -34,7 +34,7 @@ index ab7ff5934e413e0437b8a246852e54d3ec1d5e09..4efc14575858cfd2a7cb33b1111708f6
      // As a remnant of signing |EVP_MD|s, OpenSSL returned the corresponding
      // hash function when given a signature OID. To avoid unintended lax parsing
      // of hash OIDs, this is no longer supported for lookup by OID or NID.
-@@ -100,6 +103,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
+@@ -99,6 +102,7 @@ static const struct nid_to_digest nid_to_digest_mapping[] = {
       LN_sha384WithRSAEncryption},
      {NID_undef, EVP_sha512, SN_sha512WithRSAEncryption,
       LN_sha512WithRSAEncryption},
@@ -145,7 +145,7 @@ index 275d439768b7d75219fce86392ac28c3fa3747fd..60bbeb998809212a43a65ea0bbe2a537
  
    if (!RIPEMD160_Init(&ctx)) {
 diff --git a/include/openssl/digest.h b/include/openssl/digest.h
-index ad6dd507e674f7954c1b1e2f50196a99c540ad61..6f913278bfa661337f807b45720ab89fc874069e 100644
+index 81f58925e22502b0279b497a53b6a0c6bd47d13c..86c92441aaf32e9fe99508240ff86c5d505b1f07 100644
 --- a/include/openssl/digest.h
 +++ b/include/openssl/digest.h
 @@ -83,6 +83,7 @@ OPENSSL_EXPORT const EVP_MD *EVP_sha224(void);
@@ -202,10 +202,10 @@ index af7bd303fc1667eaa1a04dcbdd7571f57211248d..5329144d931a572c68804a6412839555
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index 4feb4df8ea3f30313365d5b2e5cfcc4899ae8445..80868fc3dddc7e063d230973ab56d07c03fcff10 100644
+index a0d0d49036e44172f23581e79ceb722e958ef596..f48de4eba02549eedbc570984e3d5f13e86174e8 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
-@@ -164,6 +164,14 @@ class Android(object):
+@@ -164,6 +164,22 @@ class Android(object):
        blueprint.write('    ],\n')
        blueprint.write('}\n\n')
  
@@ -220,7 +220,7 @@ index 4feb4df8ea3f30313365d5b2e5cfcc4899ae8445..80868fc3dddc7e063d230973ab56d07c
      # Legacy Android.mk format, only used by Trusty in new branches
      with open('sources.mk', 'w+') as makefile:
        makefile.write(self.header)
-@@ -212,6 +220,7 @@ class Bazel(object):
+@@ -212,6 +228,7 @@ class Bazel(object):
        self.PrintVariableSection(out, 'crypto_sources', files['crypto'])
        self.PrintVariableSection(out, 'tool_sources', files['tool'])
        self.PrintVariableSection(out, 'tool_headers', files['tool_headers'])
@@ -228,7 +228,7 @@ index 4feb4df8ea3f30313365d5b2e5cfcc4899ae8445..80868fc3dddc7e063d230973ab56d07c
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -269,6 +278,8 @@ class GN(object):
+@@ -313,6 +330,8 @@ class GN(object):
        self.PrintVariableSection(out, 'ssl_sources',
                                  files['ssl'] + files['ssl_headers'] +
                                  files['ssl_internal_headers'])
@@ -237,7 +237,7 @@ index 4feb4df8ea3f30313365d5b2e5cfcc4899ae8445..80868fc3dddc7e063d230973ab56d07c
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -556,6 +567,21 @@ def main(platforms):
+@@ -600,6 +619,21 @@ def main(platforms):
    ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
@@ -259,7 +259,7 @@ index 4feb4df8ea3f30313365d5b2e5cfcc4899ae8445..80868fc3dddc7e063d230973ab56d07c
  
    # Generate err_data.c
    with open('err_data.c', 'w+') as err_data:
-@@ -618,6 +644,7 @@ def main(platforms):
+@@ -662,6 +696,7 @@ def main(platforms):
        'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,
