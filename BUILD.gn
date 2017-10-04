@@ -82,10 +82,6 @@ grit("brave_resources") {
     "root_gen_dir=" + rebase_path(root_gen_dir),
   ]
 
-  deps = [
-    "app:brave_content_manifest_overlays",
-  ]
-
   resource_ids = "//electron/resource_ids"
 }
 

@@ -4,39 +4,6 @@
 
 import("//build/config/ui.gni")
 import("//tools/grit/grit_rule.gni")
-import("//services/service_manager/public/service_manifest.gni")
-
-service_manifest("brave_content_packaged_services_manifest_overlay") {
-  source = "//chrome/browser/chrome_content_packaged_services_manifest_overlay.json"
-  packaged_services = [
-    "//chrome/utility:profile_import_manifest",
-  ]
-}
-
-group("brave_content_manifest_overlays") {
-  deps = [
-    "//chrome/app:chrome_content_browser_manifest_overlay",
-    "//chrome/app:chrome_content_renderer_manifest_overlay",
-    "//chrome/app:chrome_content_utility_manifest_overlay",
-    ":brave_content_packaged_services_manifest_overlay",
-  ]
-}
-
-if (use_aura) {
-  service_manifest("brave_content_packaged_services_manifest") {
-    source_manifest = "//content/public/app:packaged_services_manifest"
-    overlays = [ ":brave_content_packaged_services_manifest_overlay" ]
-  }
-
-  group("service_manifests") {
-    data_deps = [
-      "//chrome/app:chrome_content_browser_manifest",
-      "//chrome/app:chrome_content_renderer_manifest",
-      "//chrome/app:chrome_content_utility_manifest",
-      ":brave_content_packaged_services_manifest_overlay",
-    ]
-  }
-}
 
 grit("brave_strings") {
   source = "brave_strings.grd"
