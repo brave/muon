@@ -721,6 +721,7 @@ void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
 
 void BraveContentBrowserClient::GetAdditionalWebUISchemes(
     std::vector<std::string>* additional_schemes) {
+  additional_schemes->push_back(content::kChromeDevToolsScheme);
 }
 
 bool BraveContentBrowserClient::ShouldAllowOpenURL(
