@@ -75,7 +75,6 @@ class InspectableWebContentsImpl :
 
   // DevToolsEmbedderMessageDispacher::Delegate
   void SetEyeDropperActive(bool active) override {}
-  void ShowCertificateViewer(const std::string& cert_chain) override {}
   void SetDevicesDiscoveryConfig(
       bool discover_usb_devices,
       bool port_forwarding_enabled,
@@ -138,6 +137,7 @@ class InspectableWebContentsImpl :
                      const std::string& value) override;
   void RemovePreference(const std::string& name) override;
   void ClearPreferences() override;
+  void ShowCertificateViewer(const std::string& cert_chain);
 
   // content::DevToolsFrontendHostDelegate:
   void HandleMessageFromDevToolsFrontend(const std::string& message);
