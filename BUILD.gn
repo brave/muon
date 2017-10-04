@@ -52,10 +52,6 @@ group("electron") {
       "app/win:electron_app",
     ]
   }
-
-  if (use_aura && (is_win || is_linux)) {
-    data_deps += [ "app:service_manifests" ]
-  }
 }
 
 grit("atom_resources") {
