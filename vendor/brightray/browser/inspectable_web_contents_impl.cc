@@ -21,6 +21,7 @@
 #include "browser/inspectable_web_contents_delegate.h"
 #include "browser/inspectable_web_contents_view.h"
 #include "browser/inspectable_web_contents_view_delegate.h"
+#include "chrome/browser/certificate_viewer.h"
 #include "chrome/browser/devtools/url_constants.h"
 #include "chrome/common/url_constants.h"
 #include "components/prefs/pref_service.h"
@@ -488,6 +489,51 @@ void InspectableWebContentsImpl::CloseDevTools() {
 
 bool InspectableWebContentsImpl::IsDevToolsViewShowing() {
   return devtools_web_contents_ && view_->IsDevToolsViewShowing();
+}
+
+void InspectableWebContentsImpl::ShowCertificateViewer(
+    const std::string& cert_chain) {
+#if !defined(OS_LINUX)
+  std::unique_ptr<base::Value> value = base::JSONReader::Read(cert_chain);
+  if (!value || value->GetType() != base::Value::Type::LIST) {
+    NOTREACHED();
+    return;
+  }
+
+  std::unique_ptr<base::ListValue> list =
+      base::ListValue::From(std::move(value));
+  std::vector<std::string> decoded;
+  for (size_t i = 0; i < list->GetSize(); ++i) {
+    base::Value* item;
+    if (!list->Get(i, &item) || item->GetType() != base::Value::Type::STRING) {
+      NOTREACHED();
+      return;
+    }
+    std::string temp;
+    if (!item->GetAsString(&temp)) {
+      NOTREACHED();
+      return;
+    }
+    if (!base::Base64Decode(temp, &temp)) {
+      NOTREACHED();
+      return;
+    }
+    decoded.push_back(temp);
+  }
+
+  std::vector<base::StringPiece> cert_string_piece;
+  for (const auto& str : decoded)
+    cert_string_piece.push_back(str);
+  scoped_refptr<net::X509Certificate> cert =
+      net::X509Certificate::CreateFromDERCertChain(cert_string_piece);
+  if (!cert) {
+    NOTREACHED();
+    return;
+  }
+
+  ::ShowCertificateViewer(
+      web_contents_, web_contents_->GetTopLevelNativeWindow(), cert.get());
+#endif
 }
 
 void InspectableWebContentsImpl::AttachTo(const scoped_refptr<content::DevToolsAgentHost>& host) {
