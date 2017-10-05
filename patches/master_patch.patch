@@ -1080,6 +1080,18 @@ index 4fb2499aa536d3618df2bbc4072fb23420f42c2e..65b6268d8d85545799a6a47e59b4adb7
    // chrome::mojom::ProfileImport:
    void StartImport(const importer::SourceProfile& source_profile,
                     uint16_t items,
+diff --git a/chrome/utility/importer/profile_import_service.h b/chrome/utility/importer/profile_import_service.h
+index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1ab3ab03b 100644
+--- a/chrome/utility/importer/profile_import_service.h
++++ b/chrome/utility/importer/profile_import_service.h
+@@ -24,6 +24,7 @@ class ProfileImportService : public service_manager::Service {
+                        mojo::ScopedMessagePipeHandle interface_pipe) override;
+ 
+  private:
++  friend class BraveProfileImportService;
+   // State needed to manage service lifecycle and lifecycle of bound clients.
+   std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
+   service_manager::BinderRegistry registry_;
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
 index 2199920ee79326a1dcd79e44c7fc33753b2d7262..f82a9936e0f45af3b13c7a033b7d957a2f62b0a7 100644
 --- a/components/crash/content/app/breakpad_linux.cc
