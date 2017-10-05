@@ -31,7 +31,6 @@ source_set("browser") {
     "//storage/common",
     "//components/prefs",
     "//components/metrics",
-    "//components/metrics:profiler_content",
     ":importer",
   ]
 
