@@ -37,7 +37,7 @@
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/widevine_cdm_constants.h"
 #include "components/component_updater/component_updater_service.h"
-#include "components/component_updater/default_component_installer.h"
+#include "components/component_updater/component_installer.h"
 #include "components/version_info/version_info.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/cdm_registry.h"
@@ -215,15 +215,15 @@ std::string GetCodecs(const base::DictionaryValue& manifest) {
 
 }  // namespace
 
-class WidevineCdmComponentInstallerTraits
-    : public component_updater::ComponentInstallerTraits {
+class WidevineCdmComponentInstallerPolicy
+    : public component_updater::ComponentInstallerPolicy {
  public:
-  explicit WidevineCdmComponentInstallerTraits(
+  explicit WidevineCdmComponentInstallerPolicy(
       const ReadyCallback& ready_callback);
-  ~WidevineCdmComponentInstallerTraits() override {}
+  ~WidevineCdmComponentInstallerPolicy() override {}
 
  private:
-  // The following methods override ComponentInstallerTraits.
+  // The following methods override ComponentInstallerPolicy.
   bool SupportsGroupPolicyEnabledComponentUpdates() const override;
   std::vector<std::string> GetMimeTypes() const override;
   bool RequiresNetworkEncryption() const override;
@@ -257,36 +257,36 @@ class WidevineCdmComponentInstallerTraits
 
   ReadyCallback ready_callback_;
 
-  DISALLOW_COPY_AND_ASSIGN(WidevineCdmComponentInstallerTraits);
+  DISALLOW_COPY_AND_ASSIGN(WidevineCdmComponentInstallerPolicy);
 };
 
-WidevineCdmComponentInstallerTraits::WidevineCdmComponentInstallerTraits(
+WidevineCdmComponentInstallerPolicy::WidevineCdmComponentInstallerPolicy(
     const ReadyCallback& ready_callback) : ready_callback_(ready_callback) {
 }
 
-bool
-WidevineCdmComponentInstallerTraits::SupportsGroupPolicyEnabledComponentUpdates() const {  // NOLINT
+bool WidevineCdmComponentInstallerPolicy::
+    SupportsGroupPolicyEnabledComponentUpdates() const {  // NOLINT
   return true;
 }
 
 std::vector<std::string>
-WidevineCdmComponentInstallerTraits::GetMimeTypes() const {
+WidevineCdmComponentInstallerPolicy::GetMimeTypes() const {
   return std::vector<std::string>();
 }
 
-bool WidevineCdmComponentInstallerTraits::RequiresNetworkEncryption() const {
+bool WidevineCdmComponentInstallerPolicy::RequiresNetworkEncryption() const {
   return false;
 }
 
 update_client::CrxInstaller::Result
-WidevineCdmComponentInstallerTraits::OnCustomInstall(
+WidevineCdmComponentInstallerPolicy::OnCustomInstall(
     const base::DictionaryValue& manifest,
     const base::FilePath& install_dir) {
   return update_client::CrxInstaller::Result(0);  // Nothing custom here.
 }
 
 // Once the CDM is ready, check the CDM adapter.
-void WidevineCdmComponentInstallerTraits::ComponentReady(
+void WidevineCdmComponentInstallerPolicy::ComponentReady(
     const base::Version& version,
     const base::FilePath& path,
     std::unique_ptr<base::DictionaryValue> manifest) {
@@ -297,12 +297,12 @@ void WidevineCdmComponentInstallerTraits::ComponentReady(
 
   base::PostTaskWithTraits(
       FROM_HERE, {base::MayBlock(), base::TaskPriority::BACKGROUND},
-      base::Bind(&WidevineCdmComponentInstallerTraits::UpdateCdmAdapter,
+      base::Bind(&WidevineCdmComponentInstallerPolicy::UpdateCdmAdapter,
                  base::Unretained(this), version, path,
                  base::Passed(&manifest)));
 }
 
-bool WidevineCdmComponentInstallerTraits::VerifyInstallation(
+bool WidevineCdmComponentInstallerPolicy::VerifyInstallation(
     const base::DictionaryValue& manifest,
     const base::FilePath& install_dir) const {
   return IsCompatibleWithBrave(manifest) &&
@@ -311,22 +311,22 @@ bool WidevineCdmComponentInstallerTraits::VerifyInstallation(
                                   kWidevineCdmLibraryName)));
 }
 
-base::FilePath WidevineCdmComponentInstallerTraits::GetRelativeInstallDir()
+base::FilePath WidevineCdmComponentInstallerPolicy::GetRelativeInstallDir()
     const {
   return base::FilePath(FILE_PATH_LITERAL("WidevineCdm"));
 }
 
-void WidevineCdmComponentInstallerTraits::GetHash(
+void WidevineCdmComponentInstallerPolicy::GetHash(
     std::vector<uint8_t>* hash) const {
   hash->assign(kSha2Hash, kSha2Hash + arraysize(kSha2Hash));
 }
 
-std::string WidevineCdmComponentInstallerTraits::GetName() const {
+std::string WidevineCdmComponentInstallerPolicy::GetName() const {
   return kWidevineCdmDisplayName;
 }
 
 update_client::InstallerAttributes
-WidevineCdmComponentInstallerTraits::GetInstallerAttributes() const {
+WidevineCdmComponentInstallerPolicy::GetInstallerAttributes() const {
   return update_client::InstallerAttributes();
 }
 
@@ -339,7 +339,7 @@ static bool HasValidAdapter(const base::FilePath& adapter_version_path,
          base::PathExists(adapter_install_path);
 }
 
-void WidevineCdmComponentInstallerTraits::UpdateCdmAdapter(
+void WidevineCdmComponentInstallerPolicy::UpdateCdmAdapter(
     const base::Version& cdm_version,
     const base::FilePath& cdm_install_dir,
     std::unique_ptr<base::DictionaryValue> manifest) {
@@ -391,13 +391,13 @@ void WidevineCdmComponentInstallerTraits::UpdateCdmAdapter(
   BrowserThread::PostTask(
       content::BrowserThread::UI, FROM_HERE,
       base::Bind(
-        &WidevineCdmComponentInstallerTraits::RegisterWidevineCdmWithBrave,
+        &WidevineCdmComponentInstallerPolicy::RegisterWidevineCdmWithBrave,
         base::Unretained(this),
         cdm_version, cdm_install_dir,
         base::Passed(&manifest)));
 }
 
-void WidevineCdmComponentInstallerTraits::RegisterWidevineCdmWithBrave(
+void WidevineCdmComponentInstallerPolicy::RegisterWidevineCdmWithBrave(
     const base::Version& cdm_version,
     const base::FilePath& cdm_install_dir,
     std::unique_ptr<base::DictionaryValue> manifest) {
@@ -437,11 +437,11 @@ void RegisterWidevineCdmComponent(
     component_updater::ComponentUpdateService* cus,
     const base::Closure& registered_callback,
     const ReadyCallback& ready_callback) {
-  std::unique_ptr<component_updater::ComponentInstallerTraits> traits(
-      new WidevineCdmComponentInstallerTraits(ready_callback));
+  std::unique_ptr<component_updater::ComponentInstallerPolicy> traits(
+      new WidevineCdmComponentInstallerPolicy(ready_callback));
   // |cus| will take ownership of |installer| during installer->Register(cus).
-  component_updater::DefaultComponentInstaller* installer =
-    new component_updater::DefaultComponentInstaller(std::move(traits));
+  component_updater::ComponentInstaller* installer =
+    new component_updater::ComponentInstaller(std::move(traits));
   installer->Register(cus, registered_callback);
 }
 
