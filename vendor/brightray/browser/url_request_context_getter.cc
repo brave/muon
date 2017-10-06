@@ -9,6 +9,7 @@
 #include "base/command_line.h"
 #include "base/memory/ptr_util.h"
 #include "base/strings/string_util.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "browser/net_log.h"
 #include "browser/network_delegate.h"
@@ -81,9 +82,10 @@ URLRequestContextGetter::Delegate::CreateURLRequestJobFactory(
       url::kDataScheme, base::WrapUnique(new net::DataProtocolHandler));
   job_factory->SetProtocolHandler(
       url::kFileScheme,
-      base::WrapUnique(new net::FileProtocolHandler(
-          BrowserThread::GetBlockingPool()->GetTaskRunnerWithShutdownBehavior(
-              base::SequencedWorkerPool::SKIP_ON_SHUTDOWN))));
+      base::WrapUnique(
+          new net::FileProtocolHandler(base::CreateTaskRunnerWithTraits(
+              {base::MayBlock(), base::TaskPriority::USER_BLOCKING,
+               base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}))));
 
   return std::move(job_factory);
 }

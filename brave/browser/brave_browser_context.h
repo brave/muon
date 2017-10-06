@@ -40,7 +40,7 @@ class BraveBrowserContext : public Profile {
   BraveBrowserContext(const std::string& partition,
                       bool in_memory,
                       const base::DictionaryValue& options,
-                      scoped_refptr<base::SequencedTaskRunner> task_runner);
+                      scoped_refptr<base::SequencedTaskRunner> io_task_runner);
   ~BraveBrowserContext() override;
 
   std::unique_ptr<content::ZoomLevelDelegate> CreateZoomLevelDelegate(
@@ -56,7 +56,7 @@ class BraveBrowserContext : public Profile {
   std::unique_ptr<net::URLRequestJobFactory> CreateURLRequestJobFactory(
       content::ProtocolHandlerMap* protocol_handlers) override;
 
-  void CreateProfilePrefs(scoped_refptr<base::SequencedTaskRunner> task_runner);
+  void CreateProfilePrefs(scoped_refptr<base::SequencedTaskRunner> io_task_runner);
 
   ChromeZoomLevelPrefs* GetZoomLevelPrefs() override;
 
@@ -154,6 +154,9 @@ class BraveBrowserContext : public Profile {
   scoped_refptr<WebDatabaseService> web_database_;
   std::unique_ptr<ProtocolHandlerRegistry::JobInterceptorFactory>
       protocol_handler_interceptor_;
+
+  // Task runner used for file access in the profile path
+  scoped_refptr<base::SequencedTaskRunner> io_task_runner_;
 
   Profile::Delegate* delegate_;
 

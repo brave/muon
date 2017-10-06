@@ -34,10 +34,6 @@ class FileBindings : public extensions::ObjectBackedNativeHandler,
   void RunCallback(
       std::unique_ptr<v8::Global<v8::Function>> holder, bool success);
 
-  static scoped_refptr<base::SequencedTaskRunner> GetTaskRunnerForFile(
-      const base::FilePath& filename,
-      base::SequencedWorkerPool* worker_pool);
-
   DISALLOW_COPY_AND_ASSIGN(FileBindings);
 };
 

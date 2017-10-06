@@ -30,7 +30,6 @@
 #include "components/guest_view/common/guest_view_constants.h"
 #include "components/password_manager/core/browser/password_manager.h"
 #include "components/password_manager/core/browser/webdata/logins_table.h"
-#include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
 #include "components/pref_registry/pref_registry_syncable.h"
@@ -136,19 +135,21 @@ void PasswordErrorCallback(sql::InitStatus init_status,
   LOG(WARNING) << "initializing Password database failed";
 }
 
-BraveBrowserContext::BraveBrowserContext(const std::string& partition,
-                           bool in_memory,
-                           const base::DictionaryValue& options,
-                           scoped_refptr<base::SequencedTaskRunner> task_runner)
+BraveBrowserContext::BraveBrowserContext(
+    const std::string& partition,
+    bool in_memory,
+    const base::DictionaryValue& options,
+    scoped_refptr<base::SequencedTaskRunner> io_task_runner)
     : Profile(partition, in_memory, options),
       pref_registry_(new user_prefs::PrefRegistrySyncable),
       has_parent_(false),
       original_context_(nullptr),
       otr_context_(nullptr),
       partition_(partition),
-      ready_(
-        new base::WaitableEvent(base::WaitableEvent::ResetPolicy::MANUAL,
-                            base::WaitableEvent::InitialState::NOT_SIGNALED)),
+      ready_(new base::WaitableEvent(
+          base::WaitableEvent::ResetPolicy::MANUAL,
+          base::WaitableEvent::InitialState::NOT_SIGNALED)),
+      io_task_runner_(std::move(io_task_runner)),
       delegate_(g_browser_process->profile_manager()) {
   std::string parent_partition;
   if (options.GetString("parent_partition", &parent_partition)) {
@@ -162,7 +163,7 @@ BraveBrowserContext::BraveBrowserContext(const std::string& partition,
         atom::AtomBrowserContext::From(partition, false));
     original_context_->otr_context_ = this;
   }
-  CreateProfilePrefs(task_runner);
+  CreateProfilePrefs(GetIOTaskRunner());
   if (original_context_) {
     TrackZoomLevelsFromParent();
   }
@@ -399,8 +400,8 @@ BraveBrowserContext::CreateURLRequestJobFactory(
 }
 
 void BraveBrowserContext::CreateProfilePrefs(
-    scoped_refptr<base::SequencedTaskRunner> task_runner) {
-  InitPrefs(task_runner);
+    scoped_refptr<base::SequencedTaskRunner> io_task_runner) {
+  InitPrefs(io_task_runner);
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   PrefStore* extension_prefs = new ExtensionPrefStore(
       ExtensionPrefValueMapFactory::GetForBrowserContext(original_context()),
@@ -465,7 +466,7 @@ void BraveBrowserContext::CreateProfilePrefs(
     base::FilePath filepath = GetPath().Append(
         FILE_PATH_LITERAL("UserPrefs"));
     scoped_refptr<JsonPrefStore> pref_store =
-        new JsonPrefStore(filepath, task_runner, std::unique_ptr<PrefFilter>());
+        new JsonPrefStore(filepath, io_task_runner, std::unique_ptr<PrefFilter>());
 
     // prepare factory
     sync_preferences::PrefServiceSyncableFactory factory;
@@ -619,8 +620,7 @@ void BraveBrowserContext::SetExitType(ExitType exit_type) {
 
 scoped_refptr<base::SequencedTaskRunner>
 BraveBrowserContext::GetIOTaskRunner() {
-  return JsonPrefStore::GetTaskRunnerForFile(
-      GetPath(), BrowserThread::GetBlockingPool());
+  return io_task_runner_;
 }
 
 }  // namespace brave
@@ -637,24 +637,23 @@ void CreateDirectoryAndSignal(const base::FilePath& path,
 }
 
 // Task that blocks the FILE thread until CreateDirectoryAndSignal() finishes on
-// blocking I/O pool.
+// the IO task runner
 void BlockFileThreadOnDirectoryCreate(base::WaitableEvent* done_creating) {
   done_creating->Wait();
 }
 
-// Initiates creation of profile directory on |sequenced_task_runner| and
-// ensures that FILE thread is blocked until that operation finishes. If
-// |create_readme| is true, the profile README will be created in the profile
-// directory.
-void CreateProfileDirectory(base::SequencedTaskRunner* sequenced_task_runner,
+// Initiates creation of profile directory on |io_task_runner| and ensures that
+// FILE thread is blocked until that operation finishes. If |create_readme| is
+// true, the profile README will be created in the profile directory.
+void CreateProfileDirectory(base::SequencedTaskRunner* io_task_runner,
                             const base::FilePath& path) {
   base::WaitableEvent* done_creating =
       new base::WaitableEvent(base::WaitableEvent::ResetPolicy::AUTOMATIC,
                               base::WaitableEvent::InitialState::NOT_SIGNALED);
-  sequenced_task_runner->PostTask(
+  io_task_runner->PostTask(
       FROM_HERE, base::Bind(&CreateDirectoryAndSignal, path, done_creating));
-  // Block the FILE thread until directory is created on I/O pool to make sure
-  // that we don't attempt any operation until that part completes.
+  // Block the FILE thread until directory is created on I/O task runner to make
+  // sure that we don't attempt any operation until that part completes.
   BrowserThread::PostTask(
       BrowserThread::FILE, FROM_HERE,
       base::Bind(&BlockFileThreadOnDirectoryCreate,
@@ -680,16 +679,16 @@ AtomBrowserContext* AtomBrowserContext::From(
                       net::EscapePath(base::ToLowerASCII(partition))));
 
   // Get sequenced task runner for making sure that file operations of
-  // this profile (defined by |path|) are executed in expected order
-  // (what was previously assured by the FILE thread).
-  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner =
-      JsonPrefStore::GetTaskRunnerForFile(path,
-                                          BrowserThread::GetBlockingPool());
+  // this profile are executed in expected order (what was previously assured by
+  // the FILE thread).
+  scoped_refptr<base::SequencedTaskRunner> io_task_runner =
+      base::CreateSequencedTaskRunnerWithTraits(
+          {base::TaskShutdownBehavior::BLOCK_SHUTDOWN, base::MayBlock()});
 
-  CreateProfileDirectory(sequenced_task_runner.get(), path);
+  CreateProfileDirectory(io_task_runner.get(), path);
 
   auto profile = new brave::BraveBrowserContext(partition, in_memory, options,
-      sequenced_task_runner);
+                                                io_task_runner);
 
   return profile;
 }
