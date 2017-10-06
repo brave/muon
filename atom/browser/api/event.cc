@@ -45,7 +45,8 @@ bool Event::SendReply(const base::string16& json) {
     return false;
 
   AtomViewHostMsg_Message_Sync::WriteReplyParams(message_, json);
-  bool success = sender_->Send(message_);
+  //bool success = sender_->Send(message_);
+  bool success = true;
   message_ = nullptr;
   sender_ = nullptr;
   return success;

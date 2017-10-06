@@ -35,7 +35,11 @@ void RemoteCallbackFreer::RunDestructor() {
       base::ASCIIToUTF16("ELECTRON_RENDERER_RELEASE_CALLBACK");
   base::ListValue args;
   args.AppendInteger(object_id_);
-  Send(new AtomViewMsg_Message(routing_id(), false, channel, args));
+  //Send(new AtomViewMsg_Message(routing_id(), false, channel, args));
+  //GetMainFrame()->Send(new AtomViewMsg_Message(GetMainFrame()->GetRoutingId(),
+  //                                             false, channel, args));
+  //GetRenderViewHost()->Send(new AtomViewMsg_Message(
+  //    GetRenderViewHost()->GetRoutingId(), false, channel, args));
 
   Observe(nullptr);
 }
