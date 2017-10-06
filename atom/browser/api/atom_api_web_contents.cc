@@ -1433,15 +1433,27 @@ void WebContents::DevToolsClosed() {
   Emit("devtools-closed");
 }
 
+struct WebContents::DispatchHelper {
+  WebContents* web_contents;
+  content::RenderViewHost* render_view_host;
+  bool Send(IPC::Message* msg) { return render_view_host->Send(msg); }
+  void OnRendererMessageSync(const base::string16& channel,
+                             const base::ListValue& args,
+                             IPC::Message* message) {
+    web_contents->OnRendererMessageSync(channel, args, message);
+  }
+};
+
 bool WebContents::OnMessageReceived(const IPC::Message& message) {
   bool handled = true;
+  DispatchHelper helper = {this, web_contents()->GetRenderViewHost()};
   IPC_BEGIN_MESSAGE_MAP(WebContents, message)
     IPC_MESSAGE_HANDLER(AtomViewHostMsg_Message, OnRendererMessage)
-    IPC_MESSAGE_HANDLER_DELAY_REPLY(AtomViewHostMsg_Message_Sync,
-                                    OnRendererMessageSync)
+    IPC_MESSAGE_FORWARD_DELAY_REPLY(AtomViewHostMsg_Message_Sync, &helper,
+                                    DispatchHelper::OnRendererMessageSync)
     IPC_MESSAGE_HANDLER(AtomViewHostMsg_Message_Shared, OnRendererMessageShared)
     IPC_MESSAGE_HANDLER_CODE(ViewHostMsg_SetCursor, OnCursorChange,
-      handled = false)
+                             handled = false)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -1861,14 +1873,16 @@ void WebContents::EnableDeviceEmulation(
   if (type_ == REMOTE)
     return;
 
-  Send(new ViewMsg_EnableDeviceEmulation(routing_id(), params));
+  web_contents()->GetRenderViewHost()->Send(new ViewMsg_EnableDeviceEmulation(
+      web_contents()->GetRenderViewHost()->GetRoutingID(), params));
 }
 
 void WebContents::DisableDeviceEmulation() {
   if (type_ == REMOTE)
     return;
 
-  Send(new ViewMsg_DisableDeviceEmulation(routing_id()));
+  web_contents()->GetRenderViewHost()->Send(new ViewMsg_DisableDeviceEmulation(
+      web_contents()->GetRenderViewHost()->GetRoutingID()));
 }
 
 void WebContents::ToggleDevTools() {
@@ -2198,8 +2212,10 @@ bool WebContents::SendIPCSharedMemory(const base::string16& channel,
   if (!memory_handle.IsValid())
     return false;
 
-  bool success = Send(
-      new AtomViewMsg_Message_Shared(routing_id(), channel, memory_handle));
+  bool success =
+      web_contents()->GetRenderViewHost()->Send(new AtomViewMsg_Message_Shared(
+          web_contents()->GetRenderViewHost()->GetRoutingID(), channel,
+          memory_handle));
 
   if (!success && memory_handle.IsValid()) {
     // cleanup if the send failed
@@ -2215,7 +2231,9 @@ bool WebContents::SendIPCSharedMemory(const base::string16& channel,
 bool WebContents::SendIPCMessage(bool all_frames,
                                  const base::string16& channel,
                                  const base::ListValue& args) {
-  return Send(new AtomViewMsg_Message(routing_id(), all_frames, channel, args));
+  return web_contents()->GetRenderViewHost()->Send(new AtomViewMsg_Message(
+      web_contents()->GetRenderViewHost()->GetRoutingID(), all_frames, channel,
+      args));
 }
 
 void WebContents::SendInputEvent(v8::Isolate* isolate,
