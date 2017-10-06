@@ -158,6 +158,7 @@ source_set("browser") {
     "//components/crash/content/app",
     "//components/crash/core/browser",
     "//components/data_usage/core",
+    "//components/keep_alive_registry",
     "//components/prefs",
     "//components/ssl_config",
     "//components/spellcheck:build_features",
@@ -210,13 +211,6 @@ source_set("browser") {
     "//chrome/browser/icon_loader_win.cc",
     "//chrome/browser/icon_manager.cc",
     "//chrome/browser/icon_manager.h",
-
-    "//chrome/browser/lifetime/keep_alive_registry.cc",
-    "//chrome/browser/lifetime/keep_alive_registry.h",
-    "//chrome/browser/lifetime/keep_alive_types.cc",
-    "//chrome/browser/lifetime/keep_alive_types.h",
-    "//chrome/browser/lifetime/scoped_keep_alive.cc",
-    "//chrome/browser/lifetime/scoped_keep_alive.h",
 
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
