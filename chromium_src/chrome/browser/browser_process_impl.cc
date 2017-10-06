@@ -608,12 +608,6 @@ CRLSetFetcher* BrowserProcessImpl::crl_set_fetcher() {
   return nullptr;
 }
 
-component_updater::PnaclComponentInstaller*
-BrowserProcessImpl::pnacl_component_installer() {
-  NOTIMPLEMENTED();
-  return nullptr;
-}
-
 component_updater::SupervisedUserWhitelistInstaller*
 BrowserProcessImpl::supervised_user_whitelist_installer() {
   NOTIMPLEMENTED();
