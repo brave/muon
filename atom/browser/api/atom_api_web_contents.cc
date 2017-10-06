@@ -1371,12 +1371,18 @@ void WebContents::DidChangeVisibleSecurityState() {
     }
 }
 
-void WebContents::TitleWasSet(content::NavigationEntry* entry,
-                              bool explicit_set) {
-  if (entry)
-    Emit("page-title-updated", entry->GetTitle(), explicit_set);
-  else
+void WebContents::TitleWasSet(content::NavigationEntry* entry) {
+  // For file URLs without a title, the title is synthesized. In that case, we
+  // don't want the update to count toward the "one set per page of the title
+  // to history."
+  if (entry) {
+    bool title_is_synthesized =
+        entry->GetURL().SchemeIsFile() && entry->GetTitle().empty();
+    Emit("page-title-updated", entry->GetTitle(), !title_is_synthesized);
+  } else {
+    bool explicit_set = true;
     Emit("page-title-updated", "", explicit_set);
+  }
 }
 
 void WebContents::DidUpdateFaviconURL(
