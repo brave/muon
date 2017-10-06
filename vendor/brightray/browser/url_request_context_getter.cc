@@ -9,6 +9,7 @@
 #include "base/command_line.h"
 #include "base/memory/ptr_util.h"
 #include "base/strings/string_util.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "browser/net_log.h"
 #include "browser/network_delegate.h"
@@ -50,9 +51,9 @@
 #include "net/url_request/url_request_context_storage.h"
 #include "net/url_request/url_request_intercepting_job_factory.h"
 #include "net/url_request/url_request_job_factory_impl.h"
+#include "storage/browser/quota/special_storage_policy.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "url/url_constants.h"
-#include "storage/browser/quota/special_storage_policy.h"
 
 #if defined(USE_NSS_CERTS)
 #include "net/cert_net/nss_ocsp.h"
@@ -81,9 +82,10 @@ URLRequestContextGetter::Delegate::CreateURLRequestJobFactory(
       url::kDataScheme, base::WrapUnique(new net::DataProtocolHandler));
   job_factory->SetProtocolHandler(
       url::kFileScheme,
-      base::WrapUnique(new net::FileProtocolHandler(
-          BrowserThread::GetBlockingPool()->GetTaskRunnerWithShutdownBehavior(
-              base::SequencedWorkerPool::SKIP_ON_SHUTDOWN))));
+      base::WrapUnique(
+          new net::FileProtocolHandler(base::CreateTaskRunnerWithTraits(
+              {base::MayBlock(), base::TaskPriority::USER_BLOCKING,
+               base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}))));
 
   return std::move(job_factory);
 }
