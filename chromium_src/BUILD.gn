@@ -948,6 +948,7 @@ source_set("tab_manager") {
 
   deps = [
     ":lifetime",
+    "//components/feature_engagement:features",
   ]
 
   if (is_win) {
