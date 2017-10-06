@@ -108,27 +108,21 @@ void DevToolsManagerDelegate::StopHttpHandler() {
   content::DevToolsAgentHost::StopRemoteDebuggingServer();
 }
 
-DevToolsManagerDelegate::DevToolsManagerDelegate()
-    : handler_(new DevToolsNetworkProtocolHandler) {
-}
+DevToolsManagerDelegate::DevToolsManagerDelegate() {}
 
 DevToolsManagerDelegate::~DevToolsManagerDelegate() {
 }
 
 void DevToolsManagerDelegate::DevToolsAgentHostAttached(
-    content::DevToolsAgentHost* agent_host) {
-  handler_->DevToolsAgentStateChanged(agent_host, true);
-}
+    content::DevToolsAgentHost* agent_host) {}
 
 void DevToolsManagerDelegate::DevToolsAgentHostDetached(
-    content::DevToolsAgentHost* agent_host) {
-  handler_->DevToolsAgentStateChanged(agent_host, false);
-}
+    content::DevToolsAgentHost* agent_host) {}
 
 base::DictionaryValue* DevToolsManagerDelegate::HandleCommand(
     content::DevToolsAgentHost* agent_host,
     base::DictionaryValue* command) {
-  return handler_->HandleCommand(agent_host, command);
+  return nullptr;
 }
 
 }  // namespace brightray

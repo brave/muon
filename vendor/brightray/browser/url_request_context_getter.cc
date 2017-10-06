@@ -13,14 +13,13 @@
 #include "base/threading/worker_pool.h"
 #include "browser/net_log.h"
 #include "browser/network_delegate.h"
-#include "chrome/browser/devtools/devtools_network_controller_handle.h"
-#include "chrome/browser/devtools/devtools_network_transaction_factory.h"
 #include "chrome/browser/net/chrome_mojo_proxy_resolver_factory.h"
 #include "chrome/common/chrome_switches.h"
 #include "common/switches.h"
 #include "components/cookie_config/cookie_store_util.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/cookie_store_factory.h"
+#include "content/public/browser/devtools_network_transaction_factory.h"
 #include "content/public/common/content_switches.h"
 #include "net/base/host_mapping_rules.h"
 #include "net/cert/cert_verifier.h"
@@ -112,7 +111,6 @@ std::vector<std::string> URLRequestContextGetter::Delegate::GetCookieableSchemes
 
 URLRequestContextGetter::URLRequestContextGetter(
     Delegate* delegate,
-    DevToolsNetworkControllerHandle* handle,
     NetLog* net_log,
     const base::FilePath& base_path,
     bool in_memory,
@@ -121,7 +119,6 @@ URLRequestContextGetter::URLRequestContextGetter(
     content::ProtocolHandlerMap* protocol_handlers,
     content::URLRequestInterceptorScopedVector protocol_interceptors)
     : delegate_(delegate),
-      network_controller_handle_(handle),
       net_log_(net_log),
       base_path_(base_path),
       in_memory_(in_memory),
@@ -359,19 +356,10 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
       backend.reset(delegate_->CreateHttpCacheBackendFactory(base_path_));
     }
 
-    if (network_controller_handle_) {
-      storage_->set_http_transaction_factory(base::WrapUnique(
-          new net::HttpCache(
-              base::WrapUnique(new DevToolsNetworkTransactionFactory(
-                  network_controller_handle_->GetController(), http_network_session_.get())),
-              std::move(backend),
-              false)));
-    } else {
-      storage_->set_http_transaction_factory(base::WrapUnique(
-          new net::HttpCache(http_network_session_.get(),
-                             std::move(backend),
-                             false)));
-    }
+    storage_->set_http_transaction_factory(base::WrapUnique(
+       new net::HttpCache(content::CreateDevToolsNetworkTransactionFactory(
+                              http_network_session_.get()),
+                          std::move(backend), false)));
 
     std::unique_ptr<net::URLRequestJobFactory> job_factory =
         delegate_->CreateURLRequestJobFactory(&protocol_handlers_);
