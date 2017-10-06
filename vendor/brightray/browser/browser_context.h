@@ -11,7 +11,6 @@
 #include "base/memory/weak_ptr.h"
 #include "browser/url_request_context_getter.h"
 #include "content/public/browser/browser_context.h"
-#include "chrome/browser/devtools/devtools_network_controller_handle.h"
 
 class PrefRegistrySimple;
 class PrefService;
@@ -62,10 +61,6 @@ class BrowserContext : public content::BrowserContext,
     return url_request_getter_.get();
   }
 
-  DevToolsNetworkControllerHandle* network_controller_handle() {
-    return network_controller_handle_.get();
-  }
-
   void InitPrefs(scoped_refptr<base::SequencedTaskRunner> task_runner);
   PrefService* prefs() { return prefs_.get(); }
 
@@ -110,8 +105,6 @@ class BrowserContext : public content::BrowserContext,
 
   base::FilePath path_;
   bool in_memory_;
-
-  std::unique_ptr<DevToolsNetworkControllerHandle> network_controller_handle_;
 
   std::unique_ptr<ResourceContext> resource_context_;
   scoped_refptr<URLRequestContextGetter> url_request_getter_;
