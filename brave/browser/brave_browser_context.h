@@ -121,10 +121,6 @@ class BraveBrowserContext : public Profile {
 
   base::FilePath GetPath() const override;
 
-  DevToolsNetworkControllerHandle*
-  GetDevToolsNetworkControllerHandle() override {
-    return network_controller_handle();
-  }
   void SetExitType(ExitType exit_type) override;
 
  private:

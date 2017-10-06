@@ -10,7 +10,7 @@
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "base/stl_util.h"
 #include "base/strings/string_util.h"
-#include "chrome/browser/devtools/devtools_network_transaction.h"
+#include "content/common/devtools/devtools_network_transaction.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/websocket_handshake_request_info.h"
 #include "extensions/features/features.h"
@@ -301,9 +301,9 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
   }
 
   if (!client_id.empty())
-    headers->SetHeader(
-        DevToolsNetworkTransaction::kDevToolsEmulateNetworkConditionsClientId,
-        client_id);
+    headers->SetHeader(content::DevToolsNetworkTransaction::
+                           kDevToolsEmulateNetworkConditionsClientId,
+                       client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))
     return brightray::NetworkDelegate::OnBeforeStartTransaction(
         request, callback, headers);
