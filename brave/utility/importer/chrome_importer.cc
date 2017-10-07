@@ -33,6 +33,10 @@
 #include "sql/statement.h"
 #include "url/gurl.h"
 
+#if defined(OS_LINUX)
+#include "components/os_crypt/key_storage_config_linux.h"
+#endif
+
 #if defined(USE_X11)
 #if defined(USE_LIBSECRET)
 #include "chrome/browser/password_manager/native_backend_libsecret.h"
@@ -284,7 +288,13 @@ void ChromeImporter::ImportCookies() {
     net::CookieCryptoDelegate* delegate =
       cookie_config::GetCookieCryptoDelegate();
     std::string value;
+#if defined(OS_LINUX)
+    if (!encrypted_value.empty() && delegate &&
+        OSCrypt::IsEncryptionAvailable()) {
+      OSCrypt::SetConfig(base::MakeUnique<os_crypt::Config>());
+#else
     if (!encrypted_value.empty() && delegate) {
+#endif
       if (!delegate->DecryptString(encrypted_value, &value)) {
         continue;
       }
