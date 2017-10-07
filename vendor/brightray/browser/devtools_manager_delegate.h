@@ -25,8 +25,9 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
  private:
   // DevToolsManagerDelegate implementation.
   void Inspect(content::DevToolsAgentHost* agent_host) override {}
-  base::DictionaryValue* HandleCommand(content::DevToolsAgentHost* agent_host,
-                                       base::DictionaryValue* command) override;
+  bool HandleCommand(content::DevToolsAgentHost* agent_host,
+                     int session_id,
+                     base::DictionaryValue* command) override;
   std::string GetTargetType(content::WebContents* web_contents) override {
     return std::string();
   }
