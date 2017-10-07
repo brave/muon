@@ -23,7 +23,6 @@
 #include "base/files/file_util.h"
 #include "base/memory/memory_pressure_monitor.h"
 #include "base/path_service.h"
-#include "base/profiler/scoped_tracker.h"
 #include "base/profiler/stack_sampling_profiler.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/time/default_tick_clock.h"
