@@ -119,10 +119,11 @@ void DevToolsManagerDelegate::DevToolsAgentHostAttached(
 void DevToolsManagerDelegate::DevToolsAgentHostDetached(
     content::DevToolsAgentHost* agent_host) {}
 
-base::DictionaryValue* DevToolsManagerDelegate::HandleCommand(
+bool DevToolsManagerDelegate::HandleCommand(
     content::DevToolsAgentHost* agent_host,
+    int session_id,
     base::DictionaryValue* command) {
-  return nullptr;
+  return false;
 }
 
 }  // namespace brightray
