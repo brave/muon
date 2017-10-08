@@ -667,6 +667,7 @@ action("create_dist") {
 
   if (is_win) {
     inputs += [
+      "$electron_dist_dir/chrome_elf.dll",
       "$electron_dist_dir/xinput1_3.dll",
       "$electron_dist_dir/libEGL.dll",
       "$electron_dist_dir/libGLESv2.dll",
