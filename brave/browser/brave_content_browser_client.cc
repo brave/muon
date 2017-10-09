@@ -318,9 +318,8 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
 
 void BraveContentBrowserClient::RegisterOutOfProcessServices(
     OutOfProcessServiceMap* services) {
-  (*services)[chrome::mojom::kProfileImportServiceName] = {
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME),
-      content::SANDBOX_TYPE_NO_SANDBOX};
+  (*services)[chrome::mojom::kProfileImportServiceName] =
+      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME);
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
