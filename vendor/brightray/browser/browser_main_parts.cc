@@ -4,16 +4,11 @@
 
 #include "browser/browser_main_parts.h"
 
-#include "browser/browser_context.h"
-#include "browser/devtools_manager_delegate.h"
-#include "browser/web_ui_controller_factory.h"
-#include "common/main_delegate.h"
-
-#include "base/command_line.h"
 #include "base/feature_list.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/utf_string_conversions.h"
-#include "content/browser/devtools/devtools_http_handler.h"
+#include "browser/browser_context.h"
+#include "common/main_delegate.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/content_switches.h"
 #include "media/base/localized_strings.h"
@@ -198,17 +193,6 @@ void BrowserMainParts::PreMainMessageLoopStart() {
   media::SetLocalizedStringProvider(MediaStringProvider);
 }
 
-void BrowserMainParts::PreMainMessageLoopRun() {
-  content::WebUIControllerFactory::RegisterFactory(
-      WebUIControllerFactory::GetInstance());
-
-  // --remote-debugging-port
-  auto command_line = base::CommandLine::ForCurrentProcess();
-  if (command_line->HasSwitch(switches::kRemoteDebuggingPort)) {
-    DevToolsManagerDelegate::StartHttpHandler();
-  }
-}
-
 void BrowserMainParts::PostMainMessageLoopStart() {
 #if defined(USE_X11)
   // Installs the X11 error handlers for the browser process after the
@@ -228,7 +212,6 @@ void BrowserMainParts::PostMainMessageLoopRun() {
   // process of terminating, this can cause errors.
   ui::SetX11ErrorHandlers(X11EmptyErrorHandler, X11EmptyIOErrorHandler);
 #endif
-  DevToolsManagerDelegate::StopHttpHandler();
 }
 
 void BrowserMainParts::PostDestroyThreads() {

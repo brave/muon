@@ -18,6 +18,7 @@
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/background/background_mode_manager.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/devtools/remote_debugging_server.h"
 #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
 #include "chrome/browser/notifications/notification_ui_manager_stub.h"
 #include "chrome/browser/prefs/chrome_command_line_pref_store.h"
@@ -203,6 +204,8 @@ void BrowserProcessImpl::StartTearDown() {
     i.GetCurrentValue()->FastShutdownIfPossible();
   }
 
+  remote_debugging_server_.reset();
+
   print_job_manager_->Shutdown();
 
   profile_manager_.reset();
@@ -313,13 +316,9 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
 
 resource_coordinator::TabManager* BrowserProcessImpl::GetTabManager() {
   DCHECK(thread_checker_.CalledOnValidThread());
-#if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
   if (!tab_manager_.get())
     tab_manager_.reset(new resource_coordinator::GuestTabManager());
   return tab_manager_.get();
-#else
-  return nullptr;
-#endif
 }
 
 namespace {
@@ -537,8 +536,15 @@ GpuProfileCache* BrowserProcessImpl::gpu_profile_cache() {
 }
 
 void BrowserProcessImpl::CreateDevToolsHttpProtocolHandler(
-    const std::string& ip, uint16_t port) {
-  NOTIMPLEMENTED();
+    const std::string& ip,
+    uint16_t port) {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  // StartupBrowserCreator::LaunchBrowser can be run multiple times when browser
+  // is started with several profiles or existing browser process is reused.
+  if (!remote_debugging_server_) {
+    remote_debugging_server_ =
+        base::MakeUnique<RemoteDebuggingServer>(ip, port);
+  }
 }
 
 void BrowserProcessImpl::CreateDevToolsAutoOpener() {

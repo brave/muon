@@ -571,10 +571,16 @@ source_set("devtools") {
     "//chrome/browser/devtools/devtools_network_upload_data_stream.h",
     "//chrome/browser/devtools/devtools_protocol.cc",
     "//chrome/browser/devtools/devtools_protocol.h",
+    "chrome/browser/devtools/devtools_ui_bindings.cc",
+    "chrome/browser/devtools/devtools_ui_bindings.h",
+    "//chrome/browser/devtools/remote_debugging_server.cc",
+    "//chrome/browser/devtools/remote_debugging_server.h",
     "//chrome/browser/devtools/url_constants.cc",
     "//chrome/browser/devtools/url_constants.h",
     "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.cc",
     "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.h",
+    "//chrome/browser/ui/webui/devtools_ui.cc",
+    "//chrome/browser/ui/webui/devtools_ui.h",
   ]
 
   configs += [

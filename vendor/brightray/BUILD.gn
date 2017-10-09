@@ -77,8 +77,6 @@ source_set("browser") {
     "browser/browser_main_parts_mac.mm",
     "browser/devtools_manager_delegate.cc",
     "browser/devtools_manager_delegate.h",
-    "browser/devtools_ui.cc",
-    "browser/devtools_ui.h",
     "browser/inspectable_web_contents.cc",
     "browser/inspectable_web_contents.h",
     "browser/inspectable_web_contents_delegate.h",
@@ -133,8 +131,6 @@ source_set("browser") {
     "browser/special_storage_policy.h",
     "browser/url_request_context_getter.cc",
     "browser/url_request_context_getter.h",
-    "browser/web_ui_controller_factory.cc",
-    "browser/web_ui_controller_factory.h",
   ]
 
   public_deps = [

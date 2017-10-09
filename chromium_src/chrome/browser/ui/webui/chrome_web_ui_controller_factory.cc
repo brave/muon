@@ -7,6 +7,7 @@
 #include "base/files/file_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/webui/crashes_ui.h"
+#include "chrome/browser/ui/webui/devtools_ui.h"
 #include "chrome/common/url_constants.h"
 #include "components/favicon/core/favicon_service.h"
 #include "content/browser/webui/web_ui_impl.h"
@@ -145,7 +146,10 @@ WebUIController* NewWebUI(WebUI* web_ui, const GURL& url) {
 WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
                                              Profile* profile,
                                              const GURL& url) {
-  if (!url.SchemeIs(content::kChromeUIScheme)) {
+  // This will get called a lot to check all URLs, so do a quick check of other
+  // schemes to filter out most URLs.
+  if (!url.SchemeIs(content::kChromeDevToolsScheme) &&
+      !url.SchemeIs(content::kChromeUIScheme)) {
     return NULL;
   }
 
@@ -154,6 +158,10 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
 
   if (url.host() == "brave") {
     return &NewWebUI<BraveWebUIController>;
+  }
+
+  if (url.SchemeIs(content::kChromeDevToolsScheme)) {
+    return &NewWebUI<DevToolsUI>;
   }
 
   return NULL;

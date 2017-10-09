@@ -25,6 +25,7 @@
 #include "extensions/features/features.h"
 #include "net/log/net_log.h"
 
+class RemoteDebuggingServer;
 class TabManager;
 
 namespace atom {
@@ -190,11 +191,8 @@ class BrowserProcessImpl : public BrowserProcess {
       std::unique_ptr<component_updater::ComponentUpdateService> &,
       bool use_brave_server);
 
-#if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
-  // Any change to this #ifdef must be reflected as well in
-  // chrome/browser/resource_coordinator/tab_manager_browsertest.cc
   std::unique_ptr<resource_coordinator::TabManager> tab_manager_;
-#endif
+  std::unique_ptr<RemoteDebuggingServer> remote_debugging_server_;
 
   std::unique_ptr<PrefService> local_state_;
 

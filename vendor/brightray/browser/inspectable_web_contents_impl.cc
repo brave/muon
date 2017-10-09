@@ -23,6 +23,7 @@
 #include "browser/inspectable_web_contents_view_delegate.h"
 #include "chrome/browser/certificate_viewer.h"
 #include "chrome/browser/devtools/url_constants.h"
+#include "chrome/browser/ui/webui/devtools_ui.h"
 #include "chrome/common/url_constants.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/scoped_user_pref_update.h"
@@ -247,14 +248,6 @@ GURL SanitizeFrontendURL(const GURL& url) {
       chrome::kChromeUIDevToolsHost, SanitizeFrontendPath(url.path()), true);
 }
 
-GURL GetRemoteBaseURL() {
-  return GURL(base::StringPrintf(
-      "%s%s/%s/",
-      kRemoteFrontendBase,
-      kRemoteFrontendPath,
-      content::GetWebKitRevision().c_str()));
-}
-
 GURL GetDevToolsURL(bool can_dock,
                                     const std::string& panel) {
   std::string url(chrome::kChromeUIDevToolsURL);
@@ -278,9 +271,9 @@ GURL GetDevToolsURL(bool can_dock,
   //     break;
   // }
 
-  url_string += "&remoteBase=" + GetRemoteBaseURL().spec();
   if (can_dock)
     url_string += "&can_dock=true";
+  url_string += "&remoteBase=" + DevToolsUI::GetRemoteBaseURL().spec();
   return SanitizeFrontendURL(GURL(url_string));
 }
 

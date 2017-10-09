@@ -7,19 +7,17 @@
 
 #include "base/macros.h"
 #include "base/compiler_specific.h"
-#include "chrome/browser/devtools/devtools_network_protocol_handler.h"
-#include "content/browser/devtools/devtools_http_handler.h"
 #include "content/public/browser/devtools_agent_host_observer.h"
 #include "content/public/browser/devtools_manager_delegate.h"
+
+class DevToolsAgentHost;
+class DevToolsNetworkProtocolHandler;
 
 namespace brightray {
 
 class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
                                 public content::DevToolsAgentHostObserver {
  public:
-  static void StartHttpHandler();
-  static void StopHttpHandler();
-
   DevToolsManagerDelegate();
   virtual ~DevToolsManagerDelegate();
 
@@ -28,12 +26,8 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
   void Inspect(content::DevToolsAgentHost* agent_host) override {}
   base::DictionaryValue* HandleCommand(content::DevToolsAgentHost* agent_host,
                                        base::DictionaryValue* command) override;
-  std::string GetTargetType(content::WebContents* web_contents) override {
-    return std::string();
-  }
-  std::string GetTargetTitle(content::WebContents* web_contents) override {
-    return std::string();
-  }
+  std::string GetTargetType(content::WebContents* web_contents) override;
+  std::string GetTargetTitle(content::WebContents* web_contents) override;
   scoped_refptr<content::DevToolsAgentHost> CreateNewTarget(
     const GURL& url) override {return nullptr;}
   std::string GetDiscoveryPageHTML() override

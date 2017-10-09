@@ -25,6 +25,7 @@
 #include "base/path_service.h"
 #include "base/profiler/scoped_tracker.h"
 #include "base/profiler/stack_sampling_profiler.h"
+#include "base/strings/string_number_conversions.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/time/default_tick_clock.h"
 #include "base/trace_event/trace_event.h"
@@ -357,7 +358,19 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 #endif
 
   browser_context_ = ProfileManager::GetActiveUserProfile();
-  brightray::BrowserMainParts::PreMainMessageLoopRun();
+
+  // --remote-debugging-port
+  if (command_line->HasSwitch(switches::kRemoteDebuggingPort)) {
+    std::string port_str =
+        command_line->GetSwitchValueASCII(switches::kRemoteDebuggingPort);
+    int port;
+    if (base::StringToInt(port_str, &port) && port >= 0 && port < 65535) {
+      fake_browser_process_->CreateDevToolsHttpProtocolHandler(
+          "", static_cast<uint16_t>(port));
+    } else {
+      DLOG(WARNING) << "Invalid http debugger port number " << port;
+    }
+  }
 
   js_env_->OnMessageLoopCreated();
   node_bindings_->PrepareMessageLoop();
