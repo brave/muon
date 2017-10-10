@@ -91,7 +91,7 @@ bool Browser::RemoveAsDefaultProtocolClient(const std::string& protocol,
 bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
                                          mate::Arguments* args) {
   std::string desktop_name;
-  if (!args->GetNext(&desktop_name)) {
+  if (args && !args->GetNext(&desktop_name)) {
     args->ThrowError("`desktop name` is a required field");
     return false;
   }
@@ -124,7 +124,7 @@ bool Browser::SetAsDefaultProtocolClient(const std::string& protocol,
 bool Browser::IsDefaultProtocolClient(const std::string& protocol,
                                       mate::Arguments* args) {
   std::string desktop_name;
-  if (!args->GetNext(&desktop_name)) {
+  if (args && !args->GetNext(&desktop_name)) {
     args->ThrowError("`desktop name` is a required field");
     return false;
   }
