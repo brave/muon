@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include "base/values.h"
+#include "base/lazy_instance.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "content/public/common/web_preferences.h"
 #include "content/public/renderer/render_thread_observer.h"
