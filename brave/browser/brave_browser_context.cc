@@ -359,6 +359,11 @@ content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
   return permission_manager_.get();
 }
 
+content::BackgroundFetchDelegate*
+BraveBrowserContext::GetBackgroundFetchDelegate() {
+  return nullptr;
+}
+
 atom::AtomNetworkDelegate* BraveBrowserContext::network_delegate() {
   auto getter = GetRequestContext();
   DCHECK(getter);

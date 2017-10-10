@@ -64,6 +64,7 @@ class BraveBrowserContext : public Profile {
 
   // content::BrowserContext:
   content::PermissionManager* GetPermissionManager() override;
+  content::BackgroundFetchDelegate* GetBackgroundFetchDelegate() override;
   content::ResourceContext* GetResourceContext() override;
   net::NetworkDelegate* CreateNetworkDelegate() override;
   content::BrowserPluginGuestManager* GetGuestManager() override;
