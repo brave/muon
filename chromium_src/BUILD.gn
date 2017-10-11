@@ -160,6 +160,7 @@ source_set("browser") {
     "//components/storage_monitor",
     "//content/public/browser",
     "//electron/atom/browser",
+    "//ui/message_center",
   ]
 
   sources = [
@@ -372,6 +373,10 @@ source_set("browser") {
 
   if (enable_plugins) {
     sources += [
+      "//chrome/browser/media/cdm_storage_id.cc",
+      "//chrome/browser/media/cdm_storage_id.h",
+      "//chrome/browser/media/media_storage_id_salt.cc",
+      "//chrome/browser/media/media_storage_id_salt.h",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h",
       "//chrome/browser/renderer_host/pepper/device_id_fetcher.cc",
