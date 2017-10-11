@@ -36,13 +36,16 @@ class DownloadItem : public mate::TrackableObject<DownloadItem>,
   std::string GetMimeType() const;
   bool HasUserGesture() const;
   std::string GetFilename() const;
+  base::FilePath GetTargetFilePath() const;
   std::string GetContentDisposition() const;
   const GURL& GetURL() const;
   content::DownloadItem::DownloadState GetState() const;
   bool IsDone() const;
   void SetSavePath(const base::FilePath& path);
   base::FilePath GetSavePath() const;
-  bool PromptForSaveLocation() const;
+  std::string GetGuid() const;
+  void SetPrompt(bool prompt);
+  bool ShouldPrompt();
 
  protected:
   DownloadItem(v8::Isolate* isolate, content::DownloadItem* download_item);
@@ -50,11 +53,13 @@ class DownloadItem : public mate::TrackableObject<DownloadItem>,
 
   // Override content::DownloadItem::Observer methods
   void OnDownloadUpdated(content::DownloadItem* download) override;
+  void OnDownloadRemoved(content::DownloadItem* download) override;
   void OnDownloadDestroyed(content::DownloadItem* download) override;
 
  private:
   base::FilePath save_path_;
   content::DownloadItem* download_item_;
+  bool prompt_;
 
   DISALLOW_COPY_AND_ASSIGN(DownloadItem);
 };

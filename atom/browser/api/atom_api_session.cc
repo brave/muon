@@ -355,6 +355,14 @@ Session::Session(v8::Isolate* isolate, Profile* profile)
   content::BrowserContext::GetDownloadManager(profile)->
       AddObserver(this);
 
+  auto user_prefs_registrar = profile_->user_prefs_change_registrar();
+  if (!user_prefs_registrar->IsObserved(prefs::kDownloadDefaultDirectory)) {
+    user_prefs_registrar->Add(
+        prefs::kDownloadDefaultDirectory,
+        base::Bind(&Session::DefaultDownloadDirectoryChanged,
+                   base::Unretained(this)));
+  }
+
   Init(isolate);
   AttachAsUserData(profile);
 }
@@ -368,6 +376,12 @@ Session::~Session() {
 std::string Session::Partition() {
   return static_cast<brave::BraveBrowserContext*>(
       profile_)->partition_with_prefix();
+}
+
+void Session::DefaultDownloadDirectoryChanged() {
+  base::FilePath default_download_path(profile_->GetPrefs()->GetFilePath(
+      prefs::kDownloadDefaultDirectory));
+  Emit("default-download-directory-changed", default_download_path);
 }
 
 void Session::OnDownloadCreated(content::DownloadManager* manager,
@@ -446,7 +460,7 @@ void Session::SetProxy(const net::ProxyConfig& config,
 }
 
 void Session::SetDownloadPath(const base::FilePath& path) {
-  profile_->prefs()->SetFilePath(
+  profile_->GetPrefs()->SetFilePath(
       prefs::kDownloadDefaultDirectory, path);
 }
 

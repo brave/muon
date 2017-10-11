@@ -58,7 +58,9 @@ std::map<uint32_t, v8::Global<v8::Object>> g_download_item_objects;
 
 DownloadItem::DownloadItem(v8::Isolate* isolate,
                            content::DownloadItem* download_item)
-    : download_item_(download_item) {
+    : download_item_(download_item),
+      prompt_(download_item->GetTargetDisposition() ==
+          content::DownloadItem::TARGET_DISPOSITION_PROMPT) {
   download_item_->AddObserver(this);
   Init(isolate);
   AttachAsUserData(download_item);
@@ -87,6 +89,10 @@ void DownloadItem::OnDownloadUpdated(content::DownloadItem* item) {
   }
 }
 
+void DownloadItem::OnDownloadRemoved(content::DownloadItem* download) {
+  Emit("removed");
+}
+
 void DownloadItem::OnDownloadDestroyed(content::DownloadItem* download_item) {
   download_item_ = nullptr;
   // Destroy the native class immediately when downloadItem is destroyed.
@@ -111,7 +117,6 @@ bool DownloadItem::CanResume() const {
 
 void DownloadItem::Cancel() {
   download_item_->Cancel(true);
-  download_item_->Remove();
 }
 
 int64_t DownloadItem::GetReceivedBytes() const {
@@ -139,6 +144,10 @@ std::string DownloadItem::GetFilename() const {
                            std::string()).LossyDisplayName());
 }
 
+base::FilePath DownloadItem::GetTargetFilePath() const {
+  return download_item_->GetTargetFilePath();
+}
+
 std::string DownloadItem::GetContentDisposition() const {
   return download_item_->GetContentDisposition();
 }
@@ -163,10 +172,18 @@ base::FilePath DownloadItem::GetSavePath() const {
   return save_path_;
 }
 
-bool DownloadItem::PromptForSaveLocation() const {
-  return download_item_->GetTargetDisposition() ==
-      content::DownloadItem::TARGET_DISPOSITION_PROMPT;
+void DownloadItem::SetPrompt(bool prompt) {
+  prompt_ = prompt;
 }
+
+bool DownloadItem::ShouldPrompt() {
+  return prompt_;
+}
+
+std::string DownloadItem::GetGuid() const {
+  return download_item_->GetGuid();
+}
+
 // static
 void DownloadItem::BuildPrototype(v8::Isolate* isolate,
                                   v8::Local<v8::FunctionTemplate> prototype) {
@@ -183,13 +200,15 @@ void DownloadItem::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getMimeType", &DownloadItem::GetMimeType)
       .SetMethod("hasUserGesture", &DownloadItem::HasUserGesture)
       .SetMethod("getFilename", &DownloadItem::GetFilename)
+      .SetMethod("getTargetFilePath", &DownloadItem::GetTargetFilePath)
       .SetMethod("getContentDisposition", &DownloadItem::GetContentDisposition)
       .SetMethod("getURL", &DownloadItem::GetURL)
       .SetMethod("getState", &DownloadItem::GetState)
       .SetMethod("isDone", &DownloadItem::IsDone)
       .SetMethod("setSavePath", &DownloadItem::SetSavePath)
       .SetMethod("getSavePath", &DownloadItem::GetSavePath)
-      .SetMethod("promptForSaveLocation", &DownloadItem::PromptForSaveLocation);
+      .SetMethod("getGuid", &DownloadItem::GetGuid)
+      .SetMethod("setPrompt", &DownloadItem::SetPrompt);
 }
 
 // static

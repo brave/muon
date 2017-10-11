@@ -155,10 +155,9 @@ std::vector<std::string> AtomBrowserContext::GetCookieableSchemes() {
 void AtomBrowserContext::RegisterPrefs(PrefRegistrySimple* pref_registry) {
   pref_registry->RegisterFilePathPref(prefs::kSelectFileLastDirectory,
                                       base::FilePath());
-  base::FilePath download_dir;
-  PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &download_dir);
+  // moved to user_prefs in brave_browser_context
   pref_registry->RegisterFilePathPref(prefs::kDownloadDefaultDirectory,
-                                      download_dir);
+                                      base::FilePath());
   pref_registry->RegisterDictionaryPref(prefs::kDevToolsFileSystemPaths);
 }
 
