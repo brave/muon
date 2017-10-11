@@ -81,6 +81,7 @@
 #include "base/win/win_util.h"
 #include "base/win/windows_version.h"
 #include "base/win/wrapped_window_proc.h"
+#include "components/crash/content/app/crash_export_thunks.h"
 #endif
 
 namespace atom {
@@ -96,12 +97,8 @@ OSStatus KeychainCallback(SecKeychainEvent keychain_event,
 
 #if defined(OS_WIN)
 void InitializeWindowProcExceptions() {
-  // Get the breakpad pointer
   base::win::WinProcExceptionFilter exception_filter =
-      reinterpret_cast<base::win::WinProcExceptionFilter>(::GetProcAddress(
-          ::GetModuleHandle(chrome::kChromeElfDllName), "CrashForException"));
-  CHECK(exception_filter);
-  exception_filter = base::win::SetWinProcExceptionFilter(exception_filter);
+      base::win::SetWinProcExceptionFilter(&CrashForException);
   DCHECK(!exception_filter);
 }
 #endif  // defined (OS_WIN)
