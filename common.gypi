@@ -1414,7 +1414,6 @@
     'release_unwind_tables%': 1,
 
     # Override where to find binutils
-    'binutils_version%': 0,
     'binutils_dir%': '',
 
     # Enable TCMalloc.
@@ -1588,35 +1587,6 @@
       ['sanitizer_coverage==1', {
         'sanitizer_coverage': 'edge,indirect-calls,8bit-counters',
       }],
-      # Get binutils version so we can enable debug fission if we can.
-      ['os_posix==1 and OS!="mac" and OS!="ios"', {
-        'conditions': [
-          # compiler_version doesn't work with clang
-          # TODO(mithro): Land https://codereview.chromium.org/199793014/ so
-          # compiler_version works with clang.
-          # TODO(glider): set clang to 1 earlier for ASan and TSan builds so
-          # that it takes effect here.
-          ['clang==0 and asan==0 and lsan==0 and tsan==0 and msan==0 and ubsan==0 and ubsan_security==0 and ubsan_vptr==0', {
-            'binutils_version%': '<!pymod_do_main(compiler_version target assembler)',
-          }],
-          # On Android we know the binutils version in the toolchain.
-          ['OS=="android"', {
-            'binutils_version%': 222,
-          }],
-          ['host_arch=="x64"', {
-            'binutils_dir%': 'third_party/binutils/Linux_x64/Release/bin',
-          }],
-          ['host_arch=="ia32"', {
-            'binutils_dir%': 'third_party/binutils/Linux_ia32/Release/bin',
-          }],
-          # Our version of binutils in third_party/binutils
-          ['linux_use_bundled_binutils==1', {
-            'binutils_version%': 224,
-          }],
-        ],
-      }, {
-        'binutils_version%': 0,
-      }],
       ['OS=="win" and "<!pymod_do_main(dir_exists <(directx_sdk_default_path))"=="True"', {
         'directx_sdk_path%': '<(directx_sdk_default_path)',
       }, {
@@ -1647,7 +1617,6 @@
             # configuration. Our gyp variable scoping is likely wrong and
             # needs to be cleaned up. The GN configuration should be changed
             # to match.
-            'binutils_version%': 224,
             'linux_use_bundled_binutils%': '1',
             'linux_use_bundled_gold%': '1',
             'binutils_dir%': 'third_party/binutils/Linux_x64/Release/bin',
@@ -3620,6 +3589,12 @@
         ],
         'ldflags': [
           '-pthread', '-Wl,-z,noexecstack',
+          # Newer binutils don't set DT_RPATH unless you disable "new" dtags
+          # and the new DT_RUNPATH doesn't work without --no-as-needed flag.
+          # FIXME(mithro): Figure out the --as-needed/--no-as-needed flags
+          # inside this file to allow usage of --no-as-needed and removal of
+          # this flag.
+          '-Wl,--disable-new-dtags',
         ],
         'libraries' : [
           '<(libraries_for_target)',
@@ -3679,7 +3654,7 @@
                 'cflags': ['-fno-unwind-tables', '-fno-asynchronous-unwind-tables'],
                 'defines': ['NO_UNWIND_TABLES'],
               }],
-              ['linux_use_debug_fission==1 and linux_use_gold_flags==1 and binutils_version>=223', {
+              ['linux_use_debug_fission==1 and linux_use_gold_flags==1', {
                 'cflags': ['-gsplit-dwarf'],
               }],
             ],
@@ -4683,19 +4658,6 @@
             # target x86.
             'ldflags': [
               '-B<!(cd <(DEPTH) && pwd -P)/<(binutils_dir)',
-            ],
-          }],
-          # Some binutils 2.23 releases may or may not have new dtags enabled,
-          # but they are all compatible with --disable-new-dtags,
-          # because the new dynamic tags are not created by default.
-          ['binutils_version>=223', {
-            # Newer binutils don't set DT_RPATH unless you disable "new" dtags
-            # and the new DT_RUNPATH doesn't work without --no-as-needed flag.
-            # FIXME(mithro): Figure out the --as-needed/--no-as-needed flags
-            # inside this file to allow usage of --no-as-needed and removal of
-            # this flag.
-            'ldflags': [
-              '-Wl,--disable-new-dtags',
             ],
           }],
           ['clang==0', {
