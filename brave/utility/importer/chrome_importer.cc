@@ -288,12 +288,9 @@ void ChromeImporter::ImportCookies() {
     net::CookieCryptoDelegate* delegate =
       cookie_config::GetCookieCryptoDelegate();
     std::string value;
-#if defined(OS_LINUX)
-    if (!encrypted_value.empty() && delegate &&
-        OSCrypt::IsEncryptionAvailable()) {
-      OSCrypt::SetConfig(base::MakeUnique<os_crypt::Config>());
-#else
     if (!encrypted_value.empty() && delegate) {
+#if defined(OS_LINUX)
+      OSCrypt::SetConfig(base::MakeUnique<os_crypt::Config>());
 #endif
       if (!delegate->DecryptString(encrypted_value, &value)) {
         continue;
