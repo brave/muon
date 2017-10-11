@@ -56,7 +56,6 @@ source_set("app") {
   deps = [
     "//base",
     "//chrome/common",
-    "//chrome/installer",
     "//components/metrics",
     "//components/crash/content/app",
     "//components/crash/content/browser",
