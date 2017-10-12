@@ -663,7 +663,7 @@ void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
           base::IgnoreResult(&GoogleUpdateSettings::SetCollectStatsConsent),
           enabled)));
 
-  #if defined(OS_WIN)
+  #if 0
     install_static::SetCollectStatsInSample(enabled);
     HMODULE elf_module = GetModuleHandle(chrome::kChromeElfDllName);
     static SetUploadConsentPointer set_upload_consent =
@@ -676,7 +676,7 @@ void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
       // This isn't a problem though, since they will be consistent.
       set_upload_consent(enabled);
     }
-  #endif  // defined(OS_WIN)
+  #endif
 }
 
 #if (defined(OS_WIN) || defined(OS_LINUX)) && !defined(OS_CHROMEOS)
