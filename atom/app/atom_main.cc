@@ -180,15 +180,9 @@ int main(int argc, const char* argv[]) {
   params.instance = instance;
   params.sandbox_info = &sandbox_info;
 
-  // SetDumpWithoutCrashingFunction must be passed the DumpProcess function
-  // from chrome_elf and not from the DLL in order for DumpWithoutCrashing to
-  // function correctly.
-  typedef void (__cdecl *DumpProcessFunction)();
-  DumpProcessFunction DumpProcess = reinterpret_cast<DumpProcessFunction>(
-      ::GetProcAddress(::GetModuleHandle(chrome::kChromeElfDllName),
-                       "DumpProcessWithoutCrash"));
-  CHECK(DumpProcess);
-  base::debug::SetDumpWithoutCrashingFunction(DumpProcess);
+  // Pass chrome_elf's copy of DumpProcessWithoutCrash resolved via load-time
+  // dynamic linking.
+  base::debug::SetDumpWithoutCrashingFunction(&DumpProcessWithoutCrash);
 
   atom::AtomCommandLine::InitW(argc, argv_setup);
 #else
