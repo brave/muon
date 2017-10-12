@@ -14,6 +14,7 @@
 #include "atom/browser/common_web_contents_delegate.h"
 #include "atom/common/options_switches.h"
 #include "base/memory/memory_pressure_listener.h"
+#include "base/memory/weak_ptr.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "content/common/cursors/webcursor.h"
 #include "content/common/view_messages.h"
@@ -155,7 +156,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool Equal(const WebContents* web_contents) const;
   void LoadURL(const GURL& url, const mate::Dictionary& options);
   void Reload(bool ignore_cache);
-  void DownloadURL(const GURL& url, bool prompt_for_location = false);
+  void DownloadURL(const GURL& url, mate::Arguments* args);
+
   GURL GetURL() const;
   base::string16 GetTitle() const;
   bool IsInitialBlankNavigation() const;
@@ -557,6 +559,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   // the context menu params for the current context menu;
   content::ContextMenuParams context_menu_params_;
+
+  base::WeakPtrFactory<WebContents> weak_ptr_factory_;
 
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
   DISALLOW_COPY_AND_ASSIGN(WebContents);

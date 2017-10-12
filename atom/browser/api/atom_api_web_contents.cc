@@ -10,6 +10,7 @@
 #include "atom/browser/api/atom_api_web_contents.h"
 
 #include "atom/browser/api/atom_api_debugger.h"
+#include "atom/browser/api/atom_api_download_item.h"
 #include "atom/browser/api/atom_api_session.h"
 #include "atom/browser/api/atom_api_web_request.h"
 #include "atom/browser/api/atom_api_window.h"
@@ -124,6 +125,16 @@ using extensions::ExtensionsAPIClient;
 using guest_view::GuestViewManager;
 
 namespace mate {
+
+template<>
+struct Converter<content::DownloadItem*> {
+  static v8::Local<v8::Value> ToV8(
+      v8::Isolate* isolate, content::DownloadItem* val) {
+    if (!val)
+      return v8::Null(isolate);
+    return atom::api::DownloadItem::Create(isolate, val).ToV8();
+  }
+};
 
 template<>
 struct Converter<atom::SetSizeParams> {
@@ -369,7 +380,8 @@ WebContents::WebContents(v8::Isolate* isolate,
       request_id_(0),
       enable_devtools_(true),
       is_being_destroyed_(false),
-      guest_delegate_(nullptr) {
+      guest_delegate_(nullptr),
+      weak_ptr_factory_(this) {
   if (type == REMOTE) {
     Init(isolate);
     AttachAsUserData(web_contents);
@@ -388,7 +400,8 @@ WebContents::WebContents(v8::Isolate* isolate,
     request_id_(0),
     enable_devtools_(true),
     is_being_destroyed_(false),
-    guest_delegate_(nullptr) {
+    guest_delegate_(nullptr),
+    weak_ptr_factory_(this) {
   CreateWebContents(isolate, options, create_params);
 }
 
@@ -397,7 +410,8 @@ WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options)
       request_id_(0),
       enable_devtools_(true),
       is_being_destroyed_(false),
-      guest_delegate_(nullptr) {
+      guest_delegate_(nullptr),
+      weak_ptr_factory_(this) {
   mate::Handle<api::Session> session = SessionFromOptions(isolate, options);
 
   content::WebContents::CreateParams create_params(session->browser_context());
@@ -1604,16 +1618,37 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   web_contents()->GetController().LoadURLWithParams(params);
 }
 
+void OnDownloadStarted(base::Callback<void(content::DownloadItem*)> callback,
+                        content::DownloadItem* item,
+                        content::DownloadInterruptReason reason) {
+  content::BrowserThread::PostTask(content::BrowserThread::UI, FROM_HERE,
+      base::Bind(callback, item));
+}
+
 void WebContents::DownloadURL(const GURL& url,
-                              bool prompt_for_location) {
+                              mate::Arguments* args) {
   auto browser_context = web_contents()->GetBrowserContext();
   auto download_manager =
     content::BrowserContext::GetDownloadManager(browser_context);
 
   auto params = content::DownloadUrlParameters::CreateForWebContentsMainFrame(
           web_contents(), url, NO_TRAFFIC_ANNOTATION_YET);
-  if (prompt_for_location)
-    params->set_prompt(prompt_for_location);
+
+  bool prompt_for_location = false;
+  if (args->GetNext(&prompt_for_location) && prompt_for_location) {
+    prompt_for_location = true;
+  }
+  params->set_prompt(prompt_for_location);
+
+  base::string16 suggested_name;
+  if (args->GetNext(&suggested_name)) {
+    params->set_suggested_name(suggested_name);
+  }
+
+  base::Callback<void(content::DownloadItem*)> callback;
+  if (args && args->GetNext(&callback)) {
+    params->set_callback(base::Bind(OnDownloadStarted, callback));
+  }
 
   download_manager->DownloadUrl(std::move(params));
 }
