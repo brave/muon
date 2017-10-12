@@ -379,9 +379,11 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
       command_line->GetSwitchValueASCII(switches::kEnableFeatures),
       command_line->GetSwitchValueASCII(switches::kDisableFeatures));
   auto feature_list = base::FeatureList::GetInstance();
-  auto field_trial = feature_list->GetFieldTrial(features::kPreferHtmlOverPlugins);
-  feature_list->RegisterFieldTrialOverride(features::kPreferHtmlOverPlugins.name,
-                                 base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+  auto field_trial =
+      feature_list->GetFieldTrial(features::kPreferHtmlOverPlugins);
+  feature_list->RegisterFieldTrialOverride(
+                    features::kPreferHtmlOverPlugins.name,
+                    base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 }
 
 
