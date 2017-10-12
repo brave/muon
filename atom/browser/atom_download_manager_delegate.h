@@ -8,6 +8,7 @@
 #include <string>
 
 #include "base/memory/weak_ptr.h"
+#include "chrome/browser/download/download_path_reservation_tracker.h"
 #include "content/public/browser/download_manager_delegate.h"
 
 namespace content {
@@ -18,22 +19,14 @@ namespace atom {
 
 class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate {
  public:
-  using CreateDownloadPathCallback =
-      base::Callback<void(const base::FilePath&)>;
-
   explicit AtomDownloadManagerDelegate(content::DownloadManager* manager);
   virtual ~AtomDownloadManagerDelegate();
 
-  // Generate default file path to save the download.
-  void CreateDownloadPath(const GURL& url,
-                          const std::string& suggested_filename,
-                          const std::string& content_disposition,
-                          const std::string& mime_type,
-                          const base::FilePath& path,
-                          const CreateDownloadPathCallback& callback);
-  void OnDownloadPathGenerated(uint32_t download_id,
-                               const content::DownloadTargetCallback& callback,
-                               const base::FilePath& default_path);
+  void OnDownloadPathGenerated(
+    int32_t download_id,
+    const content::DownloadTargetCallback& callback,
+    PathValidationResult result,
+    const base::FilePath& target_path);
 
   // content::DownloadManagerDelegate:
   void Shutdown() override;

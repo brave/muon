@@ -139,6 +139,7 @@ source_set("browser") {
     ":bookmarks",
     ":crashes_ui",
     ":devtools",
+    ":downloads",
     ":favicon",
     ":history",
     ":metrics",
@@ -769,6 +770,24 @@ source_set("password_manager") {
       "//chrome/browser/password_manager/native_backend_kwallet_x.cc",
     ]
   }
+}
+
+source_set("downloads") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
+
+  sources = [
+    "//chrome/browser/download/download_path_reservation_tracker.cc",
+    "//chrome/browser/download/download_path_reservation_tracker.h",
+  ]
+
+  deps = [
+    "//base",
+    "//chrome/common",
+    "//content/public/browser",
+    "//net",
+    "//url",
+  ]
 }
 
 source_set("favicon") {

@@ -102,6 +102,8 @@ class Session: public mate::TrackableObject<Session>,
                          content::DownloadItem* item) override;
 
  private:
+  void DefaultDownloadDirectoryChanged();
+
   // Cached object.
   v8::Global<v8::Value> cookies_;
   v8::Global<v8::Value> protocol_;

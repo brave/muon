@@ -81,6 +81,9 @@ bool OpenExternal(const GURL& url, bool activate) {
 }
 
 bool MoveItemToTrash(const base::FilePath& full_path) {
+  if (full_path.empty())
+    return false;
+
   return XDGUtil("gvfs-trash", full_path.value(), true);
 }
 

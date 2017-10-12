@@ -430,6 +430,10 @@ void BraveBrowserContext::CreateProfilePrefs(
               extension_prefs, overlay_pref_names, std::move(delegate)));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
+    base::FilePath download_dir;
+    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &download_dir);
+    pref_registry_->RegisterFilePathPref(prefs::kDownloadDefaultDirectory,
+                                        download_dir);
     pref_registry_->RegisterDictionaryPref("app_state");
     pref_registry_->RegisterDictionaryPref(
         extensions::pref_names::kPrefContentSettings);
@@ -497,6 +501,16 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
   if (!IsOffTheRecord() && !HasParentContext()) {
     content::BrowserContext::GetDefaultStoragePartition(this)->
         GetDOMStorageContext()->SetSaveSessionStorageOnDisk();
+
+    // migrate from old prefs to new prefs
+    base::FilePath default_download_path(prefs()->GetFilePath(
+      prefs::kDownloadDefaultDirectory));
+    if (!default_download_path.empty()) {
+      user_prefs_->SetFilePath(prefs::kDownloadDefaultDirectory,
+          default_download_path);
+      prefs()->SetFilePath(prefs::kDownloadDefaultDirectory,
+          base::FilePath());
+    }
 
     // Initialize autofill db
     base::FilePath webDataPath = GetPath().Append(kWebDataFilename);

@@ -317,6 +317,9 @@ bool OpenExternal(const base::string16& url, bool activate) {
 }
 
 bool MoveItemToTrash(const base::FilePath& path) {
+  if (path.empty())
+    return false;
+
   base::win::ScopedCOMInitializer com_initializer;
   if (!com_initializer.succeeded())
     return false;
