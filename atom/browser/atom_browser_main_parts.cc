@@ -34,6 +34,7 @@
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
+#include "chrome/common/chrome_features.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_result_codes.h"
 #include "chrome/common/chrome_switches.h"
@@ -374,11 +375,16 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   Browser::Get()->DidFinishLaunching(*empty_info);
 #endif
 
-  // auto feature_list = base::FeatureList::GetInstance();
   base::FeatureList::InitializeInstance(
       command_line->GetSwitchValueASCII(switches::kEnableFeatures),
       command_line->GetSwitchValueASCII(switches::kDisableFeatures));
+  auto feature_list = base::FeatureList::GetInstance();
+  auto field_trial = feature_list->GetFieldTrial(features::kPreferHtmlOverPlugins);
+  feature_list->RegisterFieldTrialOverride(features::kPreferHtmlOverPlugins.name,
+                                 base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 }
+
+
 
 bool AtomBrowserMainParts::MainMessageLoopRun(int* result_code) {
   exit_code_ = result_code;
