@@ -173,7 +173,7 @@ int main(int argc, const char* argv[]) {
       base::TimeTicks::FromInternalValue(exe_entry_point_ticks));
   content::ContentMainParams params(&chrome_main_delegate);
 
-#if defined(OS_WIN)
+#if 0
   // The process should crash when going through abnormal termination.
   base::win::SetShouldCrashOnProcessDetach(true);
   base::win::SetAbortBehaviorForCrashReporting();

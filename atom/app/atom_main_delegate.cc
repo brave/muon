@@ -148,7 +148,7 @@ base::FilePath InitializeUserDataDir() {
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
   base::FilePath user_data_dir;
-#if defined(OS_WIN)
+#if 0
   wchar_t user_data_dir_buf[MAX_PATH], invalid_user_data_dir_buf[MAX_PATH];
 
   using GetUserDataDirectoryThunkFunction =
