@@ -191,7 +191,7 @@ void BravePasswordManagerClient::PostHSTSQueryForHost(
     const GURL& origin,
     const HSTSCallback& callback) const {
   password_manager::PostHSTSQueryForHostAndRequestContext(
-       origin, make_scoped_refptr(profile_->GetRequestContext()), callback);
+      origin, base::WrapRefCounted(profile_->GetRequestContext()), callback);
 }
 
 bool BravePasswordManagerClient::OnCredentialManagerUsed() {
