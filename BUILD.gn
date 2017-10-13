@@ -257,6 +257,7 @@ source_set("utility") {
     "//chrome/common",
     "//chrome/utility",
     "//components/cookie_config",
+    "//services/proxy_resolver:lib",
     "//third_party/protobuf:protobuf_lite",
   ]
 
