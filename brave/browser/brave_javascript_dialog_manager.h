@@ -33,8 +33,8 @@ class JavaScriptDialogExtraData {
 class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
  public:
   typedef std::map<void*, JavaScriptDialogExtraData> ExtraDataMap;
-  typedef content::JavaScriptDialogManager::DialogClosedCallback
-      DialogClosedCallback;
+  using DialogClosedCallback =
+      content::JavaScriptDialogManager::DialogClosedCallback;
   static BraveJavaScriptDialogManager* GetInstance();
 
  private:
@@ -45,22 +45,22 @@ class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
 
   // JavaScriptDialogManager:
   void RunJavaScriptDialog(content::WebContents* web_contents,
-                           const GURL& origin_url,
-                           content::JavaScriptDialogType message_type,
+                           const GURL& alerting_frame_url,
+                           content::JavaScriptDialogType dialog_type,
                            const base::string16& message_text,
                            const base::string16& default_prompt_text,
-                           const DialogClosedCallback& callback,
+                           DialogClosedCallback callback,
                            bool* did_suppress_message) override;
   void RunBeforeUnloadDialog(content::WebContents* web_contents,
                              bool is_reload,
-                             const DialogClosedCallback& callback) override;
+                             DialogClosedCallback callback) override;
   bool HandleJavaScriptDialog(content::WebContents* web_contents,
                               bool accept,
                               const base::string16* prompt_override) override;
   void CancelDialogs(content::WebContents* web_contents,
                      bool reset_state) override;
 
-  std::string GetEventName(content::JavaScriptDialogType message_type);
+  std::string GetEventName(content::JavaScriptDialogType dialog_type);
   base::string16 GetTitle(content::WebContents* web_contents,
                           const GURL& origin_url,
                           bool is_alert);
