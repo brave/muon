@@ -99,12 +99,12 @@ BraveJavaScriptDialogManager::~BraveJavaScriptDialogManager() {
 
 void BraveJavaScriptDialogManager::RunJavaScriptDialog(
     content::WebContents* web_contents,
-    const GURL& origin_url,
-    content::JavaScriptDialogType message_type,
+    const GURL& alerting_frame_url,
+    content::JavaScriptDialogType dialog_type,
     const base::string16& message_text,
     const base::string16& default_prompt_text,
-    const DialogClosedCallback& callback,
-    bool* did_suppress_message)  {
+    DialogClosedCallback callback,
+    bool* did_suppress_message) {
   *did_suppress_message = false;
 
   JavaScriptDialogExtraData* extra_data =
@@ -149,8 +149,9 @@ void BraveJavaScriptDialogManager::RunJavaScriptDialog(
     last_close_time_ = base::TimeTicks();
   }
 
-  bool is_alert = message_type == content::JAVASCRIPT_DIALOG_TYPE_ALERT;
-  base::string16 dialog_title = GetTitle(web_contents, origin_url, is_alert);
+  bool is_alert = dialog_type == content::JAVASCRIPT_DIALOG_TYPE_ALERT;
+  base::string16 dialog_title =
+      GetTitle(web_contents, alerting_frame_url, is_alert);
 
   LogUMAMessageLengthStats(message_text);
 
@@ -167,21 +168,17 @@ void BraveJavaScriptDialogManager::RunJavaScriptDialog(
   }
 
   gin::TryCatch try_catch(isolate);
-  mate::EmitEvent(isolate,
-      env->process_object(),
-      GetEventName(message_type),
-      web_contents,
-      extra_data,
-      dialog_title,
-      message_text,
-      default_prompt_text,
-      ShouldDisplaySuppressCheckbox(extra_data),
-      false,  // is_before_unload_dialog
-      false,  // is_reload
-      base::Bind(&BraveJavaScriptDialogManager::OnDialogClosed,
-                 base::Unretained(this), web_contents, callback));
+  mate::EmitEvent(isolate, env->process_object(), GetEventName(dialog_type),
+                  web_contents, extra_data, dialog_title, message_text,
+                  default_prompt_text,
+                  ShouldDisplaySuppressCheckbox(extra_data),
+                  false,  // is_before_unload_dialog
+                  false,  // is_reload
+                  base::BindOnce(&BraveJavaScriptDialogManager::OnDialogClosed,
+                                 base::Unretained(this), web_contents,
+                                 std::move(callback)));
   if (try_catch.HasCaught()) {
-    callback.Run(false, base::string16());
+    std::move(callback).Run(false, base::string16());
     LOG(ERROR) << "Uncaught exception: " << try_catch.GetStackTrace();
   } else {
     if (extra_data->dialog_count_ < 100) {
@@ -193,14 +190,14 @@ void BraveJavaScriptDialogManager::RunJavaScriptDialog(
 void BraveJavaScriptDialogManager::RunBeforeUnloadDialog(
     content::WebContents* web_contents,
     bool is_reload,
-    const DialogClosedCallback& callback) {
+    DialogClosedCallback callback) {
   JavaScriptDialogExtraData* extra_data =
       &javascript_dialog_extra_data_[web_contents];
 
   if (extra_data->suppress_javascript_messages_) {
     // If a site harassed the user enough for them to put it on mute, then it
     // lost its privilege to deny unloading.
-    callback.Run(true, base::string16());
+    std::move(callback).Run(true, base::string16());
     return;
   }
 
@@ -224,33 +221,31 @@ void BraveJavaScriptDialogManager::RunBeforeUnloadDialog(
 
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   if (!isolate) {
-    callback.Run(true, base::string16());
+    std::move(callback).Run(true, base::string16());
     return;
   }
 
   node::Environment* env = node::Environment::GetCurrent(isolate);
   if (!env) {
-    callback.Run(true, base::string16());
+    std::move(callback).Run(true, base::string16());
     return;
   }
 
   gin::TryCatch try_catch(isolate);
-  mate::EmitEvent(isolate,
-      env->process_object(),
-      GetEventName(content::JAVASCRIPT_DIALOG_TYPE_CONFIRM),
-      web_contents,
-      extra_data,
-      title,
-      message,
+  mate::EmitEvent(
+      isolate, env->process_object(),
+      GetEventName(content::JAVASCRIPT_DIALOG_TYPE_CONFIRM), web_contents,
+      extra_data, title, message,
       base::string16(),  // default_prompt_text
       ShouldDisplaySuppressCheckbox(extra_data),
-      true,        // is_before_unload_dialog
+      true,  // is_before_unload_dialog
       is_reload,
-      base::Bind(&BraveJavaScriptDialogManager::OnBeforeUnloadDialogClosed,
-                 base::Unretained(this), web_contents, callback));
+      base::BindOnce(&BraveJavaScriptDialogManager::OnBeforeUnloadDialogClosed,
+                     base::Unretained(this), web_contents,
+                     std::move(callback)));
 
   if (try_catch.HasCaught()) {
-    callback.Run(true, base::string16());
+    std::move(callback).Run(true, base::string16());
     LOG(ERROR) << "Uncaught exception: " << try_catch.GetStackTrace();
   } else {
     if (extra_data->dialog_count_ < 100) {
@@ -289,8 +284,8 @@ bool BraveJavaScriptDialogManager::HandleJavaScriptDialog(
 
 std::string
 BraveJavaScriptDialogManager::GetEventName(
-    content::JavaScriptDialogType message_type) {
-  switch (message_type) {
+    content::JavaScriptDialogType dialog_type) {
+  switch (dialog_type) {
     case content::JAVASCRIPT_DIALOG_TYPE_ALERT: return "window-alert";
     case content::JAVASCRIPT_DIALOG_TYPE_CONFIRM: return "window-confirm";
     case content::JAVASCRIPT_DIALOG_TYPE_PROMPT: return "window-prompt";
@@ -364,8 +359,8 @@ void BraveJavaScriptDialogManager::OnBeforeUnloadDialogClosed(
       static_cast<int>(success ? StayVsLeave::LEAVE : StayVsLeave::STAY),
       static_cast<int>(StayVsLeave::MAX));
 
-  OnDialogClosed(web_contents, callback, success, user_input,
-      suppress_javascript_messages);
+  OnDialogClosed(web_contents, std::move(callback), success, user_input,
+                 suppress_javascript_messages);
 }
 
 void BraveJavaScriptDialogManager::OnDialogClosed(
@@ -384,7 +379,7 @@ void BraveJavaScriptDialogManager::OnDialogClosed(
 
   last_close_time_ = base::TimeTicks::Now();
 
-  callback.Run(success, user_input);
+  std::move(callback).Run(success, user_input);
 }
 
 }  // namespace brave
