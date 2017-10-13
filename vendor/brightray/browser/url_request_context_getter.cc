@@ -17,6 +17,7 @@
 #include "chrome/common/chrome_switches.h"
 #include "common/switches.h"
 #include "components/cookie_config/cookie_store_util.h"
+#include "content/network/proxy_service_mojo.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/cookie_store_factory.h"
 #include "content/public/browser/devtools_network_transaction_factory.h"
@@ -39,7 +40,6 @@
 #include "net/proxy/proxy_config_service.h"
 #include "net/proxy/proxy_script_fetcher_impl.h"
 #include "net/proxy/proxy_service.h"
-#include "net/proxy/proxy_service_mojo.h"
 #include "net/ssl/channel_id_service.h"
 #include "net/ssl/default_channel_id_store.h"
 #include "net/ssl/ssl_config_service_defaults.h"
@@ -252,13 +252,12 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         net::DhcpProxyScriptFetcherFactory dhcp_factory;
         dhcp_proxy_script_fetcher = dhcp_factory.Create(url_request_context_.get());
 
-        proxy_service = net::CreateProxyServiceUsingMojoFactory(
-              ChromeMojoProxyResolverFactory::GetInstance(),
-              std::move(proxy_config_service_),
-              new net::ProxyScriptFetcherImpl(url_request_context_.get()),
-              std::move(dhcp_proxy_script_fetcher), host_resolver.get(),
-              net_log_,
-              url_request_context_->network_delegate());
+        proxy_service = content::CreateProxyServiceUsingMojoFactory(
+            ChromeMojoProxyResolverFactory::GetInstance(),
+            std::move(proxy_config_service_),
+            new net::ProxyScriptFetcherImpl(url_request_context_.get()),
+            std::move(dhcp_proxy_script_fetcher), host_resolver.get(), net_log_,
+            url_request_context_->network_delegate());
       } else {
         proxy_service = net::ProxyService::CreateUsingSystemProxyResolver(
             std::move(proxy_config_service_),

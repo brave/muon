@@ -23,9 +23,10 @@
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "net/proxy/mojo_proxy_resolver_factory_impl.h"
 #include "net/proxy/proxy_resolver_v8.h"
 #include "printing/features/features.h"
+#include "services/proxy_resolver/proxy_resolver_service.h"
+#include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -41,12 +42,6 @@
 namespace atom {
 
 namespace {
-
-void CreateProxyResolverFactory(
-    net::interfaces::ProxyResolverFactoryRequest request) {
-  mojo::MakeStrongBinding(base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
-                          std::move(request));
-}
 
 class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
  public:
@@ -106,9 +101,6 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   // If our process runs with elevated privileges, only add elevated Mojo
   // interfaces to the interface registry.
   if (!utility_process_running_elevated_) {
-    registry->AddInterface<net::interfaces::ProxyResolverFactory>(
-        base::Bind(CreateProxyResolverFactory),
-        base::ThreadTaskRunnerHandle::Get());
     registry->AddInterface(base::Bind(CreateResourceUsageReporter),
                            base::ThreadTaskRunnerHandle::Get());
   }
@@ -132,6 +124,14 @@ bool AtomContentUtilityClient::OnMessageReceived(
 
 void AtomContentUtilityClient::RegisterServices(
     AtomContentUtilityClient::StaticServiceMap* services) {
+  service_manager::EmbeddedServiceInfo proxy_resolver_info;
+  proxy_resolver_info.task_runner =
+      content::ChildThread::Get()->GetIOTaskRunner();
+  proxy_resolver_info.factory =
+      base::Bind(&proxy_resolver::ProxyResolverService::CreateService);
+  services->emplace(proxy_resolver::mojom::kProxyResolverServiceName,
+                    proxy_resolver_info);
+
   service_manager::EmbeddedServiceInfo profile_import_info;
   profile_import_info.factory =
     base::Bind(&BraveProfileImportService::CreateService);
