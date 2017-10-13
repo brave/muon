@@ -23,9 +23,9 @@
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "net/proxy/mojo_proxy_resolver_factory_impl.h"
 #include "net/proxy/proxy_resolver_v8.h"
 #include "printing/features/features.h"
+#include "services/proxy_resolver/public/cpp/mojo_proxy_resolver_factory_impl.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -43,9 +43,10 @@ namespace atom {
 namespace {
 
 void CreateProxyResolverFactory(
-    net::interfaces::ProxyResolverFactoryRequest request) {
-  mojo::MakeStrongBinding(base::MakeUnique<net::MojoProxyResolverFactoryImpl>(),
-                          std::move(request));
+    proxy_resolver::mojom::ProxyResolverFactoryRequest request) {
+  mojo::MakeStrongBinding(
+      base::MakeUnique<proxy_resolver::MojoProxyResolverFactoryImpl>(),
+      std::move(request));
 }
 
 class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
@@ -106,7 +107,7 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   // If our process runs with elevated privileges, only add elevated Mojo
   // interfaces to the interface registry.
   if (!utility_process_running_elevated_) {
-    registry->AddInterface<net::interfaces::ProxyResolverFactory>(
+    registry->AddInterface<proxy_resolver::mojom::ProxyResolverFactory>(
         base::Bind(CreateProxyResolverFactory),
         base::ThreadTaskRunnerHandle::Get());
     registry->AddInterface(base::Bind(CreateResourceUsageReporter),
