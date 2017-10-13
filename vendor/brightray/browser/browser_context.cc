@@ -106,7 +106,7 @@ void BrowserContext::InitPrefs(
   prefs_factory.set_async(true);
   prefs_factory.SetUserPrefsFile(prefs_path, task_runner.get());
 
-  auto registry = make_scoped_refptr(new PrefRegistrySimple);
+  auto registry = base::WrapRefCounted(new PrefRegistrySimple);
   RegisterInternalPrefs(registry.get());
   RegisterPrefs(registry.get());
 
