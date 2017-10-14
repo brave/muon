@@ -22,8 +22,12 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
 
   apiFunctions.setHandleRequest('create', function (createData, cb) {
     var responseId = ++id
-    ipc.once('chrome-windows-create-response-' + responseId, function (evt, win) {
-      cb && cb(win)
+    cb && ipc.once('chrome-windows-create-response-' + responseId, function (evt, win, error) {
+      if (error) {
+        lastError.run('windows.create', error, '', cb)
+      } else {
+        cb(win)
+      }
     })
 
     ipc.send('chrome-windows-create', responseId, createData)
