@@ -106,6 +106,10 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/display/screen.h"
 
+#if BUILDFLAG(ENABLE_PRINTING)
+#include "chrome/browser/printing/printing_init.h"
+#endif
+
 #if !defined(OS_MACOSX)
 #include "ui/aura/window.h"
 #endif
@@ -468,6 +472,10 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   WebContentsPermissionHelper::CreateForWebContents(web_contents);
   // Intialize security state client.
   SecurityStateTabHelper::CreateForWebContents(web_contents);
+
+#if BUILDFLAG(ENABLE_PRINTING)
+  printing::InitializePrinting(web_contents);
+#endif
 
   std::string name;
   options.Get("name", &name);

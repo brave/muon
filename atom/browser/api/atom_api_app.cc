@@ -39,7 +39,6 @@
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/common/workers/v8_worker_thread.h"
 #include "brave/common/workers/worker_bindings.h"
-#include "chrome/browser/browser_process_impl.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/component_updater/component_updater_paths.h"
 #include "content/browser/plugin_service_impl.h"
@@ -53,6 +52,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/common/content_switches.h"
 #include "extensions/features/features.h"
+#include "muon/browser/muon_browser_process_impl.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/ssl/client_cert_identity.h"
@@ -476,7 +476,7 @@ App::App(v8::Isolate* isolate) {
   atom::Browser::Get()->AddObserver(this);
   content::GpuDataManager::GetInstance()->AddObserver(this);
   Init(isolate);
-  static_cast<BrowserProcessImpl*>(g_browser_process)->set_app(this);
+  static_cast<MuonBrowserProcessImpl*>(g_browser_process)->set_app(this);
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   registrar_.Add(this,
                  content::NOTIFICATION_WEB_CONTENTS_RENDER_VIEW_HOST_CREATED,

@@ -4,8 +4,6 @@
 
 #include "chrome/browser/browser_process_impl.h"
 
-#include "atom/browser/api/atom_api_app.h"
-#include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 #include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/metrics/field_trial.h"
@@ -14,13 +12,13 @@
 #include "base/threading/thread_restrictions.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_content_browser_client.h"
-#include "brave/browser/component_updater/brave_component_updater_configurator.h"
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/background/background_mode_manager.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
 #include "chrome/browser/notifications/notification_ui_manager_stub.h"
 #include "chrome/browser/prefs/chrome_command_line_pref_store.h"
+#include "chrome/browser/printing/background_printing_manager.h"
 #include "chrome/browser/printing/print_job_manager.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/shell_integration.h"
@@ -38,12 +36,43 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
-#include "content/public/browser/resource_dispatcher_host.h"
 #include "content/public/common/content_switches.h"
 #include "ppapi/features/features.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/message_center/message_center.h"
+
+// these are just to satisfy build errors for unused vars in
+// browser_process_imp.h
+// they should be moved above if/when they are actually used
+#include "chrome/browser/chrome_child_process_watcher.h"
+#include "chrome/browser/chrome_device_client.h"
+#include "chrome/browser/devtools/remote_debugging_server.h"
+#include "chrome/browser/gpu/gpu_mode_manager.h"
+#include "chrome/browser/gpu/gpu_profile_cache.h"
+#include "chrome/browser/icon_manager.h"
+#include "chrome/browser/intranet_redirect_detector.h"
+#include "chrome/browser/io_thread.h"
+#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
+#include "chrome/browser/media_galleries/media_file_system_registry.h"
+#include "chrome/browser/metrics/thread_watcher.h"
+#include "chrome/browser/net/crl_set_fetcher.h"
+#include "chrome/browser/notifications/notification_platform_bridge.h"
+#include "chrome/browser/plugins/plugins_resource_service.h"
+#include "chrome/browser/safe_browsing/safe_browsing_service.h"
+#include "components/gcm_driver/gcm_driver.h"
+#include "components/network_time/network_time_tracker.h"
+#include "components/net_log/chrome_net_log.h"
+#include "components/physical_web/data_source/physical_web_data_source.h"
+#include "components/policy/core/browser/browser_policy_connector.h"
+#include "components/subresource_filter/content/browser/content_ruleset_service.h"
+#include "services/preferences/public/cpp/in_process_service_factory.h"
+#include "chrome/browser/component_updater/supervised_user_whitelist_installer.h"
+#include "chrome/browser/devtools/devtools_auto_opener.h"
+#include "chrome/browser/download/download_request_limiter.h"
+#include "chrome/browser/download/download_status_updater.h"
+#include "chrome/browser/loader/chrome_resource_dispatcher_host_delegate.h"
+#include "chrome/browser/printing/print_preview_dialog_controller.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
@@ -89,13 +118,20 @@ using content::ChildProcessSecurityPolicy;
 using content::PluginService;
 
 BrowserProcessImpl::BrowserProcessImpl(
-      base::SequencedTaskRunner* local_state_task_runner) :
-    local_state_task_runner_(local_state_task_runner),
-    tearing_down_(false),
+      base::SequencedTaskRunner* local_state_task_runner,
+      const base::CommandLine& command_line) :
+    created_watchdog_thread_(false),
+    created_browser_policy_connector_(false),
     created_profile_manager_(false),
-    locale_(l10n_util::GetApplicationLocale("")) {
-  g_browser_process = this;
-
+    created_icon_manager_(false),
+    created_notification_ui_manager_(false),
+    created_notification_bridge_(false),
+    created_safe_browsing_service_(false),
+    created_subresource_filter_ruleset_service_(false),
+    shutting_down_(false),
+    tearing_down_(false),
+    locale_(l10n_util::GetApplicationLocale("")),
+    local_state_task_runner_(local_state_task_runner) {
   print_job_manager_.reset(new printing::PrintJobManager);
 
 #if defined(OS_MACOSX)
@@ -133,7 +169,7 @@ void BrowserProcessImpl::CreateProfileManager() {
 }
 
 ProfileManager* BrowserProcessImpl::profile_manager() {
-  DCHECK(thread_checker_.CalledOnValidThread());
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (!created_profile_manager_)
     CreateProfileManager();
   return profile_manager_.get();
@@ -147,44 +183,13 @@ ukm::UkmRecorder* BrowserProcessImpl::ukm_recorder() {
   return nullptr;
 }
 
-component_updater::ComponentUpdateService*
-BrowserProcessImpl::component_updater(
-    std::unique_ptr<component_updater::ComponentUpdateService> &component_updater,
-    bool use_brave_server) {
-  if (!component_updater.get()) {
-    if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
-      return NULL;
-    Profile* profile = ProfileManager::GetPrimaryUserProfile();
-    scoped_refptr<update_client::Configurator> configurator =
-        component_updater::MakeBraveComponentUpdaterConfigurator(
-            base::CommandLine::ForCurrentProcess(),
-            profile->GetRequestContext(),
-            use_brave_server);
-    // Creating the component updater does not do anything, components
-    // need to be registered and Start() needs to be called.
-    component_updater.reset(component_updater::ComponentUpdateServiceFactory(
-                                 configurator).release());
-  }
-  return component_updater.get();
-}
-
-component_updater::ComponentUpdateService*
-BrowserProcessImpl::brave_component_updater() {
-  return component_updater(brave_component_updater_, true);
-}
-
-component_updater::ComponentUpdateService*
-BrowserProcessImpl::component_updater() {
-  return component_updater(component_updater_, false);
-}
-
 extensions::EventRouterForwarder*
 BrowserProcessImpl::extension_event_router_forwarder() {
   return extension_event_router_forwarder_.get();
 }
 
 message_center::MessageCenter* BrowserProcessImpl::message_center() {
-  DCHECK(thread_checker_.CalledOnValidThread());
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   return message_center::MessageCenter::Get();
 }
 
@@ -257,7 +262,7 @@ void BrowserProcessImpl::CreateLocalState() {
 }
 
 PrefService* BrowserProcessImpl::local_state() {
-  DCHECK(thread_checker_.CalledOnValidThread());
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (!local_state_)
     CreateLocalState();
   return local_state_.get();
@@ -265,13 +270,6 @@ PrefService* BrowserProcessImpl::local_state() {
 
 bool BrowserProcessImpl::IsShuttingDown() {
   return tearing_down_;
-}
-
-void BrowserProcessImpl::ResourceDispatcherHostCreated() {
-  resource_dispatcher_host_delegate_.reset(
-      new atom::AtomResourceDispatcherHostDelegate);
-  content::ResourceDispatcherHost::Get()->SetDelegate(
-      resource_dispatcher_host_delegate_.get());
 }
 
 void BrowserProcessImpl::PreCreateThreads() {
@@ -312,7 +310,7 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
 }
 
 resource_coordinator::TabManager* BrowserProcessImpl::GetTabManager() {
-  DCHECK(thread_checker_.CalledOnValidThread());
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 #if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
   if (!tab_manager_.get())
     tab_manager_.reset(new resource_coordinator::GuestTabManager());
@@ -484,7 +482,7 @@ void BrowserProcessImpl::CreateNotificationUIManager() {
 }
 
 NotificationUIManager* BrowserProcessImpl::notification_ui_manager() {
-  DCHECK(thread_checker_.CalledOnValidThread());
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (!created_notification_ui_manager_)
     CreateNotificationUIManager();
   return notification_ui_manager_.get();
@@ -551,10 +549,14 @@ BrowserProcessImpl::print_preview_dialog_controller() {
   return nullptr;
 }
 
-printing::BackgroundPrintingManager*
-BrowserProcessImpl::background_printing_manager() {
+void BrowserProcessImpl::CreateBackgroundPrintingManager() {
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+  DCHECK(!background_printing_manager_);
+  background_printing_manager_ =
+      base::MakeUnique<printing::BackgroundPrintingManager>();
+#else
   NOTIMPLEMENTED();
-  return nullptr;
+#endif
 }
 
 IntranetRedirectDetector* BrowserProcessImpl::intranet_redirect_detector() {
@@ -577,9 +579,22 @@ DownloadRequestLimiter* BrowserProcessImpl::download_request_limiter() {
   return nullptr;
 }
 
+printing::BackgroundPrintingManager*
+    BrowserProcessImpl::background_printing_manager() {
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (!background_printing_manager_)
+    CreateBackgroundPrintingManager();
+  return background_printing_manager_.get();
+#else
+  NOTIMPLEMENTED();
+  return NULL;
+#endif
+}
+
 BackgroundModeManager* BrowserProcessImpl::background_mode_manager() {
   NOTIMPLEMENTED();
-  return nullptr;
+  return NULL;
 }
 
 void BrowserProcessImpl::set_background_mode_manager_for_test(
@@ -658,6 +673,12 @@ BrowserProcessImpl::GetPhysicalWebDataSource() {
   NOTIMPLEMENTED();
   return nullptr;
 }
+
+component_updater::ComponentUpdateService*
+BrowserProcessImpl::component_updater() {}
+void BrowserProcessImpl::OnKeepAliveStateChanged(bool is_keeping_alive) {}
+void BrowserProcessImpl::OnKeepAliveRestartStateChanged(bool can_restart) {}
+void BrowserProcessImpl::ResourceDispatcherHostCreated() {}
 
 void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
   bool enabled =
