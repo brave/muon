@@ -21,7 +21,7 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('create', function (createData, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     cb && ipc.once('chrome-windows-create-response-' + responseId, function (evt, win, error) {
       if (error) {
         lastError.run('windows.create', error, '', cb)
@@ -42,7 +42,7 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
       cb = arguments[1]
     }
 
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-windows-get-current-response-' + responseId, function (evt, win) {
       cb(win)
     })
@@ -57,7 +57,7 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
       cb = arguments[1]
     }
 
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-windows-get-all-response-' + responseId, function (evt, win) {
       cb(win)
     })
@@ -65,7 +65,7 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('update', function (windowId, updateInfo, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     cb && ipc.once('chrome-windows-update-response-' + responseId, function (evt, win) {
       cb(win)
     })
