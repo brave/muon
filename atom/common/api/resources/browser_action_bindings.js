@@ -4,8 +4,6 @@ var manifest = runtimeNatives.GetManifest();
 var process = requireNative('process');
 var extensionId = process.GetExtensionId();
 
-var id = 0
-
 var binding = {
   onClicked: {
     addListener: function (cb) {
@@ -22,7 +20,7 @@ var binding = {
     ipc.send('chrome-browser-action-set-popup', extensionId, details)
   },
   getPopup: function (details, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-browser-action-get-popup-response-' + responseId, function(evt, details) {
       cb(details)
     })
@@ -32,7 +30,7 @@ var binding = {
     ipc.send('chrome-browser-action-set-title', extensionId, details)
   },
   getTitle: function (details, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-browser-action-get-title-response-' + responseId, function(evt, result) {
       cb(result)
     })
@@ -44,7 +42,7 @@ var binding = {
       console.warn('chrome.browserAction.setIcon imageData is not supported yet')
       return
     }
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-browser-action-set-icon-response-' + responseId, function(evt) {
       cb && cb()
     })
@@ -54,7 +52,7 @@ var binding = {
     ipc.send('chrome-browser-action-set-badge-text', extensionId, details)
   },
   getBadgeText: function (details, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-browser-action-get-badge-text-response-' + responseId, function(evt, details) {
       cb(details)
     })
@@ -64,7 +62,7 @@ var binding = {
     ipc.send('chrome-browser-action-set-badge-background-color', extensionId, details)
   },
   getBadgeBackgroundColor: function (details, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     ipc.once('chrome-browser-action-get-badge-text-response-' + responseId, function(evt, details) {
       cb(details)
     })
