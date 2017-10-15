@@ -3,14 +3,12 @@ var process = requireNative('process')
 var extensionId = process.GetExtensionId()
 var runtime = require('runtime').binding
 
-var id = 0
-
 var createMenuItemId = () => {
-  return 'context-menus-' + extensionId + id++
+  return 'context-menus-' + extensionId + ipc.guid()
 }
 
 var createResponseId = () => {
-  return extensionId + id++
+  return extensionId + ipc.guid()
 }
 
 var binding = {
