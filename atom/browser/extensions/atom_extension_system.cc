@@ -306,8 +306,10 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
   bool is_extension_upgrade = false;
   bool is_extension_loaded = false;
   const Extension* old = GetInstalledExtension(extension->id());
+  std::string old_name;
   if (old) {
     is_extension_loaded = true;
+    old_name = old->name();
     int version_compare_result =
         extension->version()->CompareTo(*(old->version()));
     is_extension_upgrade = version_compare_result > 0;
@@ -317,6 +319,8 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
       DCHECK_GE(version_compare_result, 0);
     }
   }
+  registry_->TriggerOnWillBeInstalled(extension,
+                                      is_extension_upgrade, old_name);
 
   // Set the upgraded bit; we consider reloads upgrades.
   runtime_data()->SetBeingUpgraded(extension->id(),
