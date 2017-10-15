@@ -2,8 +2,6 @@ var binding = require('binding').Binding.create('windows')
 
 var ipc = require('ipc_utils')
 
-var id = 1;
-
 binding.registerCustomHook(function (bindingsAPI, extensionId) {
   var apiFunctions = bindingsAPI.apiFunctions
   var windows = bindingsAPI.compiledApi
