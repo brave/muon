@@ -1,5 +1,5 @@
 var binding = require('binding').Binding.create('windows')
-
+var lastError = require('lastError')
 var ipc = require('ipc_utils')
 
 binding.registerCustomHook(function (bindingsAPI, extensionId) {
@@ -11,7 +11,15 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('remove', function (windowId, cb) {
-    console.warn('chrome.windows.remove is not supported yet')
+    var responseId = ++id
+    cb && ipc.once('chrome-windows-remove-response-' + responseId, function (evt, error) {
+      if (error) {
+        lastError.run('windows.remove', error, '', cb)
+      } else {
+        cb()
+      }
+    })
+    ipc.send('chrome-windows-remove', responseId, windowId)
   })
 
   apiFunctions.setHandleRequest('get', function (windowId, getInfo, cb) {
