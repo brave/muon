@@ -693,8 +693,6 @@ source_set("password_manager") {
   sources = [
     "//chrome/browser/browsing_data/browsing_data_helper.h",
     "//chrome/browser/browsing_data/browsing_data_helper.cc",
-    "//chrome/browser/mac/security_wrappers.h",
-    "//chrome/browser/mac/security_wrappers.cc",
     "//chrome/browser/password_manager/password_manager_util_win.h",
     "//chrome/browser/password_manager/password_manager_util_win.cc",
     "//chrome/browser/password_manager/password_store_factory.cc",
