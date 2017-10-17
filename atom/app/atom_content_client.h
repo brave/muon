@@ -35,7 +35,7 @@ class AtomContentClient : public brightray::ContentClient {
 
   void AddContentDecryptionModules(
       std::vector<content::CdmInfo>* cdms,
-      std::vector<content::CdmHostFilePath>* cdm_host_file_paths) override;
+      std::vector<media::CdmHostFilePath>* cdm_host_file_paths) override;
 
  private:
   std::unique_ptr<ChromeOriginTrialPolicy> origin_trial_policy_;
