@@ -98,7 +98,7 @@ OSStatus KeychainCallback(SecKeychainEvent keychain_event,
 #if defined(OS_WIN)
 void InitializeWindowProcExceptions() {
   base::win::WinProcExceptionFilter exception_filter =
-      base::win::SetWinProcExceptionFilter(&CrashForException);
+      base::win::SetWinProcExceptionFilter(&CrashForException_ExportThunk);
   DCHECK(!exception_filter);
 }
 #endif  // defined (OS_WIN)
