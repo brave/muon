@@ -367,12 +367,6 @@ void TabViewGuest::GuestReady() {
   // we don't use guest only processes and don't want those limitations
   CHECK(!web_contents()->GetRenderProcessHost()->IsForGuestsOnly());
 
-  web_contents()
-      ->GetRenderViewHost()
-      ->GetWidget()
-      ->GetView()
-      ->SetBackgroundColorToDefault();
-
   api_web_contents_->Emit("guest-ready",
       extensions::TabHelper::IdForTab(web_contents()), guest_instance_id());
 }
