@@ -213,7 +213,7 @@ base::FilePath GetSigFilePath(const base::FilePath& file_path) {
 
 void AtomContentClient::AddContentDecryptionModules(
     std::vector<content::CdmInfo>* cdms,
-    std::vector<content::CdmHostFilePath>* cdm_host_file_paths) {
+    std::vector<media::CdmHostFilePath>* cdm_host_file_paths) {
   if (cdms) {
 // TODO(jrummell): Need to have a better flag to indicate systems Widevine
 // is available on. For now we continue to use ENABLE_LIBRARY_CDMS so that
@@ -253,7 +253,7 @@ void AtomContentClient::AddContentDecryptionModules(
     GetSigFilePath(file_path);
   VLOG(1) << __func__ << ": unversioned file " << " at "
     << file_path.value() << ", signature file " << sig_path.value();
-  cdm_host_file_paths->push_back(content::CdmHostFilePath(file_path, sig_path));
+  cdm_host_file_paths->push_back(media::CdmHostFilePath(file_path, sig_path));
 #elif defined(OS_MACOSX)
   chrome::AddCdmHostFilePaths(cdm_host_file_paths);
 #endif
