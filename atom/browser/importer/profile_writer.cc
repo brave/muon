@@ -17,7 +17,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/common/importer/imported_cookie_entry.h"
 #include "build/build_config.h"
-#include "chrome/browser/browser_process_impl.h"
 #include "chrome/browser/password_manager/password_store_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_manager.h"
@@ -27,6 +26,7 @@
 #include "components/keyed_service/core/service_access_type.h"
 #include "components/password_manager/core/browser/password_manager.h"
 #include "content/public/browser/browser_thread.h"
+#include "muon/browser/muon_browser_process_impl.h"
 
 #if defined(OS_WIN)
 #include "components/password_manager/core/browser/webdata/password_web_data_service_win.h"
@@ -36,7 +36,7 @@ namespace importer {
 void ShowImportLockDialog(gfx::NativeWindow parent,
                           const base::Callback<void(bool)>& callback) {
   atom::api::App *app =
-    static_cast<BrowserProcessImpl*>(g_browser_process)->app();
+    static_cast<MuonBrowserProcessImpl*>(g_browser_process)->app();
   if (app) {
     app->Emit("show-warning-dialog");
   }

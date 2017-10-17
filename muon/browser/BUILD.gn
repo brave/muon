@@ -1,0 +1,16 @@
+import("//printing/features/features.gni")
+
+source_set("browser") {
+  public_configs = [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "muon_browser_process_impl.cc",
+    "muon_browser_process_impl.h",
+  ]
+
+  public_deps = [
+    "//electron/chromium_src:browser",
+  ]
+}
