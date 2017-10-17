@@ -6,7 +6,7 @@
 
 namespace {
 
-const int kTwoHoursInMinutes = 120;
+const int kDefaultPromoShowTimeInHours = 5;
 
 }  // namespace
 
@@ -14,17 +14,16 @@ namespace feature_engagement {
 
 NewTabTracker::NewTabTracker(Profile* profile,
                              SessionDurationUpdater* session_duration_updater)
-    : FeatureTracker(profile, session_duration_updater) {}
+    : FeatureTracker(profile,
+                     session_duration_updater,
+                     nullptr, // kIPHNewTabFeature ENABLE_DESKTOP_IN_PRODUCT_HELP
+                     base::TimeDelta::FromHours(kDefaultPromoShowTimeInHours)) {
+}
 
 NewTabTracker::~NewTabTracker() = default;
 
 void NewTabTracker::OnNewTabOpened() {}
 
 void NewTabTracker::OnSessionTimeMet() {}
-
-int NewTabTracker::GetSessionTimeRequiredToShowInMinutes() {
-  NOTREACHED();
-  return kTwoHoursInMinutes;
-}
 
 }  // namespace feature_engagement
