@@ -375,10 +375,6 @@ int AtomMainDelegate::RunProcess(
     const std::string& process_type,
     const content::MainFunctionParams& main_function_params) {
     static const MainFunction kMainFunctions[] = {
-  #if BUILDFLAG(ENABLE_PRINT_PREVIEW) && !defined(CHROME_MULTIPLE_DLL_CHILD)
-      { switches::kCloudPrintServiceProcess, CloudPrintServiceProcessMain },
-  #endif
-
   #if defined(OS_MACOSX)
       { switches::kRelauncherProcess, relauncher::RelauncherMain },
   #else

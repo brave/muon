@@ -29,7 +29,6 @@
 #include "base/time/default_tick_clock.h"
 #include "base/trace_event/trace_event.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
-#include "chrome/browser/browser_process_impl.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
@@ -49,6 +48,7 @@
 #include "device/geolocation/geolocation_delegate.h"
 #include "device/geolocation/geolocation_provider.h"
 #include "muon/app/muon_crash_reporter_client.h"
+#include "muon/browser/muon_browser_process_impl.h"
 #include "v8/include/v8.h"
 #include "v8/include/v8-debug.h"
 
@@ -205,8 +205,10 @@ int AtomBrowserMainParts::PreCreateThreads() {
   {
     TRACE_EVENT0("startup",
       "AtomBrowserMainParts::PreCreateThreads:InitBrowswerProcessImpl");
+    auto command_line = base::CommandLine::ForCurrentProcess();
     fake_browser_process_.reset(
-        new BrowserProcessImpl(local_state_task_runner.get()));
+        new MuonBrowserProcessImpl(local_state_task_runner.get(),
+                                    *command_line));
   }
 
   if (parsed_command_line_.HasSwitch(switches::kEnableProfiling)) {

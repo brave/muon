@@ -13,6 +13,7 @@
 #include "content/public/browser/web_contents_user_data.h"
 
 struct PrintHostMsg_DidPreviewDocument_Params;
+struct PrintHostMsg_RequestPrintPreview_Params;
 
 namespace content {
 class WebContents;
@@ -44,6 +45,9 @@ class PrintPreviewMessageHandler
   friend class content::WebContentsUserData<PrintPreviewMessageHandler>;
 
   // Message handlers.
+  void OnRequestPrintPreview(
+    content::RenderFrameHost* render_frame_host,
+    const PrintHostMsg_RequestPrintPreview_Params& params);
   void OnMetafileReadyForPrinting(
       const PrintHostMsg_DidPreviewDocument_Params& params);
   void OnPrintPreviewFailed(int document_cookie);
@@ -51,6 +55,8 @@ class PrintPreviewMessageHandler
   void RunPrintToPDFCallback(int request_id, uint32_t data_size, char* data);
 
   PrintToPDFCallbackMap print_to_pdf_callback_map_;
+
+  base::WeakPtrFactory<PrintPreviewMessageHandler> weak_ptr_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(PrintPreviewMessageHandler);
 };
