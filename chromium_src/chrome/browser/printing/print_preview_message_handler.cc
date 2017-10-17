@@ -15,6 +15,7 @@
 #include "base/memory/shared_memory.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/printing/print_job_manager.h"
+#include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/printer_query.h"
 #include "components/printing/common/print_messages.h"
 #include "content/public/browser/browser_thread.h"
@@ -68,12 +69,12 @@ char* CopyPDFDataOnIOThread(
 
 PrintPreviewMessageHandler::PrintPreviewMessageHandler(
     WebContents* web_contents)
-    : content::WebContentsObserver(web_contents) {
+    : content::WebContentsObserver(web_contents),
+      weak_ptr_factory_(this) {
   DCHECK(web_contents);
 }
 
-PrintPreviewMessageHandler::~PrintPreviewMessageHandler() {
-}
+PrintPreviewMessageHandler::~PrintPreviewMessageHandler() {}
 
 void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
     const PrintHostMsg_DidPreviewDocument_Params& params) {
@@ -90,7 +91,7 @@ void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
       FROM_HERE,
       base::Bind(&CopyPDFDataOnIOThread, params),
       base::Bind(&PrintPreviewMessageHandler::RunPrintToPDFCallback,
-                 base::Unretained(this),
+                 weak_ptr_factory_.GetWeakPtr(),
                  params.preview_request_id,
                  params.data_size));
 }
@@ -102,7 +103,17 @@ void PrintPreviewMessageHandler::OnPrintPreviewFailed(int document_cookie) {
 bool PrintPreviewMessageHandler::OnMessageReceived(
     const IPC::Message& message,
     content::RenderFrameHost* render_frame_host) {
+
   bool handled = true;
+  IPC_BEGIN_MESSAGE_MAP_WITH_PARAM(PrintPreviewMessageHandler, message,
+                                   render_frame_host)
+    IPC_MESSAGE_HANDLER(PrintHostMsg_RequestPrintPreview,
+                        OnRequestPrintPreview)
+    IPC_MESSAGE_UNHANDLED(handled = false)
+  IPC_END_MESSAGE_MAP()
+  if (handled)
+    return true;
+
   IPC_BEGIN_MESSAGE_MAP(PrintPreviewMessageHandler, message)
     IPC_MESSAGE_HANDLER(PrintHostMsg_MetafileReadyForPrinting,
                         OnMetafileReadyForPrinting)
@@ -113,17 +124,34 @@ bool PrintPreviewMessageHandler::OnMessageReceived(
   return handled;
 }
 
+void PrintPreviewMessageHandler::OnRequestPrintPreview(
+    content::RenderFrameHost* render_frame_host,
+    const PrintHostMsg_RequestPrintPreview_Params& params) {
+  if (params.webnode_only) {
+    PrintViewManager::FromWebContents(web_contents())->PrintPreviewForWebNode(
+        render_frame_host);
+  }
+}
+
 void PrintPreviewMessageHandler::PrintToPDF(
     const base::DictionaryValue& options,
     const atom::api::WebContents::PrintToPDFCallback& callback) {
-  int request_id;
+  PrintViewManager::FromWebContents(web_contents())->PrintPreviewNow(
+        web_contents()->GetMainFrame(), false);
+
+  int request_id = -1;
   options.GetInteger(kPreviewRequestID, &request_id);
   print_to_pdf_callback_map_[request_id] = callback;
 
-  content::RenderFrameHost* rfh = web_contents()->GetMainFrame();
+  WebContents* initiator = web_contents();
+  content::RenderFrameHost* rfh =
+      initiator
+          ? PrintViewManager::FromWebContents(initiator)->print_preview_rfh()
+          : nullptr;
 
   if (rfh) {
     std::unique_ptr<base::DictionaryValue> new_options(options.DeepCopy());
+    new_options->SetBoolean(printing::kSettingPrintToPDF, true);
     new_options->SetInteger(kPreviewInitiatorHostId,
                         rfh->GetProcess()->GetID());
     new_options->SetInteger(kPreviewInitiatorRoutingId,
@@ -150,6 +178,11 @@ void PrintPreviewMessageHandler::RunPrintToPDFCallback(
         v8::Exception::Error(error_message), v8::Null(isolate));
   }
   print_to_pdf_callback_map_.erase(request_id);
+
+  auto manager = PrintViewManager::FromWebContents(web_contents());
+  if (manager) {
+    manager->PrintPreviewDone();
+  }
 }
 
 }  // namespace printing

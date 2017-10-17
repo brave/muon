@@ -24,7 +24,7 @@ source_set("browser") {
     "//electron:common",
     "//electron/muon/app",
     # @todo(bridiver) fix circular dep
-    # "//electron/chromium_src:browser",
+    # "//electron/muon/browser",
     "//base",
     "//chrome/common:constants",
     "//storage/browser",

@@ -44,9 +44,9 @@ source_set("browser") {
   deps = [
     ":apis",
     "//electron/atom/browser",
-    "//electron/chromium_src:browser",
     "//electron:common",
     "//electron/muon/app",
+    "//electron/muon/browser",
     "//chrome/common",
     "//components/autofill/content/browser:risk_proto",
     "//components/autofill/content/browser",
@@ -141,6 +141,7 @@ source_set("apis") {
 
   deps = [
     "//electron/build/node",
+    "//electron/muon/browser",
     "//v8:v8",
     "//v8:v8_libplatform",
     "//third_party/WebKit/public:blink_headers",

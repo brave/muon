@@ -654,26 +654,6 @@ index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3a
    const char* outer_app_dir_c = outer_app_dir.value().c_str();
    NSString* outer_app_dir_ns = [NSString stringWithUTF8String:outer_app_dir_c];
  
-diff --git a/chrome/common/chrome_utility_printing_messages.h b/chrome/common/chrome_utility_printing_messages.h
-index f5712a7a5bb8fabf279088631141cad405c8be8d..da8ff4065d721d49c1ca443a5c64c45e9f59ca4d 100644
---- a/chrome/common/chrome_utility_printing_messages.h
-+++ b/chrome/common/chrome_utility_printing_messages.h
-@@ -26,7 +26,6 @@
- #define IPC_MESSAGE_START ChromeUtilityPrintingMsgStart
- 
- // Preview and Cloud Print messages.
--#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- IPC_ENUM_TRAITS_MAX_VALUE(printing::PdfRenderSettings::Mode,
-                           printing::PdfRenderSettings::Mode::LAST)
- 
-@@ -44,6 +43,7 @@ IPC_STRUCT_TRAITS_BEGIN(printing::PrinterCapsAndDefaults)
-   IPC_STRUCT_TRAITS_MEMBER(printer_defaults)
-   IPC_STRUCT_TRAITS_MEMBER(defaults_mime_type)
- IPC_STRUCT_TRAITS_END()
-+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
- IPC_ENUM_TRAITS_MAX_VALUE(printing::ColorModel, printing::PROCESSCOLORMODEL_RGB)
- 
 diff --git a/chrome/common/chrome_version.h.in b/chrome/common/chrome_version.h.in
 index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e453aef4287 100644
 --- a/chrome/common/chrome_version.h.in
@@ -1318,68 +1298,6 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
    OSStatus error = keychain_.FindGenericPassword(
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
-diff --git a/components/printing/common/print_messages.h b/components/printing/common/print_messages.h
-index f9b1daf905f2d9a9eae724ebea0ab1f0e36e2707..ba4d6c91c7c4bfa02c20aee934890e0263f4804b 100644
---- a/components/printing/common/print_messages.h
-+++ b/components/printing/common/print_messages.h
-@@ -221,7 +221,6 @@ IPC_STRUCT_TRAITS_BEGIN(PrintMsg_PrintPages_Params)
-   IPC_STRUCT_TRAITS_MEMBER(pages)
- IPC_STRUCT_TRAITS_END()
- 
--#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- // Parameters to describe a rendered document.
- IPC_STRUCT_BEGIN(PrintHostMsg_DidPreviewDocument_Params)
-   // A shared memory handle to metafile data.
-@@ -243,6 +242,7 @@ IPC_STRUCT_BEGIN(PrintHostMsg_DidPreviewDocument_Params)
-   IPC_STRUCT_MEMBER(int, preview_request_id)
- IPC_STRUCT_END()
- 
-+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- // Parameters to describe a rendered preview page.
- IPC_STRUCT_BEGIN(PrintHostMsg_DidPreviewPage_Params)
-   // A shared memory handle to metafile data for a draft document of the page.
-@@ -348,13 +348,11 @@ IPC_MESSAGE_ROUTED1(PrintMsg_PrintingDone,
- // Tells the RenderFrame whether printing is enabled or not.
- IPC_MESSAGE_ROUTED1(PrintMsg_SetPrintingEnabled, bool /* enabled */)
- 
--#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- // Tells the RenderFrame to switch the CSS to print media type, renders every
- // requested pages for print preview using the given |settings|. This gets
- // called multiple times as the user updates settings.
- IPC_MESSAGE_ROUTED1(PrintMsg_PrintPreview,
-                     base::DictionaryValue /* settings */)
--#endif
- 
- // Messages sent from the renderer to the browser.
- 
-@@ -439,13 +437,13 @@ IPC_SYNC_MESSAGE_ROUTED2_1(PrintHostMsg_CheckForCancel,
-                            int32_t /* PrintPreviewUI ID */,
-                            int /* request id */,
-                            bool /* print preview cancelled */)
-+#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
- // Sends back to the browser the complete rendered document (non-draft mode,
- // used for printing) that was requested by a PrintMsg_PrintPreview message.
- // The memory handle in this message is already valid in the browser process.
- IPC_MESSAGE_ROUTED1(PrintHostMsg_MetafileReadyForPrinting,
-                     PrintHostMsg_DidPreviewDocument_Params /* params */)
--#endif  // BUILDFLAG(ENABLE_PRINT_PREVIEW)
- 
- // This is sent when there are invalid printer settings.
- IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
-@@ -454,11 +452,11 @@ IPC_MESSAGE_ROUTED0(PrintHostMsg_ShowInvalidPrinterSettingsError)
- IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintingFailed,
-                     int /* document cookie */)
- 
--#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- // Tell the browser print preview failed.
- IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewFailed,
-                     int /* document cookie */)
- 
-+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
- // Tell the browser print preview was cancelled.
- IPC_MESSAGE_ROUTED1(PrintHostMsg_PrintPreviewCancelled,
-                     int /* document cookie */)
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
 index 14ae19e07b467963ce5cac98d08495387892022e..a8d5610ad1ac2c864d563e4bdb65135216a35bfd 100644
 --- a/content/app/content_main_runner.cc

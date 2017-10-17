@@ -7,9 +7,9 @@
 #include "base/base64.h"
 #include "brave/browser/component_updater/extension_installer_traits.h"
 #include "brave/browser/component_updater/widevine_cdm_component_installer.h"
-#include "chrome/browser/browser_process_impl.h"
 #include "components/component_updater/component_updater_service.h"
 #include "components/update_client/crx_update_item.h"
+#include "muon/browser/muon_browser_process_impl.h"
 #include "native_mate/dictionary.h"
 
 #include "atom/common/node_includes.h"
@@ -35,7 +35,7 @@ component_updater::ComponentUpdateService* ComponentsUI::GetCUSForID(
   if (component_id == kWidevineId) {
     return g_browser_process->component_updater();
   }
-  return static_cast<BrowserProcessImpl*>(g_browser_process)->
+  return static_cast<MuonBrowserProcessImpl*>(g_browser_process)->
       brave_component_updater();
 }
 
@@ -85,7 +85,7 @@ void ComponentUpdater::RegisterComponentForUpdate(
     const base::Closure& registered_callback,
     const ReadyCallback& ready_callback) {
   brave::RegisterExtension(
-      static_cast<BrowserProcessImpl*>(g_browser_process)->
+      static_cast<MuonBrowserProcessImpl*>(g_browser_process)->
           brave_component_updater(),
       public_key, registered_callback, ready_callback);
 }
@@ -104,7 +104,7 @@ void ComponentUpdater::OnComponentReady(
 void ComponentUpdater::RegisterComponent(mate::Arguments* args) {
   static bool registeredObserver = false;
   if (!registeredObserver) {
-    static_cast<BrowserProcessImpl*>(g_browser_process)->
+    static_cast<MuonBrowserProcessImpl*>(g_browser_process)->
         brave_component_updater()->AddObserver(this);
     g_browser_process->component_updater()->AddObserver(this);
     registeredObserver = true;
@@ -151,7 +151,7 @@ std::vector<std::string> ComponentUpdater::GetComponentIDs() {
   std::vector<std::string> components =
       g_browser_process->component_updater()->GetComponentIDs();
   std::vector<std::string> brave_components =
-      static_cast<BrowserProcessImpl*>(g_browser_process)->
+      static_cast<MuonBrowserProcessImpl*>(g_browser_process)->
           brave_component_updater()->GetComponentIDs();
   components.insert(components.end(),
       brave_components.begin(), brave_components.end());
