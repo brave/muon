@@ -675,7 +675,7 @@ BrowserProcessImpl::GetPhysicalWebDataSource() {
 }
 
 component_updater::ComponentUpdateService*
-BrowserProcessImpl::component_updater() {}
+BrowserProcessImpl::component_updater() { return nullptr; }
 void BrowserProcessImpl::OnKeepAliveStateChanged(bool is_keeping_alive) {}
 void BrowserProcessImpl::OnKeepAliveRestartStateChanged(bool can_restart) {}
 void BrowserProcessImpl::ResourceDispatcherHostCreated() {}
