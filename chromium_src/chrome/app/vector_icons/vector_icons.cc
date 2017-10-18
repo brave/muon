@@ -16,10 +16,6 @@ static constexpr gfx::PathElement path_name[] = {__VA_ARGS__};
 #define VECTOR_ICON_TEMPLATE(icon_name, path_name, path_name_1x) \
 const gfx::VectorIcon icon_name = { path_name , path_name_1x };
 
-namespace vector_icons {
-
 using namespace gfx;
 
 VECTOR_ICON_TEMPLATE(kBrowserToolsUpdateIcon, nullptr, nullptr)
-
-}  // namespace vector_icons
