@@ -53,4 +53,14 @@ bool PrintPreviewDialogController::IsPrintPreviewURL(const GURL& url) {
 
 PrintPreviewDialogController::~PrintPreviewDialogController() {}
 
+WebContents* PrintPreviewDialogController::GetInitiator(
+    WebContents* preview_dialog) {
+  return nullptr;
+}
+
+void PrintPreviewDialogController::Observe(
+    int type,
+    const content::NotificationSource& source,
+    const content::NotificationDetails& details) {}
+
 }  // namespace printing

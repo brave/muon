@@ -279,6 +279,8 @@ source_set("browser") {
     "//chrome/browser/upgrade_detector.cc",
     "//chrome/browser/upgrade_detector.h",
     "chrome/browser/upgrade_detector_impl.cc",
+    "chrome/app/vector_icons/vector_icons.cc",
+    "chrome/app/vector_icons/vector_icons.h",
     "//chrome/browser/service_process/service_process_control.cc",
     "//chrome/browser/service_process/service_process_control.h",
     "//chrome/browser/service_process/service_process_control_mac.mm",
