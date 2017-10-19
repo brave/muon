@@ -87,6 +87,8 @@ class BraveBrowserContext : public Profile {
   bool HasOffTheRecordProfile() override;
   Profile* GetOriginalProfile() override;
   bool IsSameProfile(Profile* profile) override;
+  base::FilePath last_selected_directory() override;
+  void set_last_selected_directory(const base::FilePath& path) override;
 
   user_prefs::PrefRegistrySyncable* pref_registry() const override {
     return pref_registry_.get(); }

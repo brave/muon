@@ -20,7 +20,6 @@ namespace atom {
 
 class AtomBrowserContext;
 class NativeWindow;
-class WebDialogHelper;
 
 class CommonWebContentsDelegate
     : public content::WebContentsDelegate,
@@ -144,7 +143,6 @@ class CommonWebContentsDelegate
   // Whether window is fullscreened by window api.
   bool native_fullscreen_;
 
-  std::unique_ptr<WebDialogHelper> web_dialog_helper_;
   scoped_refptr<DevToolsFileSystemIndexer> devtools_file_system_indexer_;
 
   // Make sure BrowserContext is alwasys destroyed after WebContents.

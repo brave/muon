@@ -522,6 +522,23 @@ index 7acc7baa7cd01b9627e8d231a3a7848cf4ec2295..e857daff2ba3910223f1039f66364faa
    // Finds TabStripModel which has a WebContents whose id is the given
    // web_contents_id, and returns the WebContents index and the TabStripModel.
    int FindTabStripModelById(int64_t target_web_contents_id,
+diff --git a/chrome/browser/ui/chrome_select_file_policy.cc b/chrome/browser/ui/chrome_select_file_policy.cc
+index 43dd8ee370f089af922b387fc57baa4183d9540a..c1392ba4beb20bc96c656cf5e6880e22e03348a2 100644
+--- a/chrome/browser/ui/chrome_select_file_policy.cc
++++ b/chrome/browser/ui/chrome_select_file_policy.cc
+@@ -30,10 +30,12 @@ bool ChromeSelectFilePolicy::CanOpenSelectFileDialog() {
+ void ChromeSelectFilePolicy::SelectFileDenied() {
+   // Show the InfoBar saying that file-selection dialogs are disabled.
+   if (source_contents_) {
++#ifdef MUON_CHROMIUM_BUILD
+     SimpleAlertInfoBarDelegate::Create(
+         InfoBarService::FromWebContents(source_contents_),
+         infobars::InfoBarDelegate::CHROME_SELECT_FILE_POLICY, nullptr,
+         l10n_util::GetStringUTF16(IDS_FILE_SELECTION_DIALOG_INFOBAR), true);
++#endif
+   } else {
+     LOG(WARNING) << "File-selection dialogs are disabled but no WebContents "
+                  << "is given to display the InfoBar.";
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 653e7692e33d0ee06428366141e5c23043f66b0d..72e13e247e6ddaae02cd08cefafb43051f886055 100644
 --- a/chrome/common/BUILD.gn
