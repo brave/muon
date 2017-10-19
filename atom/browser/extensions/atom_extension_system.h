@@ -5,6 +5,7 @@
 #ifndef ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSION_SYSTEM_H_
 #define ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSION_SYSTEM_H_
 
+#include <map>
 #include <memory>
 #include <string>
 
@@ -30,6 +31,8 @@ class ExtensionService {
   virtual void NotifyExtensionUnloaded(
       const extensions::Extension* extension,
       extensions::UnloadedExtensionReason reason) = 0;
+  virtual void NotifyExtensionInstalled(
+      const std::string& extension_id) = 0;
   virtual const extensions::Extension* AddExtension(
                                   const extensions::Extension* extension) = 0;
   virtual const extensions::Extension* GetExtensionById(
@@ -139,6 +142,7 @@ class AtomExtensionSystem : public ExtensionSystem {
     void NotifyExtensionLoaded(const Extension* extension) override;
     void NotifyExtensionUnloaded(const Extension* extension,
                                  UnloadedExtensionReason reason) override;
+    void NotifyExtensionInstalled(const std::string& extension_id) override;
     const Extension* AddExtension(const Extension* extension) override;
     const Extension* GetExtensionById(
         const std::string& id,
@@ -182,6 +186,8 @@ class AtomExtensionSystem : public ExtensionSystem {
     std::unique_ptr<chromeos::DeviceLocalAccountManagementPolicyProvider>
         device_local_account_management_policy_provider_;
 #endif
+
+    std::map<std::string, bool> installed_map_;
 
     OneShotEvent ready_;
   };

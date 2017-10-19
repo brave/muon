@@ -135,6 +135,7 @@ gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
                                                         v8::Isolate* isolate) {
   return gin::Wrappable<Extension>::GetObjectTemplateBuilder(isolate)
       .SetMethod("load", &Extension::Load)
+      .SetMethod("notifyInstalled", &Extension::NotifyInstalled)
       .SetMethod("enable", &Extension::Enable)
       .SetMethod("disable", &Extension::Disable)
       .SetMethod("setURLHandler", &Extension::SetURLHandler)
@@ -235,6 +236,19 @@ void Extension::Load(gin::Arguments* args) {
         base::Bind(&Extension::LoadOnFILEThread,
             base::Unretained(this),
             path, Passed(&manifest_copy), manifest_location, flags));
+}
+
+void Extension::NotifyInstalled(gin::Arguments* args) {
+  std::string extension_id;
+  if (!args->GetNext(&extension_id)) {
+    args->ThrowTypeError("`extension_id` must be a string");
+    return;
+  }
+  auto extension_service =
+      extensions::ExtensionSystem::Get(browser_context_)->
+          extension_service();
+  if (extension_service)
+    extension_service->NotifyExtensionInstalled(extension_id);
 }
 
 void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {

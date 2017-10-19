@@ -301,6 +301,11 @@ void AtomExtensionSystem::Shared::NotifyExtensionUnloaded(
         UnregisterExtensionWithRequestContexts(extension->id(), reason);
 }
 
+void AtomExtensionSystem::Shared::NotifyExtensionInstalled(
+    const std::string& id) {
+  installed_map_[id] = true;
+}
+
 const Extension* AtomExtensionSystem::Shared::AddExtension(
                                         const Extension* extension) {
   bool is_extension_upgrade = false;
@@ -319,8 +324,10 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
       DCHECK_GE(version_compare_result, 0);
     }
   }
-  registry_->TriggerOnWillBeInstalled(extension,
-                                      is_extension_upgrade, old_name);
+
+  if (installed_map_[extension->id()])
+    registry_->TriggerOnWillBeInstalled(extension, is_extension_upgrade,
+                                        old_name);
 
   // Set the upgraded bit; we consider reloads upgrades.
   runtime_data()->SetBeingUpgraded(extension->id(),
