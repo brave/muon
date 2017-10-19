@@ -14,7 +14,6 @@
 #include "atom/browser/native_window.h"
 #include "atom/browser/ui/file_dialog.h"
 #include "atom/browser/web_contents_permission_helper.h"
-#include "atom/browser/web_dialog_helper.h"
 #include "atom/common/atom_constants.h"
 #include "base/files/file_util.h"
 #include "base/strings/utf_string_conversions.h"

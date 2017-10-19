@@ -299,6 +299,12 @@ source_set("browser") {
     "//chrome/browser/service_process/service_process_control_mac.mm",
   ]
 
+  if (use_aura) {
+    sources += [
+      "//chrome/browser/platform_util_aura.cc",
+    ]
+  }
+
   if (is_win || is_mac) {
     sources += [
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.cc",
@@ -310,7 +316,6 @@ source_set("browser") {
     sources += [
       "//chrome/browser/win/browser_util.h",
       "//chrome/browser/win/browser_util.cc",
-      "//chrome/browser/platform_util_aura.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
