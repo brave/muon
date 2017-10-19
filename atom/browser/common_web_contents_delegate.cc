@@ -22,6 +22,7 @@
 #include "chrome/browser/certificate_viewer.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
+#include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/ui/browser_dialogs.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/grit/generated_resources.h"
@@ -278,9 +279,7 @@ content::ColorChooser* CommonWebContentsDelegate::OpenColorChooser(
 void CommonWebContentsDelegate::RunFileChooser(
     content::RenderFrameHost* render_frame_host,
     const content::FileChooserParams& params) {
-  if (!web_dialog_helper_)
-    web_dialog_helper_.reset(new WebDialogHelper(owner_window()));
-  web_dialog_helper_->RunFileChooser(render_frame_host, params);
+    FileSelectHelper::RunFileChooser(render_frame_host, params);
 }
 
 void CommonWebContentsDelegate::EnumerateDirectory(content::WebContents* guest,

@@ -129,6 +129,9 @@ class Profile : public atom::AtomBrowserContext {
   // TODO(wjmaclean): Remove this when HostZoomMap migrates to StoragePartition.
   virtual ChromeZoomLevelPrefs* GetZoomLevelPrefs();
 
+  virtual base::FilePath last_selected_directory() = 0;
+  virtual void set_last_selected_directory(const base::FilePath& path) = 0;
+
   // Return whether 2 profiles are the same. 2 profiles are the same if they
   // represent the same profile. This can happen if there is pointer equality
   // or if one profile is the incognito version of another profile (or vice

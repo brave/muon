@@ -159,6 +159,19 @@ index e659aec2f7d606037a7867d6ae1f7186d96ce8eb..a446553206403b575e3e0b3b49027b41
            "safe_browsing::mojom::SafeBrowsing",
            "spellcheck::mojom::SpellCheckHost",
            "spellcheck::mojom::SpellCheckPanelHost",
+diff --git a/chrome/browser/file_select_helper.cc b/chrome/browser/file_select_helper.cc
+index 2580748f689b7aac2a48e9b7389802e381fa4925..eb3c928a9709e4770e231aff07c3f9aaddb04ef5 100644
+--- a/chrome/browser/file_select_helper.cc
++++ b/chrome/browser/file_select_helper.cc
+@@ -576,7 +576,7 @@ void FileSelectHelper::RunFileChooserOnUIThread(
+     return;
+ 
+   select_file_dialog_ = ui::SelectFileDialog::Create(
+-      this, std::make_unique<ChromeSelectFilePolicy>(web_contents_));
++      this, std::make_unique<ChromeSelectFilePolicy>(nullptr));
+   if (!select_file_dialog_.get())
+     return;
+ 
 diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
 index 864a6951115dda5ed74963f18b35692960397d50..3e1a2b719521ac2c60bae05f94e409bc4c7da022 100644
 --- a/chrome/browser/importer/external_process_importer_client.h

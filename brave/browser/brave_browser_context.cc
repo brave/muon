@@ -637,6 +637,14 @@ BraveBrowserContext::GetIOTaskRunner() {
       GetPath(), BrowserThread::GetBlockingPool());
 }
 
+base::FilePath BraveBrowserContext::last_selected_directory() {
+      return GetPrefs()->GetFilePath(prefs::kSelectFileLastDirectory);
+}
+
+void BraveBrowserContext::set_last_selected_directory(const base::FilePath& path) {
+    GetPrefs()->SetFilePath(prefs::kSelectFileLastDirectory, path);
+}
+
 }  // namespace brave
 
 namespace atom {
