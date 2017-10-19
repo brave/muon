@@ -159,19 +159,6 @@ index e659aec2f7d606037a7867d6ae1f7186d96ce8eb..a446553206403b575e3e0b3b49027b41
            "safe_browsing::mojom::SafeBrowsing",
            "spellcheck::mojom::SpellCheckHost",
            "spellcheck::mojom::SpellCheckPanelHost",
-diff --git a/chrome/browser/file_select_helper.cc b/chrome/browser/file_select_helper.cc
-index 2580748f689b7aac2a48e9b7389802e381fa4925..eb3c928a9709e4770e231aff07c3f9aaddb04ef5 100644
---- a/chrome/browser/file_select_helper.cc
-+++ b/chrome/browser/file_select_helper.cc
-@@ -576,7 +576,7 @@ void FileSelectHelper::RunFileChooserOnUIThread(
-     return;
- 
-   select_file_dialog_ = ui::SelectFileDialog::Create(
--      this, std::make_unique<ChromeSelectFilePolicy>(web_contents_));
-+      this, std::make_unique<ChromeSelectFilePolicy>(nullptr));
-   if (!select_file_dialog_.get())
-     return;
- 
 diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
 index 864a6951115dda5ed74963f18b35692960397d50..3e1a2b719521ac2c60bae05f94e409bc4c7da022 100644
 --- a/chrome/browser/importer/external_process_importer_client.h
@@ -523,6 +510,25 @@ index 7acc7baa7cd01b9627e8d231a3a7848cf4ec2295..e857daff2ba3910223f1039f66364faa
    // Finds TabStripModel which has a WebContents whose id is the given
    // web_contents_id, and returns the WebContents index and the TabStripModel.
    int FindTabStripModelById(int64_t target_web_contents_id,
+diff --git a/chrome/browser/ui/chrome_select_file_policy.cc b/chrome/browser/ui/chrome_select_file_policy.cc
+index 43dd8ee370f089af922b387fc57baa4183d9540a..82c2d42db72350935c8d9827b017123b1864f963 100644
+--- a/chrome/browser/ui/chrome_select_file_policy.cc
++++ b/chrome/browser/ui/chrome_select_file_policy.cc
+@@ -30,10 +30,10 @@ bool ChromeSelectFilePolicy::CanOpenSelectFileDialog() {
+ void ChromeSelectFilePolicy::SelectFileDenied() {
+   // Show the InfoBar saying that file-selection dialogs are disabled.
+   if (source_contents_) {
+-    SimpleAlertInfoBarDelegate::Create(
+-        InfoBarService::FromWebContents(source_contents_),
+-        infobars::InfoBarDelegate::CHROME_SELECT_FILE_POLICY, nullptr,
+-        l10n_util::GetStringUTF16(IDS_FILE_SELECTION_DIALOG_INFOBAR), true);
++//     SimpleAlertInfoBarDelegate::Create(
++//         InfoBarService::FromWebContents(source_contents_),
++//         infobars::InfoBarDelegate::CHROME_SELECT_FILE_POLICY, nullptr,
++//         l10n_util::GetStringUTF16(IDS_FILE_SELECTION_DIALOG_INFOBAR), true);
+   } else {
+     LOG(WARNING) << "File-selection dialogs are disabled but no WebContents "
+                  << "is given to display the InfoBar.";
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 653e7692e33d0ee06428366141e5c23043f66b0d..72e13e247e6ddaae02cd08cefafb43051f886055 100644
 --- a/chrome/common/BUILD.gn
