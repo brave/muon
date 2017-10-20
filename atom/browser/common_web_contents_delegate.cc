@@ -284,9 +284,7 @@ void CommonWebContentsDelegate::RunFileChooser(
 void CommonWebContentsDelegate::EnumerateDirectory(content::WebContents* guest,
                                                    int request_id,
                                                    const base::FilePath& path) {
-  if (!web_dialog_helper_)
-    web_dialog_helper_.reset(new WebDialogHelper(owner_window()));
-  web_dialog_helper_->EnumerateDirectory(guest, request_id, path);
+    FileSelectHelper::EnumerateDirectory(guest, request_id, path);
 }
 
 void CommonWebContentsDelegate::EnterFullscreenModeForTab(
