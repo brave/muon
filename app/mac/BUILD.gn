@@ -143,7 +143,7 @@ bundle_data("widevine_cdm_adapter") {
     "$root_out_dir/$widevine_cdm_path/widevinecdmadapter.plugin",
   ]
   outputs = [
-    "{{bundle_root_dir}}/Libraries/$widevine_cdm_path/{{source_file_part}}",
+    "{{bundle_contents_dir}}/Libraries/$widevine_cdm_path/{{source_file_part}}",
   ]
   data_deps = [
     "//third_party/widevine/cdm:widevinecdm",
@@ -165,7 +165,7 @@ bundle_data("external_binaries_resources") {
   ]
 
   outputs = [
-    "{{bundle_root_dir}}/Libraries/{{source_file_part}}",
+    "{{bundle_contents_dir}}/Libraries/{{source_file_part}}",
   ]
 }
 
@@ -265,7 +265,7 @@ bundle_data("electron_versioned_bundle_data") {
   ]
 
   outputs = [
-    "{{bundle_root_dir}}/$chrome_version_full/{{source_file_part}}",
+    "{{bundle_contents_dir}}/$chrome_version_full/{{source_file_part}}",
   ]
 
   public_deps = [
