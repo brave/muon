@@ -49,6 +49,7 @@
 #include "device/geolocation/geolocation_provider.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "muon/browser/muon_browser_process_impl.h"
+#include "services/metrics/public/cpp/ukm_recorder.h"
 #include "v8/include/v8.h"
 #include "v8/include/v8-debug.h"
 
@@ -381,11 +382,16 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
       command_line->GetSwitchValueASCII(switches::kEnableFeatures),
       command_line->GetSwitchValueASCII(switches::kDisableFeatures));
   auto feature_list = base::FeatureList::GetInstance();
+  // temporary workaround for flash
   auto field_trial =
       feature_list->GetFieldTrial(features::kPreferHtmlOverPlugins);
   feature_list->RegisterFieldTrialOverride(
                     features::kPreferHtmlOverPlugins.name,
                     base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+  // disable ukm metrics
+  field_trial = feature_list->GetFieldTrial(ukm::kUkmFeature);
+  feature_list->RegisterFieldTrialOverride(ukm::kUkmFeature.name,
+                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 }
 
 
