@@ -1547,7 +1547,7 @@ int WebContents::GetID() const {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::TabHelper::IdForTab(web_contents());
 #else
-  return web_contents()->GetRenderProcessHost()->GetID();
+  return web_contents()->GetMainFrame()->GetProcess()->GetID();
 #endif
 }
 
