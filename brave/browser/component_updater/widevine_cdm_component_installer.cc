@@ -429,7 +429,8 @@ void WidevineCdmComponentInstallerPolicy::RegisterWidevineCdmWithBrave(
       base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
   CdmRegistry::GetInstance()->RegisterCdm(
       content::CdmInfo(kWidevineCdmDisplayName, kWidevineCdmGuid, cdm_version,
-                       cdm_path, supported_codecs, kWidevineKeySystem, false));
+                       cdm_path, kWidevineCdmFileSystemId, supported_codecs,
+                       kWidevineKeySystem, false));
 
   ready_callback_.Run(cdm_install_dir);
 }
