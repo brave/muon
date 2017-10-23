@@ -319,8 +319,14 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
       DCHECK_GE(version_compare_result, 0);
     }
   }
-  registry_->TriggerOnWillBeInstalled(extension,
-                                      is_extension_upgrade, old_name);
+
+  bool is_install =
+      !extension_prefs_->GetInstalledExtensionInfo(extension->id()) ||
+      is_extension_upgrade;
+  if (is_install) {
+    registry_->TriggerOnWillBeInstalled(extension,
+                                        is_extension_upgrade, old_name);
+  }
 
   // Set the upgraded bit; we consider reloads upgrades.
   runtime_data()->SetBeingUpgraded(extension->id(),
@@ -352,6 +358,15 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
     NotifyExtensionLoaded(extension);
   }
   runtime_data()->SetBeingUpgraded(extension->id(), false);
+
+  if (is_install) {
+    extension_prefs_->OnExtensionInstalled(
+        extension, Extension::ENABLED, syncer::StringOrdinal(),
+        extensions::kInstallFlagNone, std::string());
+
+    registry_->TriggerOnInstalled(extension, is_extension_upgrade);
+  }
+
   return extension;
 }
 
@@ -395,8 +410,6 @@ void AtomExtensionSystem::Shared::NotifyExtensionLoaded(
   // NOTIFICATION_EXTENSION_LOADED_DEPRECATED, the
   // renderer is guaranteed to know about it.
   registry_->TriggerOnLoaded(extension);
-
-  registry_->TriggerOnInstalled(extension, false);
 }
 
 const Extension* AtomExtensionSystem::Shared::GetExtensionById(
