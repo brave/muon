@@ -6,6 +6,7 @@
 
 #include <map>
 #include <utility>
+#include "atom/browser/extensions/api/atom_extensions_api_client.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 #include "atom/browser/native_window.h"
 #include "atom/common/native_mate_converters/callback.h"
@@ -548,6 +549,10 @@ void TabHelper::RenderViewCreated(content::RenderViewHost* render_view_host) {
 
 void TabHelper::RenderFrameCreated(content::RenderFrameHost* host) {
   SetTabId(host);
+  // Look up the extension API frame ID to force the mapping to be cached.
+  // This is needed so that cached information is available for tabId in the
+  // filtering callbacks.
+  ExtensionApiFrameIdMap::Get()->CacheFrameData(host);
 }
 
 void TabHelper::WebContentsDestroyed() {
