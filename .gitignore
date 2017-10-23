@@ -18,6 +18,10 @@
 /vendor/llvm/
 /vendor/llvm-build/
 /vendor/.gclient
+/vendor/ad-block
+/vendor/tracking-protection
+/vendor/bloom-filter-cpp
+/vendor/hashset-cpp
 node_modules/
 *.xcodeproj
 *.swp
