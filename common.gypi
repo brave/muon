@@ -1591,14 +1591,6 @@
       # Get binutils version so we can enable debug fission if we can.
       ['os_posix==1 and OS!="mac" and OS!="ios"', {
         'conditions': [
-          # compiler_version doesn't work with clang
-          # TODO(mithro): Land https://codereview.chromium.org/199793014/ so
-          # compiler_version works with clang.
-          # TODO(glider): set clang to 1 earlier for ASan and TSan builds so
-          # that it takes effect here.
-          # ['clang==0 and asan==0 and lsan==0 and tsan==0 and msan==0 and ubsan==0 and ubsan_security==0 and ubsan_vptr==0', {
-          #   'binutils_version%': '<!pymod_do_main(compiler_version target assembler)',
-          # }],
           # On Android we know the binutils version in the toolchain.
           ['OS=="android"', {
             'binutils_version%': 222,
