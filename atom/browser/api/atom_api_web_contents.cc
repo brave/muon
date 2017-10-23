@@ -59,7 +59,7 @@
 #include "chrome/browser/favicon/favicon_utils.h"
 #include "chrome/browser/history/history_tab_helper.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
-#include "chrome/browser/printing/print_view_manager_basic.h"
+#include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
@@ -1952,8 +1952,8 @@ void WebContents::Print(mate::Arguments* args) {
   if (!rfh_to_use)
     return;
 
-  printing::PrintViewManagerBasic::FromWebContents(web_contents())->
-       PrintNow(rfh_to_use);
+  printing::PrintViewManager::FromWebContents(web_contents())->
+      PrintNow(rfh_to_use);
 }
 
 void WebContents::PrintToPDF(const base::DictionaryValue& setting,
