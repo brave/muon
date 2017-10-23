@@ -19,6 +19,7 @@
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
+#include "atom/browser/extensions/api/atom_extensions_api_client.h"
 #include "base/memory/ptr_util.h"
 #include "brave/browser/brave_browser_context.h"
 #include "build/build_config.h"
@@ -223,6 +224,8 @@ void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
+  extensions::ExtensionsAPIClient::Get()->AttachWebContentsHelpers(
+      web_contents());
   api_web_contents_ = atom::api::WebContents::CreateFrom(isolate,
       web_contents(), atom::api::WebContents::Type::WEB_VIEW).get();
   api_web_contents_->guest_delegate_ = this;

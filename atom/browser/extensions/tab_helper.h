@@ -42,7 +42,6 @@ class Dictionary;
 
 namespace keys {
 extern const char kIdKey[];
-extern const char kTabIdKey[];
 extern const char kIncognitoKey[];
 extern const char kWindowIdKey[];
 extern const char kAudibleKey[];
