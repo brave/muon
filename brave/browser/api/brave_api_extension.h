@@ -65,6 +65,7 @@ class Extension : public gin::Wrappable<Extension>,
       extensions::Manifest::Location manifest_location,
       int flags);
   void Load(gin::Arguments* args);
+  void NotifyInstalled(gin::Arguments* args);
   void AddExtension(scoped_refptr<extensions::Extension> extension);
   void OnExtensionReady(content::BrowserContext* browser_context,
                         const extensions::Extension* extension) override;
