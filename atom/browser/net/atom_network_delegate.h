@@ -112,7 +112,8 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
       uint64_t id, T out, std::unique_ptr<base::DictionaryValue> response);
   template<typename T>
   void OnListenerResultInUI(
-      uint64_t id, T out, const base::DictionaryValue& response);
+      uint64_t id, int render_frame_id, int render_process_id,
+      T out, const base::DictionaryValue& response);
 
   std::map<SimpleEvent, SimpleListenerInfo> simple_listeners_;
   std::map<ResponseEvent, ResponseListenerInfo> response_listeners_;

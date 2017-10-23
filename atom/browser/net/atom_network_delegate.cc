@@ -7,11 +7,14 @@
 #include <memory>
 #include <utility>
 
+#include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "base/stl_util.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/devtools/devtools_network_transaction.h"
+#include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/websocket_handshake_request_info.h"
 #include "extensions/features/features.h"
 #include "net/url_request/url_request.h"
@@ -85,29 +88,35 @@ bool MatchesFilterCondition(net::URLRequest* request,
   return false;
 }
 
+void GetRenderFrameIdAndProcessId(net::URLRequest* request,
+    int* render_frame_id,
+    int* render_process_id) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  *render_frame_id = -1;
+  *render_process_id = -1;
+  extensions::ExtensionApiFrameIdMap::FrameData frame_data;
+  if (!content::ResourceRequestInfo::GetRenderFrameForRequest(
+          request, render_process_id, render_frame_id)) {
+    const content::WebSocketHandshakeRequestInfo* websocket_info =
+      content::WebSocketHandshakeRequestInfo::ForRequest(request);
+    if (websocket_info) {
+      *render_frame_id = websocket_info->GetRenderFrameId();
+      *render_process_id = websocket_info->GetChildId();
+    }
+  }
+#endif
+}
+
 int GetTabId(net::URLRequest* request) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   int render_frame_id = -1;
   int render_process_id = -1;
   int tab_id = -1;
+  GetRenderFrameIdAndProcessId(request, &render_frame_id, &render_process_id);
   extensions::ExtensionApiFrameIdMap::FrameData frame_data;
-  if (content::ResourceRequestInfo::GetRenderFrameForRequest(
-          request, &render_process_id, &render_frame_id)) {
-    if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
-            render_process_id, render_frame_id, &frame_data)) {
-      tab_id = frame_data.tab_id;
-    }
-  } else {
-    const content::WebSocketHandshakeRequestInfo* websocket_info =
-      content::WebSocketHandshakeRequestInfo::ForRequest(request);
-    if (websocket_info) {
-      render_frame_id = websocket_info->GetRenderFrameId();
-      render_process_id = websocket_info->GetChildId();
-      if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
-              render_process_id, render_frame_id, &frame_data)) {
-        tab_id = frame_data.tab_id;
-      }
-    }
+  if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
+      render_process_id, render_frame_id, &frame_data)) {
+    tab_id = frame_data.tab_id;
   }
   return tab_id;
 #else
@@ -422,9 +431,13 @@ int AtomNetworkDelegate::HandleResponseEvent(
   // The |request| could be destroyed before the |callback| is called.
   callbacks_[request->identifier()] = callback;
 
+  int render_frame_id = -1;
+  int render_process_id = -1;
+  GetRenderFrameIdAndProcessId(request, &render_frame_id, &render_process_id);
   ResponseCallback response =
       base::Bind(&AtomNetworkDelegate::OnListenerResultInUI<Out>,
-                 weak_factory_.GetWeakPtr(), request->identifier(), out);
+                 weak_factory_.GetWeakPtr(), request->identifier(),
+                 render_frame_id, render_process_id, out);
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,
       base::Bind(RunResponseListener, info.listener, base::Passed(&details),
@@ -463,8 +476,22 @@ void AtomNetworkDelegate::OnListenerResultInIO(
 
 template<typename T>
 void AtomNetworkDelegate::OnListenerResultInUI(
-    uint64_t id, T out, const base::DictionaryValue& response) {
+    uint64_t id, int render_frame_id, int render_process_id,
+    T out, const base::DictionaryValue& response) {
   std::unique_ptr<base::DictionaryValue> copy = response.CreateDeepCopy();
+
+  int tab_id = -1;
+  copy->GetInteger(extensions::tabs_constants::kTabIdKey, &tab_id);
+  content::RenderFrameHost* rfh = content::RenderFrameHost::FromID(
+    render_process_id, render_frame_id);
+  if (rfh && tab_id == -1) {
+    auto web_contents = content::WebContents::FromRenderFrameHost(rfh);
+    if (web_contents) {
+      int tab_id = extensions::TabHelper::IdForTab(web_contents);
+      copy->SetInteger(extensions::tabs_constants::kTabIdKey, tab_id);
+    }
+  }
+
   BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(&AtomNetworkDelegate::OnListenerResultInIO<T>,
