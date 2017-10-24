@@ -1320,6 +1320,19 @@ index 14ae19e07b467963ce5cac98d08495387892022e..a8d5610ad1ac2c864d563e4bdb651352
  
      if (delegate_)
        delegate_->PreSandboxStartup();
+diff --git a/content/browser/browser_plugin/browser_plugin_guest.cc b/content/browser/browser_plugin/browser_plugin_guest.cc
+index abeb583eae5217510c35197703c5f702daa1df48..0c1750f8b3556b0e4b61d07a9428856b66780f44 100644
+--- a/content/browser/browser_plugin/browser_plugin_guest.cc
++++ b/content/browser/browser_plugin/browser_plugin_guest.cc
+@@ -880,6 +880,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
+     rwhv->UnregisterFrameSinkId();
+ 
+   delegate_->DidDetach();
++  // MUON(bbondy): Make sure GetGuestProxyRoutingID gets new info on re-attach
++  guest_proxy_routing_id_ = MSG_ROUTING_NONE;
+ }
+ 
+ void BrowserPluginGuest::OnDragStatusUpdate(int browser_plugin_instance_id,
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index c440d8061dacfa2e946abf4a3719c7c3246e0221..3246069a1114a018d57b6965fab1ea711c3d5646 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
@@ -1346,6 +1359,36 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  @property(readonly) NSTimeInterval timestamp;
  
  @end
+diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
+index dda1da688eb7ae7ad62b677e31720a5b266df97f..78cfa7d499bac245d16362a04923db222040d4d7 100644
+--- a/content/browser/renderer_host/render_widget_host_view_aura.cc
++++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
+@@ -1648,8 +1648,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
+       gfx::ConvertPointToPixel(device_scale_factor_, point);
+   viz::SurfaceId id = delegated_frame_host_->SurfaceIdAtPoint(
+       delegate, point_in_pixels, transformed_point);
+-  *transformed_point =
+-      gfx::ConvertPointToDIP(device_scale_factor_, *transformed_point);
++
++  // MUON(bbondy): When the point hasn't changed, avoid the double floor
++  // convert from pixels to DIP, which can change the input point from a
++  // couple of pixels. This can cause problems for other parts in the code
++  // like SelectionController which does an exact point comparison.  The
++  // double conversion causes a problem in particular when the DPI is not a
++  // multiple of 100.
++  // For example at 175% DPI 21 * 1.75 = 36.75, floored gives 36.
++  // Then the second DIP convert: 36 / 1.75 = 20.57, floored gives 20.
++  // Same point but we lost a pixel in that case.
++  // See: https://github.com/brave/browser-laptop/issues/8472
++  if (point_in_pixels == *transformed_point) {
++    *transformed_point = point;
++  } else {
++    *transformed_point =
++        gfx::ConvertPointToDIP(device_scale_factor_, *transformed_point);
++  }
+ 
+   // It is possible that the renderer has not yet produced a surface, in which
+   // case we return our current namespace.
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
 index 84897ae416fa61fddac742ab804d1f914636e064..8c28e44da23933cb1c62e11cff9966b778163834 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
@@ -1602,6 +1645,22 @@ index dbf1a1967f9047f206f7eeb9613c278fbb1ae097..fdb182193d14a319bb906d9e2387459b
  #endif
  
  // On macOS this value is adjusted in `UpdateScrollbarTheme()`,
+diff --git a/extensions/browser/api/messaging/message_service.cc b/extensions/browser/api/messaging/message_service.cc
+index 8b84570b413d6bd94dc20163a900dbb813023c5d..9201884dab7030724e695763f57baf44ac3c6513 100644
+--- a/extensions/browser/api/messaging/message_service.cc
++++ b/extensions/browser/api/messaging/message_service.cc
+@@ -124,6 +124,11 @@ namespace {
+ static content::RenderProcessHost* GetExtensionProcess(
+     BrowserContext* context,
+     const std::string& extension_id) {
++  auto original = ExtensionsBrowserClient::Get()->GetOriginalContext(context);
++  // Always use the original context for non-private child contexts
++  if (!context->IsOffTheRecord()) {
++    context = original;
++  }
+   scoped_refptr<SiteInstance> site_instance =
+       ProcessManager::Get(context)->GetSiteInstanceForURL(
+           Extension::GetBaseURLFromExtensionId(extension_id));
 diff --git a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc b/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
 index 0199c3356074ff8d88682386cb1aa512e59a4c1f..0a04887e6ce97d5e6037bb34c85babab86287dba 100644
 --- a/extensions/browser/guest_view/extensions_guest_view_manager_delegate.cc
@@ -1802,6 +1861,18 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
    }
  
    bool ShouldSelectReplacement() const {
+diff --git a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
+index 827581a9cb5749f0d84c8984d3805b7047e42336..5e81d997cbccf6434426f8530074156cd7dd6b4b 100644
+--- a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
++++ b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
+@@ -3301,6 +3301,7 @@ void WebViewImpl::DidCloseContextMenu() {
+   LocalFrame* frame = page_->GetFocusController().FocusedFrame();
+   if (frame)
+     frame->Selection().SetCaretBlinkingSuspended(false);
++  page_->GetContextMenuController().ClearContextMenu();
+ }
+ 
+ void WebViewImpl::HidePopups() {
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 index 76a36536f92ca5cc361e35cb8e27de1bbcc88327..004e678da6e383cfb97fbd7022d9faca35ec6581 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
@@ -1932,3 +2003,19 @@ index a3eac59cc2ebdb1f9d2bb7af8a7db0d44ab315a9..11d0c86fb7cdfc1881f563552fb6f5c5
        ]
        #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
      } else if (is_posix && !is_mac) {
+diff --git a/third_party/widevine/cdm/stub/manifest.json b/third_party/widevine/cdm/stub/manifest.json
+index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c22e9cff2 100644
+--- a/third_party/widevine/cdm/stub/manifest.json
++++ b/third_party/widevine/cdm/stub/manifest.json
+@@ -24,6 +24,11 @@
+       "os": "mac",
+       "arch": "x64",
+       "sub_package_path": "_platform_specific/mac_x64/"
++    },
++    {
++      "os": "linux",
++      "arch": "x64",
++      "sub_package_path": "_platform_specific/linux_x64/"
+     }
+   ]
+ }
