@@ -14,12 +14,12 @@
 #include "atom/browser/native_window.h"
 #include "atom/browser/ui/file_dialog.h"
 #include "atom/browser/web_contents_permission_helper.h"
-#include "atom/browser/web_dialog_helper.h"
 #include "atom/common/atom_constants.h"
 #include "base/files/file_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/brave_javascript_dialog_manager.h"
 #include "chrome/browser/certificate_viewer.h"
+#include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_dialogs.h"
@@ -278,17 +278,13 @@ content::ColorChooser* CommonWebContentsDelegate::OpenColorChooser(
 void CommonWebContentsDelegate::RunFileChooser(
     content::RenderFrameHost* render_frame_host,
     const content::FileChooserParams& params) {
-  if (!web_dialog_helper_)
-    web_dialog_helper_.reset(new WebDialogHelper(owner_window()));
-  web_dialog_helper_->RunFileChooser(render_frame_host, params);
+  FileSelectHelper::RunFileChooser(render_frame_host, params);
 }
 
 void CommonWebContentsDelegate::EnumerateDirectory(content::WebContents* guest,
                                                    int request_id,
                                                    const base::FilePath& path) {
-  if (!web_dialog_helper_)
-    web_dialog_helper_.reset(new WebDialogHelper(owner_window()));
-  web_dialog_helper_->EnumerateDirectory(guest, request_id, path);
+  FileSelectHelper::EnumerateDirectory(guest, request_id, path);
 }
 
 void CommonWebContentsDelegate::EnterFullscreenModeForTab(

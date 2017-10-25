@@ -165,8 +165,6 @@ source_set("browser") {
     "web_contents_permission_helper.h",
     "web_contents_preferences.cc",
     "web_contents_preferences.h",
-    "web_dialog_helper.cc",
-    "web_dialog_helper.h",
     "window_list.cc",
     "window_list.h",
     "window_list_observer.h",
