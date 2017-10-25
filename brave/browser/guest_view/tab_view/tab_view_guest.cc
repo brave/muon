@@ -254,8 +254,11 @@ void TabViewGuest::CreateWebContents(
     partition_options.SetString("parent_partition", parent_partition);
   } else {
     std::string session_tab_prefix = "persist:partition-";
+    std::string private_tab_prefix = "partition-";
     if (partition.compare(0, session_tab_prefix.length(),
-          session_tab_prefix) == 0) {
+          session_tab_prefix) == 0 ||
+       partition.compare(0, private_tab_prefix.length(),
+          private_tab_prefix) == 0) {
       partition_options.SetString("parent_partition", "");
     }
   }
