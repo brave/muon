@@ -238,6 +238,8 @@ source_set("browser") {
 
     "//chrome/browser/ui/chrome_select_file_policy.h",
     "chrome/browser/ui/chrome_select_file_policy.cc",
+    "//chrome/browser/ui/cocoa/ui_localizer.h",
+    "//chrome/browser/ui/cocoa/ui_localizer.mm",
 
     "chrome/browser/ui/profile_error_dialog.cc",
 

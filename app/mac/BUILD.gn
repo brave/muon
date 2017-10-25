@@ -109,6 +109,7 @@ mac_framework_bundle("electron_framework") {
     "//electron:electron_framework_resources",
     "//build/config:exe_and_shlib_deps",
     ":electron_xibs",
+    "//chrome/app/nibs:localizer_table",
   ]
 
   ldflags = [
@@ -343,6 +344,7 @@ config("external_binaries_config") {
 mac_xib_bundle_data("electron_xibs") {
   sources = [
     "resources/MainMenu.xib",
+    "//chrome/app/nibs/SaveAccessoryView.xib",
   ]
 }
 
