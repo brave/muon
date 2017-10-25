@@ -59,6 +59,7 @@ REFERENCE_MODULE(atom_common_shell);
 REFERENCE_MODULE(atom_common_v8_util);
 
 // Node's builtin modules
+REFERENCE_MODULE(ad_block);
 REFERENCE_MODULE(async_wrap);
 REFERENCE_MODULE(cares_wrap);
 REFERENCE_MODULE(fs_event_wrap);
@@ -83,6 +84,7 @@ REFERENCE_MODULE(stream_wrap);
 REFERENCE_MODULE(tcp_wrap);
 REFERENCE_MODULE(timer_wrap);
 REFERENCE_MODULE(tls_wrap);
+REFERENCE_MODULE(tp_node_addon);
 REFERENCE_MODULE(tty_wrap);
 REFERENCE_MODULE(udp_wrap);
 REFERENCE_MODULE(uv);
