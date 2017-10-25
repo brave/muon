@@ -237,7 +237,7 @@ source_set("browser") {
     "chrome/browser/ui/browser_otr_state.cc",
 
     "//chrome/browser/ui/chrome_select_file_policy.h",
-    "//chrome/browser/ui/chrome_select_file_policy.cc",
+    "chrome/browser/ui/chrome_select_file_policy.cc",
 
     "chrome/browser/ui/profile_error_dialog.cc",
 
