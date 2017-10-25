@@ -361,8 +361,7 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
 
   if (is_install) {
     extension_prefs_->OnExtensionInstalled(
-        extension, Extension::ENABLED, syncer::StringOrdinal(),
-        extensions::kInstallFlagNone, std::string());
+        extension, Extension::ENABLED, syncer::StringOrdinal(), std::string());
 
     registry_->TriggerOnInstalled(extension, is_extension_upgrade);
   }
