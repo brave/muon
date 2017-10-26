@@ -156,6 +156,9 @@ void Browser::WillFinishLaunching() {
 
 void Browser::DidFinishLaunching(const base::DictionaryValue& launch_info) {
   is_ready_ = true;
+  sb_service = safe_browsing::SafeBrowsingService::CreateSafeBrowsingService();
+  sb_service->Initialize();
+
   for (BrowserObserver& observer : observers_)
     observer.OnFinishLaunching(launch_info);
 }
@@ -190,6 +193,8 @@ void Browser::NotifyAndShutdown() {
 
 bool Browser::HandleBeforeQuit() {
   bool prevent_default = false;
+  sb_service->ShutDown();
+  
   for (BrowserObserver& observer : observers_)
     observer.OnBeforeQuit(&prevent_default);
 
