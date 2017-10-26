@@ -15,6 +15,7 @@
 #include "base/macros.h"
 #include "base/observer_list.h"
 #include "base/strings/string16.h"
+#include "chrome/browser/safe_browsing/safe_browsing_service.h"
 #include "native_mate/arguments.h"
 
 #if defined(OS_WIN)
@@ -239,6 +240,8 @@ class Browser : public WindowListObserver {
 
   std::string version_override_;
   std::string name_override_;
+
+  safe_browsing::SafeBrowsingService* sb_service;
 
   int badge_count_ = 0;
 
