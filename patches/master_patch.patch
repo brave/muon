@@ -945,7 +945,7 @@ index f211e8165a7fdf883760886ecf7eb86859922b2b..e6b4ffb00ba4fcfabbced0630862705f
  
  static_library("test_support") {
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
-index d3e5aa3a6e7931859ab3dd31c765e9417d65efcc..bd7a1b48f34ef70ffe9b1c94ae07b83988b93290 100644
+index 21f7d6fde866f50872090c8b48da223df6b3604f..6a74268abc8ac2acbe2bac18492b5d9fbf2abb55 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
 +++ b/chrome/renderer/chrome_content_renderer_client.cc
 @@ -1511,6 +1511,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
