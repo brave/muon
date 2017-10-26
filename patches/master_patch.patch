@@ -1627,23 +1627,6 @@ index 75218ea2e5cabd3cbe500914b0a5bbac17756105..2c268cdc303d608451041991b0074da3
  
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
-diff --git a/content/renderer/render_thread_impl.cc b/content/renderer/render_thread_impl.cc
-index dbf1a1967f9047f206f7eeb9613c278fbb1ae097..fdb182193d14a319bb906d9e2387459b7c0c0a3b 100644
---- a/content/renderer/render_thread_impl.cc
-+++ b/content/renderer/render_thread_impl.cc
-@@ -807,9 +807,9 @@ void RenderThreadImpl::Init(
-       switches::kEnableGpuMemoryBufferCompositorResources);
- 
- #if defined(OS_MACOSX)
--  if (base::Process::IsAppNapEnabled()) {
--    AppNapActivity::InitializeAppNapSupport();
--  }
-+//  if (base::Process::IsAppNapEnabled()) {
-+//    AppNapActivity::InitializeAppNapSupport();
-+//  }
- #endif
- 
- // On macOS this value is adjusted in `UpdateScrollbarTheme()`,
 diff --git a/extensions/browser/api/messaging/message_service.cc b/extensions/browser/api/messaging/message_service.cc
 index 8b84570b413d6bd94dc20163a900dbb813023c5d..9201884dab7030724e695763f57baf44ac3c6513 100644
 --- a/extensions/browser/api/messaging/message_service.cc
