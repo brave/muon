@@ -28,4 +28,6 @@ void NewTabTracker::OnNewTabOpened() {}
 
 void NewTabTracker::OnSessionTimeMet() {}
 
+void NewTabTracker::CloseBubble() {}
+
 }  // namespace feature_engagement
