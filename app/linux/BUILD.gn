@@ -85,13 +85,13 @@ action("generate_breakpad_symbols") {
     "--clear",
   ]
 
-  deps += [ "//breakpad:dump_syms" ]
+  deps += [ "//third_party/breakpad:dump_syms" ]
 }
 
 action("strip_and_dump_symbols") {
   script = "//build/linux/dump_app_syms.py"
 
-  dump_syms_label = "//breakpad:dump_syms($host_toolchain)"
+  dump_syms_label = "//third_party/breakpad:dump_syms($host_toolchain)"
   dump_syms_binary =
           get_label_info(dump_syms_label, "root_out_dir") + "/" + "dump_syms"
 
@@ -135,7 +135,7 @@ group("chromedriver_dist_resources") {
 
 action("strip_and_dump_chromedriver_symbols") {
   script = "//build/linux/dump_app_syms.py"
-  dump_syms_label = "//breakpad:dump_syms($host_toolchain)"
+  dump_syms_label = "//third_party/breakpad:dump_syms($host_toolchain)"
   dump_syms_binary =
           get_label_info(dump_syms_label, "root_out_dir") + "/" + "dump_syms"
 

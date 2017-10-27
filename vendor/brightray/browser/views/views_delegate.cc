@@ -8,7 +8,8 @@
 #include "ui/views/widget/native_widget_aura.h"
 
 #if defined(OS_LINUX)
-#include "ui/views/linux_ui/linux_ui.h"
+#include "base/environment.h"
+#include "base/nix/xdg_util.h"
 #endif
 
 namespace brightray {
@@ -104,12 +105,30 @@ base::TimeDelta ViewsDelegate::GetTextfieldPasswordRevealDuration() {
   return base::TimeDelta();
 }
 
+#if defined(OS_LINUX)
+namespace {
+
+bool IsDesktopEnvironmentUnity() {
+  std::unique_ptr<base::Environment> env(base::Environment::Create());
+  base::nix::DesktopEnvironment desktop_env =
+      base::nix::GetDesktopEnvironment(env.get());
+  return desktop_env == base::nix::DESKTOP_ENVIRONMENT_UNITY;
+}
+
+}  // namespace
+#endif
+
 bool ViewsDelegate::WindowManagerProvidesTitleBar(bool maximized) {
 #if defined(OS_LINUX)
-  // On Ubuntu Unity, the system always provides a title bar for maximized
-  // windows.
-  views::LinuxUI* ui = views::LinuxUI::instance();
-  return maximized && ui && ui->UnityIsRunning();
+  // On Ubuntu Unity, the system always provides a title bar for
+  // maximized windows.
+  //
+  // TODO(thomasanderson): Consider using the _UNITY_SHELL wm hint
+  // when support for Ubuntu Trusty is dropped.
+  if (!maximized)
+    return false;
+  static bool is_desktop_environment_unity = IsDesktopEnvironmentUnity();
+  return is_desktop_environment_unity;
 #else
   return false;
 #endif

@@ -6,7 +6,7 @@
 
 namespace {
 
-const int kTwoHoursInMinutes = 120;
+const int kDefaultPromoShowTimeInHours = 2;
 
 }  // namespace
 
@@ -14,7 +14,11 @@ namespace feature_engagement {
 
 NewTabTracker::NewTabTracker(Profile* profile,
                              SessionDurationUpdater* session_duration_updater)
-    : FeatureTracker(profile, session_duration_updater) {}
+    : FeatureTracker(profile,
+                     session_duration_updater,
+                     &kIPHNewTabFeature,
+                     base::TimeDelta::FromHours(kDefaultPromoShowTimeInHours)) {
+}
 
 NewTabTracker::~NewTabTracker() = default;
 
@@ -22,9 +26,6 @@ void NewTabTracker::OnNewTabOpened() {}
 
 void NewTabTracker::OnSessionTimeMet() {}
 
-int NewTabTracker::GetSessionTimeRequiredToShowInMinutes() {
-  NOTREACHED();
-  return kTwoHoursInMinutes;
-}
+void NewTabTracker::CloseBubble() {}
 
 }  // namespace feature_engagement

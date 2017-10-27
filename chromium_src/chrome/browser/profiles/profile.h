@@ -164,9 +164,6 @@ class Profile : public atom::AtomBrowserContext {
 
   virtual PrefChangeRegistrar* user_prefs_change_registrar() const = 0;
 
-  virtual DevToolsNetworkControllerHandle*
-  GetDevToolsNetworkControllerHandle() = 0;
-
   virtual bool IsGuestSession() const;
 
   bool IsNewProfile();
