@@ -115,18 +115,6 @@ index 137b2c3a3e4fa39275458542a5a5716e76bf2865..74fddd3a0aaaa825f359469a90ff9846
  } else {
    goma_prefix = ""
  }
-diff --git a/build/vs_toolchain.py b/build/vs_toolchain.py
-index 93a04ceb27d04671efddc245fc4e57ec388112da..683d6dce475462785fd365e373ca090de88e9799 100755
---- a/build/vs_toolchain.py
-+++ b/build/vs_toolchain.py
-@@ -153,6 +153,7 @@ def DetectVisualStudioPath():
-     # For now we use a hardcoded default with an environment variable override.
-     for path in (
-         os.environ.get('vs2017_install'),
-+        r'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise',
-         r'C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional',
-         r'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community'):
-       if path and os.path.exists(path):
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
 index 5d0274b0424ecfd527962c5116370a7593d10d15..37417d22d2453e4247bf80588e6927cc07c8339a 100644
 --- a/chrome/BUILD.gn
