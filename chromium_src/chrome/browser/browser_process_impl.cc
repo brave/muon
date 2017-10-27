@@ -675,29 +675,11 @@ void BrowserProcessImpl::OnKeepAliveRestartStateChanged(bool can_restart) {}
 void BrowserProcessImpl::ResourceDispatcherHostCreated() {}
 
 void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
-  bool enabled =
-      ChromeMetricsServiceAccessor::IsMetricsAndCrashReportingEnabled();
-
-  CHECK(content::BrowserThread::PostTask(
-      content::BrowserThread::FILE, FROM_HERE,
-      base::BindOnce(
-          base::IgnoreResult(&GoogleUpdateSettings::SetCollectStatsConsent),
-          enabled)));
-
-  #if 0
-    install_static::SetCollectStatsInSample(enabled);
-    HMODULE elf_module = GetModuleHandle(chrome::kChromeElfDllName);
-    static SetUploadConsentPointer set_upload_consent =
-        reinterpret_cast<SetUploadConsentPointer>(
-            GetProcAddress(elf_module, kCrashpadUpdateConsentFunctionName));
-
-    if (enabled) {
-      // Crashpad will use the kRegUsageStatsInSample registry value to apply
-      // sampling correctly, but may_record already reflects the sampling state.
-      // This isn't a problem though, since they will be consistent.
-      set_upload_consent(enabled);
-    }
-  #endif
+	GoogleUpdateSettings::CollectStatsConsentTaskRunner()->PostTask(
+		FROM_HERE,
+		base::BindOnce(
+			base::IgnoreResult(&GoogleUpdateSettings::SetCollectStatsConsent),
+			ChromeMetricsServiceAccessor::IsMetricsAndCrashReportingEnabled()));
 }
 
 #if (defined(OS_WIN) || defined(OS_LINUX)) && !defined(OS_CHROMEOS)

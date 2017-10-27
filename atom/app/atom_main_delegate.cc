@@ -53,6 +53,7 @@
 #include "chrome/install_static/install_details.h"
 #include "chrome/install_static/install_util.h"
 #include "chrome/install_static/product_install_details.h"
+#include "chrome_elf/chrome_elf_main.h"
 #include "sandbox/win/src/sandbox.h"
 #include "ui/base/resource/resource_bundle_win.h"
 #endif
@@ -148,25 +149,13 @@ base::FilePath InitializeUserDataDir() {
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
   base::FilePath user_data_dir;
-#if 0
+#if defined(OS_WIN)
   wchar_t user_data_dir_buf[MAX_PATH], invalid_user_data_dir_buf[MAX_PATH];
 
-  using GetUserDataDirectoryThunkFunction =
-      void (*)(wchar_t*, size_t, wchar_t*, size_t);
-  HMODULE elf_module = GetModuleHandle(chrome::kChromeElfDllName);
-  if (elf_module) {
-    // If we're in a test, chrome_elf won't be loaded.
-    GetUserDataDirectoryThunkFunction get_user_data_directory_thunk =
-        reinterpret_cast<GetUserDataDirectoryThunkFunction>(
-            GetProcAddress(elf_module, "GetUserDataDirectoryThunk"));
-    get_user_data_directory_thunk(
-        user_data_dir_buf, arraysize(user_data_dir_buf),
-        invalid_user_data_dir_buf, arraysize(invalid_user_data_dir_buf));
-    if (invalid_user_data_dir_buf[0] == 0)
-      user_data_dir = base::FilePath(user_data_dir_buf);
-  } else {
-    NOTREACHED();
-  }
+  GetUserDataDirectoryThunk(user_data_dir_buf, arraysize(user_data_dir_buf),
+      invalid_user_data_dir_buf,
+      arraysize(invalid_user_data_dir_buf));
+  user_data_dir = base::FilePath(user_data_dir_buf);
 #else  // OS_WIN
   user_data_dir =
       command_line.GetSwitchValuePath(switches::kUserDataDir);
