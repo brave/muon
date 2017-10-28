@@ -57,6 +57,8 @@ REFERENCE_MODULE(atom_common_native_image);
 REFERENCE_MODULE(atom_common_screen);
 REFERENCE_MODULE(atom_common_shell);
 REFERENCE_MODULE(atom_common_v8_util);
+REFERENCE_MODULE(ad_block);
+REFERENCE_MODULE(tp_node_addon);
 
 // Node's builtin modules
 REFERENCE_MODULE(async_wrap);
