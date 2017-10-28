@@ -2,8 +2,8 @@ use_relative_paths = True
 
 deps = {
   "vendor/node": "https://github.com/brave/node.git@7535fd34c36a40403743af5bf71c5b79b3f0bb6d",
-  "vendor/ad-block": "https://github.com/brave/ad-block.git@8642be202f5bd00ee84af43a0ca29a3ddad0594c",
-  "vendor/tracking-protection": "https://github.com/brave/tracking-protection.git@eea148c33e5a465d2fda86e21742381c313947de",
+  "vendor/ad-block": "https://github.com/brave/ad-block.git@b74f508be52931604199195905d3113bf450c851",
+  "vendor/tracking-protection": "https://github.com/brave/tracking-protection.git@f4e56becfc197b76cbb726b6813afe1c9dd55b88",
   "vendor/hashset-cpp": "https://github.com/bbondy/hashset-cpp.git@728fd67bc269765f5a566fb1d2fd9b04b632e68a",
   "vendor/bloom-filter-cpp": "https://github.com/bbondy/bloom-filter-cpp.git@b5509def04d1ecf60fdad62457a3bd09c457df90",
   "vendor/requests": "https://github.com/kennethreitz/requests@e4d59bedfd3c7f4f254f4f5d036587bcd8152458",
