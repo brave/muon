@@ -60,8 +60,6 @@ source_set("node") {
     "//electron/lib:atom_js2c",
     "//electron/build/node",
     "//electron:native_mate",
-    "//electron/vendor/ad-block/muon:ad_block",
-    "//electron/vendor/tracking-protection/muon:tp_node_addon",
   ]
 
   deps = [
