@@ -1907,19 +1907,6 @@ index 1cc7c6eb7182e495f8262d1d7da13bfb556cc198..210586c217932162a2fc18bded9d1e29
  }
  
  void WebViewImpl::HidePopups() {
-diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index 19c7b569f19849f8fbb26c1faf2ac52f8fe7c566..0294416a183a13cd925adf89dd5872898ba7c2fa 100644
---- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-+++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-@@ -2522,7 +2522,7 @@ void HTMLMediaElement::setMuted(bool muted) {
-   if (!muted_ && !autoplay_policy_->RequestAutoplayUnmute())
-     pause();
- 
--  // This is called after the volumechange event to make sure isAutoplayingMuted
-+  // This is called after the volumechange event to make sure IsAutoplayingMuted
-   // returns the right value when webMediaPlayer receives the volume update.
-   if (GetWebMediaPlayer())
-     GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 index 9162bc3ba51153a494aa218007511054cdebbad7..4346960346913bd4c99d3fb34540955919749eb1 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
