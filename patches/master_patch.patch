@@ -1347,10 +1347,10 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 7f727c290067354bafe5f00d15a642d13a715799..70368cf36d0acf48e47c558ee793a8460c6835c8 100644
+index 9bcef0992e7967880d3ba1ab5a45dad0b5d29856..59501864e687f768f590372fba51cf20cd06f832 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
-@@ -1624,8 +1624,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
+@@ -1629,8 +1629,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
        gfx::ConvertPointToPixel(device_scale_factor_, point);
    viz::SurfaceId id = delegated_frame_host_->SurfaceIdAtPoint(
        delegate, point_in_pixels, transformed_point);
