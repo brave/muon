@@ -1,5 +1,5 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index daed449c0a500b22b585e11bb77f5d07605fe785..ecc3c10f8b155fd250f0bd2ee0df3fb5568e54ee 100644
+index 0f9f43605e7aed8a355c8a96c8da5ac530667341..2e9e880f4503808fe749f7c3807b84a804486e90 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -170,7 +170,13 @@ config("internal_config") {
@@ -18,7 +18,7 @@ index daed449c0a500b22b585e11bb77f5d07605fe785..ecc3c10f8b155fd250f0bd2ee0df3fb5
    }
  }
 diff --git a/src/profiler/profiler-listener.cc b/src/profiler/profiler-listener.cc
-index 169b12da0770c12b24d5881a85b87853668437cc..fe9ec80a86a506bfd989c781e71c35bc12e5bef2 100644
+index 3269dfd81b676e7babd412a17773f6a904768b35..fb4498bbf491a8cc6840135dca4961389c80d1bf 100644
 --- a/src/profiler/profiler-listener.cc
 +++ b/src/profiler/profiler-listener.cc
 @@ -100,7 +100,7 @@ void ProfilerListener::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
