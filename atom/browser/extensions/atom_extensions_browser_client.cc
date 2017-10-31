@@ -144,7 +144,7 @@ class URLRequestResourceBundleJob : public net::URLRequestSimpleJob {
       std::string* charset,
       scoped_refptr<base::RefCountedMemory>* data,
       const net::CompletionCallback& callback) const override {
-    const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+    const ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
     *data = rb.LoadDataResourceBytes(resource_id_);
 
     // Add the Content-Length header now that we know the resource length.

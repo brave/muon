@@ -55,7 +55,7 @@ SubmenuButton::~SubmenuButton() {
 }
 
 const gfx::FontList& SubmenuButton::GetFontList() const {
-  ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+  ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
   return rb.GetFontListWithDelta(ui::kLabelFontSizeDelta);
 }
 
