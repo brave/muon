@@ -53,6 +53,15 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
 
   blink::WebPrescientNetworking* GetPrescientNetworking() override;
 
+  bool WillSendRequest(
+    blink::WebLocalFrame* frame,
+    ui::PageTransition transition_type,
+    const blink::WebURL& url,
+    std::vector<std::unique_ptr<content::URLLoaderThrottle>>* throttles,
+    GURL* new_url) override;
+  std::unique_ptr<blink::WebSocketHandshakeThrottle>
+      CreateWebSocketHandshakeThrottle() override;
+
  private:
   atom::ContentSettingsManager* content_settings_manager_;  // not owned
 

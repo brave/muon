@@ -33,6 +33,7 @@
 #include "extensions/features/features.h"
 #include "third_party/WebKit/public/platform/URLConversion.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
+#include "third_party/WebKit/public/platform/WebSocketHandshakeThrottle.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebPlugin.h"
 #include "third_party/WebKit/public/web/WebPluginParams.h"
@@ -231,6 +232,27 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
                 ->plugin();
 #endif  // BUILDFLAG(ENABLE_PLUGINS)
   return true;
+}
+
+bool BraveContentRendererClient::WillSendRequest(
+    blink::WebLocalFrame* frame,
+    ui::PageTransition transition_type,
+    const blink::WebURL& url,
+    std::vector<std::unique_ptr<content::URLLoaderThrottle>>* throttles,
+    GURL* new_url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (ChromeExtensionsRendererClient::GetInstance()->WillSendRequest(
+          frame, transition_type, url, new_url)) {
+    return true;
+  }
+#endif
+
+  return false;
+}
+
+std::unique_ptr<blink::WebSocketHandshakeThrottle>
+BraveContentRendererClient::CreateWebSocketHandshakeThrottle() {
+  return nullptr;
 }
 
 }  // namespace brave
