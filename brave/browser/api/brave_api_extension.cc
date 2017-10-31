@@ -176,7 +176,7 @@ std::unique_ptr<base::DictionaryValue> Extension::LoadManifest(
     std::string* error) {
   int resource_id;
   if (IsComponentExtension(extension_root, &resource_id)) {
-    const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+    const ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
     base::StringPiece manifest_contents = rb.GetRawDataResource(resource_id);
 
     JSONStringValueDeserializer deserializer(manifest_contents);
