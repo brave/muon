@@ -12,7 +12,7 @@
 #include "base/stl_util.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
-#include "content/common/devtools/devtools_network_transaction.h"
+#include "content/network/throttling/throttling_network_transaction.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/websocket_handshake_request_info.h"
@@ -321,7 +321,7 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
   }
 
   if (!client_id.empty())
-    headers->SetHeader(content::DevToolsNetworkTransaction::
+    headers->SetHeader(content::ThrottlingNetworkTransaction::
                            kDevToolsEmulateNetworkConditionsClientId,
                        client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))

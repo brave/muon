@@ -5,15 +5,16 @@
 #ifndef BROWSER_DEVTOOLS_NETWORK_CONTROLLER_H_
 #define BROWSER_DEVTOOLS_NETWORK_CONTROLLER_H_
 
+#include <memory>
 #include <unordered_map>
 
 #include "base/macros.h"
-#include "browser/net/devtools_network_interceptor.h"
+#include "content/network/throttling/network_conditions.h"
+#include "content/network/throttling/throttling_network_interceptor.h"
+
+using content::ThrottlingNetworkInterceptor;
 
 namespace brightray {
-
-class DevToolsNetworkConditions;
-class DevToolsNetworkTransaction;
 
 class DevToolsNetworkController {
  public:
@@ -21,14 +22,15 @@ class DevToolsNetworkController {
   virtual ~DevToolsNetworkController();
 
   void SetNetworkState(const std::string& client_id,
-                       std::unique_ptr<DevToolsNetworkConditions> conditions);
-  DevToolsNetworkInterceptor* GetInterceptor(const std::string& client_id);
+                       std::unique_ptr<content::NetworkConditions> conditions);
+  ThrottlingNetworkInterceptor* GetInterceptor(
+      const std::string& client_id);
 
  private:
    using InterceptorMap = std::unordered_map<std::string,
-         std::unique_ptr<DevToolsNetworkInterceptor>>;
+         std::unique_ptr<ThrottlingNetworkInterceptor>>;
 
-  std::unique_ptr<DevToolsNetworkInterceptor> appcache_interceptor_;
+  std::unique_ptr<ThrottlingNetworkInterceptor> appcache_interceptor_;
   InterceptorMap interceptors_;
 
   DISALLOW_COPY_AND_ASSIGN(DevToolsNetworkController);
