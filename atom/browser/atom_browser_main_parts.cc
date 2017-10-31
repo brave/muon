@@ -7,7 +7,6 @@
 #include "atom/browser/atom_browser_main_parts.h"
 
 #include "atom/browser/api/trackable_object.h"
-#include "atom/browser/atom_access_token_store.h"
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/bridge_task_runner.h"
@@ -110,19 +109,6 @@ void InitializeWindowProcExceptions() {
 
 }  // namespace
 
-// A provider of Geolocation services to override AccessTokenStore.
-class AtomGeolocationDelegate : public device::GeolocationDelegate {
- public:
-  AtomGeolocationDelegate() = default;
-
-  scoped_refptr<device::AccessTokenStore> CreateAccessTokenStore() final {
-    return new AtomAccessTokenStore();
-  }
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(AtomGeolocationDelegate);
-};
-
 template<typename T>
 void Erase(T* container, typename T::iterator iter) {
   container->erase(iter);
@@ -218,9 +204,6 @@ int AtomBrowserMainParts::PreCreateThreads() {
   // any callbacks, I just want to initialize the mechanism.)
   SecKeychainAddCallback(&KeychainCallback, 0, NULL);
 #endif  // defined(OS_MACOSX)
-
-  device::GeolocationProvider::SetGeolocationDelegate(
-      new AtomGeolocationDelegate());
 
   fake_browser_process_->PreCreateThreads();
 
