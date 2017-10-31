@@ -4,18 +4,18 @@
 
 #include "browser/net/devtools_network_controller.h"
 
-#include "browser/net/devtools_network_conditions.h"
-#include "browser/net/devtools_network_transaction.h"
+#include <memory>
 
 #include "base/bind.h"
 #include "content/public/browser/browser_thread.h"
 
 using content::BrowserThread;
+using content::NetworkConditions;
 
 namespace brightray {
 
 DevToolsNetworkController::DevToolsNetworkController()
-    : appcache_interceptor_(new DevToolsNetworkInterceptor) {
+    : appcache_interceptor_(new ThrottlingNetworkInterceptor) {
 }
 
 DevToolsNetworkController::~DevToolsNetworkController() {
@@ -23,21 +23,21 @@ DevToolsNetworkController::~DevToolsNetworkController() {
 
 void DevToolsNetworkController::SetNetworkState(
     const std::string& client_id,
-    std::unique_ptr<DevToolsNetworkConditions> conditions) {
+    std::unique_ptr<NetworkConditions> conditions) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
 
   auto it = interceptors_.find(client_id);
   if (it != interceptors_.end()) {
     if (!conditions)
       return;
-    std::unique_ptr<DevToolsNetworkInterceptor> new_interceptor(
-        new DevToolsNetworkInterceptor);
+    std::unique_ptr<ThrottlingNetworkInterceptor> new_interceptor(
+        new ThrottlingNetworkInterceptor);
     new_interceptor->UpdateConditions(std::move(conditions));
     interceptors_[client_id] = std::move(new_interceptor);
   } else {
     if (!conditions) {
-      std::unique_ptr<DevToolsNetworkConditions> online_conditions(
-          new DevToolsNetworkConditions(false));
+      std::unique_ptr<NetworkConditions> online_conditions(
+          new NetworkConditions(false));
       it->second->UpdateConditions(std::move(online_conditions));
       interceptors_.erase(client_id);
     } else {
@@ -56,13 +56,13 @@ void DevToolsNetworkController::SetNetworkState(
 
   bool is_appcache_offline = appcache_interceptor_->IsOffline();
   if (is_appcache_offline != has_offline_interceptors) {
-    std::unique_ptr<DevToolsNetworkConditions> appcache_conditions(
-        new DevToolsNetworkConditions(has_offline_interceptors));
+    std::unique_ptr<NetworkConditions> appcache_conditions(
+        new NetworkConditions(has_offline_interceptors));
     appcache_interceptor_->UpdateConditions(std::move(appcache_conditions));
   }
 }
 
-DevToolsNetworkInterceptor*
+ThrottlingNetworkInterceptor*
 DevToolsNetworkController::GetInterceptor(const std::string& client_id) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
 
