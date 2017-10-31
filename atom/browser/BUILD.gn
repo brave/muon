@@ -92,8 +92,6 @@ source_set("browser") {
     "browser/resources/transport_security_state_static.json",
     "auto_updater.cc",
     "auto_updater.h",
-    "atom_access_token_store.cc",
-    "atom_access_token_store.h",
     "atom_browser_client.cc",
     "atom_browser_client.h",
     "atom_browser_context.cc",
