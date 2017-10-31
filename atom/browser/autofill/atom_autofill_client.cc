@@ -245,6 +245,8 @@ void AtomAutofillClient::DidFillOrPreviewField(
     const base::string16& profile_full_name) {
 }
 
+void AtomAutofillClient::DidInteractWithNonsecureCreditCardInput() {}
+
 bool AtomAutofillClient::IsContextSecure() {
   content::SSLStatus ssl_status;
   content::NavigationEntry* navigation_entry =
