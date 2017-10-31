@@ -130,7 +130,6 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       std::string* partition_name,
       bool* in_memory) override;
   base::FilePath GetShaderDiskCacheDirectory() override;
-  gpu::GpuChannelEstablishFactory* GetGpuChannelEstablishFactory() override;
 
   std::unique_ptr<base::Value> GetServiceManifestOverlay(
       base::StringPiece name) override;

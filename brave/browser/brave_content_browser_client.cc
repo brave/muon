@@ -761,15 +761,6 @@ base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
   return user_data_dir.Append(FILE_PATH_LITERAL("ShaderCache"));
 }
 
-gpu::GpuChannelEstablishFactory*
-BraveContentBrowserClient::GetGpuChannelEstablishFactory() {
-#if defined(USE_AURA)
-  if (views::MusClient::Exists())
-    return views::MusClient::Get()->window_tree_client()->gpu();
-#endif
-  return nullptr;
-}
-
 bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
     content::SiteInstance* site_instance,
     const GURL& current_url,
