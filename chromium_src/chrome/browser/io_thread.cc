@@ -361,12 +361,12 @@ void IOThread::RegisterPrefs(PrefRegistrySimple* registry) {
 }
 
 void IOThread::UpdateServerWhitelist() {
-  globals_->http_auth_preferences->set_server_whitelist(
+  globals_->http_auth_preferences->SetServerWhitelist(
       auth_server_whitelist_.GetValue());
 }
 
 void IOThread::UpdateDelegateWhitelist() {
-  globals_->http_auth_preferences->set_delegate_whitelist(
+  globals_->http_auth_preferences->SetDelegateWhitelist(
       auth_delegate_whitelist_.GetValue());
 }
 

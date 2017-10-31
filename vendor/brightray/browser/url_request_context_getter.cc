@@ -277,14 +277,15 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
 
     // --auth-server-whitelist
     if (command_line.HasSwitch(switches::kAuthServerWhitelist)) {
-      http_auth_preferences_->set_server_whitelist(
+      http_auth_preferences_->SetServerWhitelist(
           command_line.GetSwitchValueASCII(switches::kAuthServerWhitelist));
     }
 
     // --auth-negotiate-delegate-whitelist
     if (command_line.HasSwitch(switches::kAuthNegotiateDelegateWhitelist)) {
-      http_auth_preferences_->set_delegate_whitelist(
-          command_line.GetSwitchValueASCII(switches::kAuthNegotiateDelegateWhitelist));
+      http_auth_preferences_->SetDelegateWhitelist(
+          command_line.GetSwitchValueASCII(
+              switches::kAuthNegotiateDelegateWhitelist));
     }
 
     auto auth_handler_factory =
