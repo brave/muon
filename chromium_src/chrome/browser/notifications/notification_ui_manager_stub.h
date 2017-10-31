@@ -12,12 +12,15 @@ class NotificationUIManagerStub : public NotificationUIManager {
   // Creates an initialized UI manager.
   static NotificationUIManager* Create();
 
-  void Add(const Notification& notification, Profile* profile) override {}
-  bool Update(const Notification& notification, Profile* profile) override {
+  void Add(const message_center::Notification& notification,
+           Profile* profile) override {}
+  bool Update(const message_center::Notification& notification,
+              Profile* profile) override {
     return false;
   }
-  const Notification* FindById(const std::string& delegate_id,
-                                       ProfileID profile_id) const override {
+  const message_center::Notification* FindById(
+      const std::string& delegate_id,
+      ProfileID profile_id) const override {
     return nullptr;
   }
   bool CancelById(const std::string& delegate_id,
