@@ -336,7 +336,7 @@ void AllowNTLMCredentialsForDomainsInIO(
     auto auth_preferences = const_cast<net::HttpAuthPreferences*>(
         auth_handler->http_auth_preferences());
     if (auth_preferences)
-      auth_preferences->set_server_whitelist(domains);
+      auth_preferences->SetServerWhitelist(domains);
   }
 }
 
