@@ -785,7 +785,7 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
 
 std::unique_ptr<base::Value>
 BraveContentBrowserClient::GetServiceManifestOverlay(base::StringPiece name) {
-  ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+  ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
   int id = -1;
   if (name == content::mojom::kBrowserServiceName)
     id = IDR_CHROME_CONTENT_BROWSER_MANIFEST_OVERLAY;

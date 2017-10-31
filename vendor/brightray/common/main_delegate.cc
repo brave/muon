@@ -100,7 +100,7 @@ void MainDelegate::PreSandboxStartup() {
 
 void MainDelegate::ProcessExiting(const std::string& process_type) {
   if (SubprocessNeedsResourceBundle(process_type))
-    ResourceBundle::CleanupSharedInstance();
+    ui::ResourceBundle::CleanupSharedInstance();
 }
 
 content::ContentBrowserClient* MainDelegate::CreateContentBrowserClient() {

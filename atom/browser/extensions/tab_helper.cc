@@ -648,7 +648,7 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
             resource.extension_root(),
             resource.relative_path(),
             &resource_id)) {
-      const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+      const ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
       file = rb.GetRawDataResource(resource_id).as_string();
     } else {
       scoped_refptr<FileReader> file_reader(new FileReader(
