@@ -21,6 +21,10 @@
 #include "content/public/app/content_main.h"
 #include "content/public/common/content_switches.h"
 
+#if defined(OS_MACOSX)
+#include "chrome/common/chrome_paths_internal.h"
+#endif
+
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 #include "base/nix/xdg_util.h"
 #endif
@@ -128,7 +132,13 @@ int main(int argc, const char* argv[]) {
     user_data_dir = user_data_dir.Append(
         command_line->GetSwitchValuePath(atom::options::kUserDataDirName));
   } else {
+#if defined(OS_MACOSX)
+    if (!chrome::GetDefaultUserDataDirectory(&user_data_dir)) {
+      user_data_dir = user_data_dir.Append(FILE_PATH_LITERAL("brave"));
+    }
+#else
     user_data_dir = user_data_dir.Append(FILE_PATH_LITERAL("brave"));
+#endif
   }
   environment->SetVar("CHROME_USER_DATA_DIR", user_data_dir.AsUTF8Unsafe());
 
