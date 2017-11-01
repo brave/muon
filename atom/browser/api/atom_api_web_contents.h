@@ -516,6 +516,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   bool IsBackgroundPage();
   v8::Local<v8::Value> TabValue();
+  v8::Local<v8::Value> ExtendedTabValue();
 
  private:
   friend brave::TabViewGuest;

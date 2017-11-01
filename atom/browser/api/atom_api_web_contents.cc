@@ -330,6 +330,14 @@ namespace api {
 
 namespace {
 
+static std::string GetHexColorString(SkColor theme_color) {
+  std::string hex_color = base::StringPrintf("#%02X%02X%02X",
+    SkColorGetR(theme_color),
+    SkColorGetG(theme_color),
+    SkColorGetB(theme_color));
+  return hex_color;
+}
+
 mate::Handle<api::Session> SessionFromOptions(v8::Isolate* isolate,
     const mate::Dictionary& options) {
   mate::Handle<api::Session> session;
@@ -1244,11 +1252,7 @@ void WebContents::MediaStoppedPlaying(const MediaPlayerInfo& media_info,
 }
 
 void WebContents::DidChangeThemeColor(SkColor theme_color) {
-  std::string hex_theme_color = base::StringPrintf("#%02X%02X%02X",
-    SkColorGetR(theme_color),
-    SkColorGetG(theme_color),
-    SkColorGetB(theme_color));
-  Emit("did-change-theme-color", hex_theme_color);
+  Emit("did-change-theme-color", GetHexColorString(theme_color));
 }
 
 void WebContents::RenderViewCreated(content::RenderViewHost* render_view_host) {
@@ -2429,6 +2433,23 @@ v8::Local<v8::Value> WebContents::TabValue() {
       value.get(), isolate()->GetCurrentContext());
 }
 
+v8::Local<v8::Value> WebContents::ExtendedTabValue() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+  std::unique_ptr<base::DictionaryValue> value(
+    ExtensionTabUtil::CreateTabObject(web_contents())->ToValue().release());
+
+  value->SetBoolean("canGoBack", CanGoBack());
+  value->SetBoolean("canGoForward", CanGoForward());
+  value->SetBoolean("loading", IsLoading());
+  value->SetInteger("guestInstanceId", GetGuestInstanceId());
+  value->SetString("themeColor",
+      GetHexColorString(web_contents()->GetThemeColor()));
+
+  return content::V8ValueConverter::Create()->ToV8Value(
+      value.get(), isolate()->GetCurrentContext());
+}
+
 int32_t WebContents::ID() const {
   return weak_map_id();
 }
@@ -2585,6 +2606,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("executeScriptInTab", &WebContents::ExecuteScriptInTab)
       .SetMethod("isBackgroundPage", &WebContents::IsBackgroundPage)
       .SetMethod("tabValue", &WebContents::TabValue)
+      .SetMethod("extendedTabValue", &WebContents::ExtendedTabValue)
 #endif
       .SetMethod("close", &WebContents::CloseContents)
       .SetMethod("forceClose", &WebContents::DestroyWebContents)
