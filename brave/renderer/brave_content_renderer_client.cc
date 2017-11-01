@@ -5,6 +5,7 @@
 #include "brave/renderer/brave_content_renderer_client.h"
 
 #include "atom/renderer/content_settings_manager.h"
+#include "base/command_line.h"
 #include "brave/renderer/printing/brave_print_render_frame_helper_delegate.h"
 #include "chrome/common/render_messages.h"
 #include "chrome/common/secure_origin_whitelist.h"
@@ -12,6 +13,7 @@
 #include "chrome/renderer/chrome_render_thread_observer.h"
 #include "chrome/renderer/chrome_render_view_observer.h"
 #include "chrome/renderer/content_settings_observer.h"
+#include "chrome/renderer/loadtimes_extension_bindings.h"
 #include "chrome/renderer/net/net_error_helper.h"
 #include "chrome/renderer/pepper/pepper_helper.h"
 #include "chrome/renderer/plugins/non_loadable_plugin_placeholder.h"
@@ -31,6 +33,7 @@
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
 #include "extensions/features/features.h"
+#include "third_party/WebKit/public/platform/scheduler/renderer_process_type.h"
 #include "third_party/WebKit/public/platform/URLConversion.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
 #include "third_party/WebKit/public/platform/WebSocketHandshakeThrottle.h"
@@ -40,12 +43,12 @@
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
 #if defined(OS_WIN)
 #include <shlobj.h>
-#include "base/command_line.h"
 #include "atom/common/options_switches.h"
 #endif
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/renderer/extensions/chrome_extensions_renderer_client.h"
+#include "extensions/common/switches.h"
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
@@ -68,14 +71,31 @@ using blink::WebSecurityPolicy;
 using blink::WebString;
 
 
-
 namespace brave {
+
+namespace {
+
+bool IsStandaloneExtensionProcess() {
+#if !BUILDFLAG(ENABLE_EXTENSIONS)
+  return false;
+#else
+  return base::CommandLine::ForCurrentProcess()->HasSwitch(
+      extensions::switches::kExtensionProcess);
+#endif
+}
+
+}
 
 BraveContentRendererClient::BraveContentRendererClient() {
 }
 
 void BraveContentRendererClient::RenderThreadStarted() {
   content::RenderThread* thread = content::RenderThread::Get();
+
+  thread->SetRendererProcessType(
+      IsStandaloneExtensionProcess()
+          ? blink::scheduler::RendererProcessType::kExtensionRenderer
+          : blink::scheduler::RendererProcessType::kRenderer);
 
   content_settings_manager_ = atom::ContentSettingsManager::GetInstance();
   #if defined(OS_WIN)
@@ -116,6 +136,8 @@ void BraveContentRendererClient::RenderThreadStarted() {
     thread->AddObserver(spellcheck_.get());
   }
 #endif
+
+  thread->RegisterExtension(extensions_v8::LoadTimesExtension::Get());
 }
 
 unsigned long long BraveContentRendererClient::VisitedLinkHash(  // NOLINT
