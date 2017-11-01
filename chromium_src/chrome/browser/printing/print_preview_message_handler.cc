@@ -16,6 +16,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/printing/print_job_manager.h"
 #include "chrome/browser/printing/print_view_manager.h"
+#include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/printing/printer_query.h"
 #include "components/printing/common/print_messages.h"
 #include "content/public/browser/browser_thread.h"
@@ -25,6 +26,7 @@
 #include "printing/page_size_margins.h"
 #include "printing/pdf_metafile_skia.h"
 #include "printing/print_job_constants.h"
+#include "printing/units.h"
 
 #include "atom/common/node_includes.h"
 
@@ -65,6 +67,19 @@ char* CopyPDFDataOnIOThread(
   return pdf_data;
 }
 
+std::pair<int, int> GetKey(content::RenderFrameHost* rfh) {
+  if (!rfh)
+    return std::make_pair(-1, -1);
+
+  return std::make_pair(rfh->GetProcess()->GetID(), rfh->GetRoutingID());
+}
+
+int GetRequestID(const base::DictionaryValue& options) {
+  int request_id = -1;
+  options.GetInteger(kPreviewRequestID, &request_id);
+  return request_id;
+}
+
 }  // namespace
 
 PrintPreviewMessageHandler::PrintPreviewMessageHandler(
@@ -77,6 +92,7 @@ PrintPreviewMessageHandler::PrintPreviewMessageHandler(
 PrintPreviewMessageHandler::~PrintPreviewMessageHandler() {}
 
 void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
+    content::RenderFrameHost* rfh,
     const PrintHostMsg_DidPreviewDocument_Params& params) {
   // Always try to stop the worker.
   StopWorker(params.document_cookie);
@@ -85,6 +101,10 @@ void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
     NOTREACHED();
     return;
   }
+
+  auto key = GetKey(rfh);
+  if (base::ContainsKey(print_to_pdf_options_map_, key))
+    print_to_pdf_options_map_.erase(key);
 
   BrowserThread::PostTaskAndReplyWithResult(
       BrowserThread::IO,
@@ -96,8 +116,42 @@ void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
                  params.data_size));
 }
 
-void PrintPreviewMessageHandler::OnPrintPreviewFailed(int document_cookie) {
+void PrintPreviewMessageHandler::OnError(content::RenderFrameHost* rfh,
+                                          int document_cookie,
+                                          const std::string& message) {
   StopWorker(document_cookie);
+
+  auto key = GetKey(rfh);
+  if (base::ContainsKey(print_to_pdf_options_map_, key)) {
+    auto options = print_to_pdf_options_map_[key].get();
+    RunPrintToPDFCallbackWithMessage(
+        GetRequestID(*options), message, 0, nullptr);
+    print_to_pdf_options_map_.erase(key);
+  }
+}
+
+void PrintPreviewMessageHandler::OnPrintPreviewFailed(
+    content::RenderFrameHost* rfh,
+    int document_cookie) {
+  StopWorker(document_cookie);
+
+  OnError(rfh, document_cookie, "Failed");
+}
+
+void PrintPreviewMessageHandler::OnPrintPreviewCancelled(
+    content::RenderFrameHost* rfh,
+    int document_cookie) {
+  StopWorker(document_cookie);
+
+  OnError(rfh, document_cookie, "Cancelled");
+}
+
+void PrintPreviewMessageHandler::OnPrintPreviewInvalidPrinterSettings(
+    content::RenderFrameHost* rfh,
+    int document_cookie) {
+  StopWorker(document_cookie);
+
+  OnError(rfh, document_cookie, "Invalid Settings");
 }
 
 bool PrintPreviewMessageHandler::OnMessageReceived(
@@ -109,59 +163,74 @@ bool PrintPreviewMessageHandler::OnMessageReceived(
                                    render_frame_host)
     IPC_MESSAGE_HANDLER(PrintHostMsg_RequestPrintPreview,
                         OnRequestPrintPreview)
-    IPC_MESSAGE_UNHANDLED(handled = false)
-  IPC_END_MESSAGE_MAP()
-  if (handled)
-    return true;
-
-  IPC_BEGIN_MESSAGE_MAP(PrintPreviewMessageHandler, message)
     IPC_MESSAGE_HANDLER(PrintHostMsg_MetafileReadyForPrinting,
                         OnMetafileReadyForPrinting)
     IPC_MESSAGE_HANDLER(PrintHostMsg_PrintPreviewFailed,
                         OnPrintPreviewFailed)
+    IPC_MESSAGE_HANDLER(PrintHostMsg_PrintPreviewCancelled,
+                        OnPrintPreviewCancelled)
+    IPC_MESSAGE_HANDLER(PrintHostMsg_PrintPreviewInvalidPrinterSettings,
+                        OnPrintPreviewInvalidPrinterSettings)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
+
   return handled;
 }
 
 void PrintPreviewMessageHandler::OnRequestPrintPreview(
-    content::RenderFrameHost* render_frame_host,
+    content::RenderFrameHost* rfh,
     const PrintHostMsg_RequestPrintPreview_Params& params) {
   if (params.webnode_only) {
-    PrintViewManager::FromWebContents(web_contents())->PrintPreviewForWebNode(
-        render_frame_host);
+    PrintViewManager::FromWebContents(
+        web_contents())->PrintPreviewForWebNode(rfh);
+  }
+
+  auto key = GetKey(rfh);
+  if (base::ContainsKey(print_to_pdf_options_map_, key)) {
+    auto options = print_to_pdf_options_map_[key].get();
+    options->SetBoolean(printing::kSettingPrintToPDF, true);
+    options->SetInteger(kPreviewInitiatorHostId,
+                        rfh->GetProcess()->GetID());
+    options->SetInteger(printing::kPreviewInitiatorRoutingId,
+                         rfh->GetRoutingID());
+    options->SetInteger(kSettingDpiHorizontal, kPointsPerInch);
+    options->SetInteger(kSettingDpiVertical, kPointsPerInch);
+
+    rfh->Send(new PrintMsg_PrintPreview(rfh->GetRoutingID(), *options));
   }
 }
 
 void PrintPreviewMessageHandler::PrintToPDF(
     const base::DictionaryValue& options,
     const atom::api::WebContents::PrintToPDFCallback& callback) {
-  PrintViewManager::FromWebContents(web_contents())->PrintPreviewNow(
-        web_contents()->GetMainFrame(), false);
-
-  int request_id = -1;
-  options.GetInteger(kPreviewRequestID, &request_id);
+  int request_id = GetRequestID(options);
   print_to_pdf_callback_map_[request_id] = callback;
 
-  WebContents* initiator = web_contents();
-  content::RenderFrameHost* rfh =
-      initiator
-          ? PrintViewManager::FromWebContents(initiator)->print_preview_rfh()
-          : nullptr;
-
+  content::RenderFrameHost* rfh = printing::GetFrameToPrint(web_contents());
   if (rfh) {
-    std::unique_ptr<base::DictionaryValue> new_options(options.DeepCopy());
-    new_options->SetBoolean(printing::kSettingPrintToPDF, true);
-    new_options->SetInteger(kPreviewInitiatorHostId,
-                        rfh->GetProcess()->GetID());
-    new_options->SetInteger(kPreviewInitiatorRoutingId,
-                        rfh->GetRoutingID());
-    rfh->Send(new PrintMsg_PrintPreview(rfh->GetRoutingID(), *new_options));
+    auto key = GetKey(rfh);
+    if (base::ContainsKey(print_to_pdf_options_map_, key)) {
+      RunPrintToPDFCallbackWithMessage(request_id, "Busy", 0, nullptr);
+      return;
+    }
+
+    print_to_pdf_options_map_[key] = options.CreateDeepCopy();
+  } else {
+    RunPrintToPDFCallbackWithMessage(request_id, "Aborted", 0, nullptr);
+    return;
   }
+
+  printing::StartPrint(web_contents(), false, false);
 }
 
 void PrintPreviewMessageHandler::RunPrintToPDFCallback(
     int request_id, uint32_t data_size, char* data) {
+  RunPrintToPDFCallbackWithMessage(request_id, "", data_size, data);
+}
+
+void PrintPreviewMessageHandler::RunPrintToPDFCallbackWithMessage(
+    int request_id, const std::string& message,
+    uint32_t data_size, char* data) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
@@ -173,7 +242,7 @@ void PrintPreviewMessageHandler::RunPrintToPDFCallback(
     print_to_pdf_callback_map_[request_id].Run(v8::Null(isolate), buffer);
   } else {
     v8::Local<v8::String> error_message = v8::String::NewFromUtf8(isolate,
-        "Fail to generate PDF");
+        (message.empty() ? "Failed" : message).c_str());
     print_to_pdf_callback_map_[request_id].Run(
         v8::Exception::Error(error_message), v8::Null(isolate));
   }

@@ -40,21 +40,42 @@ class PrintPreviewMessageHandler
  private:
   typedef std::map<int, atom::api::WebContents::PrintToPDFCallback>
       PrintToPDFCallbackMap;
+  typedef std::map<std::pair<int, int>, std::unique_ptr<base::DictionaryValue>>
+      PrintToPDFOptionsMap;
 
   explicit PrintPreviewMessageHandler(content::WebContents* web_contents);
   friend class content::WebContentsUserData<PrintPreviewMessageHandler>;
 
   // Message handlers.
   void OnRequestPrintPreview(
-    content::RenderFrameHost* render_frame_host,
-    const PrintHostMsg_RequestPrintPreview_Params& params);
+      content::RenderFrameHost* render_frame_host,
+      const PrintHostMsg_RequestPrintPreview_Params& params);
   void OnMetafileReadyForPrinting(
+      content::RenderFrameHost* render_frame_host,
       const PrintHostMsg_DidPreviewDocument_Params& params);
-  void OnPrintPreviewFailed(int document_cookie);
+  void OnPrintPreviewFailed(
+      content::RenderFrameHost* render_frame_host,
+      int document_cookie);
+  void OnPrintPreviewCancelled(
+      content::RenderFrameHost* render_frame_host,
+      int document_cookie);
+  void OnPrintPreviewInvalidPrinterSettings(
+      content::RenderFrameHost* render_frame_host,
+      int document_cookie);
 
-  void RunPrintToPDFCallback(int request_id, uint32_t data_size, char* data);
+  void RunPrintToPDFCallbackWithMessage(int request_id,
+                                        const std::string& message,
+                                        uint32_t data_size,
+                                        char* data);
+  void RunPrintToPDFCallback(int request_id,
+                             uint32_t data_size,
+                             char* data);
+  void OnError(content::RenderFrameHost* render_frame_host,
+                int document_cookie,
+                const std::string& message);
 
   PrintToPDFCallbackMap print_to_pdf_callback_map_;
+  PrintToPDFOptionsMap print_to_pdf_options_map_;
 
   base::WeakPtrFactory<PrintPreviewMessageHandler> weak_ptr_factory_;
 
