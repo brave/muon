@@ -1363,12 +1363,32 @@ void WebContents::DidChangeVisibleSecurityState() {
   blink::WebSecurityStyle security_style =
     web_contents()->GetDelegate()->GetSecurityStyle(
       web_contents(), &explanations);
-    if (explanations.displayed_mixed_content &&
-        security_style == blink::kWebSecurityStyleNeutral) {
+
+  SecurityStateTabHelper* helper =
+    SecurityStateTabHelper::FromWebContents(this);
+  DCHECK(helper);
+  security_state::SecurityInfo security_info;
+  helper->GetSecurityInfo(&security_info);
+
+  if (explanations.displayed_mixed_content &&
+      security_style == blink::kWebSecurityStyleNeutral) {
       Emit("security-style-changed", "passive-mixed-content");
+  } else {
+    if (security_info.security_level == security_state::EV_SECURE) {
+      DCHECK(!security_info.certificate->subject().organization_names.empty());
+      std::string organization_name =
+        security_info.certificate->subject().organization_names[0];
+
+      DCHECK(!security_info.certificate->subject().country_name.empty());
+      std::string country_code =
+        security_info.certificate->subject().country_name;
+      std::string ev_string = organization_name + " [" + country_code + "]";
+
+      Emit("security-style-changed", security_style, ev_string);
     } else {
       Emit("security-style-changed", security_style);
     }
+  }
 }
 
 void WebContents::TitleWasSet(content::NavigationEntry* entry,
