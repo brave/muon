@@ -63,7 +63,8 @@ void CryptoBindings::EncryptString(
     base::Base64Encode(ciphertext, &encoded_cipher);
     args.GetReturnValue().Set(gin::ConvertToV8(isolate, encoded_cipher));
   } else {
-    args.GetReturnValue().Set(gin::ConvertToV8(isolate, plaintext));
+    isolate->ThrowException(v8::String::NewFromUtf8(
+        isolate, "`EncryptString` failed"));
   }
 }
 
@@ -78,14 +79,16 @@ void CryptoBindings::DecryptString(
   std::string encoded_cipher = *v8::String::Utf8Value(args[0]);
   std::string ciphertext;
   if (!base::Base64Decode(encoded_cipher, &ciphertext)) {
-    args.GetReturnValue().Set(gin::ConvertToV8(isolate, encoded_cipher));
+    isolate->ThrowException(v8::String::NewFromUtf8(
+        isolate, "ciphertext should be in base64 format"));
     return;
   }
   std::string plaintext;
   if (OSCrypt::DecryptString(ciphertext, &plaintext)) {
     args.GetReturnValue().Set(gin::ConvertToV8(isolate, plaintext));
   } else {
-    args.GetReturnValue().Set(gin::ConvertToV8(isolate, encoded_cipher));
+    isolate->ThrowException(v8::String::NewFromUtf8(
+        isolate, "`DecryptString` failed"));
   }
 }
 
