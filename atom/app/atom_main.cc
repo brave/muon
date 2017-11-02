@@ -18,8 +18,13 @@
 #include "base/strings/string_util.h"
 #include "base/time/time.h"
 #include "chrome/common/chrome_switches.h"
+#include "chrome/common/chrome_paths.h"
 #include "content/public/app/content_main.h"
 #include "content/public/common/content_switches.h"
+
+#if defined(OS_MACOSX)
+#include "chrome/common/chrome_paths_internal.h"
+#endif
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 #include "base/nix/xdg_util.h"
@@ -122,6 +127,8 @@ int main(int argc, const char* argv[]) {
   if (environment->GetVar("CHROME_USER_DATA_DIR", &user_data_dir_string) &&
       base::IsStringUTF8(user_data_dir_string)) {
     user_data_dir = base::FilePath::FromUTF8Unsafe(user_data_dir_string);
+  } else if (command_line->HasSwitch(switches::kUserDataDir)) {
+    user_data_dir = command_line->GetSwitchValuePath(switches::kUserDataDir);
   } else {
 #if defined(OS_WIN) || defined(OS_MACOSX)
     PathService::Get(base::DIR_APP_DATA, &user_data_dir);
@@ -134,10 +141,17 @@ int main(int argc, const char* argv[]) {
       user_data_dir = user_data_dir.Append(
           command_line->GetSwitchValuePath(atom::options::kUserDataDirName));
     } else {
+#if defined(OS_MACOSX)
+      if (!chrome::GetDefaultUserDataDirectory(&user_data_dir))
+        user_data_dir = user_data_dir.Append(FILE_PATH_LITERAL("brave"));
+#else
       user_data_dir = user_data_dir.Append(FILE_PATH_LITERAL("brave"));
+#endif
     }
-    environment->SetVar("CHROME_USER_DATA_DIR", user_data_dir.AsUTF8Unsafe());
   }
+  PathService::Override(chrome::DIR_CRASH_DUMPS,
+      user_data_dir.Append(FILE_PATH_LITERAL("CrashPad")));
+  environment->SetVar("CHROME_USER_DATA_DIR", user_data_dir.AsUTF8Unsafe());
 
 #if defined(OS_WIN)
   SignalInitializeCrashReporting();
