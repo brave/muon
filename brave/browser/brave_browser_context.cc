@@ -454,6 +454,7 @@ void BraveBrowserContext::CreateProfilePrefs(
 #if BUILDFLAG(ENABLE_PLUGINS)
     pref_registry_->RegisterBooleanPref(prefs::kPluginsAllowOutdated, false);
     pref_registry_->RegisterBooleanPref(prefs::kPluginsAlwaysAuthorize, false);
+    pref_registry_->RegisterBooleanPref(prefs::kRunAllFlashInAllowMode, false);
     PepperFlashSettingsManager::RegisterProfilePrefs(pref_registry_.get());
 #endif
     // TODO(bridiver) - is this necessary or is it covered by
