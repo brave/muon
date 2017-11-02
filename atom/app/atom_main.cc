@@ -117,20 +117,27 @@ int main(int argc, const char* argv[]) {
 
   std::unique_ptr<base::Environment> environment(base::Environment::Create());
   base::FilePath user_data_dir;
+
+  std::string user_data_dir_string;
+  if (environment->GetVar("CHROME_USER_DATA_DIR", &user_data_dir_string) &&
+      base::IsStringUTF8(user_data_dir_string)) {
+    user_data_dir = base::FilePath::FromUTF8Unsafe(user_data_dir_string);
+  } else {
 #if defined(OS_WIN) || defined(OS_MACOSX)
-  PathService::Get(base::DIR_APP_DATA, &user_data_dir);
+    PathService::Get(base::DIR_APP_DATA, &user_data_dir);
 #else
-  user_data_dir = base::nix::GetXDGDirectory(environment.get(),
+    user_data_dir = base::nix::GetXDGDirectory(environment.get(),
                                   base::nix::kXdgConfigHomeEnvVar,
                                   base::nix::kDotConfigDir);
 #endif
-  if (command_line->HasSwitch(atom::options::kUserDataDirName)) {
-    user_data_dir = user_data_dir.Append(
-        command_line->GetSwitchValuePath(atom::options::kUserDataDirName));
-  } else {
-    user_data_dir = user_data_dir.Append(FILE_PATH_LITERAL("brave"));
+    if (command_line->HasSwitch(atom::options::kUserDataDirName)) {
+      user_data_dir = user_data_dir.Append(
+          command_line->GetSwitchValuePath(atom::options::kUserDataDirName));
+    } else {
+      user_data_dir = user_data_dir.Append(FILE_PATH_LITERAL("brave"));
+    }
+    environment->SetVar("CHROME_USER_DATA_DIR", user_data_dir.AsUTF8Unsafe());
   }
-  environment->SetVar("CHROME_USER_DATA_DIR", user_data_dir.AsUTF8Unsafe());
 
 #if defined(OS_WIN)
   SignalInitializeCrashReporting();
