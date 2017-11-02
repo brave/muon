@@ -801,12 +801,12 @@ index efd272e706ba56b748e4b76b96d76cbd03aa07ac..051851c40e6b721035c6b57ed5b35962
      @"Google Chrome Canary": @"Google Chrome",
    };
 diff --git a/chrome/common/media/cdm_host_file_path.cc b/chrome/common/media/cdm_host_file_path.cc
-index adc5d78d3d36718bcbbadcd0e9b1ef7719c52371..17b2be895cf43d8fc5c383a09d691fbda1149cd4 100644
+index 7d8030b41998f5075c39554763edca87b8120230..29fdd5664b5231647ee34c7331ef864682e97187 100644
 --- a/chrome/common/media/cdm_host_file_path.cc
 +++ b/chrome/common/media/cdm_host_file_path.cc
-@@ -20,7 +20,7 @@
- 
- namespace chrome {
+@@ -18,7 +18,7 @@
+ #include "chrome/common/chrome_constants.h"
+ #endif
  
 -#if defined(GOOGLE_CHROME_BUILD)
 +#if defined(GOOGLE_CHROME_BUILD) || !defined(MUON_CHROMIUM_BUILD)
@@ -1307,7 +1307,7 @@ index 3db7aa72c110b6939839dd34a36705d8f37891bf..a5d37a1d0e6679a71b6c87ad618f6d5f
      if (delegate_)
        delegate_->PreSandboxStartup();
 diff --git a/content/browser/browser_plugin/browser_plugin_guest.cc b/content/browser/browser_plugin/browser_plugin_guest.cc
-index e6e79a68e2638b0ac3428cff5b34d688e57effc2..10b3b598c0827917a2b2ea24c435134232737cc2 100644
+index fb880b4fc0c059f7e2f65f77b39509d7a6979e26..2bc49d96b9307068d065b7ea7e2db884f6bf062f 100644
 --- a/content/browser/browser_plugin/browser_plugin_guest.cc
 +++ b/content/browser/browser_plugin/browser_plugin_guest.cc
 @@ -871,6 +871,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
@@ -1320,10 +1320,10 @@ index e6e79a68e2638b0ac3428cff5b34d688e57effc2..10b3b598c0827917a2b2ea24c4351342
  
  void BrowserPluginGuest::OnDragStatusUpdate(int browser_plugin_instance_id,
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
-index 9ee3ffcc30e9d34e189ce644555f8caa1b179000..dab2a1c37a0f359245152c3699fb6a2cb232f84b 100644
+index 9e9a5e743d7faef670cc1b2d9988065d5e637be4..2f7e16f7091c0f1996f077b184daa0264c5f2d47 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
 +++ b/content/browser/frame_host/render_frame_message_filter.cc
-@@ -547,7 +547,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
+@@ -563,7 +563,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
    PluginServiceFilter* filter = PluginServiceImpl::GetInstance()->GetFilter();
    std::vector<WebPluginInfo> plugins;
  
@@ -1346,7 +1346,7 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 37b65baa0907560218399e4b2bb36f10b083d2af..1ac669b856dcc2bcd8d69e0b76061edeb8957b1f 100644
+index db98da85f011c4d5e728fe6319cd2181308a16a3..d2a37e0f751a254e1274cc25d767b066656811f8 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
 @@ -1629,8 +1629,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
@@ -1376,7 +1376,7 @@ index 37b65baa0907560218399e4b2bb36f10b083d2af..1ac669b856dcc2bcd8d69e0b76061ede
    // It is possible that the renderer has not yet produced a surface, in which
    // case we return our current namespace.
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 80f1e3fd251d32b703cf546c458459be700fd4fd..cb7185ad67fc0ac31873af3d91fbbb35545b393e 100644
+index f90e4952d66003b6a17bf7e4f2f1c76846e8ac94..cdef36599f43a2a8e0738fe0732cff302add16ce 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -140,6 +140,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1392,7 +1392,7 @@ index 80f1e3fd251d32b703cf546c458459be700fd4fd..cb7185ad67fc0ac31873af3d91fbbb35
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1648,6 +1654,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1650,6 +1656,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
    if (render_widget_host_) {
      render_widget_host_->SetActive(active);
      if (active) {
@@ -1403,7 +1403,7 @@ index 80f1e3fd251d32b703cf546c458459be700fd4fd..cb7185ad67fc0ac31873af3d91fbbb35
        if (HasFocus())
          render_widget_host_->Focus();
      } else {
-@@ -1911,7 +1921,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1913,7 +1923,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1418,7 +1418,7 @@ index 80f1e3fd251d32b703cf546c458459be700fd4fd..cb7185ad67fc0ac31873af3d91fbbb35
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2144,8 +2161,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2146,8 +2163,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1429,7 +1429,7 @@ index 80f1e3fd251d32b703cf546c458459be700fd4fd..cb7185ad67fc0ac31873af3d91fbbb35
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -3010,6 +3029,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -3012,6 +3031,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1442,7 +1442,7 @@ index 80f1e3fd251d32b703cf546c458459be700fd4fd..cb7185ad67fc0ac31873af3d91fbbb35
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 7638cd6597259a695115b24a84faf13f8614668c..d8891aaa9f558ab7709c44eaaae66d707a90f315 100644
+index 8a788f64c713434ea3290a9b878d3765c04167ff..52a016f87aacd1d612536c8a106511993b8f4d89 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1737,7 +1737,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -1455,7 +1455,7 @@ index 7638cd6597259a695115b24a84faf13f8614668c..d8891aaa9f558ab7709c44eaaae66d70
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2295,7 +2296,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2284,7 +2285,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
@@ -1537,10 +1537,10 @@ index 0a6b0176a982782fd1472f607f811dd6c183c3fe..052ca73677cad3b10b494bf2ab823a04
    (*map_type)[key] = value;
    ResetKeyIterator();
 diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
-index 7cd1df45667dae8493639fa020494c29c90751e1..4657e4f224dded04f1179a6951d6690bf1b0cae5 100644
+index 4cf333e8b72bc4f334d47917b73002e8ce0df852..2ff01c37b6151547eed8b906311fe9304c3db8a0 100644
 --- a/content/public/app/mojo/content_renderer_manifest.json
 +++ b/content/public/app/mojo/content_renderer_manifest.json
-@@ -40,6 +40,7 @@
+@@ -41,6 +41,7 @@
      "navigation:frame": {
        "provides": {
          "browser": [
@@ -1597,10 +1597,10 @@ index 722afb30f6625f3e00c0a437013b7ff34b31b57f..1cfbc5a98140187cddb4a6002b77c03d
  #else
        autoplay_policy(AutoplayPolicy::kNoUserGestureRequired) {
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 5907430937b1930a9aaffe49a7f76d8de487b7a9..34d8ecefe5f1efca14bb97527d587988dfae92ca 100644
+index 60da7c32e96082cd5502f733ce2d3d9fab68c47a..b5b86004d2d540b33139d59576ee85c9db096688 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
-@@ -482,8 +482,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
+@@ -503,8 +503,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
  
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
@@ -1695,7 +1695,7 @@ index a46a85f47969f0f782dace5c1f86c724474adc06..ee2cd727154ab981d4fd38f0cb8a63a9
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 60a326bade3c072c76b2647c93b654823798f443..55c078a64a7f85b2f32774f695f04840d8d3f04e 100644
+index 605499b48bf4d3efa45b6b3a3e84a272831cb580..cb95980c3733bd7ae0a9f952e9fb365afe762451 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -189,7 +189,10 @@
@@ -1710,16 +1710,16 @@ index 60a326bade3c072c76b2647c93b654823798f443..55c078a64a7f85b2f32774f695f04840
      }, {
        "internal": true,
        "channel": "stable",
-@@ -554,6 +557,7 @@
+@@ -555,6 +558,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
 +      "chrome://brave/*",
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
-       "chrome://oobe/*"
-@@ -572,6 +576,13 @@
-       "chrome://media-router/*",
+       "chrome://mobilesetup/*",
+@@ -575,6 +579,13 @@
+       "chrome://mobilesetup/*",
        "chrome://oobe/*"
      ]
 +  }, {
@@ -1732,14 +1732,14 @@ index 60a326bade3c072c76b2647c93b654823798f443..55c078a64a7f85b2f32774f695f04840
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -580,6 +591,7 @@
+@@ -583,6 +594,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
 +      "chrome://brave/*",
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
-       "chrome://oobe/*"
+       "chrome://mobilesetup/*",
 diff --git a/extensions/renderer/module_system.cc b/extensions/renderer/module_system.cc
 index 07ec45a5ad851875fc8cbf7cbc69023f97e9225a..ac1ccee6f99e9e10b7eed10a60faf774a09a49ba 100644
 --- a/extensions/renderer/module_system.cc
@@ -1856,10 +1856,10 @@ index b73f65168086189aed021cc82ffef5fde1f2d061..aa3f97fa57a3cb5616cd3811a34d0698
  }
  
 diff --git a/net/http/transport_security_state.cc b/net/http/transport_security_state.cc
-index b04a52e96b545462ce53d190ef8ac8ff55cbbc7a..410d65e5a8be0ef9b42db0c54d0598d4af69c78b 100644
+index 4d658e27e1b956656d8fb1e1fd6bd749b1f6819e..5d2b87141146f393294b0ff84401c652d0eb6f27 100644
 --- a/net/http/transport_security_state.cc
 +++ b/net/http/transport_security_state.cc
-@@ -761,6 +761,10 @@ TransportSecurityState::TransportSecurityState()
+@@ -762,6 +762,10 @@ TransportSecurityState::TransportSecurityState()
    enable_static_pins_ = false;
    enable_static_expect_ct_ = false;
  #endif
@@ -1908,10 +1908,10 @@ index c30e48bd2e602e586af2bf11da8d7c1a5e0b21e6..65bcf4e66f8b7f2eae99f9bb0782cbeb
  
  void WebViewImpl::HidePopups() {
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index 2ab5e18400c1c2c931fc0c9f2d30503e45254505..08c480d3da7435fd8c8444187713ba5532654c2e 100644
+index da494da9d3f642e3174dd637476ab5a6ef70747d..8627f507f514089afe95b0e99e5d9c69ddfec604 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -275,6 +275,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -274,6 +274,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
    if (element_->GetLoadType() == WebMediaPlayer::kLoadTypeMediaStream)
      return false;
  
@@ -1924,7 +1924,7 @@ index 2ab5e18400c1c2c931fc0c9f2d30503e45254505..08c480d3da7435fd8c8444187713ba55
    // We want to allow muted video to autoplay if:
    // - the flag is enabled;
    // - Data Saver is not enabled;
-@@ -291,6 +297,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -290,6 +296,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
        IsAutoplayAllowedPerSettings()) {
      return false;
    }
