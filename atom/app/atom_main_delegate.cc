@@ -168,16 +168,16 @@ base::FilePath InitializeUserDataDir() {
     NOTREACHED();
   }
 #else  // OS_WIN
-  user_data_dir =
-      command_line.GetSwitchValuePath(switches::kUserDataDir);
+  std::unique_ptr<base::Environment> environment(base::Environment::Create());
+  std::string user_data_dir_string;
+  if (environment->GetVar("CHROME_USER_DATA_DIR", &user_data_dir_string) &&
+      base::IsStringUTF8(user_data_dir_string)) {
+    user_data_dir = base::FilePath::FromUTF8Unsafe(user_data_dir_string);
+  }
 
   if (user_data_dir.empty()) {
-    std::string user_data_dir_string;
-    std::unique_ptr<base::Environment> environment(base::Environment::Create());
-    if (environment->GetVar("CHROME_USER_DATA_DIR", &user_data_dir_string) &&
-        base::IsStringUTF8(user_data_dir_string)) {
-      user_data_dir = base::FilePath::FromUTF8Unsafe(user_data_dir_string);
-    }
+    user_data_dir =
+        command_line.GetSwitchValuePath(switches::kUserDataDir);
   }
 #endif  // OS_WIN
 
