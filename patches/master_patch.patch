@@ -1,5 +1,5 @@
 diff --git a/base/threading/thread_restrictions.h b/base/threading/thread_restrictions.h
-index 839d8b7beadcabc05611be3028d1d6d2dd75ff27..b374a26bb8ff568304a5a4a0ba725563d667a6d5 100644
+index d372d5ac17e254a57e748e9b4a9a046bd57efd66..333e0feb41fabe0026d8579fe0bb856c6fcb643c 100644
 --- a/base/threading/thread_restrictions.h
 +++ b/base/threading/thread_restrictions.h
 @@ -32,6 +32,13 @@ class StatisticsProviderImpl;
@@ -16,7 +16,7 @@ index 839d8b7beadcabc05611be3028d1d6d2dd75ff27..b374a26bb8ff568304a5a4a0ba725563
  namespace content {
  class BrowserGpuChannelHostFactory;
  class BrowserGpuMemoryBufferManager;
-@@ -394,6 +401,9 @@ class BASE_EXPORT ThreadRestrictions {
+@@ -400,6 +407,9 @@ class BASE_EXPORT ThreadRestrictions {
    friend class ui::CommandBufferLocal;
    friend class ui::GpuState;
  
@@ -1839,10 +1839,10 @@ index 1cc7c6eb7182e495f8262d1d7da13bfb556cc198..210586c217932162a2fc18bded9d1e29
  
  void WebViewImpl::HidePopups() {
 diff --git a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-index c7a337227d5101aebb096ecea0fe594696b7e033..8137e1d7f5c465522766cc31e6f824bbb952030b 100644
+index 19c7b569f19849f8fbb26c1faf2ac52f8fe7c566..0294416a183a13cd925adf89dd5872898ba7c2fa 100644
 --- a/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
 +++ b/third_party/WebKit/Source/core/html/HTMLMediaElement.cpp
-@@ -2496,7 +2496,7 @@ void HTMLMediaElement::setMuted(bool muted) {
+@@ -2522,7 +2522,7 @@ void HTMLMediaElement::setMuted(bool muted) {
    if (!muted_ && !autoplay_policy_->RequestAutoplayUnmute())
      pause();
  
