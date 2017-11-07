@@ -1402,7 +1402,7 @@ index dda1da688eb7ae7ad62b677e31720a5b266df97f..78cfa7d499bac245d16362a04923db22
    // It is possible that the renderer has not yet produced a surface, in which
    // case we return our current namespace.
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 84897ae416fa61fddac742ab804d1f914636e064..8c28e44da23933cb1c62e11cff9966b778163834 100644
+index 84897ae416fa61fddac742ab804d1f914636e064..c0cf97b774cc1291b8633fb10b2bc7ffdb8d874f 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -140,6 +140,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1433,23 +1433,7 @@ index 84897ae416fa61fddac742ab804d1f914636e064..8c28e44da23933cb1c62e11cff9966b7
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2039,6 +2052,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
-   if (EventIsReservedBySystem(theEvent))
-     return NO;
- 
-+#ifdef MUON_CHROMIUM_BUILD
-   // If we return |NO| from this function, cocoa will send the key event to
-   // the menu and only if the menu does not process the event to |keyDown:|. We
-   // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -2052,6 +2066,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
-     DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
-     return NO;
-   }
-+#endif  // MUON_CHROMIUM_BUILD
- 
-   // Command key combinations are sent via performKeyEquivalent rather than
-   // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2099,8 +2114,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2099,8 +2112,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1460,7 +1444,7 @@ index 84897ae416fa61fddac742ab804d1f914636e064..8c28e44da23933cb1c62e11cff9966b7
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2959,6 +2976,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2959,6 +2974,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
