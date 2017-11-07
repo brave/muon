@@ -17,8 +17,8 @@
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "base/time/time.h"
-#include "chrome/common/chrome_switches.h"
 #include "chrome/common/chrome_paths.h"
+#include "chrome/common/chrome_switches.h"
 #include "content/public/app/content_main.h"
 #include "content/public/common/content_switches.h"
 
