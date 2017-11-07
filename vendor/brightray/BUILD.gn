@@ -53,6 +53,7 @@ source_set("common") {
     "//storage/browser",
     "//storage/common",
     "//components/prefs",
+    "//components/nacl/common:features",
     "//net:net_with_v8",
     "//media",
   ]

@@ -73,7 +73,6 @@ BrowserContext* BrowserContext::Get(
 
 BrowserContext::BrowserContext(const std::string& partition, bool in_memory)
     : in_memory_(in_memory),
-      network_controller_handle_(new DevToolsNetworkControllerHandle),
       resource_context_(new ResourceContext),
       storage_policy_(new SpecialStoragePolicy),
       weak_factory_(this) {
@@ -97,10 +96,6 @@ BrowserContext::~BrowserContext() {
     BrowserThread::DeleteSoon(BrowserThread::IO,
                               FROM_HERE,
                               resource_context_.release());
-
-    BrowserThread::DeleteSoon(BrowserThread::IO,
-                              FROM_HERE,
-                              network_controller_handle_.release());
   }
 }
 
@@ -111,7 +106,7 @@ void BrowserContext::InitPrefs(
   prefs_factory.set_async(true);
   prefs_factory.SetUserPrefsFile(prefs_path, task_runner.get());
 
-  auto registry = make_scoped_refptr(new PrefRegistrySimple);
+  auto registry = base::WrapRefCounted(new PrefRegistrySimple);
   RegisterInternalPrefs(registry.get());
   RegisterPrefs(registry.get());
 
@@ -128,7 +123,6 @@ net::URLRequestContextGetter* BrowserContext::CreateRequestContext(
   DCHECK(!url_request_getter_.get());
   url_request_getter_ = new URLRequestContextGetter(
       this,
-      network_controller_handle(),
       static_cast<NetLog*>(BrowserClient::Get()->GetNetLog()),
       GetPath(),
       in_memory_,

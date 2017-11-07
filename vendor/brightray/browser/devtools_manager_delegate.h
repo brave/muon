@@ -7,7 +7,6 @@
 
 #include "base/macros.h"
 #include "base/compiler_specific.h"
-#include "chrome/browser/devtools/devtools_network_protocol_handler.h"
 #include "content/browser/devtools/devtools_http_handler.h"
 #include "content/public/browser/devtools_agent_host_observer.h"
 #include "content/public/browser/devtools_manager_delegate.h"
@@ -26,8 +25,9 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
  private:
   // DevToolsManagerDelegate implementation.
   void Inspect(content::DevToolsAgentHost* agent_host) override {}
-  base::DictionaryValue* HandleCommand(content::DevToolsAgentHost* agent_host,
-                                       base::DictionaryValue* command) override;
+  bool HandleCommand(content::DevToolsAgentHost* agent_host,
+                     int session_id,
+                     base::DictionaryValue* command) override;
   std::string GetTargetType(content::WebContents* web_contents) override {
     return std::string();
   }
@@ -46,8 +46,6 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
     content::DevToolsAgentHost* agent_host) override;
   void DevToolsAgentHostDetached(
     content::DevToolsAgentHost* agent_host) override;
-
-  std::unique_ptr<DevToolsNetworkProtocolHandler> handler_;
 
   DISALLOW_COPY_AND_ASSIGN(DevToolsManagerDelegate);
 };

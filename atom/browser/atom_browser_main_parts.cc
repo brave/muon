@@ -23,7 +23,6 @@
 #include "base/files/file_util.h"
 #include "base/memory/memory_pressure_monitor.h"
 #include "base/path_service.h"
-#include "base/profiler/scoped_tracker.h"
 #include "base/profiler/stack_sampling_profiler.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/time/default_tick_clock.h"
@@ -37,8 +36,6 @@
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_result_codes.h"
 #include "chrome/common/chrome_switches.h"
-#include "components/metrics/profiler/content/content_tracking_synchronizer_delegate.h"
-#include "components/metrics/profiler/tracking_synchronizer.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
@@ -86,6 +83,7 @@
 #include "base/win/win_util.h"
 #include "base/win/windows_version.h"
 #include "base/win/wrapped_window_proc.h"
+#include "components/crash/content/app/crash_export_thunks.h"
 #endif
 
 namespace atom {
@@ -101,12 +99,8 @@ OSStatus KeychainCallback(SecKeychainEvent keychain_event,
 
 #if defined(OS_WIN)
 void InitializeWindowProcExceptions() {
-  // Get the breakpad pointer
   base::win::WinProcExceptionFilter exception_filter =
-      reinterpret_cast<base::win::WinProcExceptionFilter>(::GetProcAddress(
-          ::GetModuleHandle(chrome::kChromeElfDllName), "CrashForException"));
-  CHECK(exception_filter);
-  exception_filter = base::win::SetWinProcExceptionFilter(exception_filter);
+      base::win::SetWinProcExceptionFilter(&CrashForException_ExportThunk);
   DCHECK(!exception_filter);
 }
 #endif  // defined (OS_WIN)
@@ -211,25 +205,6 @@ int AtomBrowserMainParts::PreCreateThreads() {
         new MuonBrowserProcessImpl(local_state_task_runner.get(),
                                     *command_line));
   }
-
-  if (parsed_command_line_.HasSwitch(switches::kEnableProfiling)) {
-    TRACE_EVENT0("startup",
-        "AtomBrowserMainParts::PreCreateThreads:InitProfiling");
-    // User wants to override default tracking status.
-    std::string flag =
-      parsed_command_line_.GetSwitchValueASCII(switches::kEnableProfiling);
-    // Default to basic profiling (no parent child support).
-    tracked_objects::ThreadData::Status status =
-          tracked_objects::ThreadData::PROFILING_ACTIVE;
-    if (flag.compare("0") != 0)
-      status = tracked_objects::ThreadData::DEACTIVATED;
-    tracked_objects::ThreadData::InitializeAndSetTrackingStatus(status);
-  }
-
-  // Initialize tracking synchronizer system.
-  tracking_synchronizer_ = new metrics::TrackingSynchronizer(
-      base::MakeUnique<base::DefaultTickClock>(),
-      base::Bind(&metrics::ContentTrackingSynchronizerDelegate::Create));
 
 #if defined(OS_MACOSX)
   // Get the Keychain API to register for distributed notifications on the main

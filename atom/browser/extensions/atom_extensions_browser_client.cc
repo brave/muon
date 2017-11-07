@@ -18,6 +18,7 @@
 #include "base/files/file_path.h"
 #include "base/memory/ptr_util.h"
 #include "base/path_service.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/version.h"
 #include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/browser_process.h"
@@ -151,14 +152,13 @@ class URLRequestResourceBundleJob : public net::URLRequestSimpleJob {
                            base::SizeTToString((*data)->size()).c_str()));
 
     std::string* read_mime_type = new std::string;
-    bool posted = base::PostTaskAndReplyWithResult(
-        content::BrowserThread::GetBlockingPool(), FROM_HERE,
+    base::PostTaskWithTraitsAndReplyWithResult(
+        FROM_HERE, {base::MayBlock{}},
         base::Bind(&net::GetMimeTypeFromFile, filename_,
                    base::Unretained(read_mime_type)),
         base::Bind(&URLRequestResourceBundleJob::OnMimeTypeRead,
                    weak_factory_.GetWeakPtr(), mime_type, charset, *data,
                    base::Owned(read_mime_type), callback));
-    DCHECK(posted);
 
     return net::ERR_IO_PENDING;
   }

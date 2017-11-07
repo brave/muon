@@ -14,7 +14,7 @@
 #include "base/files/file_path.h"
 #include "base/macros.h"
 #include "base/values.h"
-#include "components/component_updater/default_component_installer.h"
+#include "components/component_updater/component_installer.h"
 
 namespace base {
 class FilePath;
@@ -28,14 +28,14 @@ class ComponentUpdateService;
 namespace brave {
 
 class ExtensionInstallerTraits :
-    public component_updater::ComponentInstallerTraits {
+    public component_updater::ComponentInstallerPolicy {
  public:
   explicit ExtensionInstallerTraits(const std::string &base64_public_key,
                                     const ReadyCallback& ready_callback);
   ~ExtensionInstallerTraits() override {}
 
  private:
-  // The following methods override ComponentInstallerTraits.
+  // The following methods override ComponentInstallerPolicy.
   bool RequiresNetworkEncryption() const override;
   update_client::CrxInstaller::Result OnCustomInstall(
     const base::DictionaryValue& manifest,

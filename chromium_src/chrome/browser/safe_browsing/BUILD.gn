@@ -7,7 +7,7 @@ source_set("safe_browsing") {
   ]
 
   deps = [
-    "//components/safe_browsing_db",
+    "//components/safe_browsing/common:interfaces",
     "//third_party/protobuf:protobuf_lite",
   ]
 

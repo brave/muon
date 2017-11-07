@@ -94,10 +94,10 @@ void URLRequestFetchJob::BeforeStartInUI(
   if (options.Get("session", &session) && session->IsNull()) {
     // We have to create the URLRequestContextGetter on UI thread.
     url_request_context_getter_ = new brightray::URLRequestContextGetter(
-        this, nullptr, nullptr, base::FilePath(), true,
+        this, nullptr, base::FilePath(), true,
         BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
-        nullptr, content::URLRequestInterceptorScopedVector());
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE), nullptr,
+        content::URLRequestInterceptorScopedVector());
   }
 }
 
