@@ -1892,6 +1892,20 @@ index 9162bc3ba51153a494aa218007511054cdebbad7..e685ea161db22661d3a643cd37df8924
        IsAutoplayAllowedPerSettings()) {
      return false;
    }
+diff --git a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
+index 7ee2fa858b93e1dd42ac27f982fb61eaf597aad4..b1c96c229077859865fd5ea03cdbd7747880e216 100644
+--- a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
++++ b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
+@@ -51,7 +51,8 @@ v8::Isolate* MainThreadIsolate() {
+ static V8PerIsolateData* g_main_thread_per_isolate_data = 0;
+ 
+ static void BeforeCallEnteredCallback(v8::Isolate* isolate) {
+-  CHECK(!ScriptForbiddenScope::IsScriptForbidden());
++  // TODO(jochen): Re-enable this once https://crbug.com/728583
++  // CHECK(!ScriptForbiddenScope::IsScriptForbidden());
+ }
+ 
+ static void MicrotasksCompletedCallback(v8::Isolate* isolate) {
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
 index 3e453e4fa2973ec006e8d12836ce39362f4c49c7..f2809f73caa1dc7e9958b8b542f6134a11e893b5 100644
 --- a/third_party/boringssl/BUILD.generated.gni
