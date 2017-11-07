@@ -1989,3 +1989,17 @@ index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c
      }
    ]
  }
+diff --git a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
+index 7ee2fa858b93..b1c96c229077 100644
+--- a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
++++ b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
+@@ -51,1 +51,1 @@ v8::Isolate* MainThreadIsolate() {
+ static V8PerIsolateData* g_main_thread_per_isolate_data = 0;
+
+ static void BeforeCallEnteredCallback(v8::Isolate* isolate) {
+-  CHECK(!ScriptForbiddenScope::IsScriptForbidden());
++  // TODO(jochen): Re-enable this once https://crbug.com/728583
++  // CHECK(!ScriptForbiddenScope::IsScriptForbidden());
+ }
+
+ static void MicrotasksCompletedCallback(v8::Isolate* isolate) {
