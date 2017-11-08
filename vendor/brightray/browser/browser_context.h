@@ -77,9 +77,6 @@ class BrowserContext : public content::BrowserContext,
   // Subclasses should override this to register custom preferences.
   virtual void RegisterPrefs(PrefRegistrySimple* pref_registry) {}
 
-  // URLRequestContextGetter::Delegate:
-  net::NetworkDelegate* CreateNetworkDelegate() override;
-
  private:
   friend class base::RefCounted<BrowserContext>;
   class ResourceContext;

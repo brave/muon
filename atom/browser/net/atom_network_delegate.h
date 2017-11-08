@@ -14,9 +14,9 @@
 #include "base/memory/weak_ptr.h"
 #include "base/synchronization/lock.h"
 #include "base/values.h"
-#include "brightray/browser/network_delegate.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/common/url_pattern.h"
+#include "net/base/network_delegate_impl.h"
 #include "net/base/net_errors.h"
 #include "net/http/http_request_headers.h"
 #include "net/http/http_response_headers.h"
@@ -27,7 +27,7 @@ using URLPatterns = std::set<URLPattern>;
 
 const char* ResourceTypeToString(content::ResourceType type);
 
-class AtomNetworkDelegate : public brightray::NetworkDelegate {
+class AtomNetworkDelegate : public net::NetworkDelegateImpl {
  public:
   using ResponseCallback = base::Callback<void(const base::DictionaryValue&)>;
   using SimpleListener = base::Callback<void(const base::DictionaryValue&)>;
@@ -91,6 +91,10 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
   void OnResponseStarted(net::URLRequest* request) override;
   void OnCompleted(net::URLRequest* request, bool started) override;
   void OnURLRequestDestroyed(net::URLRequest* request) override;
+  bool OnCanAccessFile(const net::URLRequest& request,
+                       const base::FilePath& original_path,
+                       const base::FilePath& path) const override;
+  bool OnAreExperimentalCookieFeaturesEnabled() const override;
 
  private:
   void OnErrorOccurred(net::URLRequest* request, bool started);
@@ -120,6 +124,8 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
   std::map<uint64_t, net::CompletionCallback> callbacks_;
 
   base::Lock lock_;
+
+  std::vector<std::string> ignore_connections_limit_domains_;
 
   base::WeakPtrFactory<AtomNetworkDelegate> weak_factory_;
 

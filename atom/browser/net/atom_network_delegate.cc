@@ -9,7 +9,9 @@
 
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/native_mate_converters/net_converter.h"
+#include "base/command_line.h"
 #include "base/stl_util.h"
+#include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/devtools/devtools_network_transaction.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
@@ -17,6 +19,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/websocket_handshake_request_info.h"
 #include "extensions/features/features.h"
+#include "net/base/load_flags.h"
 #include "net/url_request/url_request.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -49,6 +52,9 @@ const char* ResourceTypeToString(content::ResourceType type) {
 }
 
 namespace {
+
+// Ignore the limit of 6 connections per host.
+const char kIgnoreConnectionsLimit[] = "ignore-connections-limit";
 
 struct ResponseHeadersContainer {
   scoped_refptr<net::HttpResponseHeaders>* headers;
@@ -257,6 +263,12 @@ void ReadFromResponseObject(const base::DictionaryValue& response,
 }  // namespace
 
 AtomNetworkDelegate::AtomNetworkDelegate() : weak_factory_(this) {
+  auto command_line = base::CommandLine::ForCurrentProcess();
+  if (command_line->HasSwitch(kIgnoreConnectionsLimit)) {
+    std::string value = command_line->GetSwitchValueASCII(kIgnoreConnectionsLimit);
+    ignore_connections_limit_domains_ = base::SplitString(
+        value, ",", base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
+  }
 }
 
 AtomNetworkDelegate::~AtomNetworkDelegate() {
@@ -292,9 +304,17 @@ int AtomNetworkDelegate::OnBeforeURLRequest(
     net::URLRequest* request,
     const net::CompletionCallback& callback,
     GURL* new_url) {
+  for (const auto& domain : ignore_connections_limit_domains_) {
+    if (request->url().DomainIs(domain)) {
+      // Allow unlimited concurrent connections.
+      request->SetPriority(net::MAXIMUM_PRIORITY);
+      request->SetLoadFlags(request->load_flags() | net::LOAD_IGNORE_LIMITS);
+      break;
+    }
+  }
+
   if (!base::ContainsKey(response_listeners_, kOnBeforeRequest))
-    return brightray::NetworkDelegate::OnBeforeURLRequest(
-        request, callback, new_url);
+    return net::OK;
 
   return HandleResponseEvent(kOnBeforeRequest, request, callback, new_url);
 }
@@ -314,8 +334,7 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
         DevToolsNetworkTransaction::kDevToolsEmulateNetworkConditionsClientId,
         client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))
-    return brightray::NetworkDelegate::OnBeforeStartTransaction(
-        request, callback, headers);
+    return net::OK;
 
   return HandleResponseEvent(
       kOnBeforeSendHeaders, request, callback, headers, *headers);
@@ -325,7 +344,6 @@ void AtomNetworkDelegate::OnStartTransaction(
     net::URLRequest* request,
     const net::HttpRequestHeaders& headers) {
   if (!base::ContainsKey(simple_listeners_, kOnSendHeaders)) {
-    brightray::NetworkDelegate::OnStartTransaction(request, headers);
     return;
   }
 
@@ -339,8 +357,7 @@ int AtomNetworkDelegate::OnHeadersReceived(
     scoped_refptr<net::HttpResponseHeaders>* override,
     GURL* new_url) {
   if (!base::ContainsKey(response_listeners_, kOnHeadersReceived))
-    return brightray::NetworkDelegate::OnHeadersReceived(
-        request, callback, original, override, new_url);
+    return net::OK;
 
   return HandleResponseEvent(
       kOnHeadersReceived, request, callback,
@@ -351,7 +368,6 @@ int AtomNetworkDelegate::OnHeadersReceived(
 void AtomNetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
                                            const GURL& new_location) {
   if (!base::ContainsKey(simple_listeners_, kOnBeforeRedirect)) {
-    brightray::NetworkDelegate::OnBeforeRedirect(request, new_location);
     return;
   }
 
@@ -362,7 +378,6 @@ void AtomNetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
 
 void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request) {
   if (!base::ContainsKey(simple_listeners_, kOnResponseStarted)) {
-    brightray::NetworkDelegate::OnResponseStarted(request);
     return;
   }
 
@@ -386,12 +401,10 @@ void AtomNetworkDelegate::OnCompleted(net::URLRequest* request, bool started) {
              net::HttpResponseHeaders::IsRedirectResponseCode(
                  request->response_headers()->response_code())) {
     // Redirect event.
-    brightray::NetworkDelegate::OnCompleted(request, started);
     return;
   }
 
   if (!base::ContainsKey(simple_listeners_, kOnCompleted)) {
-    brightray::NetworkDelegate::OnCompleted(request, started);
     return;
   }
 
@@ -406,7 +419,6 @@ void AtomNetworkDelegate::OnURLRequestDestroyed(net::URLRequest* request) {
 void AtomNetworkDelegate::OnErrorOccurred(
     net::URLRequest* request, bool started) {
   if (!base::ContainsKey(simple_listeners_, kOnErrorOccurred)) {
-    brightray::NetworkDelegate::OnCompleted(request, started);
     return;
   }
 
@@ -496,6 +508,16 @@ void AtomNetworkDelegate::OnListenerResultInUI(
       BrowserThread::IO, FROM_HERE,
       base::Bind(&AtomNetworkDelegate::OnListenerResultInIO<T>,
                  weak_factory_.GetWeakPtr(), id, out, base::Passed(&copy)));
+}
+
+bool AtomNetworkDelegate::OnCanAccessFile(const net::URLRequest& request,
+                                           const base::FilePath& original_path,
+                                           const base::FilePath& path) const {
+  return true;
+}
+
+bool AtomNetworkDelegate::OnAreExperimentalCookieFeaturesEnabled() const {
+  return true;
 }
 
 }  // namespace atom
