@@ -1308,10 +1308,10 @@ index d2275a49982ec664c30b8b3e6925096cff2af405..50814c64835ac69e1aafe8b31a22f1ce
      if (delegate_)
        delegate_->PreSandboxStartup();
 diff --git a/content/browser/browser_plugin/browser_plugin_guest.cc b/content/browser/browser_plugin/browser_plugin_guest.cc
-index e6e79a68e2638b0ac3428cff5b34d688e57effc2..10b3b598c0827917a2b2ea24c435134232737cc2 100644
+index c73f9f0c640d0b155109115d74f2b81bfb58627a..6497890b574bc092936dba562ea7bccf0b6da7f6 100644
 --- a/content/browser/browser_plugin/browser_plugin_guest.cc
 +++ b/content/browser/browser_plugin/browser_plugin_guest.cc
-@@ -871,6 +871,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
+@@ -873,6 +873,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
      rwhv->UnregisterFrameSinkId();
  
    delegate_->DidDetach();
@@ -1667,7 +1667,7 @@ index a46a85f47969f0f782dace5c1f86c724474adc06..ee2cd727154ab981d4fd38f0cb8a63a9
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 60a326bade3c072c76b2647c93b654823798f443..55c078a64a7f85b2f32774f695f04840d8d3f04e 100644
+index 605499b48bf4d3efa45b6b3a3e84a272831cb580..cb95980c3733bd7ae0a9f952e9fb365afe762451 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -189,7 +189,10 @@
@@ -1682,16 +1682,16 @@ index 60a326bade3c072c76b2647c93b654823798f443..55c078a64a7f85b2f32774f695f04840
      }, {
        "internal": true,
        "channel": "stable",
-@@ -554,6 +557,7 @@
+@@ -555,6 +558,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
 +      "chrome://brave/*",
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
-       "chrome://oobe/*"
-@@ -572,6 +576,13 @@
-       "chrome://media-router/*",
+       "chrome://mobilesetup/*",
+@@ -575,6 +579,13 @@
+       "chrome://mobilesetup/*",
        "chrome://oobe/*"
      ]
 +  }, {
@@ -1704,14 +1704,14 @@ index 60a326bade3c072c76b2647c93b654823798f443..55c078a64a7f85b2f32774f695f04840
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -580,6 +591,7 @@
+@@ -583,6 +594,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
 +      "chrome://brave/*",
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
-       "chrome://oobe/*"
+       "chrome://mobilesetup/*",
 diff --git a/extensions/renderer/module_system.cc b/extensions/renderer/module_system.cc
 index 07ec45a5ad851875fc8cbf7cbc69023f97e9225a..ac1ccee6f99e9e10b7eed10a60faf774a09a49ba 100644
 --- a/extensions/renderer/module_system.cc
