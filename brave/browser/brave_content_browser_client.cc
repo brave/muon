@@ -24,6 +24,7 @@
 #include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
+#include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
 #include "chrome/browser/speech/tts_message_filter.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
@@ -814,6 +815,12 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
         base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
+}
+
+std::unique_ptr<content::NavigationUIData>
+BraveContentBrowserClient::GetNavigationUIData(
+    content::NavigationHandle* navigation_handle) {
+  return base::MakeUnique<ChromeNavigationUIData>(navigation_handle);
 }
 
 void BraveContentBrowserClient::InitFrameInterfaces() {

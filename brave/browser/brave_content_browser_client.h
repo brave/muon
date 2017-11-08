@@ -138,6 +138,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::vector<std::unique_ptr<content::NavigationThrottle>>
     CreateThrottlesForNavigation(
       content::NavigationHandle* handle) override;
+  std::unique_ptr<content::NavigationUIData> GetNavigationUIData(
+    content::NavigationHandle* navigation_handle) override;
 
  protected:
   bool IsValidStoragePartitionId(

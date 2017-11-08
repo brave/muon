@@ -24,6 +24,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
+#include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_context.h"
@@ -489,6 +490,20 @@ ExtensionWebContentsObserver*
 AtomExtensionsBrowserClient::GetExtensionWebContentsObserver(
     content::WebContents* web_contents) {
   return AtomExtensionWebContentsObserver::FromWebContents(web_contents);;
+}
+
+ExtensionNavigationUIData*
+AtomExtensionsBrowserClient::GetExtensionNavigationUIData(
+    net::URLRequest* request) {
+  const content::ResourceRequestInfo* info =
+      content::ResourceRequestInfo::ForRequest(request);
+  if (!info)
+    return nullptr;
+  ChromeNavigationUIData* navigation_data =
+      static_cast<ChromeNavigationUIData*>(info->GetNavigationUIData());
+  if (!navigation_data)
+    return nullptr;
+  return navigation_data->GetExtensionNavigationUIData();
 }
 
 KioskDelegate* AtomExtensionsBrowserClient::GetKioskDelegate() {

@@ -253,6 +253,8 @@ source_set("browser") {
     "//chrome/browser/process_singleton.h",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.cc",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.h",
+    "//chrome/browser/renderer_host/chrome_navigation_ui_data.cc",
+    "//chrome/browser/renderer_host/chrome_navigation_ui_data.h",
     "//chrome/browser/speech/tts_controller.h",
     "//chrome/browser/speech/tts_controller_impl.cc",
     "//chrome/browser/speech/tts_controller_impl.h",
