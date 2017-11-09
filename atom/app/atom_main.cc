@@ -124,7 +124,8 @@ int main(int argc, const char* argv[]) {
   base::FilePath user_data_dir;
 
   std::string user_data_dir_string;
-  if (environment->GetVar("CHROME_USER_DATA_DIR", &user_data_dir_string) &&
+  if (environment->GetVar("CHROME_USER_DATA_DIR_FOR_TEST",
+                          &user_data_dir_string) &&
       base::IsStringUTF8(user_data_dir_string)) {
     user_data_dir = base::FilePath::FromUTF8Unsafe(user_data_dir_string);
   } else if (command_line->HasSwitch(switches::kUserDataDir)) {
