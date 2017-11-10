@@ -151,10 +151,6 @@ void URLRequestContextGetter::NotifyContextShuttingDown() {
 
   shutting_down_ = true;
 
-  #if defined(USE_NSS_CERTS)
-    net::SetURLRequestContextForNSSHttpIO(NULL);
-  #endif
-
   net::URLRequestContextGetter::NotifyContextShuttingDown();
 }
 
@@ -176,10 +172,6 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
   if (!url_request_context_.get()) {
     auto& command_line = *base::CommandLine::ForCurrentProcess();
     url_request_context_.reset(new net::URLRequestContext);
-
-#if defined(USE_NSS_CERTS)
-    net::SetURLRequestContextForNSSHttpIO(url_request_context_.get());
-#endif
 
     // --log-net-log
     if (net_log_) {
