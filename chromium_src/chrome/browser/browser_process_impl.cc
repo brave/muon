@@ -23,6 +23,7 @@
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/shell_integration.h"
 #include "chrome/browser/status_icons/status_tray.h"
+#include "chrome/browser/ui/user_manager.h"
 #include "chrome/common/chrome_features.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/installer/util/google_update_settings.h"
@@ -32,6 +33,8 @@
 #include "components/password_manager/core/browser/password_manager.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_filter.h"
+#include "components/proxy_config/pref_proxy_config_tracker_impl.h"
+#include "components/ssl_config/ssl_config_service_manager.h"
 #include "components/sync_preferences/pref_service_syncable_factory.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
@@ -159,6 +162,21 @@ BrowserProcessImpl::~BrowserProcessImpl() {
   g_browser_process = NULL;
 }
 
+void BrowserProcessImpl::PostDestroyThreads() {
+
+  // This observes |local_state_|, so should be destroyed before it.
+  system_network_context_manager_.reset();
+
+  // Reset associated state right after actual thread is stopped,
+  // as io_thread_.global_ cleanup happens in CleanUp on the IO
+  // thread, i.e. as the thread exits its message loop.
+  //
+  // This is important also because in various places, the
+  // IOThread object being NULL is considered synonymous with the
+  // IO thread having stopped.
+  io_thread_.reset();
+}
+
 void BrowserProcessImpl::CreateProfileManager() {
   DCHECK(!created_profile_manager_ && !profile_manager_);
   created_profile_manager_ = true;
@@ -254,6 +272,13 @@ void BrowserProcessImpl::CreateLocalState() {
                         std::unique_ptr<PrefFilter>()));
   local_state_ = factory.Create(pref_registry.get());
 
+  // Register local state preferences.
+  // TODO(svillar): Ideally we should call chrome::RegisterLocalState()
+  // but that pulls in way too many unneeded stuff.
+  IOThread::RegisterPrefs(pref_registry.get());
+  PrefProxyConfigTrackerImpl::RegisterPrefs(pref_registry.get());
+  ssl_config::SSLConfigServiceManager::RegisterPrefs(pref_registry.get());
+
   pref_change_registrar_.Init(local_state_.get());
   pref_change_registrar_.Add(
     metrics::prefs::kMetricsReportingEnabled,
@@ -283,6 +308,15 @@ void BrowserProcessImpl::PreCreateThreads() {
   // initialize local state
   local_state()->UpdateCommandLinePrefStore(
       new ChromeCommandLinePrefStore(command_line));
+
+  // Must be created before the IOThread.
+  // TODO(mmenke): Once IOThread class is no longer needed (not the thread
+  // itself), this can be created on first use.
+  system_network_context_manager_ =
+      base::MakeUnique<SystemNetworkContextManager>();
+  io_thread_ = base::MakeUnique<IOThread>(
+      local_state(), net_log_.get(),
+      system_network_context_manager_.get());
 }
 
 void BrowserProcessImpl::PreMainMessageLoopRun() {
@@ -461,8 +495,8 @@ metrics::MetricsService* BrowserProcessImpl::metrics_service() {
 }
 
 net::URLRequestContextGetter* BrowserProcessImpl::system_request_context() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  return io_thread()->system_url_request_context_getter();
 }
 
 variations::VariationsService* BrowserProcessImpl::variations_service() {
@@ -494,8 +528,9 @@ NotificationPlatformBridge* BrowserProcessImpl::notification_platform_bridge() {
 }
 
 IOThread* BrowserProcessImpl::io_thread() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  DCHECK(io_thread_.get());
+  return io_thread_.get();
 }
 
 SystemNetworkContextManager*

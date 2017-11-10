@@ -415,6 +415,7 @@ void AtomBrowserMainParts::PostDestroyThreads() {
                           ? browser_shutdown::RESTART_LAST_SESSION
                           : browser_shutdown::NO_FLAGS;
 
+  fake_browser_process_->PostDestroyThreads();
   // browser_shutdown takes care of deleting browser_process, so we need to
   // release it.
   ignore_result(fake_browser_process_.release());
