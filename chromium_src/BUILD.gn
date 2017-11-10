@@ -205,6 +205,9 @@ source_set("browser") {
     "//chrome/browser/gpu/gpu_mode_manager.cc",
     "//chrome/browser/gpu/gpu_mode_manager.h",
 
+    "chrome/browser/io_thread.cc",
+    "chrome/browser/io_thread.h",
+
     "//chrome/browser/icon_loader.cc",
     "//chrome/browser/icon_loader.h",
     "//chrome/browser/icon_loader_mac.mm",
