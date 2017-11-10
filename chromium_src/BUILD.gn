@@ -158,6 +158,7 @@ source_set("browser") {
     "//components/crash/core/browser",
     "//components/data_usage/core",
     "//components/keep_alive_registry",
+    "//components/net_log",
     "//components/prefs",
     "//components/ssl_config",
     "//components/spellcheck:build_features",
@@ -217,6 +218,12 @@ source_set("browser") {
 
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
+    "chrome/browser/net/default_network_context_params.cc",
+    "//chrome/browser/net/default_network_context_params.h",
+    "//chrome/browser/net/proxy_service_factory.cc",
+    "//chrome/browser/net/proxy_service_factory.h",
+    "//chrome/browser/net/sth_distributor_provider.cc",
+    "//chrome/browser/net/sth_distributor_provider.h",
     "chrome/browser/net/system_network_context_manager.cc",
     "//chrome/browser/net/system_network_context_manager.h",
 
