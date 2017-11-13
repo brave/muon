@@ -17,6 +17,7 @@
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/browser/window_list.h"
+#include "atom/common/google_api_key.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
 #include "base/files/file_util.h"
@@ -220,6 +221,9 @@ void AtomBrowserClient::GetGeolocationRequestContext(
       base::BindOnce(&GetSystemRequestContextOnUIThread), std::move(callback));
 }
 
+std::string AtomBrowserClient::GetGeolocationApiKey() {
+  return GOOGLEAPIS_API_KEY;
+}
 
 brightray::BrowserMainParts* AtomBrowserClient::OverrideCreateBrowserMainParts(
     const content::MainFunctionParams& params) {

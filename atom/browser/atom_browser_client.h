@@ -82,6 +82,7 @@ class AtomBrowserClient : public brightray::BrowserClient,
   void GetGeolocationRequestContext(
       base::OnceCallback<void(scoped_refptr<net::URLRequestContextGetter>)>
           callback) override;
+  std::string GetGeolocationApiKey() override;
 
   // brightray::BrowserClient:
   brightray::BrowserMainParts* OverrideCreateBrowserMainParts(
