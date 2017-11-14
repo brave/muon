@@ -2016,3 +2016,27 @@ index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c
      }
    ]
  }
+diff --git a/ui/views/controls/menu/menu_controller.cc b/ui/views/controls/menu/menu_controller.cc
+index 2f78dfd30849c56dfa3a3118ff7ba90fe94cdeca..759d12ab4cd8153e6d56a40fe3a0022552eee053 100644
+--- a/ui/views/controls/menu/menu_controller.cc
++++ b/ui/views/controls/menu/menu_controller.cc
+@@ -615,6 +615,7 @@ bool MenuController::OnMouseDragged(SubmenuView* source,
+     return true;
+   }
+   MenuItemView* mouse_menu = NULL;
++  base::WeakPtr<MenuController> this_ref = AsWeakPtr();
+   if (part.type == MenuPart::MENU_ITEM) {
+     // If there is no menu target, but a submenu target, then we are interacting
+     // with an empty menu item within a submenu. These cannot become selection
+@@ -639,7 +640,10 @@ bool MenuController::OnMouseDragged(SubmenuView* source,
+       }
+     }
+   }
+-  UpdateActiveMouseView(source, event, mouse_menu);
++  // The above code may have deleted us, so MenuController may have
++  // been destroyed.
++  if (this_ref)
++    UpdateActiveMouseView(source, event, mouse_menu);
+ 
+   return true;
+ }
