@@ -40,6 +40,7 @@
 #include "brave/common/workers/v8_worker_thread.h"
 #include "brave/common/workers/worker_bindings.h"
 #include "chrome/common/chrome_paths.h"
+#include "chrome/common/chrome_paths_internal.h"
 #include "components/component_updater/component_updater_paths.h"
 #include "content/browser/plugin_service_impl.h"
 #include "content/child/worker_thread_registry.h"
@@ -699,6 +700,12 @@ void App::SetPath(mate::Arguments* args,
     args->ThrowError("Failed to set path");
 }
 
+base::FilePath App::GetInitialDownloadPath() {
+  base::FilePath path;
+  chrome::GetUserDownloadsDirectory(&path);
+  return path;
+}
+
 void App::SetDesktopName(const std::string& desktop_name) {
 #if defined(OS_LINUX)
   std::unique_ptr<base::Environment> env(base::Environment::Create());
@@ -948,6 +955,7 @@ void App::BuildPrototype(
 #endif
       .SetMethod("setPath", &App::SetPath)
       .SetMethod("getPath", &App::GetPath)
+      .SetMethod("getInitialDownloadPath", &App::GetInitialDownloadPath)
       .SetMethod("setDesktopName", &App::SetDesktopName)
       .SetMethod("getLocale", &App::GetLocale)
       .SetMethod("setLocale", &App::SetLocale)

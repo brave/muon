@@ -115,6 +115,8 @@ class App : public AtomBrowserClient::Delegate,
                const std::string& name,
                const base::FilePath& path);
 
+  base::FilePath GetInitialDownloadPath();
+
   void SetDesktopName(const std::string& desktop_name);
   void SetLocale(std::string);
   std::string GetLocale();
