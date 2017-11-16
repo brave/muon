@@ -1434,6 +1434,9 @@ void WebContents::DevToolsClosed() {
 }
 
 bool WebContents::OnMessageReceived(const IPC::Message& message) {
+  if (is_being_destroyed_)
+    return false;
+
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(WebContents, message)
     IPC_MESSAGE_HANDLER(AtomViewHostMsg_Message, OnRendererMessage)
