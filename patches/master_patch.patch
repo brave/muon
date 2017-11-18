@@ -635,7 +635,7 @@ index d4e0823a55994118bacfe4fd7f8ec1881640e8ac..42b227f504be77b6448b963f068a3758
  
  #if defined(OS_WIN)
 -const base::FilePath::CharType kBrowserResourcesDll[] = FPL("chrome.dll");
-+const base::FilePath::CharType kBrowserResourcesDll[] = FPL("Brave.dll");
++const base::FilePath::CharType kBrowserResourcesDll[] = FPL("brave.dll");
  const base::FilePath::CharType kStatusTrayWindowClass[] =
      FPL("Chrome_StatusTrayWindow");
  #endif  // defined(OS_WIN)
