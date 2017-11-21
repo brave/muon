@@ -1376,7 +1376,7 @@ index 9bcef0992e7967880d3ba1ab5a45dad0b5d29856..59501864e687f768f590372fba51cf20
    // It is possible that the renderer has not yet produced a surface, in which
    // case we return our current namespace.
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index d60210d735b8bfdb7a79361611b003a9e278a9be..34e5da1eee4734d3aee31d4ef9e6e50799c14f3d 100644
+index d60210d735b8bfdb7a79361611b003a9e278a9be..c19c3b4ef9f068af5511e63bc6425f984502d3cc 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -140,6 +140,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1392,7 +1392,18 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..34e5da1eee4734d3aee31d4ef9e6e507
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1893,7 +1899,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1641,6 +1647,10 @@ void RenderWidgetHostViewMac::ShutdownHost() {
+ void RenderWidgetHostViewMac::SetActive(bool active) {
+   if (render_widget_host_) {
+     render_widget_host_->SetActive(active);
++    // RenderWidgetHostViewGuest doesn't send Show/Hide to the platform_view so
++    // make sure the browser compositor is activated for guest views
++    // when the host is initially hidden
++    browser_compositor_->SetRenderWidgetHostIsHidden(!active);
+     if (active) {
+       if (HasFocus())
+         render_widget_host_->Focus();
+@@ -1893,7 +1903,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1407,7 +1418,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..34e5da1eee4734d3aee31d4ef9e6e507
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2066,6 +2079,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2066,6 +2083,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return NO;
  
@@ -1415,7 +1426,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..34e5da1eee4734d3aee31d4ef9e6e507
    // If we return |NO| from this function, cocoa will send the key event to
    // the menu and only if the menu does not process the event to |keyDown:|. We
    // want to send the event to a renderer _before_ sending it to the menu, so
-@@ -2079,6 +2093,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2079,6 +2097,7 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
      DCHECK(![[NSApp mainMenu] performKeyEquivalent:theEvent]);
      return NO;
    }
@@ -1423,7 +1434,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..34e5da1eee4734d3aee31d4ef9e6e507
  
    // Command key combinations are sent via performKeyEquivalent rather than
    // keyDown:. We just forward this on and if WebCore doesn't want to handle
-@@ -2126,8 +2141,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2126,8 +2145,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1434,7 +1445,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..34e5da1eee4734d3aee31d4ef9e6e507
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2989,6 +3006,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2989,6 +3010,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
