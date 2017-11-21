@@ -299,6 +299,59 @@ struct Converter<blink::WebSecurityStyle> {
 };
 
 template<>
+struct Converter<security_state::SecurityInfo> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   security_state::SecurityInfo val) {
+    mate::Dictionary dict(isolate, v8::Object::New(isolate));
+    // see components/security_state/core/security_state.h
+    switch (val.security_level) {
+      case security_state::NONE:
+        dict.Set("securityLevel", "none");
+        break;
+      case security_state::HTTP_SHOW_WARNING:
+        dict.Set("securityLevel", "http-show-warning");
+        break;
+      case security_state::EV_SECURE:
+        dict.Set("securityLevel", "ev-secure");
+        break;
+      case security_state::SECURE:
+        dict.Set("securityLevel", "secure");
+        break;
+      case security_state::SECURE_WITH_POLICY_INSTALLED_CERT:
+        // Currently used only on ChromeOS.
+        break;
+      case security_state::DANGEROUS:
+        dict.Set("securityLevel", "dangerous");
+        break;
+    }
+
+    if (val.certificate)
+      dict.Set("certificate", val.certificate);
+
+    switch (val.mixed_content_status) {
+      case security_state::CONTENT_STATUS_UNKNOWN:
+        dict.Set("mixedContentStatus", "content-status-unkown");
+        break;
+      case security_state::CONTENT_STATUS_NONE:
+        dict.Set("mixedContentStatus", "content-status-none");
+        break;
+      case security_state::CONTENT_STATUS_DISPLAYED:
+        dict.Set("mixedContentStatus", "content-status-displayed");
+        break;
+      case security_state::CONTENT_STATUS_RAN:
+        dict.Set("mixedContentStatus", "content-status-ran");
+        break;
+      case security_state::CONTENT_STATUS_DISPLAYED_AND_RAN:
+        dict.Set("mixedContentStatus", "content-status-displayed-and-ran");
+        break;
+    }
+
+    // TODO(darkdh): add more info
+    return dict.GetHandle();
+  }
+};
+
+template<>
 struct Converter<content::ServiceWorkerCapability> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
                                    content::ServiceWorkerCapability val) {
@@ -1360,35 +1413,15 @@ void WebContents::DidFinishNavigation(
 
 void WebContents::DidChangeVisibleSecurityState() {
   content::SecurityStyleExplanations explanations;
-  blink::WebSecurityStyle security_style =
-    web_contents()->GetDelegate()->GetSecurityStyle(
-      web_contents(), &explanations);
-
+  blink::WebSecurityStyle security_style = GetSecurityStyle(web_contents(),
+                                                            &explanations);
   SecurityStateTabHelper* helper =
-    SecurityStateTabHelper::FromWebContents(this);
+    SecurityStateTabHelper::FromWebContents(web_contents());
   DCHECK(helper);
   security_state::SecurityInfo security_info;
   helper->GetSecurityInfo(&security_info);
 
-  if (explanations.displayed_mixed_content &&
-      security_style == blink::kWebSecurityStyleNeutral) {
-      Emit("security-style-changed", "passive-mixed-content");
-  } else {
-    if (security_info.security_level == security_state::EV_SECURE) {
-      DCHECK(!security_info.certificate->subject().organization_names.empty());
-      std::string organization_name =
-        security_info.certificate->subject().organization_names[0];
-
-      DCHECK(!security_info.certificate->subject().country_name.empty());
-      std::string country_code =
-        security_info.certificate->subject().country_name;
-      std::string ev_string = organization_name + " [" + country_code + "]";
-
-      Emit("security-style-changed", security_style, ev_string);
-    } else {
-      Emit("security-style-changed", security_style);
-    }
-  }
+  Emit("security-style-changed", security_style, security_info);
 }
 
 void WebContents::TitleWasSet(content::NavigationEntry* entry,
