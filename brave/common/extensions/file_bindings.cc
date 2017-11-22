@@ -11,6 +11,7 @@
 #include "base/files/important_file_writer.h"
 #include "base/memory/ptr_util.h"
 #include "base/sequenced_task_runner.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_task_runner_handle.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "brave/common/converters/string16_converter.h"
@@ -38,7 +39,11 @@ void PostWriteCallback(
 }  // namespace
 
 FileBindings::FileBindings(extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
+    : extensions::ObjectBackedNativeHandler(context),
+      worker_pool_(
+          new base::SequencedWorkerPool(3,
+                                        "file_bindings",
+                                        base::TaskPriority::BACKGROUND)) {
   RouteFunction("WriteImportantFile",
       base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
 }
@@ -98,8 +103,7 @@ void FileBindings::WriteImportantFile(
         new v8::Global<v8::Function>(isolate, args[2].As<v8::Function>()));
   }
 
-  auto task_runner = GetTaskRunnerForFile(path,
-      BrowserThread::GetBlockingPool());
+  auto task_runner = GetTaskRunnerForFile(path, worker_pool_);
   base::ImportantFileWriter writer(path, task_runner);
 
   writer.RegisterOnNextWriteCallbacks(

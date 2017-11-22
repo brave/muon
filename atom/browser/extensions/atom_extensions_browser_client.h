@@ -113,6 +113,8 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
   bool IsMinBrowserVersionSupported(const std::string& min_version) override;
   ExtensionWebContentsObserver* GetExtensionWebContentsObserver(
       content::WebContents* web_contents) override;
+  extensions::ExtensionNavigationUIData* GetExtensionNavigationUIData(
+      net::URLRequest* request) override;
   KioskDelegate* GetKioskDelegate() override;
   void CleanUpWebView(content::BrowserContext* browser_context,
                       int embedder_process_id,

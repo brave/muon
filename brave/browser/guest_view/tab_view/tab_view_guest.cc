@@ -176,7 +176,7 @@ void TabViewGuest::DidFinishNavigation(
   args->SetInteger(webview::kInternalEntryCount,
                    web_contents()->GetController().GetEntryCount());
   args->SetInteger(webview::kInternalProcessId,
-                   web_contents()->GetRenderProcessHost()->GetID());
+                   web_contents()->GetMainFrame()->GetProcess()->GetID());
   DispatchEventToView(base::MakeUnique<GuestViewEvent>(
       webview::kEventLoadCommit, std::move(args)));
 
@@ -368,7 +368,7 @@ int TabViewGuest::GetTaskPrefix() const {
 
 void TabViewGuest::GuestReady() {
   // we don't use guest only processes and don't want those limitations
-  CHECK(!web_contents()->GetRenderProcessHost()->IsForGuestsOnly());
+  CHECK(!web_contents()->GetMainFrame()->GetProcess()->IsForGuestsOnly());
 
   api_web_contents_->Emit("guest-ready",
       extensions::TabHelper::IdForTab(web_contents()), guest_instance_id());

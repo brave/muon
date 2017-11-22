@@ -234,7 +234,7 @@ v8::Local<v8::Value> NativeImage::ToBitmap(v8::Isolate* isolate) {
   SkPixelRef* ref = bitmap->pixelRef();
   return node::Buffer::Copy(isolate,
                             reinterpret_cast<const char*>(ref->pixels()),
-                            bitmap->getSafeSize()).ToLocalChecked();
+                            bitmap->computeByteSize()).ToLocalChecked();
 }
 
 v8::Local<v8::Value> NativeImage::ToJPEG(v8::Isolate* isolate, int quality) {
@@ -260,7 +260,7 @@ v8::Local<v8::Value> NativeImage::GetBitmap(v8::Isolate* isolate) {
   SkPixelRef* ref = bitmap->pixelRef();
   return node::Buffer::New(isolate,
                            reinterpret_cast<char*>(ref->pixels()),
-                           bitmap->getSafeSize(),
+                           bitmap->computeByteSize(),
                            &Noop,
                            nullptr).ToLocalChecked();
 }

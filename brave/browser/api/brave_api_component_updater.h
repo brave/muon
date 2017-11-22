@@ -57,7 +57,7 @@ class ComponentUpdater : public mate::TrackableObject<ComponentUpdater>,
   explicit ComponentUpdater(v8::Isolate* isolate);
   ~ComponentUpdater() override;
   // When a component is registered, the old versions of the component
-  // will be removed off the main thread by the DefaultComponentInstaller.
+  // will be removed off the main thread by the ComponentInstaller.
   void RegisterComponent(mate::Arguments* args);
   std::vector<std::string> GetComponentIDs();
   void CheckNow(const std::string& component_id);
