@@ -312,7 +312,7 @@ target(_dll_target_type, "electron_dll") {
     "//components/crash/content/app",
     "//components/policy:generated",
     "//content/public/app:both",
-    "//third_party/cld",
+    "//third_party/cld_3/src/src:cld_3",
   ]
 
   ldflags = [

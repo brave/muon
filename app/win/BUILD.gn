@@ -89,7 +89,7 @@ executable("electron_exe") {
     "//components/flags_ui:switches",
     "//content:sandbox_helper_win",
     "//chrome/common:features",
-    "//third_party/cld",
+    "//third_party/cld_3/src/src:cld_3",
     "//components/policy:generated",
     "//content/app/resources",
     "//net:net_resources",
