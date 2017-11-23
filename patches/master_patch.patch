@@ -1376,7 +1376,7 @@ index 9bcef0992e7967880d3ba1ab5a45dad0b5d29856..59501864e687f768f590372fba51cf20
    // It is possible that the renderer has not yet produced a surface, in which
    // case we return our current namespace.
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index d60210d735b8bfdb7a79361611b003a9e278a9be..f0352850a2d0d2f243e24f5d7404d67e0c07ad6d 100644
+index d60210d735b8bfdb7a79361611b003a9e278a9be..d4f2d0bab3e08cee68294ef27212d124d276a25d 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -140,6 +140,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1392,17 +1392,17 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..f0352850a2d0d2f243e24f5d7404d67e
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1641,6 +1647,10 @@ void RenderWidgetHostViewMac::ShutdownHost() {
- void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1642,6 +1648,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
    if (render_widget_host_) {
      render_widget_host_->SetActive(active);
-+    // RenderWidgetHostViewGuest doesn't send Show/Hide to the platform_view so
-+    // make sure the browser compositor is activated for guest views
-+    // when the host is initially hidden
-+    browser_compositor_->SetRenderWidgetHostIsHidden(!active);
      if (active) {
++      // RenderWidgetHostViewGuest doesn't send Show/Hide to the platform_view so
++      // make sure the browser compositor is activated for guest views
++      // when the host is initially hidden
++      browser_compositor_->SetRenderWidgetHostIsHidden(false);
        if (HasFocus())
          render_widget_host_->Focus();
+     } else {
 @@ -1893,7 +1903,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
  }
  
