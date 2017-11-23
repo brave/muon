@@ -36,7 +36,7 @@ executable("electron_app") {
      "//net:net_resources",
      "//third_party/wtl",
      "//sandbox" ,
-     "//third_party/cld",
+     "//third_party/cld_3/src/src:cld_3",
      "//third_party/speech-dispatcher",
      "//ui/compositor",
      "//ui/gfx/x",
