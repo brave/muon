@@ -564,12 +564,6 @@
       # enable_basic_printing. It's possible to build Chrome with preview only.
       'enable_print_preview%': 1,
 
-      # For CLD2, the size of the tables that should be included in the build
-      # See third_party/cld_2/cld_2.gyp for more information.
-      #   0: Small tables, high accuracy
-      #   2: Large tables, higher accuracy
-      'cld2_table_size%': 2,
-
       # Enable spell checker.
       'enable_spellcheck%': 1,
 
@@ -823,7 +817,6 @@
 
         ['OS=="android"', {
           'enable_extensions%': 0,
-          'cld2_table_size%': 0,
           'enable_themes%': 0,
           'remoting%': 0,
           'enable_basic_printing%': 1,
@@ -870,7 +863,6 @@
           'configuration_policy': 0,
           'disable_ftp_support%': 1,
           'enable_extensions%': 0,
-          'cld2_table_size%': 0,
           'enable_basic_printing%': 0,
           'enable_print_preview%': 0,
           'enable_session_service%': 0,
@@ -1235,7 +1227,6 @@
     'enable_spellcheck%': '<(enable_spellcheck)',
     'use_browser_spellchecker%': '<(use_browser_spellchecker)',
     'use_minikin_hyphenation%': '<(use_minikin_hyphenation)',
-    'cld2_table_size%': '<(cld2_table_size)',
     'enable_captive_portal_detection%': '<(enable_captive_portal_detection)',
     'disable_file_support%': '<(disable_file_support)',
     'disable_ftp_support%': '<(disable_ftp_support)',
