@@ -40,10 +40,8 @@ void PostWriteCallback(
 
 FileBindings::FileBindings(extensions::ScriptContext* context)
     : extensions::ObjectBackedNativeHandler(context),
-      worker_pool_(
-          new base::SequencedWorkerPool(3,
-                                        "file_bindings",
-                                        base::TaskPriority::BACKGROUND)) {
+      file_task_runner_(base::CreateSequencedTaskRunnerWithTraits(
+          {base::MayBlock(), base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {
   RouteFunction("WriteImportantFile",
       base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
 }
@@ -103,8 +101,7 @@ void FileBindings::WriteImportantFile(
         new v8::Global<v8::Function>(isolate, args[2].As<v8::Function>()));
   }
 
-  auto task_runner = GetTaskRunnerForFile(path, worker_pool_);
-  base::ImportantFileWriter writer(path, task_runner);
+  base::ImportantFileWriter writer(path, file_task_runner_);
 
   writer.RegisterOnNextWriteCallbacks(
       base::Closure(),
@@ -115,16 +112,6 @@ void FileBindings::WriteImportantFile(
         base::SequencedTaskRunnerHandle::Get()));
 
   writer.WriteNow(base::MakeUnique<std::string>(data));
-}
-
-scoped_refptr<base::SequencedTaskRunner> FileBindings::GetTaskRunnerForFile(
-    const base::FilePath& filename,
-    base::SequencedWorkerPool* worker_pool) {
-  std::string token("muon-file-");
-  token.append(filename.AsUTF8Unsafe());
-  return worker_pool->GetSequencedTaskRunnerWithShutdownBehavior(
-      worker_pool->GetNamedSequenceToken(token),
-      base::SequencedWorkerPool::BLOCK_SHUTDOWN);
 }
 
 void FileBindings::RunCallback(
