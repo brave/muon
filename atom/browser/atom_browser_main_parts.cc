@@ -13,6 +13,7 @@
 #include "atom/browser/bridge_task_runner.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/browser_context_keyed_service_factories.h"
+#include "atom/browser/extensions/atom_extension_api_frame_id_map.h"
 #include "atom/browser/javascript_environment.h"
 #include "atom/common/api/atom_bindings.h"
 #include "atom/common/node_bindings.h"
@@ -44,6 +45,7 @@
 #include "content/public/common/content_switches.h"
 #include "device/geolocation/geolocation_delegate.h"
 #include "device/geolocation/geolocation_provider.h"
+#include "extensions/browser/extension_api_frame_id_map.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "muon/browser/muon_browser_process_impl.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
@@ -273,6 +275,10 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
         SetConnectionLostClosure(base::Bind(&chrome::SessionEnding));
   }
 #endif
+
+  // TODO(bridiver) - find a better place for these
+  extensions::ExtensionApiFrameIdMap::Get();
+  extensions::AtomExtensionApiFrameIdMap::Get();
 
   fake_browser_process_->PreMainMessageLoopRun();
 

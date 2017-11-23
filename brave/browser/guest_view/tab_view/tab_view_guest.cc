@@ -224,8 +224,6 @@ void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
-  extensions::ExtensionsAPIClient::Get()->AttachWebContentsHelpers(
-      web_contents());
   api_web_contents_ = atom::api::WebContents::CreateFrom(isolate,
       web_contents(), atom::api::WebContents::Type::WEB_VIEW).get();
   api_web_contents_->guest_delegate_ = this;
