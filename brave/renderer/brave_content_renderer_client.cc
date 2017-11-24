@@ -218,13 +218,12 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
 
   GURL url(params.url);
 #if BUILDFLAG(ENABLE_PLUGINS)
-  ChromeViewHostMsg_GetPluginInfo_Output output;
-  render_frame->Send(new ChromeViewHostMsg_GetPluginInfo(
+  chrome::mojom::PluginInfoPtr plugin_info = chrome::mojom::PluginInfo::New();
+  GetPluginInfoHost()->GetPluginInfo(
       render_frame->GetRoutingID(), url,
       render_frame->GetWebFrame()->Top()->GetSecurityOrigin(), orig_mime_type,
-      &output));
-
-  *plugin = CreatePlugin(render_frame, params, output);
+      &plugin_info);
+  *plugin = CreatePlugin(render_frame, params, *plugin_info);
 #else  // !BUILDFLAG(ENABLE_PLUGINS)
   PluginUMAReporter::GetInstance()->ReportPluginMissing(orig_mime_type, url);
   *plugin = NonLoadablePluginPlaceholder::CreateNotSupportedPlugin(
