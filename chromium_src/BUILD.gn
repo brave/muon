@@ -1082,8 +1082,6 @@ source_set("tab_manager") {
       "//chrome/browser/feature_engagement/feature_tracker.h",
       "//chrome/browser/feature_engagement/session_duration_updater.cc",
       "//chrome/browser/feature_engagement/session_duration_updater.h",
-      "//chrome/browser/feature_engagement/session_duration_updater_factory.cc",
-      "//chrome/browser/feature_engagement/session_duration_updater_factory.h",
       "chrome/browser/feature_engagement/new_tab/new_tab_tracker.cc",
       "//chrome/browser/feature_engagement/new_tab/new_tab_tracker_factory.cc",
       "//chrome/browser/feature_engagement/new_tab/new_tab_tracker_factory.h",
