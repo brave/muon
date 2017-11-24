@@ -20,7 +20,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/cache_stats_recorder.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
-#include "chrome/browser/plugins/plugin_info_message_filter.h"
+#include "chrome/browser/plugins/plugin_info_host_impl.h"
 #include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
@@ -318,6 +318,13 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
       ui_task_runner);
 #endif
 #endif
+
+  Profile* profile =
+      Profile::FromBrowserContext(render_process_host->GetBrowserContext());
+  render_process_host->GetChannel()->AddAssociatedInterfaceForIOThread(
+      base::Bind(&PluginInfoHostImpl::OnPluginInfoHostRequest,
+                 base::MakeRefCounted<PluginInfoHostImpl>(
+                     render_process_host->GetID(), profile)));
 }
 
 void BraveContentBrowserClient::RegisterInProcessServices(
@@ -397,7 +404,6 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
 
   host->AddFilter(new printing::PrintingMessageFilter(id, profile));
   host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
-  host->AddFilter(new PluginInfoMessageFilter(id, profile));
 
 #if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
   host->AddFilter(new SpellCheckMessageFilterPlatform(id));
