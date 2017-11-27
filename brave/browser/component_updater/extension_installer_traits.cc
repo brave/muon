@@ -139,12 +139,12 @@ void RegisterExtension(
     const std::string& public_key,
     const base::Closure& registered_callback,
     const ReadyCallback& ready_callback) {
-  std::unique_ptr<component_updater::ComponentInstallerTraits> traits(
+  std::unique_ptr<component_updater::ComponentInstallerPolicy> traits(
       new ExtensionInstallerTraits(public_key, ready_callback));
 
   // |cus| will take ownership of |installer| during installer->Register(cus).
-  component_updater::DefaultComponentInstaller* installer =
-      new component_updater::DefaultComponentInstaller(std::move(traits));
+  component_updater::ComponentInstaller* installer =
+      new component_updater::ComponentInstaller(std::move(traits));
   installer->Register(cus, registered_callback);
 }
 

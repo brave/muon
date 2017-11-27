@@ -39,13 +39,13 @@
 #include "base/threading/thread_task_runner_handle.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
-#include "chrome/browser/devtools/devtools_network_conditions.h"
-#include "chrome/browser/devtools/devtools_network_controller_handle.h"
 #include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
 #include "components/history/core/browser/history_service.h"
 #include "components/prefs/pref_service.h"
+#include "content/common/devtools/devtools_network_conditions.h"
+#include "content/common/devtools/devtools_network_controller.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/storage_partition.h"
 #include "extensions/features/features.h"
@@ -69,6 +69,8 @@
 #endif
 
 using content::BrowserThread;
+using content::DevToolsNetworkConditions;
+using content::DevToolsNetworkController;
 using content::StoragePartition;
 
 namespace {
@@ -481,16 +483,20 @@ void Session::EnableNetworkEmulation(const mate::Dictionary& options) {
                                                  upload_throughput));
   }
 
-  profile_->network_controller_handle()->SetNetworkState(
-      devtools_network_emulation_client_id_, std::move(conditions));
+  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+      base::BindOnce(&DevToolsNetworkController::SetNetworkState,
+                     devtools_network_emulation_client_id_,
+                     std::move(conditions)));
   profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
       devtools_network_emulation_client_id_);
 }
 
 void Session::DisableNetworkEmulation() {
   std::unique_ptr<DevToolsNetworkConditions> conditions;
-  profile_->network_controller_handle()->SetNetworkState(
-      devtools_network_emulation_client_id_, std::move(conditions));
+  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+      base::BindOnce(&DevToolsNetworkController::SetNetworkState,
+                     devtools_network_emulation_client_id_,
+                     std::move(conditions)));
   profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
       std::string());
 }

@@ -17,12 +17,14 @@
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/grit/brave_resources.h"
+#include "chrome/browser/browser_process.h"
 #include "chrome/browser/cache_stats_recorder.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/plugins/plugin_info_message_filter.h"
 #include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
+#include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
 #include "chrome/browser/speech/tts_message_filter.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
@@ -58,6 +60,8 @@
 #include "muon/app/muon_crash_reporter_client.h"
 #include "net/base/filename_util.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
+#include "services/proxy_resolver/proxy_resolver_service.h"
+#include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -316,11 +320,22 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
 #endif
 }
 
+void BraveContentBrowserClient::RegisterInProcessServices(
+    StaticServiceMap* services) {
+  service_manager::EmbeddedServiceInfo info;
+  info.factory =
+      base::Bind(&proxy_resolver::ProxyResolverService::CreateService);
+  services->insert(
+      std::make_pair(proxy_resolver::mojom::kProxyResolverServiceName, info));
+}
+
 void BraveContentBrowserClient::RegisterOutOfProcessServices(
     OutOfProcessServiceMap* services) {
-  (*services)[chrome::mojom::kProfileImportServiceName] = {
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME),
-      content::SANDBOX_TYPE_NO_SANDBOX};
+  (*services)[chrome::mojom::kProfileImportServiceName] =
+      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME);
+
+  (*services)[proxy_resolver::mojom::kProxyResolverServiceName] =
+      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROXY_RESOLVER_NAME);
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
@@ -800,6 +815,12 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
         base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
+}
+
+std::unique_ptr<content::NavigationUIData>
+BraveContentBrowserClient::GetNavigationUIData(
+    content::NavigationHandle* navigation_handle) {
+  return base::MakeUnique<ChromeNavigationUIData>(navigation_handle);
 }
 
 void BraveContentBrowserClient::InitFrameInterfaces() {

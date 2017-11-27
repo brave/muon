@@ -11,6 +11,8 @@
 
 #include "base/command_line.h"
 #include "base/path_service.h"
+#include "components/nacl/common/features.h"
+#include "components/nacl/common/nacl_switches.h"
 #include "content/public/common/content_switches.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_switches.h"
@@ -30,7 +32,7 @@ bool SubprocessNeedsResourceBundle(const std::string& process_type) {
 #if defined(OS_MACOSX)
       // Mac needs them too for scrollbar related images and for sandbox
       // profiles.
-#if !defined(DISABLE_NACL)
+#if BUILDFLAG(ENABLE_NACL)
       process_type == switches::kNaClLoaderProcess ||
 #endif
       process_type == switches::kPpapiPluginProcess ||

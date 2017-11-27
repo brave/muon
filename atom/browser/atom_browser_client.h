@@ -67,7 +67,6 @@ class AtomBrowserClient : public brightray::BrowserClient,
       const net::SSLInfo& ssl_info,
       const GURL& request_url,
       content::ResourceType resource_type,
-      bool overridable,
       bool strict_enforcement,
       bool expired_previous_decision,
       const base::Callback<void(
@@ -80,6 +79,10 @@ class AtomBrowserClient : public brightray::BrowserClient,
   void ResourceDispatcherHostCreated() override;
   void GetAdditionalAllowedSchemesForFileSystem(
       std::vector<std::string>* schemes) override;
+  void GetGeolocationRequestContext(
+      base::OnceCallback<void(scoped_refptr<net::URLRequestContextGetter>)>
+          callback) override;
+  std::string GetGeolocationApiKey() override;
 
   // brightray::BrowserClient:
   brightray::BrowserMainParts* OverrideCreateBrowserMainParts(

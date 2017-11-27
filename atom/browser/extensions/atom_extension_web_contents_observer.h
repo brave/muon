@@ -30,7 +30,9 @@ class AtomExtensionWebContentsObserver
   explicit AtomExtensionWebContentsObserver(
       content::WebContents* web_contents);
 
-  void RenderFrameCreated(content::RenderFrameHost* render_frame_host);
+  void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
+  void RenderFrameDeleted(content::RenderFrameHost* render_frame_host) override;
+
 
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionWebContentsObserver);
 };
