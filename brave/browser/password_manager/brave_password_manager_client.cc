@@ -384,7 +384,7 @@ void BravePasswordManagerClient::CheckProtectedPasswordEntry(
 #endif
 
 ukm::UkmRecorder* BravePasswordManagerClient::GetUkmRecorder() {
-  return g_browser_process->ukm_recorder();
+  return ukm::UkmRecorder::Get();
 }
 
 ukm::SourceId BravePasswordManagerClient::GetUkmSourceId() {
