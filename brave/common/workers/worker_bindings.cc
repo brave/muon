@@ -9,8 +9,8 @@
 
 #include "atom/browser/api/atom_api_app.h"
 #include "brave/common/workers/v8_worker_thread.h"
-#include "content/child/worker_thread_registry.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/renderer/worker_thread_registry.h"
 #include "extensions/renderer/script_context.h"
 #include "extensions/renderer/v8_helpers.h"
 #include "v8/include/v8.h"
