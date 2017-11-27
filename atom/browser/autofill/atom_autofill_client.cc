@@ -121,7 +121,7 @@ IdentityProvider* AtomAutofillClient::GetIdentityProvider() {
 }
 
 ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
-  return g_browser_process->ukm_recorder();
+  return ukm::UkmRecorder::Get();
 }
 
 void AtomAutofillClient::ShowAutofillSettings() {
