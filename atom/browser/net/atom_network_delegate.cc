@@ -378,7 +378,7 @@ void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request,
     return;
   }
 
-  if (request->status().status() != net::URLRequestStatus::SUCCESS)
+  if (net_error != net::URLRequestStatus::SUCCESS)
     return;
 
   HandleSimpleEvent(kOnResponseStarted, request, request->response_headers(),
