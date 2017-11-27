@@ -1065,13 +1065,12 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tabs/tab_utils.h",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.cc",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.h",
-    "//components/ukm/ukm_interface.cc",
-    "//components/ukm/ukm_interface.h",
   ]
 
   deps = [
     ":lifetime",
     "//components/feature_engagement:features",
+    "//services/metrics",
   ]
 
   if (is_win || is_linux) {
