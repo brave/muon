@@ -127,7 +127,7 @@ bool Browser::IsDefaultProtocolClient(const std::string& protocol,
     return false;
   }
 
-  base::ThreadRestrictions::AssertIOAllowed();
+  base::AssertBlockingAllowed();
 
   std::unique_ptr<base::Environment> env(base::Environment::Create());
 
