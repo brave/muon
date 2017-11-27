@@ -79,6 +79,8 @@ update_client::CrxInstaller::Result ExtensionInstallerTraits::OnCustomInstall(
   return update_client::CrxInstaller::Result(0);  // Nothing custom here.
 }
 
+void ExtensionInstallerTraits::OnCustomUninstall() {}
+
 void ExtensionInstallerTraits::ComponentReady(
     const base::Version& version,
     const base::FilePath& install_dir,
