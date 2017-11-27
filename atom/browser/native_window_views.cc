@@ -98,14 +98,14 @@ bool IsAltModifier(const content::NativeWebKeyboardEvent& event) {
 int SendClientEvent(XDisplay* display, ::Window window, const char* msg) {
   XEvent event = {};
   event.xclient.type = ClientMessage;
-  event.xclient.send_event = True;
-  event.xclient.message_type = XInternAtom(display, msg, False);
+  event.xclient.send_event = x11::True;
+  event.xclient.message_type = XInternAtom(display, msg, x11::False);
   event.xclient.window = window;
   event.xclient.format = 32;
-  XSendEvent(display, DefaultRootWindow(display), False,
+  XSendEvent(display, DefaultRootWindow(display), x11::False,
              SubstructureRedirectMask | SubstructureNotifyMask, &event);
   XFlush(display);
-  return True;
+  return x11::True;
 }
 #endif
 
@@ -249,8 +249,8 @@ NativeWindowViews::NativeWindowViews(
   if (options.Get(options::kDarkTheme, &use_dark_theme) && use_dark_theme) {
     XDisplay* xdisplay = gfx::GetXDisplay();
     XChangeProperty(xdisplay, GetAcceleratedWidget(),
-                    XInternAtom(xdisplay, "_GTK_THEME_VARIANT", False),
-                    XInternAtom(xdisplay, "UTF8_STRING", False),
+                    XInternAtom(xdisplay, "_GTK_THEME_VARIANT", x11::False),
+                    XInternAtom(xdisplay, "UTF8_STRING", x11::False),
                     8, PropModeReplace,
                     reinterpret_cast<const unsigned char*>("dark"),
                     4);
@@ -820,7 +820,7 @@ void NativeWindowViews::SetIgnoreMouseEvents(bool ignore) {
                             ShapeInput, 0, 0, &r, 1, ShapeSet, YXBanded);
   } else {
     XShapeCombineMask(gfx::GetXDisplay(), GetAcceleratedWidget(),
-                      ShapeInput, 0, 0, None, ShapeSet);
+                      ShapeInput, 0, 0, x11::None, ShapeSet);
   }
 #endif
 }
