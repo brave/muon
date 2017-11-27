@@ -28,6 +28,7 @@
 #include "services/proxy_resolver/proxy_resolver_service.h"
 #include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
+#include "services/service_manager/sandbox/switches.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/common/extensions/chrome_extensions_client.h"
@@ -85,9 +86,11 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   extensions::utility_handler::UtilityThreadStarted();
 #endif
 
+#if defined(OS_WIN)
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-  if (command_line->HasSwitch(switches::kUtilityProcessRunningElevated))
-    utility_process_running_elevated_ = true;
+  utility_process_running_elevated_ = command_line->HasSwitch(
+      service_manager::switches::kNoSandboxAndElevatedPrivileges);
+#endif
 
   content::ServiceManagerConnection* connection =
       content::ChildThread::Get()->GetServiceManagerConnection();
