@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -48,7 +49,7 @@ class BraveConfigurator : public update_client::Configurator {
   std::string ExtraRequestParams() const override;
   std::string GetDownloadPreference() const override;
   net::URLRequestContextGetter* RequestContext() const override;
-  scoped_refptr<update_client::OutOfProcessPatcher> CreateOutOfProcessPatcher()
+  std::unique_ptr<service_manager::Connector> CreateServiceManagerConnector()
       const override;
   bool EnabledDeltas() const override;
   bool EnabledComponentUpdates() const override;
@@ -146,8 +147,8 @@ net::URLRequestContextGetter* BraveConfigurator::RequestContext() const {
   return configurator_impl_.RequestContext();
 }
 
-scoped_refptr<update_client::OutOfProcessPatcher>
-BraveConfigurator::CreateOutOfProcessPatcher() const {
+std::unique_ptr<service_manager::Connector>
+    BraveConfigurator::CreateServiceManagerConnector() const {
   return nullptr;
 }
 
