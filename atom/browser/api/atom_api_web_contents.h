@@ -498,7 +498,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void MediaStartedPlaying(const MediaPlayerInfo& media_info,
                            const MediaPlayerId& id) override;
   void MediaStoppedPlaying(const MediaPlayerInfo& media_info,
-                           const MediaPlayerId& id) override;
+                           const MediaPlayerId& id,
+                           WebContentsObserver::MediaStoppedReason reason)
+                           override;
   void DidChangeThemeColor(SkColor theme_color) override;
   void RenderViewCreated(content::RenderViewHost* render_view_host) override;
 
