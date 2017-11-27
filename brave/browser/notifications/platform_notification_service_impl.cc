@@ -25,24 +25,6 @@ namespace brave {
 
 namespace {
 
-class NotificationProxy : public base::SupportsWeakPtr<NotificationProxy> {
- public:
-  NotificationProxy() {}
-
-  void Dismiss() {
-    if (notification_)
-      notification_->Dismiss();
-  }
-
-  void set_notification(base::WeakPtr<brightray::Notification> notification) {
-    notification_ = notification;
-  }
- private:
-  base::WeakPtr<brightray::Notification> notification_;
-
-  DISALLOW_COPY_AND_ASSIGN(NotificationProxy);
-};
-
 void OnPermissionResponse(const base::Callback<void(bool)>& callback,
                           blink::mojom::PermissionStatus status) {
   if (status == blink::mojom::PermissionStatus::GRANTED)
@@ -51,16 +33,11 @@ void OnPermissionResponse(const base::Callback<void(bool)>& callback,
     callback.Run(false);
 }
 
-void RemoveNotification(std::unique_ptr<NotificationProxy> notification_proxy) {
-  notification_proxy->Dismiss();
-}
-
 void OnWebNotificationAllowed(
     brightray::BrowserClient* browser_client,
     const SkBitmap& icon,
     const content::PlatformNotificationData& data,
     brightray::NotificationDelegate* delegate,
-    const base::WeakPtr<NotificationProxy> notification_proxy,
     bool allowed) {
   if (!allowed)
     return;
@@ -71,8 +48,6 @@ void OnWebNotificationAllowed(
   if (notification) {
     notification->Show(data.title, data.body, data.tag,
         data.icon, icon, data.silent);
-    if (notification_proxy)
-      notification_proxy->set_notification(notification);
   }
 }
 
@@ -109,27 +84,14 @@ void PlatformNotificationServiceImpl::DisplayNotification(
     const std::string& notification_id,
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
-    const content::NotificationResources& notification_resources,
-    base::Closure* cancel_callback) {
+    const content::NotificationResources& notification_resources) {
   brightray::NotificationDelegate* delegate =
       new brightray::NotificationDelegate(notification_id);
-  // cancel_callback must be set when this method returns, but the
-  // RequestPermission callback may run asynchronously so we use
-  // the notification proxy as a placeholder until the actual
-  // notification is available
-  std::unique_ptr<NotificationProxy> notification_proxy(new NotificationProxy);
-
   auto callback = base::Bind(&OnWebNotificationAllowed,
              BraveContentBrowserClient::Get(),
              notification_resources.notification_icon,
              notification_data,
-             base::Passed(&delegate),
-             notification_proxy->AsWeakPtr());
-
-  // TODO(bridiver) - there is a memory leak on mac because CocoaNotification
-  // never sends NotificationClosed to the PageNotificationDelegate
-  *cancel_callback =
-      base::Bind(&RemoveNotification, base::Passed(&notification_proxy));
+             base::Passed(&delegate));
 
   auto permission_manager = browser_context->GetPermissionManager();
   // TODO(bridiver) user gesture
@@ -145,6 +107,19 @@ void PlatformNotificationServiceImpl::DisplayPersistentNotification(
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
     const content::NotificationResources& notification_resources) {
+}
+
+void PlatformNotificationServiceImpl::CloseNotification(
+    content::BrowserContext* browser_context,
+    const std::string& notification_id) {
+  auto presenter =
+    BraveContentBrowserClient::Get()->GetNotificationPresenter();
+  if (!presenter)
+    return;
+  auto notification = presenter->lookupNotification(notification_id);
+  if (!notification)
+    return;
+  notification->Dismiss();
 }
 
 void PlatformNotificationServiceImpl::ClosePersistentNotification(

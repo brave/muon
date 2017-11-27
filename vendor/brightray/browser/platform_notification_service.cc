@@ -16,17 +16,11 @@ namespace brightray {
 
 namespace {
 
-void RemoveNotification(base::WeakPtr<Notification> notification) {
-  if (notification)
-    notification->Dismiss();
-}
-
 void OnWebNotificationAllowed(
     brightray::BrowserClient* browser_client,
     const SkBitmap& icon,
     const content::PlatformNotificationData& data,
     NotificationDelegate* delegate,
-    base::Closure* cancel_callback,
     bool audio_muted,
     bool allowed) {
   if (!allowed)
@@ -38,7 +32,6 @@ void OnWebNotificationAllowed(
   if (notification) {
     notification->Show(data.title, data.body, data.tag, data.icon, icon,
                        audio_muted ? true : data.silent);
-    *cancel_callback = base::Bind(&RemoveNotification, notification);
   }
 }
 
@@ -72,8 +65,7 @@ void PlatformNotificationService::DisplayNotification(
     const std::string& notification_id,
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
-    const content::NotificationResources& notification_resources,
-    base::Closure* cancel_callback) {
+    const content::NotificationResources& notification_resources) {
   NotificationDelegate* delegate =
       new NotificationDelegate(notification_id);
   browser_client_->WebNotificationAllowed(
@@ -82,8 +74,20 @@ void PlatformNotificationService::DisplayNotification(
                  browser_client_,
                  notification_resources.notification_icon,
                  notification_data,
-                 base::Passed(&delegate),
-                 cancel_callback));
+                 base::Passed(&delegate)));
+}
+
+void PlatformNotificationService::CloseNotification(
+    content::BrowserContext* browser_context,
+    const std::string& notification_id) {
+  auto presenter =
+    BrowserClient::Get()->GetNotificationPresenter();
+  if (!presenter)
+    return;
+  auto notification = presenter->lookupNotification(notification_id);
+  if (!notification)
+    return;
+  notification->Dismiss();
 }
 
 void PlatformNotificationService::DisplayPersistentNotification(
