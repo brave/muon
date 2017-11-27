@@ -115,7 +115,7 @@ struct NativeFunctionInvoker {};
 template <typename ReturnType, typename... ArgTypes>
 struct NativeFunctionInvoker<ReturnType(ArgTypes...)> {
   static void Go(base::Callback<ReturnType(ArgTypes...)> val, Arguments* args) {
-    using Indices = typename IndicesGenerator<sizeof...(ArgTypes)>::type;
+    using Indices = std::index_sequence_for<ArgTypes...>;
     Invoker<Indices, ArgTypes...> invoker(args, 0);
     if (invoker.IsOK())
       invoker.DispatchToCallback(val);
