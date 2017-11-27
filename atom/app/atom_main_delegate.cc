@@ -38,6 +38,7 @@
 #include "extensions/features/features.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "printing/features/features.h"
+#include "services/service_manager/sandbox/switches.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_switches.h"
@@ -316,7 +317,8 @@ void AtomMainDelegate::PreSandboxStartup() {
 #if defined(OS_LINUX)
   if (!IsBrowserProcess(command_line)) {
     // Disable setuid sandbox
-    command_line->AppendSwitch(::switches::kDisableSetuidSandbox);
+    command_line->AppendSwitch(
+        service_manager::switches::kDisableSetuidSandbox);
   }
 #endif
 
