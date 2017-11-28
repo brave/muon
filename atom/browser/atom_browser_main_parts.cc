@@ -189,10 +189,8 @@ int AtomBrowserMainParts::PreCreateThreads() {
   {
     TRACE_EVENT0("startup",
       "AtomBrowserMainParts::PreCreateThreads:InitBrowswerProcessImpl");
-    auto command_line = base::CommandLine::ForCurrentProcess();
     fake_browser_process_.reset(
-        new MuonBrowserProcessImpl(local_state_task_runner.get(),
-                                    *command_line));
+       new MuonBrowserProcessImpl(local_state_task_runner.get()));
   }
 
 #if defined(OS_MACOSX)
@@ -205,7 +203,8 @@ int AtomBrowserMainParts::PreCreateThreads() {
   SecKeychainAddCallback(&KeychainCallback, 0, NULL);
 #endif  // defined(OS_MACOSX)
 
-  fake_browser_process_->PreCreateThreads();
+  fake_browser_process_->PreCreateThreads(
+      *base::CommandLine::ForCurrentProcess());
 
   MuonCrashReporterClient::InitCrashReporting();
 
