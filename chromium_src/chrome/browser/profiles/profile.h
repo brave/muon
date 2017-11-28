@@ -124,6 +124,10 @@ class Profile : public atom::AtomBrowserContext {
   // profile is not incognito.
   virtual Profile* GetOriginalProfile() = 0;
 
+  // Return the original "recording" profile. This method returns this if the
+  // profile is not incognito.
+  virtual const Profile* GetOriginalProfile() const = 0;
+
   // Retrieves a pointer to the PrefService that manages the default zoom
   // level and the per-host zoom levels for this user profile.
   // TODO(wjmaclean): Remove this when HostZoomMap migrates to StoragePartition.
