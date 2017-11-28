@@ -259,6 +259,10 @@ Profile* BraveBrowserContext::GetOriginalProfile() {
   return original_context();
 }
 
+const Profile* BraveBrowserContext::GetOriginalProfile() const {
+    return const_cast<BraveBrowserContext*>(this)->original_context();
+}
+
 bool BraveBrowserContext::IsSameProfile(Profile* profile) {
   return GetOriginalProfile() == profile->GetOriginalProfile();
 }
