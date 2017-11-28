@@ -247,7 +247,8 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         proxy_service = content::CreateProxyServiceUsingMojoFactory(
             ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
-            new net::ProxyScriptFetcherImpl(url_request_context_.get()),
+            std::make_unique<net::ProxyScriptFetcherImpl>(
+                url_request_context_.get()),
             std::move(dhcp_proxy_script_fetcher), host_resolver.get(), net_log_,
             url_request_context_->network_delegate());
       } else {
