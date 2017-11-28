@@ -597,9 +597,6 @@
       # Enable FILE support by default.
       'disable_file_support%': 0,
 
-      # Enable FTP support by default.
-      'disable_ftp_support%': 0,
-
       # Do not use the platform ICU alternatives by default.
       'use_platform_icu_alternatives%': 0,
 
@@ -861,7 +858,6 @@
 
         ['OS=="ios"', {
           'configuration_policy': 0,
-          'disable_ftp_support%': 1,
           'enable_extensions%': 0,
           'enable_basic_printing%': 0,
           'enable_print_preview%': 0,
@@ -1229,7 +1225,6 @@
     'use_minikin_hyphenation%': '<(use_minikin_hyphenation)',
     'enable_captive_portal_detection%': '<(enable_captive_portal_detection)',
     'disable_file_support%': '<(disable_file_support)',
-    'disable_ftp_support%': '<(disable_ftp_support)',
     'use_platform_icu_alternatives%': '<(use_platform_icu_alternatives)',
     'disable_brotli_filter%': '<(disable_brotli_filter)',
     'enable_task_manager%': '<(enable_task_manager)',
@@ -2922,9 +2917,6 @@
       }],
       ['disable_file_support==1', {
         'defines': ['DISABLE_FILE_SUPPORT=1'],
-      }],
-      ['disable_ftp_support==1', {
-        'defines': ['DISABLE_FTP_SUPPORT=1'],
       }],
       ['enable_supervised_users==1', {
         'defines': ['ENABLE_SUPERVISED_USERS=1'],
