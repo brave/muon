@@ -245,7 +245,7 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         dhcp_proxy_script_fetcher = dhcp_factory.Create(url_request_context_.get());
 
         proxy_service = content::CreateProxyServiceUsingMojoFactory(
-            ChromeMojoProxyResolverFactory::GetInstance(),
+            ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
             new net::ProxyScriptFetcherImpl(url_request_context_.get()),
             std::move(dhcp_proxy_script_fetcher), host_resolver.get(), net_log_,

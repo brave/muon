@@ -458,8 +458,8 @@ void IOThread::SetUpProxyConfigService(
     if (command_line.HasSwitch(switches::kSingleProcess)) {
       LOG(ERROR) << "Cannot use V8 Proxy resolver in single process mode.";
     } else {
-      builder->set_mojo_proxy_resolver_factory(
-          ChromeMojoProxyResolverFactory::GetInstance());
+      builder->SetMojoProxyResolverFactory(
+          ChromeMojoProxyResolverFactory::CreateWithStrongBinding());
     }
   }
 
