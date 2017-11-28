@@ -13,7 +13,6 @@
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/relauncher.h"
 #include "atom/common/atom_command_line.h"
-#include "atom/common/google_api_key.h"
 #include "atom/utility/atom_content_utility_client.h"
 #include "base/base_switches.h"
 #include "base/command_line.h"
@@ -306,13 +305,6 @@ void AtomMainDelegate::PreSandboxStartup() {
 #else
   child_process_logging::Init();
 #endif
-
-  // Set google API key.
-  std::unique_ptr<base::Environment> env(base::Environment::Create());
-  if (!env->HasVar("GOOGLE_API_ENDPOINT"))
-    env->SetVar("GOOGLE_API_ENDPOINT", GOOGLEAPIS_ENDPOINT);
-  if (!env->HasVar("GOOGLE_API_KEY"))
-    env->SetVar("GOOGLE_API_KEY", GOOGLEAPIS_API_KEY);
 
 #if !defined(CHROME_MULTIPLE_DLL_BROWSER)
   if (process_type == switches::kUtilityProcess ||

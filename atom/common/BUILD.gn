@@ -74,6 +74,7 @@ source_set("node") {
 source_set("common") {
   public_configs = [
     "//electron/build:electron_config",
+    "//electron/build/geolocation",
   ]
 
   sources = [

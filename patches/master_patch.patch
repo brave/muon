@@ -1622,6 +1622,35 @@ index 75218ea2e5cabd3cbe500914b0a5bbac17756105..2c268cdc303d608451041991b0074da3
  
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
+diff --git a/device/geolocation/BUILD.gn b/device/geolocation/BUILD.gn
+index 0d865cbc489ff42b44a45f1df491969be435b2b4..72c5b8b2c7a31ffd8086de037690604cd0fccaa8 100644
+--- a/device/geolocation/BUILD.gn
++++ b/device/geolocation/BUILD.gn
+@@ -11,6 +11,7 @@ if (is_android) {
+ 
+ component("geolocation") {
+   defines = [ "DEVICE_GEOLOCATION_IMPLEMENTATION" ]
++  configs += [ "//electron/build/geolocation" ]
+ 
+   sources = [
+     "access_token_store.h",
+diff --git a/device/geolocation/network_location_request.cc b/device/geolocation/network_location_request.cc
+index fc90253986e06c19188d27a2aee84e4b26a82f6a..38262e43261dd06dd467513ef4093207e7f4d298 100644
+--- a/device/geolocation/network_location_request.cc
++++ b/device/geolocation/network_location_request.cc
+@@ -31,8 +31,12 @@
+ namespace device {
+ namespace {
+ 
++#if defined(GOOGLEAPIS_ENDPOINT)
++const char kNetworkLocationBaseUrl[] = GOOGLEAPIS_ENDPOINT;
++#else
+ const char kNetworkLocationBaseUrl[] =
+     "https://www.googleapis.com/geolocation/v1/geolocate";
++#endif
+ 
+ const char kLocationString[] = "location";
+ const char kLatitudeString[] = "lat";
 diff --git a/extensions/browser/api/messaging/message_service.cc b/extensions/browser/api/messaging/message_service.cc
 index 4b9084bd6e2f5a2129fcb49be34f2b4479de6f48..28c2d90eb9596ed982f4ac1a4fb28a84680135c3 100644
 --- a/extensions/browser/api/messaging/message_service.cc

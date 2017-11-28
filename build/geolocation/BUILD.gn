@@ -1,0 +1,20 @@
+declare_args() {
+  electron_google_api_key = ""
+  electron_google_api_endpoint = ""
+}
+
+config("geolocation") {
+  defines = []
+
+  if (electron_google_api_key != "") {
+    defines += [
+      "GOOGLEAPIS_API_KEY=\"$electron_google_api_key\""
+    ]
+  }
+
+  if (electron_google_api_endpoint != "") {
+    defines += [
+      "GOOGLEAPIS_ENDPOINT=\"$electron_google_api_endpoint\""
+    ]
+  }
+}
