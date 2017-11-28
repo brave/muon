@@ -32,6 +32,7 @@
 #include "content/public/browser/resource_context.h"
 #include "content/public/common/url_constants.h"
 #include "extensions/features/features.h"
+#include "net/net_features.h"
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/file_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
@@ -67,9 +68,9 @@ bool ProfileIOData::IsHandledProtocol(const std::string& scheme) {
     content::kExternalFileScheme,
 #endif  // defined(OS_CHROMEOS)
     url::kAboutScheme,
-#if !defined(DISABLE_FTP_SUPPORT)
+#if !BUILDFLAG(DISABLE_FTP_SUPPORT)
     url::kFtpScheme,
-#endif  // !defined(DISABLE_FTP_SUPPORT)
+#endif  // !BUILDFLAG(DISABLE_FTP_SUPPORT)
     url::kBlobScheme,
     url::kFileSystemScheme,
     // chrome::kChromeSearchScheme,
