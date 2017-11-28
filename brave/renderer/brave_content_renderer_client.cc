@@ -190,9 +190,6 @@ void BraveContentRendererClient::RenderFrameCreated(
 
 void BraveContentRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  ChromeExtensionsRendererClient::GetInstance()->RenderViewCreated(render_view);
-#endif
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
 
   new password_manager::CredentialManagerClient(render_view);
