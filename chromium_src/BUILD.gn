@@ -159,6 +159,7 @@ source_set("browser") {
     "//components/data_usage/core",
     "//components/keep_alive_registry",
     "//components/net_log",
+    "//components/optimization_guide/proto:optimization_guide_proto",
     "//components/policy/core/common",
     "//components/prefs",
     "//components/ssl_config",

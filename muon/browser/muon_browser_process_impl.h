@@ -21,8 +21,7 @@ class AtomResourceDispatcherHostDelegate;
 // Real implementation of BrowserProcess that creates and returns the services.
 class MuonBrowserProcessImpl : public BrowserProcessImpl {
  public:
-  MuonBrowserProcessImpl(base::SequencedTaskRunner* local_state_task_runner,
-                          const base::CommandLine& command_line);
+  MuonBrowserProcessImpl(base::SequencedTaskRunner* local_state_task_runner);
   ~MuonBrowserProcessImpl() override;
 
   void set_app(atom::api::App* app) { app_ = app; }
