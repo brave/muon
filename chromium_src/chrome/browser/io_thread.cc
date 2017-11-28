@@ -76,6 +76,7 @@ IOThread::IOThread(
 #endif
       globals_(nullptr),
       is_quic_allowed_on_init_(false),
+      network_service_request_(mojo::MakeRequest(&ui_thread_network_service_)),
       weak_factory_(this) {
   scoped_refptr<base::SingleThreadTaskRunner> io_thread_proxy =
       BrowserThread::GetTaskRunnerForThread(BrowserThread::IO);
@@ -512,7 +513,8 @@ void IOThread::ConstructSystemRequestContext() {
   SetUpProxyConfigService(builder.get(),
                           std::move(system_proxy_config_service_));
 
-  globals_->network_service = content::NetworkService::Create();
+  globals_->network_service = content::NetworkService::Create(
+      std::move(network_service_request_), net_log_);
   globals_->network_service->DisableQuic();
 
   globals_->system_network_context =
