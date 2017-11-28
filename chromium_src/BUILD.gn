@@ -458,8 +458,6 @@ source_set("browser") {
 
   if (enable_plugins) {
     sources += [
-      "//chrome/browser/media/cdm_storage_id.cc",
-      "//chrome/browser/media/cdm_storage_id.h",
       "//chrome/browser/media/media_storage_id_salt.cc",
       "//chrome/browser/media/media_storage_id_salt.h",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc",
@@ -592,6 +590,13 @@ source_set("browser") {
     if (!is_android) {
       deps += [ "//third_party/hunspell" ]
     }
+  }
+
+  if (enable_cdm_storage_id) {
+    sources += [
+      "//chrome/browser/media/cdm_storage_id.cc",
+      "//chrome/browser/media/cdm_storage_id.h",
+    ]
   }
 }
 
