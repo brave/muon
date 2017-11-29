@@ -117,8 +117,8 @@ bool NetworkDelegate::OnCanGetCookies(const net::URLRequest& request,
 }
 
 bool NetworkDelegate::OnCanSetCookie(const net::URLRequest& request,
-                                          const std::string& cookie_line,
-                                          net::CookieOptions* options) {
+                                     const net::CanonicalCookie& cookie,
+                                     net::CookieOptions* options) {
   return true;
 }
 
