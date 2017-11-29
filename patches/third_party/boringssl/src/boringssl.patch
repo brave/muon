@@ -202,7 +202,7 @@ index 6e569ec82db970ba8f1004f811ff08cc59794005..905a293ad046e5653352ec59a278df3a
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index 738484d41e84b2a1d4018f9ee80ab00f0d4a8992..84988e29a8aefa1585dc9f9ef17c1218c9a9ef7a 100644
+index 4b4a899122035328ca25d34bf58088e0405389e0..021d91666434ceaba254483b2d5a4e76c1ce0593 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
 @@ -156,6 +156,14 @@ class Android(object):
@@ -237,7 +237,7 @@ index 738484d41e84b2a1d4018f9ee80ab00f0d4a8992..84988e29a8aefa1585dc9f9ef17c1218
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -592,6 +603,21 @@ def main(platforms):
+@@ -593,6 +604,21 @@ def main(platforms):
    ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
@@ -259,7 +259,7 @@ index 738484d41e84b2a1d4018f9ee80ab00f0d4a8992..84988e29a8aefa1585dc9f9ef17c1218
  
    # Generate err_data.c
    with open('err_data.c', 'w+') as err_data:
-@@ -654,6 +680,7 @@ def main(platforms):
+@@ -656,6 +682,7 @@ def main(platforms):
        'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,
