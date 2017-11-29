@@ -8,7 +8,6 @@
 
 namespace about_flags {
 
-void RemoveFlagsSwitches(
-    std::map<std::string, base::CommandLine::StringType>* switch_list) {}
+void RemoveFlagsSwitches(base::CommandLine::SwitchMap* switch_list) {}
 
 }  // namespace about_flags
