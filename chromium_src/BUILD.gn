@@ -815,6 +815,8 @@ source_set("password_manager") {
   if (is_linux) {
     if (use_x11) {
       sources += [
+        "//chrome/browser/dbus/dbus_thread_linux.cc",
+        "//chrome/browser/dbus/dbus_thread_linux.h",
         "//chrome/browser/password_manager/password_store_x.h",
         "//chrome/browser/password_manager/password_store_x.cc",
       ]
@@ -1048,12 +1050,16 @@ source_set("tab_manager") {
     "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h",
     "//chrome/browser/resource_coordinator/tab_manager.cc",
     "//chrome/browser/resource_coordinator/tab_manager.h",
+    "//chrome/browser/resource_coordinator/tab_manager_resource_coordinator_signal_observer.cc",
+    "//chrome/browser/resource_coordinator/tab_manager_resource_coordinator_signal_observer.h",
     "//chrome/browser/resource_coordinator/tab_manager_stats_collector.cc",
     "//chrome/browser/resource_coordinator/tab_manager_stats_collector.h",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.cc",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.h",
     "//chrome/browser/resource_coordinator/tab_stats.cc",
     "//chrome/browser/resource_coordinator/tab_stats.h",
+    "//chrome/browser/resource_coordinator/time.cc",
+    "//chrome/browser/resource_coordinator/time.h",
     "//chrome/browser/memory_details.cc",
     "//chrome/browser/memory_details.h",
     "//chrome/browser/memory_details_linux.cc",
@@ -1065,6 +1071,8 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tab_contents/core_tab_helper.h",
     "//chrome/browser/ui/tabs/tab_strip_model.cc",
     "//chrome/browser/ui/tabs/tab_strip_model.h",
+    "//chrome/browser/ui/tabs/tab_strip_model_impl.cc",
+    "//chrome/browser/ui/tabs/tab_strip_model_impl.h",
     "//chrome/browser/ui/tabs/tab_strip_model_delegate.h",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.h",
@@ -1074,6 +1082,8 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tabs/tab_utils.h",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.cc",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.h",
+    "//chrome/browser/ui/tab_ui_helper.cc",
+    "//chrome/browser/ui/tab_ui_helper.h",
   ]
 
   deps = [
