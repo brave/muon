@@ -1682,6 +1682,19 @@ index 1661c0c65821de8e8e8ac5dbabaa582590c8f0cb..93340b7ce3db2718f64c983a2f688271
  
    content::WebContents* owner = guest->owner_web_contents();
    if (!owner)
+diff --git a/extensions/browser/guest_view/web_view/web_view_guest.cc b/extensions/browser/guest_view/web_view/web_view_guest.cc
+index 3f7bbdc2d80f33a38fe3f0ce9fe3dcc70d06f2b9..1619477de92298015f2553c27f70301f773d267d 100644
+--- a/extensions/browser/guest_view/web_view/web_view_guest.cc
++++ b/extensions/browser/guest_view/web_view/web_view_guest.cc
+@@ -297,7 +297,7 @@ std::string WebViewGuest::GetPartitionID(
+ }
+ 
+ // static
+-const char WebViewGuest::Type[] = "webview";
++const char WebViewGuest::Type[] = "chrome-webview";
+ 
+ // static
+ int WebViewGuest::GetOrGenerateRulesRegistryID(
 diff --git a/extensions/common/BUILD.gn b/extensions/common/BUILD.gn
 index a46a85f47969f0f782dace5c1f86c724474adc06..ee2cd727154ab981d4fd38f0cb8a63a969b8b9b5 100644
 --- a/extensions/common/BUILD.gn
