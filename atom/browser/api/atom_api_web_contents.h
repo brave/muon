@@ -487,7 +487,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void NavigationEntryCommitted(
       const content::LoadCommittedDetails& load_details) override;
   void DidChangeVisibleSecurityState() override;
-  void TitleWasSet(content::NavigationEntry* entry, bool explicit_set) override;
+  void TitleWasSet(content::NavigationEntry* entry) override;
   void DidUpdateFaviconURL(
       const std::vector<content::FaviconURL>& urls) override;
   void PluginCrashed(const base::FilePath& plugin_path,
@@ -533,6 +533,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
                          const base::ListValue& args);
 
   // Called when received a synchronous message from renderer.
+  struct DispatchHelper;
   void OnRendererMessageSync(const base::string16& channel,
                              const base::ListValue& args,
                              IPC::Message* message);

@@ -6,16 +6,9 @@
 #define BRIGHTRAY_BROWSER_URL_REQUEST_CONTEXT_GETTER_H_
 
 #include "base/files/file_path.h"
-#include "chrome/browser/devtools/devtools_network_controller_handle.h"
 #include "content/public/browser/browser_context.h"
-#include "content/public/browser/content_browser_client.h"
 #include "net/http/http_cache.h"
-#include "net/http/url_security_manager.h"
 #include "net/url_request/url_request_context_getter.h"
-
-namespace base {
-class MessageLoop;
-}
 
 namespace net {
 class HostMappingRules;
@@ -53,7 +46,6 @@ class URLRequestContextGetter : public net::URLRequestContextGetter {
 
   URLRequestContextGetter(
       Delegate* delegate,
-      DevToolsNetworkControllerHandle* handle,
       NetLog* net_log,
       const base::FilePath& base_path,
       bool in_memory,
@@ -76,7 +68,6 @@ class URLRequestContextGetter : public net::URLRequestContextGetter {
  private:
   Delegate* delegate_;
 
-  DevToolsNetworkControllerHandle* network_controller_handle_;
   NetLog* net_log_;
   base::FilePath base_path_;
   bool in_memory_;

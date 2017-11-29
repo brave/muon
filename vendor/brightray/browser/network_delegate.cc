@@ -82,7 +82,7 @@ void NetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
                                             const GURL& new_location) {
 }
 
-void NetworkDelegate::OnResponseStarted(net::URLRequest* request) {
+void NetworkDelegate::OnResponseStarted(net::URLRequest* request, int net_error) {
 }
 
 void NetworkDelegate::OnNetworkBytesReceived(net::URLRequest* request,
@@ -93,7 +93,7 @@ void NetworkDelegate::OnNetworkBytesSent(net::URLRequest* request,
                                          int64_t bytes_sent) {
 }
 
-void NetworkDelegate::OnCompleted(net::URLRequest* request, bool started) {
+void NetworkDelegate::OnCompleted(net::URLRequest* request, bool started, int net_error) {
 }
 
 void NetworkDelegate::OnURLRequestDestroyed(net::URLRequest* request) {

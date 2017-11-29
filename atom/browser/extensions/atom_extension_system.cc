@@ -232,7 +232,7 @@ void AtomExtensionSystem::Shared::EnableExtension(
   // extension_prefs_->SetExtensionEnabled(extension_id);
 
   // Move it over to the enabled list.
-  registry_->AddEnabled(make_scoped_refptr(extension));
+  registry_->AddEnabled(base::WrapRefCounted(extension));
   registry_->RemoveDisabled(extension->id());
 
   NotifyExtensionLoaded(extension);
@@ -272,7 +272,7 @@ void AtomExtensionSystem::Shared::DisableExtension(
 
   // Move it over to the disabled list. Don't send a second unload notification
   // for terminated extensions being disabled.
-  registry_->AddDisabled(make_scoped_refptr(extension));
+  registry_->AddDisabled(base::WrapRefCounted(extension));
   if (registry_->enabled_extensions().Contains(extension->id())) {
     registry_->RemoveEnabled(extension->id());
     NotifyExtensionUnloaded(extension,
@@ -361,8 +361,7 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
 
   if (is_install) {
     extension_prefs_->OnExtensionInstalled(
-        extension, Extension::ENABLED, syncer::StringOrdinal(),
-        extensions::kInstallFlagNone, std::string());
+        extension, Extension::ENABLED, syncer::StringOrdinal(), std::string());
 
     registry_->TriggerOnInstalled(extension, is_extension_upgrade);
   }
