@@ -6,22 +6,27 @@
 #define ATOM_BROWSER_EXTENSIONS_ATOM_EXTENSIONS_NETWORK_DELEGATE_H_
 
 #include <map>
+#include <memory>
+
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/net/atom_network_delegate.h"
 
+class ChromeExtensionsNetworkDelegate;
 class Profile;
 
 namespace extensions {
 
+class EventRouterForwarder;
 class InfoMap;
 
 class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
  public:
   explicit AtomExtensionsNetworkDelegate(
-      Profile* browser_context);
+      Profile* browser_context,
+      InfoMap* info_map,
+      EventRouterForwarder* event_router);
   ~AtomExtensionsNetworkDelegate() override;
-  void set_extension_info_map(extensions::InfoMap* extension_info_map);
 
   static void SetAcceptAllCookies(bool accept);
 
@@ -54,8 +59,10 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
       GURL* allowed_unsafe_redirect_url) override;
   void OnBeforeRedirect(net::URLRequest* request,
                         const GURL& new_location) override;
-  void OnResponseStarted(net::URLRequest* request) override;
-  void OnCompleted(net::URLRequest* request, bool started) override;
+  void OnResponseStarted(net::URLRequest* request, int net_error) override;
+  void OnCompleted(net::URLRequest* request,
+                   bool started,
+                   int net_error) override;
   void OnURLRequestDestroyed(net::URLRequest* request) override;
   void OnPACScriptError(int line_number, const base::string16& error) override;
   net::NetworkDelegate::AuthRequiredResponse OnAuthRequired(
@@ -67,9 +74,10 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
                     const uint64_t request_id,
                     int previous_result);
 
-  content::BrowserContext* browser_context_;
-  scoped_refptr<extensions::InfoMap> extension_info_map_;
+  Profile* profile_;
   std::map<uint64_t, net::CompletionCallback> callbacks_;
+  std::unique_ptr<ChromeExtensionsNetworkDelegate> extensions_delegate_;
+  extensions::EventRouterForwarder* extension_event_router_forwarder_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomExtensionsNetworkDelegate);
 };

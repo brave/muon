@@ -23,6 +23,10 @@
 
 class PrefChangeRegistrar;
 
+namespace extensions {
+class InfoMap;
+}
+
 namespace sync_preferences {
 class PrefServiceSyncable;
 }
@@ -74,9 +78,6 @@ class BraveBrowserContext : public Profile {
       override {
     return nullptr;
   }
-
-  // atom::AtomBrowserContext
-  atom::AtomNetworkDelegate* network_delegate() override;
 
   // Profile implementation:
   scoped_refptr<base::SequencedTaskRunner> GetIOTaskRunner() override;
@@ -162,6 +163,7 @@ class BraveBrowserContext : public Profile {
   // Task runner used for file access in the profile path
   scoped_refptr<base::SequencedTaskRunner> io_task_runner_;
 
+  extensions::InfoMap* info_map_;  // not owned
   Profile::Delegate* delegate_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveBrowserContext);

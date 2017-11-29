@@ -134,10 +134,6 @@ net::URLRequestContextGetter* BrowserContext::CreateRequestContext(
   return url_request_getter_.get();
 }
 
-net::NetworkDelegate* BrowserContext::CreateNetworkDelegate() {
-  return new NetworkDelegate;
-}
-
 base::FilePath BrowserContext::GetPath() const {
   return path_;
 }

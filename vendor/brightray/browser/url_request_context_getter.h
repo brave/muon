@@ -7,14 +7,8 @@
 
 #include "base/files/file_path.h"
 #include "content/public/browser/browser_context.h"
-#include "content/public/browser/content_browser_client.h"
 #include "net/http/http_cache.h"
-#include "net/http/url_security_manager.h"
 #include "net/url_request/url_request_context_getter.h"
-
-namespace base {
-class MessageLoop;
-}
 
 namespace net {
 class HostMappingRules;

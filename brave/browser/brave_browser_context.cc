@@ -364,20 +364,15 @@ BraveBrowserContext::GetBackgroundFetchDelegate() {
   return nullptr;
 }
 
-atom::AtomNetworkDelegate* BraveBrowserContext::network_delegate() {
-  auto getter = GetRequestContext();
-  DCHECK(getter);
-  return static_cast<atom::AtomNetworkDelegate*>(
-      getter->GetURLRequestContext()->network_delegate());
-}
-
 net::URLRequestContextGetter* BraveBrowserContext::GetRequestContext() {
   return GetDefaultStoragePartition(this)->GetURLRequestContext();
 }
 
 net::NetworkDelegate* BraveBrowserContext::CreateNetworkDelegate() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
-  return new extensions::AtomExtensionsNetworkDelegate(this);
+  return new extensions::AtomExtensionsNetworkDelegate(this,
+      info_map_,
+      g_browser_process->extension_event_router_forwarder());
 }
 
 std::unique_ptr<net::URLRequestJobFactory>
@@ -392,13 +387,10 @@ BraveBrowserContext::CreateURLRequestJobFactory(
       set_job_factory(job_factory_impl);
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  extensions::InfoMap* extension_info_map =
-      extensions::AtomExtensionSystemFactory::GetInstance()->
-        GetForBrowserContext(this)->info_map();
   job_factory_impl->SetProtocolHandler(
           extensions::kExtensionScheme,
           extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),
-                                                     extension_info_map));
+                                                     info_map_));
 #endif
   protocol_handler_interceptor_->Chain(std::move(job_factory));
   return std::move(protocol_handler_interceptor_);
@@ -500,6 +492,11 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
 
   BrowserContextDependencyManager::GetInstance()->
       CreateBrowserContextServices(this);
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+    info_map_ = extensions::AtomExtensionSystemFactory::GetInstance()->
+        GetForBrowserContext(this)->info_map();
+#endif
 
   protocol_handler_interceptor_ =
         ProtocolHandlerRegistryFactory::GetForBrowserContext(this)

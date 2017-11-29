@@ -466,41 +466,6 @@ void Session::SetDownloadPath(const base::FilePath& path) {
       prefs::kDownloadDefaultDirectory, path);
 }
 
-void Session::EnableNetworkEmulation(const mate::Dictionary& options) {
-  std::unique_ptr<DevToolsNetworkConditions> conditions;
-  bool offline = false;
-  double latency = 0.0, download_throughput = 0.0, upload_throughput = 0.0;
-  if (options.Get("offline", &offline) && offline) {
-    conditions.reset(new DevToolsNetworkConditions(offline));
-  } else {
-    options.Get("latency", &latency);
-    options.Get("downloadThroughput", &download_throughput);
-    options.Get("uploadThroughput", &upload_throughput);
-    conditions.reset(
-        new DevToolsNetworkConditions(false,
-                                                 latency,
-                                                 download_throughput,
-                                                 upload_throughput));
-  }
-
-  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-      base::BindOnce(&DevToolsNetworkController::SetNetworkState,
-                     devtools_network_emulation_client_id_,
-                     std::move(conditions)));
-  profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
-      devtools_network_emulation_client_id_);
-}
-
-void Session::DisableNetworkEmulation() {
-  std::unique_ptr<DevToolsNetworkConditions> conditions;
-  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-      base::BindOnce(&DevToolsNetworkController::SetNetworkState,
-                     devtools_network_emulation_client_id_,
-                     std::move(conditions)));
-  profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
-      std::string());
-}
-
 void Session::SetCertVerifyProc(v8::Local<v8::Value> val,
                                 mate::Arguments* args) {
   AtomCertVerifier::VerifyProc proc;
@@ -676,8 +641,6 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("flushStorageData", &Session::FlushStorageData)
       .SetMethod("setProxy", &Session::SetProxy)
       .SetMethod("setDownloadPath", &Session::SetDownloadPath)
-      .SetMethod("enableNetworkEmulation", &Session::EnableNetworkEmulation)
-      .SetMethod("disableNetworkEmulation", &Session::DisableNetworkEmulation)
       .SetMethod("setCertificateVerifyProc", &Session::SetCertVerifyProc)
       .SetMethod("setPermissionRequestHandler",
                  &Session::SetPermissionRequestHandler)

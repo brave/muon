@@ -59,8 +59,7 @@ class NoCacheBackend : public net::HttpCache::BackendFactory {
 AtomBrowserContext::AtomBrowserContext(
     const std::string& partition, bool in_memory,
     const base::DictionaryValue& options)
-    : brightray::BrowserContext(partition, in_memory),
-      network_delegate_(new AtomNetworkDelegate) {
+    : brightray::BrowserContext(partition, in_memory) {
   // Read options.
   use_cache_ = true;
   options.GetBoolean("cache", &use_cache_);
@@ -70,10 +69,6 @@ AtomBrowserContext::AtomBrowserContext(
 }
 
 AtomBrowserContext::~AtomBrowserContext() {
-}
-
-net::NetworkDelegate* AtomBrowserContext::CreateNetworkDelegate() {
-  return network_delegate_;
 }
 
 std::unique_ptr<net::URLRequestJobFactory>

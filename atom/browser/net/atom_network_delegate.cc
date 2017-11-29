@@ -377,9 +377,10 @@ void AtomNetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
                     request->was_cached());
 }
 
-void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request) {
+void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request,
+                                            int net_error) {
   if (!base::ContainsKey(simple_listeners_, kOnResponseStarted)) {
-    brightray::NetworkDelegate::OnResponseStarted(request);
+    brightray::NetworkDelegate::OnResponseStarted(request, net_error);
     return;
   }
 
@@ -390,25 +391,25 @@ void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request) {
                     request->was_cached());
 }
 
-void AtomNetworkDelegate::OnCompleted(net::URLRequest* request, bool started) {
+void AtomNetworkDelegate::OnCompleted(net::URLRequest* request,
+                                      bool started,
+                                      int net_error) {
   // OnCompleted may happen before other events.
-  callbacks_.erase(request->identifier());
+  OnURLRequestDestroyed(request);
 
-  if (request->status().status() == net::URLRequestStatus::FAILED ||
-      request->status().status() == net::URLRequestStatus::CANCELED) {
-    // Error event.
-    OnErrorOccurred(request, started);
+  if (net_error != net::OK) {
+    OnErrorOccurred(request, started, net_error);
     return;
   } else if (request->response_headers() &&
              net::HttpResponseHeaders::IsRedirectResponseCode(
                  request->response_headers()->response_code())) {
     // Redirect event.
-    brightray::NetworkDelegate::OnCompleted(request, started);
+    brightray::NetworkDelegate::OnCompleted(request, started, net_error);
     return;
   }
 
   if (!base::ContainsKey(simple_listeners_, kOnCompleted)) {
-    brightray::NetworkDelegate::OnCompleted(request, started);
+    brightray::NetworkDelegate::OnCompleted(request, started, net_error);
     return;
   }
 
@@ -421,9 +422,9 @@ void AtomNetworkDelegate::OnURLRequestDestroyed(net::URLRequest* request) {
 }
 
 void AtomNetworkDelegate::OnErrorOccurred(
-    net::URLRequest* request, bool started) {
+    net::URLRequest* request, bool started, int net_error) {
   if (!base::ContainsKey(simple_listeners_, kOnErrorOccurred)) {
-    brightray::NetworkDelegate::OnCompleted(request, started);
+    brightray::NetworkDelegate::OnCompleted(request, started, net_error);
     return;
   }
 
@@ -504,7 +505,7 @@ void AtomNetworkDelegate::OnListenerResultInUI(
   if (rfh && tab_id == -1) {
     auto web_contents = content::WebContents::FromRenderFrameHost(rfh);
     if (web_contents) {
-      int tab_id = extensions::TabHelper::IdForTab(web_contents);
+      tab_id = extensions::TabHelper::IdForTab(web_contents);
       copy->SetInteger(extensions::tabs_constants::kTabIdKey, tab_id);
     }
   }
