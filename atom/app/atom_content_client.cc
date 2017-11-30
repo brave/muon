@@ -165,7 +165,7 @@ void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
   schemes->standard_schemes.push_back(extensions::kExtensionScheme);
   schemes->savable_schemes.push_back(extensions::kExtensionScheme);
   schemes->secure_schemes.push_back(extensions::kExtensionScheme);
-  schemes->secure_origins = GetSecureOriginWhitelist();
+  schemes->secure_origins = secure_origin_whitelist::GetWhitelist();
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (extensions::feature_util::ExtensionServiceWorkersEnabled())
