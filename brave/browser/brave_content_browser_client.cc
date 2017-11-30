@@ -19,6 +19,7 @@
 #include "brave/grit/brave_resources.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/cache_stats_recorder.h"
+#include "chrome/browser/chrome_service.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/plugins/plugin_info_host_impl.h"
 #include "chrome/browser/printing/printing_message_filter.h"
@@ -28,6 +29,7 @@
 #include "chrome/browser/speech/tts_message_filter.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
+#include "chrome/common/constants.mojom.h"
 #include "chrome/common/env_vars.h"
 #include "chrome/common/importer/profile_import.mojom.h"
 #include "chrome/common/render_messages.h"
@@ -79,13 +81,6 @@
 #include "services/ui/public/cpp/gpu/gpu.h"
 #include "ui/aura/mus/window_tree_client.h"
 #include "ui/views/mus/mus_client.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPELLCHECK)
-#include "chrome/browser/spellchecker/spell_check_host_impl.h"
-#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-#include "chrome/browser/spellchecker/spell_check_panel_host_impl.h"
-#endif
 #endif
 
 #if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
@@ -309,15 +304,6 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
   scoped_refptr<base::SingleThreadTaskRunner> ui_task_runner =
       content::BrowserThread::GetTaskRunnerForThread(
           content::BrowserThread::UI);
-#if BUILDFLAG(ENABLE_SPELLCHECK)
-  registry->AddInterface(
-      base::Bind(&SpellCheckHostImpl::Create, render_process_host->GetID()),
-      ui_task_runner);
-#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-  registry->AddInterface(base::Bind(&SpellCheckPanelHostImpl::Create),
-      ui_task_runner);
-#endif
-#endif
 
   Profile* profile =
       Profile::FromBrowserContext(render_process_host->GetBrowserContext());
@@ -329,6 +315,11 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
 
 void BraveContentBrowserClient::RegisterInProcessServices(
     StaticServiceMap* services) {
+  {
+    service_manager::EmbeddedServiceInfo info;
+    info.factory = base::Bind(&ChromeService::Create);
+    services->insert(std::make_pair(chrome::mojom::kServiceName, info));
+  }
   service_manager::EmbeddedServiceInfo info;
   info.factory =
       base::Bind(&proxy_resolver::ProxyResolverService::CreateService);
