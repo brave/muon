@@ -98,10 +98,9 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
 
   // Uninstalls the extension.
   bool UninstallExtension(content::BrowserContext* context,
-                                  const std::string& transient_extension_id,
-                                  UninstallReason reason,
-                                  const base::Closure& deletion_done_callback,
-                                  base::string16* error) const override {
+                          const std::string& transient_extension_id,
+                          UninstallReason reason,
+                          base::string16* error) const override {
     NOTIMPLEMENTED();
     return false;
   }
