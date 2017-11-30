@@ -12,7 +12,8 @@ namespace safe_browsing {
 
 const scoped_refptr<SafeBrowsingUIManager>&
 SafeBrowsingService::ui_manager() const {
-  return nullptr;
+  static scoped_refptr<SafeBrowsingUIManager> empty;
+  return empty;
 }
 
 void SafeBrowsingService::DisableQuicOnIOThread() {}
