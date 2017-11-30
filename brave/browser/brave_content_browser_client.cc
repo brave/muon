@@ -423,6 +423,13 @@ GURL BraveContentBrowserClient::GetEffectiveURL(
     return url;
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
+  // If |url| has an isolated origin, don't resolve effective URLs
+  // corresponding to extensions, since isolated origins should take precedence
+  // over hosted apps.  Note that for NTP, we do want to resolve the effective
+  // URL above; see https://crbug.com/755595.
+  if (is_isolated_origin)
+    return url;
+
   return AtomBrowserClientExtensionsPart::GetEffectiveURL(
       profile, url, is_isolated_origin);
 #else

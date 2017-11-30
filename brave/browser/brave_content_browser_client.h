@@ -90,7 +90,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
                        bool* no_javascript_access) override;
   GURL GetEffectiveURL(content::BrowserContext* browser_context,
                        const GURL& url,
-                       bool is_isolated_origin);
+                       bool is_isolated_origin) override;
   bool ShouldUseProcessPerSite(content::BrowserContext* browser_context,
                                const GURL& effective_url) override;
   bool DoesSiteRequireDedicatedProcess(content::BrowserContext* browser_context,
