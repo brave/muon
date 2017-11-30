@@ -6,7 +6,7 @@
 
 #include "atom/common/api/api_messages.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
-#include "content/public/browser/render_view_host.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
 #include "native_mate/object_template_builder.h"
 
@@ -21,14 +21,21 @@ Event::Event(v8::Isolate* isolate)
 Event::~Event() {
 }
 
-void Event::SetSenderAndMessage(content::WebContents* sender,
+void Event::SetSenderAndMessage(content::RenderFrameHost* sender,
                                 IPC::Message* message) {
   DCHECK(!sender_);
   DCHECK(!message_);
   sender_ = sender;
   message_ = message;
 
-  Observe(sender);
+  if (sender_)
+    Observe(content::WebContents::FromRenderFrameHost(sender));
+}
+
+void Event::RenderFrameDeleted(content::RenderFrameHost* render_frame_host) {
+  if (render_frame_host == sender_) {
+    WebContentsDestroyed();
+  }
 }
 
 void Event::WebContentsDestroyed() {
@@ -46,7 +53,7 @@ bool Event::SendReply(const base::string16& json) {
     return false;
 
   AtomViewHostMsg_Message_Sync::WriteReplyParams(message_, json);
-  bool success = sender_->GetRenderViewHost()->Send(message_);
+  bool success = sender_->Send(message_);
   message_ = nullptr;
   sender_ = nullptr;
   return success;
