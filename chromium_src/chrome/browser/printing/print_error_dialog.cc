@@ -4,8 +4,4 @@
 
 #include "chrome/browser/printing/print_error_dialog.h"
 
-namespace chrome {
-
 void ShowPrintErrorDialog() {}
-
-}  // namespace chrome
