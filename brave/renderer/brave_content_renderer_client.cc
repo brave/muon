@@ -112,7 +112,7 @@ void BraveContentRendererClient::RenderThreadStarted() {
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   if (!spellcheck_) {
-    spellcheck_.reset(new SpellCheck());
+    spellcheck_.reset(new SpellCheck(this));
     thread->AddObserver(spellcheck_.get());
   }
 #endif
@@ -181,9 +181,9 @@ void BraveContentRendererClient::RenderFrameCreated(
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
-  new SpellCheckProvider(render_frame, spellcheck_.get());
+  new SpellCheckProvider(render_frame, spellcheck_.get(), this);
 #if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-  new SpellCheckPanel(render_frame, registry);
+  new SpellCheckPanel(render_frame, registry, this);
 #endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #endif
 }

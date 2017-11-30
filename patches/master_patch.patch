@@ -159,6 +159,19 @@ index 5c3210a3136ce1615ab8310e27f36375d314dbfa..e6d15636d71cb1aa42ce24c2f8cb7903
            "safe_browsing::mojom::SafeBrowsing",
            "translate::mojom::ContentTranslateDriver"
          ],
+diff --git a/chrome/browser/chrome_service.cc b/chrome/browser/chrome_service.cc
+index 3ea50d9bfd1cca4a78585be2066d1f203a92b5e4..f3bfb605482b45d06fc20c40856dd72e3b3f310a 100644
+--- a/chrome/browser/chrome_service.cc
++++ b/chrome/browser/chrome_service.cc
+@@ -31,8 +31,6 @@ ChromeService::ChromeService() {
+   registry_.AddInterface(
+       base::Bind(&chromeos::Launchable::Bind, base::Unretained(&launchable_)));
+ #endif
+-  registry_.AddInterface(
+-      base::Bind(&startup_metric_utils::StartupMetricHostImpl::Create));
+ #if BUILDFLAG(ENABLE_SPELLCHECK)
+   registry_with_source_info_.AddInterface(
+       base::Bind(&SpellCheckHostImpl::Create),
 diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
 index 864a6951115dda5ed74963f18b35692960397d50..3e1a2b719521ac2c60bae05f94e409bc4c7da022 100644
 --- a/chrome/browser/importer/external_process_importer_client.h
