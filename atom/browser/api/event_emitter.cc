@@ -62,17 +62,18 @@ v8::Local<v8::Object> CreateJSEvent(
     event = CreateEventObject(isolate);
 
     if (render_frame_host) {
+      v8::EscapableHandleScope handle_scope(isolate);
       auto web_contents =
           content::WebContents::FromRenderFrameHost(render_frame_host);
       // create a new wrapper so we can rebind send and sendShared
       // without affecting other references
-      auto handle = WebContents::CreateFrom(
-          isolate, web_contents, WebContents::Type::REMOTE)->GetWrapper();
+      mate::Handle<WebContents> handle = WebContents::CreateFrom(
+          isolate, web_contents, WebContents::Type::REMOTE);
 
       int render_process_id = render_frame_host->GetProcess()->GetID();
       int render_frame_id = render_frame_host->GetRoutingID();
 
-      mate::Dictionary sender(isolate, handle);
+      mate::Dictionary sender(isolate, handle->GetWrapper());
       sender.SetMethod("_send",
           base::Bind(&atom::api::WebContents::SendIPCMessage,
               render_process_id, render_frame_id));
@@ -86,7 +87,7 @@ v8::Local<v8::Object> CreateJSEvent(
         sender.Set("mainFrame", mainFrame);
       }
 
-      object = sender.GetHandle();
+      object = handle_scope.Escape(handle.ToV8());
     }
   }
   mate::Dictionary(isolate, event).Set("sender", object);

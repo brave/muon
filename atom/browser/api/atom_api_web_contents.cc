@@ -403,6 +403,7 @@ WebContents::WebContents(v8::Isolate* isolate,
   if (type == REMOTE) {
     guest_delegate_ = brave::TabViewGuest::FromWebContents(web_contents);
     Init(isolate);
+    RemoveFromWeakMap();
   } else {
     const mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
     auto session = Session::CreateFrom(isolate, GetBrowserContext());
