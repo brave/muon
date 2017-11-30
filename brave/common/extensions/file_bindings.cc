@@ -11,6 +11,7 @@
 #include "base/files/important_file_writer.h"
 #include "base/memory/ptr_util.h"
 #include "base/sequenced_task_runner.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_task_runner_handle.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "brave/common/converters/string16_converter.h"
@@ -38,7 +39,9 @@ void PostWriteCallback(
 }  // namespace
 
 FileBindings::FileBindings(extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
+    : extensions::ObjectBackedNativeHandler(context),
+      file_task_runner_(base::CreateSequencedTaskRunnerWithTraits(
+          {base::MayBlock(), base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {
   RouteFunction("WriteImportantFile",
       base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
 }
@@ -98,9 +101,7 @@ void FileBindings::WriteImportantFile(
         new v8::Global<v8::Function>(isolate, args[2].As<v8::Function>()));
   }
 
-  auto task_runner = GetTaskRunnerForFile(path,
-      BrowserThread::GetBlockingPool());
-  base::ImportantFileWriter writer(path, task_runner);
+  base::ImportantFileWriter writer(path, file_task_runner_);
 
   writer.RegisterOnNextWriteCallbacks(
       base::Closure(),
@@ -111,16 +112,6 @@ void FileBindings::WriteImportantFile(
         base::SequencedTaskRunnerHandle::Get()));
 
   writer.WriteNow(base::MakeUnique<std::string>(data));
-}
-
-scoped_refptr<base::SequencedTaskRunner> FileBindings::GetTaskRunnerForFile(
-    const base::FilePath& filename,
-    base::SequencedWorkerPool* worker_pool) {
-  std::string token("muon-file-");
-  token.append(filename.AsUTF8Unsafe());
-  return worker_pool->GetSequencedTaskRunnerWithShutdownBehavior(
-      worker_pool->GetNamedSequenceToken(token),
-      base::SequencedWorkerPool::BLOCK_SHUTDOWN);
 }
 
 void FileBindings::RunCallback(

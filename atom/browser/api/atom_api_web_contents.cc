@@ -328,6 +328,20 @@ namespace atom {
 
 namespace api {
 
+struct FrameDispatchHelper {
+  WebContents* web_contents;
+  content::RenderFrameHost* render_frame_host;
+
+  bool Send(IPC::Message* msg) { return render_frame_host->Send(msg); }
+
+  void OnRendererMessageSync(const base::string16& channel,
+                             const base::ListValue& args,
+                             IPC::Message* message) {
+    web_contents->OnRendererMessageSync(
+        render_frame_host, channel, args, message);
+  }
+};
+
 namespace {
 
 mate::Handle<api::Session> SessionFromOptions(v8::Isolate* isolate,
@@ -387,8 +401,8 @@ WebContents::WebContents(v8::Isolate* isolate,
       guest_delegate_(nullptr),
       weak_ptr_factory_(this) {
   if (type == REMOTE) {
+    guest_delegate_ = brave::TabViewGuest::FromWebContents(web_contents);
     Init(isolate);
-    AttachAsUserData(web_contents);
   } else {
     const mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
     auto session = Session::CreateFrom(isolate, GetBrowserContext());
@@ -423,6 +437,9 @@ WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options)
 }
 
 WebContents::~WebContents() {
+  if (type_ == REMOTE)
+    return;
+
   if (guest_delegate_ && web_contents() != NULL) {
     guest_delegate_->Destroy(true);
   } else {
@@ -1371,12 +1388,18 @@ void WebContents::DidChangeVisibleSecurityState() {
     }
 }
 
-void WebContents::TitleWasSet(content::NavigationEntry* entry,
-                              bool explicit_set) {
-  if (entry)
-    Emit("page-title-updated", entry->GetTitle(), explicit_set);
-  else
+void WebContents::TitleWasSet(content::NavigationEntry* entry) {
+  // For file URLs without a title, the title is synthesized. In that case, we
+  // don't want the update to count toward the "one set per page of the title
+  // to history."
+  if (entry) {
+    bool title_is_synthesized =
+        entry->GetURL().SchemeIsFile() && entry->GetTitle().empty();
+    Emit("page-title-updated", entry->GetTitle(), !title_is_synthesized);
+  } else {
+    bool explicit_set = true;
     Emit("page-title-updated", "", explicit_set);
+  }
 }
 
 void WebContents::DidUpdateFaviconURL(
@@ -1433,18 +1456,20 @@ void WebContents::DevToolsClosed() {
   Emit("devtools-closed");
 }
 
-bool WebContents::OnMessageReceived(const IPC::Message& message) {
+bool WebContents::OnMessageReceived(const IPC::Message& message,
+                                  content::RenderFrameHost* render_frame_host) {
   if (is_being_destroyed_)
     return false;
 
+  FrameDispatchHelper helper = {this, render_frame_host};
   bool handled = true;
-  IPC_BEGIN_MESSAGE_MAP(WebContents, message)
+  IPC_BEGIN_MESSAGE_MAP_WITH_PARAM(WebContents, message, render_frame_host)
     IPC_MESSAGE_HANDLER(AtomViewHostMsg_Message, OnRendererMessage)
-    IPC_MESSAGE_HANDLER_DELAY_REPLY(AtomViewHostMsg_Message_Sync,
-                                    OnRendererMessageSync)
+    IPC_MESSAGE_FORWARD_DELAY_REPLY(AtomViewHostMsg_Message_Sync, &helper,
+                                    FrameDispatchHelper::OnRendererMessageSync)
     IPC_MESSAGE_HANDLER(AtomViewHostMsg_Message_Shared, OnRendererMessageShared)
     IPC_MESSAGE_HANDLER_CODE(ViewHostMsg_SetCursor, OnCursorChange,
-      handled = false)
+                             handled = false)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -1491,6 +1516,11 @@ void WebContents::WebContentsDestroyed() {
   if (is_being_destroyed_)
     return;
 
+  if (type_ == REMOTE) {
+    delete this;
+    return;
+  }
+
   is_being_destroyed_ = true;
 
   if (owner_window() && owner_window()->browser())
@@ -1532,7 +1562,7 @@ int WebContents::GetID() const {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::TabHelper::IdForTab(web_contents());
 #else
-  return web_contents()->GetRenderProcessHost()->GetID();
+  return web_contents()->GetRenderViewHost()->GetProcess()->GetID();
 #endif
 }
 
@@ -1859,21 +1889,6 @@ bool WebContents::IsDevToolsFocused() {
   return managed_web_contents()->GetView()->IsDevToolsViewFocused();
 }
 
-void WebContents::EnableDeviceEmulation(
-    const blink::WebDeviceEmulationParams& params) {
-  if (type_ == REMOTE)
-    return;
-
-  Send(new ViewMsg_EnableDeviceEmulation(routing_id(), params));
-}
-
-void WebContents::DisableDeviceEmulation() {
-  if (type_ == REMOTE)
-    return;
-
-  Send(new ViewMsg_DisableDeviceEmulation(routing_id()));
-}
-
 void WebContents::ToggleDevTools() {
   if (IsDevToolsOpened())
     CloseDevTools();
@@ -2195,14 +2210,30 @@ bool WebContents::ExecuteScriptInTab(mate::Arguments* args) {
 }
 #endif
 
-bool WebContents::SendIPCSharedMemory(const base::string16& channel,
+bool WebContents::SendIPCSharedMemoryInternal(const base::string16& channel,
+                                      base::SharedMemory* shared_memory) {
+  auto rfh = web_contents()->GetMainFrame();
+  return SendIPCSharedMemory(
+      rfh->GetProcess()->GetID(), rfh->GetRoutingID(), channel, shared_memory);
+}
+
+// static
+bool WebContents::SendIPCSharedMemory(int render_process_id,
+                                      int render_frame_id,
+                                      const base::string16& channel,
                                       base::SharedMemory* shared_memory) {
   base::SharedMemoryHandle memory_handle = shared_memory->TakeHandle();
   if (!memory_handle.IsValid())
     return false;
 
-  bool success = Send(
-      new AtomViewMsg_Message_Shared(routing_id(), channel, memory_handle));
+  auto rfh =
+      content::RenderFrameHost::FromID(render_process_id, render_frame_id);
+
+  if (!rfh)
+    return false;
+
+  bool success = rfh->Send(new AtomViewMsg_Message_Shared(
+      rfh->GetRoutingID(), channel, memory_handle));
 
   if (!success && memory_handle.IsValid()) {
     // cleanup if the send failed
@@ -2215,10 +2246,25 @@ bool WebContents::SendIPCSharedMemory(const base::string16& channel,
   return success;
 }
 
-bool WebContents::SendIPCMessage(bool all_frames,
+bool WebContents::SendIPCMessageInternal(const base::string16& channel,
+                                         const base::ListValue& args) {
+  auto rfh = web_contents()->GetMainFrame();
+  return SendIPCMessage(
+      rfh->GetProcess()->GetID(), rfh->GetRoutingID(), channel, args);
+}
+
+// static
+bool WebContents::SendIPCMessage(int render_process_id,
+                                 int render_frame_id,
                                  const base::string16& channel,
                                  const base::ListValue& args) {
-  return Send(new AtomViewMsg_Message(routing_id(), all_frames, channel, args));
+  auto rfh =
+      content::RenderFrameHost::FromID(render_process_id, render_frame_id);
+
+  if (!rfh)
+    return false;
+
+  return rfh->Send(new AtomViewMsg_Message(rfh->GetRoutingID(), channel, args));
 }
 
 void WebContents::SendInputEvent(v8::Isolate* isolate,
@@ -2477,6 +2523,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("equal", &WebContents::Equal)
       .SetMethod("_loadURL", &WebContents::LoadURL)
       .SetMethod("_reload", &WebContents::Reload)
+      .SetMethod("_send", &WebContents::SendIPCMessageInternal)
+      .SetMethod("_sendShared", &WebContents::SendIPCSharedMemoryInternal)
       .SetMethod("downloadURL", &WebContents::DownloadURL)
       .SetMethod("getURL", &WebContents::GetURL)
       .SetMethod("getTitle", &WebContents::GetTitle)
@@ -2508,10 +2556,6 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("closeDevTools", &WebContents::CloseDevTools)
       .SetMethod("isDevToolsOpened", &WebContents::IsDevToolsOpened)
       .SetMethod("isDevToolsFocused", &WebContents::IsDevToolsFocused)
-      .SetMethod("enableDeviceEmulation",
-                 &WebContents::EnableDeviceEmulation)
-      .SetMethod("disableDeviceEmulation",
-                 &WebContents::DisableDeviceEmulation)
       .SetMethod("toggleDevTools", &WebContents::ToggleDevTools)
       .SetMethod("inspectElement", &WebContents::InspectElement)
       .SetMethod("setAudioMuted", &WebContents::SetAudioMuted)
@@ -2532,8 +2576,6 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("focus", &WebContents::Focus)
       .SetMethod("isFocused", &WebContents::IsFocused)
       .SetMethod("_clone", &WebContents::Clone)
-      .SetMethod("_send", &WebContents::SendIPCMessage)
-      .SetMethod("_sendShared", &WebContents::SendIPCSharedMemory)
       .SetMethod("sendInputEvent", &WebContents::SendInputEvent)
       .SetMethod("startDrag", &WebContents::StartDrag)
       .SetMethod("setSize", &WebContents::SetSize)
@@ -2611,20 +2653,21 @@ AtomBrowserContext* WebContents::GetBrowserContext() const {
   return static_cast<AtomBrowserContext*>(web_contents()->GetBrowserContext());
 }
 
-void WebContents::OnRendererMessage(const base::string16& channel,
+void WebContents::OnRendererMessage(content::RenderFrameHost* sender,
+                                    const base::string16& channel,
                                     const base::ListValue& args) {
-  // webContents.emit(channel, new Event(), args...);
-  Emit(base::UTF16ToUTF8(channel), args);
+  EmitWithSender(base::UTF16ToUTF8(channel), sender, nullptr, args);
 }
 
-void WebContents::OnRendererMessageSync(const base::string16& channel,
+void WebContents::OnRendererMessageSync(content::RenderFrameHost* sender,
+                                        const base::string16& channel,
                                         const base::ListValue& args,
                                         IPC::Message* message) {
-  // webContents.emit(channel, new Event(sender, message), args...);
-  EmitWithSender(base::UTF16ToUTF8(channel), web_contents(), message, args);
+  EmitWithSender(base::UTF16ToUTF8(channel), sender, message, args);
 }
 
 void WebContents::OnRendererMessageShared(
+    content::RenderFrameHost* sender,
     const base::string16& channel,
     const base::SharedMemoryHandle& handle) {
   std::vector<v8::Local<v8::Value>> args = {
@@ -2830,10 +2873,12 @@ mate::Handle<WebContents> WebContents::CreateFrom(
     return mate::Handle<WebContents>();
   }
 
-  // We have an existing WebContents object in JS.
-  auto existing = TrackableObject::FromWrappedClass(isolate, web_contents);
-  if (existing)
-    return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
+  if (type != REMOTE) {
+    // We have an existing WebContents object in JS.
+    auto existing = TrackableObject::FromWrappedClass(isolate, web_contents);
+    if (existing)
+      return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
+  }
 
   // Otherwise create a new WebContents wrapper object.
   return mate::CreateHandle(isolate, new WebContents(isolate, web_contents,

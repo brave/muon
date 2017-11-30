@@ -55,6 +55,7 @@ class BraveConfigurator : public update_client::Configurator {
   bool EnabledBackgroundDownloader() const override;
   bool EnabledCupSigning() const override;
   PrefService* GetPrefService() const override;
+  update_client::ActivityDataService* GetActivityDataService() const override;
   bool IsPerUserInstall() const override;
   std::vector<uint8_t> GetRunActionKeyHash() const override;
 
@@ -172,6 +173,11 @@ bool BraveConfigurator::EnabledCupSigning() const {
 }
 
 PrefService* BraveConfigurator::GetPrefService() const {
+  return nullptr;
+}
+
+update_client::ActivityDataService* BraveConfigurator::GetActivityDataService()
+    const {
   return nullptr;
 }
 

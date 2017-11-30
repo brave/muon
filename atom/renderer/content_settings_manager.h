@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "base/lazy_instance.h"
 #include "base/values.h"
 #include "components/content_settings/core/common/content_settings.h"
 #include "content/public/common/web_preferences.h"

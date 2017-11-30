@@ -7,7 +7,6 @@
 #include <vector>
 #include "atom/common/api/api_messages.h"
 #include "atom/common/api/atom_api_key_weak_map.h"
-#include "atom/common/api/remote_callback_freer.h"
 #include "atom/common/api/remote_object_freer.h"
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/string16_converter.h"
@@ -16,7 +15,6 @@
 #include "base/memory/shared_memory_handle.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
 #include "content/public/renderer/render_frame.h"
-#include "content/public/renderer/render_view.h"
 #include "extensions/renderer/console.h"
 #include "native_mate/dictionary.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
@@ -38,26 +36,24 @@ std::vector<v8::Local<v8::Value>> ListValueToVector(v8::Isolate* isolate,
 
 }  // namespace
 
-JavascriptBindings::JavascriptBindings(content::RenderView* render_view,
+JavascriptBindings::JavascriptBindings(content::RenderFrame* render_frame,
                                        extensions::ScriptContext* context)
-    : content::RenderViewObserver(render_view),
+    : content::RenderFrameObserver(render_frame),
       extensions::ObjectBackedNativeHandler(context) {
   RouteFunction(
       "GetBinding",
       base::Bind(&JavascriptBindings::GetBinding, base::Unretained(this)));
 }
 
-JavascriptBindings::~JavascriptBindings() {
-  Observe(nullptr);
-}
+JavascriptBindings::~JavascriptBindings() {}
 
 void JavascriptBindings::OnDestruct() {
-  Observe(nullptr);
+  // don't self delete on render frame destruction
 }
 
 v8::Local<v8::Value> JavascriptBindings::GetHiddenValue(v8::Isolate* isolate,
                                     v8::Local<v8::String> key) {
-  if (!is_valid() || !render_view())
+  if (!is_valid() || !render_frame())
     return v8::Local<v8::Value>();
 
   v8::Local<v8::Context> v8_context = context()->v8_context();
@@ -77,13 +73,13 @@ v8::Local<v8::Value> JavascriptBindings::GetHiddenValueOnObject(
                                     v8::Isolate* isolate,
                                     v8::Local<v8::Object> object,
                                     v8::Local<v8::String> key) {
-  v8::Local<v8::Context> context = isolate->GetCurrentContext();
+  v8::Local<v8::Context> v8_context = context()->v8_context();
   v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
   v8::Local<v8::Value> value;
-  v8::Maybe<bool> result = object->HasPrivate(context, privateKey);
+  v8::Maybe<bool> result = object->HasPrivate(v8_context, privateKey);
   if (!(result.IsJust() && result.FromJust()))
     return v8::Local<v8::Value>();
-  if (object->GetPrivate(context, privateKey).ToLocal(&value))
+  if (object->GetPrivate(v8_context, privateKey).ToLocal(&value))
     return value;
   return v8::Local<v8::Value>();
 }
@@ -94,16 +90,16 @@ void JavascriptBindings::SetHiddenValueOnObject(v8::Isolate* isolate,
                     v8::Local<v8::Value> value) {
   if (value.IsEmpty())
     return;
-  v8::Local<v8::Context> context = isolate->GetCurrentContext();
+  v8::Local<v8::Context> v8_context = context()->v8_context();
   v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
-  object->SetPrivate(context, privateKey, value);
+  object->SetPrivate(v8_context, privateKey, value);
 }
 
 
 void JavascriptBindings::SetHiddenValue(v8::Isolate* isolate,
                     v8::Local<v8::String> key,
                     v8::Local<v8::Value> value) {
-  if (!is_valid() || !render_view() || value.IsEmpty())
+  if (!is_valid() || !render_frame() || value.IsEmpty())
     return;
 
   v8::Local<v8::Context> v8_context = context()->v8_context();
@@ -114,31 +110,26 @@ void JavascriptBindings::SetHiddenValue(v8::Isolate* isolate,
 void JavascriptBindings::DeleteHiddenValue(v8::Isolate* isolate,
                        v8::Local<v8::Object> object,
                        v8::Local<v8::String> key) {
-  if (!is_valid() || !render_view())
+  if (!is_valid() || !render_frame())
     return;
 
-  v8::Local<v8::Context> main_context = render_view()
-                                          ->GetWebView()
-                                          ->MainFrame()
-                                          ->ToWebLocalFrame()
-                                          ->MainWorldScriptContext();
-
-
-  v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
-  // Actually deleting the value would make force the object into
+  // Actually deleting the value would force the object into
   // dictionary mode which is unnecessarily slow. Instead, we replace
   // the hidden value with "undefined".
-  object->SetPrivate(main_context, privateKey, v8::Undefined(isolate));
+  v8::Local<v8::Context> v8_context = context()->v8_context();
+  v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
+  v8_context->Global()->SetPrivate(
+      v8_context, privateKey, v8::Undefined(isolate));
 }
 
 void JavascriptBindings::IPCSend(mate::Arguments* args,
           const base::string16& channel,
           const base::ListValue& arguments) {
-  if (!is_valid() || !render_view())
+  if (!is_valid() || !render_frame())
     return;
 
-  bool success = render_view()->Send(new AtomViewHostMsg_Message(
-      render_view()->GetRoutingID(), channel, arguments));
+  bool success = Send(new AtomViewHostMsg_Message(
+      routing_id(), channel, arguments));
 
   if (!success)
     args->ThrowError("Unable to send AtomViewHostMsg_Message");
@@ -147,7 +138,7 @@ void JavascriptBindings::IPCSend(mate::Arguments* args,
 void JavascriptBindings::IPCSendShared(mate::Arguments* args,
             const base::string16& channel,
             base::SharedMemory* shared_memory) {
-  if (!is_valid() || !render_view())
+  if (!is_valid() || !render_frame())
     return;
 
   base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
@@ -157,7 +148,7 @@ void JavascriptBindings::IPCSendShared(mate::Arguments* args,
   }
 
   bool success = Send(new AtomViewHostMsg_Message_Shared(
-      render_view()->GetRoutingID(), channel, memory_handle));
+      routing_id(), channel, memory_handle));
 
   if (!success)
     args->ThrowError("Unable to send AtomViewHostMsg_Message_Shared");
@@ -168,13 +159,13 @@ base::string16 JavascriptBindings::IPCSendSync(mate::Arguments* args,
                         const base::ListValue& arguments) {
   base::string16 json;
 
-  if (!is_valid() || !render_view()) {
+  if (!is_valid() || !render_frame()) {
     return json;
   }
 
   IPC::SyncMessage* message = new AtomViewHostMsg_Message_Sync(
-      render_view()->GetRoutingID(), channel, arguments, &json);
-  bool success = render_view()->Send(message);
+      routing_id(), channel, arguments, &json);
+  bool success = Send(message);
 
   if (!success)
     args->ThrowError("Unable to send AtomViewHostMsg_Message_Sync");
@@ -214,8 +205,6 @@ void JavascriptBindings::GetBinding(
       base::Bind(&JavascriptBindings::SetHiddenValueOnObject,
       base::Unretained(this)));
 
-
-  v8.SetMethod("setRemoteCallbackFreer", &atom::RemoteCallbackFreer::BindTo);
   v8.SetMethod("setRemoteObjectFreer", &atom::RemoteObjectFreer::BindTo);
   v8.SetMethod("createIDWeakMap", &atom::api::KeyWeakMap<int32_t>::Create);
   binding.Set("v8", v8.GetHandle());
@@ -280,8 +269,7 @@ void JavascriptBindings::OnSharedBrowserMessage(const base::string16& channel,
                                   &concatenated_args.front());
 }
 
-void JavascriptBindings::OnBrowserMessage(bool all_frames,
-                                          const base::string16& channel,
+void JavascriptBindings::OnBrowserMessage(const base::string16& channel,
                                           const base::ListValue& args) {
   if (!is_valid())
     return;

@@ -5,15 +5,11 @@
 #include "atom/browser/extensions/atom_extensions_network_delegate.h"
 
 #include "base/stl_util.h"
+#include "chrome/browser/extensions/event_router_forwarder.h"
+#include "chrome/browser/net/chrome_extensions_network_delegate.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
 #include "content/public/browser/render_frame_host.h"
-#include "content/public/browser/resource_request_info.h"
-#include "extensions/browser/api/web_request/web_request_api.h"
-#include "extensions/browser/extension_navigation_ui_data.h"
-#include "extensions/browser/extension_system.h"
-#include "extensions/browser/extensions_browser_client.h"
-#include "extensions/browser/process_manager.h"
+#include "extensions/browser/info_map.h"
 #include "net/url_request/url_request.h"
 
 namespace extensions {
@@ -23,16 +19,18 @@ bool g_accept_all_cookies = true;
 }
 
 AtomExtensionsNetworkDelegate::AtomExtensionsNetworkDelegate(
-      Profile* browser_context) {
-  browser_context_ = browser_context;
+      Profile* profile,
+      InfoMap* info_map,
+      EventRouterForwarder* event_router) :
+      profile_(profile),
+      extension_event_router_forwarder_(event_router) {
+  extensions_delegate_.reset(
+      ChromeExtensionsNetworkDelegate::Create(event_router));
+  extensions_delegate_->set_profile(profile);
+  extensions_delegate_->set_extension_info_map(info_map);
 }
 
 AtomExtensionsNetworkDelegate::~AtomExtensionsNetworkDelegate() {}
-
-void AtomExtensionsNetworkDelegate::set_extension_info_map(
-    extensions::InfoMap* extension_info_map) {
-  extension_info_map_ = extension_info_map;
-}
 
 void AtomExtensionsNetworkDelegate::SetAcceptAllCookies(bool accept) {
   g_accept_all_cookies = accept;
@@ -72,6 +70,7 @@ int AtomExtensionsNetworkDelegate::OnBeforeURLRequest(
     net::URLRequest* request,
     const net::CompletionCallback& callback,
     GURL* new_url) {
+  extensions_delegate_->ForwardStartRequestStatus(request);
 
   callbacks_[request->identifier()] = callback;
 
@@ -81,22 +80,18 @@ int AtomExtensionsNetworkDelegate::OnBeforeURLRequest(
           request,
           new_url);
 
-  auto ui_wrapper = base::Bind(&AtomExtensionsNetworkDelegate::RunCallback,
+  auto wrapped_cb = base::Bind(&AtomExtensionsNetworkDelegate::RunCallback,
                                 base::Unretained(this),
                                 internal_callback,
                                 request->identifier());
 
-  int result = ExtensionWebRequestEventRouter::GetInstance()->OnBeforeRequest(
-                browser_context_,
-                extension_info_map_.get(),
-                request,
-                ui_wrapper,
-                new_url);
+  int result = extensions_delegate_->OnBeforeURLRequest(
+      request, wrapped_cb, new_url);
 
-  if (result == net::ERR_IO_PENDING)
-    return result;
+  if (result == net::OK)
+    return internal_callback.Run();
 
-  return internal_callback.Run();
+  return result;
 }
 
 int AtomExtensionsNetworkDelegate::OnBeforeStartTransactionInternal(
@@ -121,17 +116,13 @@ int AtomExtensionsNetworkDelegate::OnBeforeStartTransaction(
           request,
           headers);
 
-  auto ui_wrapper = base::Bind(&AtomExtensionsNetworkDelegate::RunCallback,
+  auto wrapped_cb = base::Bind(&AtomExtensionsNetworkDelegate::RunCallback,
                                 base::Unretained(this),
                                 internal_callback,
                                 request->identifier());
 
-  int result = ExtensionWebRequestEventRouter::GetInstance()->
-      OnBeforeSendHeaders(browser_context_,
-                          extension_info_map_.get(),
-                          request,
-                          ui_wrapper,
-                          headers);
+  int result = extensions_delegate_->OnBeforeStartTransaction(
+      request, wrapped_cb, headers);
 
   if (result == net::ERR_IO_PENDING)
     return result;
@@ -143,9 +134,7 @@ void AtomExtensionsNetworkDelegate::OnStartTransaction(
     net::URLRequest* request,
     const net::HttpRequestHeaders& headers) {
   atom::AtomNetworkDelegate::OnStartTransaction(request, headers);
-  ExtensionWebRequestEventRouter::GetInstance()->OnSendHeaders(
-      browser_context_, extension_info_map_.get(),
-      request, headers);
+  extensions_delegate_->OnStartTransaction(request, headers);
 }
 
 int AtomExtensionsNetworkDelegate::OnHeadersReceivedInternal(
@@ -178,83 +167,61 @@ int AtomExtensionsNetworkDelegate::OnHeadersReceived(
           override_response_headers,
           allowed_unsafe_redirect_url);
 
-  auto ui_wrapper = base::Bind(&AtomExtensionsNetworkDelegate::RunCallback,
+  auto wrapped_cb = base::Bind(&AtomExtensionsNetworkDelegate::RunCallback,
                                 base::Unretained(this),
                                 internal_callback,
                                 request->identifier());
 
-  int result = ExtensionWebRequestEventRouter::GetInstance()->OnHeadersReceived(
-    browser_context_,
-    extension_info_map_.get(),
-    request,
-    ui_wrapper,
-    original_response_headers,
-    override_response_headers,
-    allowed_unsafe_redirect_url);
+  int result = extensions_delegate_->OnHeadersReceived(
+      request,
+      wrapped_cb,
+      original_response_headers,
+      override_response_headers,
+      allowed_unsafe_redirect_url);
 
-  if (result == net::ERR_IO_PENDING)
-    return result;
+  if (result == net::OK)
+    return internal_callback.Run();
 
-  return internal_callback.Run();
+  return result;
 }
 
 void AtomExtensionsNetworkDelegate::OnBeforeRedirect(
     net::URLRequest* request,
     const GURL& new_location) {
   atom::AtomNetworkDelegate::OnBeforeRedirect(request, new_location);
-  ExtensionWebRequestEventRouter::GetInstance()->OnBeforeRedirect(
-      browser_context_, extension_info_map_.get(),
-      request, new_location);
+  extensions_delegate_->OnBeforeRedirect(request, new_location);
 }
 
 void AtomExtensionsNetworkDelegate::OnResponseStarted(
-    net::URLRequest* request) {
-  atom::AtomNetworkDelegate::OnResponseStarted(request);
-  ExtensionWebRequestEventRouter::GetInstance()->OnResponseStarted(
-      browser_context_, extension_info_map_.get(),
-      request);
+    net::URLRequest* request,
+    int net_error) {
+  atom::AtomNetworkDelegate::OnResponseStarted(request, net_error);
+  extensions_delegate_->OnResponseStarted(request, net_error);
 }
 
 void AtomExtensionsNetworkDelegate::OnCompleted(
     net::URLRequest* request,
-    bool started) {
+    bool started,
+    int net_error) {
   callbacks_.erase(request->identifier());
-  atom::AtomNetworkDelegate::OnCompleted(request, started);
+  atom::AtomNetworkDelegate::OnCompleted(request, started, net_error);
 
-  if (request->status().status() == net::URLRequestStatus::SUCCESS) {
-    bool is_redirect = request->response_headers() &&
-        net::HttpResponseHeaders::IsRedirectResponseCode(
-            request->response_headers()->response_code());
-    if (!is_redirect) {
-      ExtensionWebRequestEventRouter::GetInstance()->OnCompleted(
-          browser_context_, extension_info_map_.get(),
-          request);
-    }
-    return;
-  }
-
-  if (request->status().status() == net::URLRequestStatus::FAILED ||
-      request->status().status() == net::URLRequestStatus::CANCELED) {
-    ExtensionWebRequestEventRouter::GetInstance()->OnErrorOccurred(
-        browser_context_, extension_info_map_.get(),
-        request, started);
-    return;
-  }
-
-  NOTREACHED();
+  extensions_delegate_->OnCompleted(request, started, net_error);
+  extensions_delegate_->ForwardProxyErrors(request, net_error);
+  extensions_delegate_->ForwardDoneRequestStatus(request);
 }
 
 void AtomExtensionsNetworkDelegate::OnURLRequestDestroyed(
     net::URLRequest* request) {
   callbacks_.erase(request->identifier());
   atom::AtomNetworkDelegate::OnURLRequestDestroyed(request);
-  ExtensionWebRequestEventRouter::GetInstance()->OnURLRequestDestroyed(
-      browser_context_, request);
+  extensions_delegate_->OnURLRequestDestroyed(request);
 }
 
 void AtomExtensionsNetworkDelegate::OnPACScriptError(
     int line_number,
     const base::string16& error) {
+  extensions_delegate_->OnPACScriptError(line_number, error);
 }
 
 net::NetworkDelegate::AuthRequiredResponse
@@ -263,10 +230,8 @@ AtomExtensionsNetworkDelegate::OnAuthRequired(
     const net::AuthChallengeInfo& auth_info,
     const AuthCallback& callback,
     net::AuthCredentials* credentials) {
-  return ExtensionWebRequestEventRouter::GetInstance()->OnAuthRequired(
-      browser_context_, extension_info_map_.get(),
-      request, auth_info, callback,
-      credentials);
+  return extensions_delegate_->OnAuthRequired(
+      request, auth_info, callback, credentials);
 }
 
 }  // namespace extensions

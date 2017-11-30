@@ -52,6 +52,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       service_manager::BinderRegistry* registry,
       content::AssociatedInterfaceRegistry* associated_registry,
       content::RenderProcessHost* render_process_host) override;
+  void RegisterInProcessServices(StaticServiceMap* services) override;
   void RegisterOutOfProcessServices(OutOfProcessServiceMap* services) override;
   void BindInterfaceRequestFromFrame(
       content::RenderFrameHost* render_frame_host,
@@ -137,6 +138,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::vector<std::unique_ptr<content::NavigationThrottle>>
     CreateThrottlesForNavigation(
       content::NavigationHandle* handle) override;
+  std::unique_ptr<content::NavigationUIData> GetNavigationUIData(
+    content::NavigationHandle* navigation_handle) override;
 
  protected:
   bool IsValidStoragePartitionId(

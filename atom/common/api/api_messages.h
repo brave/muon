@@ -29,8 +29,7 @@ IPC_MESSAGE_ROUTED2(AtomViewHostMsg_Message_Shared,
                     base::string16 /* channel */,
                     base::SharedMemoryHandle /* arguments */)
 
-IPC_MESSAGE_ROUTED3(AtomViewMsg_Message,
-                    bool /* send_to_all */,
+IPC_MESSAGE_ROUTED2(AtomViewMsg_Message,
                     base::string16 /* channel */,
                     base::ListValue /* arguments */)
 

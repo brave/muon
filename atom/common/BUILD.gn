@@ -74,14 +74,13 @@ source_set("node") {
 source_set("common") {
   public_configs = [
     "//electron/build:electron_config",
+    "//electron/build/geolocation",
   ]
 
   sources = [
     "api/api_messages.h",
     "api/object_life_monitor.cc",
     "api/object_life_monitor.h",
-    "api/remote_callback_freer.cc",
-    "api/remote_callback_freer.h",
     "api/remote_object_freer.cc",
     "api/remote_object_freer.h",
     "asar/archive.cc",
@@ -161,7 +160,7 @@ source_set("common") {
     ]
 
     deps += [
-      "//breakpad:client",
+      "//third_party/breakpad:client",
     ]
   }
 
@@ -174,8 +173,8 @@ source_set("common") {
     ]
 
     deps += [
-      "//breakpad:breakpad_handler",
-      "//breakpad:breakpad_sender",
+      "//third_party/breakpad:breakpad_handler",
+      "//third_party/breakpad:breakpad_sender",
     ]
   }
 
