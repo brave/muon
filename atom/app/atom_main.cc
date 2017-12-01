@@ -14,6 +14,7 @@
 #include "atom/common/atom_command_line.h"
 #include "atom/common/options_switches.h"
 #include "base/environment.h"
+#include "base/files/file_path.h"
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "base/time/time.h"
