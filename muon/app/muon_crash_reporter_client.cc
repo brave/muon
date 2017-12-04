@@ -18,6 +18,7 @@
 #include "chrome/common/crash_keys.h"
 #include "chrome/installer/util/google_update_settings.h"
 #include "components/crash/content/app/crashpad.h"
+#include "components/crash/core/common/crash_key.h"
 #include "components/metrics/metrics_pref_names.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/common/content_switches.h"
@@ -110,6 +111,8 @@ void MuonCrashReporterClient::InitCrashReporting() {
 
   instance = new MuonCrashReporterClient();
   ANNOTATE_LEAKING_OBJECT_PTR(instance);
+
+  crash_reporter::InitializeCrashKeys();
   crash_reporter::SetCrashReporterClient(instance);
 
   std::string process_type = command_line->GetSwitchValueASCII(
