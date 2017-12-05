@@ -41,7 +41,8 @@ void PostWriteCallback(
 FileBindings::FileBindings(extensions::ScriptContext* context)
     : extensions::ObjectBackedNativeHandler(context),
       file_task_runner_(base::CreateSequencedTaskRunnerWithTraits(
-          {base::MayBlock(), base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {
+          {base::MayBlock(), base::TaskPriority::BACKGROUND,
+            base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {
   RouteFunction("WriteImportantFile",
       base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
 }
