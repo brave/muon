@@ -451,6 +451,13 @@ WebContents::~WebContents() {
   }
 }
 
+brightray::InspectableWebContents* WebContents::managed_web_contents() const {
+  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+    return GetMainFrame()->managed_web_contents();
+
+  return CommonWebContentsDelegate::managed_web_contents();
+}
+
 void WebContents::CreateWebContents(v8::Isolate* isolate,
     const mate::Dictionary& options,
     const content::WebContents::CreateParams& create_params) {
@@ -512,7 +519,7 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
     zoom::ZoomController::CreateForWebContents(web_contents);
     brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
 
-    if (GetType() == WEB_VIEW) {
+    if (IsGuest()) {
       // Initialize autofill client
       autofill::AtomAutofillClient::CreateForWebContents(web_contents);
       std::string locale = static_cast<brave::BraveContentBrowserClient*>(
@@ -957,7 +964,7 @@ bool WebContents::IsPopupOrPanel(const content::WebContents* source) const {
 void WebContents::HandleKeyboardEvent(
     content::WebContents* source,
     const content::NativeWebKeyboardEvent& event) {
-  if (type_ == WEB_VIEW && HostWebContents()) {
+  if (IsGuest() && HostWebContents()) {
     // Send the unhandled keyboard events back to the embedder.
     auto embedder =
         atom::api::WebContents::CreateFrom(isolate(), HostWebContents());
@@ -1478,6 +1485,11 @@ bool WebContents::OnMessageReceived(const IPC::Message& message,
 }
 
 void WebContents::DestroyWebContents() {
+  if (type_ == REMOTE && !GetMainFrame().IsEmpty()) {
+    GetMainFrame()->DestroyWebContents();
+    return;
+  }
+
   if (guest_delegate_) {
     guest_delegate_->Destroy(true);
   } else {
@@ -1583,6 +1595,14 @@ int WebContents::GetGuestInstanceId() const {
   } else {
     return -1;
   }
+}
+
+mate::Handle<WebContents> WebContents::GetMainFrame() const {
+  auto existing = TrackableObject::FromWrappedClass(isolate(), web_contents());
+  if (existing)
+    return mate::CreateHandle(isolate(), static_cast<WebContents*>(existing));
+  else
+    return mate::Handle<WebContents>();
 }
 
 bool WebContents::Equal(const WebContents* web_contents) const {
@@ -1844,14 +1864,17 @@ bool WebContents::SavePage(const base::FilePath& full_file_path,
 }
 
 void WebContents::OpenDevTools(mate::Arguments* args) {
-  if (type_ == REMOTE)
+  if (type_ == REMOTE) {
+    if (!GetMainFrame().IsEmpty())
+      GetMainFrame()->OpenDevTools(args);
     return;
+  }
 
-  if (!enable_devtools_)
+  if (!enable_devtools_ || !managed_web_contents())
     return;
 
   std::string state;
-  if (type_ == WEB_VIEW || type_ == BACKGROUND_PAGE || !owner_window()) {
+  if (IsGuest() || type_ == BACKGROUND_PAGE || !owner_window()) {
     state = "detach";
   } else if (args && args->Length() == 1) {
     bool detach = false;
@@ -1870,22 +1893,22 @@ void WebContents::OpenDevTools(mate::Arguments* args) {
 }
 
 void WebContents::CloseDevTools() {
-  if (type_ == REMOTE)
+  if (!managed_web_contents())
     return;
 
   managed_web_contents()->CloseDevTools();
 }
 
 bool WebContents::IsDevToolsOpened() {
-  if (type_ == REMOTE)
-    return false;
+  if (!managed_web_contents())
+    return;
 
   return managed_web_contents()->IsDevToolsViewShowing();
 }
 
 bool WebContents::IsDevToolsFocused() {
-  if (type_ == REMOTE)
-    return false;
+  if (!managed_web_contents())
+    return;
 
   return managed_web_contents()->GetView()->IsDevToolsViewFocused();
 }
@@ -1898,10 +1921,13 @@ void WebContents::ToggleDevTools() {
 }
 
 void WebContents::InspectElement(int x, int y) {
-  if (type_ == REMOTE)
+  if (type_ == REMOTE) {
+    if (!GetMainFrame().IsEmpty())
+      GetMainFrame()->InspectElement(x, y);
     return;
+  }
 
-  if (!enable_devtools_)
+  if (!enable_devtools_ || !managed_web_contents())
     return;
 
   if (!managed_web_contents()->GetDevToolsWebContents())
@@ -1913,10 +1939,13 @@ void WebContents::InspectElement(int x, int y) {
 }
 
 void WebContents::InspectServiceWorker() {
-  if (type_ == REMOTE)
+  if (type_ == REMOTE) {
+    if (!GetMainFrame().IsEmpty())
+      GetMainFrame()->InspectServiceWorker();
     return;
+  }
 
-  if (!enable_devtools_)
+  if (!enable_devtools_ || !managed_web_contents())
     return;
 
   for (const auto& agent_host : content::DevToolsAgentHost::GetOrCreateAll()) {
@@ -2405,6 +2434,9 @@ void WebContents::SetSize(const SetSizeParams& params) {
 }
 
 bool WebContents::IsGuest() const {
+  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+    return GetMainFrame()->IsGuest();
+
   return type_ == WEB_VIEW;
 }
 
@@ -2415,6 +2447,9 @@ v8::Local<v8::Value> WebContents::GetWebPreferences(v8::Isolate* isolate) {
 }
 
 v8::Local<v8::Value> WebContents::GetOwnerBrowserWindow() {
+  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+    return GetMainFrame()->GetOwnerBrowserWindow();
+
   if (owner_window())
     return Window::From(isolate(), owner_window());
   else
@@ -2480,6 +2515,9 @@ v8::Local<v8::Value> WebContents::TabValue() {
 }
 
 int32_t WebContents::ID() const {
+  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+    return GetMainFrame()->weak_map_id();
+
   return weak_map_id();
 }
 
@@ -2496,6 +2534,7 @@ v8::Local<v8::Value> WebContents::Session(v8::Isolate* isolate) {
 content::WebContents* WebContents::HostWebContents() {
   if (guest_delegate_)
     return guest_delegate_->embedder_web_contents();
+
   return nullptr;
 }
 
@@ -2643,6 +2682,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("neverSavePassword", &WebContents::NeverSavePassword)
       .SetMethod("updatePassword", &WebContents::UpdatePassword)
       .SetMethod("noUpdatePassword", &WebContents::NoUpdatePassword)
+      .SetProperty("mainFrame", &WebContents::GetMainFrame)
       .SetProperty("session", &WebContents::Session)
       .SetProperty("guestInstanceId", &WebContents::GetGuestInstanceId)
       .SetProperty("hostWebContents", &WebContents::HostWebContents)

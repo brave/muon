@@ -139,6 +139,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
+  brightray::InspectableWebContents* managed_web_contents() const override;
+
   void Clone(mate::Arguments* args);
 
   void DestroyWebContents();
@@ -150,6 +152,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   int GetID() const;
   Type GetType() const;
   int GetGuestInstanceId() const;
+  mate::Handle<WebContents> GetMainFrame() const;
   bool Equal(const WebContents* web_contents) const;
   void LoadURL(const GURL& url, const mate::Dictionary& options);
   void Reload(bool ignore_cache);

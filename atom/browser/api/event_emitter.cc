@@ -81,12 +81,6 @@ v8::Local<v8::Object> CreateJSEvent(
           base::Bind(&atom::api::WebContents::SendIPCSharedMemory,
               render_process_id, render_frame_id));
 
-      if (render_frame_host != web_contents->GetMainFrame()) {
-        auto mainFrame =
-            WebContents::CreateFrom(isolate, web_contents)->GetWrapper();
-        sender.Set("mainFrame", mainFrame);
-      }
-
       object = handle_scope.Escape(handle.ToV8());
     }
   }
