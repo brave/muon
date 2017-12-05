@@ -42,6 +42,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/web_ui_controller_factory.h"
+#include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
 #include "device/geolocation/geolocation_delegate.h"
 #include "device/geolocation/geolocation_provider.h"
@@ -372,6 +373,12 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   // disable ukm metrics
   field_trial = feature_list->GetFieldTrial(ukm::kUkmFeature);
   feature_list->RegisterFieldTrialOverride(ukm::kUkmFeature.name,
+                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
+  field_trial = feature_list->GetFieldTrial(
+      features::kGuestViewCrossProcessFrames);
+  feature_list->RegisterFieldTrialOverride(
+                      features::kGuestViewCrossProcessFrames.name,
                       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 }
 

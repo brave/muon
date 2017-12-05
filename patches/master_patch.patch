@@ -1583,19 +1583,6 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
  };
  
  // Details about a redirection of a resource request.
-diff --git a/content/public/common/content_features.cc b/content/public/common/content_features.cc
-index 66234129de4da98688419d15d432169b7bba5cd4..d03f0d4dfcbeb112a8c931c3f1e2924bbf41f8d7 100644
---- a/content/public/common/content_features.cc
-+++ b/content/public/common/content_features.cc
-@@ -123,7 +123,7 @@ const base::Feature kGamepadExtensions{"GamepadExtensions",
- // Causes the implementations of guests (inner WebContents) to use
- // out-of-process iframes.
- const base::Feature kGuestViewCrossProcessFrames{
--    "GuestViewCrossProcessFrames", base::FEATURE_ENABLED_BY_DEFAULT};
-+    "GuestViewCrossProcessFrames", base::FEATURE_DISABLED_BY_DEFAULT};
- 
- // Enables BlinkGC heap compaction.
- const base::Feature kHeapCompaction{"HeapCompaction",
 diff --git a/content/public/common/web_preferences.cc b/content/public/common/web_preferences.cc
 index 722afb30f6625f3e00c0a437013b7ff34b31b57f..1cfbc5a98140187cddb4a6002b77c03dc940900a 100644
 --- a/content/public/common/web_preferences.cc
