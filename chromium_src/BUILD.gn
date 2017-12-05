@@ -839,17 +839,29 @@ source_set("downloads") {
   configs += [ ":chromium_src_config" ]
 
   sources = [
+    "//chrome/browser/background_fetch/background_fetch_delegate_factory.cc",
+    "//chrome/browser/background_fetch/background_fetch_delegate_factory.h",
+    "//chrome/browser/background_fetch/background_fetch_delegate_impl.cc",
+    "//chrome/browser/background_fetch/background_fetch_delegate_impl.h",
+    "//chrome/browser/background_fetch/background_fetch_download_client.cc",
+    "//chrome/browser/background_fetch/background_fetch_download_client.h",
     "chrome/browser/download/download_core_service.cc",
     "//chrome/browser/download/download_core_service.h",
     "//chrome/browser/download/download_path_reservation_tracker.cc",
     "//chrome/browser/download/download_path_reservation_tracker.h",
     "chrome/browser/download/download_request_limiter.cc",
     "//chrome/browser/download/download_request_limiter.h",
+    "//chrome/browser/download/download_service_factory.cc",
+    "//chrome/browser/download/download_service_factory.h",
+    "//chrome/browser/download/download_task_scheduler_impl.cc",
+    "//chrome/browser/download/download_task_scheduler_impl.h",
   ]
 
   deps = [
     "//base",
     "//chrome/common",
+    "//components/download/content/factory",
+    "//components/download/public",
     "//content/public/browser",
     "//net",
     "//url",

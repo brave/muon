@@ -12,6 +12,8 @@
 #include "base/files/file_util.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
+#include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
+#include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
@@ -361,7 +363,7 @@ content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
 
 content::BackgroundFetchDelegate*
 BraveBrowserContext::GetBackgroundFetchDelegate() {
-  return nullptr;
+  return BackgroundFetchDelegateFactory::GetForProfile(this);
 }
 
 net::URLRequestContextGetter* BraveBrowserContext::GetRequestContext() {
