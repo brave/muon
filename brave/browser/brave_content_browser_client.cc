@@ -62,6 +62,8 @@
 #include "muon/app/muon_crash_reporter_client.h"
 #include "net/base/filename_util.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
+#include "services/metrics/metrics_mojo_service.h"
+#include "services/metrics/public/interfaces/constants.mojom.h"
 #include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
@@ -319,6 +321,9 @@ void BraveContentBrowserClient::RegisterInProcessServices(
     info.factory = base::Bind(&ChromeService::Create);
     services->insert(std::make_pair(chrome::mojom::kServiceName, info));
   }
+  service_manager::EmbeddedServiceInfo info;
+  info.factory = base::Bind(&metrics::CreateMetricsService);
+  services->emplace(metrics::mojom::kMetricsServiceName, info);
 }
 
 void BraveContentBrowserClient::RegisterOutOfProcessServices(
