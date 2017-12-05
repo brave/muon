@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "atom/common/api/atom_api_key_weak_map.h"
+#include "atom/common/api/remote_callback_freer.h"
 #include "atom/common/api/remote_object_freer.h"
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/node_includes.h"
@@ -99,6 +100,7 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   dict.SetMethod("deleteHiddenValue", &DeleteHiddenValue);
   dict.SetMethod("getObjectHash", &GetObjectHash);
   dict.SetMethod("takeHeapSnapshot", &TakeHeapSnapshot);
+  dict.SetMethod("setRemoteCallbackFreer", &atom::RemoteCallbackFreer::BindTo);
   dict.SetMethod("setRemoteObjectFreer", &atom::RemoteObjectFreer::BindTo);
   dict.SetMethod("createIDWeakMap", &atom::api::KeyWeakMap<int32_t>::Create);
   dict.SetMethod("createDoubleIDWeakMap",

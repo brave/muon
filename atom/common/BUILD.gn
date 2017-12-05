@@ -81,6 +81,8 @@ source_set("common") {
     "api/api_messages.h",
     "api/object_life_monitor.cc",
     "api/object_life_monitor.h",
+    "api/remote_callback_freer.cc",
+    "api/remote_callback_freer.h",
     "api/remote_object_freer.cc",
     "api/remote_object_freer.h",
     "asar/archive.cc",
