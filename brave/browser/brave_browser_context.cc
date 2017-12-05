@@ -68,6 +68,7 @@
 #if BUILDFLAG(ENABLE_PLUGINS)
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "chrome/browser/pepper_flash_settings_manager.h"
+#include "chrome/browser/plugins/plugin_info_message_filter.h"
 #endif
 
 using content::BrowserThread;
@@ -446,9 +447,7 @@ void BraveBrowserContext::CreateProfilePrefs(
     pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);
     pref_registry_->RegisterBooleanPref(prefs::kPrintPreviewDisabled, false);
 #if BUILDFLAG(ENABLE_PLUGINS)
-    pref_registry_->RegisterBooleanPref(prefs::kPluginsAllowOutdated, false);
-    pref_registry_->RegisterBooleanPref(prefs::kPluginsAlwaysAuthorize, false);
-    pref_registry_->RegisterBooleanPref(prefs::kRunAllFlashInAllowMode, false);
+    PluginInfoMessageFilter::RegisterUserPrefs(pref_registry_.get());
     PepperFlashSettingsManager::RegisterProfilePrefs(pref_registry_.get());
 #endif
     // TODO(bridiver) - is this necessary or is it covered by
