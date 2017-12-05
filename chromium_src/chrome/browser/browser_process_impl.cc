@@ -31,6 +31,7 @@
 #include "components/metrics_services_manager/metrics_services_manager.h"
 #include "components/metrics/metrics_pref_names.h"
 #include "components/password_manager/core/browser/password_manager.h"
+#include "components/policy/core/common/policy_service_stub.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_filter.h"
 #include "components/proxy_config/pref_proxy_config_tracker_impl.h"
@@ -119,6 +120,11 @@ static constexpr base::TimeDelta kEndSessionTimeout =
 
 using content::ChildProcessSecurityPolicy;
 using content::PluginService;
+
+namespace {
+base::LazyInstance<policy::PolicyServiceStub>::Leaky policy_service_stub =
+    LAZY_INSTANCE_INITIALIZER;
+}  // namespace
 
 BrowserProcessImpl::BrowserProcessImpl(
       base::SequencedTaskRunner* local_state_task_runner,
@@ -315,7 +321,8 @@ void BrowserProcessImpl::PreCreateThreads() {
   system_network_context_manager_ =
       base::MakeUnique<SystemNetworkContextManager>();
   io_thread_ = base::MakeUnique<IOThread>(
-      local_state(), net_log_.get(),
+      local_state(), policy_service(), net_log_.get(),
+      extension_event_router_forwarder(),
       system_network_context_manager_.get());
 }
 
@@ -550,8 +557,7 @@ policy::BrowserPolicyConnector* BrowserProcessImpl::browser_policy_connector() {
 }
 
 policy::PolicyService* BrowserProcessImpl::policy_service() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return policy_service_stub.Pointer();
 }
 
 IconManager* BrowserProcessImpl::icon_manager() {

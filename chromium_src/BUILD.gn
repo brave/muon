@@ -159,6 +159,7 @@ source_set("browser") {
     "//components/data_usage/core",
     "//components/keep_alive_registry",
     "//components/net_log",
+    "//components/policy/core/common",
     "//components/prefs",
     "//components/ssl_config",
     "//components/spellcheck:build_features",
@@ -207,7 +208,7 @@ source_set("browser") {
     "//chrome/browser/gpu/gpu_mode_manager.h",
 
     "chrome/browser/io_thread.cc",
-    "chrome/browser/io_thread.h",
+    "//chrome/browser/io_thread.h",
 
     "//chrome/browser/icon_loader.cc",
     "//chrome/browser/icon_loader.h",
@@ -220,13 +221,13 @@ source_set("browser") {
     "//chrome/browser/net/chrome_extensions_network_delegate.h",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
-    "chrome/browser/net/default_network_context_params.cc",
+    "//chrome/browser/net/default_network_context_params.cc",
     "//chrome/browser/net/default_network_context_params.h",
     "//chrome/browser/net/proxy_service_factory.cc",
     "//chrome/browser/net/proxy_service_factory.h",
     "//chrome/browser/net/sth_distributor_provider.cc",
     "//chrome/browser/net/sth_distributor_provider.h",
-    "chrome/browser/net/system_network_context_manager.cc",
+    "//chrome/browser/net/system_network_context_manager.cc",
     "//chrome/browser/net/system_network_context_manager.h",
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
@@ -307,6 +308,10 @@ source_set("browser") {
     "//chrome/browser/service_process/service_process_control.cc",
     "//chrome/browser/service_process/service_process_control.h",
     "//chrome/browser/service_process/service_process_control_mac.mm",
+
+    # these are not in a gn file anywhere for some reason
+    "//components/policy/core/common/policy_service_stub.cc",
+    "//components/policy/core/common/policy_service_stub.h",
   ]
 
   if (use_aura) {

@@ -7,6 +7,7 @@
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
+#include "chrome/browser/io_thread.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "components/component_updater/component_updater_service.h"
@@ -31,11 +32,10 @@ MuonBrowserProcessImpl::component_updater(
   if (!component_updater.get()) {
     if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI))
       return NULL;
-    Profile* profile = ProfileManager::GetPrimaryUserProfile();
     scoped_refptr<update_client::Configurator> configurator =
         component_updater::MakeBraveComponentUpdaterConfigurator(
             base::CommandLine::ForCurrentProcess(),
-            profile->GetRequestContext(),
+            io_thread()->system_url_request_context_getter(),
             use_brave_server);
     // Creating the component updater does not do anything, components
     // need to be registered and Start() needs to be called.

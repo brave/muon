@@ -18,6 +18,7 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/io_thread.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/pref_names.h"
@@ -234,6 +235,8 @@ BraveBrowserContext::~BraveBrowserContext() {
             base::Unretained(original_context_), base::Unretained(this)));
 #endif
   }
+
+  g_browser_process->io_thread()->ChangedToOnTheRecord();
 
   ShutdownStoragePartitions();
 }
