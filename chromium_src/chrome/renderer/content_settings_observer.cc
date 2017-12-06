@@ -216,9 +216,9 @@ void ContentSettingsObserver::DidBlockContentType(
   args.AppendString(settings_type);
   args.AppendString(details);
 
-  auto rv = render_frame()->GetRenderView();
-  rv->Send(new AtomViewHostMsg_Message(
-    rv->GetRoutingID(), base::UTF8ToUTF16("content-blocked"), args));
+  auto rf = render_frame();
+  rf->Send(new AtomViewHostMsg_Message(
+    rf->GetRoutingID(), base::UTF8ToUTF16("content-blocked"), args));
 }
 
 bool ContentSettingsObserver::OnMessageReceived(const IPC::Message& message) {
