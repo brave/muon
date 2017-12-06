@@ -540,8 +540,8 @@ void ContentSettingsObserver::DidRunInsecureContent(GURL resouce_url) {
   base::ListValue args;
     args.AppendString(resouce_url.spec());
 
-    auto rv = render_frame()->GetRenderView();
-    rv->Send(new AtomViewHostMsg_Message(rv->GetRoutingID(),
+    auto rf = render_frame();
+    rf->Send(new AtomViewHostMsg_Message(rf->GetRoutingID(),
         base::UTF8ToUTF16("did-run-insecure-content"), args));
 }
 
@@ -549,8 +549,8 @@ void ContentSettingsObserver::DidBlockRunInsecureContent(GURL resouce_url) {
   base::ListValue args;
     args.AppendString(resouce_url.spec());
 
-    auto rv = render_frame()->GetRenderView();
-    rv->Send(new AtomViewHostMsg_Message(rv->GetRoutingID(),
+    auto rf = render_frame();
+    rf->Send(new AtomViewHostMsg_Message(rf->GetRoutingID(),
         base::UTF8ToUTF16("did-block-run-insecure-content"), args));
 }
 
