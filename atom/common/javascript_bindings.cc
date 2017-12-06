@@ -222,16 +222,16 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
   if (context_type == Feature::WEB_PAGE_CONTEXT)
     return false;
 
+  bool handled = true;
+
   if (context_type == Feature::WEBUI_CONTEXT ||
       context_type == Feature::BLESSED_EXTENSION_CONTEXT) {
-    bool handled = true;
     IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
       IPC_MESSAGE_HANDLER(AtomViewMsg_Message_Shared, OnSharedBrowserMessage)
       IPC_MESSAGE_UNHANDLED(handled = false)
     IPC_END_MESSAGE_MAP()
   }
 
-  bool handled = false;  // don't swallow any of these messages
   IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
     IPC_MESSAGE_HANDLER(AtomViewMsg_Message, OnBrowserMessage)
     IPC_MESSAGE_UNHANDLED(handled = false)
