@@ -88,12 +88,14 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
       GURL* allowed_unsafe_redirect_url) override;
   void OnBeforeRedirect(net::URLRequest* request,
                         const GURL& new_location) override;
-  void OnResponseStarted(net::URLRequest* request) override;
-  void OnCompleted(net::URLRequest* request, bool started) override;
+  void OnResponseStarted(net::URLRequest* request, int net_error) override;
+  void OnCompleted(net::URLRequest* request,
+                   bool started,
+                   int net_error) override;
   void OnURLRequestDestroyed(net::URLRequest* request) override;
 
  private:
-  void OnErrorOccurred(net::URLRequest* request, bool started);
+  void OnErrorOccurred(net::URLRequest* request, bool started, int net_error);
 
   template<typename...Args>
   void HandleSimpleEvent(SimpleEvent type,

@@ -110,14 +110,16 @@ v8::Local<v8::Value> CreateFunctionFromTranslater(
     v8::Isolate* isolate, const Translater& translater);
 
 // Calls callback with Arguments.
-template <typename Sig>
+template <template <typename> class Callback, typename Sig>
 struct NativeFunctionInvoker {};
 
-template <typename ReturnType, typename... ArgTypes>
-struct NativeFunctionInvoker<ReturnType(ArgTypes...)> {
-  static void Go(base::Callback<ReturnType(ArgTypes...)> val, Arguments* args) {
+template <template <typename> class Callback,
+          typename ReturnType,
+          typename... ArgTypes>
+struct NativeFunctionInvoker<Callback, ReturnType(ArgTypes...)> {
+  static void Go(Callback<ReturnType(ArgTypes...)> val, Arguments* args) {
     using Indices = typename IndicesGenerator<sizeof...(ArgTypes)>::type;
-    Invoker<Indices, ArgTypes...> invoker(args, 0);
+    Invoker<Callback, Indices, ArgTypes...> invoker(args, 0);
     if (invoker.IsOK())
       invoker.DispatchToCallback(val);
   }
@@ -125,19 +127,19 @@ struct NativeFunctionInvoker<ReturnType(ArgTypes...)> {
 
 }  // namespace internal
 
-template<typename Sig>
-struct Converter<base::Callback<Sig>> {
+template <template <typename> class Callback, typename Sig>
+struct Converter<Callback<Sig>> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   const base::Callback<Sig>& val) {
+                                   const Callback<Sig>& val) {
     // We don't use CreateFunctionTemplate here because it creates a new
     // FunctionTemplate everytime, which is cached by V8 and causes leaks.
-    internal::Translater translater = base::Bind(
-        &internal::NativeFunctionInvoker<Sig>::Go, val);
+    internal::Translater translater =
+        base::Bind(&internal::NativeFunctionInvoker<Callback, Sig>::Go, val);
     return internal::CreateFunctionFromTranslater(isolate, translater);
   }
   static bool FromV8(v8::Isolate* isolate,
                      v8::Local<v8::Value> val,
-                     base::Callback<Sig>* out) {
+                     Callback<Sig>* out) {
     if (!val->IsFunction())
       return false;
 

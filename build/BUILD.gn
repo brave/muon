@@ -22,11 +22,6 @@ if (is_linux) {
   }
 }
 
-declare_args() {
-  electron_google_api_key = ""
-  electron_google_api_endpoint = ""
-}
-
 # be warned changing these will cause a full rebuild!!
 muon_include_dirs_ = [
   "//electron/chromium_src",
@@ -58,18 +53,6 @@ config("electron_config") {
   defines = [
     "ATOM_PRODUCT_NAME=\"$chrome_product_short_name\""
   ]
-
-  if (electron_google_api_key != "") {
-    defines += [
-      "GOOGLEAPIS_API_KEY=\"$electron_google_api_key\""
-    ]
-  }
-
-  if (electron_google_api_endpoint != "") {
-    defines += [
-      "GOOGLEAPIS_ENDPOINT=\"$electron_google_api_endpoint\""
-    ]
-  }
 
   cflags = []
 

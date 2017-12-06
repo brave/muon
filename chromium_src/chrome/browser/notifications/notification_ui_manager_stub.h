@@ -22,9 +22,6 @@ class NotificationUIManagerStub : public NotificationUIManager {
   }
   bool CancelById(const std::string& delegate_id,
                           ProfileID profile_id) override { return false; }
-  std::set<std::string> GetAllIdsByProfileAndSourceOrigin(
-      ProfileID profile_id,
-      const GURL& source) override { return std::set<std::string>(); }
   std::set<std::string> GetAllIdsByProfile(ProfileID profile_id) override {
     return std::set<std::string>(); }
   bool CancelAllBySourceOrigin(const GURL& source_origin) override {
