@@ -1901,14 +1901,14 @@ void WebContents::CloseDevTools() {
 
 bool WebContents::IsDevToolsOpened() {
   if (!managed_web_contents())
-    return;
+    return false;
 
   return managed_web_contents()->IsDevToolsViewShowing();
 }
 
 bool WebContents::IsDevToolsFocused() {
   if (!managed_web_contents())
-    return;
+    return false;
 
   return managed_web_contents()->GetView()->IsDevToolsViewFocused();
 }
