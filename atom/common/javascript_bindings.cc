@@ -61,11 +61,13 @@ v8::Local<v8::Value> JavascriptBindings::GetHiddenValue(v8::Isolate* isolate,
   v8::Local<v8::Value> value;
   v8::Local<v8::Object> object = v8_context->Global();
 
-  v8::Maybe<bool> result = object->HasPrivate(v8_context, privateKey);
-  if (!(result.IsJust() && result.FromJust()))
+
+  if (!object->HasPrivate(v8_context, privateKey).FromMaybe(false))
     return v8::Local<v8::Value>();
+
   if (object->GetPrivate(v8_context, privateKey).ToLocal(&value))
     return value;
+
   return v8::Local<v8::Value>();
 }
 
@@ -76,11 +78,13 @@ v8::Local<v8::Value> JavascriptBindings::GetHiddenValueOnObject(
   v8::Local<v8::Context> v8_context = context()->v8_context();
   v8::Local<v8::Private> privateKey = v8::Private::ForApi(isolate, key);
   v8::Local<v8::Value> value;
-  v8::Maybe<bool> result = object->HasPrivate(v8_context, privateKey);
-  if (!(result.IsJust() && result.FromJust()))
+
+  if (!object->HasPrivate(v8_context, privateKey).FromMaybe(false))
     return v8::Local<v8::Value>();
+
   if (object->GetPrivate(v8_context, privateKey).ToLocal(&value))
     return value;
+
   return v8::Local<v8::Value>();
 }
 
@@ -222,18 +226,11 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
   if (context_type == Feature::WEB_PAGE_CONTEXT)
     return false;
 
-  bool handled = true;
-
-  if (context_type == Feature::WEBUI_CONTEXT ||
-      context_type == Feature::BLESSED_EXTENSION_CONTEXT) {
-    IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
-      IPC_MESSAGE_HANDLER(AtomViewMsg_Message_Shared, OnSharedBrowserMessage)
-      IPC_MESSAGE_UNHANDLED(handled = false)
-    IPC_END_MESSAGE_MAP()
-  }
+  bool handled = false;
 
   IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
     IPC_MESSAGE_HANDLER(AtomViewMsg_Message, OnBrowserMessage)
+    IPC_MESSAGE_HANDLER(AtomViewMsg_Message_Shared, OnSharedBrowserMessage)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -271,7 +268,11 @@ void JavascriptBindings::OnSharedBrowserMessage(const base::string16& channel,
 
 void JavascriptBindings::OnBrowserMessage(const base::string16& channel,
                                           const base::ListValue& args) {
-  if (!is_valid())
+  if (!context()->is_valid())
+    return;
+
+  auto context_type = context()->effective_context_type();
+  if (context_type == Feature::WEB_PAGE_CONTEXT)
     return;
 
   v8::Isolate* isolate = context()->isolate();

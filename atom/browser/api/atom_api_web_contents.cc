@@ -438,7 +438,7 @@ WebContents::WebContents(v8::Isolate* isolate, const mate::Dictionary& options)
 }
 
 WebContents::~WebContents() {
-  if (type_ == REMOTE)
+  if (IsRemote())
     return;
 
   if (guest_delegate_ && web_contents() != NULL) {
@@ -452,7 +452,7 @@ WebContents::~WebContents() {
 }
 
 brightray::InspectableWebContents* WebContents::managed_web_contents() const {
-  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+  if (IsRemote() && !GetMainFrame().IsEmpty())
     return GetMainFrame()->managed_web_contents();
 
   return CommonWebContentsDelegate::managed_web_contents();
@@ -1485,7 +1485,7 @@ bool WebContents::OnMessageReceived(const IPC::Message& message,
 }
 
 void WebContents::DestroyWebContents() {
-  if (type_ == REMOTE && !GetMainFrame().IsEmpty()) {
+  if (IsRemote() && !GetMainFrame().IsEmpty()) {
     GetMainFrame()->DestroyWebContents();
     return;
   }
@@ -1529,7 +1529,7 @@ void WebContents::WebContentsDestroyed() {
   if (is_being_destroyed_)
     return;
 
-  if (type_ == REMOTE) {
+  if (IsRemote()) {
     delete this;
     return;
   }
@@ -1864,7 +1864,7 @@ bool WebContents::SavePage(const base::FilePath& full_file_path,
 }
 
 void WebContents::OpenDevTools(mate::Arguments* args) {
-  if (type_ == REMOTE) {
+  if (IsRemote()) {
     if (!GetMainFrame().IsEmpty())
       GetMainFrame()->OpenDevTools(args);
     return;
@@ -1921,7 +1921,7 @@ void WebContents::ToggleDevTools() {
 }
 
 void WebContents::InspectElement(int x, int y) {
-  if (type_ == REMOTE) {
+  if (IsRemote()) {
     if (!GetMainFrame().IsEmpty())
       GetMainFrame()->InspectElement(x, y);
     return;
@@ -1939,7 +1939,7 @@ void WebContents::InspectElement(int x, int y) {
 }
 
 void WebContents::InspectServiceWorker() {
-  if (type_ == REMOTE) {
+  if (IsRemote()) {
     if (!GetMainFrame().IsEmpty())
       GetMainFrame()->InspectServiceWorker();
     return;
@@ -2434,10 +2434,14 @@ void WebContents::SetSize(const SetSizeParams& params) {
 }
 
 bool WebContents::IsGuest() const {
-  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+  if (IsRemote() && !GetMainFrame().IsEmpty())
     return GetMainFrame()->IsGuest();
 
   return type_ == WEB_VIEW;
+}
+
+bool WebContents::IsRemote() const {
+  return type_ == REMOTE;
 }
 
 v8::Local<v8::Value> WebContents::GetWebPreferences(v8::Isolate* isolate) {
@@ -2447,7 +2451,7 @@ v8::Local<v8::Value> WebContents::GetWebPreferences(v8::Isolate* isolate) {
 }
 
 v8::Local<v8::Value> WebContents::GetOwnerBrowserWindow() {
-  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+  if (IsRemote() && !GetMainFrame().IsEmpty())
     return GetMainFrame()->GetOwnerBrowserWindow();
 
   if (owner_window())
@@ -2515,7 +2519,7 @@ v8::Local<v8::Value> WebContents::TabValue() {
 }
 
 int32_t WebContents::ID() const {
-  if (type_ == REMOTE && !GetMainFrame().IsEmpty())
+  if (IsRemote() && !GetMainFrame().IsEmpty())
     return GetMainFrame()->weak_map_id();
 
   return weak_map_id();
@@ -2620,6 +2624,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("startDrag", &WebContents::StartDrag)
       .SetMethod("setSize", &WebContents::SetSize)
       .SetMethod("isGuest", &WebContents::IsGuest)
+      .SetMethod("isRemote", &WebContents::IsRemote)
       .SetMethod("getType", &WebContents::GetType)
       .SetMethod("getWebPreferences", &WebContents::GetWebPreferences)
       .SetMethod("getOwnerBrowserWindow", &WebContents::GetOwnerBrowserWindow)
