@@ -279,6 +279,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // Methods for creating <webview>.
   void SetSize(const SetSizeParams& params);
   bool IsGuest() const;
+  bool IsRemote() const;
 
   // Callback triggered on permission response.
   void OnEnterFullscreenModeForTab(content::WebContents* source,
