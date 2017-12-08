@@ -158,6 +158,16 @@ BrowserProcessImpl::BrowserProcessImpl(
 #endif
 
   message_center::MessageCenter::Initialize();
+
+  net_log_ = base::MakeUnique<net_log::ChromeNetLog>();
+
+  // TODO(darkdh): support this later
+  // if (command_line.HasSwitch(switches::kLogNetLog)) {
+  //   net_log_->StartWritingToFile(
+  //       command_line.GetSwitchValuePath(switches::kLogNetLog),
+  //       GetNetCaptureModeFromCommandLine(command_line),
+  //       command_line.GetCommandLineString(), chrome::GetChannelString());
+  // }
 }
 
 BrowserProcessImpl::~BrowserProcessImpl() {
@@ -487,8 +497,7 @@ void BrowserProcessImpl::FlushLocalStateAndReply(base::OnceClosure reply) {
 }
 
 net_log::ChromeNetLog* BrowserProcessImpl::net_log() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return net_log_.get();
 }
 
 metrics_services_manager::MetricsServicesManager*
