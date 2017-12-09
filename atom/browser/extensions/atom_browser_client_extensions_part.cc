@@ -338,7 +338,9 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
 
 // static
 GURL AtomBrowserClientExtensionsPart::GetEffectiveURL(
-    Profile* profile, const GURL& url) {
+    Profile* profile,
+    const GURL& url,
+    bool is_isolated_origin) {
   // If the input |url| is part of an installed app, the effective URL is an
   // extension URL with the ID of that extension as the host. This has the
   // effect of grouping apps together in a common SiteInstance.
@@ -354,6 +356,13 @@ GURL AtomBrowserClientExtensionsPart::GetEffectiveURL(
   // Bookmark apps do not use the hosted app process model, and should be
   // treated as normal URLs.
   if (extension->from_bookmark())
+    return url;
+
+  // If |url| corresponds to an isolated origin, don't resolve effective URLs,
+  // since isolated origins should take precedence over hosted apps.  One
+  // exception is a URL for Chrome Web Store, which should always be resolved
+  // to its effective URL, so that the CWS process gets proper bindings.
+  if (is_isolated_origin)
     return url;
 
   // If the URL is part of an extension's web extent, convert it to an
