@@ -39,13 +39,13 @@
 #include "base/threading/thread_task_runner_handle.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
-#include "chrome/browser/devtools/devtools_network_conditions.h"
-#include "chrome/browser/devtools/devtools_network_controller_handle.h"
 #include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
 #include "components/history/core/browser/history_service.h"
 #include "components/prefs/pref_service.h"
+#include "content/common/devtools/devtools_network_conditions.h"
+#include "content/common/devtools/devtools_network_controller.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/storage_partition.h"
 #include "extensions/features/features.h"
@@ -69,6 +69,8 @@
 #endif
 
 using content::BrowserThread;
+using content::DevToolsNetworkConditions;
+using content::DevToolsNetworkController;
 using content::StoragePartition;
 
 namespace {
@@ -464,37 +466,6 @@ void Session::SetDownloadPath(const base::FilePath& path) {
       prefs::kDownloadDefaultDirectory, path);
 }
 
-void Session::EnableNetworkEmulation(const mate::Dictionary& options) {
-  std::unique_ptr<DevToolsNetworkConditions> conditions;
-  bool offline = false;
-  double latency = 0.0, download_throughput = 0.0, upload_throughput = 0.0;
-  if (options.Get("offline", &offline) && offline) {
-    conditions.reset(new DevToolsNetworkConditions(offline));
-  } else {
-    options.Get("latency", &latency);
-    options.Get("downloadThroughput", &download_throughput);
-    options.Get("uploadThroughput", &upload_throughput);
-    conditions.reset(
-        new DevToolsNetworkConditions(false,
-                                                 latency,
-                                                 download_throughput,
-                                                 upload_throughput));
-  }
-
-  profile_->network_controller_handle()->SetNetworkState(
-      devtools_network_emulation_client_id_, std::move(conditions));
-  profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
-      devtools_network_emulation_client_id_);
-}
-
-void Session::DisableNetworkEmulation() {
-  std::unique_ptr<DevToolsNetworkConditions> conditions;
-  profile_->network_controller_handle()->SetNetworkState(
-      devtools_network_emulation_client_id_, std::move(conditions));
-  profile_->network_delegate()->SetDevToolsNetworkEmulationClientId(
-      std::string());
-}
-
 void Session::SetCertVerifyProc(v8::Local<v8::Value> val,
                                 mate::Arguments* args) {
   AtomCertVerifier::VerifyProc proc;
@@ -670,8 +641,6 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("flushStorageData", &Session::FlushStorageData)
       .SetMethod("setProxy", &Session::SetProxy)
       .SetMethod("setDownloadPath", &Session::SetDownloadPath)
-      .SetMethod("enableNetworkEmulation", &Session::EnableNetworkEmulation)
-      .SetMethod("disableNetworkEmulation", &Session::DisableNetworkEmulation)
       .SetMethod("setCertificateVerifyProc", &Session::SetCertVerifyProc)
       .SetMethod("setPermissionRequestHandler",
                  &Session::SetPermissionRequestHandler)

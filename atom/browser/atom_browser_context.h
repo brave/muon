@@ -26,7 +26,6 @@ class AtomBrowserContext : public brightray::BrowserContext {
       const base::DictionaryValue& options = base::DictionaryValue());
 
   // brightray::URLRequestContextGetter::Delegate:
-  net::NetworkDelegate* CreateNetworkDelegate() override;
   std::unique_ptr<net::URLRequestJobFactory> CreateURLRequestJobFactory(
       content::ProtocolHandlerMap* protocol_handlers) override;
   net::HttpCache::BackendFactory* CreateHttpCacheBackendFactory(
@@ -41,9 +40,6 @@ class AtomBrowserContext : public brightray::BrowserContext {
   // brightray::BrowserContext:
   void RegisterPrefs(PrefRegistrySimple* pref_registry) override;
 
-  virtual AtomNetworkDelegate* network_delegate() {
-      return network_delegate_; }
-
  protected:
   AtomBrowserContext(const std::string& partition, bool in_memory,
                      const base::DictionaryValue& options);
@@ -52,9 +48,6 @@ class AtomBrowserContext : public brightray::BrowserContext {
  private:
   std::unique_ptr<AtomDownloadManagerDelegate> download_manager_delegate_;
   bool use_cache_;
-
-  // Managed by brightray::BrowserContext.
-  AtomNetworkDelegate* network_delegate_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserContext);
 };

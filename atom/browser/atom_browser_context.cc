@@ -23,8 +23,8 @@
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_worker_pool.h"
-#include "base/threading/worker_pool.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/pref_names.h"
@@ -59,8 +59,7 @@ class NoCacheBackend : public net::HttpCache::BackendFactory {
 AtomBrowserContext::AtomBrowserContext(
     const std::string& partition, bool in_memory,
     const base::DictionaryValue& options)
-    : brightray::BrowserContext(partition, in_memory),
-      network_delegate_(new AtomNetworkDelegate) {
+    : brightray::BrowserContext(partition, in_memory) {
   // Read options.
   use_cache_ = true;
   options.GetBoolean("cache", &use_cache_);
@@ -70,10 +69,6 @@ AtomBrowserContext::AtomBrowserContext(
 }
 
 AtomBrowserContext::~AtomBrowserContext() {
-}
-
-net::NetworkDelegate* AtomBrowserContext::CreateNetworkDelegate() {
-  return network_delegate_;
 }
 
 std::unique_ptr<net::URLRequestJobFactory>
@@ -91,9 +86,11 @@ AtomBrowserContext::CreateURLRequestJobFactory(
   job_factory->SetProtocolHandler(
       url::kDataScheme, base::WrapUnique(new net::DataProtocolHandler));
   job_factory->SetProtocolHandler(
-      url::kFileScheme, base::WrapUnique(new asar::AsarProtocolHandler(
-          BrowserThread::GetBlockingPool()->GetTaskRunnerWithShutdownBehavior(
-              base::SequencedWorkerPool::SKIP_ON_SHUTDOWN))));
+      url::kFileScheme,
+      base::WrapUnique(
+          new asar::AsarProtocolHandler(base::CreateTaskRunnerWithTraits(
+              {base::MayBlock(), base::TaskPriority::USER_BLOCKING,
+               base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}))));
   job_factory->SetProtocolHandler(
       url::kHttpScheme,
       base::WrapUnique(new HttpProtocolHandler(url::kHttpScheme)));

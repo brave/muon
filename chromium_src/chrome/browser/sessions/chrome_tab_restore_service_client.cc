@@ -38,11 +38,6 @@ ChromeTabRestoreServiceClient::FindLiveTabContextForTab(
   return nullptr;
 }
 
-base::SequencedWorkerPool* ChromeTabRestoreServiceClient::GetBlockingPool() {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  return content::BrowserThread::GetBlockingPool();
-}
-
 sessions::LiveTabContext* ChromeTabRestoreServiceClient::CreateLiveTabContext(
     const std::string& app_name) {
   NOTIMPLEMENTED();

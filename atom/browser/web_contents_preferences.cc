@@ -12,6 +12,7 @@
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "base/strings/string_number_conversions.h"
 #include "cc/base/switches.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/common/content_switches.h"
@@ -62,7 +63,7 @@ content::WebContents* WebContentsPreferences::GetWebContentsFromProcessID(
     int process_id) {
   for (WebContentsPreferences* preferences : instances_) {
     content::WebContents* web_contents = preferences->web_contents_;
-    if (web_contents->GetRenderProcessHost()->GetID() == process_id)
+    if (web_contents->GetMainFrame()->GetProcess()->GetID() == process_id)
       return web_contents;
   }
   // Also try to get the webview from RenderViewHost::FromID because
@@ -149,8 +150,10 @@ void WebContentsPreferences::OverrideWebkitPrefs(
     prefs->javascript_can_access_clipboard = b;
   if (self->web_preferences_.GetBoolean("textAreasAreResizable", &b))
     prefs->text_areas_are_resizable = b;
-  if (self->web_preferences_.GetBoolean("webgl", &b))
-    prefs->experimental_webgl_enabled = b;
+  if (self->web_preferences_.GetBoolean("webgl", &b)) {
+    prefs->webgl1_enabled = b;
+    prefs->webgl2_enabled = b;
+  }
   if (self->web_preferences_.GetBoolean("webSecurity", &b))
     prefs->web_security_enabled = b;
   if (self->web_preferences_.GetBoolean("allowFileAccessFromFileUrls", &b))

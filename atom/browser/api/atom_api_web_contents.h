@@ -23,6 +23,7 @@
 #include "content/public/common/context_menu_params.h"
 #include "content/public/common/favicon_url.h"
 #include "extensions/features/features.h"
+#include "ipc/ipc_sender.h"
 #include "native_mate/handle.h"
 #include "ui/gfx/image/image.h"
 
@@ -36,10 +37,6 @@ class AtomAutofillClient;
 namespace base {
 class SharedMemory;
 class SharedMemoryHandle;
-}
-
-namespace blink {
-struct WebDeviceEmulationParams;
 }
 
 namespace brave {
@@ -142,6 +139,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
+  brightray::InspectableWebContents* managed_web_contents() const override;
+
   void Clone(mate::Arguments* args);
 
   void DestroyWebContents();
@@ -153,6 +152,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   int GetID() const;
   Type GetType() const;
   int GetGuestInstanceId() const;
+  mate::Handle<WebContents> GetMainFrame() const;
   bool Equal(const WebContents* web_contents) const;
   void LoadURL(const GURL& url, const mate::Dictionary& options);
   void Reload(bool ignore_cache);
@@ -193,8 +193,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool IsDevToolsOpened();
   bool IsDevToolsFocused();
   void ToggleDevTools();
-  void EnableDeviceEmulation(const blink::WebDeviceEmulationParams& params);
-  void DisableDeviceEmulation();
   void InspectElement(int x, int y);
   void InspectServiceWorker();
   void HasServiceWorker(
@@ -256,11 +254,14 @@ class WebContents : public mate::TrackableObject<WebContents>,
 #endif
 
   // Send messages to browser.
-  bool SendIPCMessage(bool all_frames,
-                      const base::string16& channel,
-                      const base::ListValue& args);
-  bool SendIPCSharedMemory(const base::string16& channel,
-                            base::SharedMemory* shared_memory);
+  static bool SendIPCMessage(int render_process_id,
+                             int render_frame_id,
+                             const base::string16& channel,
+                             const base::ListValue& args);
+  static bool SendIPCSharedMemory(int render_process_id,
+                                  int render_frame_id,
+                                  const base::string16& channel,
+                                  base::SharedMemory* shared_memory);
 
   // Send WebInputEvent to the page.
   void SendInputEvent(v8::Isolate* isolate, v8::Local<v8::Value> input_event);
@@ -278,6 +279,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // Methods for creating <webview>.
   void SetSize(const SetSizeParams& params);
   bool IsGuest() const;
+  bool IsRemote() const;
 
   // Callback triggered on permission response.
   void OnEnterFullscreenModeForTab(content::WebContents* source,
@@ -482,12 +484,13 @@ class WebContents : public mate::TrackableObject<WebContents>,
       content::NavigationHandle* navigation_handle) override;
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;
-  bool OnMessageReceived(const IPC::Message& message) override;
+  bool OnMessageReceived(const IPC::Message& message,
+                         content::RenderFrameHost* render_frame_host) override;
   void WebContentsDestroyed() override;
   void NavigationEntryCommitted(
       const content::LoadCommittedDetails& load_details) override;
   void DidChangeVisibleSecurityState() override;
-  void TitleWasSet(content::NavigationEntry* entry, bool explicit_set) override;
+  void TitleWasSet(content::NavigationEntry* entry) override;
   void DidUpdateFaviconURL(
       const std::vector<content::FaviconURL>& urls) override;
   void PluginCrashed(const base::FilePath& plugin_path,
@@ -519,6 +522,13 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
  private:
   friend brave::TabViewGuest;
+  friend struct FrameDispatchHelper;
+
+  bool SendIPCSharedMemoryInternal(const base::string16& channel,
+                                   base::SharedMemory* shared_memory);
+  bool SendIPCMessageInternal(const base::string16& channel,
+                              const base::ListValue& args);
+
   AtomBrowserContext* GetBrowserContext() const;
 
   uint32_t GetNextRequestId() {
@@ -529,15 +539,18 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void OnCursorChange(const content::WebCursor& cursor);
 
   // Called when received a message from renderer.
-  void OnRendererMessage(const base::string16& channel,
+  void OnRendererMessage(content::RenderFrameHost* sender,
+                         const base::string16& channel,
                          const base::ListValue& args);
 
   // Called when received a synchronous message from renderer.
-  void OnRendererMessageSync(const base::string16& channel,
+  void OnRendererMessageSync(content::RenderFrameHost* render_frame_host,
+                             const base::string16& channel,
                              const base::ListValue& args,
                              IPC::Message* message);
 
-  void OnRendererMessageShared(const base::string16& channel,
+  void OnRendererMessageShared(content::RenderFrameHost* sender,
+                               const base::string16& channel,
                                const base::SharedMemoryHandle& shared_memory);
 
   v8::Global<v8::Value> session_;

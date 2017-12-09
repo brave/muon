@@ -283,7 +283,7 @@ v8::Local<v8::Value> Converter<content::ReloadType>::ToV8(
       return StringToV8(isolate, "bypassingCache");
     case content::ReloadType::ORIGINAL_REQUEST_URL:
       return StringToV8(isolate, "originalRequestUrl");
-    case content::ReloadType::DISABLE_LOFI_MODE:
+    case content::ReloadType::DISABLE_PREVIEWS:
       return StringToV8(isolate, "disableLofiMode");
     default:
       break;

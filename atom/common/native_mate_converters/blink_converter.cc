@@ -15,7 +15,7 @@
 #include "native_mate/dictionary.h"
 #include "third_party/WebKit/public/platform/WebMouseEvent.h"
 #include "third_party/WebKit/public/platform/WebMouseWheelEvent.h"
-#include "third_party/WebKit/public/web/WebDeviceEmulationParams.h"
+#include "third_party/WebKit/public/platform/WebSize.h"
 #include "third_party/WebKit/public/web/WebFindOptions.h"
 #include "ui/base/clipboard/clipboard.h"
 
@@ -294,32 +294,6 @@ bool Converter<blink::WebSize>::FromV8(
   if (!ConvertFromV8(isolate, val, &dict))
     return false;
   return dict.Get("width", &out->width) && dict.Get("height", &out->height);
-}
-
-bool Converter<blink::WebDeviceEmulationParams>::FromV8(
-    v8::Isolate* isolate, v8::Local<v8::Value> val,
-    blink::WebDeviceEmulationParams* out) {
-  mate::Dictionary dict;
-  if (!ConvertFromV8(isolate, val, &dict))
-    return false;
-
-  std::string screen_position;
-  if (dict.Get("screenPosition", &screen_position)) {
-    screen_position = base::ToLowerASCII(screen_position);
-    if (screen_position == "mobile")
-      out->screen_position = blink::WebDeviceEmulationParams::kMobile;
-    else if (screen_position == "desktop")
-      out->screen_position = blink::WebDeviceEmulationParams::kDesktop;
-    else
-      return false;
-  }
-
-  dict.Get("screenSize", &out->screen_size);
-  dict.Get("viewPosition", &out->view_position);
-  dict.Get("deviceScaleFactor", &out->device_scale_factor);
-  dict.Get("viewSize", &out->view_size);
-  dict.Get("scale", &out->scale);
-  return true;
 }
 
 bool Converter<blink::WebFindOptions>::FromV8(

@@ -7,12 +7,13 @@
 #include <memory>
 #include <utility>
 
+#include "atom/browser/extensions/atom_extension_api_frame_id_map.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "base/stl_util.h"
 #include "base/strings/string_util.h"
-#include "chrome/browser/devtools/devtools_network_transaction.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
+#include "content/common/devtools/devtools_network_transaction.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/websocket_handshake_request_info.h"
@@ -94,6 +95,7 @@ void GetRenderFrameIdAndProcessId(net::URLRequest* request,
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   *render_frame_id = -1;
   *render_process_id = -1;
+
   extensions::ExtensionApiFrameIdMap::FrameData frame_data;
   if (!content::ResourceRequestInfo::GetRenderFrameForRequest(
           request, render_process_id, render_frame_id)) {
@@ -112,12 +114,27 @@ int GetTabId(net::URLRequest* request) {
   int render_frame_id = -1;
   int render_process_id = -1;
   int tab_id = -1;
-  GetRenderFrameIdAndProcessId(request, &render_frame_id, &render_process_id);
-  extensions::ExtensionApiFrameIdMap::FrameData frame_data;
-  if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
-      render_process_id, render_frame_id, &frame_data)) {
-    tab_id = frame_data.tab_id;
+
+  // PlzNavigate requests have a frame_tree_node_id, but no render_process_id
+  auto request_info = content::ResourceRequestInfo::ForRequest(request);
+  if (request_info) {
+    int frame_tree_node_id = request_info->GetFrameTreeNodeId();
+    extensions::AtomExtensionApiFrameIdMap::FrameData frame_data;
+    if (extensions::AtomExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
+        frame_tree_node_id, &frame_data)) {
+      tab_id = frame_data.tab_id;
+    }
   }
+
+  if (tab_id == -1) {
+    GetRenderFrameIdAndProcessId(request, &render_frame_id, &render_process_id);
+    extensions::ExtensionApiFrameIdMap::FrameData frame_data;
+    if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
+        render_process_id, render_frame_id, &frame_data)) {
+      tab_id = frame_data.tab_id;
+    }
+  }
+
   return tab_id;
 #else
   return -1;
@@ -310,9 +327,9 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
   }
 
   if (!client_id.empty())
-    headers->SetHeader(
-        DevToolsNetworkTransaction::kDevToolsEmulateNetworkConditionsClientId,
-        client_id);
+    headers->SetHeader(content::DevToolsNetworkTransaction::
+                           kDevToolsEmulateNetworkConditionsClientId,
+                       client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))
     return brightray::NetworkDelegate::OnBeforeStartTransaction(
         request, callback, headers);
@@ -360,9 +377,10 @@ void AtomNetworkDelegate::OnBeforeRedirect(net::URLRequest* request,
                     request->was_cached());
 }
 
-void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request) {
+void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request,
+                                            int net_error) {
   if (!base::ContainsKey(simple_listeners_, kOnResponseStarted)) {
-    brightray::NetworkDelegate::OnResponseStarted(request);
+    brightray::NetworkDelegate::OnResponseStarted(request, net_error);
     return;
   }
 
@@ -373,25 +391,25 @@ void AtomNetworkDelegate::OnResponseStarted(net::URLRequest* request) {
                     request->was_cached());
 }
 
-void AtomNetworkDelegate::OnCompleted(net::URLRequest* request, bool started) {
+void AtomNetworkDelegate::OnCompleted(net::URLRequest* request,
+                                      bool started,
+                                      int net_error) {
   // OnCompleted may happen before other events.
-  callbacks_.erase(request->identifier());
+  OnURLRequestDestroyed(request);
 
-  if (request->status().status() == net::URLRequestStatus::FAILED ||
-      request->status().status() == net::URLRequestStatus::CANCELED) {
-    // Error event.
-    OnErrorOccurred(request, started);
+  if (net_error != net::OK) {
+    OnErrorOccurred(request, started, net_error);
     return;
   } else if (request->response_headers() &&
              net::HttpResponseHeaders::IsRedirectResponseCode(
                  request->response_headers()->response_code())) {
     // Redirect event.
-    brightray::NetworkDelegate::OnCompleted(request, started);
+    brightray::NetworkDelegate::OnCompleted(request, started, net_error);
     return;
   }
 
   if (!base::ContainsKey(simple_listeners_, kOnCompleted)) {
-    brightray::NetworkDelegate::OnCompleted(request, started);
+    brightray::NetworkDelegate::OnCompleted(request, started, net_error);
     return;
   }
 
@@ -404,9 +422,9 @@ void AtomNetworkDelegate::OnURLRequestDestroyed(net::URLRequest* request) {
 }
 
 void AtomNetworkDelegate::OnErrorOccurred(
-    net::URLRequest* request, bool started) {
+    net::URLRequest* request, bool started, int net_error) {
   if (!base::ContainsKey(simple_listeners_, kOnErrorOccurred)) {
-    brightray::NetworkDelegate::OnCompleted(request, started);
+    brightray::NetworkDelegate::OnCompleted(request, started, net_error);
     return;
   }
 
@@ -487,7 +505,7 @@ void AtomNetworkDelegate::OnListenerResultInUI(
   if (rfh && tab_id == -1) {
     auto web_contents = content::WebContents::FromRenderFrameHost(rfh);
     if (web_contents) {
-      int tab_id = extensions::TabHelper::IdForTab(web_contents);
+      tab_id = extensions::TabHelper::IdForTab(web_contents);
       copy->SetInteger(extensions::tabs_constants::kTabIdKey, tab_id);
     }
   }

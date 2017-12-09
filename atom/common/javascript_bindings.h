@@ -5,7 +5,7 @@
 #ifndef ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 #define ATOM_COMMON_JAVASCRIPT_BINDINGS_H_
 
-#include "content/public/renderer/render_view_observer.h"
+#include "content/public/renderer/render_frame_observer.h"
 #include "extensions/renderer/object_backed_native_handler.h"
 #include "extensions/renderer/script_context.h"
 #include "v8/include/v8.h"
@@ -21,10 +21,10 @@ class Arguments;
 
 namespace atom {
 
-class JavascriptBindings : public content::RenderViewObserver,
+class JavascriptBindings : public content::RenderFrameObserver,
                            public extensions::ObjectBackedNativeHandler {
  public:
-  explicit JavascriptBindings(content::RenderView* render_view,
+  explicit JavascriptBindings(content::RenderFrame* render_frame,
                               extensions::ScriptContext* context);
   virtual ~JavascriptBindings();
 
@@ -59,13 +59,10 @@ class JavascriptBindings : public content::RenderViewObserver,
                     v8::Local<v8::String> key,
                     v8::Local<v8::Value> value);
 
-
-
-
+  // content::RenderFrameObserver:
   void OnDestruct() override;
   bool OnMessageReceived(const IPC::Message& message) override;
-  void OnBrowserMessage(bool all_frames,
-                        const base::string16& channel,
+  void OnBrowserMessage(const base::string16& channel,
                         const base::ListValue& args);
   void OnSharedBrowserMessage(const base::string16& channel,
                               const base::SharedMemoryHandle& handle);
