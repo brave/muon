@@ -9,6 +9,7 @@
 #include "chrome/common/extensions/chrome_extensions_client.h"
 
 #include <string>
+#include "base/command_line.h"
 #include "base/strings/string_util.h"
 #include "base/values.h"
 #include "brave/grit/brave_resources.h"  // NOLINT: This file is generated
@@ -45,23 +46,25 @@ namespace extensions {
 
 namespace {
 
+// TODO(battre): Delete the HTTP URL once the blacklist is downloaded via HTTPS.
 const char kExtensionBlocklistUrlPrefix[] =
     "http://www.gstatic.com/chrome/extensions/blacklist";
 const char kExtensionBlocklistHttpsUrlPrefix[] =
     "https://www.gstatic.com/chrome/extensions/blacklist";
 
-static base::LazyInstance<ChromeExtensionsClient>::DestructorAtExit g_client =
-    LAZY_INSTANCE_INITIALIZER;
-
 }  // namespace
 
-ChromeExtensionsClient::ChromeExtensionsClient() {
-}
+static base::LazyInstance<ChromeExtensionsClient>::Leaky g_client =
+    LAZY_INSTANCE_INITIALIZER;
+
+ChromeExtensionsClient::ChromeExtensionsClient() {}
 
 ChromeExtensionsClient::~ChromeExtensionsClient() {
 }
 
 void ChromeExtensionsClient::Initialize() {
+  // Registration could already be finalized in unit tests, where the utility
+  // thread runs in-process.
   if (!ManifestHandler::IsRegistrationFinalized()) {
     RegisterCommonManifestHandlers();
     RegisterChromeManifestHandlers();
@@ -73,6 +76,12 @@ void ChromeExtensionsClient::Initialize() {
                                               GetChromePermissionAliases());
   PermissionsInfo::GetInstance()->AddProvider(extensions_api_permissions_,
                                               GetExtensionsPermissionAliases());
+  InitializeWebStoreUrls(base::CommandLine::ForCurrentProcess());
+}
+
+void ChromeExtensionsClient::InitializeWebStoreUrls(
+    base::CommandLine* command_line) {
+  webstore_update_url_ = GURL(chrome::kExtensionInvalidRequestURL);
 }
 
 const PermissionMessageProvider&
@@ -110,20 +119,12 @@ ChromeExtensionsClient::CreateAPIFeatureSource() const {
   return source;
 }
 
-void ChromeExtensionsClient::SetScriptingWhitelist(
-    const ExtensionsClient::ScriptingWhitelist& whitelist) {
-  scripting_whitelist_ = whitelist;
-}
-
-const ExtensionsClient::ScriptingWhitelist&
-ChromeExtensionsClient::GetScriptingWhitelist() const {
-  return scripting_whitelist_;
-}
-
 void ChromeExtensionsClient::FilterHostPermissions(
     const URLPatternSet& hosts,
     URLPatternSet* new_hosts,
     PermissionIDSet* permissions) const {
+  // When editing this function, be sure to add the same functionality to
+  // FilterHostPermissions() above.
   for (URLPatternSet::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
     // Filters out every URL pattern that matches chrome:// scheme.
     if (i->scheme() == content::kChromeUIScheme) {
@@ -137,6 +138,16 @@ void ChromeExtensionsClient::FilterHostPermissions(
       new_hosts->AddPattern(*i);
     }
   }
+}
+
+void ChromeExtensionsClient::SetScriptingWhitelist(
+    const ExtensionsClient::ScriptingWhitelist& whitelist) {
+  scripting_whitelist_ = whitelist;
+}
+
+const ExtensionsClient::ScriptingWhitelist&
+ChromeExtensionsClient::GetScriptingWhitelist() const {
+  return scripting_whitelist_;
 }
 
 URLPatternSet ChromeExtensionsClient::GetPermittedChromeSchemeHosts(
@@ -156,6 +167,7 @@ bool ChromeExtensionsClient::IsScriptableURL(
 
 bool ChromeExtensionsClient::IsAPISchemaGenerated(
     const std::string& name) const {
+  // Test from most common to least common.
   return api::BraveGeneratedSchemas::IsGenerated(name) ||
          api::ChromeGeneratedSchemas::IsGenerated(name) ||
          api::GeneratedSchemas::IsGenerated(name);
@@ -163,17 +175,22 @@ bool ChromeExtensionsClient::IsAPISchemaGenerated(
 
 base::StringPiece ChromeExtensionsClient::GetAPISchema(
     const std::string& name) const {
-  if (api::BraveGeneratedSchemas::IsGenerated(name))
-    return api::BraveGeneratedSchemas::Get(name);
+  base::StringPiece brave_schema = api::BraveGeneratedSchemas::Get(name);
+  if (!brave_schema.empty())
+    return brave_schema;
 
   // Test from most common to least common.
-  if (api::ChromeGeneratedSchemas::IsGenerated(name))
-    return api::ChromeGeneratedSchemas::Get(name);
+  base::StringPiece chrome_schema = api::ChromeGeneratedSchemas::Get(name);
+  if (!chrome_schema.empty())
+    return chrome_schema;
 
   return api::GeneratedSchemas::Get(name);
 }
 
 bool ChromeExtensionsClient::ShouldSuppressFatalErrors() const {
+  // Suppress fatal everywhere until the cause of bugs like http://crbug/471599
+  // are fixed. This would typically be:
+  // return GetCurrentChannel() > version_info::Channel::DEV;
   return true;
 }
 
@@ -181,16 +198,20 @@ void ChromeExtensionsClient::RecordDidSuppressFatalError() {
 }
 
 const GURL& ChromeExtensionsClient::GetWebstoreBaseURL() const {
-  webstore_update_url_ = GURL(chrome::kExtensionInvalidRequestURL);
   return webstore_update_url_;
 }
 
 const GURL& ChromeExtensionsClient::GetWebstoreUpdateURL() const {
-  webstore_update_url_ = GURL(chrome::kExtensionInvalidRequestURL);
   return webstore_update_url_;
 }
 
 bool ChromeExtensionsClient::IsBlacklistUpdateURL(const GURL& url) const {
+  // The extension blacklist URL is returned from the update service and
+  // therefore not determined by Chromium. If the location of the blacklist file
+  // ever changes, we need to update this function. A DCHECK in the
+  // ExtensionUpdater ensures that we notice a change. This is the full URL
+  // of a blacklist:
+  // http://www.gstatic.com/chrome/extensions/blacklist/l_0_0_0_7.txt
   return base::StartsWith(url.spec(), kExtensionBlocklistUrlPrefix,
                           base::CompareCase::SENSITIVE) ||
          base::StartsWith(url.spec(), kExtensionBlocklistHttpsUrlPrefix,

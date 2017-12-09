@@ -10,6 +10,7 @@
 #include <vector>
 #include <set>
 
+#include "base/optional.h"
 #include "base/strings/string_piece.h"
 #include "native_mate/compat.h"
 #include "v8/include/v8.h"
@@ -194,6 +195,42 @@ struct Converter<v8::Local<v8::Value> > {
   static bool FromV8(v8::Isolate* isolate,
                      v8::Local<v8::Value> val,
                      v8::Local<v8::Value>* out);
+};
+
+template<typename T>
+struct Converter<base::Optional<T> > {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   const base::Optional<T>& val) {
+    v8::Local<v8::Array> result;
+    if (val.has_value()) {
+      result = MATE_ARRAY_NEW(isolate, 1);
+      result->Set(0, Converter<T>::ToV8(isolate, val.value()));
+    } else {
+      result = MATE_ARRAY_NEW(isolate, 0);
+    }
+    return result;
+  }
+
+  static bool FromV8(v8::Isolate* isolate,
+                     v8::Local<v8::Value> val,
+                     base::Optional<T>* out) {
+    if (!val->IsArray())
+      return false;
+
+    base::Optional<T> result;
+    v8::Local<v8::Array> array(v8::Local<v8::Array>::Cast(val));
+    if (array->Length() == 0)
+      result = base::Optional<T>();
+    else {
+      T item;
+      if (!Converter<T>::FromV8(isolate, array->Get(0), &item))
+        return false;
+      result = base::Optional<T>(item);
+    }
+
+    *out = result;
+    return true;
+  }
 };
 
 template<typename T>

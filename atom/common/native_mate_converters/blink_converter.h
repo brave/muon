@@ -13,7 +13,6 @@ namespace blink {
 class WebMouseEvent;
 class WebMouseWheelEvent;
 class WebKeyboardEvent;
-struct WebDeviceEmulationParams;
 struct WebFindOptions;
 struct WebFloatPoint;
 struct WebPoint;
@@ -75,12 +74,6 @@ template<>
 struct Converter<blink::WebSize> {
   static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
                      blink::WebSize* out);
-};
-
-template<>
-struct Converter<blink::WebDeviceEmulationParams> {
-  static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
-                     blink::WebDeviceEmulationParams* out);
 };
 
 template<>

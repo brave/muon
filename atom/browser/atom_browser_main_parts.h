@@ -24,10 +24,6 @@ namespace brightray {
 class BrowserContext;
 }
 
-namespace metrics {
-class TrackingSynchronizer;
-}
-
 class PrefService;
 
 namespace atom {
@@ -110,8 +106,6 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
 
   base::Timer gc_timer_;
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
-
-  scoped_refptr<metrics::TrackingSynchronizer> tracking_synchronizer_;
 
   // Members needed across shutdown methods.
   bool restart_last_session_ = false;

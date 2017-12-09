@@ -56,7 +56,6 @@ source_set("app") {
   deps = [
     "//base",
     "//chrome/common",
-    "//chrome/installer",
     "//components/metrics",
     "//components/crash/content/app",
     "//components/crash/content/browser",
@@ -158,6 +157,9 @@ source_set("browser") {
     "//components/crash/content/app",
     "//components/crash/core/browser",
     "//components/data_usage/core",
+    "//components/keep_alive_registry",
+    "//components/net_log",
+    "//components/policy/core/common",
     "//components/prefs",
     "//components/ssl_config",
     "//components/spellcheck:build_features",
@@ -165,6 +167,7 @@ source_set("browser") {
     "//components/storage_monitor",
     "//content/public/browser",
     "//electron/atom/browser",
+    "//ui/message_center",
   ]
 
   sources = [
@@ -200,6 +203,9 @@ source_set("browser") {
     "//chrome/browser/gpu/gpu_mode_manager.cc",
     "//chrome/browser/gpu/gpu_mode_manager.h",
 
+    "chrome/browser/io_thread.cc",
+    "//chrome/browser/io_thread.h",
+
     "//chrome/browser/icon_loader.cc",
     "//chrome/browser/icon_loader.h",
     "//chrome/browser/icon_loader_mac.mm",
@@ -207,16 +213,17 @@ source_set("browser") {
     "//chrome/browser/icon_manager.cc",
     "//chrome/browser/icon_manager.h",
 
-    "//chrome/browser/lifetime/keep_alive_registry.cc",
-    "//chrome/browser/lifetime/keep_alive_registry.h",
-    "//chrome/browser/lifetime/keep_alive_types.cc",
-    "//chrome/browser/lifetime/keep_alive_types.h",
-    "//chrome/browser/lifetime/scoped_keep_alive.cc",
-    "//chrome/browser/lifetime/scoped_keep_alive.h",
-
+    "//chrome/browser/net/chrome_extensions_network_delegate.cc",
+    "//chrome/browser/net/chrome_extensions_network_delegate.h",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
-    "chrome/browser/net/system_network_context_manager.cc",
+    "//chrome/browser/net/default_network_context_params.cc",
+    "//chrome/browser/net/default_network_context_params.h",
+    "//chrome/browser/net/proxy_service_factory.cc",
+    "//chrome/browser/net/proxy_service_factory.h",
+    "//chrome/browser/net/sth_distributor_provider.cc",
+    "//chrome/browser/net/sth_distributor_provider.h",
+    "//chrome/browser/net/system_network_context_manager.cc",
     "//chrome/browser/net/system_network_context_manager.h",
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
@@ -244,6 +251,8 @@ source_set("browser") {
     "//chrome/browser/process_singleton.h",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.cc",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.h",
+    "//chrome/browser/renderer_host/chrome_navigation_ui_data.cc",
+    "//chrome/browser/renderer_host/chrome_navigation_ui_data.h",
     "//chrome/browser/speech/tts_controller.h",
     "//chrome/browser/speech/tts_controller_impl.cc",
     "//chrome/browser/speech/tts_controller_impl.h",
@@ -284,6 +293,10 @@ source_set("browser") {
     "//chrome/browser/service_process/service_process_control.cc",
     "//chrome/browser/service_process/service_process_control.h",
     "//chrome/browser/service_process/service_process_control_mac.mm",
+
+    # these are not in a gn file anywhere for some reason
+    "//components/policy/core/common/policy_service_stub.cc",
+    "//components/policy/core/common/policy_service_stub.h",
   ]
 
   if (is_win || is_mac) {
@@ -421,6 +434,10 @@ source_set("browser") {
 
   if (enable_plugins) {
     sources += [
+      "//chrome/browser/media/cdm_storage_id.cc",
+      "//chrome/browser/media/cdm_storage_id.h",
+      "//chrome/browser/media/media_storage_id_salt.cc",
+      "//chrome/browser/media/media_storage_id_salt.h",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h",
       "//chrome/browser/renderer_host/pepper/device_id_fetcher.cc",
@@ -487,6 +504,12 @@ source_set("browser") {
         "//chrome/browser/extensions/api/messaging/native_process_launcher.h",
         "//chrome/browser/extensions/api/messaging/native_process_launcher_posix.cc",
         "//chrome/browser/extensions/api/messaging/native_process_launcher_win.cc",
+        "//chrome/browser/extensions/api/proxy/proxy_api.cc",
+        "//chrome/browser/extensions/api/proxy/proxy_api.h",
+        "//chrome/browser/extensions/api/proxy/proxy_api_constants.cc",
+        "//chrome/browser/extensions/api/proxy/proxy_api_constants.h",
+        "//chrome/browser/extensions/api/proxy/proxy_api_helpers.cc",
+        "//chrome/browser/extensions/api/proxy/proxy_api_helpers.h",
         "//chrome/browser/extensions/api/spellcheck/spellcheck_api.cc",
         "//chrome/browser/extensions/api/spellcheck/spellcheck_api.h",
         "//chrome/browser/extensions/api/tabs/tabs_constants.cc",
@@ -596,22 +619,6 @@ source_set("devtools") {
     "//chrome/browser/devtools/devtools_embedder_message_dispatcher.h",
     "//chrome/browser/devtools/devtools_file_system_indexer.cc",
     "//chrome/browser/devtools/devtools_file_system_indexer.h",
-    "//chrome/browser/devtools/devtools_network_conditions.cc",
-    "//chrome/browser/devtools/devtools_network_conditions.h",
-    "//chrome/browser/devtools/devtools_network_controller.cc",
-    "//chrome/browser/devtools/devtools_network_controller.h",
-    "//chrome/browser/devtools/devtools_network_controller_handle.cc",
-    "//chrome/browser/devtools/devtools_network_controller_handle.h",
-    "//chrome/browser/devtools/devtools_network_interceptor.cc",
-    "//chrome/browser/devtools/devtools_network_interceptor.h",
-    "//chrome/browser/devtools/devtools_network_protocol_handler.cc",
-    "//chrome/browser/devtools/devtools_network_protocol_handler.h",
-    "//chrome/browser/devtools/devtools_network_transaction_factory.cc",
-    "//chrome/browser/devtools/devtools_network_transaction_factory.h",
-    "//chrome/browser/devtools/devtools_network_transaction.cc",
-    "//chrome/browser/devtools/devtools_network_transaction.h",
-    "//chrome/browser/devtools/devtools_network_upload_data_stream.cc",
-    "//chrome/browser/devtools/devtools_network_upload_data_stream.h",
     "//chrome/browser/devtools/devtools_protocol.cc",
     "//chrome/browser/devtools/devtools_protocol.h",
     "//chrome/browser/devtools/url_constants.cc",
@@ -754,8 +761,6 @@ source_set("password_manager") {
   sources = [
     "//chrome/browser/browsing_data/browsing_data_helper.h",
     "//chrome/browser/browsing_data/browsing_data_helper.cc",
-    "//chrome/browser/mac/security_wrappers.h",
-    "//chrome/browser/mac/security_wrappers.cc",
     "//chrome/browser/password_manager/password_manager_util_win.h",
     "//chrome/browser/password_manager/password_manager_util_win.cc",
     "//chrome/browser/password_manager/password_store_factory.cc",
@@ -819,17 +824,29 @@ source_set("downloads") {
   configs += [ ":chromium_src_config" ]
 
   sources = [
+    "//chrome/browser/background_fetch/background_fetch_delegate_factory.cc",
+    "//chrome/browser/background_fetch/background_fetch_delegate_factory.h",
+    "//chrome/browser/background_fetch/background_fetch_delegate_impl.cc",
+    "//chrome/browser/background_fetch/background_fetch_delegate_impl.h",
+    "//chrome/browser/background_fetch/background_fetch_download_client.cc",
+    "//chrome/browser/background_fetch/background_fetch_download_client.h",
     "chrome/browser/download/download_core_service.cc",
     "//chrome/browser/download/download_core_service.h",
     "//chrome/browser/download/download_path_reservation_tracker.cc",
     "//chrome/browser/download/download_path_reservation_tracker.h",
     "chrome/browser/download/download_request_limiter.cc",
     "//chrome/browser/download/download_request_limiter.h",
+    "//chrome/browser/download/download_service_factory.cc",
+    "//chrome/browser/download/download_service_factory.h",
+    "//chrome/browser/download/download_task_scheduler_impl.cc",
+    "//chrome/browser/download/download_task_scheduler_impl.h",
   ]
 
   deps = [
     "//base",
     "//chrome/common",
+    "//components/download/content/factory",
+    "//components/download/public",
     "//content/public/browser",
     "//net",
     "//url",
@@ -1034,9 +1051,10 @@ source_set("tab_manager") {
 
   deps = [
     ":lifetime",
+    "//components/feature_engagement:features",
   ]
 
-  if (is_win) {
+  if (is_win || is_linux) {
     sources += [
       "//chrome/browser/feature_engagement/tracker_factory.cc",
       "//chrome/browser/feature_engagement/tracker_factory.h",
@@ -1055,6 +1073,12 @@ source_set("tab_manager") {
 
     deps += [
       "//components/feature_engagement",
+    ]
+  }
+
+  if (is_linux) {
+    sources += [
+      "//chrome/browser/icon_loader_auralinux.cc",
     ]
   }
 

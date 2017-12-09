@@ -49,7 +49,7 @@ class CommonWebContentsDelegate
   // Returns the WebContents of devtools.
   content::WebContents* GetDevToolsWebContents() const;
 
-  brightray::InspectableWebContents* managed_web_contents() const {
+  virtual brightray::InspectableWebContents* managed_web_contents() const {
     return web_contents_.get();
   }
 

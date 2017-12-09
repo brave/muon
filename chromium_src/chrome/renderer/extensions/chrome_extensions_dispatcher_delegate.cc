@@ -146,7 +146,7 @@ void ChromeExtensionsDispatcherDelegate::RegisterNativeHandlers(
       "atom",
       std::unique_ptr<NativeHandler>(
           new atom::JavascriptBindings(
-              context->GetRenderFrame()->GetRenderView(), context)));
+              context->GetRenderFrame(), context)));
   module_system->RegisterNativeHandler(
       "contentSettings",
       std::unique_ptr<NativeHandler>(

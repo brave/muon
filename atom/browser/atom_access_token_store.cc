@@ -12,6 +12,7 @@
 #include "chrome/browser/profiles/profile_manager.h"
 #include "content/public/browser/browser_thread.h"
 #include "device/geolocation/geolocation_provider.h"
+#include "muon/browser/muon_browser_process_impl.h"
 
 using content::BrowserThread;
 
@@ -32,7 +33,7 @@ class TokenLoadingJob : public base::RefCountedThreadSafe<TokenLoadingJob> {
  public:
   explicit TokenLoadingJob(
       const device::AccessTokenStore::LoadAccessTokensCallback& callback)
-      : callback_(callback), request_context_getter_(nullptr) {}
+      : callback_(callback), system_request_context_(nullptr) {}
 
   void Run() {
     BrowserThread::PostTaskAndReply(
@@ -49,8 +50,7 @@ class TokenLoadingJob : public base::RefCountedThreadSafe<TokenLoadingJob> {
 
   void PerformWorkOnUIThread() {
     DCHECK_CURRENTLY_ON(BrowserThread::UI);
-    Profile* profile = ProfileManager::GetPrimaryUserProfile();
-    request_context_getter_ = profile->GetRequestContext();
+    system_request_context_ = g_browser_process->system_request_context();
   }
 
   void RespondOnOriginatingThread() {
@@ -62,11 +62,11 @@ class TokenLoadingJob : public base::RefCountedThreadSafe<TokenLoadingJob> {
     token_pair.first = GURL(kGeolocationProviderURL);
     access_token_map.insert(token_pair);
 
-    callback_.Run(access_token_map, request_context_getter_);
+    callback_.Run(access_token_map, system_request_context_);
   }
 
   device::AccessTokenStore::LoadAccessTokensCallback callback_;
-  net::URLRequestContextGetter* request_context_getter_;
+  net::URLRequestContextGetter* system_request_context_;
 };
 
 }  // namespace

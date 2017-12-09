@@ -17,6 +17,7 @@
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/browser/window_list.h"
+#include "atom/common/google_api_key.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
 #include "base/files/file_util.h"
@@ -63,6 +64,15 @@ namespace {
 // Custom schemes to be registered to handle service worker.
 std::string g_custom_service_worker_schemes = "";  // NOLINT
 
+// Gets the URL request context getter for the browser process.
+// Must be called on the UI thread.
+scoped_refptr<net::URLRequestContextGetter>
+GetSystemRequestContextOnUIThread() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  return scoped_refptr<net::URLRequestContextGetter>(
+      g_browser_process->system_request_context());
+}
+
 }  // namespace
 
 void AtomBrowserClient::SetCustomServiceWorkerSchemes(
@@ -106,7 +116,8 @@ void AtomBrowserClient::OverrideWebkitPrefs(
   prefs->allow_universal_access_from_file_urls = false;
   prefs->allow_file_access_from_file_urls = false;
   prefs->hyperlink_auditing_enabled = false;
-  prefs->experimental_webgl_enabled = true;
+  prefs->webgl1_enabled = true;
+  prefs->webgl2_enabled = true;
   prefs->allow_running_insecure_content = false;
 
   // Custom preferences of guest page.
@@ -166,16 +177,14 @@ void AtomBrowserClient::AllowCertificateError(
     const net::SSLInfo& ssl_info,
     const GURL& request_url,
     content::ResourceType resource_type,
-    bool overridable,
     bool strict_enforcement,
     bool expired_previous_decision,
     const base::Callback<void(
         content::CertificateRequestResultType)>& callback) {
   if (delegate_) {
     delegate_->AllowCertificateError(
-        web_contents, cert_error, ssl_info, request_url,
-        resource_type, overridable, strict_enforcement,
-        expired_previous_decision, callback);
+        web_contents, cert_error, ssl_info, request_url, resource_type,
+        strict_enforcement, expired_previous_decision, callback);
   }
 }
 
@@ -202,6 +211,18 @@ void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
     additional_schemes->insert(additional_schemes->end(),
                                schemes_list.begin(),
                                schemes_list.end());
+}
+
+void AtomBrowserClient::GetGeolocationRequestContext(
+      base::OnceCallback<void(scoped_refptr<net::URLRequestContextGetter>)>
+          callback) {
+  content::BrowserThread::PostTaskAndReplyWithResult(
+      content::BrowserThread::UI, FROM_HERE,
+      base::BindOnce(&GetSystemRequestContextOnUIThread), std::move(callback));
+}
+
+std::string AtomBrowserClient::GetGeolocationApiKey() {
+  return GOOGLEAPIS_API_KEY;
 }
 
 brightray::BrowserMainParts* AtomBrowserClient::OverrideCreateBrowserMainParts(

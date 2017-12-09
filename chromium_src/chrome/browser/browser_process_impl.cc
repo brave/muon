@@ -23,6 +23,7 @@
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/shell_integration.h"
 #include "chrome/browser/status_icons/status_tray.h"
+#include "chrome/browser/ui/user_manager.h"
 #include "chrome/common/chrome_features.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/installer/util/google_update_settings.h"
@@ -30,8 +31,11 @@
 #include "components/metrics_services_manager/metrics_services_manager.h"
 #include "components/metrics/metrics_pref_names.h"
 #include "components/password_manager/core/browser/password_manager.h"
+#include "components/policy/core/common/policy_service_stub.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_filter.h"
+#include "components/proxy_config/pref_proxy_config_tracker_impl.h"
+#include "components/ssl_config/ssl_config_service_manager.h"
 #include "components/sync_preferences/pref_service_syncable_factory.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
@@ -117,6 +121,11 @@ static constexpr base::TimeDelta kEndSessionTimeout =
 using content::ChildProcessSecurityPolicy;
 using content::PluginService;
 
+namespace {
+base::LazyInstance<policy::PolicyServiceStub>::Leaky policy_service_stub =
+    LAZY_INSTANCE_INITIALIZER;
+}  // namespace
+
 BrowserProcessImpl::BrowserProcessImpl(
       base::SequencedTaskRunner* local_state_task_runner,
       const base::CommandLine& command_line) :
@@ -149,6 +158,16 @@ BrowserProcessImpl::BrowserProcessImpl(
 #endif
 
   message_center::MessageCenter::Initialize();
+
+  net_log_ = base::MakeUnique<net_log::ChromeNetLog>();
+
+  // TODO(darkdh): support this later
+  // if (command_line.HasSwitch(switches::kLogNetLog)) {
+  //   net_log_->StartWritingToFile(
+  //       command_line.GetSwitchValuePath(switches::kLogNetLog),
+  //       GetNetCaptureModeFromCommandLine(command_line),
+  //       command_line.GetCommandLineString(), chrome::GetChannelString());
+  // }
 }
 
 BrowserProcessImpl::~BrowserProcessImpl() {
@@ -157,6 +176,21 @@ BrowserProcessImpl::~BrowserProcessImpl() {
   extensions::ExtensionsBrowserClient::Set(nullptr);
 #endif
   g_browser_process = NULL;
+}
+
+void BrowserProcessImpl::PostDestroyThreads() {
+
+  // This observes |local_state_|, so should be destroyed before it.
+  system_network_context_manager_.reset();
+
+  // Reset associated state right after actual thread is stopped,
+  // as io_thread_.global_ cleanup happens in CleanUp on the IO
+  // thread, i.e. as the thread exits its message loop.
+  //
+  // This is important also because in various places, the
+  // IOThread object being NULL is considered synonymous with the
+  // IO thread having stopped.
+  io_thread_.reset();
 }
 
 void BrowserProcessImpl::CreateProfileManager() {
@@ -254,6 +288,13 @@ void BrowserProcessImpl::CreateLocalState() {
                         std::unique_ptr<PrefFilter>()));
   local_state_ = factory.Create(pref_registry.get());
 
+  // Register local state preferences.
+  // TODO(svillar): Ideally we should call chrome::RegisterLocalState()
+  // but that pulls in way too many unneeded stuff.
+  IOThread::RegisterPrefs(pref_registry.get());
+  PrefProxyConfigTrackerImpl::RegisterPrefs(pref_registry.get());
+  ssl_config::SSLConfigServiceManager::RegisterPrefs(pref_registry.get());
+
   pref_change_registrar_.Init(local_state_.get());
   pref_change_registrar_.Add(
     metrics::prefs::kMetricsReportingEnabled,
@@ -283,6 +324,16 @@ void BrowserProcessImpl::PreCreateThreads() {
   // initialize local state
   local_state()->UpdateCommandLinePrefStore(
       new ChromeCommandLinePrefStore(command_line));
+
+  // Must be created before the IOThread.
+  // TODO(mmenke): Once IOThread class is no longer needed (not the thread
+  // itself), this can be created on first use.
+  system_network_context_manager_ =
+      base::MakeUnique<SystemNetworkContextManager>();
+  io_thread_ = base::MakeUnique<IOThread>(
+      local_state(), policy_service(), net_log_.get(),
+      extension_event_router_forwarder(),
+      system_network_context_manager_.get());
 }
 
 void BrowserProcessImpl::PreMainMessageLoopRun() {
@@ -446,8 +497,7 @@ void BrowserProcessImpl::FlushLocalStateAndReply(base::OnceClosure reply) {
 }
 
 net_log::ChromeNetLog* BrowserProcessImpl::net_log() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return net_log_.get();
 }
 
 metrics_services_manager::MetricsServicesManager*
@@ -461,8 +511,8 @@ metrics::MetricsService* BrowserProcessImpl::metrics_service() {
 }
 
 net::URLRequestContextGetter* BrowserProcessImpl::system_request_context() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  return io_thread()->system_url_request_context_getter();
 }
 
 variations::VariationsService* BrowserProcessImpl::variations_service() {
@@ -494,8 +544,9 @@ NotificationPlatformBridge* BrowserProcessImpl::notification_platform_bridge() {
 }
 
 IOThread* BrowserProcessImpl::io_thread() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  DCHECK(io_thread_.get());
+  return io_thread_.get();
 }
 
 SystemNetworkContextManager*
@@ -515,8 +566,7 @@ policy::BrowserPolicyConnector* BrowserProcessImpl::browser_policy_connector() {
 }
 
 policy::PolicyService* BrowserProcessImpl::policy_service() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  return policy_service_stub.Pointer();
 }
 
 IconManager* BrowserProcessImpl::icon_manager() {
@@ -623,12 +673,6 @@ CRLSetFetcher* BrowserProcessImpl::crl_set_fetcher() {
   return nullptr;
 }
 
-component_updater::PnaclComponentInstaller*
-BrowserProcessImpl::pnacl_component_installer() {
-  NOTIMPLEMENTED();
-  return nullptr;
-}
-
 component_updater::SupervisedUserWhitelistInstaller*
 BrowserProcessImpl::supervised_user_whitelist_installer() {
   NOTIMPLEMENTED();
@@ -681,29 +725,11 @@ void BrowserProcessImpl::OnKeepAliveRestartStateChanged(bool can_restart) {}
 void BrowserProcessImpl::ResourceDispatcherHostCreated() {}
 
 void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
-  bool enabled =
-      ChromeMetricsServiceAccessor::IsMetricsAndCrashReportingEnabled();
-
-  CHECK(content::BrowserThread::PostTask(
-      content::BrowserThread::FILE, FROM_HERE,
-      base::BindOnce(
-          base::IgnoreResult(&GoogleUpdateSettings::SetCollectStatsConsent),
-          enabled)));
-
-  #if defined(OS_WIN)
-    install_static::SetCollectStatsInSample(enabled);
-    HMODULE elf_module = GetModuleHandle(chrome::kChromeElfDllName);
-    static SetUploadConsentPointer set_upload_consent =
-        reinterpret_cast<SetUploadConsentPointer>(
-            GetProcAddress(elf_module, kCrashpadUpdateConsentFunctionName));
-
-    if (enabled) {
-      // Crashpad will use the kRegUsageStatsInSample registry value to apply
-      // sampling correctly, but may_record already reflects the sampling state.
-      // This isn't a problem though, since they will be consistent.
-      set_upload_consent(enabled);
-    }
-  #endif  // defined(OS_WIN)
+	GoogleUpdateSettings::CollectStatsConsentTaskRunner()->PostTask(
+		FROM_HERE,
+		base::BindOnce(
+			base::IgnoreResult(&GoogleUpdateSettings::SetCollectStatsConsent),
+			ChromeMetricsServiceAccessor::IsMetricsAndCrashReportingEnabled()));
 }
 
 #if (defined(OS_WIN) || defined(OS_LINUX)) && !defined(OS_CHROMEOS)
