@@ -418,14 +418,16 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
 }
 
 GURL BraveContentBrowserClient::GetEffectiveURL(
-    content::BrowserContext* browser_context, const GURL& url) {
+    content::BrowserContext* browser_context,
+    const GURL& url,
+    bool is_isolated_origin) {
   Profile* profile = Profile::FromBrowserContext(browser_context);
   if (!profile)
     return url;
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   return AtomBrowserClientExtensionsPart::GetEffectiveURL(
-      profile, url);
+      profile, url, is_isolated_origin);
 #else
   return url;
 #endif

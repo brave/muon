@@ -39,7 +39,9 @@ class AtomBrowserClientExtensionsPart {
   ~AtomBrowserClientExtensionsPart();
 
   // Corresponds to the AtomBrowserClient function of the same name.
-  static GURL GetEffectiveURL(Profile* profile, const GURL& url);
+  static GURL GetEffectiveURL(Profile* profile,
+                              const GURL& url,
+                              bool is_isolated_origin);
   static bool ShouldUseProcessPerSite(Profile* profile,
                                       const GURL& effective_url);
   static bool DoesSiteRequireDedicatedProcess(
