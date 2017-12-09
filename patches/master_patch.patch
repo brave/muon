@@ -932,10 +932,10 @@ index f211e8165a7fdf883760886ecf7eb86859922b2b..e6b4ffb00ba4fcfabbced0630862705f
  
  static_library("test_support") {
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
-index 21f7d6fde866f50872090c8b48da223df6b3604f..6a74268abc8ac2acbe2bac18492b5d9fbf2abb55 100644
+index 0459db65fee93a4f9c32dc83e7528b6bb8c8f653..a952500396f293dfa648ff9aeb9631f4847df2e5 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
 +++ b/chrome/renderer/chrome_content_renderer_client.cc
-@@ -1511,6 +1511,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
+@@ -1510,6 +1510,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
  #endif
  }
  
@@ -943,7 +943,7 @@ index 21f7d6fde866f50872090c8b48da223df6b3604f..6a74268abc8ac2acbe2bac18492b5d9f
  void ChromeContentRendererClient::RecordRappor(const std::string& metric,
                                                 const std::string& sample) {
    if (!rappor_recorder_) {
-@@ -1528,6 +1529,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
+@@ -1527,6 +1528,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
    }
    rappor_recorder_->RecordRapporURL(metric, url);
  }
