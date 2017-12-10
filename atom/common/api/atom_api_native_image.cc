@@ -99,10 +99,12 @@ bool AddImageSkiaRep(gfx::ImageSkia* image,
 bool AddImageSkiaRep(gfx::ImageSkia* image,
                      const base::FilePath& path,
                      double scale_factor) {
-  base::ThreadRestrictions::SetIOAllowed(true);   // TODO(bridiver) ugh electron
   std::string file_contents;
-  if (!asar::ReadFileToString(path, &file_contents))
-    return false;
+  {
+    base::ThreadRestrictions::ScopedAllowIO allow_io;
+    if (!asar::ReadFileToString(path, &file_contents))
+      return false;
+  }
 
   const unsigned char* data =
       reinterpret_cast<const unsigned char*>(file_contents.data());
