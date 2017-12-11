@@ -159,6 +159,7 @@ source_set("browser") {
     "//components/data_usage/core",
     "//components/keep_alive_registry",
     "//components/net_log",
+    "//components/offline_items_collection/core",
     "//components/optimization_guide/proto:optimization_guide_proto",
     "//components/policy/core/common",
     "//components/prefs",
@@ -234,6 +235,9 @@ source_set("browser") {
     "//chrome/browser/net/sth_distributor_provider.h",
     "//chrome/browser/net/system_network_context_manager.cc",
     "//chrome/browser/net/system_network_context_manager.h",
+
+    "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.cc",
+    "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.h",
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
