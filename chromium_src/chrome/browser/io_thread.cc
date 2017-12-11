@@ -111,10 +111,9 @@ IOThread::IOThread(
           local_state,
           BrowserThread::GetTaskRunnerForThread(BrowserThread::IO)));
 
-  base::Value* dns_client_enabled_default =
-      new base::Value(base::FeatureList::IsEnabled(features::kAsyncDns));
-  local_state->SetDefaultPrefValue(prefs::kBuiltInDnsClientEnabled,
-                                   dns_client_enabled_default);
+  local_state->SetDefaultPrefValue(
+      prefs::kBuiltInDnsClientEnabled,
+      base::Value(base::FeatureList::IsEnabled(features::kAsyncDns)));
 
   dns_client_enabled_.Init(prefs::kBuiltInDnsClientEnabled,
                            local_state,
