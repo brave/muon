@@ -28,7 +28,6 @@
 #include "content/public/network/ignore_errors_cert_verifier.h"
 #include "content/public/network/url_request_context_builder_mojo.h"
 #include "extensions/features/features.h"
-#include "net/base/logging_network_change_observer.h"
 #include "net/cert/cert_verifier.h"
 #include "net/cert/ct_known_logs.h"
 #include "net/cert/ct_log_verifier.h"
@@ -223,12 +222,6 @@ void IOThread::Init() {
   DCHECK(!globals_);
   globals_ = new Globals;
 
-  // Add an observer that will emit network change events to the ChromeNetLog.
-  // Assuming NetworkChangeNotifier dispatches in FIFO order, we should be
-  // logging the network change before other IO thread consumers respond to it.
-  network_change_observer_.reset(
-      new net::LoggingNetworkChangeObserver(net_log_));
-
   // Setup the HistogramWatcher to run on the IO thread.
   net::NetworkChangeNotifier::InitHistogramWatcher();
 
@@ -283,9 +276,6 @@ void IOThread::CleanUp() {
 
   // Shutdown the HistogramWatcher on the IO thread.
   net::NetworkChangeNotifier::ShutdownHistogramWatcher();
-
-  // This must be reset before the ChromeNetLog is destroyed.
-  network_change_observer_.reset();
 
   system_proxy_config_service_.reset();
   delete globals_;
@@ -480,7 +470,6 @@ void IOThread::ConstructSystemRequestContext() {
       atom_network_delegate(new atom::AtomNetworkDelegate());
 
   builder->set_network_delegate(std::move(atom_network_delegate));
-  builder->set_net_log(net_log_);
   std::unique_ptr<net::HostResolver> host_resolver(
       CreateGlobalHostResolver(net_log_));
 
