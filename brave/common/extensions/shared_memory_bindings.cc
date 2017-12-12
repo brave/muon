@@ -112,7 +112,9 @@ mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
   // Create the shared memory object.
   std::unique_ptr<base::SharedMemory> shared_memory;
   if (ChildThread::Get()) {
-    shared_memory = ChildThreadImpl::AllocateSharedMemory(pickle.size());
+    shared_memory =
+        content::RenderThread::Get()->HostAllocateSharedMemoryBuffer(
+                                                                 pickle.size());
   } else {
     shared_memory.reset(new base::SharedMemory);
 
@@ -134,8 +136,13 @@ mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
   memcpy(shared_memory->memory(), pickle.data(), pickle.size());
   free(buf.first);
 
-  base::SharedMemoryHandle handle = shared_memory->TakeHandle();
+  base::SharedMemoryHandle handle =
+      base::SharedMemory::DuplicateHandle(shared_memory->handle());
+
+  shared_memory->Close();
+
   if (!handle.IsValid()) {
+    base::SharedMemory::CloseHandle(handle);
     return mate::Handle<SharedMemoryWrapper>();
   }
 

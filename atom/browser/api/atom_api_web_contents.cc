@@ -2252,28 +2252,19 @@ bool WebContents::SendIPCSharedMemory(int render_process_id,
                                       int render_frame_id,
                                       const base::string16& channel,
                                       base::SharedMemory* shared_memory) {
-  base::SharedMemoryHandle memory_handle = shared_memory->TakeHandle();
-  if (!memory_handle.IsValid())
-    return false;
+  base::SharedMemoryHandle memory_handle =
+      base::SharedMemory::DuplicateHandle(shared_memory->handle());
 
   auto rfh =
       content::RenderFrameHost::FromID(render_process_id, render_frame_id);
 
-  if (!rfh)
+  if (!memory_handle.IsValid() || !rfh) {
+    base::SharedMemory::CloseHandle(memory_handle);
     return false;
-
-  bool success = rfh->Send(new AtomViewMsg_Message_Shared(
-      rfh->GetRoutingID(), channel, memory_handle));
-
-  if (!success && memory_handle.IsValid()) {
-    // cleanup if the send failed
-    std::unique_ptr<base::SharedMemory>
-        temp(new base::SharedMemory(memory_handle, true));
-    temp->Unmap();
-    temp->Close();
   }
 
-  return success;
+  return rfh->Send(new AtomViewMsg_Message_Shared(
+      rfh->GetRoutingID(), channel, memory_handle));
 }
 
 bool WebContents::SendIPCMessageInternal(const base::string16& channel,

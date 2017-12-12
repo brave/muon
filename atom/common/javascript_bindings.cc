@@ -145,8 +145,10 @@ void JavascriptBindings::IPCSendShared(mate::Arguments* args,
   if (!is_valid() || !render_frame())
     return;
 
-  base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
+  base::SharedMemoryHandle memory_handle =
+      base::SharedMemory::DuplicateHandle(shared_memory->handle());
   if (!memory_handle.IsValid()) {
+    base::SharedMemory::CloseHandle(memory_handle);
     args->ThrowError("Could not create shared memory handle");
     return;
   }
