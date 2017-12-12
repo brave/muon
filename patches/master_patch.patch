@@ -1997,24 +1997,6 @@ index 7505524b693b24d9028447929d881232a0483561..03eea7522154c40691405ec43e07303b
          if (now - last_upload_attempt_time < kUploadAttemptIntervalSeconds) {
            database_->SkipReportUpload(
                report.uuid, Metrics::CrashSkippedReason::kUploadThrottled);
-diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
-index a3eac59cc2ebdb1f9d2bb7af8a7db0d44ab315a9..11d0c86fb7cdfc1881f563552fb6f5c5abdabae4 100644
---- a/third_party/widevine/cdm/BUILD.gn
-+++ b/third_party/widevine/cdm/BUILD.gn
-@@ -113,9 +113,10 @@ if (widevine_cdm_binary_files != []) {
-     if (is_mac) {
-       ldflags = [
-         # Not to strip important symbols by -Wl,-dead_strip.
--        "-Wl,-exported_symbol,_PPP_GetInterface",
--        "-Wl,-exported_symbol,_PPP_InitializeModule",
--        "-Wl,-exported_symbol,_PPP_ShutdownModule",
-+        # "-Wl,-exported_symbol,_PPP_GetInterface",
-+        # "-Wl,-exported_symbol,_PPP_InitializeModule",
-+        # "-Wl,-exported_symbol,_PPP_ShutdownModule",
-+        "-Wl,-install_name,@loader_path/libwidevinecdm.dylib",
-       ]
-       #TODO(jrummell) Mac: 'DYLIB_INSTALL_NAME_BASE': '@loader_path',
-     } else if (is_posix && !is_mac) {
 diff --git a/third_party/widevine/cdm/stub/manifest.json b/third_party/widevine/cdm/stub/manifest.json
 index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c22e9cff2 100644
 --- a/third_party/widevine/cdm/stub/manifest.json
