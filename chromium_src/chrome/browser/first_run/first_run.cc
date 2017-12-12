@@ -10,4 +10,8 @@ bool IsChromeFirstRun() {
   return false;
 }
 
+base::Time GetFirstRunSentinelCreationTime() {
+  return base::Time();
+}
+
 }  // namespace first_run
