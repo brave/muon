@@ -2031,6 +2031,73 @@ index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c
      }
    ]
  }
+diff --git a/third_party/wtl/include/atldlgs.h b/third_party/wtl/include/atldlgs.h
+index 62db9178013cd6e61cf763e11c079f388e20f144..85e5e6690d3b9429e381ad543203f507974d0549 100644
+--- a/third_party/wtl/include/atldlgs.h
++++ b/third_party/wtl/include/atldlgs.h
+@@ -1110,7 +1110,7 @@ public:
+ 	}
+ 
+ // Implementation - IFileDialogEvents interface
+-	virtual HRESULT STDMETHODCALLTYPE IFileDialogEvents::OnFileOk(IFileDialog* pfd)
++	virtual HRESULT STDMETHODCALLTYPE OnFileOk(IFileDialog* pfd)
+ 	{
+ 		T* pT = static_cast<T*>(this);
+ 		ATLASSERT(pT->m_spFileDlg.IsEqualObject(pfd));
+@@ -1118,7 +1118,7 @@ public:
+ 		return pT->OnFileOk();
+ 	}
+ 
+-	virtual HRESULT STDMETHODCALLTYPE IFileDialogEvents::OnFolderChanging(IFileDialog* pfd, IShellItem* psiFolder)
++	virtual HRESULT STDMETHODCALLTYPE OnFolderChanging(IFileDialog* pfd, IShellItem* psiFolder)
+ 	{
+ 		T* pT = static_cast<T*>(this);
+ 		ATLASSERT(pT->m_spFileDlg.IsEqualObject(pfd));
+@@ -1126,7 +1126,7 @@ public:
+ 		return pT->OnFolderChanging(psiFolder);
+ 	}
+ 
+-	virtual HRESULT STDMETHODCALLTYPE IFileDialogEvents::OnFolderChange(IFileDialog* pfd)
++	virtual HRESULT STDMETHODCALLTYPE OnFolderChange(IFileDialog* pfd)
+ 	{
+ 		T* pT = static_cast<T*>(this);
+ 		ATLASSERT(pT->m_spFileDlg.IsEqualObject(pfd));
+@@ -1134,7 +1134,7 @@ public:
+ 		return pT->OnFolderChange();
+ 	}
+ 
+-	virtual HRESULT STDMETHODCALLTYPE IFileDialogEvents::OnSelectionChange(IFileDialog* pfd)
++	virtual HRESULT STDMETHODCALLTYPE OnSelectionChange(IFileDialog* pfd)
+ 	{
+ 		T* pT = static_cast<T*>(this);
+ 		ATLASSERT(pT->m_spFileDlg.IsEqualObject(pfd));
+@@ -1142,7 +1142,7 @@ public:
+ 		return pT->OnSelectionChange();
+ 	}
+ 
+-	virtual HRESULT STDMETHODCALLTYPE IFileDialogEvents::OnShareViolation(IFileDialog* pfd, IShellItem* psi, FDE_SHAREVIOLATION_RESPONSE* pResponse)
++	virtual HRESULT STDMETHODCALLTYPE OnShareViolation(IFileDialog* pfd, IShellItem* psi, FDE_SHAREVIOLATION_RESPONSE* pResponse)
+ 	{
+ 		T* pT = static_cast<T*>(this);
+ 		ATLASSERT(pT->m_spFileDlg.IsEqualObject(pfd));
+@@ -1150,7 +1150,7 @@ public:
+ 		return pT->OnShareViolation(psi, pResponse);
+ 	}
+ 
+-	virtual HRESULT STDMETHODCALLTYPE IFileDialogEvents::OnTypeChange(IFileDialog* pfd)
++	virtual HRESULT STDMETHODCALLTYPE OnTypeChange(IFileDialog* pfd)
+ 	{
+ 		T* pT = static_cast<T*>(this);
+ 		ATLASSERT(pT->m_spFileDlg.IsEqualObject(pfd));
+@@ -1158,7 +1158,7 @@ public:
+ 		return pT->OnTypeChange();
+ 	}
+ 
+-	virtual HRESULT STDMETHODCALLTYPE IFileDialogEvents::OnOverwrite(IFileDialog* pfd, IShellItem* psi, FDE_OVERWRITE_RESPONSE* pResponse)
++	virtual HRESULT STDMETHODCALLTYPE OnOverwrite(IFileDialog* pfd, IShellItem* psi, FDE_OVERWRITE_RESPONSE* pResponse)
+ 	{
+ 		T* pT = static_cast<T*>(this);
+ 		ATLASSERT(pT->m_spFileDlg.IsEqualObject(pfd));
 diff --git a/ui/views/controls/menu/menu_controller.cc b/ui/views/controls/menu/menu_controller.cc
 index 9389f25f034d131f9aab4bd521db7999c12c5a5c..382d93ef0f641bdf80ca6ce84d1438670350fe12 100644
 --- a/ui/views/controls/menu/menu_controller.cc
