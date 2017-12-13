@@ -2253,13 +2253,17 @@ bool WebContents::SendIPCSharedMemory(int render_process_id,
                                       const base::string16& channel,
                                       base::SharedMemory* shared_memory) {
   base::SharedMemoryHandle memory_handle =
-      base::SharedMemory::DuplicateHandle(shared_memory->handle());
+      shared_memory->GetReadOnlyHandle().Duplicate();
 
   auto rfh =
       content::RenderFrameHost::FromID(render_process_id, render_frame_id);
 
-  if (!memory_handle.IsValid() || !rfh) {
-    base::SharedMemory::CloseHandle(memory_handle);
+  if (!memory_handle.IsValid() || !rfh)
+    return false;
+
+  base::ProcessHandle handle = rfh->GetProcess()->GetHandle();
+  if (!handle) {
+    LOG(ERROR) << "no process handle yet";
     return false;
   }
 

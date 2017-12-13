@@ -18,6 +18,8 @@
 #include "url/gurl.h"
 #include "v8/include/v8.h"
 
+#include "content/public/renderer/render_thread.h"
+
 using content::ChildThread;
 using content::ChildThreadImpl;
 
@@ -136,13 +138,9 @@ mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
   memcpy(shared_memory->memory(), pickle.data(), pickle.size());
   free(buf.first);
 
-  base::SharedMemoryHandle handle =
-      base::SharedMemory::DuplicateHandle(shared_memory->handle());
-
-  shared_memory->Close();
+  base::SharedMemoryHandle handle = shared_memory->GetReadOnlyHandle();
 
   if (!handle.IsValid()) {
-    base::SharedMemory::CloseHandle(handle);
     return mate::Handle<SharedMemoryWrapper>();
   }
 
@@ -157,15 +155,10 @@ SharedMemoryWrapper::SharedMemoryWrapper(v8::Isolate* isolate,
 }
 
 void SharedMemoryWrapper::Close() {
-  if (shared_memory_.get()) {
-    shared_memory_->Unmap();
-    shared_memory_->Close();
-  }
+  shared_memory_.reset();
 }
 
-SharedMemoryWrapper::~SharedMemoryWrapper() {
-  Close();
-}
+SharedMemoryWrapper::~SharedMemoryWrapper() {}
 
 void SharedMemoryWrapper::BuildPrototype(v8::Isolate* isolate,
                                  v8::Local<v8::FunctionTemplate> prototype) {
