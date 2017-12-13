@@ -655,15 +655,13 @@ index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3a
    NSString* outer_app_dir_ns = [NSString stringWithUTF8String:outer_app_dir_c];
  
 diff --git a/chrome/common/chrome_version.h.in b/chrome/common/chrome_version.h.in
-index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..32a42063be29461cd51eeee04092c2521c8c2da5 100644
+index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e453aef4287 100644
 --- a/chrome/common/chrome_version.h.in
 +++ b/chrome/common/chrome_version.h.in
-@@ -22,3 +22,7 @@
+@@ -22,3 +22,5 @@
  // Changelist Information
  
  #define LASTCHANGE_STRING "@LASTCHANGE@"
-+
-+#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
 +
 +#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
 diff --git a/chrome/common/crash_keys.cc b/chrome/common/crash_keys.cc
@@ -1846,11 +1844,11 @@ index b73f65168086189aed021cc82ffef5fde1f2d061..aa3f97fa57a3cb5616cd3811a34d0698
  }
  
 diff --git a/net/http/transport_security_state_static.json b/net/http/transport_security_state_static.json
-index 698980a564bc1e72bdc3967244fcba0dcd610af5..00a32c08fe94c74def0097208b46e73515fcfc6f 100644
+index 698980a564bc1e72bdc3967244fcba0dcd610af5..e7553cd2d9e58cc585123634afda63f45f6eab05 100644
 --- a/net/http/transport_security_state_static.json
 +++ b/net/http/transport_security_state_static.json
-@@ -66,6 +66,17 @@
-       "report_uri": "http://clients3.google.com/cert_upload_json"
+@@ -56,6 +56,17 @@
+       ]
      },
      {
 +      "name": "brave",
@@ -1864,9 +1862,9 @@ index 698980a564bc1e72bdc3967244fcba0dcd610af5..00a32c08fe94c74def0097208b46e735
 +      ]
 +    },
 +    {
-       "name": "tor",
+       "name": "google",
        "static_spki_hashes": [
-         "RapidSSL",
+         "GoogleBackup2048",
 @@ -262,6 +273,10 @@
      { "name": "app", "include_subdomains": true, "mode": "force-https" },
      { "name": "chrome", "include_subdomains": true, "mode": "force-https" },
