@@ -1846,7 +1846,7 @@ index b73f65168086189aed021cc82ffef5fde1f2d061..aa3f97fa57a3cb5616cd3811a34d0698
  }
  
 diff --git a/net/http/transport_security_state_static.json b/net/http/transport_security_state_static.json
-index 698980a564bc1e72bdc3967244fcba0dcd610af5..184bd5f570dc07839bfd2b8559bb68868bb30c90 100644
+index 698980a564bc1e72bdc3967244fcba0dcd610af5..ba320d3442eadac05946c90ebb798177508aa0f9 100644
 --- a/net/http/transport_security_state_static.json
 +++ b/net/http/transport_security_state_static.json
 @@ -66,6 +66,17 @@
@@ -1878,9 +1878,9 @@ index 698980a564bc1e72bdc3967244fcba0dcd610af5..184bd5f570dc07839bfd2b8559bb6886
 +    { "name": "sync-staging.brave.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
 +    { "name": "brave-sync-staging.s3.dualstack.us-west-2.amazonaws.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
 +    { "name": "brave-sync.s3.dualstack.us-west-2.amazonaws.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "https://s3.amazonaws.com/adblock-data/", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "https://s3.amazonaws.com/tracking-protection-data", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "https://s3.amazonaws.com/https-everywhere-data", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
++    { "name": "s3.amazonaws.com/adblock-data/", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
++    { "name": "s3.amazonaws.com/tracking-protection-data", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
++    { "name": "s3.amazonaws.com/https-everywhere-data", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
 +    { "name": "ledger.mercury.basicattentiontoken.org", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
 +    { "name": "balance.mercury.basicattentiontoken.org", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
 +
