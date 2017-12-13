@@ -1846,7 +1846,7 @@ index b73f65168086189aed021cc82ffef5fde1f2d061..aa3f97fa57a3cb5616cd3811a34d0698
  }
  
 diff --git a/net/http/transport_security_state_static.json b/net/http/transport_security_state_static.json
-index 698980a564bc1e72bdc3967244fcba0dcd610af5..ba320d3442eadac05946c90ebb798177508aa0f9 100644
+index 698980a564bc1e72bdc3967244fcba0dcd610af5..00a32c08fe94c74def0097208b46e73515fcfc6f 100644
 --- a/net/http/transport_security_state_static.json
 +++ b/net/http/transport_security_state_static.json
 @@ -66,6 +66,17 @@
@@ -1867,22 +1867,13 @@ index 698980a564bc1e72bdc3967244fcba0dcd610af5..ba320d3442eadac05946c90ebb798177
        "name": "tor",
        "static_spki_hashes": [
          "RapidSSL",
-@@ -262,6 +273,19 @@
+@@ -262,6 +273,10 @@
      { "name": "app", "include_subdomains": true, "mode": "force-https" },
      { "name": "chrome", "include_subdomains": true, "mode": "force-https" },
  
 +    //Brave
 +    { "name": "brave.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "laptop-updates.brave.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "sync.brave.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "sync-staging.brave.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "brave-sync-staging.s3.dualstack.us-west-2.amazonaws.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "brave-sync.s3.dualstack.us-west-2.amazonaws.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "s3.amazonaws.com/adblock-data/", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "s3.amazonaws.com/tracking-protection-data", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "s3.amazonaws.com/https-everywhere-data", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "ledger.mercury.basicattentiontoken.org", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
-+    { "name": "balance.mercury.basicattentiontoken.org", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
++    { "name": "basicattentiontoken.org", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
 +
      // Google domains using Expect-CT.
      { "name": "mail.google.com", "include_subdomains": true, "mode": "force-https", "pins": "google", "expect_ct": true, "expect_ct_report_uri": "https://clients3.google.com/ct_upload" },
