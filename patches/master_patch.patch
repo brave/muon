@@ -236,7 +236,7 @@ index 4605a11ecd9367cf49fb3f6320eaaae86d13833c..e1d24a3bc45622ba7b2a3fc68d494849
  }
  
  PasswordStoreFactory::~PasswordStoreFactory() {}
-@@ -264,12 +266,14 @@ PasswordStoreFactory::BuildServiceInstanceFor(
+@@ -264,6 +266,7 @@ PasswordStoreFactory::BuildServiceInstanceFor(
        ps.get(), profile->GetPrefs(),
        base::WrapRefCounted(profile->GetRequestContext()));
  
@@ -244,13 +244,14 @@ index 4605a11ecd9367cf49fb3f6320eaaae86d13833c..e1d24a3bc45622ba7b2a3fc68d494849
  #if defined(OS_WIN) || defined(OS_MACOSX) || \
      (defined(OS_LINUX) && !defined(OS_CHROMEOS))
    std::unique_ptr<password_manager::PasswordStoreSigninNotifier> notifier =
-       base::MakeUnique<password_manager::PasswordStoreSigninNotifierImpl>(
+@@ -271,6 +274,7 @@ PasswordStoreFactory::BuildServiceInstanceFor(
            profile);
    ps->SetPasswordStoreSigninNotifier(std::move(notifier));
-+#endif
  #endif
++#endif
  
    return ps;
+ }
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index e1d7bcd79da69a0de720df05dd1f8ce307b3d146..25decc50a030b09c15b6784d0e90c7194a7b0e82 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
@@ -642,7 +643,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3ade1a5e1e 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -40,7 +40,9 @@ NSBundle* OuterAppBundleInternal() {
+@@ -40,7 +40,9 @@
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -724,16 +725,16 @@ diff --git a/chrome/common/importer/profile_import.mojom b/chrome/common/importe
 index d5fa210c58244a5c9bc2aed4fa80d903920f604e..3f24c00ba2024fb1a6553d4fc69dae5f71c4d08c 100644
 --- a/chrome/common/importer/profile_import.mojom
 +++ b/chrome/common/importer/profile_import.mojom
-@@ -17,6 +17,9 @@ struct ImportedBookmarkEntry;
- [Native]
+@@ -18,6 +18,9 @@ struct ImportedBookmarkEntry;
  struct ImporterAutofillFormDataEntry;
  
-+[Native]
+ [Native]
 +struct ImportedCookieEntry;
 +
- [Native]
++[Native]
  struct SearchEngineInfo;
  
+ [Native]
 @@ -65,6 +68,8 @@ interface ProfileImportObserver {
    OnAutofillFormDataImportStart(uint32 total_autofill_form_data_entry_count);
    OnAutofillFormDataImportGroup(
@@ -1111,7 +1112,7 @@ diff --git a/components/crash/content/app/crashpad_mac.mm b/components/crash/con
 index 485c2b4b3e98244f6303c92394dd0f6eab7263c6..5b530d7a32df23537d3b59e03f3729759a937254 100644
 --- a/components/crash/content/app/crashpad_mac.mm
 +++ b/components/crash/content/app/crashpad_mac.mm
-@@ -55,6 +55,8 @@ base::FilePath PlatformCrashpadInitialization(
+@@ -55,6 +55,8 @@
        // Only allow the possibility of report upload in official builds. This
        // crash server won't have symbols for any other build types.
        std::string url = "https://clients2.google.com/cr/report";
@@ -1269,7 +1270,7 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
  #include "base/mac/mac_logging.h"
  #include "base/rand_util.h"
  #include "crypto/apple_keychain.h"
-@@ -61,6 +62,14 @@ const char KeychainPassword::account_name[] = "Chromium";
+@@ -61,6 +62,14 @@
  std::string KeychainPassword::GetPassword() const {
    UInt32 password_length = 0;
    void* password_data = NULL;
@@ -1336,7 +1337,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493ff3c9050 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -22,7 +22,7 @@
+@@ -22,7 +22,7 @@ @interface SyntheticPinchEvent : NSObject
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1379,7 +1380,7 @@ diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/cont
 index d60210d735b8bfdb7a79361611b003a9e278a9be..d4f2d0bab3e08cee68294ef27212d124d276a25d 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -140,6 +140,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
+@@ -140,6 +140,12 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
  
  }  // namespace
  
@@ -1392,7 +1393,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..d4f2d0bab3e08cee68294ef27212d124
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1642,6 +1648,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1642,6 +1648,10 @@ new BrowserCompositorMac(this, this, render_widget_host_->is_hidden(),
    if (render_widget_host_) {
      render_widget_host_->SetActive(active);
      if (active) {
@@ -1403,7 +1404,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..d4f2d0bab3e08cee68294ef27212d124
        if (HasFocus())
          render_widget_host_->Focus();
      } else {
-@@ -1893,7 +1903,14 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -1893,7 +1903,14 @@ - (BOOL)acceptsMouseEventsWhenInactive {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1418,7 +1419,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..d4f2d0bab3e08cee68294ef27212d124
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2126,8 +2143,10 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2126,8 +2143,10 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1429,7 +1430,7 @@ index d60210d735b8bfdb7a79361611b003a9e278a9be..d4f2d0bab3e08cee68294ef27212d124
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2989,6 +3008,11 @@ void RenderWidgetHostViewMac::OnDisplayMetricsChanged(
+@@ -2989,6 +3008,11 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1469,7 +1470,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index abcbb302f417fd46fa0db86dae137f20ae4805c0..fec5f0b8ddbb7b41519719b26ceed25d4af31c1d 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -591,6 +591,7 @@ void WebContentsViewMac::CloseTab() {
+@@ -591,6 +591,7 @@ - (void)draggedImage:(NSImage*)anImage
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -1495,7 +1496,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index ff2c964a68d0b21d46a3b88b2ea6c3ff4d9d0a07..af043f6d204ee90ec54bc7df401a3bd6519b8541 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -347,6 +347,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
+@@ -347,6 +347,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  
@@ -1842,6 +1843,39 @@ index b73f65168086189aed021cc82ffef5fde1f2d061..aa3f97fa57a3cb5616cd3811a34d0698
    return SimplifyUrlForRequest(url).spec();
  }
  
+diff --git a/net/http/transport_security_state_static.json b/net/http/transport_security_state_static.json
+index 698980a564bc1e72bdc3967244fcba0dcd610af5..e7553cd2d9e58cc585123634afda63f45f6eab05 100644
+--- a/net/http/transport_security_state_static.json
++++ b/net/http/transport_security_state_static.json
+@@ -56,6 +56,17 @@
+       ]
+     },
+     {
++      "name": "brave",
++      "static_spki_hashes": [
++        "BaltimoreCyberTrustRoot",
++        "DigiCertGlobalRoot",
++        "DigiCertEVRoot",
++        "DigiCertAssuredIDRoot",
++        "LetsEncryptAuthorityPrimary_X1_X3",
++        "LetsEncryptAuthorityBackup_X2_X4"
++      ]
++    },
++    {
+       "name": "google",
+       "static_spki_hashes": [
+         "GoogleBackup2048",
+@@ -262,6 +273,10 @@
+     { "name": "app", "include_subdomains": true, "mode": "force-https" },
+     { "name": "chrome", "include_subdomains": true, "mode": "force-https" },
+ 
++    //Brave
++    { "name": "brave.com", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
++    { "name": "basicattentiontoken.org", "include_subdomains": true, "mode": "force-https", "pins": "brave", "expect_ct": true, "expect_ct_report_uri": "https://brave.com/expect-staple"},
++
+     // Google domains using Expect-CT.
+     { "name": "mail.google.com", "include_subdomains": true, "mode": "force-https", "pins": "google", "expect_ct": true, "expect_ct_report_uri": "https://clients3.google.com/ct_upload" },
+     { "name": "plus.sandbox.google.com", "include_subdomains": true, "mode": "force-https", "pins": "google", "expect_ct": true, "expect_ct_report_uri": "https://clients3.google.com/ct_upload" },
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 37f4aee2004316df03aef81aee033486195c44f8..2b99ddea253583b45fa41ab00069c7da510557c9 100644
 --- a/net/url_request/url_request_job.h
