@@ -18,7 +18,7 @@
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
-#include "chrome/browser/resource_coordinator/discard_condition.h"
+#include "chrome/browser/resource_coordinator/discard_reason.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -473,7 +473,7 @@ bool TabHelper::Discard() {
   if (guest()->attached()) {
     int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
     return !!GetTabManager()->DiscardTabById(
-        web_contents_id, resource_coordinator::DiscardCondition::kProactive);
+        web_contents_id, resource_coordinator::DiscardReason::kProactive);
   } else {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
