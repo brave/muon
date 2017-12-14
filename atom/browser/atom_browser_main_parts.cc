@@ -44,7 +44,6 @@
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
-#include "device/geolocation/geolocation_delegate.h"
 #include "device/geolocation/geolocation_provider.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
 #include "muon/app/muon_crash_reporter_client.h"
