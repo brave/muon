@@ -583,16 +583,6 @@ Returns:
 Fired when details regarding a requested resource is available.
 `status` indicates socket connection to download the resource.
 
-### Event: 'did-get-redirect-request'
-
-Returns:
-
-* `oldURL` String
-* `newURL` String
-* `isMainFrame` Boolean
-
-Fired when a redirect was received while requesting a resource.
-
 ### Event: 'dom-ready'
 
 Fired when document in the given frame is loaded.

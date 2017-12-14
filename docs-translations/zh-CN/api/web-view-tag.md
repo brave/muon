@@ -463,16 +463,6 @@ Returns:
 
 `status` 指示 socket 连接来下载资源.
 
-### Event: 'did-get-redirect-request'
-
-返回:
-
-* `oldURL` String
-* `newURL` String
-* `isMainFrame` Boolean
-
-当重定向请求资源被接收的时候触发.
-
 ### Event: 'dom-ready'
 
 当指定的frame文档加载完毕时触发.
