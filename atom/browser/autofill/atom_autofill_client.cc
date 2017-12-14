@@ -124,6 +124,10 @@ ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
   return ukm::UkmRecorder::Get();
 }
 
+AddressNormalizer* AtomAutofillClient::GetAddressNormalizer() {
+  return nullptr;
+}
+
 void AtomAutofillClient::ShowAutofillSettings() {
   if (api_web_contents_) {
     api_web_contents_->Emit("show-autofill-settings");
