@@ -68,21 +68,6 @@ var webContents = win.webContents;
 当有关请求资源的详细信息可用的时候发出事件.
 `status` 标识了 socket链接来下载资源.
 
-### Event: 'did-get-redirect-request'
-
-返回:
-
-* `event` Event
-* `oldURL` String
-* `newURL` String
-* `isMainFrame` Boolean
-* `httpResponseCode` Integer
-* `requestMethod` String
-* `referrer` String
-* `headers` Object
-
-当在请求资源时收到重定向的时候发出事件.
-
 ### Event: 'dom-ready'
 
 返回:
