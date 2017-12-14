@@ -145,8 +145,10 @@ void JavascriptBindings::IPCSendShared(mate::Arguments* args,
   if (!is_valid() || !render_frame())
     return;
 
-  base::SharedMemoryHandle memory_handle = shared_memory->handle().Duplicate();
+  base::SharedMemoryHandle memory_handle =
+      base::SharedMemory::DuplicateHandle(shared_memory->handle());
   if (!memory_handle.IsValid()) {
+    base::SharedMemory::CloseHandle(memory_handle);
     args->ThrowError("Could not create shared memory handle");
     return;
   }
@@ -228,9 +230,20 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
 
   bool handled = false;
 
+  // Shared memory ipc messages should only be sent to a single context
+  // to avoid getting an invalid handle on windows. webui and blessed extension
+  // contexts are mutually exclusive
+  if (context_type == Feature::WEBUI_CONTEXT ||
+      context_type == Feature::BLESSED_EXTENSION_CONTEXT) {
+    IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
+      IPC_MESSAGE_HANDLER(AtomViewMsg_Message_Shared, OnSharedBrowserMessage)
+      IPC_MESSAGE_UNHANDLED(handled = false)
+    IPC_END_MESSAGE_MAP()
+  }
+
+
   IPC_BEGIN_MESSAGE_MAP(JavascriptBindings, message)
     IPC_MESSAGE_HANDLER(AtomViewMsg_Message, OnBrowserMessage)
-    IPC_MESSAGE_HANDLER(AtomViewMsg_Message_Shared, OnSharedBrowserMessage)
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
@@ -239,6 +252,11 @@ bool JavascriptBindings::OnMessageReceived(const IPC::Message& message) {
 
 void JavascriptBindings::OnSharedBrowserMessage(const base::string16& channel,
                                       const base::SharedMemoryHandle& handle) {
+  if (!base::SharedMemory::IsHandleValid(handle)) {
+    NOTREACHED() << "Bad handle";
+    return;
+  }
+
   if (!is_valid())
     return;
 

@@ -18,6 +18,8 @@
 #include "url/gurl.h"
 #include "v8/include/v8.h"
 
+#include "content/public/renderer/render_thread.h"
+
 using content::ChildThread;
 using content::ChildThreadImpl;
 
@@ -112,7 +114,9 @@ mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
   // Create the shared memory object.
   std::unique_ptr<base::SharedMemory> shared_memory;
   if (ChildThread::Get()) {
-    shared_memory = ChildThreadImpl::AllocateSharedMemory(pickle.size());
+    shared_memory =
+        content::RenderThread::Get()->HostAllocateSharedMemoryBuffer(
+                                                                 pickle.size());
   } else {
     shared_memory.reset(new base::SharedMemory);
 
@@ -134,7 +138,8 @@ mate::Handle<SharedMemoryWrapper> SharedMemoryWrapper::CreateFrom(
   memcpy(shared_memory->memory(), pickle.data(), pickle.size());
   free(buf.first);
 
-  base::SharedMemoryHandle handle = shared_memory->TakeHandle();
+  base::SharedMemoryHandle handle = shared_memory->GetReadOnlyHandle();
+
   if (!handle.IsValid()) {
     return mate::Handle<SharedMemoryWrapper>();
   }
@@ -150,15 +155,10 @@ SharedMemoryWrapper::SharedMemoryWrapper(v8::Isolate* isolate,
 }
 
 void SharedMemoryWrapper::Close() {
-  if (shared_memory_.get()) {
-    shared_memory_->Unmap();
-    shared_memory_->Close();
-  }
+  shared_memory_.reset();
 }
 
-SharedMemoryWrapper::~SharedMemoryWrapper() {
-  Close();
-}
+SharedMemoryWrapper::~SharedMemoryWrapper() {}
 
 void SharedMemoryWrapper::BuildPrototype(v8::Isolate* isolate,
                                  v8::Local<v8::FunctionTemplate> prototype) {
