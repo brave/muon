@@ -53,6 +53,7 @@ class AtomAutofillClient
   syncer::SyncService* GetSyncService() override;
   IdentityProvider* GetIdentityProvider() override;
   ukm::UkmRecorder* GetUkmRecorder() override;
+  autofill::AddressNormalizer* GetAddressNormalizer() override;
   void ShowAutofillSettings() override;
   void ShowUnmaskPrompt(const CreditCard& card,
                         UnmaskCardReason reason,
