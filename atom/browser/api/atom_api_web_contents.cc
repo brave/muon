@@ -1380,19 +1380,6 @@ void WebContents::DidGetResourceResponseStart(
        ResourceTypeToString(details.resource_type));
 }
 
-void WebContents::DidGetRedirectForResourceRequest(
-    const content::ResourceRedirectDetails& details) {
-  const net::HttpResponseHeaders* headers = details.headers.get();
-  Emit("did-get-redirect-request",
-       details.url,
-       details.new_url,
-       (details.resource_type == content::RESOURCE_TYPE_MAIN_FRAME),
-       details.http_response_code,
-       details.method,
-       details.referrer,
-       headers);
-}
-
 void WebContents::DidStartLoading() {
   Emit("did-start-loading");
 }
