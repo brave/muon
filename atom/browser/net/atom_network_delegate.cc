@@ -489,7 +489,7 @@ void AtomNetworkDelegate::OnListenerResultInIO(
 
   bool cancel = false;
   response->GetBoolean("cancel", &cancel);
-  callbacks_[id].Run(cancel ? net::ERR_BLOCKED_BY_CLIENT : net::OK);
+  callbacks_[id].Run(cancel ? net::ERR_ABORTED : net::OK);
 }
 
 template<typename T>
