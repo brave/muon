@@ -2253,7 +2253,7 @@ bool WebContents::SendIPCSharedMemory(int render_process_id,
                                       const base::string16& channel,
                                       base::SharedMemory* shared_memory) {
   base::SharedMemoryHandle memory_handle =
-      shared_memory->GetReadOnlyHandle().Duplicate();
+      shared_memory->handle().Duplicate();
 
   auto rfh =
       content::RenderFrameHost::FromID(render_process_id, render_frame_id);
