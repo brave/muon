@@ -63,6 +63,10 @@ v8::Local<v8::Value> Converter<net::X509Certificate>::ToV8(
   dict.Set("data", encoded_data);
   dict.Set("issuerName", val.issuer().GetDisplayName());
   dict.Set("subjectName", val.subject().GetDisplayName());
+  if (!val.subject().organization_names.empty())
+    dict.Set("organizationNames", val.subject().organization_names);
+  if (!val.subject().country_name.empty())
+    dict.Set("countryName", val.subject().country_name);
   dict.Set("serialNumber", base::HexEncode(val.serial_number().data(),
                                            val.serial_number().size()));
   dict.Set("validStart", val.valid_start().ToDoubleT());
