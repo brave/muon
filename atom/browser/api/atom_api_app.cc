@@ -776,11 +776,6 @@ bool App::Relaunch(mate::Arguments* js_args) {
 }
 
 void App::DisableHardwareAcceleration(mate::Arguments* args) {
-  if (atom::Browser::Get()->is_ready()) {
-    args->ThrowError("app.disableHardwareAcceleration() can only be called "
-                     "before app is ready");
-    return;
-  }
   content::GpuDataManager::GetInstance()->DisableHardwareAcceleration();
 }
 
