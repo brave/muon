@@ -60,9 +60,23 @@ LoginHandler::~LoginHandler() {
 content::WebContents* LoginHandler::GetWebContents() const {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
-  content::RenderFrameHost* rfh = content::RenderFrameHost::FromID(
-      render_process_host_id_, render_frame_id_);
-  return content::WebContents::FromRenderFrameHost(rfh);
+  int frame_tree_node_id = -1;
+  auto* request_info = content::ResourceRequestInfo::ForRequest(request_);
+  if (request_info) {
+    frame_tree_node_id = request_info->GetFrameTreeNodeId();
+  }
+
+  content::WebContents* web_contents =
+    content::WebContents::FromFrameTreeNodeId(frame_tree_node_id);
+
+  if (!web_contents) {
+    content::RenderFrameHost* rfh =
+      content::RenderFrameHost::FromID(render_process_host_id_,
+                                       render_frame_id_);
+    web_contents = content::WebContents::FromRenderFrameHost(rfh);
+  }
+
+  return web_contents;
 }
 
 void LoginHandler::Login(const base::string16& username,
