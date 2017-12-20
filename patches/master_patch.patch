@@ -1362,7 +1362,7 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 3adf96eda1635015d91ad3ac36b191d4d482fa8b..8dd8e96d10273611d682fd9f45dc06e78a51b065 100644
+index 46a5b64a44b337d78f52468c3788926af8fbcc87..0ddcd2cf3f93de028aae5967b1d13a45b8f96428 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
 @@ -1675,8 +1675,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
@@ -1553,7 +1553,7 @@ index 0a6b0176a982782fd1472f607f811dd6c183c3fe..052ca73677cad3b10b494bf2ab823a04
    (*map_type)[key] = value;
    ResetKeyIterator();
 diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
-index 16aba6363aa24b7970c22fe69e842dd77dc50d5f..2bfae191067d37116d6021a97bbd576a576a8c26 100644
+index d06258b6d8e9e55b7e7f6d5be58c72bfe906ae65..4b5a7508245b50895b6fd422388406d6eeb69ad4 100644
 --- a/content/public/app/mojo/content_renderer_manifest.json
 +++ b/content/public/app/mojo/content_renderer_manifest.json
 @@ -43,6 +43,7 @@
@@ -1711,7 +1711,7 @@ index 521f0f81083f5483026fbf75da22a124661182bf..12e20638bbde2a8024becdeb46d78254
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index b20f47dcb130702a6de13a5651dff75e0e05fb5c..4bbc8845ab47fd617bf5ae2d9c529e3a5c930720 100644
+index 24ba9fd2be824110b84ac82700989c2e86b48ffb..0f11dbc0e84c2d63f839fc086feab3e11ab4372b 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -189,7 +189,10 @@
@@ -1726,7 +1726,7 @@ index b20f47dcb130702a6de13a5651dff75e0e05fb5c..4bbc8845ab47fd617bf5ae2d9c529e3a
      }, {
        "internal": true,
        "channel": "stable",
-@@ -554,6 +557,7 @@
+@@ -555,6 +558,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
@@ -1734,7 +1734,7 @@ index b20f47dcb130702a6de13a5651dff75e0e05fb5c..4bbc8845ab47fd617bf5ae2d9c529e3a
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://mobilesetup/*",
-@@ -574,6 +578,13 @@
+@@ -575,6 +579,13 @@
        "chrome://mobilesetup/*",
        "chrome://oobe/*"
      ]
@@ -1748,7 +1748,7 @@ index b20f47dcb130702a6de13a5651dff75e0e05fb5c..4bbc8845ab47fd617bf5ae2d9c529e3a
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -582,6 +593,7 @@
+@@ -583,6 +594,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
