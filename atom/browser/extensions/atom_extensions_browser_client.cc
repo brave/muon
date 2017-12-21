@@ -8,7 +8,6 @@
 
 #include "atom/browser/browser.h"
 #include "atom/browser/extensions/api/atom_extensions_api_client.h"
-#include "atom/browser/extensions/atom_component_extension_resource_manager.h"
 #include "atom/browser/extensions/atom_extension_host_delegate.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
@@ -23,6 +22,7 @@
 #include "base/version.h"
 #include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/extensions/chrome_component_extension_resource_manager.h"
 #include "chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
 #include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
@@ -234,7 +234,7 @@ AtomExtensionsBrowserClient::AtomExtensionsBrowserClient()
   : extension_cache_(new NullExtensionCache()) {
     api_client_.reset(new AtomExtensionsAPIClient);
     process_manager_delegate_.reset(new AtomProcessManagerDelegate);
-    resource_manager_.reset(new AtomComponentExtensionResourceManager);
+    resource_manager_.reset(new ChromeComponentExtensionResourceManager);
 }
 
 AtomExtensionsBrowserClient::~AtomExtensionsBrowserClient() {}
