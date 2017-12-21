@@ -644,11 +644,12 @@ source_set("menu_bar") {
   ]
 
   if (use_gio) {
+    configs += [ "//build/linux:gio_config" ]
+
     deps = [
       "//components/sync",
       "//ipc:mojom",
       "//third_party/protobuf:protobuf_lite",
-      "//build/linux/libgio",
     ]
   }
 }
