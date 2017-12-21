@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "atom/browser/extensions/atom_component_extensions.h"
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/api/event_emitter_caller.h"
@@ -108,16 +109,7 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
   std::vector<extensions::InstallWarning> warnings;
 
   int resource_id;
-  const extensions::ComponentExtensionResourceManager*
-      component_extension_resource_manager =
-          extensions::ExtensionsBrowserClient::Get()
-              ->GetComponentExtensionResourceManager();
-
-  if (!(component_extension_resource_manager &&
-      component_extension_resource_manager->IsComponentExtensionResource(
-          path,
-          base::FilePath(extensions::kManifestFilename),
-          &resource_id))) {
+  if (!IsComponentExtension(path, &resource_id)) {
     // Component extensions contained inside the resources pak fail manifest validation
     // so we skip validation. 
     if (!extensions::file_util::ValidateExtension(extension.get(),
@@ -183,16 +175,7 @@ std::unique_ptr<base::DictionaryValue> Extension::LoadManifest(
     const base::FilePath& extension_root,
     std::string* error) {
   int resource_id;
-  const extensions::ComponentExtensionResourceManager*
-      component_extension_resource_manager =
-          extensions::ExtensionsBrowserClient::Get()
-              ->GetComponentExtensionResourceManager();
-
-  if (component_extension_resource_manager &&
-      component_extension_resource_manager->IsComponentExtensionResource(
-          extension_root,
-          base::FilePath(extensions::kManifestFilename),
-          &resource_id)) {
+  if (IsComponentExtension(extension_root, &resource_id)) {
     const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
     base::StringPiece manifest_contents = rb.GetRawDataResource(resource_id);
 
