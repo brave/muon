@@ -27,7 +27,6 @@
 #include "chrome/common/chrome_constants.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/crash_keys.h"
-#include "chrome/common/extensions/extension_process_policy.h"
 #include "chrome/common/secure_origin_whitelist.h"
 #include "content/public/common/cdm_info.h"
 #include "content/public/common/content_constants.h"
