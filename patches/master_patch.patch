@@ -1553,41 +1553,6 @@ index d06258b6d8e9e55b7e7f6d5be58c72bfe906ae65..4b5a7508245b50895b6fd422388406d6
            "blink::mojom::AppBannerController",
            "blink::mojom::EngagementClient",
            "blink::mojom::InstallationService",
-diff --git a/content/public/browser/resource_request_details.cc b/content/public/browser/resource_request_details.cc
-index 759915cf42dc22800b30c97dcd8f1f3c8d7e5dfe..f03aca42206522b3f9f4c45f8960fbf21bdbbb5c 100644
---- a/content/public/browser/resource_request_details.cc
-+++ b/content/public/browser/resource_request_details.cc
-@@ -22,6 +22,10 @@ ResourceRequestDetails::ResourceRequestDetails(const net::URLRequest* request,
-       has_certificate(has_certificate),
-       ssl_cert_status(request->ssl_info().cert_status),
-       socket_address(request->GetSocketAddress()) {
-+  if (request->response_info().headers.get())
-+    headers = new net::HttpResponseHeaders(
-+        request->response_info().headers->raw_headers());
-+
-   const ResourceRequestInfo* info = ResourceRequestInfo::ForRequest(request);
-   resource_type = info->GetResourceType();
-   http_response_code =
-diff --git a/content/public/browser/resource_request_details.h b/content/public/browser/resource_request_details.h
-index 06b140186dd90cfc3b780514da5200ca13449147..af9bce9428723a16f9a0be336511b1869ebcadbb 100644
---- a/content/public/browser/resource_request_details.h
-+++ b/content/public/browser/resource_request_details.h
-@@ -10,6 +10,7 @@
- #include "content/public/common/resource_type.h"
- #include "net/base/host_port_pair.h"
- #include "net/cert/cert_status_flags.h"
-+#include "net/http/http_response_headers.h"
- #include "net/url_request/url_request_status.h"
- #include "url/gurl.h"
- 
-@@ -41,6 +42,7 @@ struct ResourceRequestDetails {
-   // HTTP response code. See HttpResponseHeaders::response_code().
-   // -1 if there are no response headers yet.
-   int http_response_code;
-+  scoped_refptr<net::HttpResponseHeaders> headers;
- };
- 
- }  // namespace content
 diff --git a/content/public/common/web_preferences.cc b/content/public/common/web_preferences.cc
 index cc20936125f42016228bfbe2eaa8103a1a2b4d3e..eaf4d799d32abb075a79f87b4ccacd393a5e7309 100644
 --- a/content/public/common/web_preferences.cc
