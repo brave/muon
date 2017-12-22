@@ -33,7 +33,6 @@
 #include "extensions/renderer/utils_native_handler.h"
 #include "gin/array_buffer.h"
 #include "gin/modules/console.h"
-#include "gin/modules/module_registry.h"
 #include "gin/object_template_builder.h"
 #include "gin/v8_initializer.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -42,7 +41,6 @@
 using extensions::Feature;
 using extensions::ModuleSystem;
 using extensions::ScriptContext;
-using gin::ModuleRegistry;
 using gin::ObjectTemplateBuilder;
 
 namespace atom {
@@ -131,7 +129,6 @@ JavascriptEnvironment::JavascriptEnvironment()
       context_holder_(new gin::ContextHolder(isolate_)),
       source_map_(GetModuleSearchPaths()) {
   v8::Local<v8::ObjectTemplate> templ = ObjectTemplateBuilder(isolate_).Build();
-  ModuleRegistry::RegisterGlobals(isolate_, templ);
 
   v8::Local<v8::Context> ctx =
       v8::Context::New(isolate_,
@@ -154,11 +151,6 @@ JavascriptEnvironment::JavascriptEnvironment()
       "path", std::unique_ptr<extensions::NativeHandler>(
           new brave::PathBindings(script_context_.get(), &source_map_)));
   }
-
-  ModuleRegistry* registry = ModuleRegistry::From(context());
-  registry->AddBuiltinModule(isolate(),
-      gin::Console::kModuleName,
-      gin::Console::GetModule(isolate()));
 
   v8::Local<v8::Object> global = context()->Global();
   v8::Local<v8::Object> muon = v8::Object::New(isolate_);
