@@ -562,8 +562,11 @@ std::unique_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
   return base::WrapUnique(new ExtensionSet());
 }
 
-void AtomExtensionSystem::InstallUpdate(const std::string& extension_id,
-                                         const base::FilePath& temp_dir) {
+void AtomExtensionSystem::InstallUpdate(
+    const std::string& extension_id,
+    const std::string& public_key,
+    const base::FilePath& unpacked_dir,
+    InstallUpdateCallback install_update_callback) {
   NOTREACHED();
 }
 
