@@ -59,7 +59,7 @@ v8::Local<v8::Value> Converter<net::X509Certificate>::ToV8(
   mate::Dictionary dict(isolate, v8::Object::New(isolate));
   std::string encoded_data;
   net::X509Certificate::GetPEMEncoded(
-      val.os_cert_handle(), &encoded_data);
+      val.cert_buffer(), &encoded_data);
   dict.Set("data", encoded_data);
   dict.Set("issuerName", val.issuer().GetDisplayName());
   dict.Set("subjectName", val.subject().GetDisplayName());
@@ -73,7 +73,7 @@ v8::Local<v8::Value> Converter<net::X509Certificate>::ToV8(
   dict.Set("validExpiry", val.valid_expiry().ToDoubleT());
   dict.Set("fingerprint",
            net::HashValue(
-              val.CalculateFingerprint256(val.os_cert_handle())).ToString());
+              val.CalculateFingerprint256(val.cert_buffer())).ToString());
 
   return dict.GetHandle();
 }
