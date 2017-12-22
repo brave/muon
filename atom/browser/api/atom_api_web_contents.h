@@ -474,8 +474,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
                    const GURL& validated_url,
                    int error_code,
                    const base::string16& error_description) override;
-  void DidGetResourceResponseStart(
-      const content::ResourceRequestDetails& details) override;
   void DidStartLoading() override;
   void DidStopLoading() override;
   void DidStartNavigation(
