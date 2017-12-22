@@ -10,7 +10,6 @@
 #include "base/macros.h"
 #include "brave/common/extensions/asar_source_map.h"
 #include "extensions/renderer/script_context.h"
-#include "gin/modules/module_runner_delegate.h"
 #include "gin/public/context_holder.h"
 #include "gin/public/isolate_holder.h"
 #include "v8/include/v8.h"
