@@ -38,6 +38,8 @@
     'msvs_use_common_release': 0,
     'icu_small': 'false',
     'v8_enable_inspector': 1,
+    'debug_http2': 'false',
+    'debug_nghttp2': 'false',
   },
   'target_defaults': {
     'default_configuration': 'Release',
