@@ -208,8 +208,8 @@ node::Environment* NodeBindings::CreateEnvironment(
   if (debug_options.inspector_enabled()) {
     // always enable the inspector
     debug_options.ParseOption(c_argv[0], "--inspect");
-    env->inspector_agent()->Start(
-        gin::V8Platform::Get(), nullptr, debug_options);
+    env->inspector_agent()->Start(node::CreatePlatform(4, uv_loop_, nullptr),
+                                  nullptr, debug_options);
   }
 
   return env;
