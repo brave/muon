@@ -24,7 +24,11 @@ class CrashReporterBindings : public extensions::ObjectBackedNativeHandler {
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);
  private:
   void SetEnabled(const v8::FunctionCallbackInfo<v8::Value>& args);
-  void SetCrashKeyValue(const v8::FunctionCallbackInfo<v8::Value>& args);
+  void SetChannelCrashValue(const v8::FunctionCallbackInfo<v8::Value>& args);
+  void SetJavascriptInfoCrashValue(
+      const v8::FunctionCallbackInfo<v8::Value>& args);
+  void SetNodeEnvCrashValue(const v8::FunctionCallbackInfo<v8::Value>& args);
+  void SetVersionCrashValue(const v8::FunctionCallbackInfo<v8::Value>& args);
   void DumpWithoutCrashing(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   DISALLOW_COPY_AND_ASSIGN(CrashReporterBindings);

@@ -29,6 +29,7 @@ source_set("app") {
     "//electron/muon/app",
     "//content/public/common",
     "//components/rappor/public/interfaces",
+    "//gpu/config",
     "//media:media_features",
     "//third_party/widevine/cdm:headers",
   ]
