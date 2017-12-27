@@ -26,7 +26,6 @@ class AtomContentClient : public brightray::ContentClient {
   std::string GetProduct() const override;
   std::string GetUserAgent() const override;
   void SetGpuInfo(const gpu::GPUInfo& gpu_info);
-  bool IsSupplementarySiteIsolationModeEnabled() override;
   void AddAdditionalSchemes(Schemes* schemes) override;
   void AddPepperPlugins(
       std::vector<content::PepperPluginInfo>* plugins) override;
