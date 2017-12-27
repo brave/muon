@@ -152,14 +152,6 @@ std::string AtomContentClient::GetUserAgent() const {
       "Chrome/" CHROME_VERSION_STRING);
 }
 
-bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  return true;
-#else
-  return false;
-#endif
-}
-
 void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
   schemes->standard_schemes.push_back(extensions::kExtensionScheme);
   schemes->savable_schemes.push_back(extensions::kExtensionScheme);
