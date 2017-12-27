@@ -12,7 +12,6 @@
 #include "atom/common/pepper_flash_util.h"
 #include "base/base_paths.h"
 #include "base/command_line.h"
-#include "base/debug/crash_logging.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/mac/bundle_locations.h"
@@ -35,6 +34,7 @@
 #include "extensions/features/features.h"
 #include "gpu/config/gpu_crash_keys.h"
 #include "gpu/config/gpu_info.h"
+#include "gpu/config/gpu_util.h"
 #include "media/media_features.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -122,25 +122,7 @@ void AtomContentClient::SetActiveURL(const GURL& url, std::string top_origin) {
 }
 
 void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendorID,
-      base::StringPrintf("0x%04x", gpu_info.gpu.vendor_id));
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDeviceID,
-      base::StringPrintf("0x%04x", gpu_info.gpu.device_id));
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDriverVersion,
-      gpu_info.driver_version);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUPixelShaderVersion,
-      gpu_info.pixel_shader_version);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVertexShaderVersion,
-      gpu_info.vertex_shader_version);
-#if defined(OS_MACOSX)
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUGLVersion,
-      gpu_info.gl_version);
-#elif defined(OS_POSIX)
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendor,
-      gpu_info.gl_vendor);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPURenderer,
-      gpu_info.gl_renderer);
-#endif
+  gpu::SetKeysForCrashLogging(gpu_info);
 }
 
 std::string AtomContentClient::GetProduct() const {

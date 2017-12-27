@@ -26,7 +26,10 @@ class MuonCrashReporterClient : public ChromeCrashReporterClient {
   static void InitForProcess();
   static void InitCrashReporting();
   static void SetCrashReportingEnabled(bool enabled);
-  static void SetCrashKeyValue(const std::string& key, const std::string& val);
+  static void SetChannelCrashValue(const std::string& value);
+  static void SetJavascriptInfoCrashValue(const std::string& value);
+  static void SetNodeEnvCrashValue(const std::string& value);
+  static void SetVersionCrashValue(const std::string& value);
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
   void GetProductNameAndVersion(const char** product_name,
