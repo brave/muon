@@ -144,7 +144,6 @@ class BravePasswordManagerClient
   password_manager::PasswordManagerMetricsRecorder& GetMetricsRecorder()
       override;
 
-  ukm::UkmRecorder* GetUkmRecorder() override;
   ukm::SourceId GetUkmSourceId() override;
 
   static void CreateForWebContentsWithAutofillClient(
@@ -236,11 +235,6 @@ class BravePasswordManagerClient
   std::unique_ptr<password_manager::PasswordFormManager> form_to_save_;
 
   atom::api::WebContents* api_web_contents_;
-
-
-  // If set, this stores a ukm::SourceId that is bound to the last committed
-  // navigation of the tab owning this BravePasswordManagerClient.
-  base::Optional<ukm::SourceId> ukm_source_id_;
 
   // Recorder of metrics that is associated with the last committed navigation
   // of the WebContents owning this BravePasswordManagerClient. May be unset at
