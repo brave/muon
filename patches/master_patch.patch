@@ -134,21 +134,6 @@ index 8cdfee383f238dfd84bcebe3b00f2c85d2b2a35a..8910266a792e75249c25a5126b63c04b
  }
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
-diff --git a/chrome/app/chrome_crash_reporter_client_win.cc b/chrome/app/chrome_crash_reporter_client_win.cc
-index c8e7b605a76ebcd850bb95b64a3e51b610f1238b..801501a9d7800dce2ff9e038355211b4e2357f2f 100644
---- a/chrome/app/chrome_crash_reporter_client_win.cc
-+++ b/chrome/app/chrome_crash_reporter_client_win.cc
-@@ -74,6 +74,10 @@ size_t RegisterCrashKeysHelper() {
-   // For now these need to be kept relatively up to date with those in
-   // chrome/common/crash_keys.cc::RegisterChromeCrashKeys().
-   static constexpr base::debug::CrashKey kFixedKeys[] = {
-+      {"javascript-info", kHugeSize},
-+      {"_version", kSmallSize},
-+      {"muon-version", kSmallSize},
-+      {"node-env", kSmallSize},
-       {kMetricsClientId, kSmallSize},
-       {kChannel, kSmallSize},
-       {kActiveURL, kLargeSize},
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
 index df5e1c10e8a915d4288b0dc393452d083515f0d4..3cc764eedc1992bc811683fc5478ecb37be33e30 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
@@ -679,23 +664,6 @@ index f0a0bcd0098ec31b18bb00588ad8fd11b439fd6f..888572f87a71e6e8444bd6a302343e45
  #define LASTCHANGE_STRING "@LASTCHANGE@"
 +
 +#define EXECUTABLE_NAME "@EXECUTABLE_NAME@"
-diff --git a/chrome/common/crash_keys.cc b/chrome/common/crash_keys.cc
-index 9f8d1301cb02064589151d73e58d00c0fbf3c1c3..bca73ac2c26d2187e9edf51845f4233a414501e3 100644
---- a/chrome/common/crash_keys.cc
-+++ b/chrome/common/crash_keys.cc
-@@ -47,6 +47,12 @@ size_t RegisterChromeCrashKeys() {
-   //     RegisterWebViewCrashKeys(),
-   // chromecast/crash/cast_crash_keys.cc::RegisterCastCrashKeys().
-   base::debug::CrashKey fixed_keys[] = {
-+#if !defined(MUON_CHROMIUM_BUILD)
-+    {"javascript-info", kHugeSize},
-+    {"_version", kSmallSize},
-+    {"muon-version", kSmallSize},
-+    {"node-env", kSmallSize},
-+#endif
- #if defined(OS_MACOSX) || defined(OS_WIN)
-     {kMetricsClientId, kSmallSize},
- #else
 diff --git a/chrome/common/importer/edge_importer_utils_win.cc b/chrome/common/importer/edge_importer_utils_win.cc
 index c2abd64b2d7c5166c1fdbaaf782974cb4bcc5e53..eb59bbe098dabd0edd3d9d8e24befe1006e56b8b 100644
 --- a/chrome/common/importer/edge_importer_utils_win.cc
