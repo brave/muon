@@ -51,6 +51,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/sessions/content/content_record_password_state.h"
 #include "components/signin/core/browser/signin_manager.h"
+#include "components/ukm/content/source_url_recorder.h"
 #include "components/version_info/version_info.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/navigation_entry.h"
@@ -331,8 +332,7 @@ void BravePasswordManagerClient::HidePasswordGenerationPopup() {
 PasswordManagerMetricsRecorder&
 BravePasswordManagerClient::GetMetricsRecorder() {
   if (!metrics_recorder_) {
-    metrics_recorder_.emplace(GetUkmRecorder(), GetUkmSourceId(),
-                              GetMainFrameURL());
+    metrics_recorder_.emplace(GetUkmSourceId(), GetMainFrameURL());
   }
   return metrics_recorder_.value();
 }
@@ -343,7 +343,8 @@ void BravePasswordManagerClient::DidFinishNavigation(
     return;
 
   if (!navigation_handle->IsSameDocument())
-    ukm_source_id_.reset();
+    // Send any collected metrics by destroying the metrics recorder.
+    metrics_recorder_.reset();
 
   // From this point on, the ContentCredentialManager will service API calls in
   // the context of the new WebContents::GetLastCommittedURL, which may very
@@ -400,20 +401,8 @@ void BravePasswordManagerClient::CheckProtectedPasswordEntry(
     bool password_field_exists) {}
 #endif
 
-ukm::UkmRecorder* BravePasswordManagerClient::GetUkmRecorder() {
-  return ukm::UkmRecorder::Get();
-}
-
 ukm::SourceId BravePasswordManagerClient::GetUkmSourceId() {
-  // TODO(crbug.com/732846): The UKM Source should be recycled (e.g. from the
-  // web contents), once the UKM framework provides a mechanism for that.
-  if (!ukm_source_id_) {
-    ukm_source_id_ = ukm::UkmRecorder::GetNewSourceID();
-    ukm::UkmRecorder* ukm_recorder = GetUkmRecorder();
-    if (ukm_recorder)
-      ukm_recorder->UpdateSourceURL(*ukm_source_id_, GetMainFrameURL());
-  }
-  return *ukm_source_id_;
+  return ukm::GetSourceIdForWebContentsDocument(web_contents());
 }
 
 password_manager::PasswordSyncState
