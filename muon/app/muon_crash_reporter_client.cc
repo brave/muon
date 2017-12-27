@@ -9,7 +9,6 @@
 #include "base/base_switches.h"
 #include "base/bind.h"
 #include "base/command_line.h"
-#include "base/debug/crash_logging.h"
 #include "base/debug/leak_annotations.h"
 #include "base/path_service.h"
 #include "chrome/browser/metrics/metrics_reporting_state.h"
@@ -119,16 +118,21 @@ void MuonCrashReporterClient::InitCrashReporting() {
   breakpad::InitCrashReporter(process_type);
 #endif
 #endif  // !defined(OS_WIN)
+
+  static crash_reporter::CrashKeyString<32> version_key("_version");
   std::string version =
       command_line->GetSwitchValueASCII(atom::options::kAppVersion);
   if (!version.empty())
-    SetCrashKeyValue("_version", version);
+    version_key.Set(version);
+
+  static crash_reporter::CrashKeyString<16> channel_key("channel");
   std::string channel =
         command_line->GetSwitchValueASCII(atom::options::kAppChannel);
   if (!channel.empty())
-    SetCrashKeyValue(crash_keys::kChannel, channel);
+    channel_key.Set(channel);
 
-  SetCrashKeyValue("muon-version", ATOM_VERSION_STRING);
+  static crash_reporter::CrashKeyString<32> muon_version_key("muon-version");
+  muon_version_key.Set(ATOM_VERSION_STRING);
 }
 
 //  static
@@ -141,11 +145,24 @@ void MuonCrashReporterClient::SetCrashReportingEnabled(bool enabled) {
       base::Bind(&SetCrashReportingEnabledForProcess));
 }
 
+namespace {
+const char kJavascriptInfo[] = "javascript-info";
+const char kNodeEnv[] = "node-env";
+
+static crash_reporter::CrashKeyString<1024> javascript_info_key(
+    kJavascriptInfo);
+static crash_reporter::CrashKeyString<32> node_env_key(kNodeEnv);
+}  //  namespace
+
 //  static
 void MuonCrashReporterClient::SetCrashKeyValue(const std::string& key,
                                                 const std::string& value) {
-  base::debug::SetCrashKeyValue(
-      base::StringPiece(key), base::StringPiece(value));
+  if (key == std::string(kJavascriptInfo))
+    javascript_info_key.Set(base::StringPiece(value));
+  else if (key == std::string(kNodeEnv))
+    node_env_key.Set(base::StringPiece(value));
+  else
+    NOTREACHED();
 }
 
 //  static
