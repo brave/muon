@@ -1783,37 +1783,6 @@ index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8
    };
  
    proto.attachedCallback = function() {
-diff --git a/gin/object_template_builder.h b/gin/object_template_builder.h
-index bf0ece1e723ba1a0644961cfd3a01ce3c14c892a..5e7d3dbb9da51a5abb0447bc04c90c9bee6b9324 100644
---- a/gin/object_template_builder.h
-+++ b/gin/object_template_builder.h
-@@ -26,7 +26,7 @@ template<typename T, typename Enable = void>
- struct CallbackTraits {
-   static v8::Local<v8::FunctionTemplate> CreateTemplate(v8::Isolate* isolate,
-                                                          T callback) {
--    return CreateFunctionTemplate(isolate, base::Bind(callback));
-+    return gin::CreateFunctionTemplate(isolate, base::Bind(callback));
-   }
-   static void SetAsFunctionHandler(v8::Isolate* isolate,
-                                    v8::Local<v8::ObjectTemplate> tmpl,
-@@ -40,7 +40,7 @@ template<typename T>
- struct CallbackTraits<base::Callback<T> > {
-   static v8::Local<v8::FunctionTemplate> CreateTemplate(
-       v8::Isolate* isolate, const base::Callback<T>& callback) {
--    return CreateFunctionTemplate(isolate, callback);
-+    return gin::CreateFunctionTemplate(isolate, callback);
-   }
-   static void SetAsFunctionHandler(v8::Isolate* isolate,
-                                    v8::Local<v8::ObjectTemplate> tmpl,
-@@ -59,7 +59,7 @@ struct CallbackTraits<
-     typename std::enable_if<std::is_member_function_pointer<T>::value>::type> {
-   static v8::Local<v8::FunctionTemplate> CreateTemplate(v8::Isolate* isolate,
-                                                          T callback) {
--    return CreateFunctionTemplate(isolate, base::Bind(callback),
-+    return gin::CreateFunctionTemplate(isolate, base::Bind(callback),
-                                   HolderIsFirstArgument);
-   }
-   static void SetAsFunctionHandler(v8::Isolate* isolate,
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
 index 87849cd90cfb439fdba6b7c22d3e5ca9b97e12b8..d77d78cf33aface5d1248b765a40252860b562b5 100644
 --- a/media/base/media_switches.cc
