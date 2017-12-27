@@ -13,7 +13,6 @@
 #include "atom/browser/bridge_task_runner.h"
 #include "atom/browser/browser.h"
 #include "atom/browser/browser_context_keyed_service_factories.h"
-#include "atom/browser/extensions/atom_extension_api_frame_id_map.h"
 #include "atom/browser/javascript_environment.h"
 #include "atom/common/api/atom_bindings.h"
 #include "atom/common/node_bindings.h"
@@ -279,7 +278,6 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   // TODO(bridiver) - find a better place for these
   extensions::ExtensionApiFrameIdMap::Get();
-  extensions::AtomExtensionApiFrameIdMap::Get();
 
   fake_browser_process_->PreMainMessageLoopRun();
 

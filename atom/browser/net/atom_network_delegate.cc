@@ -7,7 +7,6 @@
 #include <memory>
 #include <utility>
 
-#include "atom/browser/extensions/atom_extension_api_frame_id_map.h"
 #include "atom/browser/extensions/tab_helper.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "base/stl_util.h"
@@ -62,17 +61,39 @@ struct ResponseHeadersContainer {
         : headers(headers), status_line(status_line), new_url(new_url) {}
 };
 
+int GetTabId(int frame_tree_node_id,
+             int render_frame_id,
+             int render_process_id) {
+  auto web_contents =
+      content::WebContents::FromFrameTreeNodeId(frame_tree_node_id);
 
+  if (!web_contents) {
+    content::RenderFrameHost* rfh =
+        content::RenderFrameHost::FromID(render_process_id, render_frame_id);
+    if (rfh)
+      web_contents = content::WebContents::FromRenderFrameHost(rfh);
+  }
+
+  return extensions::TabHelper::IdForTab(web_contents);
+}
 
 void RunSimpleListener(const AtomNetworkDelegate::SimpleListener& listener,
-                       std::unique_ptr<base::DictionaryValue> details) {
+                       std::unique_ptr<base::DictionaryValue> details,
+                       int frame_tree_node_id,
+                       int render_frame_id,
+                       int render_process_id) {
+  details->SetInteger(extensions::tabs_constants::kTabIdKey,
+      GetTabId(frame_tree_node_id, render_frame_id, render_process_id));
   return listener.Run(*(details.get()));
 }
 
 void RunResponseListener(
     const AtomNetworkDelegate::ResponseListener& listener,
     std::unique_ptr<base::DictionaryValue> details,
+    int frame_tree_node_id, int render_frame_id, int render_process_id,
     const AtomNetworkDelegate::ResponseCallback& callback) {
+  details->SetInteger(extensions::tabs_constants::kTabIdKey,
+      GetTabId(frame_tree_node_id, render_frame_id, render_process_id));
   return listener.Run(*(details.get()), callback);
 }
 
@@ -109,36 +130,10 @@ void GetRenderFrameIdAndProcessId(net::URLRequest* request,
 #endif
 }
 
-int GetTabId(net::URLRequest* request) {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  int render_frame_id = -1;
-  int render_process_id = -1;
-  int tab_id = -1;
-
-  // PlzNavigate requests have a frame_tree_node_id, but no render_process_id
+void GetFrameTreeNodeId(net::URLRequest* request, int* frame_tree_node_id) {
   auto request_info = content::ResourceRequestInfo::ForRequest(request);
-  if (request_info) {
-    int frame_tree_node_id = request_info->GetFrameTreeNodeId();
-    extensions::AtomExtensionApiFrameIdMap::FrameData frame_data;
-    if (extensions::AtomExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
-        frame_tree_node_id, &frame_data)) {
-      tab_id = frame_data.tab_id;
-    }
-  }
-
-  if (tab_id == -1) {
-    GetRenderFrameIdAndProcessId(request, &render_frame_id, &render_process_id);
-    extensions::ExtensionApiFrameIdMap::FrameData frame_data;
-    if (extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
-        render_process_id, render_frame_id, &frame_data)) {
-      tab_id = frame_data.tab_id;
-    }
-  }
-
-  return tab_id;
-#else
-  return -1;
-#endif
+  if (request_info)
+    *frame_tree_node_id = request_info->GetFrameTreeNodeId();
 }
 
 // Overloaded by multiple types to fill the |details| object.
@@ -151,7 +146,6 @@ void ToDictionary(base::DictionaryValue* details, net::URLRequest* request) {
   details->SetString("resourceType",
                      info ? ResourceTypeToString(info->GetResourceType())
                           : "other");
-  details->SetInteger("tabId", GetTabId(request));
 }
 
 void ToDictionary(base::DictionaryValue* details,
@@ -449,16 +443,20 @@ int AtomNetworkDelegate::HandleResponseEvent(
   // The |request| could be destroyed before the |callback| is called.
   callbacks_[request->identifier()] = callback;
 
+  int frame_tree_node_id = -1;
+  GetFrameTreeNodeId(request, &frame_tree_node_id);
+
   int render_frame_id = -1;
   int render_process_id = -1;
   GetRenderFrameIdAndProcessId(request, &render_frame_id, &render_process_id);
+
   ResponseCallback response =
       base::Bind(&AtomNetworkDelegate::OnListenerResultInUI<Out>,
-                 weak_factory_.GetWeakPtr(), request->identifier(),
-                 render_frame_id, render_process_id, out);
+                 weak_factory_.GetWeakPtr(), request->identifier(), out);
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,
       base::Bind(RunResponseListener, info.listener, base::Passed(&details),
+                 frame_tree_node_id, render_frame_id, render_process_id,
                  response));
   return net::ERR_IO_PENDING;
 }
@@ -473,9 +471,17 @@ void AtomNetworkDelegate::HandleSimpleEvent(
   std::unique_ptr<base::DictionaryValue> details(new base::DictionaryValue);
   FillDetailsObject(details.get(), request, args...);
 
+  int frame_tree_node_id = -1;
+  GetFrameTreeNodeId(request, &frame_tree_node_id);
+
+  int render_frame_id = -1;
+  int render_process_id = -1;
+  GetRenderFrameIdAndProcessId(request, &render_frame_id, &render_process_id);
+
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,
-      base::Bind(RunSimpleListener, info.listener, base::Passed(&details)));
+      base::Bind(RunSimpleListener, info.listener, base::Passed(&details),
+          frame_tree_node_id, render_frame_id, render_process_id));
 }
 
 template<typename T>
@@ -494,22 +500,9 @@ void AtomNetworkDelegate::OnListenerResultInIO(
 
 template<typename T>
 void AtomNetworkDelegate::OnListenerResultInUI(
-    uint64_t id, int render_frame_id, int render_process_id,
+    uint64_t id,
     T out, const base::DictionaryValue& response) {
   std::unique_ptr<base::DictionaryValue> copy = response.CreateDeepCopy();
-
-  int tab_id = -1;
-  copy->GetInteger(extensions::tabs_constants::kTabIdKey, &tab_id);
-  content::RenderFrameHost* rfh = content::RenderFrameHost::FromID(
-    render_process_id, render_frame_id);
-  if (rfh && tab_id == -1) {
-    auto web_contents = content::WebContents::FromRenderFrameHost(rfh);
-    if (web_contents) {
-      tab_id = extensions::TabHelper::IdForTab(web_contents);
-      copy->SetInteger(extensions::tabs_constants::kTabIdKey, tab_id);
-    }
-  }
-
   BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(&AtomNetworkDelegate::OnListenerResultInIO<T>,
