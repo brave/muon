@@ -6,7 +6,6 @@
 
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
 
-#include "atom/browser/extensions/atom_extension_api_frame_id_map.h"
 #include "chrome/common/url_constants.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/child_process_security_policy.h"
@@ -33,7 +32,6 @@ AtomExtensionWebContentsObserver::~AtomExtensionWebContentsObserver() {}
 void AtomExtensionWebContentsObserver::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
   ExtensionWebContentsObserver::RenderFrameCreated(render_frame_host);
-  AtomExtensionApiFrameIdMap::Get()->CacheFrameData(render_frame_host);
 
   const Extension* extension = GetExtensionFromFrame(render_frame_host, false);
   if (!extension)
@@ -70,7 +68,6 @@ void AtomExtensionWebContentsObserver::RenderFrameCreated(
 void AtomExtensionWebContentsObserver::RenderFrameDeleted(
     content::RenderFrameHost* render_frame_host) {
   ExtensionWebContentsObserver::RenderFrameDeleted(render_frame_host);
-  AtomExtensionApiFrameIdMap::Get()->RemoveFrameData(render_frame_host);
 }
 
 }  // namespace extensions
