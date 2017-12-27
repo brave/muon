@@ -116,9 +116,9 @@ AtomContentClient::AtomContentClient() {
 AtomContentClient::~AtomContentClient() {
 }
 
-void AtomContentClient::SetActiveURL(const GURL& url) {
-  base::debug::SetCrashKeyValue(crash_keys::kActiveURL,
-                                url.possibly_invalid_spec());
+void AtomContentClient::SetActiveURL(const GURL& url, std::string top_origin) {
+  static crash_reporter::CrashKeyString<64> top_origin_key("top-origin");
+  top_origin_key.Set(top_origin);
 }
 
 void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {

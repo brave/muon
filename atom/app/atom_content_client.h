@@ -22,7 +22,7 @@ class AtomContentClient : public brightray::ContentClient {
 
  protected:
   // content::ContentClient:
-  void SetActiveURL(const GURL& url) override;
+  void SetActiveURL(const GURL& url, std::string top_origin) override;
   std::string GetProduct() const override;
   std::string GetUserAgent() const override;
   void SetGpuInfo(const gpu::GPUInfo& gpu_info);
