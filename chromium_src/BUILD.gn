@@ -216,8 +216,6 @@ source_set("browser") {
     "//chrome/browser/gpu/gpu_mode_manager.cc",
     "//chrome/browser/gpu/gpu_mode_manager.h",
     "//chrome/browser/gpu/gpu_profile_cache.h",
-    "//chrome/browser/gpu/gl_string_manager.cc",
-    "//chrome/browser/gpu/gl_string_manager.h",
 
     "chrome/browser/io_thread.cc",
     "//chrome/browser/io_thread.h",
