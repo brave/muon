@@ -233,6 +233,8 @@ source_set("browser") {
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
     "//chrome/browser/net/default_network_context_params.cc",
     "//chrome/browser/net/default_network_context_params.h",
+    "//chrome/browser/net/proxy_config_monitor.cc",
+    "//chrome/browser/net/proxy_config_monitor.h",
     "//chrome/browser/net/proxy_service_factory.cc",
     "//chrome/browser/net/proxy_service_factory.h",
     "//chrome/browser/net/sth_distributor_provider.cc",
