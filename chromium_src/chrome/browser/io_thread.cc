@@ -22,10 +22,12 @@
 #include "components/net_log/chrome_net_log.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
-#include "components/proxy_config/pref_proxy_config_tracker.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/network_service_instance.h"
+#include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/network/ignore_errors_cert_verifier.h"
+#include "content/public/network/network_service.h"
 #include "content/public/network/url_request_context_builder_mojo.h"
 #include "extensions/features/features.h"
 #include "net/cert/cert_verifier.h"
@@ -75,7 +77,6 @@ IOThread::IOThread(
 #endif
       globals_(nullptr),
       is_quic_allowed_on_init_(false),
-      network_service_request_(mojo::MakeRequest(&ui_thread_network_service_)),
       weak_factory_(this) {
   scoped_refptr<base::SingleThreadTaskRunner> io_thread_proxy =
       BrowserThread::GetTaskRunnerForThread(BrowserThread::IO);
@@ -100,11 +101,6 @@ IOThread::IOThread(
 #if defined(OS_POSIX)
   gssapi_library_name_ = local_state->GetString(prefs::kGSSAPILibraryName);
 #endif
-  pref_proxy_config_tracker_.reset(
-      ProxyServiceFactory::CreatePrefProxyConfigTrackerOfLocalState(
-          local_state));
-  system_proxy_config_service_ = ProxyServiceFactory::CreateProxyConfigService(
-      pref_proxy_config_tracker_.get());
   ssl_config_service_manager_.reset(
       ssl_config::SSLConfigServiceManager::CreateDefaultManager(
           local_state,
@@ -129,7 +125,7 @@ IOThread::IOThread(
   pac_https_url_stripping_enabled_.MoveToThread(io_thread_proxy);
 
   chrome_browser_net::SetGlobalSTHDistributor(
-      std::unique_ptr<net::ct::STHDistributor>(new net::ct::STHDistributor()));
+      std::make_unique<net::ct::STHDistributor>());
 
   BrowserThread::SetIOThreadDelegate(this);
 
@@ -141,7 +137,6 @@ IOThread::IOThread(
 IOThread::~IOThread() {
   BrowserThread::SetIOThreadDelegate(nullptr);
 
-  pref_proxy_config_tracker_->DetachFromPrefService();
   DCHECK(!globals_);
 
   // Destroy the old distributor to check that the observers list it holds is
@@ -230,16 +225,6 @@ void IOThread::Init() {
       extension_event_router_forwarder_;
 #endif
 
-  std::vector<scoped_refptr<const net::CTLogVerifier>> ct_logs(
-      net::ct::CreateLogVerifiersForKnownLogs());
-
-  globals_->ct_logs.assign(ct_logs.begin(), ct_logs.end());
-
-  ct_tree_tracker_.reset(new certificate_transparency::TreeStateTracker(
-      globals_->ct_logs, net_log_));
-  // Register the ct_tree_tracker_ as observer for new STHs.
-  RegisterSTHObserver(ct_tree_tracker_.get());
-
 #if defined(OS_MACOSX)
   // Start observing Keychain events. This needs to be done on the UI thread,
   // as Keychain services requires a CFRunLoop.
@@ -251,6 +236,21 @@ void IOThread::Init() {
   ConstructSystemRequestContext();
 
   UpdateDnsClientEnabled();
+
+  std::vector<scoped_refptr<const net::CTLogVerifier>> ct_logs(
+      net::ct::CreateLogVerifiersForKnownLogs());
+
+  globals_->ct_logs.assign(ct_logs.begin(), ct_logs.end());
+
+  ct_tree_tracker_ =
+      std::make_unique<certificate_transparency::TreeStateTracker>(
+          globals_->ct_logs, globals_->system_request_context->host_resolver(),
+          net_log_);
+  // Register the ct_tree_tracker_ as observer for new STHs.
+  RegisterSTHObserver(ct_tree_tracker_.get());
+  // Register the ct_tree_tracker_ as observer for verified SCTs.
+  globals_->system_request_context->cert_transparency_verifier()->SetObserver(
+      ct_tree_tracker_.get());
 }
 
 void IOThread::CleanUp() {
@@ -258,7 +258,7 @@ void IOThread::CleanUp() {
   net::ShutdownNSSHttpIO();
 #endif
 
-  system_url_request_context_getter_ = NULL;
+  system_url_request_context_getter_ = nullptr;
 
   // Unlink the ct_tree_tracker_ from the global cert_transparency_verifier
   // and unregister it from new STH notifications so it will take no actions
@@ -277,9 +277,8 @@ void IOThread::CleanUp() {
   // Shutdown the HistogramWatcher on the IO thread.
   net::NetworkChangeNotifier::ShutdownHistogramWatcher();
 
-  system_proxy_config_service_.reset();
   delete globals_;
-  globals_ = NULL;
+  globals_ = nullptr;
 
   base::debug::LeakTracker<SystemURLRequestContextGetter>::CheckForLeaks();
 
@@ -299,7 +298,7 @@ net::URLRequestContextGetter* IOThread::system_url_request_context_getter() {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
   if (!system_url_request_context_getter_.get()) {
     system_url_request_context_getter_ =
-        new SystemURLRequestContextGetter(this);
+        base::MakeRefCounted<SystemURLRequestContextGetter>(this);
   }
   return system_url_request_context_getter_.get();
 }
@@ -315,7 +314,7 @@ void IOThread::ClearHostCache(
 
 void IOThread::DisableQuic() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
-  globals_->network_service->DisableQuic();
+  globals_->quic_disabled = true;
 }
 
 net::SSLConfigService* IOThread::GetSSLConfigService() {
@@ -394,22 +393,21 @@ bool IOThread::PacHttpsUrlStrippingEnabled() const {
 std::unique_ptr<net::HostResolver> CreateGlobalHostResolver(
     net::NetLog* net_log) {
   TRACE_EVENT0("startup", "IOThread::CreateGlobalHostResolver");
-  const base::CommandLine& command_line =
-      *base::CommandLine::ForCurrentProcess();
 
-  net::HostResolver::Options options;
-  std::unique_ptr<net::HostResolver> global_host_resolver;
-  global_host_resolver =
-      net::HostResolver::CreateSystemResolver(options, net_log);
+  using resolver = net::HostResolver;
+  std::unique_ptr<resolver> global_host_resolver =
+      resolver::CreateSystemResolver(resolver::Options(), net_log);
 
   // If hostname remappings were specified on the command-line, layer these
   // rules on top of the real host resolver. This allows forwarding all requests
   // through a designated test server.
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
   if (!command_line.HasSwitch(switches::kHostResolverRules))
     return global_host_resolver;
 
-  std::unique_ptr<net::MappedHostResolver> remapped_resolver(
-      new net::MappedHostResolver(std::move(global_host_resolver)));
+  auto remapped_resolver = std::make_unique<net::MappedHostResolver>(
+      std::move(global_host_resolver));
   remapped_resolver->SetRulesFromString(
       command_line.GetSwitchValueASCII(switches::kHostResolverRules));
   return std::move(remapped_resolver);
@@ -435,30 +433,13 @@ IOThread::CreateDefaultAuthHandlerFactory(net::HostResolver* host_resolver) {
       globals_->http_auth_preferences.get(), host_resolver);
 }
 
-void IOThread::SetUpProxyConfigService(
-    content::URLRequestContextBuilderMojo* builder,
-    std::unique_ptr<net::ProxyConfigService> proxy_config_service) const {
-  const base::CommandLine& command_line =
-      *base::CommandLine::ForCurrentProcess();
-
-  // TODO(eroman): Figure out why this doesn't work in single-process mode.
-  // Should be possible now that a private isolate is used.
-  // http://crbug.com/474654
-  if (!command_line.HasSwitch(switches::kWinHttpProxyResolver)) {
-    if (command_line.HasSwitch(switches::kSingleProcess)) {
-      LOG(ERROR) << "Cannot use V8 Proxy resolver in single process mode.";
-    } else {
-      builder->SetMojoProxyResolverFactory(
-          ChromeMojoProxyResolverFactory::CreateWithStrongBinding());
-    }
-  }
-
+void IOThread::SetUpProxyService(
+    content::URLRequestContextBuilderMojo* builder) const {
   builder->set_pac_quick_check_enabled(WpadQuickCheckEnabled());
   builder->set_pac_sanitize_url_policy(
       PacHttpsUrlStrippingEnabled()
           ? net::ProxyService::SanitizeUrlPolicy::SAFE
           : net::ProxyService::SanitizeUrlPolicy::UNSAFE);
-  builder->set_proxy_config_service(std::move(proxy_config_service));
 }
 
 void IOThread::ConstructSystemRequestContext() {
@@ -493,23 +474,26 @@ void IOThread::ConstructSystemRequestContext() {
   // Add built-in logs
   ct_verifier->AddLogs(globals_->ct_logs);
 
-  // Register the ct_tree_tracker_ as observer for verified SCTs.
-  ct_verifier->SetObserver(ct_tree_tracker_.get());
-
   builder->set_ct_verifier(std::move(ct_verifier));
 
-  SetUpProxyConfigService(builder.get(),
-                          std::move(system_proxy_config_service_));
+  SetUpProxyService(builder.get());
 
-  globals_->network_service = content::NetworkService::Create(
-      std::move(network_service_request_), net_log_);
-  globals_->network_service->DisableQuic();
+  globals_->quic_disabled = true;
 
-  globals_->system_network_context =
-      globals_->network_service->CreateNetworkContextWithBuilder(
-          std::move(network_context_request_),
-          std::move(network_context_params_), std::move(builder),
-          &globals_->system_request_context);
+  if (base::FeatureList::IsEnabled(features::kNetworkService)) {
+    globals_->system_request_context_owner =
+        std::move(builder)->Create(std::move(network_context_params_).get(),
+                                   !is_quic_allowed_on_init_, net_log_);
+    globals_->system_request_context =
+        globals_->system_request_context_owner.url_request_context.get();
+  } else {
+    globals_->system_network_context =
+        content::GetNetworkServiceImpl()->CreateNetworkContextWithBuilder(
+            std::move(network_context_request_),
+            std::move(network_context_params_), std::move(builder),
+            &globals_->system_request_context);
+  }
+
 
 #if defined(USE_NSS_CERTS)
   net::SetURLRequestContextForNSSHttpIO(globals_->system_request_context);
