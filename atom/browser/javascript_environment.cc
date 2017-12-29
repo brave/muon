@@ -18,6 +18,7 @@
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "brave/common/extensions/crash_reporter_bindings.h"
+#include "brave/common/extensions/crypto_bindings.h"
 #include "brave/common/extensions/file_bindings.h"
 #include "brave/common/extensions/path_bindings.h"
 #include "brave/common/extensions/shared_memory_bindings.h"
@@ -179,6 +180,10 @@ JavascriptEnvironment::JavascriptEnvironment()
   v8::Local<v8::Object> crash_reporter =
       brave::CrashReporterBindings::API(script_context_.get());
   muon->Set(v8::String::NewFromUtf8(isolate_, "crashReporter"), crash_reporter);
+
+  v8::Local<v8::Object> crypto =
+      brave::CryptoBindings::API(script_context_.get());
+  muon->Set(v8::String::NewFromUtf8(isolate_, "crypto"), crypto);
 }
 
 JavascriptEnvironment::~JavascriptEnvironment() {

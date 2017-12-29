@@ -211,6 +211,8 @@ source_set("common") {
     "brave/common/extensions/asar_source_map.h",
     "brave/common/extensions/crash_reporter_bindings.cc",
     "brave/common/extensions/crash_reporter_bindings.h",
+    "brave/common/extensions/crypto_bindings.cc",
+    "brave/common/extensions/crypto_bindings.h",
     "brave/common/extensions/file_bindings.cc",
     "brave/common/extensions/file_bindings.h",
     "brave/common/extensions/path_bindings.cc",
