@@ -1893,46 +1893,41 @@ index 19c7b569f19849f8fbb26c1faf2ac52f8fe7c566..0294416a183a13cd925adf89dd587289
    if (GetWebMediaPlayer())
      GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index 9162bc3ba51153a494aa218007511054cdebbad7..e685ea161db22661d3a643cd37df8924c4439d15 100644
+index 9162bc3ba51153a494aa218007511054cdebbad7..96ff31910ae3ba49f74e14da464758d458911ecc 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -264,6 +264,11 @@ void AutoplayPolicy::UnlockUserGesture() {
- }
- 
- bool AutoplayPolicy::IsGestureNeededForPlayback() const {
-+  // MUON(darkdh): check autoplay setting
-+  if (!IsAutoplayAllowedPerSettings()) {
-+    return true;
-+  }
-+
-   if (!IsLockedPendingUserGesture())
+@@ -275,6 +275,10 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+   if (element_->GetLoadType() == WebMediaPlayer::kLoadTypeMediaStream)
      return false;
  
-@@ -280,14 +285,16 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
++  // MUON(darkdh): default allow local files
++  if (element_->GetDocument().origin() == String("null"))
++    return false;
++
+   // We want to allow muted video to autoplay if:
+   // - the flag is enabled;
    // - Data Saver is not enabled;
-   // - Preload was not disabled (low end devices);
-   // - Autoplay is enabled in settings;
--  if (element_->IsHTMLVideoElement() && element_->muted() &&
--      RuntimeEnabledFeatures::AutoplayMutedVideosEnabled() &&
--      !(element_->GetDocument().GetSettings() &&
--        element_->GetDocument().GetSettings()->GetDataSaverEnabled()) &&
--      !(element_->GetDocument().GetSettings() &&
--        element_->GetDocument()
--            .GetSettings()
--            ->GetForcePreloadNoneForMediaElements()) &&
-+  // if (element_->IsHTMLVideoElement() && element_->muted() &&
-+  //     RuntimeEnabledFeatures::AutoplayMutedVideosEnabled() &&
-+  //     !(element_->GetDocument().GetSettings() &&
-+  //       element_->GetDocument().GetSettings()->GetDataSaverEnabled()) &&
-+  //     !(element_->GetDocument().GetSettings() &&
-+  //       element_->GetDocument()
-+  //           .GetSettings()
-+  //           ->GetForcePreloadNoneForMediaElements()) &&
-+  // MUON(darkdh): only check autoplay setting
-+  if (element_->IsHTMLVideoElement() &&
+@@ -288,10 +292,20 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+         element_->GetDocument()
+             .GetSettings()
+             ->GetForcePreloadNoneForMediaElements()) &&
++      // MUON(darkdh): don't prompt for autoplay permission for muted videos
++#if defined(MUON_CHROMIUM_BUILD)
        IsAutoplayAllowedPerSettings()) {
++#else
++      true) {
++#endif
      return false;
    }
+ 
++  // MUON(darkdh): prompt for autoplay permission
++  if ((element_->IsHTMLVideoElement() || element_->IsAudioElement()) &&
++      IsAutoplayAllowedPerSettings())
++    return false;
++
+   return true;
+ }
+ 
 diff --git a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
 index 7ee2fa858b93e1dd42ac27f982fb61eaf597aad4..b1c96c229077859865fd5ea03cdbd7747880e216 100644
 --- a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
