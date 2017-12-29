@@ -193,7 +193,8 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     } else {
       auto cookie_config = content::CookieStoreConfig(
           base_path_.Append(FILE_PATH_LITERAL("Cookies")),
-          content::CookieStoreConfig::EPHEMERAL_SESSION_COOKIES, nullptr);
+          false /* restore_old_session_cookies */,
+          false /* persist_session_cookies */, nullptr);
       cookie_config.cookieable_schemes = delegate_->GetCookieableSchemes();
       cookie_config.crypto_delegate = cookie_config::GetCookieCryptoDelegate();
       cookie_store = content::CreateCookieStore(cookie_config);
