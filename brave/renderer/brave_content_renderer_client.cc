@@ -101,8 +101,7 @@ void BraveContentRendererClient::RenderThreadStarted() {
       new network_hints::PrescientNetworkingDispatcher());
 
   for (auto& origin : secure_origin_whitelist::GetWhitelist()) {
-    WebSecurityPolicy::AddOriginTrustworthyWhiteList(
-        WebSecurityOrigin::Create(origin));
+    WebSecurityPolicy::AddOriginTrustworthyWhiteList(WebSecurityOrigin(origin));
   }
 
   for (auto& scheme :
