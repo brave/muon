@@ -92,7 +92,7 @@ class InspectableWebContentsImpl :
   void Reattach(const DispatchCallback& callback) override {};
   void ReadyForTest() override {};
   void RegisterExtensionsAPI(const std::string& origin,
-                             const std::string& script) override {};
+                             const std::string& script) override;
 
   void ActivateWindow() override;
   void CloseWindow() override;
@@ -148,12 +148,9 @@ class InspectableWebContentsImpl :
   void AgentHostClosed(content::DevToolsAgentHost* agent_host) override;
 
   // content::WebContentsObserver:
-  void RenderFrameHostChanged(content::RenderFrameHost* old_host,
-                              content::RenderFrameHost* new_host) override;
+  void ReadyToCommitNavigation(
+      content::NavigationHandle* navigation_handle) override;
   void OnWebContentsFocused(content::RenderWidgetHost* host) override;
-  void DidStartNavigationToPendingEntry(
-      const GURL& url,
-      content::ReloadType reload_type) override;
 
   // content::WebContentsDelegate:
   bool DidAddMessageToConsole(content::WebContents* source,
@@ -210,6 +207,9 @@ class InspectableWebContentsImpl :
 
   std::unique_ptr<content::WebContents> devtools_web_contents_;
   std::unique_ptr<InspectableWebContentsView> view_;
+
+  using ExtensionsAPIs = std::map<std::string, std::string>;
+  ExtensionsAPIs extensions_api_;
 
   base::WeakPtrFactory<InspectableWebContentsImpl> weak_factory_;
 
