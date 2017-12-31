@@ -75,7 +75,6 @@ module.exports.init = () => {
     let hapiRegistered = false;
 
     ipcMain.on('halo', (event, arg) => {
-        console.log(event)
         if(!hapiRegistered){
             session.defaultSession.extensions.load(path.join(__dirname,`extensions/hapi`), {}, 'unpacked');            
             hapiRegistered = true;
@@ -85,7 +84,6 @@ module.exports.init = () => {
     })
 
     ipcMain.on('unload-halo', (event, arg) => {
-        console.log('unload hapi');
         session.defaultSession.extensions.disable('mnojpmjdmbbfmejpflffifhffcmidifd')                      
     })
 }
