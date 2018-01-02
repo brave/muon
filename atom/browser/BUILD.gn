@@ -20,6 +20,8 @@ source_set("browser") {
     "//third_party/WebKit/public:blink_headers",
   ]
 
+  data_deps = []
+
   deps = [
     "//electron:common",
     "//electron/muon/app",
@@ -306,6 +308,8 @@ source_set("browser") {
   }
 
   if (enable_extensions) {
+    data_deps += [ "//electron:brave_resources" ]
+
     sources += [
       "extensions/api/atom_extensions_api_client.cc",
       "extensions/api/atom_extensions_api_client.h",
