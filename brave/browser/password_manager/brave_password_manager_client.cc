@@ -151,6 +151,10 @@ void BravePasswordManagerClient::DidClickNoUpdate() {
 bool BravePasswordManagerClient::IsPasswordManagementEnabledForCurrentPage()
     const {
   DCHECK(web_contents());
+  PrefService* prefs = profile_->GetPrefs();
+  DCHECK(prefs);
+  if (!prefs->GetBoolean(password_manager::prefs::kCredentialsEnableService))
+    return false;
   content::NavigationEntry* entry =
       web_contents()->GetController().GetLastCommittedEntry();
   bool is_enabled = false;
