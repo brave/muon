@@ -37,6 +37,7 @@
 #include "extensions/renderer/renderer_extension_registry.h"
 #endif
 
+using atom::ContentSettingsManager;
 using blink::WebContentSettingCallbacks;
 using blink::WebDocument;
 using blink::WebFrame;
@@ -46,22 +47,6 @@ using blink::WebURL;
 using blink::WebView;
 using content::DocumentState;
 using content::NavigationState;
-
-namespace {
-
-GURL GetOriginOrURL(const WebFrame* frame) {
-  WebString top_origin = frame->Top()->GetSecurityOrigin().ToString();
-  // The |top_origin| is unique ("null") e.g., for file:// URLs. Use the
-  // document URL as the primary URL in those cases.
-  // TODO(alexmos): This is broken for --site-per-process, since top() can be a
-  // WebRemoteFrame which does not have a document(), and the WebRemoteFrame's
-  // URL is not replicated.
-  if (top_origin == "null")
-    return frame->Top()->ToWebLocalFrame()->GetDocument().Url();
-  return blink::WebStringToGURL(top_origin);
-}
-
-}  // namespace
 
 ContentSettingsObserver::ContentSettingsObserver(
     content::RenderFrame* render_frame,
@@ -262,7 +247,7 @@ bool ContentSettingsObserver::AllowDatabase(const WebString& name,
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-          GetOriginOrURL(frame),
+          ContentSettingsManager::GetOriginOrURL(frame),
           secondary_url,
           "cookies",
           allow) != CONTENT_SETTING_BLOCK;
@@ -290,7 +275,7 @@ void ContentSettingsObserver::RequestFileSystemAccessAsync(
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-          GetOriginOrURL(frame),
+          ContentSettingsManager::GetOriginOrURL(frame),
           secondary_url,
           "cookies",
           allow) != CONTENT_SETTING_BLOCK;
@@ -313,10 +298,11 @@ bool ContentSettingsObserver::AllowImage(bool enabled_per_settings,
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-                                 GetOriginOrURL(render_frame()->GetWebFrame()),
-                                 secondary_url,
-                                 "images",
-                                 allow) != CONTENT_SETTING_BLOCK;
+            ContentSettingsManager::GetOriginOrURL(
+                render_frame()->GetWebFrame()),
+            secondary_url,
+            "images",
+            allow) != CONTENT_SETTING_BLOCK;
   }
 
   if (!allow)
@@ -337,10 +323,10 @@ bool ContentSettingsObserver::AllowIndexedDB(const WebString& name,
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-          GetOriginOrURL(frame),
-          secondary_url,
-          "cookies",
-          allow) != CONTENT_SETTING_BLOCK;
+            ContentSettingsManager::GetOriginOrURL(frame),
+            secondary_url,
+            "cookies",
+            allow) != CONTENT_SETTING_BLOCK;
   }
 
   if (!allow)
@@ -362,10 +348,10 @@ bool ContentSettingsObserver::AllowScript(bool enabled_per_settings) {
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-                                   GetOriginOrURL(frame),
-                                   GURL(),
-                                   "javascript",
-                                   allow) != CONTENT_SETTING_BLOCK;
+          ContentSettingsManager::GetOriginOrURL(frame),
+          GURL(),
+          "javascript",
+          allow) != CONTENT_SETTING_BLOCK;
   }
 
   cached_script_permissions_[frame] = allow;
@@ -385,10 +371,10 @@ bool ContentSettingsObserver::AllowScriptFromSource(
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-                                 GetOriginOrURL(render_frame()->GetWebFrame()),
-                                 secondary_url,
-                                 "javascript",
-                                 allow) != CONTENT_SETTING_BLOCK;
+          ContentSettingsManager::GetOriginOrURL(render_frame()->GetWebFrame()),
+          secondary_url,
+          "javascript",
+          allow) != CONTENT_SETTING_BLOCK;
   }
 
   allow = allow || IsWhitelistedForContentSettings();
@@ -418,7 +404,7 @@ bool ContentSettingsObserver::AllowStorage(bool local) {
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-          GetOriginOrURL(frame),
+          ContentSettingsManager::GetOriginOrURL(frame),
           blink::WebStringToGURL(frame->GetSecurityOrigin().ToString()),
           "cookies",
           allow) != CONTENT_SETTING_BLOCK;
@@ -471,10 +457,11 @@ bool ContentSettingsObserver::AllowMutationEvents(bool default_value) {
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-                                 GetOriginOrURL(render_frame()->GetWebFrame()),
-                                 GURL(),
-                                 "mutation",
-                                 allow) != CONTENT_SETTING_BLOCK;
+            ContentSettingsManager::GetOriginOrURL(
+                render_frame()->GetWebFrame()),
+            GURL(),
+            "mutation",
+            allow) != CONTENT_SETTING_BLOCK;
   }
 
   if (!allow)
@@ -492,10 +479,11 @@ bool ContentSettingsObserver::AllowRunningInsecureContent(
   if (content_settings_manager_->content_settings()) {
     allow =
         content_settings_manager_->GetSetting(
-                                 GetOriginOrURL(render_frame()->GetWebFrame()),
-                                 secondary_url,
-                                 "runInsecureContent",
-                                 allow) != CONTENT_SETTING_BLOCK;
+            ContentSettingsManager::GetOriginOrURL(
+                render_frame()->GetWebFrame()),
+            secondary_url,
+            "runInsecureContent",
+            allow) != CONTENT_SETTING_BLOCK;
   }
 
   if (allow)
@@ -509,13 +497,13 @@ bool ContentSettingsObserver::AllowAutoplay(bool default_value) {
   bool allow = default_value;
   if (content_settings_manager_->content_settings()) {
     WebFrame* frame = render_frame()->GetWebFrame();
+    auto origin = frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin();
     allow =
         content_settings_manager_->GetSetting(
-                          GetOriginOrURL(frame),
-                          blink::WebStringToGURL(
-                              frame->ToWebLocalFrame()->GetDocument().GetSecurityOrigin().ToString()),
-                          "autoplay",
-                          allow) != CONTENT_SETTING_BLOCK;
+            ContentSettingsManager::GetOriginOrURL(frame),
+            blink::WebStringToGURL(origin.ToString()),
+            "autoplay",
+            allow) != CONTENT_SETTING_BLOCK;
   }
 
   if (!allow)
