@@ -18,10 +18,10 @@ index 9dc2514b8d55c1977f1cc047986b9f157769fd36..9fd8d8eceda7c9f372a4c7e53cbcb2df
    }
  }
 diff --git a/src/profiler/profiler-listener.cc b/src/profiler/profiler-listener.cc
-index 3269dfd81b676e7babd412a17773f6a904768b35..fb4498bbf491a8cc6840135dca4961389c80d1bf 100644
+index 5199b6135863dc8909e3d94a3dfea1b723ca088c..2fb818135dbc2820d67a6c20793cc791c8f3128e 100644
 --- a/src/profiler/profiler-listener.cc
 +++ b/src/profiler/profiler-listener.cc
-@@ -100,7 +100,7 @@ void ProfilerListener::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
+@@ -96,7 +96,7 @@ void ProfilerListener::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
        int position = it.source_position().ScriptOffset();
        int line_number = script->GetLineNumber(position) + 1;
        int pc_offset = it.code_offset() + offset;
