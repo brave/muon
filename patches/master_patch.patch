@@ -1583,6 +1583,19 @@ index e54e2c0fcc8eac6fe637025c3c71f3d6834a4892..d817176d073d8a96fa76b944f6fb198d
  };
  
  // Details about a redirection of a resource request.
+diff --git a/content/public/common/content_features.cc b/content/public/common/content_features.cc
+index f11d51a320cd3b1ddda4824bde4e29cc93fcd21d..6fe9a7b27f0254c776e493eded13f2364e305a16 100644
+--- a/content/public/common/content_features.cc
++++ b/content/public/common/content_features.cc
+@@ -300,7 +300,7 @@ const base::Feature kSignInProcessIsolation{"sign-in-process-isolation",
+ // Alternative to switches::kSitePerProcess, for turning on full site isolation.
+ // Launch bug: https://crbug.com/739418.
+ const base::Feature kSitePerProcess{"site-per-process",
+-                                    base::FEATURE_DISABLED_BY_DEFAULT};
++                                    base::FEATURE_ENABLED_BY_DEFAULT};
+ 
+ // An experiment for skipping compositing small scrollers.
+ const base::Feature kSkipCompositingSmallScrollers{
 diff --git a/content/public/common/web_preferences.cc b/content/public/common/web_preferences.cc
 index 722afb30f6625f3e00c0a437013b7ff34b31b57f..1cfbc5a98140187cddb4a6002b77c03dc940900a 100644
 --- a/content/public/common/web_preferences.cc
