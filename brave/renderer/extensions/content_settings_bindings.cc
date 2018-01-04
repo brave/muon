@@ -17,6 +17,8 @@
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
 
+using atom::ContentSettingsManager;
+
 namespace mate {
 
 template<>
@@ -61,17 +63,13 @@ void ContentSettingsBindings::GetCurrentSetting(
       mate::V8ToString(args[0].As<v8::String>());
   bool incognito = args[1].As<v8::Boolean>()->Value();
 
-  auto render_view = context()->GetRenderFrame()->GetRenderView();
-  GURL main_frame_url = render_view
-      ->GetWebView()->MainFrame()->ToWebLocalFrame()->GetDocument().Url();
-
   ContentSetting setting =
     atom::ContentSettingsManager::GetInstance()->GetSetting(
-          main_frame_url,
+          ContentSettingsManager::GetOriginOrURL(
+              context()->GetRenderFrame()->GetWebFrame()),
           context()->web_frame()->GetDocument().Url(),
           content_type,
           incognito);
-
 
   args.GetReturnValue().Set(
     mate::Converter<ContentSetting>::ToV8(context()->isolate(), setting));

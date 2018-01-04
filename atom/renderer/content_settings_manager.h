@@ -21,6 +21,10 @@ namespace base {
 class DictionaryValue;
 }
 
+namespace blink {
+class WebFrame;
+}
+
 namespace atom {
 
 class ContentSettingsManager : public content::RenderThreadObserver {
@@ -29,6 +33,7 @@ class ContentSettingsManager : public content::RenderThreadObserver {
   ~ContentSettingsManager() override;
 
   static ContentSettingsManager* GetInstance();
+  static GURL GetOriginOrURL(const blink::WebFrame* frame);
 
   const base::DictionaryValue* content_settings() const
     { return content_settings_.get(); };
