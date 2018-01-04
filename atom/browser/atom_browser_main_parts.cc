@@ -36,6 +36,7 @@
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_result_codes.h"
 #include "chrome/common/chrome_switches.h"
+#include "components/password_manager/core/common/password_manager_features.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
@@ -378,6 +379,13 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   feature_list->RegisterFieldTrialOverride(
                       features::kGuestViewCrossProcessFrames.name,
                       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
+  // enable fill-on-account-select
+  field_trial = feature_list->GetFieldTrial(
+      password_manager::features::kFillOnAccountSelect);
+  feature_list->RegisterFieldTrialOverride(
+      password_manager::features::kFillOnAccountSelect.name,
+      base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
 }
 
 
