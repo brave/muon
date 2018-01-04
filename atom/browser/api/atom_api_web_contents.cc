@@ -851,6 +851,13 @@ void WebContents::AutofillSelect(const std::string& value,
     autofillClient->DidAcceptSuggestion(value, frontend_id, index);
 }
 
+void WebContents::AutofillConfirm() {
+  auto autofillClient =
+    autofill::AtomAutofillClient::FromWebContents(web_contents());
+  if (autofillClient)
+    autofillClient->DidConfirmAutofill();
+}
+
 void WebContents::AutofillPopupHidden() {
   auto autofillClient =
     autofill::AtomAutofillClient::FromWebContents(web_contents());
@@ -2716,6 +2723,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("close", &WebContents::CloseContents)
       .SetMethod("forceClose", &WebContents::DestroyWebContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
+      .SetMethod("autofillConfirm", &WebContents::AutofillConfirm)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
       .SetMethod("_attachGuest", &WebContents::AttachGuest)
       .SetMethod("_detachGuest", &WebContents::DetachGuest)

@@ -1061,6 +1061,156 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    // State needed to manage service lifecycle and lifecycle of bound clients.
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
+diff --git a/components/autofill/content/browser/content_autofill_driver.cc b/components/autofill/content/browser/content_autofill_driver.cc
+index f4e1ecec6d4fe4275b03d49c0de8e69801158046..b37becd7211cbd58c37ceb8fa5b558ad8ea77281 100644
+--- a/components/autofill/content/browser/content_autofill_driver.cc
++++ b/components/autofill/content/browser/content_autofill_driver.cc
+@@ -100,6 +100,8 @@ void ContentAutofillDriver::SendFormDataToRenderer(
+     case FORM_DATA_ACTION_PREVIEW:
+       GetAutofillAgent()->PreviewForm(query_id, data);
+       break;
++    case FORM_DATA_ACTION_ASK:
++      break;
+   }
+ }
+ 
+diff --git a/components/autofill/core/browser/autofill_client.h b/components/autofill/core/browser/autofill_client.h
+index caee854be9724a1ab0f3c570bf7822cd65694a0d..49c009408ff9310e9b71e1dd4a77085e156eadc8 100644
+--- a/components/autofill/core/browser/autofill_client.h
++++ b/components/autofill/core/browser/autofill_client.h
+@@ -192,6 +192,9 @@ class AutofillClient : public RiskDataLoader {
+ 
+   // Handles simple actions for the autofill popups.
+   virtual void ExecuteCommand(int id) = 0;
++
++  virtual void DidGetAutofillValues(
++      const std::vector<base::string16>& values) {};
+ };
+ 
+ }  // namespace autofill
+diff --git a/components/autofill/core/browser/autofill_driver.h b/components/autofill/core/browser/autofill_driver.h
+index 5422060f52974910ea434a57f6e038c743e7ea6f..ea5a1e96da600e44f088b81728654277059ccba3 100644
+--- a/components/autofill/core/browser/autofill_driver.h
++++ b/components/autofill/core/browser/autofill_driver.h
+@@ -31,7 +31,8 @@ class AutofillDriver {
+     // The renderer should fill the form data.
+     FORM_DATA_ACTION_FILL,
+     // The renderer should preview the form data.
+-    FORM_DATA_ACTION_PREVIEW
++    FORM_DATA_ACTION_PREVIEW,
++    FORM_DATA_ACTION_ASK
+   };
+ 
+   virtual ~AutofillDriver() {}
+diff --git a/components/autofill/core/browser/autofill_external_delegate.cc b/components/autofill/core/browser/autofill_external_delegate.cc
+index 329712ea42595672bed0d3e4f24892ff70e7cf26..420782ff97a67510b7ad1160fd2240f17560451c 100644
+--- a/components/autofill/core/browser/autofill_external_delegate.cc
++++ b/components/autofill/core/browser/autofill_external_delegate.cc
+@@ -290,6 +290,14 @@ void AutofillExternalDelegate::Reset() {
+   manager_->client()->HideAutofillPopup();
+ }
+ 
++void AutofillExternalDelegate::QueryAutofillValues(int unique_id) {
++  manager_->FillOrPreviewForm(AutofillDriver::FORM_DATA_ACTION_ASK,
++                              query_id_,
++                              query_form_,
++                              query_field_,
++                              unique_id);
++}
++
+ base::WeakPtr<AutofillExternalDelegate> AutofillExternalDelegate::GetWeakPtr() {
+   return weak_ptr_factory_.GetWeakPtr();
+ }
+diff --git a/components/autofill/core/browser/autofill_external_delegate.h b/components/autofill/core/browser/autofill_external_delegate.h
+index a5984209fa9a0c4b917cd11dd35c186a479de6f7..84732809858131d5e48d9f1619a9950e5917a3b9 100644
+--- a/components/autofill/core/browser/autofill_external_delegate.h
++++ b/components/autofill/core/browser/autofill_external_delegate.h
+@@ -85,6 +85,8 @@ class AutofillExternalDelegate : public AutofillPopupDelegate {
+   // values or settings.
+   void Reset();
+ 
++  void QueryAutofillValues(int unique_id) override;
++
+  protected:
+   base::WeakPtr<AutofillExternalDelegate> GetWeakPtr();
+ 
+diff --git a/components/autofill/core/browser/autofill_manager.cc b/components/autofill/core/browser/autofill_manager.cc
+index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..ba6c4591edecc52dae1811a7fdc47b595103110f 100644
+--- a/components/autofill/core/browser/autofill_manager.cc
++++ b/components/autofill/core/browser/autofill_manager.cc
+@@ -1789,6 +1789,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
+         static_cast<const AutofillProfile*>(&data_model)->language_code();
+   }
+ 
++  std::vector<base::string16> values;
++
+   // If the relevant section is auto-filled, we should fill |field| but not the
+   // rest of the form.
+   if (SectionIsAutofilled(*form_structure, form, autofill_field->section())) {
+@@ -1796,7 +1798,11 @@ void AutofillManager::FillOrPreviewDataModelForm(
+       if (iter.SameFieldAs(field)) {
+         base::string16 value =
+             data_model.GetInfo(autofill_field->Type(), app_locale_);
+-        if (AutofillField::FillFormField(*autofill_field, value,
++        if (action == AutofillDriver::FORM_DATA_ACTION_ASK) {
++          values.push_back((iter.label.length() ? iter.label :
++                           iter.name.length() ? iter.name : iter.id)
++                           + base::ASCIIToUTF16(": ") + value);
++        } else if (AutofillField::FillFormField(*autofill_field, value,
+                                          profile_language_code, app_locale_,
+                                          &iter)) {
+           // Mark the cached field as autofilled, so that we can detect when a
+@@ -1819,6 +1825,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
+     // address book entry.
+     if (action == AutofillDriver::FORM_DATA_ACTION_FILL)
+       personal_data_->RecordUseOf(data_model);
++    else if (action == AutofillDriver::FORM_DATA_ACTION_ASK)
++      client_->DidGetAutofillValues(values);
+ 
+     driver()->SendFormDataToRenderer(query_id, action, result);
+     return;
+@@ -1859,9 +1867,16 @@ void AutofillManager::FillOrPreviewDataModelForm(
+                          (result.fields[i].SameFieldAs(field) ||
+                           result.fields[i].form_control_type == "select-one" ||
+                           result.fields[i].value.empty());
+-    if (AutofillField::FillFormField(*cached_field, value,
+-                                     profile_language_code, app_locale_,
+-                                     &result.fields[i])) {
++    if (action == AutofillDriver::FORM_DATA_ACTION_ASK) {
++      values.push_back((form_structure->field(i)->label.length() ?
++                       form_structure->field(i)->label :
++                       form_structure->field(i)->name.length() ?
++                       form_structure->field(i)->name :
++                       form_structure->field(i)->id)
++                       + base::ASCIIToUTF16(": ") + value);
++    } else if (AutofillField::FillFormField(*cached_field, value,
++                                            profile_language_code, app_locale_,
++                                            &result.fields[i])) {
+       // Mark the cached field as autofilled, so that we can detect when a
+       // user edits an autofilled field (for metrics).
+       form_structure->field(i)->is_autofilled = true;
+@@ -1886,6 +1901,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
+   // address book entry.
+   if (action == AutofillDriver::FORM_DATA_ACTION_FILL)
+     personal_data_->RecordUseOf(data_model);
++  else if (action == AutofillDriver::FORM_DATA_ACTION_ASK)
++      client_->DidGetAutofillValues(values);
+ 
+   driver()->SendFormDataToRenderer(query_id, action, result);
+ }
+diff --git a/components/autofill/core/browser/autofill_popup_delegate.h b/components/autofill/core/browser/autofill_popup_delegate.h
+index 6febbf91cfc9ad94f9eb4531c1bd3ce4f6048817..02087afc5d027b85f7ff0c3cd7b11ea0fa62d7c8 100644
+--- a/components/autofill/core/browser/autofill_popup_delegate.h
++++ b/components/autofill/core/browser/autofill_popup_delegate.h
+@@ -51,6 +51,8 @@ class AutofillPopupDelegate {
+ 
+   // Returns the associated AutofillDriver.
+   virtual AutofillDriver* GetAutofillDriver() = 0;
++
++  virtual void QueryAutofillValues(int unique_id) {};
+ };
+ 
+ }  // namespace autofill
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
 index 42a50e8381c196b310024c82d69a1a529ead0ba6..c3bafffe4c3d04b02d9f6fb33b3711782c782e50 100644
 --- a/components/crash/content/app/breakpad_linux.cc
