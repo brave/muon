@@ -1841,10 +1841,10 @@ index 9361272ce0d539dd4bfa1b66b07cb416fe867b14..2df550bc5c628f9029f44328922dac26
  }
  
 diff --git a/net/http/transport_security_state.cc b/net/http/transport_security_state.cc
-index 5af15d92ef4921dbbe93f86dbffc7284fd355a22..921acec6026b76edbf7582540ddd906dda462e11 100644
+index a433afd0217830b49ddb3381ad55afeae2381840..ddcca749666f956c6317676dbcdd48daa861374d 100644
 --- a/net/http/transport_security_state.cc
 +++ b/net/http/transport_security_state.cc
-@@ -761,6 +761,10 @@ TransportSecurityState::TransportSecurityState()
+@@ -762,6 +762,10 @@ TransportSecurityState::TransportSecurityState()
    enable_static_pins_ = false;
    enable_static_expect_ct_ = false;
  #endif
@@ -1893,10 +1893,10 @@ index b73e62a0420f77db2874260a6f5e141264018cb8..c0f24ad844cb53eb813e4dc6ad7f8eef
  
  void WebViewImpl::HidePopups() {
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index fbf699ed4464957ab7b24091aaa14f3411270ac0..dc244f5ed421a07c96cd7540aecf1ff8a984cc0b 100644
+index fbf699ed4464957ab7b24091aaa14f3411270ac0..2076f27a7b4a835fda8144a6a9462fb789ac8a77 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -275,6 +275,10 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -303,6 +303,10 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
    if (element_->GetLoadType() == WebMediaPlayer::kLoadTypeMediaStream)
      return false;
  
@@ -1907,7 +1907,7 @@ index fbf699ed4464957ab7b24091aaa14f3411270ac0..dc244f5ed421a07c96cd7540aecf1ff8
    // We want to allow muted video to autoplay if:
    // - the flag is enabled;
    // - Data Saver is not enabled;
-@@ -288,10 +292,20 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -316,10 +320,20 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
          element_->GetDocument()
              .GetSettings()
              ->GetForcePreloadNoneForMediaElements()) &&
