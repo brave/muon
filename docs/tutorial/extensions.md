@@ -2,6 +2,8 @@ Muon exposes the ability to use extensions within your electron app. While a lot
 
 The extension utilities are found under `session.defaultSession.extensions` and have the following API calls.
 
+> If you want to access your extension resources after loading and enabling it then you can do so via `chrome-extension://{extensionID}/{resource-path}`
+
 ### `extensions.load(path, manifest, manifestLocation)`
 
 This will load an extension for use. The path is absolute, and manifest is defaulted to `{}` until it locates your manifest file in your extension folder to load into the manifest object. 
