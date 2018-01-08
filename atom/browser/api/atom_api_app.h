@@ -117,6 +117,8 @@ class App : public AtomBrowserClient::Delegate,
   void SetDesktopName(const std::string& desktop_name);
   void SetLocale(std::string);
   std::string GetLocale();
+  void SetBooleanPref(const std::string& path, bool value);
+  bool GetBooleanPref(const std::string& path);
   bool MakeSingleInstance(
       const ProcessSingleton::NotificationCallback& callback);
   void ReleaseSingleInstance();

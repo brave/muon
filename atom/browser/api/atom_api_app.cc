@@ -712,6 +712,14 @@ void App::SetLocale(std::string locale) {
   g_browser_process->SetApplicationLocale(locale);
 }
 
+bool App::GetBooleanPref(const std::string& path) {
+  return g_browser_process->local_state()->GetBoolean(path);
+}
+
+void App::SetBooleanPref(const std::string& path, bool value) {
+  g_browser_process->local_state()->SetBoolean(path, value);
+}
+
 bool App::MakeSingleInstance(
     const ProcessSingleton::NotificationCallback& callback) {
   base::ThreadRestrictions::SetIOAllowed(true);  // TODO(bridiver) ugh electron
@@ -944,6 +952,8 @@ void App::BuildPrototype(
       .SetMethod("setDesktopName", &App::SetDesktopName)
       .SetMethod("getLocale", &App::GetLocale)
       .SetMethod("setLocale", &App::SetLocale)
+      .SetMethod("getBooleanPref", &App::GetBooleanPref)
+      .SetMethod("setBooleanPref", &App::SetBooleanPref)
       .SetMethod("makeSingleInstance", &App::MakeSingleInstance)
       .SetMethod("releaseSingleInstance", &App::ReleaseSingleInstance)
       .SetMethod("relaunch", &App::Relaunch)
