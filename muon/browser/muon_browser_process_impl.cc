@@ -7,6 +7,7 @@
 #include "atom/browser/api/atom_api_app.h"
 #include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
+#include "chrome/browser/chrome_device_client.h"
 #include "chrome/browser/io_thread.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_manager.h"
@@ -19,6 +20,8 @@ MuonBrowserProcessImpl::MuonBrowserProcessImpl(
       const base::CommandLine& command_line) :
     BrowserProcessImpl(local_state_task_runner, command_line) {
   g_browser_process = this;
+
+  device_client_.reset(new ChromeDeviceClient);
 }
 
 MuonBrowserProcessImpl::~MuonBrowserProcessImpl() {

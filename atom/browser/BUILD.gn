@@ -307,11 +307,15 @@ source_set("browser") {
   }
 
   if (enable_extensions) {
+    deps += [ "//electron:brave_resources" ]
+
     sources += [
       "extensions/api/atom_extensions_api_client.cc",
       "extensions/api/atom_extensions_api_client.h",
       "extensions/atom_browser_client_extensions_part.cc",
       "extensions/atom_browser_client_extensions_part.h",
+      "extensions/atom_component_extensions.cc",
+      "extensions/atom_component_extensions.h",
       "extensions/atom_extension_host_delegate.cc",
       "extensions/atom_extension_host_delegate.h",
       "extensions/atom_extensions_network_delegate.cc",

@@ -14,6 +14,7 @@
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
 #include "build/build_config.h"
+#include "chrome/browser/extensions/chrome_component_extension_resource_manager.h"
 #include "extensions/browser/extension_host_delegate.h"
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/browser/kiosk/kiosk_delegate.h"
@@ -29,7 +30,6 @@ class BrowserContext;
 namespace extensions {
 
 class AtomProcessManagerDelegate;
-class AtomComponentExtensionResourceManager;
 class ExtensionsAPIClient;
 
 // Implementation of BrowserClient for Chrome, which includes
@@ -139,7 +139,7 @@ class AtomExtensionsBrowserClient : public ExtensionsBrowserClient {
   // Client for API implementations.
   std::unique_ptr<ExtensionsAPIClient> api_client_;
 
-  std::unique_ptr<AtomComponentExtensionResourceManager> resource_manager_;
+  std::unique_ptr<ChromeComponentExtensionResourceManager> resource_manager_;
 
   std::unique_ptr<ExtensionCache> extension_cache_;
 
