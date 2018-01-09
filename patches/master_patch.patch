@@ -1921,10 +1921,10 @@ index 19c7b569f19849f8fbb26c1faf2ac52f8fe7c566..0294416a183a13cd925adf89dd587289
    if (GetWebMediaPlayer())
      GetWebMediaPlayer()->SetVolume(EffectiveMediaVolume());
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index 9162bc3ba51153a494aa218007511054cdebbad7..96ff31910ae3ba49f74e14da464758d458911ecc 100644
+index 9162bc3ba51153a494aa218007511054cdebbad7..4346960346913bd4c99d3fb34540955919749eb1 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -275,6 +275,10 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -275,6 +275,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
    if (element_->GetLoadType() == WebMediaPlayer::kLoadTypeMediaStream)
      return false;
  
@@ -1932,30 +1932,24 @@ index 9162bc3ba51153a494aa218007511054cdebbad7..96ff31910ae3ba49f74e14da464758d4
 +  if (element_->GetDocument().origin() == String("null"))
 +    return false;
 +
++  // MUON(darkdh): prompt autoply permission even for muted video
++#if defined(MUON_CHROMIUM_BUILD)
    // We want to allow muted video to autoplay if:
    // - the flag is enabled;
    // - Data Saver is not enabled;
-@@ -288,10 +292,20 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
-         element_->GetDocument()
-             .GetSettings()
-             ->GetForcePreloadNoneForMediaElements()) &&
-+      // MUON(darkdh): don't prompt for autoplay permission for muted videos
-+#if defined(MUON_CHROMIUM_BUILD)
+@@ -291,6 +297,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
        IsAutoplayAllowedPerSettings()) {
-+#else
-+      true) {
-+#endif
      return false;
    }
- 
++#endif
++
 +  // MUON(darkdh): prompt for autoplay permission
 +  if ((element_->IsHTMLVideoElement() || element_->IsAudioElement()) &&
 +      IsAutoplayAllowedPerSettings())
 +    return false;
-+
+ 
    return true;
  }
- 
 diff --git a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
 index 7ee2fa858b93e1dd42ac27f982fb61eaf597aad4..b1c96c229077859865fd5ea03cdbd7747880e216 100644
 --- a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
