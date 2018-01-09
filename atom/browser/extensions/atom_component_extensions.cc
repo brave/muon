@@ -8,7 +8,7 @@
 #include "chrome/common/chrome_paths.h"
 
 static const std::map<base::FilePath, int> componentExtensionManifests = {
-    {base::FilePath("cryptotoken"), IDR_CRYPTOTOKEN_MANIFEST},
+    {base::FilePath(FILE_PATH_LITERAL("cryptotoken")), IDR_CRYPTOTOKEN_MANIFEST},
 };
 
 bool IsComponentExtension(const base::FilePath& extension_path, int* resource_id) {
