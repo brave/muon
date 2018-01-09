@@ -187,6 +187,9 @@ source_set("browser") {
     "chrome/browser/background/background_mode_manager.cc",
     "//chrome/browser/background/background_mode_manager.h",
 
+    "//chrome/browser/chrome_device_client.cc",
+    "//chrome/browser/chrome_device_client.h",
+
     # extensions
     "//chrome/browser/extensions/global_shortcut_listener.cc",
     "//chrome/browser/extensions/global_shortcut_listener.h",
@@ -504,10 +507,14 @@ source_set("browser") {
 
     if (enable_extensions) {
       sources += [
+        "//chrome/browser/extensions/chrome_component_extension_resource_manager.cc",
+        "//chrome/browser/extensions/chrome_component_extension_resource_manager.h",
         "chrome/browser/extensions/extension_util.cc",
         "//chrome/browser/extensions/extension_util.h",
         "chrome/browser/extensions/extension_tab_util.cc",
         "//chrome/browser/extensions/extension_tab_util.h",
+        "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.cc",
+        "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h",
         "chrome/browser/extensions/api/messaging/incognito_connectability.cc",
         "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
         "//chrome/browser/extensions/api/messaging/chrome_messaging_delegate.cc",
@@ -536,6 +543,7 @@ source_set("browser") {
         "//chrome/browser/extensions/api/tabs/tabs_constants.h",
         "//chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.cc",
         "//chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h",
+        "chrome/browser/extensions/chrome_extension_function_details.cc",
         "//chrome/browser/extensions/event_router_forwarder.cc",
         "//chrome/browser/extensions/event_router_forwarder.h",
       ]

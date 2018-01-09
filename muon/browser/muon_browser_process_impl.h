@@ -8,6 +8,8 @@
 #include "build/build_config.h"
 #include "chrome/browser/browser_process_impl.h"
 
+class ChromeDeviceClient;
+
 namespace atom {
 namespace api {
 class App;
@@ -45,6 +47,8 @@ class MuonBrowserProcessImpl : public BrowserProcessImpl {
   component_updater::ComponentUpdateService* component_updater(
       std::unique_ptr<component_updater::ComponentUpdateService> &,
       bool use_brave_server);
+
+  std::unique_ptr<ChromeDeviceClient> device_client_;
 
   DISALLOW_COPY_AND_ASSIGN(MuonBrowserProcessImpl);
 };

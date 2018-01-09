@@ -22,6 +22,7 @@
 #include "base/version.h"
 #include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/extensions/chrome_component_extension_resource_manager.h"
 #include "chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
 #include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
@@ -71,6 +72,7 @@
 
 #include "electron/brave/common/extensions/api/generated_api_registration.h"
 #include "extensions/browser/api/generated_api_registration.h"
+#include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
 
 namespace {
 
@@ -228,29 +230,11 @@ class AtomRuntimeAPIDelegate : public RuntimeAPIDelegate {
   DISALLOW_COPY_AND_ASSIGN(AtomRuntimeAPIDelegate);
 };
 
-class AtomComponentExtensionResourceManager
-    : public ComponentExtensionResourceManager {
- public:
-  AtomComponentExtensionResourceManager() {}
-  ~AtomComponentExtensionResourceManager() override {};
-
-  bool IsComponentExtensionResource(
-      const base::FilePath& extension_path,
-      const base::FilePath& resource_path,
-      int* resource_id) const override {
-    // TODO(bridiver) - bundle extension resources
-    return false;
-  };
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(AtomComponentExtensionResourceManager);
-};
-
 AtomExtensionsBrowserClient::AtomExtensionsBrowserClient()
   : extension_cache_(new NullExtensionCache()) {
     api_client_.reset(new AtomExtensionsAPIClient);
     process_manager_delegate_.reset(new AtomProcessManagerDelegate);
-    resource_manager_.reset(new AtomComponentExtensionResourceManager);
+    resource_manager_.reset(new ChromeComponentExtensionResourceManager);
 }
 
 AtomExtensionsBrowserClient::~AtomExtensionsBrowserClient() {}
@@ -439,6 +423,21 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
     ExtensionFunctionRegistry* registry) const {
   api::GeneratedFunctionRegistry::RegisterAll(registry);
   api::BraveGeneratedFunctionRegistry::RegisterAll(registry);
+
+  // Instead of registering all Chrome extension functions, 
+  // via api::ChromeGeneratedFunctionRegistry::RegisterAll(registry)
+  // explicitly register just the ones we want
+  constexpr ExtensionFunctionRegistry::FactoryEntry chromeEntries[] = {
+    {
+      &NewExtensionFunction<api::CryptotokenPrivateCanOriginAssertAppIdFunction>,
+      api::CryptotokenPrivateCanOriginAssertAppIdFunction::function_name(),
+      api::CryptotokenPrivateCanOriginAssertAppIdFunction::histogram_value(),
+    },
+  };
+
+  for (const auto& entry : chromeEntries) {
+      registry->Register(entry);
+  }
 }
 
 std::unique_ptr<RuntimeAPIDelegate>
