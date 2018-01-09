@@ -11,7 +11,7 @@ binding.registerCustomHook(function (bindingsAPI, extensionId) {
   })
 
   apiFunctions.setHandleRequest('remove', function (windowId, cb) {
-    var responseId = ++id
+    var responseId = ipc.guid()
     cb && ipc.once('chrome-windows-remove-response-' + responseId, function (evt, error) {
       if (error) {
         lastError.run('windows.remove', error, '', cb)
