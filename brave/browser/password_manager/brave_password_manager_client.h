@@ -151,6 +151,8 @@ class BravePasswordManagerClient
       content::WebContents* contents,
       autofill::AutofillClient* autofill_client);
 
+  static bool IsPossibleConfirmPasswordForm(const autofill::PasswordForm& form);
+
   // Observer for PasswordGenerationPopup events. Used for testing.
   void SetTestObserver(autofill::PasswordGenerationPopupObserver* observer);
 
