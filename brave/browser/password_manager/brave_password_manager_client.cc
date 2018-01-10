@@ -15,6 +15,7 @@
 #include "base/memory/singleton.h"
 #include "base/metrics/field_trial.h"
 #include "base/metrics/histogram_macros.h"
+#include "base/strings/utf_string_conversions.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browsing_data/browsing_data_helper.h"
@@ -90,6 +91,15 @@ void BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
   contents->SetUserData(
       UserDataKey(),
       base::MakeUnique<BravePasswordManagerClient>(contents, autofill_client));
+}
+
+// static
+bool BravePasswordManagerClient::IsPossibleConfirmPasswordForm(
+    const autofill::PasswordForm& form) {
+  return form.new_password_element.empty() &&
+    form.layout != autofill::PasswordForm::Layout::LAYOUT_LOGIN_AND_SIGNUP &&
+    // https://chromium.googlesource.com/chromium/src/+/fdef64500de7e7cdfcc1a77ae7e82ad4a39d264f
+    form.username_element == base::UTF8ToUTF16("anonymous_username");
 }
 
 BravePasswordManagerClient::BravePasswordManagerClient(
@@ -210,7 +220,10 @@ bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
   if (!CanShowBubbleOnURL(web_contents()->GetLastCommittedURL()))
     return false;
   const autofill::PasswordForm *form = form_to_save->submitted_form();
-    form_to_save_ = std::move(form_to_save);
+  // Don't save password for confirmation page (ex. Trezor passphrase)
+  if (IsPossibleConfirmPasswordForm(*form))
+    return false;
+  form_to_save_ = std::move(form_to_save);
   if (update_password) {
     api_web_contents_->Emit("update-password", form->username_value,
                             form->signon_realm);
