@@ -1,3 +1,7 @@
+// Copyright 2018 Brave authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "atom/browser/extensions/atom_component_extensions.h"
 
 #include <map>
@@ -8,10 +12,12 @@
 #include "chrome/common/chrome_paths.h"
 
 static const std::map<base::FilePath, int> componentExtensionManifests = {
-    {base::FilePath(FILE_PATH_LITERAL("cryptotoken")), IDR_CRYPTOTOKEN_MANIFEST},
+    {base::FilePath(FILE_PATH_LITERAL("cryptotoken")),
+     IDR_CRYPTOTOKEN_MANIFEST},
 };
 
-bool IsComponentExtension(const base::FilePath& extension_path, int* resource_id) {
+bool IsComponentExtension(const base::FilePath& extension_path,
+                          int* resource_id) {
   base::FilePath directory_path = extension_path;
   base::FilePath resources_dir;
   base::FilePath relative_path;
