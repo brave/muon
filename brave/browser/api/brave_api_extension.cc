@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "atom/browser/extensions/atom_component_extensions.h"
@@ -110,8 +111,8 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
 
   int resource_id;
   if (!IsComponentExtension(path, &resource_id)) {
-    // Component extensions contained inside the resources pak fail manifest validation
-    // so we skip validation. 
+    // Component extensions contained inside the resources pak fail manifest
+    // validation so we skip validation.
     if (!extensions::file_util::ValidateExtension(extension.get(),
                                                   error,
                                                   &warnings)) {
@@ -190,7 +191,8 @@ std::unique_ptr<base::DictionaryValue> Extension::LoadManifest(
         *error = l10n_util::GetStringUTF8(IDS_EXTENSION_MANIFEST_UNREADABLE);
       } else {
         *error = base::StringPrintf(
-            "%s  %s", extensions::manifest_errors::kManifestParseError, error->c_str());
+            "%s  %s", extensions::manifest_errors::kManifestParseError,
+            error->c_str());
       }
       return NULL;
     }

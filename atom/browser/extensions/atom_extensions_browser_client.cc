@@ -66,13 +66,13 @@
 #include "base/sha1.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
+#include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
 #include "extensions/common/file_util.h"
 #include "net/url_request/url_request_simple_job.h"
 
 
 #include "electron/brave/common/extensions/api/generated_api_registration.h"
 #include "extensions/browser/api/generated_api_registration.h"
-#include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
 
 namespace {
 
@@ -430,15 +430,17 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
   api::GeneratedFunctionRegistry::RegisterAll(registry);
   api::BraveGeneratedFunctionRegistry::RegisterAll(registry);
 
-  // Instead of registering all Chrome extension functions, 
+  // Instead of registering all Chrome extension functions,
   // via api::ChromeGeneratedFunctionRegistry::RegisterAll(registry)
   // explicitly register just the ones we want
   constexpr ExtensionFunctionRegistry::FactoryEntry chromeEntries[] = {
-    {
-      &NewExtensionFunction<api::CryptotokenPrivateCanOriginAssertAppIdFunction>,
-      api::CryptotokenPrivateCanOriginAssertAppIdFunction::function_name(),
-      api::CryptotokenPrivateCanOriginAssertAppIdFunction::histogram_value(),
-    },
+      {
+          &NewExtensionFunction<
+              api::CryptotokenPrivateCanOriginAssertAppIdFunction>,
+          api::CryptotokenPrivateCanOriginAssertAppIdFunction::function_name(),
+          api::CryptotokenPrivateCanOriginAssertAppIdFunction::
+              histogram_value(),
+      },
   };
 
   for (const auto& entry : chromeEntries) {
