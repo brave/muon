@@ -311,7 +311,7 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
     is_extension_loaded = true;
     old_name = old->name();
     int version_compare_result =
-        extension->version()->CompareTo(*(old->version()));
+        extension->version().CompareTo(old->version());
     is_extension_upgrade = version_compare_result > 0;
     // Other than for unpacked extensions, CrxInstaller should have guaranteed
     // that we aren't downgrading.
