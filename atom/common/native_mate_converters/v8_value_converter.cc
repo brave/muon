@@ -218,7 +218,7 @@ v8::Local<v8::Value> V8ValueConverter::ToV8Array(
 
     v8::Local<v8::Value> child_v8 = ToV8ValueImpl(isolate, child);
 
-    v8::TryCatch try_catch;
+    v8::TryCatch try_catch(isolate);
     result->Set(static_cast<uint32_t>(i), child_v8);
     if (try_catch.HasCaught())
       LOG(ERROR) << "Setter for index " << i << " threw an exception.";
@@ -237,7 +237,7 @@ v8::Local<v8::Value> V8ValueConverter::ToV8Object(
     const std::string& key = iter.key();
     v8::Local<v8::Value> child_v8 = ToV8ValueImpl(isolate, &iter.value());
 
-    v8::TryCatch try_catch;
+    v8::TryCatch try_catch(isolate);
     result.Set(key, child_v8);
     if (try_catch.HasCaught()) {
       LOG(ERROR) << "Setter for property " << key.c_str() << " threw an "
@@ -263,6 +263,19 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
   if (state->HasReachedMaxRecursionDepth())
     return nullptr;
 
+  // std::unique_ptr<v8::Context::Scope> scope;
+  v8::Local<v8::Context> context;
+  // // If val was created in a different context than our current one,
+  // // change to
+  // // that context, but change back after val is converted.
+  // if (!val->CreationContext().IsEmpty() &&
+  //     val->CreationContext() != isolate->GetCurrentContext()) {
+  //   context = val->CreationContext();
+  //   scope.reset(new v8::Context::Scope(context));
+  // } else {
+    context = isolate->GetCurrentContext();
+  // }
+
   if (val->IsExternal())
     return new base::Value();
 
@@ -270,16 +283,16 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
     return new base::Value();
 
   if (val->IsBoolean())
-    return new base::Value(val->ToBoolean()->Value());
+    return new base::Value(val->ToBoolean(context).ToLocalChecked()->Value());
 
   if (val->IsInt32())
-    return new base::Value(val->ToInt32()->Value());
+    return new base::Value(val->ToInt32(context).ToLocalChecked()->Value());
 
   if (val->IsNumber())
-    return new base::Value(val->ToNumber()->Value());
+    return new base::Value(val->ToNumber(context).ToLocalChecked()->Value());
 
   if (val->IsString()) {
-    v8::String::Utf8Value utf8(val->ToString());
+    v8::String::Utf8Value utf8(val->ToString(context).ToLocalChecked());
     return new base::Value(std::string(*utf8, utf8.length()));
   }
 
@@ -295,7 +308,7 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
       v8::Local<v8::Value> result =
           toISOString.As<v8::Function>()->Call(val, 0, nullptr);
       if (!result.IsEmpty()) {
-        v8::String::Utf8Value utf8(result->ToString());
+        v8::String::Utf8Value utf8(result->ToString(context).ToLocalChecked());
         return new base::Value(std::string(*utf8, utf8.length()));
       }
     }
@@ -304,8 +317,10 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
   if (val->IsRegExp()) {
     if (!reg_exp_allowed_)
       // JSON.stringify converts to an object.
-      return FromV8Object(val->ToObject(), state, isolate);
-    return new base::Value(*v8::String::Utf8Value(val->ToString()));
+      return FromV8Object(val->ToObject(context).ToLocalChecked(), state,
+                          isolate);
+    return new base::Value(
+        *v8::String::Utf8Value(val->ToString(context).ToLocalChecked()));
   }
 
   // v8::Value doesn't have a ToArray() method for some reason.
@@ -316,7 +331,8 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
     if (!function_allowed_)
       // JSON.stringify refuses to convert function(){}.
       return nullptr;
-    return FromV8Object(val->ToObject(), state, isolate);
+    return FromV8Object(val->ToObject(context).ToLocalChecked(), state,
+                        isolate);
   }
 
   if (node::Buffer::HasInstance(val)) {
@@ -324,7 +340,8 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
   }
 
   if (val->IsObject()) {
-    return FromV8Object(val->ToObject(), state, isolate);
+    return FromV8Object(val->ToObject(context).ToLocalChecked(), state,
+                        isolate);
   }
 
   LOG(ERROR) << "Unexpected v8 value type encountered.";
@@ -340,17 +357,22 @@ base::Value* V8ValueConverter::FromV8Array(
     return new base::Value();
 
   std::unique_ptr<v8::Context::Scope> scope;
+  v8::Local<v8::Context> context;
   // If val was created in a different context than our current one, change to
   // that context, but change back after val is converted.
   if (!val->CreationContext().IsEmpty() &&
-      val->CreationContext() != isolate->GetCurrentContext())
-    scope.reset(new v8::Context::Scope(val->CreationContext()));
+      val->CreationContext() != isolate->GetCurrentContext()) {
+    context = val->CreationContext();
+    scope.reset(new v8::Context::Scope(context));
+  } else {
+    context = isolate->GetCurrentContext();
+  }
 
   auto* result = new base::ListValue();
 
   // Only fields with integer keys are carried over to the ListValue.
   for (uint32_t i = 0; i < val->Length(); ++i) {
-    v8::TryCatch try_catch;
+    v8::TryCatch try_catch(isolate);
     v8::Local<v8::Value> child_v8 = val->Get(i);
     if (try_catch.HasCaught()) {
       LOG(ERROR) << "Getter for index " << i << " threw an exception.";
@@ -388,11 +410,16 @@ base::Value* V8ValueConverter::FromV8Object(
     return new base::Value();
 
   std::unique_ptr<v8::Context::Scope> scope;
+  v8::Local<v8::Context> context;
   // If val was created in a different context than our current one, change to
   // that context, but change back after val is converted.
   if (!val->CreationContext().IsEmpty() &&
-      val->CreationContext() != isolate->GetCurrentContext())
-    scope.reset(new v8::Context::Scope(val->CreationContext()));
+      val->CreationContext() != isolate->GetCurrentContext()) {
+    context = val->CreationContext();
+    scope.reset(new v8::Context::Scope(context));
+  } else {
+    context = isolate->GetCurrentContext();
+  }
 
   std::unique_ptr<base::DictionaryValue> result(new base::DictionaryValue());
   v8::Local<v8::Array> property_names(val->GetOwnPropertyNames());
@@ -408,9 +435,10 @@ base::Value* V8ValueConverter::FromV8Object(
       continue;
     }
 
-    v8::String::Utf8Value name_utf8(key->ToString());
+    v8::String::Utf8Value name_utf8(
+        key->ToString(context).ToLocalChecked());
 
-    v8::TryCatch try_catch;
+    v8::TryCatch try_catch(isolate);
     v8::Local<v8::Value> child_v8 = val->Get(key);
 
     if (try_catch.HasCaught()) {
