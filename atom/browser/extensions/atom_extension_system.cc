@@ -507,6 +507,10 @@ void AtomExtensionSystem::InitForRegularProfile(bool extensions_enabled) {
   shared_->Init(extensions_enabled);
 }
 
+void AtomExtensionSystem::InitForIncognitoProfile() {
+  NOTREACHED();
+}
+
 ExtensionService* AtomExtensionSystem::extension_service() {
   return shared_->extension_service();
 }
