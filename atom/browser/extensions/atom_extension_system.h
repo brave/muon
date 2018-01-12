@@ -60,6 +60,7 @@ class AtomExtensionSystem : public ExtensionSystem {
   void Shutdown() override;
 
   void InitForRegularProfile(bool extensions_enabled) override;
+  void InitForIncognitoProfile() override;
 
   // ExtensionSystem implementation;
   ExtensionService* extension_service() override;  // shared
