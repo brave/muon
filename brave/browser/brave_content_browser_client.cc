@@ -359,22 +359,6 @@ void BraveContentBrowserClient::BindInterfaceRequestFromFrame(
   }
 }
 
-bool BraveContentBrowserClient::BindAssociatedInterfaceRequestFromFrame(
-    content::RenderFrameHost* render_frame_host,
-    const std::string& interface_name,
-    mojo::ScopedInterfaceEndpointHandle* handle) {
-  // TODO(https://crbug.com/736357): Factor AssociatedInterfaceRegistryImpl out
-  // into content/public/ so it can be used here instead of this abomination.
-  if (interface_name == password_manager::mojom::CredentialManager::Name_) {
-    BravePasswordManagerClient::BindCredentialManager(
-        password_manager::mojom::CredentialManagerAssociatedRequest(
-            std::move(*handle)),
-        render_frame_host);
-    return true;
-  }
-  return false;
-}
-
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 void BraveContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
     const base::CommandLine& command_line,
