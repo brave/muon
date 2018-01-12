@@ -91,6 +91,8 @@ class InspectableWebContentsImpl :
                                  int boundary_value) override {};
   void Reattach(const DispatchCallback& callback) override {};
   void ReadyForTest() override {};
+  void ConnectionReady() override {};
+  void SetOpenNewWindowForPopups(bool value) override {};
   void RegisterExtensionsAPI(const std::string& origin,
                              const std::string& script) override;
 
