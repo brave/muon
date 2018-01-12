@@ -374,8 +374,6 @@ source_set("native_mate") {
     "vendor/native_mate/native_mate/persistent_dictionary.h",
     "vendor/native_mate/native_mate/scoped_persistent.h",
     "vendor/native_mate/native_mate/template_util.h",
-    "vendor/native_mate/native_mate/try_catch.cc",
-    "vendor/native_mate/native_mate/try_catch.h",
     "vendor/native_mate/native_mate/wrappable.cc",
     "vendor/native_mate/native_mate/wrappable.h",
     "vendor/native_mate/native_mate/wrappable_base.h",
