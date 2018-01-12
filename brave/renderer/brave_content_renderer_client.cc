@@ -24,7 +24,6 @@
 #include "components/autofill/content/renderer/password_autofill_agent.h"
 #include "components/autofill/content/renderer/password_generation_agent.h"
 #include "components/network_hints/renderer/prescient_networking_dispatcher.h"
-#include "components/password_manager/content/renderer/credential_manager_client.h"
 #include "components/plugins/renderer/plugin_placeholder.h"
 #include "components/printing/renderer/print_render_frame_helper.h"
 #include "components/spellcheck/spellcheck_build_features.h"
@@ -191,8 +190,6 @@ void BraveContentRendererClient::RenderFrameCreated(
 void BraveContentRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
-
-  new password_manager::CredentialManagerClient(render_view);
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   // This is a workaround keeping the behavior that, the Blink side spellcheck
