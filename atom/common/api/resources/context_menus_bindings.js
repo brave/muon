@@ -23,10 +23,29 @@ var binding = {
       // ipc.off('chrome-context-menus-clicked', cb)
     }
   },
+  remove: function (menuItemId, cb) {
+    switch(typeof menuItemId) {
+        case 'number':
+        case 'string':
+            break; // accepted cases
+        default:
+            throw new Error('Please define the desired context menu to remove by its number or string identifier.')
+    }
+
+    var responseId = createResponseId()
+    ipc.once('chrome-context-menus-remove-response-' + responseId, function(evt) {
+      if (cb) {
+        cb()
+      }
+    })
+    ipc.send('chrome-context-menus-remove', responseId, extensionId, menuItemId)
+  },
   removeAll: function (cb) {
     var responseId = createResponseId()
-    cb && ipc.once('chrome-context-menus-remove-all-response-' + responseId, function(evt) {
-      cb()
+    ipc.once('chrome-context-menus-remove-all-response-' + responseId, function(evt) {
+      if (cb) {
+        cb()
+      }
     })
     ipc.send('chrome-context-menus-remove-all', responseId, extensionId)
   },
@@ -45,8 +64,10 @@ var binding = {
     if (properties.enabled !== undefined) {
       throw new Error('createProperties.enabled of contextMenus.create is not supported yet')
     }
-    cb && ipc.once('chrome-context-menus-create-response-' + responseId, function(evt) {
-      cb()
+    ipc.once('chrome-context-menus-create-response-' + responseId, function(evt) {
+      if (cb) {
+        cb()
+      }
     })
     properties.onclick && ipc.on('chrome-context-menus-clicked', (evt, info, tab) => {
       if (info.menuItemId === menuItemId) {
