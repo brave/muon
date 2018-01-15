@@ -79,6 +79,48 @@ var binding = {
     ipc.send('chrome-context-menus-create', responseId, extensionId, menuItemId, properties, icon)
     return menuItemId
   }
+  update: function (menuItemId, properties, cb) {
+    switch(typeof menuItemId) {
+        case 'number':
+        case 'string':
+            break; // accepted cases
+        default:
+            throw new Error('Please define the desired context menu to remove by its number or string identifier.')
+    }
+
+    if (!properties) {
+        if (cb) {
+            cb();
+        }
+        return
+    }
+
+    var responseId = createResponseId()
+    if (properties.checked !== undefined) {
+      throw new Error('createProperties.checked of contextMenus.update is not supported yet')
+    }
+    if (properties.documentUrlPatterns !== undefined) {
+      throw new Error('createProperties.documentUrlPatterns of contextMenus.update is not supported yet')
+    }
+    if (properties.targetUrlPatterns !== undefined) {
+      throw new Error('createProperties.targetUrlPatterns of contextMenus.update is not supported yet')
+    }
+    if (properties.enabled !== undefined) {
+      throw new Error('createProperties.enabled of contextMenus.update is not supported yet')
+    }
+    ipc.once('chrome-context-menus-update-response-' + responseId, function(evt) {
+      if (cb) {
+        cb()
+      }
+    })
+    ipc.on('chrome-context-menus-update', (evt, info, tab) => {
+      if (properties.onclick && info.menuItemId === menuItemId) {
+        properties.onclick(info, tab)
+      }
+    })
+    let manifest = runtime.getManifest()
+    ipc.send('chrome-context-menus-update', responseId, extensionId, menuItemId, properties)
+  }
 }
 
 exports.binding = binding
