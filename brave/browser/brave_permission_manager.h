@@ -53,6 +53,7 @@ class BravePermissionManager : public content::PermissionManager {
   void OnPermissionResponse(int request_id,
       const GURL& url,
       const ResponseCallback& callback,
+      const std::vector<content::PermissionType>& permissions,
       const std::vector<blink::mojom::PermissionStatus>& status);
 
   // content::PermissionManager:

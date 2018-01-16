@@ -9,6 +9,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
+#include "device/geolocation/geolocation_provider.h"
 
 namespace brave {
 
@@ -110,7 +111,8 @@ int BravePermissionManager::RequestPermissions(
                                base::Unretained(this),
                                request_id_,
                                requesting_origin,
-                               response_callback);
+                               response_callback,
+                               permissions);
     pending_requests_[request_id_] =
         { render_process_id, render_frame_id, callback, permissions.size() };
     request_handler_.Run(requesting_origin, url, permissions, callback);
@@ -125,11 +127,19 @@ void BravePermissionManager::OnPermissionResponse(
     int request_id,
     const GURL& origin,
     const ResponseCallback& callback,
+    const std::vector<content::PermissionType>& permissions,
     const std::vector<blink::mojom::PermissionStatus>& status) {
   auto request = pending_requests_.find(request_id);
   if (request != pending_requests_.end()) {
     if (!WebContentsDestroyed(
         request->second.render_process_id, request->second.render_frame_id)) {
+      for (int i = 0; i < permissions.size(); i++) {
+        if (permissions[i] == content::PermissionType::GEOLOCATION) {
+          if (status[i] == blink::mojom::PermissionStatus::GRANTED) {
+            device::GeolocationProvider::GetInstance()->UserDidOptIntoLocationServices();
+          }
+        }
+      }
       callback.Run(status);
     }
     pending_requests_.erase(request);
