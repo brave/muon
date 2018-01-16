@@ -59,6 +59,7 @@ source_set("browser") {
     "//components/visitedlink/browser",
     "//components/visitedlink/common",
     "//content/public/common:service_names",
+    "//device/geolocation",
     "//device/usb/mojo",
     "//device/usb/public/interfaces",
     "//gpu/config",
