@@ -961,8 +961,13 @@ source_set("metrics") {
     "//components/metrics_services_manager",
     "//components/version_info",
     "//content/public/browser",
-    "//third_party/crashpad/crashpad/client:client",
   ]
+
+  if (is_mac) {
+    deps += [
+      "//third_party/crashpad/crashpad/client:client",
+    ]
+  }
 }
 
 source_set("search") {
