@@ -26,6 +26,7 @@ using brightray::InspectableWebContentsViewMac;
 - (instancetype)initWithInspectableWebContentsViewMac:(InspectableWebContentsViewMac*)view;
 - (void)removeObservers;
 - (void)notifyDevToolsFocused;
+- (void)updateDevToolsForWebContents;
 - (void)setDevToolsVisible:(BOOL)visible;
 - (BOOL)isDevToolsVisible;
 - (BOOL)isDevToolsFocused;
