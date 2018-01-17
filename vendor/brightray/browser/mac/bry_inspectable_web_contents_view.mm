@@ -10,6 +10,10 @@
 
 using namespace brightray;
 
+@interface NSView (WebContentsView)
+- (void)setMouseDownCanMoveWindow:(BOOL)can_move;
+@end
+
 @implementation BRYInspectableWebContentsView
 
 - (instancetype)initWithInspectableWebContentsViewMac:(InspectableWebContentsViewMac*)view {
@@ -42,7 +46,29 @@ using namespace brightray;
   // See https://code.google.com/p/chromium/issues/detail?id=348490.
   [self setWantsLayer:YES];
 
+  [self updateDevToolsForWebContents];
+
   return self;
+}
+
+- (void)updateDevToolsForWebContents {
+  if (!inspectableWebContentsView_->inspectable_web_contents())
+    return;
+
+  auto contents =
+      inspectableWebContentsView_->inspectable_web_contents()->GetWebContents();
+
+  if (!contents)
+    return;
+
+  if (!devtools_docked_)
+    return;
+
+  for (NSView *view in [self subviews]) {
+    if ([view respondsToSelector:@selector(setMouseDownCanMoveWindow:)]) {
+      [view setMouseDownCanMoveWindow:YES];
+    }
+  }
 }
 
 - (void)removeObservers {
@@ -181,6 +207,7 @@ using namespace brightray;
       &new_devtools_bounds, &new_contents_bounds);
   [devToolsView setFrame:[self flipRectToNSRect:new_devtools_bounds]];
   [contentsView setFrame:[self flipRectToNSRect:new_contents_bounds]];
+  [self updateDevToolsForWebContents];
 }
 
 - (void)setTitle:(NSString*)title {

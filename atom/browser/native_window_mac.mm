@@ -524,6 +524,43 @@ struct Converter<atom::NativeWindowMac::TitleBarStyle> {
 
 namespace atom {
 
+namespace {
+
+// Draggable regions is implemented by having the whole web view draggable
+// (mouseDownCanMoveWindow) and overlaying regions that are not draggable.
+void AddControlRegions(NSView* view,
+                       const std::vector<gfx::Rect>& drag_exclude_areas) {
+  // Create and add a ControlRegionView for each region that needs to be
+  // excluded from the dragging.
+  NSInteger height = NSHeight([view bounds]);
+  for (std::vector<gfx::Rect>::const_iterator iter =
+      drag_exclude_areas.begin();
+      iter != drag_exclude_areas.end();
+      ++iter) {
+    base::scoped_nsobject<NSView> controlRegion(
+        [[ControlRegionView alloc] initWithFrame:NSZeroRect]);
+
+    [controlRegion setFrame:NSMakeRect(iter->x(),
+                                       height - iter->bottom(),
+                                       iter->width(),
+                                       iter->height())];
+    [view addSubview:controlRegion];
+  }
+}
+
+void ClearControlRegions(NSView* view) {
+  // Remove all ControlRegionViews that are added last time.
+  // Note that [views subviews] returns the view's mutable internal array and
+  // it should be copied to avoid mutating the original array while enumerating
+  // it.
+  base::scoped_nsobject<NSArray> subviews([[view subviews] copy]);
+  for (NSView* subview in subviews.get())
+    if ([subview isKindOfClass:[ControlRegionView class]])
+      [subview removeFromSuperview];
+}
+
+}  // namespace
+
 NativeWindowMac::NativeWindowMac(
     brightray::InspectableWebContents* web_contents,
     const mate::Dictionary& options,
@@ -1313,34 +1350,25 @@ void NativeWindowMac::UpdateDraggableRegionViews(
     [webView setMouseDownCanMoveWindow:YES];
   }
 
-  // Remove all ControlRegionViews that are added last time.
-  // Note that [webView subviews] returns the view's mutable internal array and
-  // it should be copied to avoid mutating the original array while enumerating
-  // it.
-  base::scoped_nsobject<NSArray> subviews([[webView subviews] copy]);
-  for (NSView* subview in subviews.get())
-    if ([subview isKindOfClass:[ControlRegionView class]])
-      [subview removeFromSuperview];
+  ClearControlRegions(webView);
+  AddControlRegions(webView,
+  CalculateNonDraggableRegions(regions, webViewWidth, webViewHeight));
 
-  // Draggable regions is implemented by having the whole web view draggable
-  // (mouseDownCanMoveWindow) and overlaying regions that are not draggable.
-  std::vector<gfx::Rect> system_drag_exclude_areas =
-      CalculateNonDraggableRegions(regions, webViewWidth, webViewHeight);
+  // calculate other window views (devtools)
+  DraggableRegion webViewRegion;
+  webViewRegion.draggable = true;
+  webViewRegion.bounds = gfx::Rect([webView bounds]);
+  std::vector<DraggableRegion> webViewRegions;
+  webViewRegions.push_back(webViewRegion);
 
-  // Create and add a ControlRegionView for each region that needs to be
-  // excluded from the dragging.
-  for (std::vector<gfx::Rect>::const_iterator iter =
-           system_drag_exclude_areas.begin();
-       iter != system_drag_exclude_areas.end();
-       ++iter) {
-    base::scoped_nsobject<NSView> controlRegion(
-        [[ControlRegionView alloc] initWithFrame:NSZeroRect]);
-    [controlRegion setFrame:NSMakeRect(iter->x(),
-                                       webViewHeight - iter->bottom(),
-                                       iter->width(),
-                                       iter->height())];
-    [webView addSubview:controlRegion];
-  }
+  NSView* view = inspectable_web_contents()->GetView()->GetNativeView();
+
+  NSInteger windowWidth = GetBounds().width();
+  NSInteger windowHeight = GetBounds().height();
+
+  ClearControlRegions(view);
+  AddControlRegions(view,
+      CalculateNonDraggableRegions(webViewRegions, windowWidth, windowHeight));
 
   // AppKit will not update its cache of mouseDownCanMoveWindow unless something
   // changes. Previously we tried adding an NSView and removing it, but for some
