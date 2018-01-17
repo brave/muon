@@ -1010,6 +1010,11 @@ gfx::AcceleratedWidget NativeWindowViews::GetAcceleratedWidget() {
   return GetNativeWindow()->GetHost()->GetAcceleratedWidget();
 }
 
+gfx::NativeView NativeWindowViews::GetNativeView() {
+  // TODO(hferreiro)
+  return nullptr;
+}
+
 #if defined(OS_WIN)
 void NativeWindowViews::SetIcon(HICON window_icon, HICON app_icon) {
   // We are responsible for storing the images.

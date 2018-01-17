@@ -784,9 +784,15 @@ bool Window::IsModal() const {
 }
 
 v8::Local<v8::Value> Window::GetNativeWindowHandle() {
+#ifdef OS_MACOSX
+  gfx::NativeView handle = window_->GetNativeView();
+  return ToBuffer(
+      isolate(), static_cast<void*>(&handle), sizeof(gfx::NativeView));
+#else
   gfx::AcceleratedWidget handle = window_->GetAcceleratedWidget();
   return ToBuffer(
       isolate(), static_cast<void*>(&handle), sizeof(gfx::AcceleratedWidget));
+#endif
 }
 
 void Window::SetVisibleOnAllWorkspaces(bool visible) {

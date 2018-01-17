@@ -151,6 +151,7 @@ class NativeWindow : public base::SupportsUserData,
   virtual void SetParentWindow(NativeWindow* parent);
   virtual gfx::NativeWindow GetNativeWindow() const = 0;
   virtual gfx::AcceleratedWidget GetAcceleratedWidget() = 0;
+  virtual gfx::NativeView GetNativeView() = 0;
 
   // Taskbar/Dock APIs.
   enum ProgressState {

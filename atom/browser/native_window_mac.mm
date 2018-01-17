@@ -1141,6 +1141,10 @@ ui::WindowShowState NativeWindowMac::GetRestoredState() const {
 }
 
 gfx::AcceleratedWidget NativeWindowMac::GetAcceleratedWidget() {
+  NOTREACHED();
+}
+
+gfx::NativeView NativeWindowMac::GetNativeView() {
   return inspectable_web_contents()->GetView()->GetNativeView();
 }
 

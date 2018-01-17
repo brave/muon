@@ -121,6 +121,7 @@ class NativeWindowViews : public NativeWindow,
   bool IsVisibleOnAllWorkspaces() override;
 
   gfx::AcceleratedWidget GetAcceleratedWidget() override;
+  gfx::NativeView GetNativeView() override;
 
 #if defined(OS_WIN)
   void SetIcon(HICON small_icon, HICON app_icon);
