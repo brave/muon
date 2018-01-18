@@ -1099,8 +1099,6 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tab_contents/core_tab_helper.h",
     "//chrome/browser/ui/tabs/tab_strip_model.cc",
     "//chrome/browser/ui/tabs/tab_strip_model.h",
-    "//chrome/browser/ui/tabs/tab_strip_model_impl.cc",
-    "//chrome/browser/ui/tabs/tab_strip_model_impl.h",
     "//chrome/browser/ui/tabs/tab_strip_model_delegate.h",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.h",

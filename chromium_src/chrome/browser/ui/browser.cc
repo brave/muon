@@ -17,7 +17,7 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/devtools/devtools_window.h"
 #include "chrome/browser/ui/browser_list.h"
-#include "chrome/browser/ui/tabs/tab_strip_model_impl.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/chrome_switches.h"
 #include "components/keep_alive_registry/keep_alive_registry.h"
 #include "components/keep_alive_registry/keep_alive_types.h"
@@ -58,7 +58,7 @@ Browser::Browser(const CreateParams& params)
       window_(params.window),
       tab_strip_model_delegate_(new brave::BraveTabStripModelDelegate()),
       tab_strip_model_(
-          new TabStripModelImpl(tab_strip_model_delegate_.get(),
+          new TabStripModel(tab_strip_model_delegate_.get(),
             params.profile)),
       app_name_(params.app_name),
       is_trusted_source_(params.trusted_source),
