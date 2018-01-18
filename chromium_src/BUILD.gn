@@ -578,8 +578,8 @@ source_set("browser") {
   }
   if (enable_spellcheck) {
     sources += [
-      "//chrome/browser/spellchecker/spell_check_host_impl.cc",
-      "//chrome/browser/spellchecker/spell_check_host_impl.h",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl.cc",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl.h",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
       "//chrome/browser/spellchecker/spellcheck_dictionary.h",
