@@ -256,7 +256,7 @@ index a4af6667d9e73a67b3b218850b9ba06009afb0df..e1b3830a2d6a73ba648b4bb56612f1bc
 +      FindCFiles(os.path.join('src', 'decrepit', 'ssl'), NoTests) +
 +      FindCFiles(os.path.join('src', 'decrepit', 'x509'), NoTests) +
 +      FindCFiles(os.path.join('src', 'decrepit', 'xts'), NoTests))
-
+ 
    # third_party/fiat/p256.c lives in third_party/fiat, but it is a FIPS
    # fragment, not a normal source file.
 @@ -662,6 +688,7 @@ def main(platforms):
