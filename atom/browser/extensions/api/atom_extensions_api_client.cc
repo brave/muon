@@ -18,9 +18,9 @@
 #include "extensions/browser/api/storage/settings_observer.h"
 #include "extensions/browser/api/web_request/web_request_event_details.h"
 #include "extensions/browser/api/web_request/web_request_event_router_delegate.h"
+#include "extensions/browser/disable_reason.h"
 #include "extensions/browser/requirements_checker.h"
 #include "extensions/browser/value_store/value_store_factory.h"
-#include "extensions/common/disable_reason.h"
 #include "extensions/common/manifest_handlers/icons_handler.h"
 
 namespace extensions {
