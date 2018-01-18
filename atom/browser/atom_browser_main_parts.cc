@@ -165,11 +165,12 @@ base::Closure AtomBrowserMainParts::RegisterDestructionCallback(
   return base::Bind(&Erase<std::list<base::Closure>>, &destructors_, iter);
 }
 
-void AtomBrowserMainParts::PreEarlyInitialization() {
+int AtomBrowserMainParts::PreEarlyInitialization() {
   brightray::BrowserMainParts::PreEarlyInitialization();
 #if defined(OS_POSIX)
   HandleSIGCHLD();
 #endif
+  return content::RESULT_CODE_NORMAL_EXIT;
 }
 
 int AtomBrowserMainParts::PreCreateThreads() {
