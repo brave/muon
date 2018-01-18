@@ -1,5 +1,7 @@
 source_set("prerender") {
   sources = [
+    "//chrome/browser/prerender/prerender_histograms.cc",
+    "//chrome/browser/prerender/prerender_histograms.h",
     "prerender_contents.cc",
     "prerender_manager.cc",
     "prerender_manager_factory.cc",
