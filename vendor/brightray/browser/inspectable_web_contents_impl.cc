@@ -672,6 +672,9 @@ void InspectableWebContentsImpl::SetIsDocked(const DispatchCallback& callback,
 void InspectableWebContentsImpl::OpenInNewTab(const std::string& url) {
 }
 
+void InspectableWebContentsImpl::ShowItemInFolder(
+    const std::string& file_system_path) {}
+
 void InspectableWebContentsImpl::SaveToFile(
     const std::string& url, const std::string& content, bool save_as) {
   if (delegate_)
