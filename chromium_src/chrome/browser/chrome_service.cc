@@ -11,7 +11,7 @@
 #include "content/public/common/content_client.h"
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
-#include "chrome/browser/spellchecker/spell_check_host_impl.h"
+#include "chrome/browser/spellchecker/spell_check_host_chrome_impl.h"
 #if BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #include "chrome/browser/spellchecker/spell_check_panel_host_impl.h"
 #endif
@@ -26,7 +26,7 @@ ChromeService::ChromeService() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   registry_with_source_info_.AddInterface(
-      base::Bind(&SpellCheckHostImpl::Create),
+      base::Bind(&SpellCheckHostChromeImpl::Create),
       content::BrowserThread::GetTaskRunnerForThread(
           content::BrowserThread::UI));
 #if BUILDFLAG(HAS_SPELLCHECK_PANEL)
