@@ -16,6 +16,7 @@ struct VectorIcon;
 extern const gfx::VectorIcon icon_name;
 
 VECTOR_ICON_TEMPLATE_H(kBrowserToolsUpdateIcon)
+VECTOR_ICON_TEMPLATE_H(kUsbSecurityKeyIcon)
 
 #undef VECTOR_ICON_TEMPLATE_H
 

@@ -14,4 +14,9 @@ namespace prerender {
 void PrerenderContents::DidNavigate(
     const history::HistoryAddPageArgs& add_page_args) {}
 
+PrerenderContents* PrerenderContents::FromWebContents(
+    content::WebContents* web_contents) {
+  return NULL;
+}
+
 }  // namespace prerender
