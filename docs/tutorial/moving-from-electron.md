@@ -73,6 +73,24 @@ Brave uses the first solution in its [`'brave'` extension](https://github.com/br
 - Attributes which are no longer supported: `allowtransparency`, `httpreferer`
 - `getURL`, `send`, and other remote methods can only be called from the main process. Example in [#396](https://github.com/brave/muon/issues/396#issuecomment-358521847)
 
+### `preload` scripts
+
+Preload scripts have been removed in favor of [Chrome extension content scripts](https://developer.chrome.com/extensions/content_scripts). 
+
+The `ipcRenderer` API is still available under the `chrome.*` object in content scripts.
+
+#### Mimicking a preload script from a Chrome extension
+
+If mutating any `window.*` global object is important for your project, it can be closely mimicked by injecting a JavaScript file from your content script.
+
+```js
+const script = document.createElement('script');
+script.src = chrome.runtime.getURL('preload.js');
+document.documentElement.appendChild(script);
+```
+
+Set the [extension manifest](https://developer.chrome.com/extensions/content_scripts#registration)'s `run_at` property to use the value of `'document_start'` in combination with the above script to closely match the scope and timing of Electron's preload scripts.
+
 ## [`protocol`](../api/protocol.md) API
 
 - `protocol.registerFileProtocol` is removed
