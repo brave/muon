@@ -4,7 +4,7 @@ into the browser process only for security reasons.
 
 It may be a better fit than [Electron](https://github.com/electron/electron) for your application, if your application
 needs to leverage the full support of Chromium, needs tighter security, or needs support for things like autofill and
-extensions.
+extensions. See the [Moving from Electron to Muon](docs/tutorials/moving-from-electron.md) guide to help make the transition.
 
 Some of Muons goals include:
 - use the Chromium source directly (eliminating electron's copy of `chrome_src`) with minor patches
