@@ -40,7 +40,7 @@ Muon removes NodeJS integration from the renderer process to improve security by
 
 A limited subset of Electron APIs are still available when files are loaded using the `chrome://brave/*` protocol. The wildcard path accepts an absolute file path and works similar to the `file:///*` protocol.
 
-APIs are available under the `chrome.*` global object. Among those included are [`ipcRenderer`](docs/api/ipc-renderer.md), [`remote`](docs/api/remote.md), and [`webFrame`](docs/api/web-frame.md).
+APIs are available under the `chrome.*` global object. Among those included are [`ipcRenderer`](../api/ipc-renderer.md), [`remote`](../api/remote.md), and [`webFrame`](../api/web-frame.md).
 
 ### Webpack configuration
 
@@ -73,7 +73,7 @@ Brave uses the first solution in its [`'brave'` extension](https://github.com/br
 - Attributes which are no longer supported: `allowtransparency`, `httpreferer`
 - `getURL`, `send`, and other remote methods can only be called from the main process. Example in [#396](https://github.com/brave/muon/issues/396#issuecomment-358521847)
 
-## [`protocol`](docs/api/protocol.md) API
+## [`protocol`](../api/protocol.md) API
 
 - `protocol.registerFileProtocol` is removed
 - `protocol.registerStreamProtocol` is not yet supported (brave/browser-laptop#10629)
