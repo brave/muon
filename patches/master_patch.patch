@@ -1075,7 +1075,7 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
-index 42a50e8381c196b310024c82d69a1a529ead0ba6..7498b8f51d6ff479fc790f1d1cf6e037957d98e1 100644
+index 42a50e8381c196b310024c82d69a1a529ead0ba6..c3bafffe4c3d04b02d9f6fb33b3711782c782e50 100644
 --- a/components/crash/content/app/breakpad_linux.cc
 +++ b/components/crash/content/app/breakpad_linux.cc
 @@ -87,8 +87,10 @@ namespace breakpad {
@@ -1083,11 +1083,10 @@ index 42a50e8381c196b310024c82d69a1a529ead0ba6..7498b8f51d6ff479fc790f1d1cf6e037
  namespace {
  
 -#if !defined(OS_CHROMEOS)
--const char kUploadURL[] = "https://clients2.google.com/cr/report";
 +#if !defined(OS_CHROMEOS) && defined(MUON_CHROMIUM_BUILD)
-+  const char kUploadURL[] = "https://clients2.google.com/cr/report";
+ const char kUploadURL[] = "https://clients2.google.com/cr/report";
 +#else
-+  const char kUploadURL[] = "https://laptop-updates.brave.com/1/crashes";
++const char kUploadURL[] = "https://laptop-updates.brave.com/1/crashes";
  #endif
  
  bool g_is_crash_reporter_enabled = false;
@@ -1099,25 +1098,9 @@ index 42a50e8381c196b310024c82d69a1a529ead0ba6..7498b8f51d6ff479fc790f1d1cf6e037
      "--timeout=10",  // Set a timeout so we don't hang forever.
      "--tries=1",     // Don't retry if the upload fails.
      "-O",  // Output reply to the file descriptor path.
-@@ -1411,6 +1414,9 @@ size_t WaitForCrashReportUploadProcess(int fd, size_t bytes_to_read,
- // |buf| should be |expected_len| + 1 characters in size and nullptr terminated.
- bool IsValidCrashReportId(const char* buf, size_t bytes_read,
-                           size_t expected_len) {
-+#if !defined(MUON_CHROMIUM_BUILD)
-+  return my_strcmp(buf, "OK") == 0;
-+#endif
-   if (bytes_read != expected_len) {
-     static const char msg[] = "Unexpected crash report id length\n";
-     WriteLog(msg, sizeof(msg) - 1);
-@@ -1897,8 +1903,13 @@ void HandleCrashDump(const BreakpadInfo& info) {
-       if (upload_child > 0) {
-         IGNORE_RET(sys_close(fds[1]));  // Close write end of pipe.
+@@ -1899,6 +1902,7 @@ void HandleCrashDump(const BreakpadInfo& info) {
  
-+#if defined(MUON_CHROMIUM_BUILD)
          const size_t kCrashIdLength = 16;
-+#else
-+        const size_t kCrashIdLength = 2;
-+#endif
          char id_buf[kCrashIdLength + 1];
 +
          size_t bytes_read =
