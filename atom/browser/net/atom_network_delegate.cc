@@ -146,6 +146,12 @@ void ToDictionary(base::DictionaryValue* details, net::URLRequest* request) {
   details->SetString("resourceType",
                      info ? ResourceTypeToString(info->GetResourceType())
                           : "other");
+  net::IPEndPoint request_ip_endpoint;
+  bool was_successful = request->GetRemoteEndpoint(&request_ip_endpoint);
+  if (was_successful) {
+    details->SetString("ip", request_ip_endpoint.ToStringWithoutPort());
+    details->SetInteger("port", request_ip_endpoint.port());
+  }
 }
 
 void ToDictionary(base::DictionaryValue* details,
