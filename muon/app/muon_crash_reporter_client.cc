@@ -27,8 +27,10 @@
 #include "base/format_macros.h"
 #include "base/path_service.h"
 #include "base/files/file_path.h"
+#include "components/crash/content/app/crash_export_thunks.h"
 #include "components/crash/content/app/crash_switches.h"
 #include "chrome/common/chrome_constants.h"
+#include "chrome/install_static/install_util.h"
 #elif defined(OS_LINUX)
 #include "components/crash/content/app/breakpad_linux.h"
 #endif
@@ -136,6 +138,10 @@ void MuonCrashReporterClient::InitCrashReporting() {
 
 //  static
 void MuonCrashReporterClient::SetCrashReportingEnabled(bool enabled) {
+#if defined(OS_WIN)
+  install_static::SetCollectStatsInSample(true);
+  SetUploadConsent_ExportThunk(true);
+#endif  // defined(OS_WIN)
   ChangeMetricsReportingStateWithReply(enabled,
       base::Bind(&SetCrashReportingEnabledForProcess));
 }
