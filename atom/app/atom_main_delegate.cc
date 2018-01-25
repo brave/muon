@@ -285,6 +285,17 @@ void AtomMainDelegate::PreSandboxStartup() {
   install_static::InitializeProcessType();
 #endif
 
+  auto command_line = base::CommandLine::ForCurrentProcess();
+  std::string process_type =
+      command_line->GetSwitchValueASCII(::switches::kProcessType);
+
+#if !defined(OS_WIN)
+  // For windows we call InitLogging when the sandbox is initialized.
+  InitLogging(process_type);
+#else
+  child_process_logging::Init();
+#endif
+
   base::FilePath path = InitializeUserDataDir();
   if (path.empty()) {
     LOG(ERROR) << "Could not create user data dir";
@@ -296,16 +307,6 @@ void AtomMainDelegate::PreSandboxStartup() {
 
   MuonCrashReporterClient::InitForProcess();
 
-  auto command_line = base::CommandLine::ForCurrentProcess();
-  std::string process_type =
-      command_line->GetSwitchValueASCII(::switches::kProcessType);
-
-#if !defined(OS_WIN)
-  // For windows we call InitLogging when the sandbox is initialized.
-  InitLogging(process_type);
-#else
-  child_process_logging::Init();
-#endif
 
 #if !defined(CHROME_MULTIPLE_DLL_BROWSER)
   if (process_type == switches::kUtilityProcess ||

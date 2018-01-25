@@ -39,7 +39,6 @@ class MuonCrashReporterClient : public ChromeCrashReporterClient {
   bool ShouldMonitorCrashHandlerExpensively() override;
 #endif
 
-  size_t RegisterCrashKeys() override;
   bool GetCollectStatsConsent() override;
   bool GetCollectStatsInSample() override;
 

@@ -86,25 +86,14 @@ bool MuonCrashReporterClient::GetCollectStatsInSample() {
   return true;
 }
 
-size_t MuonCrashReporterClient::RegisterCrashKeys() {
-  size_t length = ChromeCrashReporterClient::RegisterCrashKeys();
-  auto command_line = base::CommandLine::ForCurrentProcess();
-  std::string version =
-        command_line->GetSwitchValueASCII(atom::options::kAppVersion);
-  if (!version.empty())
-    SetCrashKeyValue("_version", version);
-  std::string channel =
-        command_line->GetSwitchValueASCII(atom::options::kAppChannel);
-  if (!channel.empty())
-    SetCrashKeyValue(crash_keys::kChannel, channel);
-
-  SetCrashKeyValue("muon-version", ATOM_VERSION_STRING);
-  return length;
-}
-
 //  static
 void MuonCrashReporterClient::InitCrashReporting() {
+  crash_reporter::InitializeCrashKeys();
+
   auto command_line = base::CommandLine::ForCurrentProcess();
+  std::string process_type = command_line->GetSwitchValueASCII(
+      ::switches::kProcessType);
+
 #if !defined(OS_WIN)
   static MuonCrashReporterClient* instance = nullptr;
 
@@ -114,11 +103,8 @@ void MuonCrashReporterClient::InitCrashReporting() {
   instance = new MuonCrashReporterClient();
   ANNOTATE_LEAKING_OBJECT_PTR(instance);
 
-  crash_reporter::InitializeCrashKeys();
   crash_reporter::SetCrashReporterClient(instance);
 
-  std::string process_type = command_line->GetSwitchValueASCII(
-      ::switches::kProcessType);
 #if defined(OS_MACOSX)
   const bool install_from_dmg_relauncher_process =
       process_type == switches::kRelauncherProcess &&
@@ -133,7 +119,16 @@ void MuonCrashReporterClient::InitCrashReporting() {
   breakpad::InitCrashReporter(process_type);
 #endif
 #endif  // !defined(OS_WIN)
-  crash_keys::SetCrashKeysFromCommandLine(*command_line);
+  std::string version =
+      command_line->GetSwitchValueASCII(atom::options::kAppVersion);
+  if (!version.empty())
+    SetCrashKeyValue("_version", version);
+  std::string channel =
+        command_line->GetSwitchValueASCII(atom::options::kAppChannel);
+  if (!channel.empty())
+    SetCrashKeyValue(crash_keys::kChannel, channel);
+
+  SetCrashKeyValue("muon-version", ATOM_VERSION_STRING);
 }
 
 //  static
@@ -172,9 +167,6 @@ void MuonCrashReporterClient::AppendExtraCommandLineSwitches(
 
 //  static
 void MuonCrashReporterClient::InitForProcess() {
-#if defined(OS_WIN)
-  return;
-#else
   auto command_line = base::CommandLine::ForCurrentProcess();
   std::string process_type = command_line->GetSwitchValueASCII(
       ::switches::kProcessType);
@@ -189,5 +181,4 @@ void MuonCrashReporterClient::InitForProcess() {
 #endif
 
   InitCrashReporting();
-#endif  // defined(OS_WIN)
 }
