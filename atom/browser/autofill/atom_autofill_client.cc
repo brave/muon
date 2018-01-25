@@ -86,7 +86,8 @@ void AtomAutofillClient::DidAcceptSuggestion(const std::string& value,
   suggestion_value_ = base::UTF8ToUTF16(value);
   suggestion_frontend_id_ = frontend_id;
   suggestion_index_ = index;
-  if (frontend_id > autofill::PopupItemId::POPUP_ITEM_ID_AUTOCOMPLETE_ENTRY) {
+  if (GetPrefs()->GetBoolean(prefs::kAutofillConfirmEnabled) &&
+      frontend_id > autofill::PopupItemId::POPUP_ITEM_ID_AUTOCOMPLETE_ENTRY) {
     delegate_->QueryAutofillValues(frontend_id);
   } else if (delegate_) {
     delegate_->DidAcceptSuggestion(suggestion_value_,

@@ -1135,10 +1135,20 @@ index a5984209fa9a0c4b917cd11dd35c186a479de6f7..84732809858131d5e48d9f1619a9950e
    base::WeakPtr<AutofillExternalDelegate> GetWeakPtr();
  
 diff --git a/components/autofill/core/browser/autofill_manager.cc b/components/autofill/core/browser/autofill_manager.cc
-index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..ba6c4591edecc52dae1811a7fdc47b595103110f 100644
+index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..6028de20fd27ead31559f5040632c320a01fd6e5 100644
 --- a/components/autofill/core/browser/autofill_manager.cc
 +++ b/components/autofill/core/browser/autofill_manager.cc
-@@ -1789,6 +1789,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
+@@ -283,6 +283,9 @@ void AutofillManager::RegisterProfilePrefs(
+   registry->RegisterBooleanPref(
+       prefs::kAutofillEnabled, true,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
++  registry->RegisterBooleanPref(
++      prefs::kAutofillConfirmEnabled, true,
++      user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+   registry->RegisterBooleanPref(
+       prefs::kAutofillProfileUseDatesFixed, false,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+@@ -1789,6 +1792,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
          static_cast<const AutofillProfile*>(&data_model)->language_code();
    }
  
@@ -1147,7 +1157,7 @@ index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..ba6c4591edecc52dae1811a7fdc47b59
    // If the relevant section is auto-filled, we should fill |field| but not the
    // rest of the form.
    if (SectionIsAutofilled(*form_structure, form, autofill_field->section())) {
-@@ -1796,7 +1798,11 @@ void AutofillManager::FillOrPreviewDataModelForm(
+@@ -1796,7 +1801,11 @@ void AutofillManager::FillOrPreviewDataModelForm(
        if (iter.SameFieldAs(field)) {
          base::string16 value =
              data_model.GetInfo(autofill_field->Type(), app_locale_);
@@ -1160,7 +1170,7 @@ index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..ba6c4591edecc52dae1811a7fdc47b59
                                           profile_language_code, app_locale_,
                                           &iter)) {
            // Mark the cached field as autofilled, so that we can detect when a
-@@ -1819,6 +1825,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
+@@ -1819,6 +1828,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
      // address book entry.
      if (action == AutofillDriver::FORM_DATA_ACTION_FILL)
        personal_data_->RecordUseOf(data_model);
@@ -1169,7 +1179,7 @@ index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..ba6c4591edecc52dae1811a7fdc47b59
  
      driver()->SendFormDataToRenderer(query_id, action, result);
      return;
-@@ -1859,9 +1867,16 @@ void AutofillManager::FillOrPreviewDataModelForm(
+@@ -1859,9 +1870,16 @@ void AutofillManager::FillOrPreviewDataModelForm(
                           (result.fields[i].SameFieldAs(field) ||
                            result.fields[i].form_control_type == "select-one" ||
                            result.fields[i].value.empty());
@@ -1189,7 +1199,7 @@ index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..ba6c4591edecc52dae1811a7fdc47b59
        // Mark the cached field as autofilled, so that we can detect when a
        // user edits an autofilled field (for metrics).
        form_structure->field(i)->is_autofilled = true;
-@@ -1886,6 +1901,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
+@@ -1886,6 +1904,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
    // address book entry.
    if (action == AutofillDriver::FORM_DATA_ACTION_FILL)
      personal_data_->RecordUseOf(data_model);
@@ -1211,6 +1221,32 @@ index 6febbf91cfc9ad94f9eb4531c1bd3ce4f6048817..02087afc5d027b85f7ff0c3cd7b11ea0
  };
  
  }  // namespace autofill
+diff --git a/components/autofill/core/common/autofill_pref_names.cc b/components/autofill/core/common/autofill_pref_names.cc
+index c52ffb9a7cfe61d15340bd443388bf6913201a06..ee0113dc8993628eeed4e8d7070ea6d467336d0e 100644
+--- a/components/autofill/core/common/autofill_pref_names.cc
++++ b/components/autofill/core/common/autofill_pref_names.cc
+@@ -14,6 +14,9 @@ const char kAutofillCreditCardSigninPromoImpressionCount[] =
+ // Boolean that is true if Autofill is enabled and allowed to save profile data.
+ const char kAutofillEnabled[] = "autofill.enabled";
+ 
++// Boolean that is true if Autofill ask for user consent
++const char kAutofillConfirmEnabled[] = "autofill.confirm_enabled";
++
+ // Boolean that is true if Autofill address profiles were fixed regarding their
+ // bad use dates.
+ const char kAutofillProfileUseDatesFixed[] = "autofill.profile_use_dates_fixed";
+diff --git a/components/autofill/core/common/autofill_pref_names.h b/components/autofill/core/common/autofill_pref_names.h
+index de57761997cc55e37519fcba78716ce0391a28c8..a050d5e35e25dd62a38602eb097c3667fcb3828b 100644
+--- a/components/autofill/core/common/autofill_pref_names.h
++++ b/components/autofill/core/common/autofill_pref_names.h
+@@ -15,6 +15,7 @@ extern const char kAutofillAcceptSaveCreditCardPromptState[];
+ extern const char kAutofillCreditCardEnabled[];
+ extern const char kAutofillCreditCardSigninPromoImpressionCount[];
+ extern const char kAutofillEnabled[];
++extern const char kAutofillConfirmEnabled[];
+ extern const char kAutofillLastVersionDeduped[];
+ extern const char kAutofillLastVersionDisusedAddressesDeleted[];
+ extern const char kAutofillLastVersionDisusedCreditCardsDeleted[];
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
 index 42a50e8381c196b310024c82d69a1a529ead0ba6..c3bafffe4c3d04b02d9f6fb33b3711782c782e50 100644
 --- a/components/crash/content/app/breakpad_linux.cc
