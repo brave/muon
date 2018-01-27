@@ -7,7 +7,6 @@
 #include "atom/browser/atom_browser_main_parts.h"
 
 #include "atom/browser/api/trackable_object.h"
-#include "atom/browser/atom_access_token_store.h"
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/bridge_task_runner.h"
@@ -18,6 +17,7 @@
 #include "atom/common/node_bindings.h"
 #include "atom/common/node_includes.h"
 #include "base/allocator/allocator_extension.h"
+#include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/feature_list.h"
 #include "base/files/file_util.h"
@@ -44,7 +44,6 @@
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
-#include "device/geolocation/geolocation_delegate.h"
 #include "device/geolocation/geolocation_provider.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
 #include "muon/app/muon_crash_reporter_client.h"
@@ -109,19 +108,6 @@ void InitializeWindowProcExceptions() {
 #endif  // defined (OS_WIN)
 
 }  // namespace
-
-// A provider of Geolocation services to override AccessTokenStore.
-class AtomGeolocationDelegate : public device::GeolocationDelegate {
- public:
-  AtomGeolocationDelegate() = default;
-
-  scoped_refptr<device::AccessTokenStore> CreateAccessTokenStore() final {
-    return new AtomAccessTokenStore();
-  }
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(AtomGeolocationDelegate);
-};
 
 template<typename T>
 void Erase(T* container, typename T::iterator iter) {
@@ -203,10 +189,8 @@ int AtomBrowserMainParts::PreCreateThreads() {
   {
     TRACE_EVENT0("startup",
       "AtomBrowserMainParts::PreCreateThreads:InitBrowswerProcessImpl");
-    auto command_line = base::CommandLine::ForCurrentProcess();
     fake_browser_process_.reset(
-        new MuonBrowserProcessImpl(local_state_task_runner.get(),
-                                    *command_line));
+       new MuonBrowserProcessImpl(local_state_task_runner.get()));
   }
 
 #if defined(OS_MACOSX)
@@ -219,10 +203,8 @@ int AtomBrowserMainParts::PreCreateThreads() {
   SecKeychainAddCallback(&KeychainCallback, 0, NULL);
 #endif  // defined(OS_MACOSX)
 
-  device::GeolocationProvider::SetGeolocationDelegate(
-      new AtomGeolocationDelegate());
-
-  fake_browser_process_->PreCreateThreads();
+  fake_browser_process_->PreCreateThreads(
+      *base::CommandLine::ForCurrentProcess());
 
   MuonCrashReporterClient::InitCrashReporting();
 

@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "atom/browser/extensions/atom_component_extensions.h"
@@ -29,8 +30,8 @@
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
-#include "content/public/child/v8_value_converter.h"
 #include "content/public/common/url_constants.h"
+#include "content/public/renderer/v8_value_converter.h"
 #include "extensions/browser/component_extension_resource_manager.h"
 #include "extensions/browser/extension_host.h"
 #include "extensions/browser/extension_registry.h"
@@ -110,8 +111,8 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
 
   int resource_id;
   if (!IsComponentExtension(path, &resource_id)) {
-    // Component extensions contained inside the resources pak fail manifest validation
-    // so we skip validation. 
+    // Component extensions contained inside the resources pak fail manifest
+    // validation so we skip validation.
     if (!extensions::file_util::ValidateExtension(extension.get(),
                                                   error,
                                                   &warnings)) {
@@ -176,7 +177,7 @@ std::unique_ptr<base::DictionaryValue> Extension::LoadManifest(
     std::string* error) {
   int resource_id;
   if (IsComponentExtension(extension_root, &resource_id)) {
-    const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+    const ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
     base::StringPiece manifest_contents = rb.GetRawDataResource(resource_id);
 
     JSONStringValueDeserializer deserializer(manifest_contents);
@@ -190,7 +191,8 @@ std::unique_ptr<base::DictionaryValue> Extension::LoadManifest(
         *error = l10n_util::GetStringUTF8(IDS_EXTENSION_MANIFEST_UNREADABLE);
       } else {
         *error = base::StringPrintf(
-            "%s  %s", extensions::manifest_errors::kManifestParseError, error->c_str());
+            "%s  %s", extensions::manifest_errors::kManifestParseError,
+            error->c_str());
       }
       return NULL;
     }

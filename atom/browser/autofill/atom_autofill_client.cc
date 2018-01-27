@@ -121,7 +121,11 @@ IdentityProvider* AtomAutofillClient::GetIdentityProvider() {
 }
 
 ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
-  return g_browser_process->ukm_recorder();
+  return ukm::UkmRecorder::Get();
+}
+
+AddressNormalizer* AtomAutofillClient::GetAddressNormalizer() {
+  return nullptr;
 }
 
 void AtomAutofillClient::ShowAutofillSettings() {
@@ -244,6 +248,8 @@ void AtomAutofillClient::DidFillOrPreviewField(
     const base::string16& autofilled_value,
     const base::string16& profile_full_name) {
 }
+
+void AtomAutofillClient::DidInteractWithNonsecureCreditCardInput() {}
 
 bool AtomAutofillClient::IsContextSecure() {
   content::SSLStatus ssl_status;

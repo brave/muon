@@ -197,11 +197,17 @@ void SetCookieOnIO(scoped_refptr<net::URLRequestContextGetter> getter,
         base::Time::FromDoubleT(last_access_date);
   }
 
-  GetCookieStore(getter)->SetCookieWithDetailsAsync(
-      GURL(url), name, value, domain, path, creation_time,
-      expiration_time, last_access_time, secure, http_only,
-      net::CookieSameSite::DEFAULT_MODE,
-      net::COOKIE_PRIORITY_DEFAULT, base::Bind(OnSetCookie, callback));
+  bool secure_source = false;
+  bool modify_http_only = false;
+  details->GetBoolean("secure_source", &secure_source);
+  details->GetBoolean("modify_http_only", &modify_http_only);
+
+  GetCookieStore(getter)->SetCanonicalCookieAsync(
+      net::CanonicalCookie::CreateSanitizedCookie(
+          GURL(url), name, value, domain, path, creation_time, expiration_time,
+          last_access_time, secure, http_only,
+          net::CookieSameSite::DEFAULT_MODE, net::COOKIE_PRIORITY_DEFAULT),
+      secure_source, modify_http_only, base::Bind(OnSetCookie, callback));
 }
 
 }  // namespace
@@ -273,5 +279,3 @@ void Cookies::BuildPrototype(v8::Isolate* isolate,
 }  // namespace api
 
 }  // namespace atom
-
-

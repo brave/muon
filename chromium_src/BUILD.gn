@@ -159,6 +159,8 @@ source_set("browser") {
     "//components/data_usage/core",
     "//components/keep_alive_registry",
     "//components/net_log",
+    "//components/offline_items_collection/core",
+    "//components/optimization_guide/proto:optimization_guide_proto",
     "//components/policy/core/common",
     "//components/prefs",
     "//components/ssl_config",
@@ -168,6 +170,7 @@ source_set("browser") {
     "//content/public/browser",
     "//electron/atom/browser",
     "//ui/message_center",
+    "//net:features",
   ]
 
   sources = [
@@ -178,7 +181,10 @@ source_set("browser") {
     "chrome/browser/browser_process_impl.cc",
     "//chrome/browser/browser_process_impl.h",
     "//chrome/browser/browser_shutdown.cc",
+    "//chrome/browser/browser_shutdown.h",
     "//chrome/browser/chrome_notification_types.h",
+    "chrome/browser/chrome_service.cc",
+    "//chrome/browser/chrome_service.h",
     "chrome/browser/custom_handlers/protocol_handler_registry.cc",
     "//chrome/browser/custom_handlers/protocol_handler_registry.h",
     "//chrome/browser/custom_handlers/protocol_handler_registry_factory.cc",
@@ -232,6 +238,9 @@ source_set("browser") {
     "//chrome/browser/net/sth_distributor_provider.h",
     "//chrome/browser/net/system_network_context_manager.cc",
     "//chrome/browser/net/system_network_context_manager.h",
+
+    "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.cc",
+    "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.h",
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
@@ -457,8 +466,6 @@ source_set("browser") {
 
   if (enable_plugins) {
     sources += [
-      "//chrome/browser/media/cdm_storage_id.cc",
-      "//chrome/browser/media/cdm_storage_id.h",
       "//chrome/browser/media/media_storage_id_salt.cc",
       "//chrome/browser/media/media_storage_id_salt.h",
       "//chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc",
@@ -489,8 +496,8 @@ source_set("browser") {
       "//chrome/browser/plugins/flash_temporary_permission_tracker_factory.h",
       "//chrome/browser/plugins/plugin_finder.cc",
       "//chrome/browser/plugins/plugin_finder.h",
-      "//chrome/browser/plugins/plugin_info_message_filter.cc",
-      "//chrome/browser/plugins/plugin_info_message_filter.h",
+      "//chrome/browser/plugins/plugin_info_host_impl.cc",
+      "//chrome/browser/plugins/plugin_info_host_impl.h",
       "//chrome/browser/plugins/plugin_installer.cc",
       "//chrome/browser/plugins/plugin_installer.h",
       "//chrome/browser/plugins/plugin_metadata.cc",
@@ -596,6 +603,13 @@ source_set("browser") {
     if (!is_android) {
       deps += [ "//third_party/hunspell" ]
     }
+  }
+
+  if (enable_cdm_storage_id) {
+    sources += [
+      "//chrome/browser/media/cdm_storage_id.cc",
+      "//chrome/browser/media/cdm_storage_id.h",
+    ]
   }
 }
 
@@ -814,6 +828,8 @@ source_set("password_manager") {
   if (is_linux) {
     if (use_x11) {
       sources += [
+        "//chrome/browser/dbus/dbus_thread_linux.cc",
+        "//chrome/browser/dbus/dbus_thread_linux.h",
         "//chrome/browser/password_manager/password_store_x.h",
         "//chrome/browser/password_manager/password_store_x.cc",
       ]
@@ -997,6 +1013,8 @@ source_set("lifetime") {
     "//chrome/browser/lifetime/application_lifetime.cc",
     "//chrome/browser/lifetime/application_lifetime.h",
     "//chrome/browser/lifetime/application_lifetime_mac.mm",
+    "//chrome/browser/lifetime/switch_utils.cc",
+    "//chrome/browser/lifetime/switch_utils.h",
 
     "//chrome/browser/notifications/notification_ui_manager.h",
     "chrome/browser/notifications/notification_ui_manager_stub.cc",
@@ -1041,18 +1059,26 @@ source_set("tab_manager") {
     "chrome/browser/engagement/site_engagement_service.cc",
     "//chrome/browser/memory/oom_memory_details.cc",
     "//chrome/browser/memory/oom_memory_details.h",
+    "//chrome/browser/resource_coordinator/discard_metrics_util.cc",
+    "//chrome/browser/resource_coordinator/discard_metrics_util.h",
+    "//chrome/browser/resource_coordinator/page_signal_receiver.cc",
+    "//chrome/browser/resource_coordinator/page_signal_receiver.h",
     "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.cc",
     "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h",
     "//chrome/browser/resource_coordinator/tab_manager.cc",
     "//chrome/browser/resource_coordinator/tab_manager.h",
-    "//chrome/browser/resource_coordinator/tab_manager_grc_tab_signal_observer.cc",
-    "//chrome/browser/resource_coordinator/tab_manager_grc_tab_signal_observer.h",
+    "//chrome/browser/resource_coordinator/tab_manager_features.cc",
+    "//chrome/browser/resource_coordinator/tab_manager_features.h",
+    "//chrome/browser/resource_coordinator/tab_manager_resource_coordinator_signal_observer.cc",
+    "//chrome/browser/resource_coordinator/tab_manager_resource_coordinator_signal_observer.h",
     "//chrome/browser/resource_coordinator/tab_manager_stats_collector.cc",
     "//chrome/browser/resource_coordinator/tab_manager_stats_collector.h",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.cc",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.h",
     "//chrome/browser/resource_coordinator/tab_stats.cc",
     "//chrome/browser/resource_coordinator/tab_stats.h",
+    "//chrome/browser/resource_coordinator/time.cc",
+    "//chrome/browser/resource_coordinator/time.h",
     "//chrome/browser/memory_details.cc",
     "//chrome/browser/memory_details.h",
     "//chrome/browser/memory_details_linux.cc",
@@ -1064,6 +1090,8 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tab_contents/core_tab_helper.h",
     "//chrome/browser/ui/tabs/tab_strip_model.cc",
     "//chrome/browser/ui/tabs/tab_strip_model.h",
+    "//chrome/browser/ui/tabs/tab_strip_model_impl.cc",
+    "//chrome/browser/ui/tabs/tab_strip_model_impl.h",
     "//chrome/browser/ui/tabs/tab_strip_model_delegate.h",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.h",
@@ -1071,15 +1099,18 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tabs/tab_strip_model_order_controller.h",
     "chrome/browser/ui/tabs/tab_utils.cc",
     "//chrome/browser/ui/tabs/tab_utils.h",
+    "//chrome/browser/ui/tabs/web_contents_closer.cc",
+    "//chrome/browser/ui/tabs/web_contents_closer.h",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.cc",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.h",
-    "//components/ukm/ukm_interface.cc",
-    "//components/ukm/ukm_interface.h",
+    "//chrome/browser/ui/tab_ui_helper.cc",
+    "//chrome/browser/ui/tab_ui_helper.h",
   ]
 
   deps = [
     ":lifetime",
     "//components/feature_engagement:features",
+    "//services/metrics",
   ]
 
   if (is_win || is_linux) {
@@ -1090,8 +1121,6 @@ source_set("tab_manager") {
       "//chrome/browser/feature_engagement/feature_tracker.h",
       "//chrome/browser/feature_engagement/session_duration_updater.cc",
       "//chrome/browser/feature_engagement/session_duration_updater.h",
-      "//chrome/browser/feature_engagement/session_duration_updater_factory.cc",
-      "//chrome/browser/feature_engagement/session_duration_updater_factory.h",
       "chrome/browser/feature_engagement/new_tab/new_tab_tracker.cc",
       "//chrome/browser/feature_engagement/new_tab/new_tab_tracker_factory.cc",
       "//chrome/browser/feature_engagement/new_tab/new_tab_tracker_factory.h",

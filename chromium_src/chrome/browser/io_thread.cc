@@ -24,11 +24,10 @@
 #include "components/prefs/pref_service.h"
 #include "components/proxy_config/pref_proxy_config_tracker.h"
 #include "content/public/browser/browser_thread.h"
-#include "content/public/browser/ignore_errors_cert_verifier.h"
 #include "content/public/common/content_switches.h"
+#include "content/public/network/ignore_errors_cert_verifier.h"
 #include "content/public/network/url_request_context_builder_mojo.h"
 #include "extensions/features/features.h"
-#include "net/base/logging_network_change_observer.h"
 #include "net/cert/cert_verifier.h"
 #include "net/cert/ct_known_logs.h"
 #include "net/cert/ct_log_verifier.h"
@@ -76,6 +75,7 @@ IOThread::IOThread(
 #endif
       globals_(nullptr),
       is_quic_allowed_on_init_(false),
+      network_service_request_(mojo::MakeRequest(&ui_thread_network_service_)),
       weak_factory_(this) {
   scoped_refptr<base::SingleThreadTaskRunner> io_thread_proxy =
       BrowserThread::GetTaskRunnerForThread(BrowserThread::IO);
@@ -110,10 +110,9 @@ IOThread::IOThread(
           local_state,
           BrowserThread::GetTaskRunnerForThread(BrowserThread::IO)));
 
-  base::Value* dns_client_enabled_default =
-      new base::Value(base::FeatureList::IsEnabled(features::kAsyncDns));
-  local_state->SetDefaultPrefValue(prefs::kBuiltInDnsClientEnabled,
-                                   dns_client_enabled_default);
+  local_state->SetDefaultPrefValue(
+      prefs::kBuiltInDnsClientEnabled,
+      base::Value(base::FeatureList::IsEnabled(features::kAsyncDns)));
 
   dns_client_enabled_.Init(prefs::kBuiltInDnsClientEnabled,
                            local_state,
@@ -223,12 +222,6 @@ void IOThread::Init() {
   DCHECK(!globals_);
   globals_ = new Globals;
 
-  // Add an observer that will emit network change events to the ChromeNetLog.
-  // Assuming NetworkChangeNotifier dispatches in FIFO order, we should be
-  // logging the network change before other IO thread consumers respond to it.
-  network_change_observer_.reset(
-      new net::LoggingNetworkChangeObserver(net_log_));
-
   // Setup the HistogramWatcher to run on the IO thread.
   net::NetworkChangeNotifier::InitHistogramWatcher();
 
@@ -283,9 +276,6 @@ void IOThread::CleanUp() {
 
   // Shutdown the HistogramWatcher on the IO thread.
   net::NetworkChangeNotifier::ShutdownHistogramWatcher();
-
-  // This must be reset before the ChromeNetLog is destroyed.
-  network_change_observer_.reset();
 
   system_proxy_config_service_.reset();
   delete globals_;
@@ -361,12 +351,12 @@ void IOThread::RegisterPrefs(PrefRegistrySimple* registry) {
 }
 
 void IOThread::UpdateServerWhitelist() {
-  globals_->http_auth_preferences->set_server_whitelist(
+  globals_->http_auth_preferences->SetServerWhitelist(
       auth_server_whitelist_.GetValue());
 }
 
 void IOThread::UpdateDelegateWhitelist() {
-  globals_->http_auth_preferences->set_delegate_whitelist(
+  globals_->http_auth_preferences->SetDelegateWhitelist(
       auth_delegate_whitelist_.GetValue());
 }
 
@@ -458,8 +448,8 @@ void IOThread::SetUpProxyConfigService(
     if (command_line.HasSwitch(switches::kSingleProcess)) {
       LOG(ERROR) << "Cannot use V8 Proxy resolver in single process mode.";
     } else {
-      builder->set_mojo_proxy_resolver_factory(
-          ChromeMojoProxyResolverFactory::GetInstance());
+      builder->SetMojoProxyResolverFactory(
+          ChromeMojoProxyResolverFactory::CreateWithStrongBinding());
     }
   }
 
@@ -480,7 +470,6 @@ void IOThread::ConstructSystemRequestContext() {
       atom_network_delegate(new atom::AtomNetworkDelegate());
 
   builder->set_network_delegate(std::move(atom_network_delegate));
-  builder->set_net_log(net_log_);
   std::unique_ptr<net::HostResolver> host_resolver(
       CreateGlobalHostResolver(net_log_));
 
@@ -512,7 +501,8 @@ void IOThread::ConstructSystemRequestContext() {
   SetUpProxyConfigService(builder.get(),
                           std::move(system_proxy_config_service_));
 
-  globals_->network_service = content::NetworkService::Create();
+  globals_->network_service = content::NetworkService::Create(
+      std::move(network_service_request_), net_log_);
   globals_->network_service->DisableQuic();
 
   globals_->system_network_context =

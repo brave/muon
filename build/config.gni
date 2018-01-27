@@ -1,5 +1,6 @@
 import("//build/toolchain/toolchain.gni")
 import("//build/util/branding.gni")
+import("//media/media_options.gni")
 
 declare_args() {
   electron_product_name = ""
@@ -36,3 +37,5 @@ if (is_win) {
 } else if (is_linux) {
   electron_platform = "linux"
 }
+
+enable_cdm_storage_id = enable_library_cdms && (is_win || is_mac)

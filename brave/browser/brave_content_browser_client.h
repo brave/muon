@@ -50,7 +50,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       mojo::ScopedMessagePipeHandle* interface_pipe) override;
   void ExposeInterfacesToRenderer(
       service_manager::BinderRegistry* registry,
-      content::AssociatedInterfaceRegistry* associated_registry,
+      blink::AssociatedInterfaceRegistry* associated_registry,
       content::RenderProcessHost* render_process_host) override;
   void RegisterInProcessServices(StaticServiceMap* services) override;
   void RegisterOutOfProcessServices(OutOfProcessServiceMap* services) override;
@@ -89,8 +89,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
                        bool opener_suppressed,
                        bool* no_javascript_access) override;
   GURL GetEffectiveURL(content::BrowserContext* browser_context,
-                       const GURL& url,
-                       bool is_isolated_origin);
+                       const GURL& url) override;
   bool ShouldUseProcessPerSite(content::BrowserContext* browser_context,
                                const GURL& effective_url) override;
   bool DoesSiteRequireDedicatedProcess(content::BrowserContext* browser_context,
@@ -130,7 +129,6 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       std::string* partition_name,
       bool* in_memory) override;
   base::FilePath GetShaderDiskCacheDirectory() override;
-  gpu::GpuChannelEstablishFactory* GetGpuChannelEstablishFactory() override;
 
   std::unique_ptr<base::Value> GetServiceManifestOverlay(
       base::StringPiece name) override;

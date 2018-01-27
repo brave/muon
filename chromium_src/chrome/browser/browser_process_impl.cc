@@ -15,6 +15,7 @@
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/background/background_mode_manager.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/component_updater/crl_set_component_installer.h"
 #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
 #include "chrome/browser/notifications/notification_ui_manager_stub.h"
 #include "chrome/browser/prefs/chrome_command_line_pref_store.h"
@@ -30,6 +31,7 @@
 #include "components/component_updater/component_updater_service.h"
 #include "components/metrics_services_manager/metrics_services_manager.h"
 #include "components/metrics/metrics_pref_names.h"
+#include "components/optimization_guide/optimization_guide_service.h"
 #include "components/password_manager/core/browser/password_manager.h"
 #include "components/policy/core/common/policy_service_stub.h"
 #include "components/prefs/json_pref_store.h"
@@ -41,6 +43,7 @@
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/common/content_switches.h"
+#include "content/public/common/network_connection_tracker.h"
 #include "ppapi/features/features.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -60,7 +63,6 @@
 #include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #include "chrome/browser/media_galleries/media_file_system_registry.h"
 #include "chrome/browser/metrics/thread_watcher.h"
-#include "chrome/browser/net/crl_set_fetcher.h"
 #include "chrome/browser/notifications/notification_platform_bridge.h"
 #include "chrome/browser/plugins/plugins_resource_service.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
@@ -127,8 +129,7 @@ base::LazyInstance<policy::PolicyServiceStub>::Leaky policy_service_stub =
 }  // namespace
 
 BrowserProcessImpl::BrowserProcessImpl(
-      base::SequencedTaskRunner* local_state_task_runner,
-      const base::CommandLine& command_line) :
+      base::SequencedTaskRunner* local_state_task_runner) :
     created_watchdog_thread_(false),
     created_browser_policy_connector_(false),
     created_profile_manager_(false),
@@ -210,10 +211,6 @@ ProfileManager* BrowserProcessImpl::profile_manager() {
 }
 
 rappor::RapporServiceImpl* BrowserProcessImpl::rappor_service() {
-  return nullptr;
-}
-
-ukm::UkmRecorder* BrowserProcessImpl::ukm_recorder() {
   return nullptr;
 }
 
@@ -313,17 +310,17 @@ bool BrowserProcessImpl::IsShuttingDown() {
   return tearing_down_;
 }
 
-void BrowserProcessImpl::PreCreateThreads() {
+void BrowserProcessImpl::PreCreateThreads(
+    const base::CommandLine& command_line) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   // Disable Isolate Extensions by default
   ChildProcessSecurityPolicy::GetInstance()->RegisterWebSafeScheme(
       extensions::kExtensionScheme);
 #endif
-  auto command_line = base::CommandLine::ForCurrentProcess();
 
   // initialize local state
   local_state()->UpdateCommandLinePrefStore(
-      new ChromeCommandLinePrefStore(command_line));
+      new ChromeCommandLinePrefStore(&command_line));
 
   // Must be created before the IOThread.
   // TODO(mmenke): Once IOThread class is no longer needed (not the thread
@@ -555,6 +552,12 @@ BrowserProcessImpl::system_network_context_manager() {
   return nullptr;
 }
 
+content::NetworkConnectionTracker*
+BrowserProcessImpl::network_connection_tracker() {
+  NOTIMPLEMENTED();
+  return nullptr;
+}
+
 WatchDogThread* BrowserProcessImpl::watchdog_thread() {
   NOTIMPLEMENTED();
   return nullptr;
@@ -668,7 +671,8 @@ BrowserProcessImpl::subresource_filter_ruleset_service() {
   return nullptr;
 }
 
-CRLSetFetcher* BrowserProcessImpl::crl_set_fetcher() {
+optimization_guide::OptimizationGuideService*
+BrowserProcessImpl::optimization_guide_service() {
   NOTIMPLEMENTED();
   return nullptr;
 }

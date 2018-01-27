@@ -25,6 +25,8 @@ class NotificationPresenter {
 
   std::set<Notification*> notifications() const { return notifications_; }
 
+  Notification* lookupNotification(const std::string& notification_id) const;
+
  protected:
   NotificationPresenter();
 

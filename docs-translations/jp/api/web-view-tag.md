@@ -502,16 +502,6 @@ Executes editing command `undo` in page.
 読み込むリソースの詳細がわかった時点で発生します。
 `status`は、リソースをダウンロードするソケット接続であるかを示します。
 
-### Event: 'did-get-redirect-request'
-
-返り値:
-
-* `oldURL` String
-* `newURL` String
-* `isMainFrame` Boolean
-
-リソースの取得中に、リダイレクトを受け取った際に発生します。
-
 ### Event: 'dom-ready'
 
 該当フレーム内のドキュメントが読み込まれた時に発生します。

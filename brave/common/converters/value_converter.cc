@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "base/values.h"
-#include "content/public/child/v8_value_converter.h"
+#include "content/public/renderer/v8_value_converter.h"
 
 using v8::Array;
 using v8::External;

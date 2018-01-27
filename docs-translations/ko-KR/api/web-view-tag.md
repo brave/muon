@@ -556,16 +556,6 @@ Returns:
 요청한 리소스에 관해 자세한 내용을 알 수 있을 때 발생하는 이벤트입니다.
 `status`는 리소스를 다운로드할 소켓 커낵션을 나타냅니다.
 
-### Event: 'did-get-redirect-request'
-
-Returns:
-
-* `oldURL` String
-* `newURL` String
-* `isMainFrame` Boolean
-
-리소스를 요청하고 받는 도중에 리다이렉트가 생기면 발생하는 이벤트입니다.
-
 ### Event: 'dom-ready'
 
 프레임 문서의 로드가 끝나면 발생하는 이벤트입니다.

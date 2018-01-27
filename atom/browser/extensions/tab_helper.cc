@@ -18,11 +18,13 @@
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/resource_coordinator/discard_reason.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
 #include "chrome/browser/ui/tab_contents/tab_contents_iterator.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_impl.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_order_controller.h"
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/browser_context.h"
@@ -425,12 +427,13 @@ void TabHelper::SetBrowser(Browser* browser) {
         is_invalid_tab_index) {
       index_ = browser_->tab_strip_model()->count();
     } else if (is_invalid_tab_index) {
+      // FIXME(svillar): The OrderController is exposed just for tests
       index_ =
-        browser_->tab_strip_model()->order_controller()->
-        DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                active_ ?
-                                TabStripModel::ADD_ACTIVE :
-                                TabStripModel::ADD_NONE);
+          static_cast<TabStripModelImpl*>(browser->tab_strip_model())
+              ->order_controller()
+              ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                        active_ ? TabStripModel::ADD_ACTIVE
+                                                : TabStripModel::ADD_NONE);
     } else if (index_ < TabStripModel::kNoTab) {
       // hack for browserAction
       // TODO(bridiver) - use extension view
@@ -469,8 +472,8 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 bool TabHelper::Discard() {
   if (guest()->attached()) {
     int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-    return !!GetTabManager()->DiscardTabById(web_contents_id,
-                                             TabManager::kProactiveShutdown);
+    return !!GetTabManager()->DiscardTabById(
+        web_contents_id, resource_coordinator::DiscardReason::kProactive);
   } else {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
@@ -648,7 +651,7 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
             resource.extension_root(),
             resource.relative_path(),
             &resource_id)) {
-      const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+      const ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
       file = rb.GetRawDataResource(resource_id).as_string();
     } else {
       scoped_refptr<FileReader> file_reader(new FileReader(

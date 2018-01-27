@@ -38,6 +38,7 @@
 #include "extensions/features/features.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "printing/features/features.h"
+#include "services/service_manager/sandbox/switches.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_switches.h"
@@ -284,17 +285,6 @@ void AtomMainDelegate::PreSandboxStartup() {
   install_static::InitializeProcessType();
 #endif
 
-  base::FilePath path = InitializeUserDataDir();
-  if (path.empty()) {
-    LOG(ERROR) << "Could not create user data dir";
-  } else {
-    PathService::OverrideAndCreateIfNeeded(
-        component_updater::DIR_COMPONENT_USER,
-        path.Append(FILE_PATH_LITERAL("Extensions")), false, true);
-  }
-
-  MuonCrashReporterClient::InitForProcess();
-
   auto command_line = base::CommandLine::ForCurrentProcess();
   std::string process_type =
       command_line->GetSwitchValueASCII(::switches::kProcessType);
@@ -306,6 +296,18 @@ void AtomMainDelegate::PreSandboxStartup() {
   child_process_logging::Init();
 #endif
 
+  base::FilePath path = InitializeUserDataDir();
+  if (path.empty()) {
+    LOG(ERROR) << "Could not create user data dir";
+  } else {
+    PathService::OverrideAndCreateIfNeeded(
+        component_updater::DIR_COMPONENT_USER,
+        path.Append(FILE_PATH_LITERAL("Extensions")), false, true);
+  }
+
+  MuonCrashReporterClient::InitForProcess();
+
+
 #if !defined(CHROME_MULTIPLE_DLL_BROWSER)
   if (process_type == switches::kUtilityProcess ||
       process_type == switches::kZygoteProcess) {
@@ -316,7 +318,8 @@ void AtomMainDelegate::PreSandboxStartup() {
 #if defined(OS_LINUX)
   if (!IsBrowserProcess(command_line)) {
     // Disable setuid sandbox
-    command_line->AppendSwitch(::switches::kDisableSetuidSandbox);
+    command_line->AppendSwitch(
+        service_manager::switches::kDisableSetuidSandbox);
   }
 #endif
 

@@ -106,7 +106,7 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
   if (web_preferences.GetDouble(options::kZoomFactor, &zoom_factor) &&
       zoom_factor != 1.0)
     command_line->AppendSwitchASCII(switches::kZoomFactor,
-                                    base::DoubleToString(zoom_factor));
+                                    base::NumberToString(zoom_factor));
 
   // Custom command line switches.
   const base::ListValue* args;

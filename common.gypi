@@ -564,12 +564,6 @@
       # enable_basic_printing. It's possible to build Chrome with preview only.
       'enable_print_preview%': 1,
 
-      # For CLD2, the size of the tables that should be included in the build
-      # See third_party/cld_2/cld_2.gyp for more information.
-      #   0: Small tables, high accuracy
-      #   2: Large tables, higher accuracy
-      'cld2_table_size%': 2,
-
       # Enable spell checker.
       'enable_spellcheck%': 1,
 
@@ -602,9 +596,6 @@
 
       # Enable FILE support by default.
       'disable_file_support%': 0,
-
-      # Enable FTP support by default.
-      'disable_ftp_support%': 0,
 
       # Do not use the platform ICU alternatives by default.
       'use_platform_icu_alternatives%': 0,
@@ -823,7 +814,6 @@
 
         ['OS=="android"', {
           'enable_extensions%': 0,
-          'cld2_table_size%': 0,
           'enable_themes%': 0,
           'remoting%': 0,
           'enable_basic_printing%': 1,
@@ -868,9 +858,7 @@
 
         ['OS=="ios"', {
           'configuration_policy': 0,
-          'disable_ftp_support%': 1,
           'enable_extensions%': 0,
-          'cld2_table_size%': 0,
           'enable_basic_printing%': 0,
           'enable_print_preview%': 0,
           'enable_session_service%': 0,
@@ -1235,10 +1223,8 @@
     'enable_spellcheck%': '<(enable_spellcheck)',
     'use_browser_spellchecker%': '<(use_browser_spellchecker)',
     'use_minikin_hyphenation%': '<(use_minikin_hyphenation)',
-    'cld2_table_size%': '<(cld2_table_size)',
     'enable_captive_portal_detection%': '<(enable_captive_portal_detection)',
     'disable_file_support%': '<(disable_file_support)',
-    'disable_ftp_support%': '<(disable_ftp_support)',
     'use_platform_icu_alternatives%': '<(use_platform_icu_alternatives)',
     'disable_brotli_filter%': '<(disable_brotli_filter)',
     'enable_task_manager%': '<(enable_task_manager)',
@@ -2931,9 +2917,6 @@
       }],
       ['disable_file_support==1', {
         'defines': ['DISABLE_FILE_SUPPORT=1'],
-      }],
-      ['disable_ftp_support==1', {
-        'defines': ['DISABLE_FTP_SUPPORT=1'],
       }],
       ['enable_supervised_users==1', {
         'defines': ['ENABLE_SUPERVISED_USERS=1'],

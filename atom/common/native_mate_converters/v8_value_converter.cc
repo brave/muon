@@ -162,7 +162,7 @@ base::Value* V8ValueConverter::FromV8Value(
 
 v8::Local<v8::Value> V8ValueConverter::ToV8ValueImpl(
      v8::Isolate* isolate, const base::Value* value) const {
-  switch (value->GetType()) {
+  switch (value->type()) {
     case base::Value::Type::NONE:
       return v8::Null(isolate);
 
@@ -203,7 +203,7 @@ v8::Local<v8::Value> V8ValueConverter::ToV8ValueImpl(
                            static_cast<const base::Value*>(value));
 
     default:
-      LOG(ERROR) << "Unexpected value type: " << value->GetType();
+      LOG(ERROR) << "Unexpected value type: " << value->type();
       return v8::Null(isolate);
   }
 }

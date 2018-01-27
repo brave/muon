@@ -6,8 +6,10 @@
 #include "browser/inspectable_web_contents_impl.h"
 
 #include "base/base64.h"
+#include "base/guid.h"
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
+#include "base/json/string_escape.h"
 #include "base/memory/ptr_util.h"
 #include "base/metrics/histogram.h"
 #include "base/metrics/histogram_macros.h"
@@ -29,6 +31,7 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/host_zoom_map.h"
+#include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/common/user_agent.h"
@@ -495,7 +498,7 @@ void InspectableWebContentsImpl::ShowCertificateViewer(
     const std::string& cert_chain) {
 #if !defined(OS_LINUX)
   std::unique_ptr<base::Value> value = base::JSONReader::Read(cert_chain);
-  if (!value || value->GetType() != base::Value::Type::LIST) {
+  if (!value || value->type() != base::Value::Type::LIST) {
     NOTREACHED();
     return;
   }
@@ -505,7 +508,7 @@ void InspectableWebContentsImpl::ShowCertificateViewer(
   std::vector<std::string> decoded;
   for (size_t i = 0; i < list->GetSize(); ++i) {
     base::Value* item;
-    if (!list->Get(i, &item) || item->GetType() != base::Value::Type::STRING) {
+    if (!list->Get(i, &item) || item->type() != base::Value::Type::STRING) {
       NOTREACHED();
       return;
     }
@@ -687,10 +690,9 @@ void InspectableWebContentsImpl::RequestFileSystems() {
 }
 
 void InspectableWebContentsImpl::AddFileSystem(
-    const std::string& file_system_path) {
+    const std::string& type) {
   if (delegate_)
-    delegate_->DevToolsAddFileSystem(
-        base::FilePath::FromUTF8Unsafe(file_system_path));
+    delegate_->DevToolsAddFileSystem(base::FilePath());
 }
 
 void InspectableWebContentsImpl::RemoveFileSystem(
@@ -822,8 +824,10 @@ void InspectableWebContentsImpl::DispatchProtocolMessage(
     return;
 
   if (message.length() < kMaxMessageChunkSize) {
-    base::string16 javascript = base::UTF8ToUTF16(
-        "DevToolsAPI.dispatchMessage(" + message + ");");
+    std::string param;
+    base::EscapeJSONString(message, true, &param);
+    base::string16 javascript =
+        base::UTF8ToUTF16("DevToolsAPI.dispatchMessage(" + param + ");");
     devtools_web_contents_->GetMainFrame()->ExecuteJavaScript(javascript);
     return;
   }
@@ -837,18 +841,32 @@ void InspectableWebContentsImpl::DispatchProtocolMessage(
 }
 
 void InspectableWebContentsImpl::AgentHostClosed(
-    content::DevToolsAgentHost* agent_host, bool replaced) {
+    content::DevToolsAgentHost* agent_host) {}
+
+void InspectableWebContentsImpl::RegisterExtensionsAPI(
+      const std::string& origin,
+      const std::string& script) {
+  extensions_api_[origin + "/"] = script;
 }
 
-void InspectableWebContentsImpl::RenderFrameHostChanged(
-    content::RenderFrameHost* old_host,
-    content::RenderFrameHost* new_host) {
-  if (new_host->GetParent())
+void InspectableWebContentsImpl::ReadyToCommitNavigation(
+    content::NavigationHandle* navigation_handle) {
+  content::RenderFrameHost* frame = navigation_handle->GetRenderFrameHost();
+  if (navigation_handle->IsInMainFrame()) {
+    frontend_host_.reset(content::DevToolsFrontendHost::Create(
+        frame,
+        base::Bind(
+            &InspectableWebContentsImpl::HandleMessageFromDevToolsFrontend,
+            base::Unretained(this))));
     return;
-  frontend_host_.reset(content::DevToolsFrontendHost::Create(
-      new_host,
-      base::Bind(&InspectableWebContentsImpl::HandleMessageFromDevToolsFrontend,
-                 base::Unretained(this))));
+  }
+  std::string origin = navigation_handle->GetURL().GetOrigin().spec();
+  auto it = extensions_api_.find(origin);
+  if (it == extensions_api_.end())
+    return;
+  std::string script = base::StringPrintf("%s(\"%s\")", it->second.c_str(),
+                                          base::GenerateGUID().c_str());
+  content::DevToolsFrontendHost::SetupExtensionsAPI(frame, script);
 }
 
 void InspectableWebContentsImpl::WebContentsDestroyed() {
@@ -932,16 +950,6 @@ void InspectableWebContentsImpl::OnWebContentsFocused(content::RenderWidgetHost*
   if (view_->GetDelegate())
     view_->GetDelegate()->DevToolsFocused();
 #endif
-}
-
-void InspectableWebContentsImpl::DidStartNavigationToPendingEntry(
-    const GURL& url,
-    content::ReloadType reload_type) {
-  frontend_host_.reset(
-      content::DevToolsFrontendHost::Create(
-          web_contents()->GetMainFrame(),
-          base::Bind(&InspectableWebContentsImpl::HandleMessageFromDevToolsFrontend,
-                     base::Unretained(this))));
 }
 
 void InspectableWebContentsImpl::OnURLFetchComplete(const net::URLFetcher* source) {

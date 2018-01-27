@@ -66,7 +66,7 @@
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/browser/ui/tabs/tab_strip_model_impl.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_order_controller.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
@@ -94,8 +94,8 @@
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
-#include "content/public/child/v8_value_converter.h"
 #include "content/public/common/window_container_type.mojom.h"
+#include "content/public/renderer/v8_value_converter.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/http/http_response_headers.h"
@@ -772,12 +772,13 @@ void WebContents::AddNewContents(content::WebContents* source,
         browser = owner_window()->browser();
       }
       if (browser) {
+        // FIXME(svillar): The OrderController is exposed just for tests
         int index =
-          browser->tab_strip_model()->order_controller()->
-            DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                    active ?
-                                    TabStripModel::ADD_ACTIVE :
-                                    TabStripModel::ADD_NONE);
+            static_cast<TabStripModelImpl*>(browser->tab_strip_model())
+                ->order_controller()
+                ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                          active ? TabStripModel::ADD_ACTIVE
+                                                 : TabStripModel::ADD_NONE);
         tab_helper->SetTabIndex(index);
         tab_helper->SetActive(active);
       }
@@ -1317,7 +1318,9 @@ void WebContents::MediaStartedPlaying(const MediaPlayerInfo& media_info,
 }
 
 void WebContents::MediaStoppedPlaying(const MediaPlayerInfo& media_info,
-                                      const MediaPlayerId& id) {
+                                      const MediaPlayerId& id,
+                                      WebContentsObserver::MediaStoppedReason
+                                      reason) {
   Emit("media-paused");
 }
 
@@ -1375,19 +1378,6 @@ void WebContents::DidGetResourceResponseStart(
        details.referrer,
        headers,
        ResourceTypeToString(details.resource_type));
-}
-
-void WebContents::DidGetRedirectForResourceRequest(
-    const content::ResourceRedirectDetails& details) {
-  const net::HttpResponseHeaders* headers = details.headers.get();
-  Emit("did-get-redirect-request",
-       details.url,
-       details.new_url,
-       (details.resource_type == content::RESOURCE_TYPE_MAIN_FRAME),
-       details.http_response_code,
-       details.method,
-       details.referrer,
-       headers);
 }
 
 void WebContents::DidStartLoading() {

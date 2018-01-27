@@ -9,6 +9,7 @@
 #include <atlbase.h>
 #include <shlobj.h>
 #include <shobjidl.h>
+#include <wrl/client.h>
 
 #include "atom/browser/ui/win/jump_list.h"
 #include "atom/common/atom_version.h"
@@ -21,7 +22,6 @@
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/win/registry.h"
-#include "base/win/scoped_comptr.h"
 #include "base/win/win_util.h"
 #include "base/win/windows_version.h"
 
@@ -196,7 +196,7 @@ bool LaunchDefaultAppsSettingsModernDialog(const wchar_t* protocol) {
       L"windows.immersivecontrolpanel_cw5n1h2txyewy"
       L"!microsoft.windows.immersivecontrolpanel";
 
-  base::win::ScopedComPtr<IApplicationActivationManager> activator;
+  Microsoft::WRL::ComPtr<IApplicationActivationManager> activator;
   HRESULT hr =
       ::CoCreateInstance(CLSID_ApplicationActivationManager, nullptr,
                          CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&activator));

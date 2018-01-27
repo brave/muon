@@ -27,6 +27,8 @@ class NotificationDelegate {
   virtual void NotificationClosed();
   virtual void NotificationDisplayed();
 
+  const std::string notificationId() { return notification_id_; }
+
  private:
   const std::string notification_id_;
 

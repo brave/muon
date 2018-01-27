@@ -19,8 +19,9 @@
 #include "brave/grit/brave_resources.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/cache_stats_recorder.h"
+#include "chrome/browser/chrome_service.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
-#include "chrome/browser/plugins/plugin_info_message_filter.h"
+#include "chrome/browser/plugins/plugin_info_host_impl.h"
 #include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
@@ -28,6 +29,7 @@
 #include "chrome/browser/speech/tts_message_filter.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
+#include "chrome/common/constants.mojom.h"
 #include "chrome/common/env_vars.h"
 #include "chrome/common/importer/profile_import.mojom.h"
 #include "chrome/common/render_messages.h"
@@ -60,7 +62,8 @@
 #include "muon/app/muon_crash_reporter_client.h"
 #include "net/base/filename_util.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
-#include "services/proxy_resolver/proxy_resolver_service.h"
+#include "services/metrics/metrics_mojo_service.h"
+#include "services/metrics/public/interfaces/constants.mojom.h"
 #include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
@@ -79,13 +82,6 @@
 #include "services/ui/public/cpp/gpu/gpu.h"
 #include "ui/aura/mus/window_tree_client.h"
 #include "ui/views/mus/mus_client.h"
-#endif
-
-#if BUILDFLAG(ENABLE_SPELLCHECK)
-#include "chrome/browser/spellchecker/spell_check_host_impl.h"
-#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-#include "chrome/browser/spellchecker/spell_check_panel_host_impl.h"
-#endif
 #endif
 
 #if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
@@ -296,7 +292,7 @@ content::WebContentsViewDelegate*
 
 void BraveContentBrowserClient::ExposeInterfacesToRenderer(
     service_manager::BinderRegistry* registry,
-    content::AssociatedInterfaceRegistry* associated_registry,
+    blink::AssociatedInterfaceRegistry* associated_registry,
     content::RenderProcessHost* render_process_host) {
   // The CacheStatsRecorder is an associated binding, instead of a
   // non-associated one, because the sender (in the renderer process) posts the
@@ -309,24 +305,25 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
   scoped_refptr<base::SingleThreadTaskRunner> ui_task_runner =
       content::BrowserThread::GetTaskRunnerForThread(
           content::BrowserThread::UI);
-#if BUILDFLAG(ENABLE_SPELLCHECK)
-  registry->AddInterface(
-      base::Bind(&SpellCheckHostImpl::Create, render_process_host->GetID()),
-      ui_task_runner);
-#if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-  registry->AddInterface(base::Bind(&SpellCheckPanelHostImpl::Create),
-      ui_task_runner);
-#endif
-#endif
+
+  Profile* profile =
+      Profile::FromBrowserContext(render_process_host->GetBrowserContext());
+  render_process_host->GetChannel()->AddAssociatedInterfaceForIOThread(
+      base::Bind(&PluginInfoHostImpl::OnPluginInfoHostRequest,
+                 base::MakeRefCounted<PluginInfoHostImpl>(
+                     render_process_host->GetID(), profile)));
 }
 
 void BraveContentBrowserClient::RegisterInProcessServices(
     StaticServiceMap* services) {
+  {
+    service_manager::EmbeddedServiceInfo info;
+    info.factory = base::Bind(&ChromeService::Create);
+    services->insert(std::make_pair(chrome::mojom::kServiceName, info));
+  }
   service_manager::EmbeddedServiceInfo info;
-  info.factory =
-      base::Bind(&proxy_resolver::ProxyResolverService::CreateService);
-  services->insert(
-      std::make_pair(proxy_resolver::mojom::kProxyResolverServiceName, info));
+  info.factory = base::Bind(&metrics::CreateMetricsService);
+  services->emplace(metrics::mojom::kMetricsServiceName, info);
 }
 
 void BraveContentBrowserClient::RegisterOutOfProcessServices(
@@ -397,7 +394,6 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
 
   host->AddFilter(new printing::PrintingMessageFilter(id, profile));
   host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
-  host->AddFilter(new PluginInfoMessageFilter(id, profile));
 
 #if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
   host->AddFilter(new SpellCheckMessageFilterPlatform(id));
@@ -419,15 +415,14 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
 
 GURL BraveContentBrowserClient::GetEffectiveURL(
     content::BrowserContext* browser_context,
-    const GURL& url,
-    bool is_isolated_origin) {
+    const GURL& url) {
   Profile* profile = Profile::FromBrowserContext(browser_context);
   if (!profile)
     return url;
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   return AtomBrowserClientExtensionsPart::GetEffectiveURL(
-      profile, url, is_isolated_origin);
+      profile, url);
 #else
   return url;
 #endif
@@ -580,7 +575,6 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
       extensions::switches::kEnableEmbeddedExtensionOptions,
       extensions::switches::kEnableExperimentalExtensionApis,
       extensions::switches::kExtensionsOnChromeURLs,
-      extensions::switches::kNativeCrxBindings,
       extensions::switches::kWhitelistedExtensionID,
       extensions::switches::kYieldBetweenContentScriptRuns,
 #endif
@@ -761,15 +755,6 @@ base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
   return user_data_dir.Append(FILE_PATH_LITERAL("ShaderCache"));
 }
 
-gpu::GpuChannelEstablishFactory*
-BraveContentBrowserClient::GetGpuChannelEstablishFactory() {
-#if defined(USE_AURA)
-  if (views::MusClient::Exists())
-    return views::MusClient::Get()->window_tree_client()->gpu();
-#endif
-  return nullptr;
-}
-
 bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
     content::SiteInstance* site_instance,
     const GURL& current_url,
@@ -785,7 +770,7 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
 
 std::unique_ptr<base::Value>
 BraveContentBrowserClient::GetServiceManifestOverlay(base::StringPiece name) {
-  ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+  ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
   int id = -1;
   if (name == content::mojom::kBrowserServiceName)
     id = IDR_CHROME_CONTENT_BROWSER_MANIFEST_OVERLAY;

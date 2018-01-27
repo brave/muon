@@ -10,8 +10,8 @@
 #include "base/run_loop.h"
 #include "base/threading/thread_local.h"
 #include "brave/common/workers/worker_bindings.h"
-#include "content/child/worker_thread_registry.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/renderer/worker_thread_registry.h"
 
 using content::BrowserThread;
 using extensions::ModuleSystem;

@@ -245,9 +245,10 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         dhcp_proxy_script_fetcher = dhcp_factory.Create(url_request_context_.get());
 
         proxy_service = content::CreateProxyServiceUsingMojoFactory(
-            ChromeMojoProxyResolverFactory::GetInstance(),
+            ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
-            new net::ProxyScriptFetcherImpl(url_request_context_.get()),
+            std::make_unique<net::ProxyScriptFetcherImpl>(
+                url_request_context_.get()),
             std::move(dhcp_proxy_script_fetcher), host_resolver.get(), net_log_,
             url_request_context_->network_delegate());
       } else {
@@ -277,14 +278,15 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
 
     // --auth-server-whitelist
     if (command_line.HasSwitch(switches::kAuthServerWhitelist)) {
-      http_auth_preferences_->set_server_whitelist(
+      http_auth_preferences_->SetServerWhitelist(
           command_line.GetSwitchValueASCII(switches::kAuthServerWhitelist));
     }
 
     // --auth-negotiate-delegate-whitelist
     if (command_line.HasSwitch(switches::kAuthNegotiateDelegateWhitelist)) {
-      http_auth_preferences_->set_delegate_whitelist(
-          command_line.GetSwitchValueASCII(switches::kAuthNegotiateDelegateWhitelist));
+      http_auth_preferences_->SetDelegateWhitelist(
+          command_line.GetSwitchValueASCII(
+              switches::kAuthNegotiateDelegateWhitelist));
     }
 
     auto auth_handler_factory =

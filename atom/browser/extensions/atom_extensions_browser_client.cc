@@ -66,13 +66,13 @@
 #include "base/sha1.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
+#include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
 #include "extensions/common/file_util.h"
 #include "net/url_request/url_request_simple_job.h"
 
 
 #include "electron/brave/common/extensions/api/generated_api_registration.h"
 #include "extensions/browser/api/generated_api_registration.h"
-#include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
 
 namespace {
 
@@ -146,13 +146,13 @@ class URLRequestResourceBundleJob : public net::URLRequestSimpleJob {
       std::string* charset,
       scoped_refptr<base::RefCountedMemory>* data,
       const net::CompletionCallback& callback) const override {
-    const ResourceBundle& rb = ResourceBundle::GetSharedInstance();
+    const ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
     *data = rb.LoadDataResourceBytes(resource_id_);
 
     // Add the Content-Length header now that we know the resource length.
     response_info_.headers->AddHeader(
         base::StringPrintf("%s: %s", net::HttpRequestHeaders::kContentLength,
-                           base::SizeTToString((*data)->size()).c_str()));
+                           base::NumberToString((*data)->size()).c_str()));
 
     std::string* read_mime_type = new std::string;
     base::PostTaskWithTraitsAndReplyWithResult(
@@ -364,13 +364,19 @@ AtomExtensionsBrowserClient::MaybeCreateResourceBundleRequestJob(
 }
 
 bool AtomExtensionsBrowserClient::AllowCrossRendererResourceLoad(
-    net::URLRequest* request,
+    const GURL& url,
+    content::ResourceType resource_type,
+    ui::PageTransition page_transition,
+    int child_id,
     bool is_incognito,
     const Extension* extension,
-    InfoMap* extension_info_map) {
+    const ExtensionSet& extensions,
+    const ProcessMap& process_map) {
+
   bool allowed = false;
   if (url_request_util::AllowCrossRendererResourceLoad(
-          request, is_incognito, extension, extension_info_map, &allowed)) {
+          url, resource_type, page_transition, child_id, is_incognito,
+          extension, extensions, process_map, &allowed)) {
     return allowed;
   }
 
@@ -424,15 +430,17 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
   api::GeneratedFunctionRegistry::RegisterAll(registry);
   api::BraveGeneratedFunctionRegistry::RegisterAll(registry);
 
-  // Instead of registering all Chrome extension functions, 
+  // Instead of registering all Chrome extension functions,
   // via api::ChromeGeneratedFunctionRegistry::RegisterAll(registry)
   // explicitly register just the ones we want
   constexpr ExtensionFunctionRegistry::FactoryEntry chromeEntries[] = {
-    {
-      &NewExtensionFunction<api::CryptotokenPrivateCanOriginAssertAppIdFunction>,
-      api::CryptotokenPrivateCanOriginAssertAppIdFunction::function_name(),
-      api::CryptotokenPrivateCanOriginAssertAppIdFunction::histogram_value(),
-    },
+      {
+          &NewExtensionFunction<
+              api::CryptotokenPrivateCanOriginAssertAppIdFunction>,
+          api::CryptotokenPrivateCanOriginAssertAppIdFunction::function_name(),
+          api::CryptotokenPrivateCanOriginAssertAppIdFunction::
+              histogram_value(),
+      },
   };
 
   for (const auto& entry : chromeEntries) {

@@ -100,19 +100,20 @@ void BraveContentRendererClient::RenderThreadStarted() {
   prescient_networking_dispatcher_.reset(
       new network_hints::PrescientNetworkingDispatcher());
 
-  for (auto& origin : GetSecureOriginWhitelist()) {
+  for (auto& origin : secure_origin_whitelist::GetWhitelist()) {
     WebSecurityPolicy::AddOriginTrustworthyWhiteList(
         WebSecurityOrigin::Create(origin));
   }
 
-  for (auto& scheme : GetSchemesBypassingSecureContextCheckWhitelist()) {
+  for (auto& scheme :
+       secure_origin_whitelist::GetSchemesBypassingSecureContextCheck()) {
     WebSecurityPolicy::AddSchemeToBypassSecureContextWhitelist(
         WebString::FromUTF8(scheme));
   }
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   if (!spellcheck_) {
-    spellcheck_.reset(new SpellCheck());
+    spellcheck_.reset(new SpellCheck(this));
     thread->AddObserver(spellcheck_.get());
   }
 #endif
@@ -181,18 +182,15 @@ void BraveContentRendererClient::RenderFrameCreated(
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
-  new SpellCheckProvider(render_frame, spellcheck_.get());
+  new SpellCheckProvider(render_frame, spellcheck_.get(), this);
 #if BUILDFLAG(HAS_SPELLCHECK_PANEL)
-  new SpellCheckPanel(render_frame, registry);
+  new SpellCheckPanel(render_frame, registry, this);
 #endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #endif
 }
 
 void BraveContentRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  ChromeExtensionsRendererClient::GetInstance()->RenderViewCreated(render_view);
-#endif
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
 
   new password_manager::CredentialManagerClient(render_view);
@@ -218,13 +216,12 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
 
   GURL url(params.url);
 #if BUILDFLAG(ENABLE_PLUGINS)
-  ChromeViewHostMsg_GetPluginInfo_Output output;
-  render_frame->Send(new ChromeViewHostMsg_GetPluginInfo(
+  chrome::mojom::PluginInfoPtr plugin_info = chrome::mojom::PluginInfo::New();
+  GetPluginInfoHost()->GetPluginInfo(
       render_frame->GetRoutingID(), url,
       render_frame->GetWebFrame()->Top()->GetSecurityOrigin(), orig_mime_type,
-      &output));
-
-  *plugin = CreatePlugin(render_frame, params, output);
+      &plugin_info);
+  *plugin = CreatePlugin(render_frame, params, *plugin_info);
 #else  // !BUILDFLAG(ENABLE_PLUGINS)
   PluginUMAReporter::GetInstance()->ReportPluginMissing(orig_mime_type, url);
   *plugin = NonLoadablePluginPlaceholder::CreateNotSupportedPlugin(
