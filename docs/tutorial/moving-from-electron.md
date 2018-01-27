@@ -59,13 +59,22 @@ Currently Brave uses them to archive extensions which are to be unpacked on firs
 
 ### Removed `asar://` protocol
 
-As part of the deprecation of asar archives, it is unavailable as a browser protocol.
+Accessing contents of an asar archive is no longer possible using the `asar://` protocol. In its place is the `chrome://brave/` protocol which supports loading files from within `.asar` archives.
 
-Some alternatives for packaging app resources include:
-1. Package resources into a Chrome Extension.
-1. Include resources as flat files outside of an archive. Using `chrome://brave/*` can work as an alternate `file:///` in a renderer.
+In the renderer context, the `__dirname` global is unavailable due to removed NodeJS integration. To link to files within the asar archive, use paths relative to your app's entry html file—similar to a typical web application.
 
-Brave uses the first solution in its [`'brave'` extension](https://github.com/brave/browser-laptop/tree/master/app/extensions/brave).
+Given an application structure of
+```
+app/
+  assets/icon.svg
+  index.html
+```
+
+Using `icon.svg` can be linked using a relative path.
+```html
+<img src="./assets/icon.svg" />
+```
+The resolved url would resemble `chrome://brave//Users/Foobar/MyApp/app/assets/icon.svg`. Keep in mind, the window frame's location must be using the `chrome://brave/` protocol for this to work.
 
 ## `<webview>` element
 
