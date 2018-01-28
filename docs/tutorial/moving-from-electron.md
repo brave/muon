@@ -34,6 +34,10 @@ build_from_source = true
 
 See [`.npmrc` in brave/browser-laptop](https://github.com/brave/browser-laptop/blob/master/.npmrc) for up-to-date versions.
 
+### Building from source
+
+Refer to the [browser-laptop-bootstrap](https://github.com/brave/browser-laptop-bootstrap) repo for instructions on building Muon from source.
+
 ## Process sandbox
 
 Muon removes NodeJS integration from the renderer process to improve security by enabling [Chromium's Sandbox features](https://chromium.googlesource.com/chromium/src/+/b4730a0c2773d8f6728946013eb812c6d3975bec/docs/design/sandbox.md).
