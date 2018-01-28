@@ -1062,10 +1062,10 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
 diff --git a/components/autofill/content/browser/content_autofill_driver.cc b/components/autofill/content/browser/content_autofill_driver.cc
-index f4e1ecec6d4fe4275b03d49c0de8e69801158046..b37becd7211cbd58c37ceb8fa5b558ad8ea77281 100644
+index e7ce37455adb9c43afe8dcd281401f2763962924..d93847439d976866b9d68a01eaf3fb2d3a8ed5f7 100644
 --- a/components/autofill/content/browser/content_autofill_driver.cc
 +++ b/components/autofill/content/browser/content_autofill_driver.cc
-@@ -100,6 +100,8 @@ void ContentAutofillDriver::SendFormDataToRenderer(
+@@ -101,6 +101,8 @@ void ContentAutofillDriver::SendFormDataToRenderer(
      case FORM_DATA_ACTION_PREVIEW:
        GetAutofillAgent()->PreviewForm(query_id, data);
        break;
@@ -1075,10 +1075,10 @@ index f4e1ecec6d4fe4275b03d49c0de8e69801158046..b37becd7211cbd58c37ceb8fa5b558ad
  }
  
 diff --git a/components/autofill/core/browser/autofill_client.h b/components/autofill/core/browser/autofill_client.h
-index caee854be9724a1ab0f3c570bf7822cd65694a0d..49c009408ff9310e9b71e1dd4a77085e156eadc8 100644
+index c44c5ec4fdebf6ac06de71ddf04a614af1ff6a0d..943edaf4f2b32436fc451a06b67965270caf1b67 100644
 --- a/components/autofill/core/browser/autofill_client.h
 +++ b/components/autofill/core/browser/autofill_client.h
-@@ -192,6 +192,9 @@ class AutofillClient : public RiskDataLoader {
+@@ -200,6 +200,9 @@ class AutofillClient : public RiskDataLoader {
  
    // Handles simple actions for the autofill popups.
    virtual void ExecuteCommand(int id) = 0;
@@ -1103,10 +1103,10 @@ index 5422060f52974910ea434a57f6e038c743e7ea6f..ea5a1e96da600e44f088b81728654277
  
    virtual ~AutofillDriver() {}
 diff --git a/components/autofill/core/browser/autofill_external_delegate.cc b/components/autofill/core/browser/autofill_external_delegate.cc
-index 329712ea42595672bed0d3e4f24892ff70e7cf26..420782ff97a67510b7ad1160fd2240f17560451c 100644
+index 15daab11d869eab01e84c7ce697bd00a19405df8..47c08c4781ccdaaa2390c4284fc1b31fe322843a 100644
 --- a/components/autofill/core/browser/autofill_external_delegate.cc
 +++ b/components/autofill/core/browser/autofill_external_delegate.cc
-@@ -290,6 +290,14 @@ void AutofillExternalDelegate::Reset() {
+@@ -300,6 +300,14 @@ void AutofillExternalDelegate::Reset() {
    manager_->client()->HideAutofillPopup();
  }
  
@@ -1122,10 +1122,10 @@ index 329712ea42595672bed0d3e4f24892ff70e7cf26..420782ff97a67510b7ad1160fd2240f1
    return weak_ptr_factory_.GetWeakPtr();
  }
 diff --git a/components/autofill/core/browser/autofill_external_delegate.h b/components/autofill/core/browser/autofill_external_delegate.h
-index a5984209fa9a0c4b917cd11dd35c186a479de6f7..84732809858131d5e48d9f1619a9950e5917a3b9 100644
+index fee1624c02f52bb3d5d6a851ecfef7c6ecd28c51..cdf9d19e5126a4c465db91d3fc7075eb3c70dc65 100644
 --- a/components/autofill/core/browser/autofill_external_delegate.h
 +++ b/components/autofill/core/browser/autofill_external_delegate.h
-@@ -85,6 +85,8 @@ class AutofillExternalDelegate : public AutofillPopupDelegate {
+@@ -87,6 +87,8 @@ class AutofillExternalDelegate : public AutofillPopupDelegate {
    // values or settings.
    void Reset();
  
@@ -1135,10 +1135,10 @@ index a5984209fa9a0c4b917cd11dd35c186a479de6f7..84732809858131d5e48d9f1619a9950e
    base::WeakPtr<AutofillExternalDelegate> GetWeakPtr();
  
 diff --git a/components/autofill/core/browser/autofill_manager.cc b/components/autofill/core/browser/autofill_manager.cc
-index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..6028de20fd27ead31559f5040632c320a01fd6e5 100644
+index d218556ac397b8ff58bdeb5de8f8d5804be8d118..87f8304f43a932377864fc1dc5966b2ec2bb67c1 100644
 --- a/components/autofill/core/browser/autofill_manager.cc
 +++ b/components/autofill/core/browser/autofill_manager.cc
-@@ -283,6 +283,9 @@ void AutofillManager::RegisterProfilePrefs(
+@@ -219,6 +219,9 @@ void AutofillManager::RegisterProfilePrefs(
    registry->RegisterBooleanPref(
        prefs::kAutofillEnabled, true,
        user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
@@ -1148,29 +1148,35 @@ index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..6028de20fd27ead31559f5040632c320
    registry->RegisterBooleanPref(
        prefs::kAutofillProfileUseDatesFixed, false,
        user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
-@@ -1789,6 +1792,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
-         static_cast<const AutofillProfile*>(&data_model)->language_code();
-   }
+@@ -1317,13 +1320,25 @@ void AutofillManager::FillOrPreviewDataModelForm(
+ 
+   FormData result = form;
  
 +  std::vector<base::string16> values;
 +
    // If the relevant section is auto-filled, we should fill |field| but not the
    // rest of the form.
    if (SectionIsAutofilled(*form_structure, form, autofill_field->section())) {
-@@ -1796,7 +1801,11 @@ void AutofillManager::FillOrPreviewDataModelForm(
+     for (FormFieldData& iter : result.fields) {
        if (iter.SameFieldAs(field)) {
-         base::string16 value =
-             data_model.GetInfo(autofill_field->Type(), app_locale_);
--        if (AutofillField::FillFormField(*autofill_field, value,
+-        FillFieldWithValue(autofill_field, data_model, &iter,
+-                           /*should_notify=*/!is_credit_card, cvc);
 +        if (action == AutofillDriver::FORM_DATA_ACTION_ASK) {
-+          values.push_back((iter.label.length() ? iter.label :
-+                           iter.name.length() ? iter.name : iter.id)
-+                           + base::ASCIIToUTF16(": ") + value);
-+        } else if (AutofillField::FillFormField(*autofill_field, value,
-                                          profile_language_code, app_locale_,
-                                          &iter)) {
-           // Mark the cached field as autofilled, so that we can detect when a
-@@ -1819,6 +1828,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
++          const base::string16 value =
++            data_model.GetInfo(autofill_field->Type(),
++                               app_locale_);
++          if (!value.empty())
++            values.push_back((iter.label.length() ? iter.label :
++                              iter.name.length() ? iter.name : iter.id)
++                             + base::ASCIIToUTF16(": ") + value);
++        } else {
++          FillFieldWithValue(autofill_field, data_model, &iter,
++                             /*should_notify=*/!is_credit_card, cvc);
++        }
+         break;
+       }
+     }
+@@ -1332,6 +1347,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
      // address book entry.
      if (action == AutofillDriver::FORM_DATA_ACTION_FILL)
        personal_data_->RecordUseOf(data_model);
@@ -1179,53 +1185,59 @@ index 50d4ecb114c190f8a4ccb1608e6d0733ad3074f9..6028de20fd27ead31559f5040632c320
  
      driver()->SendFormDataToRenderer(query_id, action, result);
      return;
-@@ -1859,9 +1870,16 @@ void AutofillManager::FillOrPreviewDataModelForm(
-                          (result.fields[i].SameFieldAs(field) ||
+@@ -1376,10 +1393,23 @@ void AutofillManager::FillOrPreviewDataModelForm(
                            result.fields[i].form_control_type == "select-one" ||
                            result.fields[i].value.empty());
--    if (AutofillField::FillFormField(*cached_field, value,
--                                     profile_language_code, app_locale_,
--                                     &result.fields[i])) {
+ 
 +    if (action == AutofillDriver::FORM_DATA_ACTION_ASK) {
-+      values.push_back((form_structure->field(i)->label.length() ?
-+                       form_structure->field(i)->label :
-+                       form_structure->field(i)->name.length() ?
-+                       form_structure->field(i)->name :
-+                       form_structure->field(i)->id)
-+                       + base::ASCIIToUTF16(": ") + value);
-+    } else if (AutofillField::FillFormField(*cached_field, value,
-+                                            profile_language_code, app_locale_,
-+                                            &result.fields[i])) {
-       // Mark the cached field as autofilled, so that we can detect when a
-       // user edits an autofilled field (for metrics).
-       form_structure->field(i)->is_autofilled = true;
-@@ -1886,6 +1904,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
++      const base::string16 value =
++        data_model.GetInfo(cached_field->Type(),
++                           app_locale_);
++      if (!value.empty())
++        values.push_back((form_structure->field(i)->label.length() ?
++                          form_structure->field(i)->label :
++                          form_structure->field(i)->name.length() ?
++                          form_structure->field(i)->name :
++                          form_structure->field(i)->id)
++                         + base::ASCIIToUTF16(": ") + value);
+     // Fill the non-empty value from |data_model| into the result vector, which
+     // will be sent to the renderer.
+-    FillFieldWithValue(cached_field, data_model, &result.fields[i],
+-                       should_notify, cvc);
++    } else {
++      FillFieldWithValue(cached_field, data_model, &result.fields[i],
++                         should_notify, cvc);
++    }
+   }
+ 
+   autofilled_form_signatures_.push_front(form_structure->FormSignatureAsStr());
+@@ -1392,6 +1422,8 @@ void AutofillManager::FillOrPreviewDataModelForm(
    // address book entry.
    if (action == AutofillDriver::FORM_DATA_ACTION_FILL)
      personal_data_->RecordUseOf(data_model);
 +  else if (action == AutofillDriver::FORM_DATA_ACTION_ASK)
-+      client_->DidGetAutofillValues(values);
++    client_->DidGetAutofillValues(values);
  
    driver()->SendFormDataToRenderer(query_id, action, result);
  }
 diff --git a/components/autofill/core/browser/autofill_popup_delegate.h b/components/autofill/core/browser/autofill_popup_delegate.h
-index 6febbf91cfc9ad94f9eb4531c1bd3ce4f6048817..02087afc5d027b85f7ff0c3cd7b11ea0fa62d7c8 100644
+index 4299f5c2d03db2cb7fd382e33fc2698f6359d333..b8b8c8b01d99361fbc16b20a1367793fdf71f036 100644
 --- a/components/autofill/core/browser/autofill_popup_delegate.h
 +++ b/components/autofill/core/browser/autofill_popup_delegate.h
-@@ -51,6 +51,8 @@ class AutofillPopupDelegate {
- 
-   // Returns the associated AutofillDriver.
-   virtual AutofillDriver* GetAutofillDriver() = 0;
+@@ -58,6 +58,8 @@ class AutofillPopupDelegate {
+   // should not outlive it.
+   virtual void RegisterDeletionCallback(
+       base::OnceClosure deletion_callback) = 0;
 +
 +  virtual void QueryAutofillValues(int unique_id) {};
  };
  
  }  // namespace autofill
 diff --git a/components/autofill/core/common/autofill_pref_names.cc b/components/autofill/core/common/autofill_pref_names.cc
-index c52ffb9a7cfe61d15340bd443388bf6913201a06..ee0113dc8993628eeed4e8d7070ea6d467336d0e 100644
+index ec4976a8f53b973cb8483c7c692a11cf716f7c5d..8566bad59f972d433555820a8fc8f46c4f3304c2 100644
 --- a/components/autofill/core/common/autofill_pref_names.cc
 +++ b/components/autofill/core/common/autofill_pref_names.cc
-@@ -14,6 +14,9 @@ const char kAutofillCreditCardSigninPromoImpressionCount[] =
+@@ -18,6 +18,9 @@ const char kAutofillCreditCardSigninPromoImpressionCount[] =
  // Boolean that is true if Autofill is enabled and allowed to save profile data.
  const char kAutofillEnabled[] = "autofill.enabled";
  
@@ -1236,10 +1248,10 @@ index c52ffb9a7cfe61d15340bd443388bf6913201a06..ee0113dc8993628eeed4e8d7070ea6d4
  // bad use dates.
  const char kAutofillProfileUseDatesFixed[] = "autofill.profile_use_dates_fixed";
 diff --git a/components/autofill/core/common/autofill_pref_names.h b/components/autofill/core/common/autofill_pref_names.h
-index de57761997cc55e37519fcba78716ce0391a28c8..a050d5e35e25dd62a38602eb097c3667fcb3828b 100644
+index 43c0bdae17416ac0a1f81b30e23d3c73cf7b5a5c..1938bdb4ef3b00d2568ad34b7cfb3c4b1f36baba 100644
 --- a/components/autofill/core/common/autofill_pref_names.h
 +++ b/components/autofill/core/common/autofill_pref_names.h
-@@ -15,6 +15,7 @@ extern const char kAutofillAcceptSaveCreditCardPromptState[];
+@@ -16,6 +16,7 @@ extern const char kAutofillBillingCustomerNumber[];
  extern const char kAutofillCreditCardEnabled[];
  extern const char kAutofillCreditCardSigninPromoImpressionCount[];
  extern const char kAutofillEnabled[];
@@ -1518,7 +1530,7 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 46a5b64a44b337d78f52468c3788926af8fbcc87..0ddcd2cf3f93de028aae5967b1d13a45b8f96428 100644
+index 2662e67f7eeff9883f49c62c3e6223f0649b13a1..2644dce490ae294771b9090f17aad97be1942acf 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
 @@ -1675,8 +1675,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
