@@ -105,6 +105,22 @@ Set the [extension manifest](https://developer.chrome.com/extensions/content_scr
 - `protocol.registerFileProtocol` is removed
 - `protocol.registerStreamProtocol` is not yet supported (brave/browser-laptop#10629)
 
+## WidevineCDM
+
+Muon supports downloading and using WidevineCDM binaries with the [`componentUpdater`](../api/component-updater.md) API.
+
+Add the following code to the main process for WidevineCDM support.
+```js
+const widevineComponentId = 'oimompecagnajdejgnnjijobebaeigek'
+const widevineComponentPublicKey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCmhe+02cLPPAViaevk/fzODKUnb/ysaAeD8lpE9pwirV6GYOm+naTo7xPOCh8ujcR6Ryi1nPTq2GTG0CyqdDyOsZ1aRLuMZ5QqX3dJ9jXklS0LqGfosoIpGexfwggbiLvQOo9Q+IWTrAO620KAzYU0U6MV272TJLSmZPUEFY6IGQIDAQAB'
+
+componentUpdater.on('component-registered', (event, componentId) => {
+  componentUpdater.checkNow(componentId)
+})
+
+componentUpdater.registerComponent(widevineComponentId, widevineComponentPublicKey)
+```
+
 ## Links
 
 - [browser-laptop](https://github.com/brave/browser-laptop) - Brave Browser built using Muon
