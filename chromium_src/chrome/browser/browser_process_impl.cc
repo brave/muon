@@ -291,6 +291,7 @@ void BrowserProcessImpl::CreateLocalState() {
   IOThread::RegisterPrefs(pref_registry.get());
   PrefProxyConfigTrackerImpl::RegisterPrefs(pref_registry.get());
   ssl_config::SSLConfigServiceManager::RegisterPrefs(pref_registry.get());
+  GpuModeManager::RegisterPrefs(pref_registry.get());
 
   pref_change_registrar_.Init(local_state_.get());
   pref_change_registrar_.Add(
@@ -331,6 +332,12 @@ void BrowserProcessImpl::PreCreateThreads(
       local_state(), policy_service(), net_log_.get(),
       extension_event_router_forwarder(),
       system_network_context_manager_.get());
+
+  if (gpu_profile_cache())
+    gpu_profile_cache()->Initialize();
+
+  // Create an instance of GpuModeManager to watch gpu mode pref change.
+  gpu_mode_manager();
 }
 
 void BrowserProcessImpl::PreMainMessageLoopRun() {
@@ -578,13 +585,17 @@ IconManager* BrowserProcessImpl::icon_manager() {
 }
 
 GpuModeManager* BrowserProcessImpl::gpu_mode_manager() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (!gpu_mode_manager_)
+    gpu_mode_manager_ = base::MakeUnique<GpuModeManager>();
+  return gpu_mode_manager_.get();
 }
 
 GpuProfileCache* BrowserProcessImpl::gpu_profile_cache() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (!gpu_profile_cache_)
+    gpu_profile_cache_ = GpuProfileCache::Create();
+  return gpu_profile_cache_.get();
 }
 
 void BrowserProcessImpl::CreateDevToolsHttpProtocolHandler(
