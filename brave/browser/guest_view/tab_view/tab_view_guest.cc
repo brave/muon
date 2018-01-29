@@ -68,6 +68,10 @@ void TabViewGuest::SetCanRunInDetachedState(bool can_run_detached) {
     Destroy(true);
 }
 
+bool TabViewGuest::ShouldDestroyOnDetach() const {
+  return !can_run_detached_;
+}
+
 void TabViewGuest::GuestDestroyed() {
   if (api_web_contents_) {
     api_web_contents_->guest_delegate_ = nullptr;
