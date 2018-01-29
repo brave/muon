@@ -64,8 +64,20 @@ const char TabViewGuest::Type[] = "webview";
 
 void TabViewGuest::SetCanRunInDetachedState(bool can_run_detached) {
   can_run_detached_ = can_run_detached;
-  if (!can_run_detached_ && !attached())
+  if (!can_run_detached_ && !attached()) {
     Destroy(true);
+  }
+}
+
+bool TabViewGuest::ShouldDestroyOnDetach() const {
+  web_contents()->GetMainFrame()->BlockRequestsForFrame();
+
+  if (api_web_contents_) {
+    api_web_contents_->Emit("did-detach",
+        extensions::TabHelper::IdForTab(web_contents()));
+  }
+
+  return !can_run_detached_;
 }
 
 void TabViewGuest::GuestDestroyed() {
@@ -343,15 +355,6 @@ void TabViewGuest::DidAttachToEmbedder() {
       extensions::TabHelper::IdForTab(web_contents()));
 
   tab_helper->DidAttach();
-}
-
-void TabViewGuest::DidDetachFromEmbedder() {
-  web_contents()->GetMainFrame()->BlockRequestsForFrame();
-
-  if (api_web_contents_) {
-    api_web_contents_->Emit("did-detach",
-        extensions::TabHelper::IdForTab(web_contents()));
-  }
 }
 
 bool TabViewGuest::ZoomPropagatesFromEmbedderToGuest() const {

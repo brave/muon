@@ -63,8 +63,8 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void CreateWebContents(
     const base::DictionaryValue& create_params,
     const WebContentsCreatedCallback& callback) final;
+  bool ShouldDestroyOnDetach() const final;
   void DidAttachToEmbedder() final;
-  void DidDetachFromEmbedder() final;
   bool ZoomPropagatesFromEmbedderToGuest() const final;
   const char* GetAPINamespace() const final;
   void GuestSizeChangedDueToAutoSize(const gfx::Size& old_size,
