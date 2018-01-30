@@ -1271,10 +1271,10 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
 diff --git a/components/ssl_config/ssl_config_service_manager_pref.cc b/components/ssl_config/ssl_config_service_manager_pref.cc
-index c2e85271796d6dbc510cd6c5682fc98a2ea194a1..e91484b8ab7ab1d7ed0b92ef92bc4f51d923b71a 100644
+index b96163ba1ad65dd5e353b360961c22abc6f447a9..be7259ca17b6d1fd07d36a80d165f8f5e8e9c9ac 100644
 --- a/components/ssl_config/ssl_config_service_manager_pref.cc
 +++ b/components/ssl_config/ssl_config_service_manager_pref.cc
-@@ -308,10 +308,14 @@ void SSLConfigServiceManagerPref::GetSSLConfigFromPrefs(
+@@ -301,10 +301,14 @@ void SSLConfigServiceManagerPref::GetSSLConfigFromPrefs(
      net::SSLConfig* config) {
    // rev_checking_enabled was formerly a user-settable preference, but now
    // it is managed-only.
