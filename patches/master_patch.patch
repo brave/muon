@@ -1283,6 +1283,25 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
    OSStatus error = keychain_.FindGenericPassword(
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
+diff --git a/components/ssl_config/ssl_config_service_manager_pref.cc b/components/ssl_config/ssl_config_service_manager_pref.cc
+index c2e85271796d6dbc510cd6c5682fc98a2ea194a1..e91484b8ab7ab1d7ed0b92ef92bc4f51d923b71a 100644
+--- a/components/ssl_config/ssl_config_service_manager_pref.cc
++++ b/components/ssl_config/ssl_config_service_manager_pref.cc
+@@ -308,10 +308,14 @@ void SSLConfigServiceManagerPref::GetSSLConfigFromPrefs(
+     net::SSLConfig* config) {
+   // rev_checking_enabled was formerly a user-settable preference, but now
+   // it is managed-only.
++#if defined(MUON_CHROMIUM_BUILD)
+   if (rev_checking_enabled_.IsManaged())
+     config->rev_checking_enabled = rev_checking_enabled_.GetValue();
+   else
+     config->rev_checking_enabled = false;
++#else
++  config->rev_checking_enabled = rev_checking_enabled_.GetValue();
++#endif
+   config->rev_checking_required_local_anchors =
+       rev_checking_required_local_anchors_.GetValue();
+   config->sha1_local_anchors_enabled = sha1_local_anchors_enabled_.GetValue();
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
 index d5e46419c0b43326a2cb9008729f20e563a8e43a..1759a1fdbac11c174451e9558de309cb97d1273d 100644
 --- a/content/app/content_main_runner.cc
