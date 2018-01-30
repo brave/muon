@@ -197,7 +197,9 @@ NativeWindowViews::NativeWindowViews(
     params.shadow_type = views::Widget::InitParams::SHADOW_TYPE_NONE;*/
 
   bool focusable;
-  if (options.Get(options::kFocusable, &focusable) && !focusable)
+  bool show;
+  if ((options.Get(options::kFocusable, &focusable) && !focusable) ||
+      (options.Get(options::kShow, &show) && !show))
     params.activatable = views::Widget::InitParams::ACTIVATABLE_NO;
 
 #if defined(OS_WIN)
@@ -360,7 +362,7 @@ void NativeWindowViews::CloseImmediately() {
 
 void NativeWindowViews::Focus(bool focus) {
   // For hidden window focus() should do nothing.
-  if (!IsVisible())
+  if (!IsVisible() || focus == IsFocused())
     return;
 
   if (focus) {
@@ -387,6 +389,11 @@ bool NativeWindowViews::IsFocused() {
 }
 
 void NativeWindowViews::Show() {
+  if (IsVisible())
+    return;
+
+  SetFocusable(true);
+
   if (is_modal() && NativeWindow::parent())
     static_cast<NativeWindowViews*>(NativeWindow::parent())->SetEnabled(false);
 
@@ -412,6 +419,9 @@ void NativeWindowViews::ShowInactive() {
 }
 
 void NativeWindowViews::Hide() {
+  if (!IsVisible())
+    return;
+
   if (is_modal() && NativeWindow::parent())
     static_cast<NativeWindowViews*>(NativeWindow::parent())->SetEnabled(true);
 
@@ -419,6 +429,7 @@ void NativeWindowViews::Hide() {
 
   NotifyWindowHide();
 
+  SetFocusable(false);
 #if defined(USE_X11)
   if (global_menu_bar_)
     global_menu_bar_->OnWindowUnmapped();
@@ -842,7 +853,9 @@ void NativeWindowViews::SetFocusable(bool focusable) {
     ex_style |= WS_EX_NOACTIVATE;
   ::SetWindowLong(GetAcceleratedWidget(), GWL_EXSTYLE, ex_style);
   SetSkipTaskbar(!focusable);
-  Focus(false);
+  if (!focusable)
+    Focus(false);
+  set_can_activate(focusable);
 #endif
 }
 
