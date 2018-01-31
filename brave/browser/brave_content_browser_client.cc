@@ -14,6 +14,7 @@
 #include "base/lazy_instance.h"
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_browser_context.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/grit/brave_resources.h"
@@ -276,6 +277,13 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
     }
   }
 #endif
+
+  BraveBrowserContext* profile =
+      BraveBrowserContext::FromBrowserContext(browser_context);
+  if (profile->IsTorContext()) {
+      *in_memory = profile->IsOffTheRecord();
+      *partition_domain = site.host();
+  }
 
   // Assert that if |can_be_default| is false, the code above must have found a
   // non-default partition.  If this fails, the caller has a serious logic

@@ -67,6 +67,8 @@ class BraveBrowserContext : public Profile {
 
   bool HasParentContext();
 
+  bool IsTorContext();
+
   // content::BrowserContext:
   content::PermissionManager* GetPermissionManager() override;
   content::BackgroundFetchDelegate* GetBackgroundFetchDelegate() override;
