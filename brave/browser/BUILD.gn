@@ -67,6 +67,7 @@ source_set("browser") {
     "//mojo/common",
     "//mojo/edk/system",
     "//mojo/public/cpp/bindings",
+    "//services/device/public/interfaces",
     "//services/identity:lib",
     "//third_party/WebKit/public:image_resources",
     "//third_party/WebKit/public:resources",
