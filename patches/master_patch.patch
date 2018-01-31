@@ -1917,21 +1917,6 @@ index 7505524b693b24d9028447929d881232a0483561..03eea7522154c40691405ec43e07303b
          if (now - last_upload_attempt_time < kUploadAttemptIntervalSeconds) {
            database_->SkipReportUpload(
                report.uuid, Metrics::CrashSkippedReason::kUploadThrottled);
-diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
-index 0ab3bb63b0da0398cef54ed1316e12c7d8f3587b..7b2ba8a4e3caaba9002a5ec035b151dbbb80e155 100644
---- a/third_party/widevine/cdm/BUILD.gn
-+++ b/third_party/widevine/cdm/BUILD.gn
-@@ -110,6 +110,10 @@ if (widevine_cdm_binary_files != []) {
-       "//build/config:exe_and_shlib_deps",
-     ]
- 
-+    if (is_mac) {
-+      ldflags = [ "-Wl,-install_name,@loader_path/libwidevinecdm.dylib" ]
-+    }
-+
-     if (is_posix && !is_mac) {
-       cflags = [ "-fvisibility=hidden" ]
-     }
 diff --git a/third_party/widevine/cdm/stub/manifest.json b/third_party/widevine/cdm/stub/manifest.json
 index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c22e9cff2 100644
 --- a/third_party/widevine/cdm/stub/manifest.json
