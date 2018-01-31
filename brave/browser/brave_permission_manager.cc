@@ -136,7 +136,8 @@ void BravePermissionManager::OnPermissionResponse(
       for (int i = 0; i < permissions.size(); i++) {
         if (permissions[i] == content::PermissionType::GEOLOCATION) {
           if (status[i] == blink::mojom::PermissionStatus::GRANTED) {
-            device::GeolocationProvider::GetInstance()->UserDidOptIntoLocationServices();
+            device::GeolocationProvider::GetInstance()
+                ->UserDidOptIntoLocationServices();
           }
         }
       }
