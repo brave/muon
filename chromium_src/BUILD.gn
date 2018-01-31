@@ -171,6 +171,7 @@ source_set("browser") {
     "//electron/atom/browser",
     "//ui/message_center",
     "//net:features",
+    "//pdf",
   ]
 
   sources = [
@@ -350,6 +351,10 @@ source_set("browser") {
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
+      "//chrome/browser/permissions/permission_request.cc",
+      "//chrome/browser/permissions/permission_request.h",
+      "chrome/browser/permissions/permission_request_manager.cc",
+      "//chrome/browser/permissions/permission_request_manager.h",
       "//chrome/browser/printing/pdf_to_emf_converter.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.h",
       "//chrome/browser/ui/views/certificate_viewer_win.cc",
