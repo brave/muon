@@ -9,8 +9,6 @@
 #include <vector>
 #include "base/compiler_specific.h"
 #include "base/macros.h"
-#include "extensions/common/url_pattern_set.h"
-#include "url/origin.h"
 
 class GURL;
 class PrefRegistrySimple;
@@ -42,7 +40,8 @@ class AtomBrowserClientExtensionsPart {
 
   // Corresponds to the AtomBrowserClient function of the same name.
   static GURL GetEffectiveURL(Profile* profile,
-                              const GURL& url);
+                              const GURL& url,
+                              bool is_isolated_origin);
   static bool ShouldUseProcessPerSite(Profile* profile,
                                       const GURL& effective_url);
   static bool DoesSiteRequireDedicatedProcess(
@@ -73,9 +72,6 @@ class AtomBrowserClientExtensionsPart {
 
   void OverrideWebkitPrefs(content::RenderViewHost* host,
       content::WebPreferences* prefs);
-
-  static bool DoesOriginMatchAllURLsInWebExtent(const url::Origin& origin,
-                                              const URLPatternSet& web_extent);
 
   // // Helper function to call InfoMap::SetSigninProcess().
   // static void SetSigninProcess(content::SiteInstance* site_instance);
