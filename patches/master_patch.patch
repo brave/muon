@@ -1043,8 +1043,7 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
-index c72cd3622b86d29a66f2e003cd4331e99a0aa68c..66bbb4afe8ea43983d73b728025e15c26a68dd5a 100644
->>>>>>> f059533ef... Update patches to Chromium 65.0.3315.3
+index c72cd3622b86d29a66f2e003cd4331e99a0aa68c..5b48960f3042c0aecb2228272a36152273b8ed65 100644
 --- a/components/crash/content/app/breakpad_linux.cc
 +++ b/components/crash/content/app/breakpad_linux.cc
 @@ -86,8 +86,10 @@ namespace breakpad {
@@ -1067,7 +1066,7 @@ index c72cd3622b86d29a66f2e003cd4331e99a0aa68c..66bbb4afe8ea43983d73b728025e15c2
      "--timeout=10",  // Set a timeout so we don't hang forever.
      "--tries=1",     // Don't retry if the upload fails.
      "-O",  // Output reply to the file descriptor path.
-@@ -1899,6 +1902,7 @@ void HandleCrashDump(const BreakpadInfo& info) {
+@@ -1884,6 +1887,7 @@ void HandleCrashDump(const BreakpadInfo& info) {
  
          const size_t kCrashIdLength = 16;
          char id_buf[kCrashIdLength + 1];
@@ -1253,10 +1252,10 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
 diff --git a/components/ssl_config/ssl_config_service_manager_pref.cc b/components/ssl_config/ssl_config_service_manager_pref.cc
-index b96163ba1ad65dd5e353b360961c22abc6f447a9..be7259ca17b6d1fd07d36a80d165f8f5e8e9c9ac 100644
+index f924fe268f0334d522898ffcc51d82e39fc77a8f..42bac4005b86ccec4d5a45b2c8067e4c923980f0 100644
 --- a/components/ssl_config/ssl_config_service_manager_pref.cc
 +++ b/components/ssl_config/ssl_config_service_manager_pref.cc
-@@ -301,10 +301,14 @@ void SSLConfigServiceManagerPref::GetSSLConfigFromPrefs(
+@@ -298,10 +298,14 @@ void SSLConfigServiceManagerPref::GetSSLConfigFromPrefs(
      net::SSLConfig* config) {
    // rev_checking_enabled was formerly a user-settable preference, but now
    // it is managed-only.
@@ -1919,7 +1918,7 @@ index 7505524b693b24d9028447929d881232a0483561..03eea7522154c40691405ec43e07303b
            database_->SkipReportUpload(
                report.uuid, Metrics::CrashSkippedReason::kUploadThrottled);
 diff --git a/third_party/widevine/cdm/BUILD.gn b/third_party/widevine/cdm/BUILD.gn
-index f35d8187209663167a19a06a745b95a89d7b9063..36f7959a0508676832b8ecd8d1912fce7456f6e2 100644
+index 0ab3bb63b0da0398cef54ed1316e12c7d8f3587b..7b2ba8a4e3caaba9002a5ec035b151dbbb80e155 100644
 --- a/third_party/widevine/cdm/BUILD.gn
 +++ b/third_party/widevine/cdm/BUILD.gn
 @@ -110,6 +110,10 @@ if (widevine_cdm_binary_files != []) {
