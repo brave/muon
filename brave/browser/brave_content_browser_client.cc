@@ -14,6 +14,7 @@
 #include "base/lazy_instance.h"
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_browser_context.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/grit/brave_resources.h"
@@ -224,6 +225,12 @@ std::string BraveContentBrowserClient::GetStoragePartitionIdForSite(
     partition_id = site.spec();
 #endif
 
+  auto brave_browser_context =
+    BraveBrowserContext::FromBrowserContext(browser_context);
+  if (brave_browser_context && brave_browser_context->IsIsolatedStorage()) {
+    partition_id = site.spec();
+  }
+
   DCHECK(IsValidStoragePartitionId(browser_context, partition_id));
   return partition_id;
 }
@@ -282,6 +289,17 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
   // error about which StoragePartition they expect to be in and it is not
   // safe to continue.
   CHECK(can_be_default || !partition_domain->empty());
+
+  auto brave_browser_context =
+    BraveBrowserContext::FromBrowserContext(browser_context);
+  if (brave_browser_context && brave_browser_context->IsIsolatedStorage() &&
+      !site.SchemeIs(extensions::kExtensionScheme)) {
+    if (!site.is_empty()) {
+      *partition_domain = site.host();
+      *partition_name = site.host();
+    }
+    *in_memory = brave_browser_context->IsOffTheRecord();
+  }
 }
 
 content::WebContentsViewDelegate*
@@ -673,6 +691,11 @@ void BraveContentBrowserClient::SiteInstanceDeleting(
 
 bool BraveContentBrowserClient::ShouldUseProcessPerSite(
     content::BrowserContext* browser_context, const GURL& effective_url) {
+  auto brave_browser_context =
+    BraveBrowserContext::FromBrowserContext(browser_context);
+  if (brave_browser_context && brave_browser_context->IsIsolatedStorage())
+    return true;
+
   Profile* profile = Profile::FromBrowserContext(browser_context);
   if (!profile)
     return false;
