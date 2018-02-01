@@ -253,7 +253,7 @@ index 54e54a5a1f922b84746b2f62c900857206257a24..00e706352dd09a0c8a7d5773c966ea2e
  
    return ps;
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
-index 59761b2d81799cc48ffa8b6b7f64c3d3e53f34b1..01c8ebbad98aacba021196cc138d1280aea42050 100644
+index f5f81901489121699fb7b18174f016918ae889f2..01b149aa75ca2e417ab6a857881f0add6b5f1822 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
 @@ -71,13 +71,13 @@ using PrintSettingsCallback =
@@ -1642,6 +1642,30 @@ index 40549b7e067f24731733f69440be4da97c104084..8d8dbe70d45408a2c92eb3a4b491f132
  }
  
  void RenderWidgetTargeter::ViewWillBeDestroyed(RenderWidgetHostViewBase* view) {
+diff --git a/content/browser/storage_partition_impl_map.h b/content/browser/storage_partition_impl_map.h
+index ce0951bacd4dab08db92f6a87087279fcc7e4f09..10c7976815635c945079344e63ecf7f9f9932eaf 100644
+--- a/content/browser/storage_partition_impl_map.h
++++ b/content/browser/storage_partition_impl_map.h
+@@ -22,6 +22,10 @@ class FilePath;
+ class SequencedTaskRunner;
+ }  // namespace base
+ 
++namespace brave {
++class BraveBrowserContext;
++} // namespace brave
++
+ namespace content {
+ 
+ class BrowserContext;
+@@ -64,6 +68,8 @@ class CONTENT_EXPORT StoragePartitionImplMap
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionConfigTest, OperatorLess);
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionImplMapTest, GarbageCollect);
+ 
++  friend class brave::BraveBrowserContext;
++
+   // Each StoragePartition is uniquely identified by which partition domain
+   // it belongs to (such as an app or the browser itself), the user supplied
+   // partition name and the bit indicating whether it should be persisted on
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index 829401d6438671f55a9caf3a8f5eb5dc38234332..8ea576f35c95b7a0dbe050788a8d6b302ba75550 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
@@ -1757,7 +1781,7 @@ index 0a6b0176a982782fd1472f607f811dd6c183c3fe..052ca73677cad3b10b494bf2ab823a04
    (*map_type)[key] = value;
    ResetKeyIterator();
 diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
-index 5efdd84bc0862047e218b31a281232caee905beb..aaada991eb3ee26a6effdf8c0b871a6ce1c17e0b 100644
+index a0e53cf8b199fba071a83c0c45283696bf8c224d..ffeafa9d9bb22c51b862fc62ac5fc3a29280402d 100644
 --- a/content/public/app/mojo/content_renderer_manifest.json
 +++ b/content/public/app/mojo/content_renderer_manifest.json
 @@ -47,6 +47,7 @@
@@ -2409,6 +2433,19 @@ index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6
    } else {
      socket_.reset(new SOCKSClientSocket(
          std::move(transport_socket_handle_), socks_params_->destination(),
+diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
+index 369a1ca0c222526b3daf5250d221e43c37c2e2a3..ff58dc77128ece681a757bebb91f424f82ee14c0 100644
+--- a/net/proxy/proxy_service.cc
++++ b/net/proxy/proxy_service.cc
+@@ -1476,7 +1476,7 @@ void ProxyService::ResetConfigService(
+ 
+ void ProxyService::ForceReloadProxyConfig() {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+-  ResetProxyConfig(false);
++  ResetProxyConfig(true);
+   ApplyProxyConfigIfAvailable();
+ }
+ 
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h
