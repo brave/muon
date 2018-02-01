@@ -142,10 +142,6 @@ std::unique_ptr<content::ZoomLevelDelegate> BrowserContext::CreateZoomLevelDeleg
   return std::unique_ptr<content::ZoomLevelDelegate>();
 }
 
-bool BrowserContext::IsOffTheRecord() const {
-  return in_memory_;
-}
-
 content::ResourceContext* BrowserContext::GetResourceContext() {
   return resource_context_.get();
 }
@@ -175,24 +171,8 @@ content::BackgroundSyncController* BrowserContext::GetBackgroundSyncController()
 }
 
 net::URLRequestContextGetter*
-BrowserContext::CreateRequestContextForStoragePartition(
-    const base::FilePath& partition_path,
-    bool in_memory,
-    content::ProtocolHandlerMap* protocol_handlers,
-    content::URLRequestInterceptorScopedVector request_interceptors) {
-  return nullptr;
-}
-
-net::URLRequestContextGetter*
 BrowserContext::CreateMediaRequestContext() {
   return url_request_getter_.get();
-}
-
-net::URLRequestContextGetter*
-BrowserContext::CreateMediaRequestContextForStoragePartition(
-    const base::FilePath& partition_path,
-    bool in_memory) {
-  return nullptr;
 }
 
 }  // namespace brightray
