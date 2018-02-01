@@ -5,6 +5,7 @@
 #ifndef BRAVE_BROWSER_BRAVE_BROWSER_CONTEXT_H_
 #define BRAVE_BROWSER_BRAVE_BROWSER_CONTEXT_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "atom/browser/atom_browser_context.h"
 #include "content/public/browser/host_zoom_map.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
+#include "chrome/browser/profiles/storage_partition_descriptor.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/zoom/chrome_zoom_level_prefs.h"
 #include "components/prefs/overlay_user_pref_store.h"
@@ -75,6 +77,15 @@ class BraveBrowserContext : public Profile {
       override {
     return nullptr;
   }
+  net::URLRequestContextGetter* CreateRequestContextForStoragePartition(
+      const base::FilePath& partition_path,
+      bool in_memory,
+      content::ProtocolHandlerMap* protocol_handlers,
+      content::URLRequestInterceptorScopedVector request_interceptors) override;
+  net::URLRequestContextGetter* CreateMediaRequestContextForStoragePartition(
+      const base::FilePath& partition_path,
+      bool in_memory) override;
+  bool IsOffTheRecord() const override;
 
   // Profile implementation:
   scoped_refptr<base::SequencedTaskRunner> GetIOTaskRunner() override;
@@ -127,12 +138,25 @@ class BraveBrowserContext : public Profile {
 
   void SetExitType(ExitType exit_type) override;
 
+  bool IsIsolatedStorage() const { return isolated_storage_; }
+
+  void SetTorNewIdentity(const GURL& url, const base::Closure& callback);
+
  private:
+    typedef std::map<StoragePartitionDescriptor,
+                     scoped_refptr<brightray::URLRequestContextGetter>,
+                     StoragePartitionDescriptorLess>
+      URLRequestContextGetterMap;
   void OnPrefsLoaded(bool success);
   void TrackZoomLevelsFromParent();
   void OnParentZoomLevelChanged(
       const content::HostZoomMap::ZoomLevelChange& change);
   void UpdateDefaultZoomLevel();
+
+  void TorSetProxy(
+    scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter,
+    const base::FilePath partition_path);
 
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<sync_preferences::PrefServiceSyncable> user_prefs_;
@@ -150,6 +174,12 @@ class BraveBrowserContext : public Profile {
   BraveBrowserContext* otr_context_;
   const std::string partition_;
   std::unique_ptr<base::WaitableEvent> ready_;
+  bool isolated_storage_;
+  GURL tor_proxy_;
+  bool in_memory_;
+  base::Process tor_process_;
+
+  URLRequestContextGetterMap url_request_context_getter_map_;
 
   std::unique_ptr<WebDataServiceWrapper> web_database_wrapper_;
   std::unique_ptr<ProtocolHandlerRegistry::JobInterceptorFactory>
