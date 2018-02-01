@@ -281,7 +281,7 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
   BraveBrowserContext* profile =
       BraveBrowserContext::FromBrowserContext(browser_context);
   if (profile->IsTorContext()) {
-      *in_memory = profile->IsOffTheRecord();
+      *in_memory = true;
       *partition_domain = site.host();
   }
 
