@@ -46,12 +46,18 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/dom_storage_context.h"
 #include "content/public/browser/storage_partition.h"
+#include "crypto/random.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/features/features.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
+#include "net/proxy/proxy_config_service_fixed.h"
+#include "net/proxy/proxy_service.h"
 #include "net/url_request/url_request_context.h"
+#include "net/url_request/url_request_context_getter.h"
 #include "net/url_request/url_request_job_factory_impl.h"
+#include "vendor/brightray/browser/browser_client.h"
+#include "vendor/brightray/browser/net_log.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
@@ -82,6 +88,7 @@ namespace {
 const char kPrefExitTypeCrashed[] = "Crashed";
 const char kPrefExitTypeSessionEnded[] = "SessionEnded";
 const char kPrefExitTypeNormal[] = "Normal";
+const int kTorPasswordLength = 16;
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 // WATCH(bridiver) - chrome/browser/profiles/off_the_record_profile_impl.cc
@@ -153,6 +160,8 @@ BraveBrowserContext::BraveBrowserContext(
       ready_(new base::WaitableEvent(
           base::WaitableEvent::ResetPolicy::MANUAL,
           base::WaitableEvent::InitialState::NOT_SIGNALED)),
+      isolated_storage_(false),
+      tor_proxy_(std::string()),
       io_task_runner_(std::move(io_task_runner)),
       delegate_(g_browser_process->profile_manager()) {
   std::string parent_partition;
@@ -160,6 +169,16 @@ BraveBrowserContext::BraveBrowserContext(
     has_parent_ = true;
     original_context_ = static_cast<BraveBrowserContext*>(
         atom::AtomBrowserContext::From(parent_partition, false));
+  }
+
+  bool isolated_storage;
+  if (options.GetBoolean("isolated_storage", &isolated_storage)) {
+    isolated_storage_ = isolated_storage;
+  }
+
+  std::string tor_proxy;
+  if (options.GetString("tor_proxy", &tor_proxy)) {
+    tor_proxy_ = tor_proxy;
   }
 
   if (in_memory) {
@@ -305,6 +324,51 @@ content::BrowserPluginGuestManager* BraveBrowserContext::GetGuestManager() {
   return guest_view::GuestViewManager::FromBrowserContext(this);
 }
 
+net::URLRequestContextGetter*
+BraveBrowserContext::CreateRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory,
+    content::ProtocolHandlerMap* protocol_handlers,
+    content::URLRequestInterceptorScopedVector request_interceptors) {
+  if (isolated_storage_) {
+    url_request_getter_ =
+      new brightray::URLRequestContextGetter(
+        this,
+        static_cast<brightray::NetLog*>(brightray::BrowserClient::Get()->
+                                        GetNetLog()),
+        partition_path,
+        in_memory,
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
+        protocol_handlers,
+        std::move(request_interceptors));
+    auto proxy_service = url_request_getter_->GetURLRequestContext()->
+      proxy_service();
+    if (!tor_proxy_.empty() && GURL(tor_proxy_).is_valid()) {
+      net::ProxyConfig config;
+      // Notice CreateRequestContextForStoragePartition will only be called once
+      // per partition_path so there is no need to cache password per origin
+      std::string origin = partition_path.DirName().BaseName().value();
+      std::string encoded_password;
+      std::vector<uint8_t> password(kTorPasswordLength);
+      crypto::RandBytes(password.data(), password.size());
+      encoded_password = base::HexEncode(password.data(), password.size());
+      std::string url = tor_proxy_;
+      base::ReplaceFirstSubstringAfterOffset(
+        &url, 0, "//", "//" + origin + ":" + encoded_password + "@");
+      // TODO(darkdh): using URL with auth after
+      // https://github.com/brave/muon/pull/470
+      config.proxy_rules().ParseFromString(tor_proxy_);
+      proxy_service->ResetConfigService(base::WrapUnique(
+        new net::ProxyConfigServiceFixed(config)));
+      proxy_service->ForceReloadProxyConfig();
+    }
+    return url_request_getter_.get();
+  } else {
+    return nullptr;
+  }
+}
+
 void BraveBrowserContext::TrackZoomLevelsFromParent() {
   // Here we only want to use zoom levels stored in the main-context's default
   // storage partition. We're not interested in zoom levels in special
@@ -402,6 +466,11 @@ BraveBrowserContext::CreateURLRequestJobFactory(
           extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),
                                                      info_map_));
 #endif
+  if (!protocol_handler_interceptor_.get()) {
+    protocol_handler_interceptor_ =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
+      ->CreateJobInterceptorFactory();
+  }
   protocol_handler_interceptor_->Chain(std::move(job_factory));
   return std::move(protocol_handler_interceptor_);
 }

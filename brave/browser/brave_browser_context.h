@@ -78,6 +78,11 @@ class BraveBrowserContext : public Profile {
       override {
     return nullptr;
   }
+  net::URLRequestContextGetter* CreateRequestContextForStoragePartition(
+      const base::FilePath& partition_path,
+      bool in_memory,
+      content::ProtocolHandlerMap* protocol_handlers,
+      content::URLRequestInterceptorScopedVector request_interceptors) override;
 
   // Profile implementation:
   scoped_refptr<base::SequencedTaskRunner> GetIOTaskRunner() override;
@@ -129,6 +134,8 @@ class BraveBrowserContext : public Profile {
 
   void SetExitType(ExitType exit_type) override;
 
+  bool IsIsolatedStorage() const { return isolated_storage_; }
+
  private:
   void OnPrefsLoaded(bool success);
   void TrackZoomLevelsFromParent();
@@ -152,6 +159,10 @@ class BraveBrowserContext : public Profile {
   BraveBrowserContext* otr_context_;
   const std::string partition_;
   std::unique_ptr<base::WaitableEvent> ready_;
+  bool isolated_storage_;
+  std::string tor_proxy_;
+
+  scoped_refptr<brightray::URLRequestContextGetter> url_request_getter_;
 
   scoped_refptr<autofill::AutofillWebDataService> autofill_data_;
 #if defined(OS_WIN)
