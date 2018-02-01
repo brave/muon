@@ -43,6 +43,7 @@ source_set("browser") {
 
   deps = [
     ":apis",
+    ":proxy",
     "//electron/atom/browser",
     "//electron:common",
     "//electron/muon/app",
@@ -152,5 +153,20 @@ source_set("apis") {
 
   public_deps = [
     "component_updater",
+  ]
+}
+
+source_set("proxy") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "net/proxy/proxy_config_service_tor.cc",
+    "net/proxy/proxy_config_service_tor.h",
+  ]
+
+  deps = [
+    "//net",
   ]
 }
