@@ -292,19 +292,6 @@ void DoCacheActionInIO(
     on_get_backend.Run(net::OK);
 }
 
-void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
-                  const net::ProxyConfig& config,
-                  const base::Closure& callback) {
-  auto proxy_service =
-      getter->GetURLRequestContext()->proxy_resolution_service();
-  proxy_service->ResetConfigService(base::WrapUnique(
-      new net::ProxyConfigServiceFixed(config)));
-  // Refetches and applies the new pac script if provided.
-  proxy_service->ForceReloadProxyConfig();
-  BrowserThread::PostTask(
-      BrowserThread::UI, FROM_HERE, callback);
-}
-
 void SetCertVerifyProcInIO(
     const scoped_refptr<net::URLRequestContextGetter>& context_getter,
     const AtomCertVerifier::VerifyProc& proc) {
@@ -464,8 +451,14 @@ void Session::FlushStorageData() {
 
 void Session::SetProxy(const net::ProxyConfig& config,
                        const base::Closure& callback) {
-  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-      base::Bind(&SetProxyInIO, request_context_getter_, config, callback));
+  auto proxy_service =
+    request_context_getter_->GetURLRequestContext()->proxy_service();
+  proxy_service->ResetConfigService(base::WrapUnique(
+      new net::ProxyConfigServiceFixed(config)));
+  // Refetches and applies the new pac script if provided.
+  proxy_service->ForceReloadProxyConfig();
+  if (callback)
+    callback.Run();
 }
 
 void Session::SetDownloadPath(const base::FilePath& path) {
@@ -599,6 +592,25 @@ bool Session::Equal(Session* session) const {
 #endif
 }
 
+bool Session::IsOffTheRecord() const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (brave_browser_context->IsOffTheRecord())
+    return true;
+  if (brave_browser_context->IsIsolatedStorage())
+    return true;
+  return false;
+}
+
+void Session::SetTorNewIdentity(const GURL& url,
+                                const base::Closure& callback) const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsIsolatedStorage())
+    return;
+  brave_browser_context->SetTorNewIdentity(url, callback);
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, content::BrowserContext* browser_context) {
@@ -657,6 +669,8 @@ void Session::BuildPrototype(v8::Isolate* isolate,
                  &Session::AllowNTLMCredentialsForDomains)
       .SetMethod("setEnableBrotli", &Session::SetEnableBrotli)
       .SetMethod("equal", &Session::Equal)
+      .SetMethod("isOffTheRecord", &Session::IsOffTheRecord)
+      .SetMethod("setTorNewIdentity", &Session::SetTorNewIdentity)
       .SetProperty("partition", &Session::Partition)
       .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)
