@@ -22,6 +22,7 @@
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/browser_url_handler.h"
+#include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/site_instance.h"
@@ -309,6 +310,36 @@ void AtomBrowserClientExtensionsPart::OverrideWebkitPrefs(
   host->Send(new AtomMsg_UpdateWebKitPrefs(*prefs));
 }
 
+// static
+bool AtomBrowserClientExtensionsPart::
+    DoesOriginMatchAllURLsInWebExtent(const url::Origin& origin,
+                                      const URLPatternSet& web_extent) {
+  // This function assumes |origin| is an isolated origin, which can only have
+  // an HTTP or HTTPS scheme (see IsolatedOriginUtil::IsValidIsolatedOrigin()),
+  // so these are the only schemes allowed to be matched below.
+  DCHECK(origin.scheme() == url::kHttpsScheme ||
+         origin.scheme() == url::kHttpScheme);
+  URLPattern origin_pattern(URLPattern::SCHEME_HTTPS | URLPattern::SCHEME_HTTP);
+  // TODO(alexmos): Temporarily disable precise scheme matching on
+  // |origin_pattern| to allow apps that use *://foo.com/ in their web extent
+  // to still work with isolated origins.  See https://crbug.com/799638.  We
+  // should use SetScheme(origin.scheme()) here once https://crbug.com/791796
+  // is fixed.
+  origin_pattern.SetScheme("*");
+  origin_pattern.SetHost(origin.host());
+  origin_pattern.SetPath("/*");
+  // We allow matching subdomains here because |origin| is the precise origin
+  // retrieved from site isolation policy. Thus, we'll only allow an extent of
+  // foo.example.com and bar.example.com if the isolated origin was
+  // example.com; if the isolated origin is foo.example.com, this will
+  // correctly fail.
+  origin_pattern.SetMatchSubdomains(true);
+
+  URLPatternSet origin_pattern_list;
+  origin_pattern_list.AddPattern(origin_pattern);
+  return origin_pattern_list.Contains(web_extent);
+}
+
 void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
     content::RenderProcessHost* host) {
   int id = host->GetID();
@@ -338,8 +369,7 @@ void AtomBrowserClientExtensionsPart::RenderProcessWillLaunch(
 // static
 GURL AtomBrowserClientExtensionsPart::GetEffectiveURL(
     Profile* profile,
-    const GURL& url,
-    bool is_isolated_origin) {
+    const GURL& url) {
   // If the input |url| is part of an installed app, the effective URL is an
   // extension URL with the ID of that extension as the host. This has the
   // effect of grouping apps together in a common SiteInstance.
@@ -357,12 +387,31 @@ GURL AtomBrowserClientExtensionsPart::GetEffectiveURL(
   if (extension->from_bookmark())
     return url;
 
-  // If |url| corresponds to an isolated origin, don't resolve effective URLs,
-  // since isolated origins should take precedence over hosted apps.  One
-  // exception is a URL for Chrome Web Store, which should always be resolved
-  // to its effective URL, so that the CWS process gets proper bindings.
-  if (is_isolated_origin)
+  // If |url| corresponds to both an isolated origin and a hosted app,
+  // determine whether to use the effective URL, which also determines whether
+  // the isolated origin should take precedence over a matching hosted app:
+  // - Chrome Web Store should always be resolved to its effective URL, so that
+  //   the CWS process gets proper bindings.
+  // - for other hosted apps, if the isolated origin covers the app's entire
+  //   web extent (i.e., *all* URLs matched by the hosted app will have this
+  //   isolated origin), allow the hosted app to take effect and return an
+  //   effective URL.
+  // - for other cases, disallow effective URLs, as otherwise this would allow
+  //   the isolated origin to share the hosted app process with other origins
+  //   it does not trust, due to https://crbug.com/791796.
+  //
+  // TODO(alexmos): Revisit and possibly remove this once
+  // https://crbug.com/791796 is fixed.
+  url::Origin isolated_origin;
+  auto* policy = content::ChildProcessSecurityPolicy::GetInstance();
+  bool is_isolated_origin = policy->GetMatchingIsolatedOrigin(
+      url::Origin::Create(url), &isolated_origin);
+  if (is_isolated_origin && extension->id() != kWebStoreAppId &&
+      !DoesOriginMatchAllURLsInWebExtent(isolated_origin,
+                                         extension->web_extent())) {
     return url;
+  }
+
 
   // If the URL is part of an extension's web extent, convert it to an
   // extension URL.
