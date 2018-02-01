@@ -10,8 +10,10 @@
 #include "base/path_service.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/process/launch.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
+#include "brave/browser/net/proxy/proxy_config_service_tor.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
 #include "chrome/browser/browser_process.h"
@@ -41,17 +43,23 @@
 #include "components/user_prefs/user_prefs.h"
 #include "components/zoom/zoom_event_manager.h"
 #include "components/webdata/common/webdata_constants.h"
+#include "content/browser/storage_partition_impl_map.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/dom_storage_context.h"
+#include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/features/features.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
+#include "net/proxy/proxy_service.h"
 #include "net/url_request/url_request_context.h"
+#include "net/url_request/url_request_context_getter.h"
 #include "net/url_request/url_request_job_factory_impl.h"
+#include "vendor/brightray/browser/browser_client.h"
+#include "vendor/brightray/browser/net_log.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
@@ -153,6 +161,8 @@ BraveBrowserContext::BraveBrowserContext(
       ready_(new base::WaitableEvent(
           base::WaitableEvent::ResetPolicy::MANUAL,
           base::WaitableEvent::InitialState::NOT_SIGNALED)),
+      isolated_storage_(false),
+      in_memory_(in_memory),
       io_task_runner_(std::move(io_task_runner)),
       delegate_(g_browser_process->profile_manager()) {
   std::string parent_partition;
@@ -160,6 +170,21 @@ BraveBrowserContext::BraveBrowserContext(
     has_parent_ = true;
     original_context_ = static_cast<BraveBrowserContext*>(
         atom::AtomBrowserContext::From(parent_partition, false));
+  }
+
+  bool isolated_storage;
+  if (options.GetBoolean("isolated_storage", &isolated_storage)) {
+    isolated_storage_ = isolated_storage;
+  }
+
+  std::string tor_proxy;
+  if (options.GetString("tor_proxy", &tor_proxy)) {
+    tor_proxy_ = GURL(tor_proxy);
+    if (!tor_process_.IsValid()) {
+      base::FilePath tor("/usr/local/bin/tor");
+      base::CommandLine cmdline(tor);
+      tor_process_ = base::LaunchProcess(cmdline, base::LaunchOptions());
+    }
   }
 
   if (in_memory) {
@@ -184,6 +209,10 @@ BraveBrowserContext::BraveBrowserContext(
 
 BraveBrowserContext::~BraveBrowserContext() {
   MaybeSendDestroyedNotification();
+
+  if (tor_process_.IsValid()) {
+    base::EnsureProcessTerminated(std::move(tor_process_));
+  }
 
   if (track_zoom_subscription_.get())
     track_zoom_subscription_.reset(nullptr);
@@ -305,6 +334,61 @@ content::BrowserPluginGuestManager* BraveBrowserContext::GetGuestManager() {
   return guest_view::GuestViewManager::FromBrowserContext(this);
 }
 
+net::URLRequestContextGetter*
+BraveBrowserContext::CreateRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory,
+    content::ProtocolHandlerMap* protocol_handlers,
+    content::URLRequestInterceptorScopedVector request_interceptors) {
+  if (isolated_storage_) {
+     scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter =
+        new brightray::URLRequestContextGetter(
+          this,
+          static_cast<brightray::NetLog*>(brightray::BrowserClient::Get()->
+                                          GetNetLog()),
+          partition_path,
+          in_memory,
+          BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
+          BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
+          protocol_handlers,
+          std::move(request_interceptors));
+    StoragePartitionDescriptor descriptor(partition_path, in_memory);
+    url_request_context_getter_map_[descriptor] = url_request_context_getter;
+    BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
+                            base::Bind(&BraveBrowserContext::TorSetProxy,
+                                          base::Unretained(this),
+                                          url_request_context_getter,
+                                          partition_path));
+    return url_request_context_getter.get();
+  } else {
+    return nullptr;
+  }
+}
+
+net::URLRequestContextGetter*
+BraveBrowserContext::CreateMediaRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory) {
+  if (isolated_storage_) {
+    StoragePartitionDescriptor descriptor(partition_path, in_memory);
+    URLRequestContextGetterMap::iterator iter =
+      url_request_context_getter_map_.find(descriptor);
+    if (iter != url_request_context_getter_map_.end())
+      return (iter->second).get();
+    else
+      return nullptr;
+  } else {
+    return nullptr;
+  }
+}
+
+bool BraveBrowserContext::IsOffTheRecord() const {
+  if (isolated_storage_)
+    return true;
+  return in_memory_;
+}
+
 void BraveBrowserContext::TrackZoomLevelsFromParent() {
   // Here we only want to use zoom levels stored in the main-context's default
   // storage partition. We're not interested in zoom levels in special
@@ -363,6 +447,26 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
       ->OnDefaultZoomLevelChanged();
 }
 
+void BraveBrowserContext::TorSetProxy(
+    scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter,
+    const base::FilePath partition_path) {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+  if (!url_request_context_getter || !isolated_storage_)
+    return;
+  if (tor_proxy_.is_valid()) {
+    auto proxy_service = url_request_context_getter->GetURLRequestContext()->
+      proxy_service();
+    // Notice CreateRequestContextForStoragePartition will only be called once
+    // per partition_path so there is no need to cache password per origin
+    std::string origin = partition_path.DirName().BaseName().value();
+    std::unique_ptr<net::ProxyConfigServiceTor>
+      config(new net::ProxyConfigServiceTor(tor_proxy_));
+    config->SetUsername(origin);
+    proxy_service->ResetConfigService(std::move(config));
+  }
+}
+
 content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
   if (!permission_manager_.get())
     permission_manager_.reset(new BravePermissionManager);
@@ -402,6 +506,11 @@ BraveBrowserContext::CreateURLRequestJobFactory(
           extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),
                                                      info_map_));
 #endif
+  if (!protocol_handler_interceptor_.get()) {
+    protocol_handler_interceptor_ =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
+      ->CreateJobInterceptorFactory();
+  }
   protocol_handler_interceptor_->Chain(std::move(job_factory));
   return std::move(protocol_handler_interceptor_);
 }
@@ -605,7 +714,7 @@ std::string BraveBrowserContext::partition_with_prefix() {
   if (canonical_partition.empty())
     canonical_partition = "default";
 
-  if (IsOffTheRecord())
+  if (IsOffTheRecord() && !isolated_storage_)
     return canonical_partition;
 
   return kPersistPrefix + canonical_partition;
@@ -641,6 +750,27 @@ void BraveBrowserContext::SetExitType(ExitType exit_type) {
     user_prefs_->SetString(prefs::kSessionExitType,
                       ExitTypeToSessionTypePrefValue(exit_type));
   }
+}
+
+void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
+                                            const base::Closure& callback) {
+  GURL site_url(content::SiteInstance::GetSiteForURL(this, url));
+  const std::string host = site_url.host();
+  base::FilePath partition_path = this->GetPath().Append(
+    content::StoragePartitionImplMap::GetStoragePartitionPath(host, host));
+  scoped_refptr<brightray::URLRequestContextGetter> url_request_context_getter;
+  StoragePartitionDescriptor descriptor(partition_path, true);
+    URLRequestContextGetterMap::iterator iter =
+      url_request_context_getter_map_.find(descriptor);
+  if (iter != url_request_context_getter_map_.end())
+    url_request_context_getter = (iter->second);
+  else
+    return;
+  auto proxy_service = url_request_context_getter->GetURLRequestContext()->
+    proxy_service();
+  proxy_service->ForceReloadProxyConfig();
+  if (callback)
+    callback.Run();
 }
 
 scoped_refptr<base::SequencedTaskRunner>
