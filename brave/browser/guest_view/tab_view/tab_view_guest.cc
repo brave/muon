@@ -286,6 +286,10 @@ void TabViewGuest::CreateWebContents(
       partition_options.SetString("parent_partition", "");
     }
   }
+  bool isolated_storage;
+  if (params.GetBoolean("isolated_storage", &isolated_storage)) {
+    partition_options.SetBoolean("isolated_storage", isolated_storage);
+  }
   atom::AtomBrowserContext* browser_context =
       brave::BraveBrowserContext::FromPartition(partition, partition_options);
 
