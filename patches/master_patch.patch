@@ -1873,52 +1873,44 @@ index 551953165f93c8d8e4772f0e905f1c4819aaf3b5..caf6df58e858580b165e6ff689572a3d
  EVENT_TYPE(SOCKS5_HANDSHAKE_WRITE)
  
 diff --git a/net/proxy/proxy_server.cc b/net/proxy/proxy_server.cc
-index ed81ebbb26b4f439d618c115b32f49249d9284a6..a0e78e5e842fe7804f860f5bd1b7a2cba9903f14 100644
+index ed81ebbb26b4f439d618c115b32f49249d9284a6..3ad26195376d8cb017d2eaf8def61fa681c8aa79 100644
 --- a/net/proxy/proxy_server.cc
 +++ b/net/proxy/proxy_server.cc
-@@ -65,7 +65,23 @@ ProxyServer::Scheme GetSchemeFromURIInternal(base::StringPiece type) {
+@@ -65,7 +65,17 @@ ProxyServer::Scheme GetSchemeFromURIInternal(base::StringPiece type) {
  }  // namespace
  
  ProxyServer::ProxyServer(Scheme scheme, const HostPortPair& host_port_pair)
 -      : scheme_(scheme), host_port_pair_(host_port_pair) {
-+      : scheme_(scheme), host_port_pair_(host_port_pair), auth_(false) {
-+  if (scheme_ == SCHEME_DIRECT || scheme_ == SCHEME_INVALID) {
-+    // |host_port_pair| isn't relevant for these special schemes, so none should
-+    // have been specified. It is important for this to be consistent since we
-+    // do raw field comparisons in the equality and comparison functions.
-+    DCHECK(host_port_pair.Equals(HostPortPair()));
-+    host_port_pair_ = HostPortPair();
-+  }
++      : ProxyServer(scheme, host_port_pair, "", "") {
 +}
 +
 +ProxyServer::ProxyServer(Scheme scheme, const HostPortPair& host_port_pair,
 +                         const std::string& username,
 +                         const std::string& password)
 +      : scheme_(scheme), host_port_pair_(host_port_pair),
-+        auth_(true), username_(username), password_(password) {
++        username_(username), password_(password) {
 +  // Authentication is supported only for SOCKS5 proxies.
-+  DCHECK(scheme_ == SCHEME_SOCKS5);
++  DCHECK(scheme_ == SCHEME_SOCKS5 ||
++         (username.size() == 0 && password.size() == 0));
    if (scheme_ == SCHEME_DIRECT || scheme_ == SCHEME_INVALID) {
      // |host_port_pair| isn't relevant for these special schemes, so none should
      // have been specified. It is important for this to be consistent since we
-@@ -83,6 +99,16 @@ const HostPortPair& ProxyServer::host_port_pair() const {
+@@ -83,6 +93,14 @@ const HostPortPair& ProxyServer::host_port_pair() const {
    return host_port_pair_;
  }
  
 +const std::string& ProxyServer::username() const {
-+  DCHECK(is_auth());
 +  return username_;
 +};
 +
 +const std::string& ProxyServer::password() const {
-+  DCHECK(is_auth());
 +  return password_;
 +};
 +
  // static
  ProxyServer ProxyServer::FromURI(const std::string& uri,
                                   Scheme default_scheme) {
-@@ -123,7 +149,8 @@ std::string ProxyServer::ToURI() const {
+@@ -123,7 +141,8 @@ std::string ProxyServer::ToURI() const {
      case SCHEME_SOCKS4:
        return std::string("socks4://") + host_port_pair().ToString();
      case SCHEME_SOCKS5:
@@ -1928,7 +1920,7 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..a0e78e5e842fe7804f860f5bd1b7a2cb
      case SCHEME_HTTPS:
        return std::string("https://") + host_port_pair().ToString();
      case SCHEME_QUIC:
-@@ -175,7 +202,8 @@ std::string ProxyServer::ToPacString() const {
+@@ -175,7 +194,8 @@ std::string ProxyServer::ToPacString() const {
        // For compatibility send SOCKS instead of SOCKS4.
        return std::string("SOCKS ") + host_port_pair().ToString();
      case SCHEME_SOCKS5:
@@ -1938,12 +1930,12 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..a0e78e5e842fe7804f860f5bd1b7a2cb
      case SCHEME_HTTPS:
        return std::string("HTTPS ") + host_port_pair().ToString();
      case SCHEME_QUIC:
-@@ -187,6 +215,16 @@ std::string ProxyServer::ToPacString() const {
+@@ -187,6 +207,16 @@ std::string ProxyServer::ToPacString() const {
    }
  }
  
 +std::string ProxyServer::AuthString() const {
-+  if (!is_auth())
++  if (username().size() == 0 && password().size() == 0)
 +    return "";
 +  std::string auth = username();
 +  if (password().size() > 0)
@@ -1955,11 +1947,10 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..a0e78e5e842fe7804f860f5bd1b7a2cb
  // static
  int ProxyServer::GetDefaultPortForScheme(Scheme scheme) {
    switch (scheme) {
-@@ -227,6 +265,24 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
+@@ -227,6 +257,22 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
      return ProxyServer();  // Invalid -- DIRECT cannot have a host/port.
  
    HostPortPair host_port_pair;
-+  bool auth = false;
 +  std::string username;
 +  std::string password;
 +
@@ -1967,7 +1958,6 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..a0e78e5e842fe7804f860f5bd1b7a2cb
 +  if (at != end) {
 +    if (scheme != SCHEME_SOCKS5)
 +      return ProxyServer();     // Invalid -- only SOCKS5 has authentication.
-+    auth = true;
 +    std::string::const_iterator colon = std::find(begin, at, ':');
 +    if (colon != at) {
 +      username = std::string(begin, colon);
@@ -1980,20 +1970,17 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..a0e78e5e842fe7804f860f5bd1b7a2cb
  
    if (scheme != SCHEME_INVALID && scheme != SCHEME_DIRECT) {
      std::string host;
-@@ -243,7 +299,10 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
+@@ -243,7 +289,7 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
      host_port_pair = HostPortPair(host, static_cast<uint16_t>(port));
    }
  
 -  return ProxyServer(scheme, host_port_pair);
-+  if (auth)
-+    return ProxyServer(scheme, host_port_pair, username, password);
-+  else
-+    return ProxyServer(scheme, host_port_pair);
++  return ProxyServer(scheme, host_port_pair, username, password);
  }
  
  }  // namespace net
 diff --git a/net/proxy/proxy_server.h b/net/proxy/proxy_server.h
-index 8de93ea0aa4eff6501675b1bb8c1bbd07cff1222..8d8ca8262e2ee7134bf86d6e1e8ac3eac556d35d 100644
+index 8de93ea0aa4eff6501675b1bb8c1bbd07cff1222..560ffb507a304c8546d8c93737c31a72eb95604d 100644
 --- a/net/proxy/proxy_server.h
 +++ b/net/proxy/proxy_server.h
 @@ -19,7 +19,7 @@
@@ -2014,20 +2001,16 @@ index 8de93ea0aa4eff6501675b1bb8c1bbd07cff1222..8d8ca8262e2ee7134bf86d6e1e8ac3ea
  
    bool is_valid() const { return scheme_ != SCHEME_INVALID; }
  
-@@ -67,7 +69,12 @@ class NET_EXPORT ProxyServer {
-   // Returns true if this ProxyServer is a QUIC proxy.
+@@ -68,6 +70,8 @@ class NET_EXPORT ProxyServer {
    bool is_quic() const { return scheme_ == SCHEME_QUIC; }
  
-+  // Returns true if this ProxyServer has username/password authentication
-+  bool is_auth() const { return auth_; }
-+
    const HostPortPair& host_port_pair() const;
 +  const std::string& username() const;
 +  const std::string& password() const;
  
    // Parses from an input with format:
    //   [<scheme>"://"]<server>[":"<port>]
-@@ -146,15 +153,18 @@ class NET_EXPORT ProxyServer {
+@@ -146,15 +150,18 @@ class NET_EXPORT ProxyServer {
  
    bool operator==(const ProxyServer& other) const {
      return scheme_ == other.scheme_ &&
@@ -2043,13 +2026,13 @@ index 8de93ea0aa4eff6501675b1bb8c1bbd07cff1222..8d8ca8262e2ee7134bf86d6e1e8ac3ea
    bool operator<(const ProxyServer& other) const {
 -    return std::tie(scheme_, host_port_pair_) <
 -           std::tie(other.scheme_, other.host_port_pair_);
-+    return std::tie(scheme_, host_port_pair_, auth_, username_, password_) <
++    return std::tie(scheme_, host_port_pair_, username_, password_) <
 +           std::tie(other.scheme_, other.host_port_pair_,
-+                    other.auth_, other.username_, other.password_);
++                    other.username_, other.password_);
    }
  
    // Returns the estimate of dynamically allocated memory in bytes.
-@@ -168,8 +178,15 @@ class NET_EXPORT ProxyServer {
+@@ -168,8 +175,14 @@ class NET_EXPORT ProxyServer {
        std::string::const_iterator host_and_port_begin,
        std::string::const_iterator host_and_port_end);
  
@@ -2059,14 +2042,13 @@ index 8de93ea0aa4eff6501675b1bb8c1bbd07cff1222..8d8ca8262e2ee7134bf86d6e1e8ac3ea
 +
    Scheme scheme_;
    HostPortPair host_port_pair_;
-+  bool auth_;
 +  std::string username_;
 +  std::string password_;
  };
  
  typedef std::pair<HostPortPair, ProxyServer> HostPortProxyPair;
 diff --git a/net/socket/client_socket_pool_manager.cc b/net/socket/client_socket_pool_manager.cc
-index ffec16ff2944915301b2af4ca34b556cbc177b5d..07dcb8111b833292cf59148514064a1356b2b70b 100644
+index ffec16ff2944915301b2af4ca34b556cbc177b5d..272e99ba7ae79610cb92f606ddc9ecaf0655017b 100644
 --- a/net/socket/client_socket_pool_manager.cc
 +++ b/net/socket/client_socket_pool_manager.cc
 @@ -13,6 +13,7 @@
@@ -2077,22 +2059,21 @@ index ffec16ff2944915301b2af4ca34b556cbc177b5d..07dcb8111b833292cf59148514064a13
  #include "net/socket/socks_client_socket_pool.h"
  #include "net/socket/ssl_client_socket_pool.h"
  #include "net/socket/transport_client_socket_pool.h"
-@@ -189,9 +190,20 @@ int InitSocketPoolHelper(ClientSocketPoolManager::SocketGroupType group_type,
+@@ -189,9 +190,19 @@ int InitSocketPoolHelper(ClientSocketPoolManager::SocketGroupType group_type,
        connection_group = base::StringPrintf(
            "socks%c/%s", socks_version, connection_group.c_str());
  
 -      socks_params = new SOCKSSocketParams(proxy_tcp_params,
 -                                           socks_version == '5',
 -                                           origin_host_port);
-+      scoped_refptr<SOCKSAuth> auth(nullptr);
-+      if (proxy_server.is_auth()) {
++      if (proxy_server.username().size() != 0 ||
++          proxy_server.password().size() != 0) {
 +        DCHECK_EQ('5', socks_version);
-+        const std::string& username = proxy_server.username();
-+        const std::string& password = proxy_server.password();
-+        auth = new SOCKSAuthUsernamePassword(username, password);
 +        socks_params = new SOCKSSocketParams(proxy_tcp_params,
 +                                             origin_host_port,
-+                                             auth);
++                                             new SOCKSAuthUsernamePassword(
++                                                 proxy_server.username(),
++                                                 proxy_server.password()));
 +      } else {
 +        socks_params = new SOCKSSocketParams(proxy_tcp_params,
 +                                             socks_version == '5',
