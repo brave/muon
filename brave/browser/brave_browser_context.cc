@@ -271,6 +271,10 @@ bool BraveBrowserContext::HasParentContext() {
   return has_parent_;
 }
 
+bool BraveBrowserContext::IsTorContext() {
+  return partition() == "tor";
+}
+
 BraveBrowserContext* BraveBrowserContext::original_context() {
   if (original_context_) {
     return original_context_;

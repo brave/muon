@@ -260,7 +260,8 @@ void TabViewGuest::CreateWebContents(
     if (partition.compare(0, session_tab_prefix.length(),
           session_tab_prefix) == 0 ||
        partition.compare(0, private_tab_prefix.length(),
-          private_tab_prefix) == 0) {
+          private_tab_prefix) == 0 ||
+       partition == "persist:tor") {
       partition_options.SetString("parent_partition", "");
     }
   }
