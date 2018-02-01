@@ -1619,6 +1619,30 @@ index 9e0e5b96b8e38a6c29e601d091941dad28eec900..1463daf2462cfb3d8208a91f3fb3b0f1
  }
  
  void RenderWidgetTargeter::ViewWillBeDestroyed(RenderWidgetHostViewBase* view) {
+diff --git a/content/browser/storage_partition_impl_map.h b/content/browser/storage_partition_impl_map.h
+index ce0951bacd4dab08db92f6a87087279fcc7e4f09..10c7976815635c945079344e63ecf7f9f9932eaf 100644
+--- a/content/browser/storage_partition_impl_map.h
++++ b/content/browser/storage_partition_impl_map.h
+@@ -22,6 +22,10 @@ class FilePath;
+ class SequencedTaskRunner;
+ }  // namespace base
+ 
++namespace brave {
++class BraveBrowserContext;
++} // namespace brave
++
+ namespace content {
+ 
+ class BrowserContext;
+@@ -64,6 +68,8 @@ class CONTENT_EXPORT StoragePartitionImplMap
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionConfigTest, OperatorLess);
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionImplMapTest, GarbageCollect);
+ 
++  friend class brave::BraveBrowserContext;
++
+   // Each StoragePartition is uniquely identified by which partition domain
+   // it belongs to (such as an app or the browser itself), the user supplied
+   // partition name and the bit indicating whether it should be persisted on
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index 942a35d355acc1cff8762c1e5a4961c6f022f4b2..182887b23f1b8b969cf68302673a7f94139b7ba3 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
@@ -2300,6 +2324,19 @@ index 0e16d7eecb8a2aa7e7403788c888849c1ba4db79..4c5ee5dab477f8e8e39276f1466bc8a9
    } else {
      socket_.reset(new SOCKSClientSocket(
          std::move(transport_socket_handle_), socks_params_->destination(),
+diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
+index 369a1ca0c222526b3daf5250d221e43c37c2e2a3..ff58dc77128ece681a757bebb91f424f82ee14c0 100644
+--- a/net/proxy/proxy_service.cc
++++ b/net/proxy/proxy_service.cc
+@@ -1476,7 +1476,7 @@ void ProxyService::ResetConfigService(
+ 
+ void ProxyService::ForceReloadProxyConfig() {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+-  ResetProxyConfig(false);
++  ResetProxyConfig(true);
+   ApplyProxyConfigIfAvailable();
+ }
+ 
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h

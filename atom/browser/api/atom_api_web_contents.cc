@@ -413,6 +413,14 @@ mate::Handle<api::Session> SessionFromOptions(v8::Isolate* isolate,
     if (options.Get("parent_partition", &parent_partition)) {
       session_options.SetString("parent_partition", parent_partition);
     }
+    bool isolated_storage;
+    if (options.Get("isolated_storage", &isolated_storage)) {
+      session_options.SetBoolean("isolated_storage", isolated_storage);
+    }
+    std::string tor_proxy;
+    if (options.Get("tor_proxy", &tor_proxy)) {
+      session_options.SetString("tor_proxy", tor_proxy);
+    }
     session = Session::FromPartition(isolate, partition, session_options);
   } else {
     // Use the default session if not specified.
