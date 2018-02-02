@@ -2105,6 +2105,22 @@ index b7fb84846acdd37de8593a1180dfaedd2fbc431c..3b4be3019ec0dd2fa0ed636bc6a56ea2
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
+diff --git a/net/base/host_port_pair.cc b/net/base/host_port_pair.cc
+index ec8248449dbcd4156e361fcc8781ce0712f26a02..8fd7daa8348a7a8e7f044b501dfeff8d4b578b35 100644
+--- a/net/base/host_port_pair.cc
++++ b/net/base/host_port_pair.cc
+@@ -18,9 +18,11 @@
+ namespace net {
+ 
+ HostPortPair::HostPortPair() : port_(0) {}
++#if 0                           // muon override
+ HostPortPair::HostPortPair(const std::string& in_host, uint16_t in_port)
+     : host_(in_host), port_(in_port) {
+ }
++#endif
+ 
+ // static
+ HostPortPair HostPortPair::FromURL(const GURL& url) {
 diff --git a/net/base/host_port_pair.h b/net/base/host_port_pair.h
 index a5ee6bda3ff542624b484b7a11811b708fec3e11..0d635e6dd1242382bd5845f6cb7674dc32c58b5d 100644
 --- a/net/base/host_port_pair.h
@@ -2214,7 +2230,7 @@ index 551953165f93c8d8e4772f0e905f1c4819aaf3b5..caf6df58e858580b165e6ff689572a3d
  EVENT_TYPE(SOCKS5_HANDSHAKE_WRITE)
  
 diff --git a/net/proxy/proxy_server.cc b/net/proxy/proxy_server.cc
-index ed81ebbb26b4f439d618c115b32f49249d9284a6..35c592babe062b5804c8d3292dd3893ea51279b2 100644
+index ed81ebbb26b4f439d618c115b32f49249d9284a6..ebfa79de63e40539a09d072a62c8522fef7cf0f4 100644
 --- a/net/proxy/proxy_server.cc
 +++ b/net/proxy/proxy_server.cc
 @@ -8,6 +8,7 @@
@@ -2225,34 +2241,15 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..35c592babe062b5804c8d3292dd3893e
  #include "net/base/url_util.h"
  #include "net/http/http_util.h"
  
-@@ -229,10 +230,14 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
-   HostPortPair host_port_pair;
- 
-   if (scheme != SCHEME_INVALID && scheme != SCHEME_DIRECT) {
-+    std::string username;
-+    std::string password;
+@@ -232,7 +233,7 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
      std::string host;
      int port = -1;
      // If the scheme has a host/port, parse it.
 -    bool ok = ParseHostAndPort(begin, end, &host, &port);
-+    bool ok = scheme == SCHEME_SOCKS5
-+      ? ParseAuthHostAndPort(begin, end, &username, &password, &host, &port)
-+      : ParseHostAndPort(begin, end, &host, &port);
++    bool ok = ParseAuthHostAndPort(begin, end, &host, &port);
      if (!ok)
        return ProxyServer();  // Invalid -- failed parsing <host>[":"<port>]
  
-@@ -240,7 +245,10 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
-     if (port == -1)
-       port = GetDefaultPortForScheme(scheme);
- 
--    host_port_pair = HostPortPair(host, static_cast<uint16_t>(port));
-+    DCHECK(scheme == SCHEME_SOCKS5 || username.size() == 0);
-+    DCHECK(scheme == SCHEME_SOCKS5 || password.size() == 0);
-+    host_port_pair = HostPortPair(
-+        username, password, host, static_cast<uint16_t>(port));
-   }
- 
-   return ProxyServer(scheme, host_port_pair);
 diff --git a/net/socket/socks5_client_socket.cc b/net/socket/socks5_client_socket.cc
 index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce67473e2b8188 100644
 --- a/net/socket/socks5_client_socket.cc

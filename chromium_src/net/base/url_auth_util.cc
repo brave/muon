@@ -15,9 +15,7 @@ namespace net {
 // password instead of rejecting them.
 bool ParseAuthHostAndPort(std::string::const_iterator host_and_port_begin,
                           std::string::const_iterator host_and_port_end,
-                          std::string *username,
-                          std::string *password,
-                          std::string* host,
+                          std::string* up_host_ret,
                           int* port) {
   if (host_and_port_begin >= host_and_port_end)
     return false;
@@ -68,12 +66,26 @@ bool ParseAuthHostAndPort(std::string::const_iterator host_and_port_begin,
     }
   }
 
+  // Reassemble user:pass@host as up_host.
+  std::string up_host;
+  std::string username(auth_begin + username_component.begin,
+                       username_component.len);
+  std::string password(auth_begin + password_component.begin,
+                       password_component.len);
+  std::string hostname(auth_begin + hostname_component.begin,
+                       hostname_component.len);
+  if (username.size() != 0 || password.size() != 0) {
+    up_host += username;
+    if (password.size() != 0) {
+      up_host += ":";
+      up_host += password;
+    }
+    up_host += "@";
+  }
+  up_host += hostname;
+
   // Pass results back to caller.
-  username->assign(auth_begin + username_component.begin,
-                   username_component.len);
-  password->assign(auth_begin + password_component.begin,
-                   password_component.len);
-  host->assign(auth_begin + hostname_component.begin, hostname_component.len);
+  *up_host_ret = up_host;
   *port = parsed_port_number;
 
   return true;  // Success.
