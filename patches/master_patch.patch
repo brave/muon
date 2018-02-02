@@ -1825,6 +1825,54 @@ index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f74
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
+diff --git a/net/base/host_port_pair.h b/net/base/host_port_pair.h
+index a5ee6bda3ff542624b484b7a11811b708fec3e11..0d635e6dd1242382bd5845f6cb7674dc32c58b5d 100644
+--- a/net/base/host_port_pair.h
++++ b/net/base/host_port_pair.h
+@@ -23,6 +23,8 @@ class NET_EXPORT HostPortPair {
+   HostPortPair();
+   // If |in_host| represents an IPv6 address, it should not bracket the address.
+   HostPortPair(const std::string& in_host, uint16_t in_port);
++  HostPortPair(const std::string& username, const std::string& password,
++               const std::string& in_host, uint16_t in_port);
+ 
+   // Creates a HostPortPair for the origin of |url|.
+   static HostPortPair FromURL(const GURL& url);
+@@ -37,18 +39,23 @@ class NET_EXPORT HostPortPair {
+   // TODO(willchan): Define a functor instead.
+   // Comparator function so this can be placed in a std::map.
+   bool operator<(const HostPortPair& other) const {
+-    return std::tie(port_, host_) < std::tie(other.port_, other.host_);
++    return std::tie(port_, host_, username_, password_) <
++      std::tie(other.port_, other.host_, other.username_, other.password_);
+   }
+ 
+   // Equality test of contents. (Probably another violation of style guide).
+   bool Equals(const HostPortPair& other) const {
+-    return host_ == other.host_ && port_ == other.port_;
++    return username_ == other.username_ && password_ == other.password_ &&
++      host_ == other.host_ && port_ == other.port_;
+   }
+ 
+   bool IsEmpty() const {
+     return host_.empty() && port_ == 0;
+   }
+ 
++  const std::string& username() const { return username_; }
++  const std::string& password() const { return password_; }
++
+   const std::string& host() const {
+     return host_;
+   }
+@@ -72,6 +79,8 @@ class NET_EXPORT HostPortPair {
+   size_t EstimateMemoryUsage() const;
+ 
+  private:
++  std::string username_;
++  std::string password_;
+   // If |host_| represents an IPv6 address, this string will not contain
+   // brackets around the address.
+   std::string host_;
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
 index 9361272ce0d539dd4bfa1b66b07cb416fe867b14..2df550bc5c628f9029f44328922dac267bbc17b1 100644
 --- a/net/http/http_util.cc
@@ -1873,234 +1921,50 @@ index 551953165f93c8d8e4772f0e905f1c4819aaf3b5..caf6df58e858580b165e6ff689572a3d
  EVENT_TYPE(SOCKS5_HANDSHAKE_WRITE)
  
 diff --git a/net/proxy/proxy_server.cc b/net/proxy/proxy_server.cc
-index ed81ebbb26b4f439d618c115b32f49249d9284a6..3ad26195376d8cb017d2eaf8def61fa681c8aa79 100644
+index ed81ebbb26b4f439d618c115b32f49249d9284a6..35c592babe062b5804c8d3292dd3893ea51279b2 100644
 --- a/net/proxy/proxy_server.cc
 +++ b/net/proxy/proxy_server.cc
-@@ -65,7 +65,17 @@ ProxyServer::Scheme GetSchemeFromURIInternal(base::StringPiece type) {
- }  // namespace
+@@ -8,6 +8,7 @@
  
- ProxyServer::ProxyServer(Scheme scheme, const HostPortPair& host_port_pair)
--      : scheme_(scheme), host_port_pair_(host_port_pair) {
-+      : ProxyServer(scheme, host_port_pair, "", "") {
-+}
-+
-+ProxyServer::ProxyServer(Scheme scheme, const HostPortPair& host_port_pair,
-+                         const std::string& username,
-+                         const std::string& password)
-+      : scheme_(scheme), host_port_pair_(host_port_pair),
-+        username_(username), password_(password) {
-+  // Authentication is supported only for SOCKS5 proxies.
-+  DCHECK(scheme_ == SCHEME_SOCKS5 ||
-+         (username.size() == 0 && password.size() == 0));
-   if (scheme_ == SCHEME_DIRECT || scheme_ == SCHEME_INVALID) {
-     // |host_port_pair| isn't relevant for these special schemes, so none should
-     // have been specified. It is important for this to be consistent since we
-@@ -83,6 +93,14 @@ const HostPortPair& ProxyServer::host_port_pair() const {
-   return host_port_pair_;
- }
+ #include "base/strings/string_util.h"
+ #include "base/trace_event/memory_usage_estimator.h"
++#include "net/base/url_auth_util.h"
+ #include "net/base/url_util.h"
+ #include "net/http/http_util.h"
  
-+const std::string& ProxyServer::username() const {
-+  return username_;
-+};
-+
-+const std::string& ProxyServer::password() const {
-+  return password_;
-+};
-+
- // static
- ProxyServer ProxyServer::FromURI(const std::string& uri,
-                                  Scheme default_scheme) {
-@@ -123,7 +141,8 @@ std::string ProxyServer::ToURI() const {
-     case SCHEME_SOCKS4:
-       return std::string("socks4://") + host_port_pair().ToString();
-     case SCHEME_SOCKS5:
--      return std::string("socks5://") + host_port_pair().ToString();
-+      return std::string("socks5://") + AuthString() +
-+        host_port_pair().ToString();
-     case SCHEME_HTTPS:
-       return std::string("https://") + host_port_pair().ToString();
-     case SCHEME_QUIC:
-@@ -175,7 +194,8 @@ std::string ProxyServer::ToPacString() const {
-       // For compatibility send SOCKS instead of SOCKS4.
-       return std::string("SOCKS ") + host_port_pair().ToString();
-     case SCHEME_SOCKS5:
--      return std::string("SOCKS5 ") + host_port_pair().ToString();
-+      return std::string("SOCKS5 ") + AuthString() +
-+        host_port_pair().ToString();
-     case SCHEME_HTTPS:
-       return std::string("HTTPS ") + host_port_pair().ToString();
-     case SCHEME_QUIC:
-@@ -187,6 +207,16 @@ std::string ProxyServer::ToPacString() const {
-   }
- }
- 
-+std::string ProxyServer::AuthString() const {
-+  if (username().size() == 0 && password().size() == 0)
-+    return "";
-+  std::string auth = username();
-+  if (password().size() > 0)
-+    auth += ":" + password();
-+  auth += "@";
-+  return auth;
-+};
-+
- // static
- int ProxyServer::GetDefaultPortForScheme(Scheme scheme) {
-   switch (scheme) {
-@@ -227,6 +257,22 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
-     return ProxyServer();  // Invalid -- DIRECT cannot have a host/port.
- 
+@@ -229,10 +230,14 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
    HostPortPair host_port_pair;
-+  std::string username;
-+  std::string password;
-+
-+  std::string::const_iterator at = std::find(begin, end, '@');
-+  if (at != end) {
-+    if (scheme != SCHEME_SOCKS5)
-+      return ProxyServer();     // Invalid -- only SOCKS5 has authentication.
-+    std::string::const_iterator colon = std::find(begin, at, ':');
-+    if (colon != at) {
-+      username = std::string(begin, colon);
-+      password = std::string(colon + 1, at);
-+    } else {
-+      username = std::string(begin, at);
-+    }
-+    begin = at + 1;
-+  }
  
    if (scheme != SCHEME_INVALID && scheme != SCHEME_DIRECT) {
++    std::string username;
++    std::string password;
      std::string host;
-@@ -243,7 +289,7 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
-     host_port_pair = HostPortPair(host, static_cast<uint16_t>(port));
+     int port = -1;
+     // If the scheme has a host/port, parse it.
+-    bool ok = ParseHostAndPort(begin, end, &host, &port);
++    bool ok = scheme == SCHEME_SOCKS5
++      ? ParseAuthHostAndPort(begin, end, &username, &password, &host, &port)
++      : ParseHostAndPort(begin, end, &host, &port);
+     if (!ok)
+       return ProxyServer();  // Invalid -- failed parsing <host>[":"<port>]
+ 
+@@ -240,7 +245,10 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
+     if (port == -1)
+       port = GetDefaultPortForScheme(scheme);
+ 
+-    host_port_pair = HostPortPair(host, static_cast<uint16_t>(port));
++    DCHECK(scheme == SCHEME_SOCKS5 || username.size() == 0);
++    DCHECK(scheme == SCHEME_SOCKS5 || password.size() == 0);
++    host_port_pair = HostPortPair(
++        username, password, host, static_cast<uint16_t>(port));
    }
  
--  return ProxyServer(scheme, host_port_pair);
-+  return ProxyServer(scheme, host_port_pair, username, password);
- }
- 
- }  // namespace net
-diff --git a/net/proxy/proxy_server.h b/net/proxy/proxy_server.h
-index 8de93ea0aa4eff6501675b1bb8c1bbd07cff1222..560ffb507a304c8546d8c93737c31a72eb95604d 100644
---- a/net/proxy/proxy_server.h
-+++ b/net/proxy/proxy_server.h
-@@ -19,7 +19,7 @@
- 
- namespace net {
- 
--// ProxyServer encodes the {type, host, port} of a proxy server.
-+// ProxyServer encodes the {type, user, pass, host, port} of a proxy server.
- // ProxyServer is immutable.
- class NET_EXPORT ProxyServer {
-  public:
-@@ -44,6 +44,8 @@ class NET_EXPORT ProxyServer {
-   ProxyServer() : scheme_(SCHEME_INVALID) {}
- 
-   ProxyServer(Scheme scheme, const HostPortPair& host_port_pair);
-+  ProxyServer(Scheme scheme, const HostPortPair& host_port_pair,
-+              const std::string& username, const std::string& password);
- 
-   bool is_valid() const { return scheme_ != SCHEME_INVALID; }
- 
-@@ -68,6 +70,8 @@ class NET_EXPORT ProxyServer {
-   bool is_quic() const { return scheme_ == SCHEME_QUIC; }
- 
-   const HostPortPair& host_port_pair() const;
-+  const std::string& username() const;
-+  const std::string& password() const;
- 
-   // Parses from an input with format:
-   //   [<scheme>"://"]<server>[":"<port>]
-@@ -146,15 +150,18 @@ class NET_EXPORT ProxyServer {
- 
-   bool operator==(const ProxyServer& other) const {
-     return scheme_ == other.scheme_ &&
--           host_port_pair_.Equals(other.host_port_pair_);
-+           host_port_pair_.Equals(other.host_port_pair_) &&
-+           username_ == other.username_ &&
-+           password_ == other.password_;
-   }
- 
-   bool operator!=(const ProxyServer& other) const { return !(*this == other); }
- 
-   // Comparator function so this can be placed in a std::map.
-   bool operator<(const ProxyServer& other) const {
--    return std::tie(scheme_, host_port_pair_) <
--           std::tie(other.scheme_, other.host_port_pair_);
-+    return std::tie(scheme_, host_port_pair_, username_, password_) <
-+           std::tie(other.scheme_, other.host_port_pair_,
-+                    other.username_, other.password_);
-   }
- 
-   // Returns the estimate of dynamically allocated memory in bytes.
-@@ -168,8 +175,14 @@ class NET_EXPORT ProxyServer {
-       std::string::const_iterator host_and_port_begin,
-       std::string::const_iterator host_and_port_end);
- 
-+  // Returns the `<user>:<pass>@' prefix, if authentication is
-+  // enabled, or empty if not.
-+  std::string AuthString() const;
-+
-   Scheme scheme_;
-   HostPortPair host_port_pair_;
-+  std::string username_;
-+  std::string password_;
- };
- 
- typedef std::pair<HostPortPair, ProxyServer> HostPortProxyPair;
-diff --git a/net/socket/client_socket_pool_manager.cc b/net/socket/client_socket_pool_manager.cc
-index ffec16ff2944915301b2af4ca34b556cbc177b5d..272e99ba7ae79610cb92f606ddc9ecaf0655017b 100644
---- a/net/socket/client_socket_pool_manager.cc
-+++ b/net/socket/client_socket_pool_manager.cc
-@@ -13,6 +13,7 @@
- #include "net/proxy/proxy_info.h"
- #include "net/socket/client_socket_handle.h"
- #include "net/socket/client_socket_pool.h"
-+#include "net/socket/socks_auth_username_password.h"
- #include "net/socket/socks_client_socket_pool.h"
- #include "net/socket/ssl_client_socket_pool.h"
- #include "net/socket/transport_client_socket_pool.h"
-@@ -189,9 +190,19 @@ int InitSocketPoolHelper(ClientSocketPoolManager::SocketGroupType group_type,
-       connection_group = base::StringPrintf(
-           "socks%c/%s", socks_version, connection_group.c_str());
- 
--      socks_params = new SOCKSSocketParams(proxy_tcp_params,
--                                           socks_version == '5',
--                                           origin_host_port);
-+      if (proxy_server.username().size() != 0 ||
-+          proxy_server.password().size() != 0) {
-+        DCHECK_EQ('5', socks_version);
-+        socks_params = new SOCKSSocketParams(proxy_tcp_params,
-+                                             origin_host_port,
-+                                             new SOCKSAuthUsernamePassword(
-+                                                 proxy_server.username(),
-+                                                 proxy_server.password()));
-+      } else {
-+        socks_params = new SOCKSSocketParams(proxy_tcp_params,
-+                                             socks_version == '5',
-+                                             origin_host_port);
-+      }
-     }
-   }
- 
+   return ProxyServer(scheme, host_port_pair);
 diff --git a/net/socket/socks5_client_socket.cc b/net/socket/socks5_client_socket.cc
-index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c85f17315b84544b01c0969230c8f3a6f8b1be68 100644
+index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce67473e2b8188 100644
 --- a/net/socket/socks5_client_socket.cc
 +++ b/net/socket/socks5_client_socket.cc
-@@ -31,10 +31,12 @@ static_assert(sizeof(struct in6_addr) == 16, "incorrect system size of IPv6");
- 
- SOCKS5ClientSocket::SOCKS5ClientSocket(
-     std::unique_ptr<ClientSocketHandle> transport_socket,
--    const HostResolver::RequestInfo& req_info)
-+    const HostResolver::RequestInfo& req_info,
-+    const SOCKSAuth& auth)
-     : io_callback_(base::Bind(&SOCKS5ClientSocket::OnIOComplete,
-                               base::Unretained(this))),
-       transport_(std::move(transport_socket)),
-+      auth_state_(auth.Initialize()),
-       next_state_(STATE_NONE),
-       completed_handshake_(false),
-       bytes_sent_(0),
-@@ -245,6 +247,9 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
+@@ -245,6 +245,9 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
          net_log_.EndEventWithNetErrorCode(NetLogEventType::SOCKS5_GREET_READ,
                                            rv);
          break;
@@ -2110,7 +1974,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c85f17315b84544b01c0969230c8f3a6
        case STATE_HANDSHAKE_WRITE:
          DCHECK_EQ(OK, rv);
          net_log_.BeginEvent(NetLogEventType::SOCKS5_HANDSHAKE_WRITE);
-@@ -274,8 +279,6 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
+@@ -274,8 +277,6 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
    return rv;
  }
  
@@ -2119,7 +1983,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c85f17315b84544b01c0969230c8f3a6
  int SOCKS5ClientSocket::DoGreetWrite() {
    // Since we only have 1 byte to send the hostname length in, if the
    // URL has a hostname longer than 255 characters we can't send it.
-@@ -285,8 +288,12 @@ int SOCKS5ClientSocket::DoGreetWrite() {
+@@ -285,8 +286,12 @@ int SOCKS5ClientSocket::DoGreetWrite() {
    }
  
    if (buffer_.empty()) {
@@ -2128,18 +1992,18 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c85f17315b84544b01c0969230c8f3a6
 +    const char greeting[] = {
 +      0x05,			// SOCKS version
 +      0x01,			// number of authentication methods
-+      auth_state_->method_number(),
++      auth_method(),
 +    };
 +    buffer_ = std::string(greeting, sizeof(greeting));
      bytes_sent_ = 0;
    }
  
-@@ -345,17 +352,23 @@ int SOCKS5ClientSocket::DoGreetReadComplete(int result) {
+@@ -345,14 +350,32 @@ int SOCKS5ClientSocket::DoGreetReadComplete(int result) {
                        NetLog::IntCallback("version", buffer_[0]));
      return ERR_SOCKS_CONNECTION_FAILED;
    }
 -  if (buffer_[1] != 0x00) {
-+  if (buffer_[1] != auth_state_->method_number()) {
++  if (buffer_[1] != auth_method()) {
      net_log_.AddEvent(NetLogEventType::SOCKS_UNEXPECTED_AUTH,
                        NetLog::IntCallback("method", buffer_[1]));
      return ERR_SOCKS_CONNECTION_FAILED;
@@ -2148,20 +2012,29 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c85f17315b84544b01c0969230c8f3a6
    buffer_.clear();
 -  next_state_ = STATE_HANDSHAKE_WRITE;
 +  next_state_ = STATE_AUTH;
-   return OK;
- }
- 
++  return OK;
++}
++
 +int SOCKS5ClientSocket::DoAuth(int rv) {
-+  rv = auth_state_->Do(rv, *transport_, io_callback_);
++  rv = Authenticate(rv, *transport_, net_log_, io_callback_);
 +  next_state_ = (rv == OK ? STATE_HANDSHAKE_WRITE : STATE_AUTH);
 +  return rv;
 +}
 +
- int SOCKS5ClientSocket::BuildHandshakeWriteBuffer(std::string* handshake)
-     const {
-   DCHECK(handshake->empty());
++uint8_t SOCKS5ClientSocket::auth_method() {
++  return 0x00;
++}
++
++int SOCKS5ClientSocket::Authenticate(int rv,
++                                     ClientSocketHandle& socket,
++                                     NetLogWithSource& net_log,
++                                     CompletionCallback& callback) {
++  DCHECK_EQ(OK, rv);
+   return OK;
+ }
+ 
 diff --git a/net/socket/socks5_client_socket.h b/net/socket/socks5_client_socket.h
-index afef312d001297ac1178b93fea92586102a54ac8..ab275b81a76973db6c49e558a89b0fcf6f633445 100644
+index afef312d001297ac1178b93fea92586102a54ac8..9c37710526d38ce9a48ef4942654e9dbaae2c567 100644
 --- a/net/socket/socks5_client_socket.h
 +++ b/net/socket/socks5_client_socket.h
 @@ -19,6 +19,7 @@
@@ -2172,17 +2045,16 @@ index afef312d001297ac1178b93fea92586102a54ac8..ab275b81a76973db6c49e558a89b0fcf
  #include "net/socket/stream_socket.h"
  #include "url/gurl.h"
  
-@@ -37,7 +38,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
-   // always pass it a hostname. This means the DNS resolving is done
-   // proxy side.
-   SOCKS5ClientSocket(std::unique_ptr<ClientSocketHandle> transport_socket,
--                     const HostResolver::RequestInfo& req_info);
-+                     const HostResolver::RequestInfo& req_info,
-+                     const SOCKSAuth& auth);
+@@ -40,7 +41,7 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+                      const HostResolver::RequestInfo& req_info);
  
    // On destruction Disconnect() is called.
-   ~SOCKS5ClientSocket() override;
-@@ -81,6 +83,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+-  ~SOCKS5ClientSocket() override;
++  virtual ~SOCKS5ClientSocket() override;
+ 
+   // StreamSocket implementation.
+ 
+@@ -81,6 +82,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
      STATE_GREET_WRITE_COMPLETE,
      STATE_GREET_READ,
      STATE_GREET_READ_COMPLETE,
@@ -2191,133 +2063,47 @@ index afef312d001297ac1178b93fea92586102a54ac8..ab275b81a76973db6c49e558a89b0fcf
      STATE_HANDSHAKE_WRITE,
      STATE_HANDSHAKE_WRITE_COMPLETE,
      STATE_HANDSHAKE_READ,
-@@ -115,6 +119,7 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+@@ -115,6 +118,14 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
    int DoGreetReadComplete(int result);
    int DoGreetWrite();
    int DoGreetWriteComplete(int result);
 +  int DoAuth(int result);
++
++  // Authentication hooks.
++  virtual uint8_t auth_method();
++  virtual int Authenticate(int result,
++                           ClientSocketHandle& socket,
++                           NetLogWithSource& net_log,
++                           CompletionCallback& callback);
  
    // Writes the SOCKS handshake buffer into |handshake|
    // and return OK on success.
-@@ -125,6 +130,9 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
-   // Stores the underlying socket.
-   std::unique_ptr<ClientSocketHandle> transport_;
- 
-+  // Stores authentication state.
-+  std::unique_ptr<SOCKSAuthState> auth_state_;
-+
-   State next_state_;
- 
-   // Stores the callback to the layer above, called on completing Connect().
 diff --git a/net/socket/socks_client_socket_pool.cc b/net/socket/socks_client_socket_pool.cc
-index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..af0d0e650544b0c8c0e1bdb8291994a90192f942 100644
+index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6ea5b4919 100644
 --- a/net/socket/socks_client_socket_pool.cc
 +++ b/net/socket/socks_client_socket_pool.cc
-@@ -17,6 +17,7 @@
+@@ -16,7 +16,7 @@
+ #include "net/socket/client_socket_factory.h"
  #include "net/socket/client_socket_handle.h"
  #include "net/socket/client_socket_pool_base.h"
- #include "net/socket/socks5_client_socket.h"
-+#include "net/socket/socks_auth_null.h"
+-#include "net/socket/socks5_client_socket.h"
++#include "net/socket/socks5_client_socket_auth.h"
  #include "net/socket/socks_client_socket.h"
  #include "net/socket/transport_client_socket_pool.h"
  
-@@ -30,11 +31,26 @@ SOCKSSocketParams::SOCKSSocketParams(
-     const HostPortPair& host_port_pair)
-     : transport_params_(proxy_server),
-       destination_(host_port_pair),
--      socks_v5_(socks_v5) {
-+      socks_v5_(socks_v5),
-+      auth_(new SOCKSAuthNull) {
-+}
-+
-+SOCKSSocketParams::SOCKSSocketParams(
-+    const scoped_refptr<TransportSocketParams>& proxy_server,
-+    const HostPortPair& host_port_pair,
-+    const scoped_refptr<SOCKSAuth>& auth)
-+    : transport_params_(proxy_server),
-+      destination_(host_port_pair),
-+      socks_v5_(true),
-+      auth_(auth) {
- }
+@@ -146,8 +146,10 @@ int SOCKSConnectJob::DoSOCKSConnect() {
  
- SOCKSSocketParams::~SOCKSSocketParams() = default;
- 
-+SOCKSAuth::~SOCKSAuth() = default;
-+
-+SOCKSAuthState::~SOCKSAuthState() = default;
-+
- // SOCKSConnectJobs will time out after this many seconds.  Note this is on
- // top of the timeout for the transport socket.
- static const int kSOCKSConnectJobTimeoutInSeconds = 30;
-@@ -147,7 +163,8 @@ int SOCKSConnectJob::DoSOCKSConnect() {
    // Add a SOCKS connection on top of the tcp socket.
    if (socks_params_->is_socks_v5()) {
-     socket_.reset(new SOCKS5ClientSocket(std::move(transport_socket_handle_),
+-    socket_.reset(new SOCKS5ClientSocket(std::move(transport_socket_handle_),
 -                                         socks_params_->destination()));
-+                                         socks_params_->destination(),
-+                                         *socks_params_->auth()));
++    socket_.reset(new SOCKS5ClientSocketAuth(
++            std::move(transport_socket_handle_),
++            socks_params_->destination(),
++            socks_params_->transport_params()->destination().host_port_pair()));
    } else {
      socket_.reset(new SOCKSClientSocket(std::move(transport_socket_handle_),
                                          socks_params_->destination(),
-diff --git a/net/socket/socks_client_socket_pool.h b/net/socket/socks_client_socket_pool.h
-index 4eb72e8e4fe5109f68620034ee2ae417ee4731fc..c15bafd8f9c556a64010ca66dcbf87cf6d5d9950 100644
---- a/net/socket/socks_client_socket_pool.h
-+++ b/net/socket/socks_client_socket_pool.h
-@@ -21,6 +21,8 @@
- namespace net {
- 
- class ConnectJobFactory;
-+class SOCKSAuth;
-+class SOCKSAuthState;
- class SocketPerformanceWatcherFactory;
- class TransportClientSocketPool;
- class TransportSocketParams;
-@@ -30,11 +32,15 @@ class NET_EXPORT_PRIVATE SOCKSSocketParams
-  public:
-   SOCKSSocketParams(const scoped_refptr<TransportSocketParams>& proxy_server,
-                     bool socks_v5, const HostPortPair& host_port_pair);
-+  SOCKSSocketParams(const scoped_refptr<TransportSocketParams>& proxy_server,
-+                    const HostPortPair& host_port_pair,
-+                    const scoped_refptr<SOCKSAuth>& auth);
- 
-   const scoped_refptr<TransportSocketParams>& transport_params() const {
-     return transport_params_;
-   }
-   const HostResolver::RequestInfo& destination() const { return destination_; }
-+  const scoped_refptr<SOCKSAuth>& auth() const { return auth_; }
-   bool is_socks_v5() const { return socks_v5_; }
- 
-  private:
-@@ -46,10 +52,29 @@ class NET_EXPORT_PRIVATE SOCKSSocketParams
-   // This is the HTTP destination.
-   HostResolver::RequestInfo destination_;
-   const bool socks_v5_;
-+  const scoped_refptr<SOCKSAuth> auth_;
- 
-   DISALLOW_COPY_AND_ASSIGN(SOCKSSocketParams);
- };
- 
-+// Method and parameters for authentication.
-+class NET_EXPORT_PRIVATE SOCKSAuth
-+    : public base::RefCounted<SOCKSAuth> {
-+ public:
-+  virtual SOCKSAuthState* Initialize() const = 0;
-+ protected:
-+  friend class base::RefCounted<SOCKSAuth>;
-+  virtual ~SOCKSAuth() = 0;
-+};
-+
-+// State for performing authentication.
-+class NET_EXPORT_PRIVATE SOCKSAuthState {
-+ public:
-+  virtual ~SOCKSAuthState() = 0;
-+  virtual uint8_t method_number() = 0;
-+  virtual int Do(int, ClientSocketHandle&, CompletionCallback&) = 0;
-+};
-+
- // SOCKSConnectJob handles the handshake to a socks server after setting up
- // an underlying transport socket.
- class SOCKSConnectJob : public ConnectJob {
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h
