@@ -3,51 +3,62 @@
 // found in the LICENSE file.
 
 #include "net/base/io_buffer.h"
-#include "net/socket/socks_auth_username_password.h"
+#include "net/socket/socks5_client_socket_auth.h"
 
 namespace net {
 
-SOCKSAuthUsernamePassword::SOCKSAuthUsernamePassword(
-      const std::string& username, const std::string& password)
-    : username_(username), password_(password) {
-}
-
-SOCKSAuthUsernamePassword::~SOCKSAuthUsernamePassword() = default;
-
-SOCKSAuthState* SOCKSAuthUsernamePassword::Initialize() const {
-  return new SOCKSAuthUsernamePassword::State(this);
-}
-
-SOCKSAuthUsernamePassword::State::State(const SOCKSAuthUsernamePassword* auth)
-    : auth_(auth),
+SOCKS5ClientSocketAuth::SOCKS5ClientSocketAuth(
+    std::unique_ptr<ClientSocketHandle> transport_socket,
+    const HostResolver::RequestInfo& req_info,
+    const HostPortPair& proxy_host_port)
+    : SOCKS5ClientSocket(std::move(transport_socket), req_info),
+      proxy_host_port_(proxy_host_port),
       next_state_(STATE_INIT_WRITE) {
 }
 
-SOCKSAuthUsernamePassword::State::~State() = default;
+SOCKS5ClientSocketAuth::~SOCKS5ClientSocketAuth() = default;
 
-uint8_t SOCKSAuthUsernamePassword::State::method_number() {
+const std::string& SOCKS5ClientSocketAuth::username() {
+  return proxy_host_port_.username();
+}
+
+const std::string& SOCKS5ClientSocketAuth::password() {
+  return proxy_host_port_.password();
+}
+
+bool SOCKS5ClientSocketAuth::do_auth() {
+  return username().size() != 0 || password().size() != 0;
+}
+
+uint8_t SOCKS5ClientSocketAuth::auth_method() {
+  if (!do_auth())
+    return 0x00;
   return 0x02;
 }
 
 static const size_t kSOCKSAuthUsernamePasswordResponseLen = 2;
 
-int SOCKSAuthUsernamePassword::State::Do(
-    int rv, ClientSocketHandle& transport, CompletionCallback& callback) {
-  const NetLogWithSource& net_log = transport.socket()->NetLog();
+int SOCKS5ClientSocketAuth::Authenticate(
+    int rv, ClientSocketHandle& transport, NetLogWithSource& net_log,
+    CompletionCallback& callback) {
+  if (!do_auth()) {
+    DCHECK_EQ(OK, rv);
+    return OK;
+  }
   do {
     switch (next_state_) {
       case STATE_INIT_WRITE: {
         DCHECK_EQ(OK, rv);
         // Initialize the buffer with 
         //        0x01, usernamelen, username, passwordlen, password
-        size_t usernamelen = auth_->username_.size();
-        size_t passwordlen = auth_->password_.size();
+        size_t usernamelen = username().size();
+        size_t passwordlen = password().size();
         buffer_ = std::string(1 + 1 + usernamelen + 1 + passwordlen, 0);
         buffer_[0] = 0x01;
         buffer_[1] = usernamelen;
-        buffer_.replace(2, usernamelen, auth_->username_);
+        buffer_.replace(2, usernamelen, username());
         buffer_[2 + usernamelen] = passwordlen;
-        buffer_.replace(2 + usernamelen + 1, passwordlen, auth_->password_);
+        buffer_.replace(2 + usernamelen + 1, passwordlen, password());
         DCHECK_EQ(buffer_.size(), 2 + usernamelen + 1 + passwordlen);
         buffer_left_ = buffer_.size();
         next_state_ = STATE_WRITE;
