@@ -76,8 +76,6 @@ bool ParseAuthHostAndPort(std::string::const_iterator host_and_port_begin,
   host->assign(auth_begin + hostname_component.begin, hostname_component.len);
   *port = parsed_port_number;
 
-  std::cerr << "username(" << username->size() << "): " << *username << "\n";
-  std::cerr << "password(" << password->size() << "): " << *password << "\n";
   return true;  // Success.
 }
 
