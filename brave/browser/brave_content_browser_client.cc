@@ -708,6 +708,11 @@ void BraveContentBrowserClient::SiteInstanceDeleting(
 
 bool BraveContentBrowserClient::ShouldUseProcessPerSite(
     content::BrowserContext* browser_context, const GURL& effective_url) {
+  auto brave_browser_context =
+    BraveBrowserContext::FromBrowserContext(browser_context);
+  if (brave_browser_context && brave_browser_context->IsIsolatedStorage())
+    return true;
+
   Profile* profile = Profile::FromBrowserContext(browser_context);
   if (!profile)
     return false;
