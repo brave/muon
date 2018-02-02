@@ -2324,7 +2324,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
  }
  
 diff --git a/net/socket/socks5_client_socket.h b/net/socket/socks5_client_socket.h
-index afef312d001297ac1178b93fea92586102a54ac8..9c37710526d38ce9a48ef4942654e9dbaae2c567 100644
+index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e00cd5251 100644
 --- a/net/socket/socks5_client_socket.h
 +++ b/net/socket/socks5_client_socket.h
 @@ -19,6 +19,7 @@
@@ -2334,15 +2334,6 @@ index afef312d001297ac1178b93fea92586102a54ac8..9c37710526d38ce9a48ef4942654e9db
 +#include "net/socket/socks_client_socket_pool.h"
  #include "net/socket/stream_socket.h"
  #include "url/gurl.h"
- 
-@@ -40,7 +41,7 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
-                      const HostResolver::RequestInfo& req_info);
- 
-   // On destruction Disconnect() is called.
--  ~SOCKS5ClientSocket() override;
-+  virtual ~SOCKS5ClientSocket() override;
- 
-   // StreamSocket implementation.
  
 @@ -81,6 +82,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
      STATE_GREET_WRITE_COMPLETE,
