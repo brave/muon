@@ -620,7 +620,8 @@ atom::AtomBrowserContext* BraveBrowserContext::FromPartition(
   if (base::StartsWith(
       partition, kPersistPrefix, base::CompareCase::SENSITIVE)) {
     std::string name = partition.substr(kPersistPrefixLength);
-    return atom::AtomBrowserContext::From(name, false, options);
+    return atom::AtomBrowserContext::From(
+        name == "default" ? "" : name, false, options);
   } else {
     return atom::AtomBrowserContext::From(partition, true, options);
   }
