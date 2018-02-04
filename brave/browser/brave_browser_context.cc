@@ -331,7 +331,7 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
     content::ProtocolHandlerMap* protocol_handlers,
     content::URLRequestInterceptorScopedVector request_interceptors) {
   if (isolated_storage_) {
-    url_request_getter_ =
+    auto url_request_context_getter =
       new brightray::URLRequestContextGetter(
         this,
         static_cast<brightray::NetLog*>(brightray::BrowserClient::Get()->
@@ -342,9 +342,11 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
         BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
         protocol_handlers,
         std::move(request_interceptors));
-    auto proxy_service = url_request_getter_->GetURLRequestContext()->
-      proxy_service();
+    StoragePartitionDescriptor descriptor(partition_path, in_memory);
+    url_request_context_getter_map_[descriptor] = url_request_context_getter;
     if (!tor_proxy_.empty() && GURL(tor_proxy_).is_valid()) {
+      auto proxy_service = url_request_context_getter->GetURLRequestContext()->
+        proxy_service();
       net::ProxyConfig config;
       // Notice CreateRequestContextForStoragePartition will only be called once
       // per partition_path so there is no need to cache password per origin
@@ -363,7 +365,24 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
         new net::ProxyConfigServiceFixed(config)));
       proxy_service->ForceReloadProxyConfig();
     }
-    return url_request_getter_.get();
+    return url_request_context_getter;
+  } else {
+    return nullptr;
+  }
+}
+
+net::URLRequestContextGetter*
+BraveBrowserContext::CreateMediaRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory) {
+  if (isolated_storage_) {
+    StoragePartitionDescriptor descriptor(partition_path, in_memory);
+    URLRequestContextGetterMap::iterator iter =
+      url_request_context_getter_map_.find(descriptor);
+  if (iter != url_request_context_getter_map_.end())
+    return (iter->second).get();
+  else
+    return nullptr;
   } else {
     return nullptr;
   }
