@@ -592,6 +592,16 @@ bool Session::Equal(Session* session) const {
 #endif
 }
 
+bool Session::IsOffTheRecord() const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (brave_browser_context->IsOffTheRecord())
+    return true;
+  if (brave_browser_context->IsIsolatedStorage())
+    return true;
+  return false;
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, content::BrowserContext* browser_context) {
@@ -649,6 +659,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
                  &Session::AllowNTLMCredentialsForDomains)
       .SetMethod("setEnableBrotli", &Session::SetEnableBrotli)
       .SetMethod("equal", &Session::Equal)
+      .SetMethod("isOffTheRecord", &Session::IsOffTheRecord)
       .SetProperty("partition", &Session::Partition)
       .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)
