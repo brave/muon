@@ -167,6 +167,11 @@ void BraveJavaScriptDialogManager::RunJavaScriptDialog(
     return;
   }
 
+  base::Callback<void(bool, const base::string16&, bool)> callback_wrapper =
+    base::Bind(&BraveJavaScriptDialogManager::OnDialogClosed,
+               base::Unretained(this), web_contents,
+               base::Passed(std::move(callback)));
+
   gin::TryCatch try_catch(isolate);
   mate::EmitEvent(isolate, env->process_object(), GetEventName(dialog_type),
                   web_contents, extra_data, dialog_title, message_text,
@@ -174,11 +179,9 @@ void BraveJavaScriptDialogManager::RunJavaScriptDialog(
                   ShouldDisplaySuppressCheckbox(extra_data),
                   false,  // is_before_unload_dialog
                   false,  // is_reload
-                  base::Bind(&BraveJavaScriptDialogManager::OnDialogClosed,
-                             base::Unretained(this), web_contents,
-                             base::Passed(std::move(callback))));
+                  callback_wrapper);
   if (try_catch.HasCaught()) {
-    std::move(callback).Run(false, base::string16());
+    callback_wrapper.Run(false, base::string16(), false);
     LOG(ERROR) << "Uncaught exception: " << try_catch.GetStackTrace();
   } else {
     if (extra_data->dialog_count_ < 100) {
@@ -231,6 +234,10 @@ void BraveJavaScriptDialogManager::RunBeforeUnloadDialog(
     std::move(callback).Run(true, base::string16());
     return;
   }
+  base::Callback<void(bool, const base::string16&, bool)> callback_wrapper =
+    base::Bind(&BraveJavaScriptDialogManager::OnBeforeUnloadDialogClosed,
+               base::Unretained(this), web_contents,
+               base::Passed(std::move(callback)));
 
   gin::TryCatch try_catch(isolate);
   mate::EmitEvent(
@@ -241,12 +248,10 @@ void BraveJavaScriptDialogManager::RunBeforeUnloadDialog(
       ShouldDisplaySuppressCheckbox(extra_data),
       true,  // is_before_unload_dialog
       is_reload,
-      base::Bind(&BraveJavaScriptDialogManager::OnBeforeUnloadDialogClosed,
-                 base::Unretained(this), web_contents,
-                 base::Passed(std::move(callback))));
+      callback_wrapper);
 
   if (try_catch.HasCaught()) {
-    std::move(callback).Run(true, base::string16());
+    callback_wrapper.Run(true, base::string16(), false);
     LOG(ERROR) << "Uncaught exception: " << try_catch.GetStackTrace();
   } else {
     if (extra_data->dialog_count_ < 100) {
