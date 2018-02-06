@@ -1446,6 +1446,30 @@ index 7671defd7a2f2d49c38015dfe52cdb18b9eb1d21..e40f51499af760411b29f65eed5ed008
    return (renderWidgetHostView_->GetTextInputType() !=
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
+diff --git a/content/browser/storage_partition_impl_map.h b/content/browser/storage_partition_impl_map.h
+index ce0951bacd4dab08db92f6a87087279fcc7e4f09..10c7976815635c945079344e63ecf7f9f9932eaf 100644
+--- a/content/browser/storage_partition_impl_map.h
++++ b/content/browser/storage_partition_impl_map.h
+@@ -22,6 +22,10 @@ class FilePath;
+ class SequencedTaskRunner;
+ }  // namespace base
+ 
++namespace brave {
++class BraveBrowserContext;
++} // namespace brave
++
+ namespace content {
+ 
+ class BrowserContext;
+@@ -64,6 +68,8 @@ class CONTENT_EXPORT StoragePartitionImplMap
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionConfigTest, OperatorLess);
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionImplMapTest, GarbageCollect);
+ 
++  friend class brave::BraveBrowserContext;
++
+   // Each StoragePartition is uniquely identified by which partition domain
+   // it belongs to (such as an app or the browser itself), the user supplied
+   // partition name and the bit indicating whether it should be persisted on
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index c1ae2a911735bd1fea7c4b9517f8dfaa362edaab..15b3a67d58136f5e07afa3cc2778a6d60b96e11f 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
