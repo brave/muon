@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <memory>
-#include <set>
 #include <utility>
 
 #include "brave/browser/brave_browser_context.h"
@@ -19,7 +18,6 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
-#include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/io_thread.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/common/chrome_paths.h"
@@ -29,7 +27,6 @@
 #include "components/autofill/core/browser/webdata/autofill_table.h"
 #include "components/component_updater/component_updater_paths.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
-#include "components/history/core/browser/history_service.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/guest_view/browser/guest_view_manager.h"
 #include "components/guest_view/browser/guest_view_manager_delegate.h"
@@ -167,6 +164,7 @@ BraveBrowserContext::BraveBrowserContext(
           base::WaitableEvent::InitialState::NOT_SIGNALED)),
       isolated_storage_(false),
       tor_proxy_(std::string()),
+      in_memory_(in_memory),
       io_task_runner_(std::move(io_task_runner)),
       delegate_(g_browser_process->profile_manager()) {
   std::string parent_partition;
@@ -258,32 +256,6 @@ BraveBrowserContext::~BraveBrowserContext() {
         base::Bind(&NotifyOTRProfileDestroyedOnIOThread,
             base::Unretained(original_context_), base::Unretained(this)));
 #endif
-  }
-
-  if (isolated_storage_) {
-    content::StoragePartition* storage_partition =
-      content::BrowserContext::GetDefaultStoragePartition(this);
-    if (storage_partition) {
-      storage_partition->ClearData(
-        content::StoragePartition::REMOVE_DATA_MASK_ALL,
-        content::StoragePartition::QUOTA_MANAGED_STORAGE_MASK_ALL, GURL(),
-        content::StoragePartition::OriginMatcherFunction(),
-        base::Time(), base::Time::Max(),
-        base::Bind(&base::DoNothing));
-
-      net::URLRequestContextGetter* url_request_context_getter;
-      // TODO(darkdh): Clear Cache
-    }
-
-    history::HistoryService* history_service =
-        HistoryServiceFactory::GetForProfile(this,
-          ServiceAccessType::EXPLICIT_ACCESS);
-    base::CancelableTaskTracker task_tracker;
-    history_service->ExpireHistoryBetween(std::set<GURL>(),
-                                        base::Time(),
-                                        base::Time::Max(),
-                                        base::Bind(&base::DoNothing),
-                                        &task_tracker);
   }
 
   g_browser_process->io_thread()->ChangedToOnTheRecord();
@@ -398,6 +370,12 @@ BraveBrowserContext::CreateMediaRequestContextForStoragePartition(
   } else {
     return nullptr;
   }
+}
+
+bool BraveBrowserContext::IsOffTheRecord() const {
+  if (isolated_storage_)
+    return true;
+  return in_memory_;
 }
 
 void BraveBrowserContext::TrackZoomLevelsFromParent() {

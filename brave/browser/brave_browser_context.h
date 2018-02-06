@@ -88,6 +88,7 @@ class BraveBrowserContext : public Profile {
   net::URLRequestContextGetter* CreateMediaRequestContextForStoragePartition(
       const base::FilePath& partition_path,
       bool in_memory) override;
+  bool IsOffTheRecord() const override;
 
   // Profile implementation:
   scoped_refptr<base::SequencedTaskRunner> GetIOTaskRunner() override;
@@ -177,6 +178,7 @@ class BraveBrowserContext : public Profile {
   std::unique_ptr<base::WaitableEvent> ready_;
   bool isolated_storage_;
   std::string tor_proxy_;
+  bool in_memory_;
 
   URLRequestContextGetterMap url_request_context_getter_map_;
 
