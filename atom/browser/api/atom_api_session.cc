@@ -602,6 +602,14 @@ bool Session::IsOffTheRecord() const {
   return false;
 }
 
+void Session::SetTorNewIdentity(const GURL& origin) const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsIsolatedStorage())
+    return;
+  brave_browser_context->SetTorNewIdentity(origin);
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, content::BrowserContext* browser_context) {
@@ -660,6 +668,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("setEnableBrotli", &Session::SetEnableBrotli)
       .SetMethod("equal", &Session::Equal)
       .SetMethod("isOffTheRecord", &Session::IsOffTheRecord)
+      .SetMethod("setTorNewIdentity", &Session::SetTorNewIdentity)
       .SetProperty("partition", &Session::Partition)
       .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)

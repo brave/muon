@@ -41,6 +41,7 @@
 #include "components/user_prefs/user_prefs.h"
 #include "components/zoom/zoom_event_manager.h"
 #include "components/webdata/common/webdata_constants.h"
+#include "content/browser/storage_partition_impl_map.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/browser_thread.h"
@@ -344,27 +345,7 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
         std::move(request_interceptors));
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
-    if (!tor_proxy_.empty() && GURL(tor_proxy_).is_valid()) {
-      auto proxy_service = url_request_context_getter->GetURLRequestContext()->
-        proxy_service();
-      net::ProxyConfig config;
-      // Notice CreateRequestContextForStoragePartition will only be called once
-      // per partition_path so there is no need to cache password per origin
-      std::string origin = partition_path.DirName().BaseName().value();
-      std::string encoded_password;
-      std::vector<uint8_t> password(kTorPasswordLength);
-      crypto::RandBytes(password.data(), password.size());
-      encoded_password = base::HexEncode(password.data(), password.size());
-      std::string url = tor_proxy_;
-      base::ReplaceFirstSubstringAfterOffset(
-        &url, 0, "//", "//" + origin + ":" + encoded_password + "@");
-      // TODO(darkdh): using URL with auth after
-      // https://github.com/brave/muon/pull/470
-      config.proxy_rules().ParseFromString(tor_proxy_);
-      proxy_service->ResetConfigService(base::WrapUnique(
-        new net::ProxyConfigServiceFixed(config)));
-      proxy_service->ForceReloadProxyConfig();
-    }
+    TorSetProxy(url_request_context_getter, partition_path);
     return url_request_context_getter;
   } else {
     return nullptr;
@@ -444,6 +425,34 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
   // zoom level is set, so we need to do it here.
   zoom::ZoomEventManager::GetForBrowserContext(this)
       ->OnDefaultZoomLevelChanged();
+}
+
+void BraveBrowserContext::TorSetProxy(
+    brightray::URLRequestContextGetter* url_request_context_getter,
+    const base::FilePath partition_path) {
+  if (!url_request_context_getter || !isolated_storage_)
+    return;
+  if (!tor_proxy_.empty() && GURL(tor_proxy_).is_valid()) {
+    auto proxy_service = url_request_context_getter->GetURLRequestContext()->
+      proxy_service();
+    net::ProxyConfig config;
+    // Notice CreateRequestContextForStoragePartition will only be called once
+    // per partition_path so there is no need to cache password per origin
+    std::string origin = partition_path.DirName().BaseName().value();
+    std::string encoded_password;
+    std::vector<uint8_t> password(kTorPasswordLength);
+    crypto::RandBytes(password.data(), password.size());
+    encoded_password = base::HexEncode(password.data(), password.size());
+    std::string url = tor_proxy_;
+    base::ReplaceFirstSubstringAfterOffset(
+      &url, 0, "//", "//" + origin + ":" + encoded_password + "@");
+    // TODO(darkdh): using URL with auth after
+    // https://github.com/brave/muon/pull/470
+    config.proxy_rules().ParseFromString(tor_proxy_);
+    proxy_service->ResetConfigService(base::WrapUnique(
+      new net::ProxyConfigServiceFixed(config)));
+    proxy_service->ForceReloadProxyConfig();
+  }
 }
 
 content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
@@ -729,6 +738,21 @@ void BraveBrowserContext::SetExitType(ExitType exit_type) {
     user_prefs_->SetString(prefs::kSessionExitType,
                       ExitTypeToSessionTypePrefValue(exit_type));
   }
+}
+
+void BraveBrowserContext::SetTorNewIdentity(const GURL& origin) {
+  const std::string host = origin.host();
+  base::FilePath partition_path = this->GetPath().Append(
+    content::StoragePartitionImplMap::GetStoragePartitionPath(host, host));
+  brightray::URLRequestContextGetter* url_request_context_getter;
+  StoragePartitionDescriptor descriptor(partition_path, true);
+    URLRequestContextGetterMap::iterator iter =
+      url_request_context_getter_map_.find(descriptor);
+  if (iter != url_request_context_getter_map_.end())
+    url_request_context_getter = (iter->second).get();
+  else
+    return;
+  TorSetProxy(url_request_context_getter, partition_path);
 }
 
 scoped_refptr<base::SequencedTaskRunner>
