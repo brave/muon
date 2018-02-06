@@ -46,6 +46,7 @@
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/dom_storage_context.h"
+#include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
 #include "crypto/random.h"
 #include "extensions/browser/pref_names.h"
@@ -345,7 +346,8 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
         std::move(request_interceptors));
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
-    TorSetProxy(url_request_context_getter, partition_path);
+    TorSetProxy(url_request_context_getter, partition_path,
+                base::Bind(&base::DoNothing));
     return url_request_context_getter;
   } else {
     return nullptr;
@@ -429,7 +431,7 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
 
 void BraveBrowserContext::TorSetProxy(
     brightray::URLRequestContextGetter* url_request_context_getter,
-    const base::FilePath partition_path) {
+    const base::FilePath partition_path, const base::Closure& callback) {
   if (!url_request_context_getter || !isolated_storage_)
     return;
   if (!tor_proxy_.empty() && GURL(tor_proxy_).is_valid()) {
@@ -452,6 +454,8 @@ void BraveBrowserContext::TorSetProxy(
     proxy_service->ResetConfigService(base::WrapUnique(
       new net::ProxyConfigServiceFixed(config)));
     proxy_service->ForceReloadProxyConfig();
+    if (callback)
+      callback.Run();
   }
 }
 
@@ -740,8 +744,10 @@ void BraveBrowserContext::SetExitType(ExitType exit_type) {
   }
 }
 
-void BraveBrowserContext::SetTorNewIdentity(const GURL& origin) {
-  const std::string host = origin.host();
+void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
+                                            const base::Closure& callback) {
+  GURL site_url(content::SiteInstance::GetSiteForURL(this, url));
+  const std::string host = site_url.host();
   base::FilePath partition_path = this->GetPath().Append(
     content::StoragePartitionImplMap::GetStoragePartitionPath(host, host));
   brightray::URLRequestContextGetter* url_request_context_getter;
@@ -752,7 +758,7 @@ void BraveBrowserContext::SetTorNewIdentity(const GURL& origin) {
     url_request_context_getter = (iter->second).get();
   else
     return;
-  TorSetProxy(url_request_context_getter, partition_path);
+  TorSetProxy(url_request_context_getter, partition_path, callback);
 }
 
 scoped_refptr<base::SequencedTaskRunner>

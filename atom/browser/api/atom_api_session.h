@@ -93,7 +93,8 @@ class Session: public mate::TrackableObject<Session>,
   v8::Local<v8::Value> Extensions(v8::Isolate* isolate);
   bool Equal(Session* session) const;
   bool IsOffTheRecord() const;
-  void SetTorNewIdentity(const GURL& origin) const;
+  void SetTorNewIdentity(const GURL& url,
+                         const base::Closure& callback) const;
 
  protected:
   Session(v8::Isolate* isolate, Profile* browser_context);

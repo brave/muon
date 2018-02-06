@@ -602,12 +602,13 @@ bool Session::IsOffTheRecord() const {
   return false;
 }
 
-void Session::SetTorNewIdentity(const GURL& origin) const {
+void Session::SetTorNewIdentity(const GURL& url,
+                                const base::Closure& callback) const {
   brave::BraveBrowserContext* brave_browser_context =
    brave::BraveBrowserContext::FromBrowserContext(profile_);
   if (!brave_browser_context->IsIsolatedStorage())
     return;
-  brave_browser_context->SetTorNewIdentity(origin);
+  brave_browser_context->SetTorNewIdentity(url, callback);
 }
 
 // static

@@ -141,7 +141,7 @@ class BraveBrowserContext : public Profile {
 
   bool IsIsolatedStorage() const { return isolated_storage_; }
 
-  void SetTorNewIdentity(const GURL& origin);
+  void SetTorNewIdentity(const GURL& url, const base::Closure& callback);
 
  private:
     typedef std::map<StoragePartitionDescriptor,
@@ -156,7 +156,8 @@ class BraveBrowserContext : public Profile {
 
   void TorSetProxy(
     brightray::URLRequestContextGetter* url_request_context_getter,
-    const base::FilePath partition_path);
+    const base::FilePath partition_path,
+    const base::Closure& callback);
 
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<sync_preferences::PrefServiceSyncable> user_prefs_;
