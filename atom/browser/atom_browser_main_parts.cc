@@ -202,6 +202,34 @@ int AtomBrowserMainParts::PreCreateThreads() {
   // any callbacks, I just want to initialize the mechanism.)
   SecKeychainAddCallback(&KeychainCallback, 0, NULL);
 #endif  // defined(OS_MACOSX)
+  auto feature_list = base::FeatureList::GetInstance();
+
+  const base::CommandLine* command_line =
+      base::CommandLine::ForCurrentProcess();
+
+  // temporary workaround for flash
+  auto field_trial =
+      feature_list->GetFieldTrial(features::kPreferHtmlOverPlugins);
+  feature_list->RegisterFieldTrialOverride(
+                    features::kPreferHtmlOverPlugins.name,
+                    base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+  // disable ukm metrics
+  field_trial = feature_list->GetFieldTrial(ukm::kUkmFeature);
+  feature_list->RegisterFieldTrialOverride(ukm::kUkmFeature.name,
+                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
+  field_trial = feature_list->GetFieldTrial(
+      features::kGuestViewCrossProcessFrames);
+  feature_list->RegisterFieldTrialOverride(
+                      features::kGuestViewCrossProcessFrames.name,
+                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
+  // enable fill-on-account-select
+  field_trial = feature_list->GetFieldTrial(
+      password_manager::features::kFillOnAccountSelect);
+  feature_list->RegisterFieldTrialOverride(
+      password_manager::features::kFillOnAccountSelect.name,
+      base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
 
   fake_browser_process_->PreCreateThreads(
       *base::CommandLine::ForCurrentProcess());
@@ -267,32 +295,9 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   content::WebUIControllerFactory::RegisterFactory(
       ChromeWebUIControllerFactory::GetInstance());
 
-  js_env_.reset(new JavascriptEnvironment);
-  js_env_->isolate()->Enter();
-
-  node_bindings_->Initialize();
-
-  // Create the global environment.
-  node::Environment* env =
-      node_bindings_->CreateEnvironment(js_env_->context());
-
-  // Add atom-shell extended APIs.
-  atom_bindings_->BindTo(js_env_->isolate(), env->process_object());
-
-  // Load everything.
-  node_bindings_->LoadEnvironment(env);
-
-  // Wrap the uv loop with global env.
-  node_bindings_->set_uv_env(env);
 #if defined(USE_X11)
   ui::TouchFactory::SetTouchDeviceListFromCommandLine();
 #endif
-
-  // Start idle gc.
-  gc_timer_.Start(
-      FROM_HERE, base::TimeDelta::FromMinutes(1),
-      base::Bind(&AtomBrowserMainParts::IdleHandler,
-                 base::Unretained(this)));
 
   memory_pressure_listener_.reset(new base::MemoryPressureListener(
       base::Bind(&AtomBrowserMainParts::OnMemoryPressure,
@@ -326,6 +331,30 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   browser_context_ = ProfileManager::GetActiveUserProfile();
   brightray::BrowserMainParts::PreMainMessageLoopRun();
 
+  js_env_.reset(new JavascriptEnvironment);
+  js_env_->isolate()->Enter();
+
+  node_bindings_->Initialize();
+
+  // Create the global environment.
+  node::Environment* env =
+      node_bindings_->CreateEnvironment(js_env_->context());
+
+  // Add atom-shell extended APIs.
+  atom_bindings_->BindTo(js_env_->isolate(), env->process_object());
+
+  // Load everything.
+  node_bindings_->LoadEnvironment(env);
+
+  // Wrap the uv loop with global env.
+  node_bindings_->set_uv_env(env);
+
+  // Start idle gc.
+  gc_timer_.Start(
+      FROM_HERE, base::TimeDelta::FromMinutes(1),
+      base::Bind(&AtomBrowserMainParts::IdleHandler,
+                 base::Unretained(this)));
+
   js_env_->OnMessageLoopCreated();
   node_bindings_->PrepareMessageLoop();
   node_bindings_->RunMessageLoop();
@@ -340,34 +369,6 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   std::unique_ptr<base::DictionaryValue> empty_info(new base::DictionaryValue);
   Browser::Get()->DidFinishLaunching(*empty_info);
 #endif
-
-  base::FeatureList::InitializeInstance(
-      command_line->GetSwitchValueASCII(switches::kEnableFeatures),
-      command_line->GetSwitchValueASCII(switches::kDisableFeatures));
-  auto feature_list = base::FeatureList::GetInstance();
-  // temporary workaround for flash
-  auto field_trial =
-      feature_list->GetFieldTrial(features::kPreferHtmlOverPlugins);
-  feature_list->RegisterFieldTrialOverride(
-                    features::kPreferHtmlOverPlugins.name,
-                    base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-  // disable ukm metrics
-  field_trial = feature_list->GetFieldTrial(ukm::kUkmFeature);
-  feature_list->RegisterFieldTrialOverride(ukm::kUkmFeature.name,
-                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
-  field_trial = feature_list->GetFieldTrial(
-      features::kGuestViewCrossProcessFrames);
-  feature_list->RegisterFieldTrialOverride(
-                      features::kGuestViewCrossProcessFrames.name,
-                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
-  // enable fill-on-account-select
-  field_trial = feature_list->GetFieldTrial(
-      password_manager::features::kFillOnAccountSelect);
-  feature_list->RegisterFieldTrialOverride(
-      password_manager::features::kFillOnAccountSelect.name,
-      base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
 }
 
 
