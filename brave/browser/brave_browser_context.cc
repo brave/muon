@@ -164,6 +164,7 @@ BraveBrowserContext::BraveBrowserContext(
           base::WaitableEvent::InitialState::NOT_SIGNALED)),
       isolated_storage_(false),
       tor_proxy_(std::string()),
+      in_memory_(in_memory),
       io_task_runner_(std::move(io_task_runner)),
       delegate_(g_browser_process->profile_manager()) {
   std::string parent_partition;
@@ -369,6 +370,12 @@ BraveBrowserContext::CreateMediaRequestContextForStoragePartition(
   } else {
     return nullptr;
   }
+}
+
+bool BraveBrowserContext::IsOffTheRecord() const {
+  if (isolated_storage_)
+    return true;
+  return in_memory_;
 }
 
 void BraveBrowserContext::TrackZoomLevelsFromParent() {
@@ -706,7 +713,7 @@ std::string BraveBrowserContext::partition_with_prefix() {
   if (canonical_partition.empty())
     canonical_partition = "default";
 
-  if (IsOffTheRecord())
+  if (IsOffTheRecord() && !isolated_storage_)
     return canonical_partition;
 
   return kPersistPrefix + canonical_partition;
