@@ -1803,10 +1803,10 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-index d0c5134a2ad6e74bfe70b00bac290b56df458317..8bf2bc0ec41d39e3482bf9c69c4fd474d5808dcf 100644
+index d91e3b1430736d8997d5a9546944f3f7db985e01..9a0a23b8a12da7118acbe485d779b4341bdc9af4 100644
 --- a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
 +++ b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-@@ -3257,6 +3257,7 @@ void WebViewImpl::DidCloseContextMenu() {
+@@ -3252,6 +3252,7 @@ void WebViewImpl::DidCloseContextMenu() {
    LocalFrame* frame = page_->GetFocusController().FocusedFrame();
    if (frame)
      frame->Selection().SetCaretBlinkingSuspended(false);
