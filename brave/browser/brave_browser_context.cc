@@ -713,7 +713,7 @@ std::string BraveBrowserContext::partition_with_prefix() {
   if (canonical_partition.empty())
     canonical_partition = "default";
 
-  if (IsOffTheRecord())
+  if (IsOffTheRecord() && !isolated_storage_)
     return canonical_partition;
 
   return kPersistPrefix + canonical_partition;
