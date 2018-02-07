@@ -1364,7 +1364,7 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 46a5b64a44b337d78f52468c3788926af8fbcc87..0ddcd2cf3f93de028aae5967b1d13a45b8f96428 100644
+index 2662e67f7eeff9883f49c62c3e6223f0649b13a1..2644dce490ae294771b9090f17aad97be1942acf 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
 @@ -1675,8 +1675,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
@@ -1814,6 +1814,19 @@ index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f74
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
+diff --git a/net/http/BUILD.gn b/net/http/BUILD.gn
+index d00da41da1d8bbc40d8a85d582c1966ed22eaaf1..6a3b54e91eafb8f187989c9c954be0008343aa63 100644
+--- a/net/http/BUILD.gn
++++ b/net/http/BUILD.gn
+@@ -10,7 +10,7 @@ compiled_action("generate_transport_security_state") {
+ 
+   # Inputs in order expected by the command line of the tool.
+   inputs = [
+-    "transport_security_state_static.json",
++    "//electron/atom/browser/resources/transport_security_state_static.json",
+     "transport_security_state_static.pins",
+     "transport_security_state_static.template",
+   ]
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
 index 9361272ce0d539dd4bfa1b66b07cb416fe867b14..2df550bc5c628f9029f44328922dac267bbc17b1 100644
 --- a/net/http/http_util.cc
