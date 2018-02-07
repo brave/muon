@@ -18,7 +18,7 @@ index 8492cb5f624156ab7b7bc9cd6c06ad996eb45182..9ec52a4ef6c13b89a4bd5f364e0447eb
    }
  }
 diff --git a/src/profiler/profiler-listener.cc b/src/profiler/profiler-listener.cc
-index 5199b6135863dc8909e3d94a3dfea1b723ca088c..2fb818135dbc2820d67a6c20793cc791c8f3128e 100644
+index fecfdb66b099388cfeb71c3c7b4ef8832bfac2a6..392b34a3037b4690cb990f72216da4935bec97f2 100644
 --- a/src/profiler/profiler-listener.cc
 +++ b/src/profiler/profiler-listener.cc
 @@ -96,7 +96,7 @@ void ProfilerListener::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,
