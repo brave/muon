@@ -1200,8 +1200,9 @@ source_set("sessions") {
 
 source_set("net") {
   sources = [
-    "net/socket/socks_auth_null.cc",
-    "net/socket/socks_auth_username_password.cc",
+    "net/base/host_port_pair_auth.cc",
+    "net/base/url_auth_util.cc",
+    "net/socket/socks5_client_socket_auth.cc",
   ]
   deps = [
     "//net",
