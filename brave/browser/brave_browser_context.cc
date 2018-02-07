@@ -334,22 +334,27 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
     content::ProtocolHandlerMap* protocol_handlers,
     content::URLRequestInterceptorScopedVector request_interceptors) {
   if (isolated_storage_) {
-    auto url_request_context_getter =
-      new brightray::URLRequestContextGetter(
-        this,
-        static_cast<brightray::NetLog*>(brightray::BrowserClient::Get()->
-                                        GetNetLog()),
-        partition_path,
-        in_memory,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
-        protocol_handlers,
-        std::move(request_interceptors));
+     scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter =
+        new brightray::URLRequestContextGetter(
+          this,
+          static_cast<brightray::NetLog*>(brightray::BrowserClient::Get()->
+                                          GetNetLog()),
+          partition_path,
+          in_memory,
+          BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
+          BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
+          protocol_handlers,
+          std::move(request_interceptors));
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
-    TorSetProxy(url_request_context_getter, partition_path,
-                base::Bind(&base::DoNothing));
-    return url_request_context_getter;
+    BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+                            base::Bind(&BraveBrowserContext::TorSetProxy,
+                                          base::Unretained(this),
+                                          url_request_context_getter,
+                                          partition_path,
+                                          base::Bind(&base::DoNothing)));
+    return url_request_context_getter.get();
   } else {
     return nullptr;
   }
@@ -363,10 +368,10 @@ BraveBrowserContext::CreateMediaRequestContextForStoragePartition(
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
     URLRequestContextGetterMap::iterator iter =
       url_request_context_getter_map_.find(descriptor);
-  if (iter != url_request_context_getter_map_.end())
-    return (iter->second).get();
-  else
-    return nullptr;
+    if (iter != url_request_context_getter_map_.end())
+      return (iter->second).get();
+    else
+      return nullptr;
   } else {
     return nullptr;
   }
@@ -437,7 +442,8 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
 }
 
 void BraveBrowserContext::TorSetProxy(
-    brightray::URLRequestContextGetter* url_request_context_getter,
+    scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter,
     const base::FilePath partition_path, const base::Closure& callback) {
   if (!url_request_context_getter || !isolated_storage_)
     return;
@@ -462,7 +468,7 @@ void BraveBrowserContext::TorSetProxy(
       new net::ProxyConfigServiceFixed(config)));
     proxy_service->ForceReloadProxyConfig();
     if (callback)
-      callback.Run();
+      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, callback);
   }
 }
 
@@ -757,15 +763,19 @@ void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
   const std::string host = site_url.host();
   base::FilePath partition_path = this->GetPath().Append(
     content::StoragePartitionImplMap::GetStoragePartitionPath(host, host));
-  brightray::URLRequestContextGetter* url_request_context_getter;
+  scoped_refptr<brightray::URLRequestContextGetter> url_request_context_getter;
   StoragePartitionDescriptor descriptor(partition_path, true);
     URLRequestContextGetterMap::iterator iter =
       url_request_context_getter_map_.find(descriptor);
   if (iter != url_request_context_getter_map_.end())
-    url_request_context_getter = (iter->second).get();
+    url_request_context_getter = (iter->second);
   else
     return;
-  TorSetProxy(url_request_context_getter, partition_path, callback);
+  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+                          base::Bind(&BraveBrowserContext::TorSetProxy,
+                                        base::Unretained(this),
+                                        url_request_context_getter,
+                                        partition_path, callback));
 }
 
 scoped_refptr<base::SequencedTaskRunner>

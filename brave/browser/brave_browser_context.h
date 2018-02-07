@@ -156,7 +156,8 @@ class BraveBrowserContext : public Profile {
   void UpdateDefaultZoomLevel();
 
   void TorSetProxy(
-    brightray::URLRequestContextGetter* url_request_context_getter,
+    scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter,
     const base::FilePath partition_path,
     const base::Closure& callback);
 
