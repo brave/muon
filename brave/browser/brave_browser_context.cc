@@ -461,9 +461,7 @@ void BraveBrowserContext::TorSetProxy(
     std::string url = tor_proxy_;
     base::ReplaceFirstSubstringAfterOffset(
       &url, 0, "//", "//" + origin + ":" + encoded_password + "@");
-    // TODO(darkdh): using URL with auth after
-    // https://github.com/brave/muon/pull/470
-    config.proxy_rules().ParseFromString(tor_proxy_);
+    config.proxy_rules().ParseFromString(url);
     proxy_service->ResetConfigService(base::WrapUnique(
       new net::ProxyConfigServiceFixed(config)));
     proxy_service->ForceReloadProxyConfig();
