@@ -15,9 +15,7 @@ service_manifest("brave_content_packaged_services_manifest_overlay") {
 
 group("brave_content_manifest_overlays") {
   deps = [
-    "//chrome/app:chrome_content_browser_manifest_overlay",
-    "//chrome/app:chrome_content_renderer_manifest_overlay",
-    "//chrome/app:chrome_content_utility_manifest_overlay",
+    "//chrome/app:chrome_content_manifest_overlays",
     ":brave_content_packaged_services_manifest_overlay",
   ]
 }
@@ -30,9 +28,7 @@ if (use_aura) {
 
   group("service_manifests") {
     data_deps = [
-      "//chrome/app:chrome_content_browser_manifest",
-      "//chrome/app:chrome_content_renderer_manifest",
-      "//chrome/app:chrome_content_utility_manifest",
+      "//chrome/app:service_manifests",
       ":brave_content_packaged_services_manifest_overlay",
     ]
   }
