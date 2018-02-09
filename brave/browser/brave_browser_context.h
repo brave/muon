@@ -158,8 +158,7 @@ class BraveBrowserContext : public Profile {
   void TorSetProxy(
     scoped_refptr<brightray::URLRequestContextGetter>
       url_request_context_getter,
-    const base::FilePath partition_path,
-    const base::Closure& callback);
+    const base::FilePath partition_path);
 
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<sync_preferences::PrefServiceSyncable> user_prefs_;
@@ -178,7 +177,7 @@ class BraveBrowserContext : public Profile {
   const std::string partition_;
   std::unique_ptr<base::WaitableEvent> ready_;
   bool isolated_storage_;
-  std::string tor_proxy_;
+  GURL tor_proxy_;
   bool in_memory_;
 
   URLRequestContextGetterMap url_request_context_getter_map_;

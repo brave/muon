@@ -1351,7 +1351,7 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 46a5b64a44b337d78f52468c3788926af8fbcc87..0ddcd2cf3f93de028aae5967b1d13a45b8f96428 100644
+index 2662e67f7eeff9883f49c62c3e6223f0649b13a1..2644dce490ae294771b9090f17aad97be1942acf 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
 @@ -1675,8 +1675,23 @@ viz::FrameSinkId RenderWidgetHostViewAura::FrameSinkIdAtPoint(
@@ -1853,6 +1853,19 @@ index a433afd0217830b49ddb3381ad55afeae2381840..ddcca749666f956c6317676dbcdd48da
 +  enable_static_pins_ = true;
 +#endif
    DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+ }
+ 
+diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
+index 0503ae963e775bccd3c0241b4ec922ce8a2ecd1a..f29b0c4be5d8ad4032b1361e99c7a0e82f64d9dc 100644
+--- a/net/proxy/proxy_service.cc
++++ b/net/proxy/proxy_service.cc
+@@ -1477,7 +1477,7 @@ void ProxyService::ResetConfigService(
+ 
+ void ProxyService::ForceReloadProxyConfig() {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+-  ResetProxyConfig(false);
++  ResetProxyConfig(true);
+   ApplyProxyConfigIfAvailable();
  }
  
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
