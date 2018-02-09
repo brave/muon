@@ -1826,7 +1826,7 @@ index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f74
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
 diff --git a/net/base/host_port_pair.cc b/net/base/host_port_pair.cc
-index ec8248449dbcd4156e361fcc8781ce0712f26a02..8fd7daa8348a7a8e7f044b501dfeff8d4b578b35 100644
+index ec8248449dbcd4156e361fcc8781ce0712f26a02..e9f4dce79a73c1949293c45486606377f4f11ebb 100644
 --- a/net/base/host_port_pair.cc
 +++ b/net/base/host_port_pair.cc
 @@ -18,9 +18,11 @@
@@ -1841,6 +1841,21 @@ index ec8248449dbcd4156e361fcc8781ce0712f26a02..8fd7daa8348a7a8e7f044b501dfeff8d
  
  // static
  HostPortPair HostPortPair::FromURL(const GURL& url) {
+@@ -50,12 +52,14 @@ HostPortPair HostPortPair::FromString(const std::string& str) {
+   return host_port_pair;
+ }
+ 
++#if 0                           // muon override
+ std::string HostPortPair::ToString() const {
+   std::string ret(HostForURL());
+   ret += ':';
+   ret += base::UintToString(port_);
+   return ret;
+ }
++#endif
+ 
+ std::string HostPortPair::HostForURL() const {
+   // TODO(rtenneti): Add support for |host| to have '\0'.
 diff --git a/net/base/host_port_pair.h b/net/base/host_port_pair.h
 index a5ee6bda3ff542624b484b7a11811b708fec3e11..0d635e6dd1242382bd5845f6cb7674dc32c58b5d 100644
 --- a/net/base/host_port_pair.h
