@@ -12,6 +12,7 @@
 #include "base/files/file_util.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
+#include "brave/browser/net/proxy/proxy_config_service_tor.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
 #include "chrome/browser/browser_process.h"
@@ -48,12 +49,10 @@
 #include "content/public/browser/dom_storage_context.h"
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
-#include "crypto/random.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/features/features.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
-#include "net/proxy/proxy_config_service_fixed.h"
 #include "net/proxy/proxy_service.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
@@ -90,7 +89,6 @@ namespace {
 const char kPrefExitTypeCrashed[] = "Crashed";
 const char kPrefExitTypeSessionEnded[] = "SessionEnded";
 const char kPrefExitTypeNormal[] = "Normal";
-const int kTorPasswordLength = 16;
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 // WATCH(bridiver) - chrome/browser/profiles/off_the_record_profile_impl.cc
@@ -163,7 +161,6 @@ BraveBrowserContext::BraveBrowserContext(
           base::WaitableEvent::ResetPolicy::MANUAL,
           base::WaitableEvent::InitialState::NOT_SIGNALED)),
       isolated_storage_(false),
-      tor_proxy_(std::string()),
       in_memory_(in_memory),
       io_task_runner_(std::move(io_task_runner)),
       delegate_(g_browser_process->profile_manager()) {
@@ -181,7 +178,7 @@ BraveBrowserContext::BraveBrowserContext(
 
   std::string tor_proxy;
   if (options.GetString("tor_proxy", &tor_proxy)) {
-    tor_proxy_ = tor_proxy;
+    tor_proxy_ = GURL(tor_proxy);
   }
 
   if (in_memory) {
@@ -348,12 +345,11 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
           std::move(request_interceptors));
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
-    BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+    BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
                             base::Bind(&BraveBrowserContext::TorSetProxy,
                                           base::Unretained(this),
                                           url_request_context_getter,
-                                          partition_path,
-                                          base::Bind(&base::DoNothing)));
+                                          partition_path));
     return url_request_context_getter.get();
   } else {
     return nullptr;
@@ -444,29 +440,20 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
 void BraveBrowserContext::TorSetProxy(
     scoped_refptr<brightray::URLRequestContextGetter>
       url_request_context_getter,
-    const base::FilePath partition_path, const base::Closure& callback) {
+    const base::FilePath partition_path) {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
   if (!url_request_context_getter || !isolated_storage_)
     return;
-  if (!tor_proxy_.empty() && GURL(tor_proxy_).is_valid()) {
+  if (tor_proxy_.is_valid()) {
     auto proxy_service = url_request_context_getter->GetURLRequestContext()->
       proxy_service();
-    net::ProxyConfig config;
     // Notice CreateRequestContextForStoragePartition will only be called once
     // per partition_path so there is no need to cache password per origin
     std::string origin = partition_path.DirName().BaseName().value();
-    std::string encoded_password;
-    std::vector<uint8_t> password(kTorPasswordLength);
-    crypto::RandBytes(password.data(), password.size());
-    encoded_password = base::HexEncode(password.data(), password.size());
-    std::string url = tor_proxy_;
-    base::ReplaceFirstSubstringAfterOffset(
-      &url, 0, "//", "//" + origin + ":" + encoded_password + "@");
-    config.proxy_rules().ParseFromString(url);
-    proxy_service->ResetConfigService(base::WrapUnique(
-      new net::ProxyConfigServiceFixed(config)));
-    proxy_service->ForceReloadProxyConfig();
-    if (callback)
-      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, callback);
+    std::unique_ptr<net::ProxyConfigServiceTor>
+      config(new net::ProxyConfigServiceTor(tor_proxy_));
+    config->SetUsername(origin);
+    proxy_service->ResetConfigService(std::move(config));
   }
 }
 
@@ -769,11 +756,11 @@ void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
     url_request_context_getter = (iter->second);
   else
     return;
-  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-                          base::Bind(&BraveBrowserContext::TorSetProxy,
-                                        base::Unretained(this),
-                                        url_request_context_getter,
-                                        partition_path, callback));
+  auto proxy_service = url_request_context_getter->GetURLRequestContext()->
+    proxy_service();
+  proxy_service->ForceReloadProxyConfig();
+  if (callback)
+    callback.Run();
 }
 
 scoped_refptr<base::SequencedTaskRunner>
