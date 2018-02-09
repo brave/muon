@@ -4,6 +4,8 @@
 
 #include "net/base/host_port_pair.h"
 
+#include "base/strings/string_number_conversions.h"
+
 namespace net {
 
 HostPortPair::HostPortPair(const std::string& username,
@@ -27,6 +29,22 @@ HostPortPair::HostPortPair(const std::string& up_host, uint16_t in_port)
       password_ = std::string(colon + 1, at);
     host_ = std::string(at + 1, end);
   }
+}
+
+std::string HostPortPair::ToString() const {
+  std::string ret;
+  if (username_.size() != 0 || password_.size() != 0) {
+    ret += username_;
+    if (password_.size() != 0) {
+      ret += ':';
+      ret += password_;
+    }
+    ret += '@';
+  }
+  ret += HostForURL();
+  ret += ':';
+  ret += base::UintToString(port_);
+  return ret;
 }
 
 }  // namespace net
