@@ -201,9 +201,9 @@ void TabViewGuest::DidStartNavigation(
                                                        std::move(args)));
 }
 
-void TabViewGuest::AttachGuest(int guestInstanceId) {
+void TabViewGuest::AttachGuest(int guest_instance_id) {
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
-  args->SetInteger("guestInstanceId", guestInstanceId);
+  args->SetInteger("guestInstanceId", guest_instance_id);
   DispatchEventToView(base::MakeUnique<GuestViewEvent>(
       "webViewInternal.onAttachGuest", std::move(args)));
 }
@@ -349,10 +349,10 @@ void TabViewGuest::DidAttachToEmbedder() {
     web_contents()->GetController().LoadIfNecessary();
   }
 
+  tab_helper->DidAttach();
+
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
-
-  tab_helper->DidAttach();
 }
 
 void TabViewGuest::DidDetachFromEmbedder() {
@@ -429,6 +429,8 @@ void TabViewGuest::WillAttachToEmbedder() {
 
   if (owner_window) {
     TabIdChanged();
+    auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+    tab_helper->SetBrowser(owner_window->browser());
     api_web_contents_->SetOwnerWindow(owner_window);
   }
 }
