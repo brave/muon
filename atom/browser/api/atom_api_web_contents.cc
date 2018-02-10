@@ -759,53 +759,67 @@ void WebContents::AddNewContents(content::WebContents* source,
     user_gesture = true;
   }
 
-  if (disposition != WindowOpenDisposition::NEW_WINDOW &&
-      disposition != WindowOpenDisposition::NEW_POPUP) {
-    auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
-    if (tab_helper &&
-        tab_helper->get_index() == TabStripModel::kNoTab) {
-      ::Browser* browser = nullptr;
-      bool active = disposition == WindowOpenDisposition::NEW_FOREGROUND_TAB;
-      if (tab_helper->window_id() != -1) {
-        browser = tab_helper->browser();
-      } else {
-        browser = owner_window()->browser();
-      }
-      if (browser) {
-        int index =
-          browser->tab_strip_model()->order_controller()->
-            DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                    active ?
-                                    TabStripModel::ADD_ACTIVE :
-                                    TabStripModel::ADD_NONE);
-        tab_helper->SetTabIndex(index);
-        tab_helper->SetActive(active);
+  bool active = disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB;
+
+  auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
+  if (tab_helper)
+    tab_helper->SetActive(active);
+
+  ::Browser* browser = nullptr;
+  if (tab_helper->window_id() != -1) {
+    for (auto* b : *BrowserList::GetInstance()) {
+      if (b->session_id().id() == tab_helper->window_id()) {
+        browser = b;
+        break;
       }
     }
   }
 
-  node::Environment* env = node::Environment::GetCurrent(isolate());
-  if (!env) {
-    return;
+  if (disposition != WindowOpenDisposition::NEW_WINDOW &&
+      disposition != WindowOpenDisposition::NEW_POPUP &&
+      tab_helper) {
+    if (!browser) {
+      // TODO(bridiver) - this should be the source owner_window
+      browser = owner_window()->browser();
+      tab_helper->SetWindowId(browser->session_id().id());
+    }
+
+    if (tab_helper->get_index() == TabStripModel::kNoTab) {
+      // FIXME(svillar): The OrderController is exposed just for tests
+      int index =
+          browser->tab_strip_model()
+              ->order_controller()
+              ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                        active ? TabStripModel::ADD_ACTIVE
+                                               : TabStripModel::ADD_NONE);
+      tab_helper->SetTabIndex(index);
+    }
   }
 
-  auto event = v8::Local<v8::Object>::Cast(
-      mate::Event::Create(isolate()).ToV8());
+  node::Environment* env = node::Environment::GetCurrent(isolate());
+  bool blocked = false;
 
-  mate::EmitEvent(isolate(),
-                  env->process_object(),
-                  "add-new-contents",
-                  event,
-                  source,
-                  new_contents,
-                  disposition,
-                  initial_rect,
-                  user_gesture);
-  bool blocked = event->Get(
-      mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
+  if (env) {
+    auto event = v8::Local<v8::Object>::Cast(
+        mate::Event::Create(isolate()).ToV8());
 
-  if (was_blocked)
-    *was_blocked = blocked;
+    mate::EmitEvent(isolate(),
+                    env->process_object(),
+                    "add-new-contents",
+                    event,
+                    source,
+                    new_contents,
+                    disposition,
+                    initial_rect,
+                    user_gesture);
+    blocked = event->Get(
+        mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
+
+    if (was_blocked)
+      *was_blocked = blocked;
+  } else {
+    blocked = true;
+  }
 
   if (was_blocked && *was_blocked) {
     auto guest = brave::TabViewGuest::FromWebContents(new_contents);
@@ -814,12 +828,8 @@ void WebContents::AddNewContents(content::WebContents* source,
     } else {
       delete new_contents;
     }
-  } else {
-    if (disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB) {
-      auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
-      if (tab_helper)
-        tab_helper->SetActive(true);
-    }
+  } else if (browser) {
+    tab_helper->SetBrowser(browser);
   }
 }
 
@@ -2793,7 +2803,7 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
   bool active = true;
   options.Get("active", &active);
-  tab_helper->SetActive(active);
+  // SetActive is called in AddNewContents
 
   int index = -1;
   if (options.Get("index", &index)) {
@@ -2809,9 +2819,6 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   if (options.Get("autoDiscardable", &autoDiscardable)) {
     tab_helper->SetAutoDiscardable(autoDiscardable);
   }
-
-  int opener_tab_id = TabStripModel::kNoTab;
-    options.Get("openerTabId", &opener_tab_id);
 
   bool discarded = false;
   if (options.Get("discarded", &discarded) && discarded && !active) {
@@ -2846,21 +2853,13 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   }
 
   int window_id = -1;
-  ::Browser *browser = nullptr;
-  if (options.Get("windowId", &window_id) && window_id != -1) {
-    auto api_window =
-        mate::TrackableObject<Window>::FromWeakMapID(isolate(), window_id);
-    if (api_window) {
-      browser = api_window->window()->browser();
-      tab_helper->SetWindowId(window_id);
-    }
-  }
-  if (!browser) {
-    browser = owner_window()->browser();
-  }
+  if (options.Get("windowId", &window_id) && window_id != -1)
+    tab_helper->SetWindowId(window_id);
 
+
+  int opener_tab_id = TabStripModel::kNoTab;
+  options.Get("openerTabId", &opener_tab_id);
   tab_helper->SetOpener(opener_tab_id);
-  tab_helper->SetBrowser(browser);
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != TabStripModel::kNoTab) {

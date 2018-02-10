@@ -18,6 +18,7 @@
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/resource_coordinator/discard_reason.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
@@ -28,6 +29,8 @@
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
+#include "content/public/browser/notification_service.h"
+#include "content/public/browser/notification_source.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
@@ -397,7 +400,13 @@ void TabHelper::WasShown() {
 void TabHelper::UpdateBrowser(Browser* browser) {
   browser_ = browser;
   browser_->tab_strip_model()->AddObserver(this);
+  SetWindowId(browser_->session_id().id());
   static_cast<atom::NativeWindow*>(browser_->window())->AddObserver(this);
+
+  content::NotificationService::current()->Notify(
+      chrome::NOTIFICATION_TAB_PARENTED,
+      content::Source<content::WebContents>(web_contents()),
+      content::NotificationService::NoDetails());
 }
 
 void TabHelper::SetBrowser(Browser* browser) {
