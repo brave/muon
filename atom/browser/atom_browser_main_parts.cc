@@ -328,9 +328,6 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   OSCrypt::SetConfig(std::move(config));
 #endif
 
-  browser_context_ = ProfileManager::GetActiveUserProfile();
-  brightray::BrowserMainParts::PreMainMessageLoopRun();
-
   js_env_.reset(new JavascriptEnvironment);
   js_env_->isolate()->Enter();
 
@@ -358,6 +355,9 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   js_env_->OnMessageLoopCreated();
   node_bindings_->PrepareMessageLoop();
   node_bindings_->RunMessageLoop();
+
+  browser_context_ = ProfileManager::GetActiveUserProfile();
+  brightray::BrowserMainParts::PreMainMessageLoopRun();
 
 #if defined(USE_X11)
   libgtkui::GtkInitFromCommandLine(*base::CommandLine::ForCurrentProcess());
