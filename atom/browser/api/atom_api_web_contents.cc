@@ -1240,6 +1240,9 @@ void WebContents::TabReplacedAt(TabStripModel* tab_strip_model,
       }
     }
 
+    if (g_browser_process->GetTabManager()->IsTabDiscarded(new_contents))
+      Emit("discarded");
+      
     Emit("tab-replaced-at",
         browser->session_id().id(), index, new_contents);
   }
