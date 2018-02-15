@@ -37,6 +37,7 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
 
   ProxyConfig config_;
   GURL url_;
+  std::string username_;
 };
 
 }  // namespace net
