@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "base/strings/string_number_conversions.h"
+#include "base/strings/string_util.h"
 #include "crypto/random.h"
 #include "url/gurl.h"
 
@@ -26,10 +27,10 @@ ProxyConfigServiceTor::ConfigAvailability
   if (!url_.is_valid())
     return CONFIG_UNSET;
   std::string password = GenerateNewPassword();
-  GURL::Replacements replacements;
-  replacements.SetPasswordStr(password);
-  url_ = url_.ReplaceComponents(replacements);
-  config_.proxy_rules().ParseFromString(url_.spec());
+  std::string url = url_.spec();
+  base::ReplaceFirstSubstringAfterOffset(
+    &url, 0, "//", "//" + username_ + ":" + password + "@");
+  config_.proxy_rules().ParseFromString(url);
   *config = config_;
   return CONFIG_VALID;
 }
@@ -37,10 +38,7 @@ ProxyConfigServiceTor::ConfigAvailability
 bool ProxyConfigServiceTor::SetUsername(const std::string& username) {
   if (username.empty())
     return false;
-  GURL::Replacements replacements;
-  replacements.SetUsernameStr(username);
-  url_ = url_.ReplaceComponents(replacements);
-  config_.proxy_rules().ParseFromString(url_.spec());
+  username_ = username;
   return true;
 }
 
