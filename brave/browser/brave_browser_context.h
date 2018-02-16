@@ -179,6 +179,7 @@ class BraveBrowserContext : public Profile {
   bool isolated_storage_;
   GURL tor_proxy_;
   bool in_memory_;
+  base::Process tor_process_;
 
   URLRequestContextGetterMap url_request_context_getter_map_;
 
