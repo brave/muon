@@ -10,6 +10,7 @@
 #include "base/path_service.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/process/launch.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
 #include "brave/browser/net/proxy/proxy_config_service_tor.h"
@@ -179,6 +180,11 @@ BraveBrowserContext::BraveBrowserContext(
   std::string tor_proxy;
   if (options.GetString("tor_proxy", &tor_proxy)) {
     tor_proxy_ = GURL(tor_proxy);
+    if (!tor_process_.IsValid()) {
+      base::FilePath tor("/usr/local/bin/tor");
+      base::CommandLine cmdline(tor);
+      tor_process_ = base::LaunchProcess(cmdline, base::LaunchOptions());
+    }
   }
 
   if (in_memory) {
@@ -203,6 +209,10 @@ BraveBrowserContext::BraveBrowserContext(
 
 BraveBrowserContext::~BraveBrowserContext() {
   MaybeSendDestroyedNotification();
+
+  if (tor_process_.IsValid()) {
+    base::EnsureProcessTerminated(std::move(tor_process_));
+  }
 
   if (track_zoom_subscription_.get())
     track_zoom_subscription_.reset(nullptr);
