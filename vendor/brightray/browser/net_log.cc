@@ -11,6 +11,8 @@
 #include "content/public/common/content_switches.h"
 #include "net/log/file_net_log_observer.h"
 #include "net/log/net_log_util.h"
+#include "services/network/public/cpp/network_switches.h"
+
 
 namespace brightray {
 
