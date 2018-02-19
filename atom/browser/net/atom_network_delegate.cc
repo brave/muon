@@ -327,7 +327,7 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
   }
 
   if (!client_id.empty())
-    headers->SetHeader(content::ThrottlingNetworkTransaction::
+    headers->SetHeader(network::ThrottlingNetworkTransaction::
                            kDevToolsEmulateNetworkConditionsClientId,
                        client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))

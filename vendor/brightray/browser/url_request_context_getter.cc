@@ -51,6 +51,7 @@
 #include "net/url_request/url_request_intercepting_job_factory.h"
 #include "net/url_request/url_request_job_factory_impl.h"
 #include "services/network/proxy_service_mojo.h"
+#include "services/network/public/cpp/network_switches.h"
 #include "storage/browser/quota/special_storage_policy.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "url/url_constants.h"
@@ -212,11 +213,11 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     std::unique_ptr<net::HostResolver> host_resolver(net::HostResolver::CreateDefaultResolver(nullptr));
 
     // --host-resolver-rules
-    if (command_line.HasSwitch(::switches::kHostResolverRules)) {
+    if (command_line.HasSwitch(network::switches::kHostResolverRules)) {
       std::unique_ptr<net::MappedHostResolver> remapped_resolver(
           new net::MappedHostResolver(std::move(host_resolver)));
       remapped_resolver->SetRulesFromString(
-          command_line.GetSwitchValueASCII(::switches::kHostResolverRules));
+          command_line.GetSwitchValueASCII(network::switches::kHostResolverRules));
       host_resolver = std::move(remapped_resolver);
     }
 
