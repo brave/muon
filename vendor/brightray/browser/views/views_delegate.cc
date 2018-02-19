@@ -35,7 +35,7 @@ bool ViewsDelegate::GetSavedWindowPlacement(
 }
 
 void ViewsDelegate::NotifyAccessibilityEvent(
-    views::View* view, ui::AXEvent event_type) {
+    views::View* view, ax::mojom::Event event_type) {
 }
 
 void ViewsDelegate::NotifyMenuItemFocused(
