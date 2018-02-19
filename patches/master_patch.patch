@@ -1972,6 +1972,19 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..ebfa79de63e40539a09d072a62c8522f
      if (!ok)
        return ProxyServer();  // Invalid -- failed parsing <host>[":"<port>]
  
+diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
+index 0503ae963e775bccd3c0241b4ec922ce8a2ecd1a..f29b0c4be5d8ad4032b1361e99c7a0e82f64d9dc 100644
+--- a/net/proxy/proxy_service.cc
++++ b/net/proxy/proxy_service.cc
+@@ -1477,7 +1477,7 @@ void ProxyService::ResetConfigService(
+ 
+ void ProxyService::ForceReloadProxyConfig() {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+-  ResetProxyConfig(false);
++  ResetProxyConfig(true);
+   ApplyProxyConfigIfAvailable();
+ }
+ 
 diff --git a/net/socket/socks5_client_socket.cc b/net/socket/socks5_client_socket.cc
 index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce67473e2b8188 100644
 --- a/net/socket/socks5_client_socket.cc
@@ -2107,17 +2120,6 @@ index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6
    } else {
      socket_.reset(new SOCKSClientSocket(std::move(transport_socket_handle_),
                                          socks_params_->destination(),
-diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
-index 0503ae963e775bccd3c0241b4ec922ce8a2ecd1a..f29b0c4be5d8ad4032b1361e99c7a0e82f64d9dc 100644
---- a/net/proxy/proxy_service.cc
-+++ b/net/proxy/proxy_service.cc
-@@ -1477,7 +1477,7 @@ void ProxyService::ResetConfigService(
- void ProxyService::ForceReloadProxyConfig() {
-   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
--  ResetProxyConfig(false);
-+  ResetProxyConfig(true);
-   ApplyProxyConfigIfAvailable();
- }
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h
