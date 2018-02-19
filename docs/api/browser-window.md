@@ -887,13 +887,6 @@ Enters or leaves the kiosk mode.
 
 Returns whether the window is in kiosk mode.
 
-#### `win.getNativeWindowHandle()`
-
-Returns the platform-specific handle of the window as `Buffer`.
-
-The native type of the handle is `HWND` on Windows, `NSView*` on macOS, and
-`Window` (`unsigned long`) on Linux.
-
 #### `win.hookWindowMessage(message, callback)` _Windows_
 
 * `message` Integer
