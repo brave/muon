@@ -62,7 +62,7 @@ source_set("browser") {
     "//content/public/common:service_names",
     "//device/geolocation",
     "//device/usb/mojo",
-    "//device/usb/public/interfaces",
+    "//device/usb/public/mojom",
     "//gpu/config",
     "//mojo/common",
     "//mojo/edk/system",
