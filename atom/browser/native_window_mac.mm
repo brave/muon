@@ -1141,7 +1141,9 @@ ui::WindowShowState NativeWindowMac::GetRestoredState() const {
 }
 
 gfx::AcceleratedWidget NativeWindowMac::GetAcceleratedWidget() {
-  return inspectable_web_contents()->GetView()->GetNativeView();
+  // Only used in OS_WIN and USE_X11
+  NOTREACHED();
+  return gfx::kNullAcceleratedWidget;
 }
 
 void NativeWindowMac::SetProgressBar(double progress, const NativeWindow::ProgressState state) {

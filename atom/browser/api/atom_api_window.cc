@@ -783,12 +783,6 @@ bool Window::IsModal() const {
   return window_->is_modal();
 }
 
-v8::Local<v8::Value> Window::GetNativeWindowHandle() {
-  gfx::AcceleratedWidget handle = window_->GetAcceleratedWidget();
-  return ToBuffer(
-      isolate(), static_cast<void*>(&handle), sizeof(gfx::AcceleratedWidget));
-}
-
 void Window::SetVisibleOnAllWorkspaces(bool visible) {
   return window_->SetVisibleOnAllWorkspaces(visible);
 }
@@ -849,7 +843,6 @@ void Window::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("getParentWindow", &Window::GetParentWindow)
       .SetMethod("getChildWindows", &Window::GetChildWindows)
       .SetMethod("isModal", &Window::IsModal)
-      .SetMethod("getNativeWindowHandle", &Window::GetNativeWindowHandle)
       .SetMethod("getBounds", &Window::GetBounds)
       .SetMethod("setBounds", &Window::SetBounds)
       .SetMethod("getSize", &Window::GetSize)
