@@ -572,12 +572,6 @@ var win = new BrowserWindow({ width: 800, height: 600 });
 
 返回 boolean,是否进入或离开 kiosk 模式.
 
-### `win.getNativeWindowHandle()`
-
-以 `Buffer` 形式返回这个具体平台的窗口的句柄.
-
-windows上句柄类型为 `HWND` ，macOS `NSView*` ， Linux `Window`.
-
 ### `win.hookWindowMessage(message, callback)` _Windows_
 
 * `message` Integer
