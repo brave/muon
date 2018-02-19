@@ -23,7 +23,7 @@
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "net/proxy/proxy_resolver_v8.h"
+#include "net/proxy_resolution/proxy_resolver_v8.h"
 #include "printing/features/features.h"
 #include "services/proxy_resolver/proxy_resolver_service.h"
 #include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
