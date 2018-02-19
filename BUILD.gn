@@ -17,7 +17,7 @@ import("//tools/grit/repack.gni")
 import("//ui/base/ui_features.gni")
 import("//v8/gni/v8.gni")
 import("//third_party/icu/config.gni")
-import("//media/cdm/ppapi/cdm_paths.gni")
+import("//media/cdm/library_cdm/cdm_paths.gni")
 import("//electron/build/config.gni")
 
 group("electron") {
