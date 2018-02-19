@@ -43,10 +43,10 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate,
   // content::DownloadManagerDelegate:
   void Shutdown() override;
   bool DetermineDownloadTarget(
-      content::DownloadItem* download,
+      download::DownloadItem* download,
       const content::DownloadTargetCallback& callback) override;
   bool ShouldOpenDownload(
-      content::DownloadItem* download,
+      download::DownloadItem* download,
       const content::DownloadOpenDelayedCallback& callback) override;
   void GetNextId(const content::DownloadIdCallback& callback) override;
   bool ShouldCompleteDownload(content::DownloadItem* item,
@@ -84,9 +84,9 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate,
         content::DownloadItem* item,
         const base::Closure& internal_complete_callback);
 
-  void GetItemSavePath(content::DownloadItem* item, base::FilePath* path);
+  void GetItemSavePath(download::DownloadItem* item, base::FilePath* path);
 
-  bool GetExtension(content::DownloadItem* item,
+  bool GetExtension(download::DownloadItem* item,
                     const base::FilePath& target_path,
                     base::FilePath::StringType* extension);
 
@@ -97,7 +97,7 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate,
 
   void OnDownloadItemSelectionCancelled(
       const content::DownloadTargetCallback& callback,
-      content::DownloadItem* item);
+      download::DownloadItem* item);
 
   void CheckClientDownloadDone(uint32_t download_id,
                                safe_browsing::DownloadCheckResult result);
