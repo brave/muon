@@ -900,7 +900,7 @@ source_set("downloads") {
     "//base",
     "//chrome/common",
     "//components/download/content/factory",
-    "//components/download/public",
+    "//components/download/public/background_service:public",
     "//content/public/browser",
     "//net",
     "//url",
