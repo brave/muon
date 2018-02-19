@@ -45,8 +45,6 @@
 #include "chrome/common/pref_names.h"
 #include "components/history/core/browser/history_service.h"
 #include "components/prefs/pref_service.h"
-#include "content/network/throttling/network_conditions.h"
-#include "content/network/throttling/throttling_controller.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/storage_partition.h"
@@ -72,9 +70,7 @@
 #endif
 
 using content::BrowserThread;
-using content::NetworkConditions;
 using content::StoragePartition;
-using content::ThrottlingController;
 
 namespace {
 
