@@ -98,7 +98,6 @@ void DevToolsManagerDelegate::StartHttpHandler() {
   std::string frontend_url;
   content::DevToolsAgentHost::StartRemoteDebuggingServer(
       CreateSocketFactory(),
-      frontend_url,
       base::FilePath(),
       base::FilePath());
 }
