@@ -41,6 +41,7 @@
 #include "net/url_request/url_request_context_getter.h"
 #include "services/network/ignore_errors_cert_verifier.h"
 #include "services/network/network_service.h"
+#include "services/network/public/cpp/network_switches.h"
 #include "services/network/url_request_context_builder_mojo.h"
 #include "vendor/brightray/common/content_client.h"
 
