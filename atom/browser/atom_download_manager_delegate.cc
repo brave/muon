@@ -16,6 +16,7 @@
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/download_manager.h"
 #include "net/base/filename_util.h"
 #include "net/base/mime_util.h"
@@ -57,7 +58,7 @@ AtomDownloadManagerDelegate::~AtomDownloadManagerDelegate() {
   }
 }
 
-void AtomDownloadManagerDelegate::GetItemSavePath(content::DownloadItem* item,
+void AtomDownloadManagerDelegate::GetItemSavePath(download::DownloadItem* item,
                                                   base::FilePath* path) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Locker locker(isolate);
@@ -69,7 +70,7 @@ void AtomDownloadManagerDelegate::GetItemSavePath(content::DownloadItem* item,
 }
 
 bool AtomDownloadManagerDelegate::GetExtension(
-    content::DownloadItem* item,
+    download::DownloadItem* item,
     const base::FilePath& target_path,
     base::FilePath::StringType* extension) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
@@ -106,20 +107,20 @@ void AtomDownloadManagerDelegate:: OnDownloadItemSelected(
     download_item->SetSavePath(paths[0]);
 
   callback.Run(paths[0],
-               content::DownloadItem::TARGET_DISPOSITION_PROMPT,
-               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, paths[0],
-               content::DOWNLOAD_INTERRUPT_REASON_NONE);
+               download::DownloadItem::TARGET_DISPOSITION_PROMPT,
+               download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, paths[0],
+               download::DOWNLOAD_INTERRUPT_REASON_NONE);
 }
 
 void AtomDownloadManagerDelegate::OnDownloadItemSelectionCancelled(
     const content::DownloadTargetCallback& callback,
-    content::DownloadItem* item) {
+    download::DownloadItem* item) {
   item->Remove();
   base::FilePath path;
   callback.Run(path,
-               content::DownloadItem::TARGET_DISPOSITION_PROMPT,
-               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
-               content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
+               download::DownloadItem::TARGET_DISPOSITION_PROMPT,
+               download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+               download::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
 }
 
 void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
@@ -152,7 +153,8 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
 
   // To show file save dialog, |window| always must be valid.
   NativeWindow* window = nullptr;
-  if (content::WebContents* web_contents = item->GetWebContents()) {
+  if (content::WebContents* web_contents =
+          content::DownloadItemUtils::GetWebContents(item)) {
     window = GetNativeWindowFromWebContents(web_contents);
     // TODO(): If we want to use WebContents internally for file download, we
     // should revisit here. If that happens with single tab, browser is
@@ -168,9 +170,9 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
     item->Remove();
     base::FilePath path;
     callback.Run(path,
-                 content::DownloadItem::TARGET_DISPOSITION_PROMPT,
-                 content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
-                 content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
+                 download::DownloadItem::TARGET_DISPOSITION_PROMPT,
+                 download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 download::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
     return;
   }
 
@@ -197,10 +199,9 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
     if (download_item)
       download_item->SetSavePath(path);
 
-    callback.Run(path,
-                 content::DownloadItem::TARGET_DISPOSITION_PROMPT,
-                 content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
-                 content::DOWNLOAD_INTERRUPT_REASON_NONE);
+    callback.Run(path, download::DownloadItem::TARGET_DISPOSITION_PROMPT,
+                 download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 download::DOWNLOAD_INTERRUPT_REASON_NONE);
   }
 }
 
@@ -210,7 +211,7 @@ void AtomDownloadManagerDelegate::Shutdown() {
 }
 
 bool AtomDownloadManagerDelegate::DetermineDownloadTarget(
-    content::DownloadItem* download,
+    download::DownloadItem* download,
     const content::DownloadTargetCallback& callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
@@ -256,14 +257,14 @@ bool AtomDownloadManagerDelegate::DetermineDownloadTarget(
 }
 
 bool AtomDownloadManagerDelegate::ShouldOpenDownload(
-    content::DownloadItem* download,
+    download::DownloadItem* download,
     const content::DownloadOpenDelayedCallback& callback) {
   return true;
 }
 
 void AtomDownloadManagerDelegate::GetNextId(
     const content::DownloadIdCallback& callback) {
-  static uint32_t next_id = content::DownloadItem::kInvalidId + 1;
+  static uint32_t next_id = download::DownloadItem::kInvalidId + 1;
   callback.Run(next_id++);
 }
 

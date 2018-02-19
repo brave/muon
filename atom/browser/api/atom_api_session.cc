@@ -48,6 +48,7 @@
 #include "content/network/throttling/network_conditions.h"
 #include "content/network/throttling/throttling_controller.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/storage_partition.h"
 #include "extensions/features/features.h"
 #include "native_mate/dictionary.h"
@@ -389,16 +390,15 @@ void Session::DefaultDownloadDirectoryChanged() {
 }
 
 void Session::OnDownloadCreated(content::DownloadManager* manager,
-                                content::DownloadItem* item) {
+                                download::DownloadItem* item) {
   if (item->IsSavePackageDownload())
     return;
 
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
-  bool prevent_default = Emit(
-      "will-download",
-      DownloadItem::Create(isolate(), item),
-      item->GetWebContents());
+  bool prevent_default =
+      Emit("will-download", DownloadItem::Create(isolate(), item),
+           content::DownloadItemUtils::GetWebContents(item));
   if (prevent_default) {
     item->Cancel(true);
     item->Remove();

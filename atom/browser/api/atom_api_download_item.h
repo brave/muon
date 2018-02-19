@@ -9,7 +9,7 @@
 
 #include "atom/browser/api/trackable_object.h"
 #include "base/files/file_path.h"
-#include "content/public/browser/download_item.h"
+#include "components/download/public/common/download_item.h"
 #include "native_mate/handle.h"
 #include "url/gurl.h"
 
@@ -18,10 +18,10 @@ namespace atom {
 namespace api {
 
 class DownloadItem : public mate::TrackableObject<DownloadItem>,
-                     public content::DownloadItem::Observer {
+                     public download::DownloadItem::Observer {
  public:
   static mate::Handle<DownloadItem> Create(v8::Isolate* isolate,
-                                           content::DownloadItem* item);
+                                           download::DownloadItem* item);
 
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
@@ -39,7 +39,7 @@ class DownloadItem : public mate::TrackableObject<DownloadItem>,
   base::FilePath GetTargetFilePath() const;
   std::string GetContentDisposition() const;
   const GURL& GetURL() const;
-  content::DownloadItem::DownloadState GetState() const;
+  download::DownloadItem::DownloadState GetState() const;
   bool IsDone() const;
   void SetSavePath(const base::FilePath& path);
   base::FilePath GetSavePath() const;
@@ -48,17 +48,17 @@ class DownloadItem : public mate::TrackableObject<DownloadItem>,
   bool ShouldPrompt();
 
  protected:
-  DownloadItem(v8::Isolate* isolate, content::DownloadItem* download_item);
+  DownloadItem(v8::Isolate* isolate, download::DownloadItem* download_item);
   ~DownloadItem();
 
-  // Override content::DownloadItem::Observer methods
-  void OnDownloadUpdated(content::DownloadItem* download) override;
-  void OnDownloadRemoved(content::DownloadItem* download) override;
-  void OnDownloadDestroyed(content::DownloadItem* download) override;
+  // Override download::DownloadItem::Observer methods
+  void OnDownloadUpdated(download::DownloadItem* download) override;
+  void OnDownloadRemoved(download::DownloadItem* download) override;
+  void OnDownloadDestroyed(download::DownloadItem* download) override;
 
  private:
   base::FilePath save_path_;
-  content::DownloadItem* download_item_;
+  download::DownloadItem* download_item_;
   bool prompt_;
 
   DISALLOW_COPY_AND_ASSIGN(DownloadItem);

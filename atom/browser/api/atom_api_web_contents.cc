@@ -77,6 +77,7 @@
 #include "content/browser/frame_host/navigation_entry_impl.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/browser_plugin_guest_manager.h"
+#include "content/public/browser/download_request_utils.h"
 #include "content/public/browser/favicon_status.h"
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "content/public/browser/navigation_details.h"
@@ -131,9 +132,9 @@ using guest_view::GuestViewManager;
 namespace mate {
 
 template<>
-struct Converter<content::DownloadItem*> {
+struct Converter<download::DownloadItem*> {
   static v8::Local<v8::Value> ToV8(
-      v8::Isolate* isolate, content::DownloadItem* val) {
+      v8::Isolate* isolate, download::DownloadItem* val) {
     if (!val)
       return v8::Null(isolate);
     return atom::api::DownloadItem::Create(isolate, val).ToV8();
@@ -1724,9 +1725,9 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   web_contents()->GetController().LoadURLWithParams(params);
 }
 
-void OnDownloadStarted(base::Callback<void(content::DownloadItem*)> callback,
-                        content::DownloadItem* item,
-                        content::DownloadInterruptReason reason) {
+void OnDownloadStarted(base::Callback<void(download::DownloadItem*)> callback,
+                        download::DownloadItem* item,
+                        download::DownloadInterruptReason reason) {
   content::BrowserThread::PostTask(content::BrowserThread::UI, FROM_HERE,
       base::Bind(callback, item));
 }
@@ -1737,7 +1738,8 @@ void WebContents::DownloadURL(const GURL& url,
   auto download_manager =
     content::BrowserContext::GetDownloadManager(browser_context);
 
-  auto params = content::DownloadUrlParameters::CreateForWebContentsMainFrame(
+  auto params =
+      content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents(), url, NO_TRAFFIC_ANNOTATION_YET);
 
   bool prompt_for_location = false;
@@ -1751,7 +1753,7 @@ void WebContents::DownloadURL(const GURL& url,
     params->set_suggested_name(suggested_name);
   }
 
-  base::Callback<void(content::DownloadItem*)> callback;
+  base::Callback<void(download::DownloadItem*)> callback;
   if (args && args->GetNext(&callback)) {
     params->set_callback(base::Bind(OnDownloadStarted, callback));
   }
