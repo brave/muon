@@ -268,7 +268,7 @@ void IOThread::CleanUp() {
   UnregisterSTHObserver(ct_tree_tracker_.get());
   ct_tree_tracker_.reset();
 
-  globals_->system_request_context->proxy_service()->OnShutdown();
+  globals_->system_request_context->proxy_resolution_service()->OnShutdown();
 
 #if defined(USE_NSS_CERTS)
   net::SetURLRequestContextForNSSHttpIO(nullptr);
@@ -438,8 +438,8 @@ void IOThread::SetUpProxyService(
   builder->set_pac_quick_check_enabled(WpadQuickCheckEnabled());
   builder->set_pac_sanitize_url_policy(
       PacHttpsUrlStrippingEnabled()
-          ? net::ProxyService::SanitizeUrlPolicy::SAFE
-          : net::ProxyService::SanitizeUrlPolicy::UNSAFE);
+          ? net::ProxyResolutionService::SanitizeUrlPolicy::SAFE
+          : net::ProxyResolutionService::SanitizeUrlPolicy::UNSAFE);
 }
 
 void IOThread::ConstructSystemRequestContext() {

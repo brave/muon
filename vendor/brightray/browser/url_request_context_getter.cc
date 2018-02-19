@@ -140,7 +140,7 @@ URLRequestContextGetter::URLRequestContextGetter(
   // We must create the proxy config service on the UI loop on Linux because it
   // must synchronously run on the glib message loop. This will be passed to
   // the URLRequestContextStorage on the IO thread in GetURLRequestContext().
-  proxy_config_service_ = net::ProxyService::CreateSystemProxyConfigService(
+  proxy_config_service_ = net::ProxyResolutionService::CreateSystemProxyConfigService(
       file_task_runner_);
 }
 
@@ -222,30 +222,30 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
 
     // --proxy-server
     if (command_line.HasSwitch(switches::kNoProxyServer)) {
-      storage_->set_proxy_service(net::ProxyService::CreateDirect());
+      storage_->set_proxy_resolution_service(net::ProxyResolutionService::CreateDirect());
     } else if (command_line.HasSwitch(switches::kProxyServer)) {
       net::ProxyConfig proxy_config;
       proxy_config.proxy_rules().ParseFromString(
           command_line.GetSwitchValueASCII(switches::kProxyServer));
       proxy_config.proxy_rules().bypass_rules.ParseFromString(
           command_line.GetSwitchValueASCII(switches::kProxyBypassList));
-      storage_->set_proxy_service(net::ProxyService::CreateFixed(proxy_config));
+      storage_->set_proxy_resolution_service(net::ProxyResolutionService::CreateFixed(proxy_config));
     } else if (command_line.HasSwitch(switches::kProxyPacUrl)) {
       auto proxy_config = net::ProxyConfig::CreateFromCustomPacURL(
           GURL(command_line.GetSwitchValueASCII(switches::kProxyPacUrl)));
       proxy_config.set_pac_mandatory(true);
-      storage_->set_proxy_service(net::ProxyService::CreateFixed(
+      storage_->set_proxy_resolution_service(net::ProxyResolutionService::CreateFixed(
           proxy_config));
     } else {
       bool use_v8 = !command_line.HasSwitch(::switches::kWinHttpProxyResolver);
 
-      std::unique_ptr<net::ProxyService> proxy_service;
+      std::unique_ptr<net::ProxyResolutionService> proxy_service;
       if (use_v8) {
         std::unique_ptr<net::DhcpProxyScriptFetcher> dhcp_proxy_script_fetcher;
         net::DhcpProxyScriptFetcherFactory dhcp_factory;
         dhcp_proxy_script_fetcher = dhcp_factory.Create(url_request_context_.get());
 
-        proxy_service = content::CreateProxyServiceUsingMojoFactory(
+        proxy_service = network::CreateProxyServiceUsingMojoFactory(
             ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
             std::make_unique<net::ProxyScriptFetcherImpl>(
@@ -253,16 +253,16 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
             std::move(dhcp_proxy_script_fetcher), host_resolver.get(), net_log_,
             url_request_context_->network_delegate());
       } else {
-        proxy_service = net::ProxyService::CreateUsingSystemProxyResolver(
+        proxy_service = net::ProxyResolutionService::CreateUsingSystemProxyResolver(
             std::move(proxy_config_service_),
             net_log_);
       }
 
       proxy_service->set_quick_check_enabled(true);
       proxy_service->set_sanitize_url_policy(
-          net::ProxyService::SanitizeUrlPolicy::SAFE);
+          net::ProxyResolutionService::SanitizeUrlPolicy::SAFE);
 
-      storage_->set_proxy_service(std::move(proxy_service));
+      storage_->set_proxy_resolution_service(std::move(proxy_service));
     }
 
     std::vector<std::string> schemes;
