@@ -16,7 +16,7 @@ Prebuilt binaries for Muon are provided by the [brave/electron-prebuilt](https:/
 ```json
 {
 	"devDependencies": {
-		"electron": "brave/electron-prebuild"
+		"electron": "brave/electron-prebuilt"
 	}
 }
 ```
