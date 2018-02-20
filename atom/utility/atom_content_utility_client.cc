@@ -12,7 +12,6 @@
 #include "base/time/time.h"
 #include "brave/utility/importer/brave_profile_import_service.h"
 #include "chrome/common/importer/profile_import.mojom.h"
-#include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
 #include "chrome/utility/utility_message_handler.h"
 #include "content/public/common/content_switches.h"
@@ -23,7 +22,6 @@
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "net/proxy_resolution/proxy_resolver_v8.h"
 #include "printing/features/features.h"
 #include "services/proxy_resolver/proxy_resolver_service.h"
 #include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
@@ -50,35 +48,6 @@
 #endif
 
 namespace atom {
-
-namespace {
-
-class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
- public:
-  ResourceUsageReporterImpl() {}
-  ~ResourceUsageReporterImpl() override {}
-
- private:
-  void GetUsageData(const GetUsageDataCallback& callback) override {
-    chrome::mojom::ResourceUsageDataPtr data =
-      chrome::mojom::ResourceUsageData::New();
-    size_t total_heap_size = net::ProxyResolverV8::GetTotalHeapSize();
-    if (total_heap_size) {
-      data->reports_v8_stats = true;
-      data->v8_bytes_allocated = total_heap_size;
-      data->v8_bytes_used = net::ProxyResolverV8::GetUsedHeapSize();
-    }
-    callback.Run(std::move(data));
-  }
-};
-
-void CreateResourceUsageReporter(
-    mojo::InterfaceRequest<chrome::mojom::ResourceUsageReporter> request) {
-  mojo::MakeStrongBinding(base::MakeUnique<ResourceUsageReporterImpl>(),
-                          std::move(request));
-}
-
-}  // namespace
 
 AtomContentUtilityClient::AtomContentUtilityClient()
     : utility_process_running_elevated_(false) {
@@ -113,8 +82,6 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   // If our process runs with elevated privileges, only add elevated Mojo
   // interfaces to the interface registry.
   if (!utility_process_running_elevated_) {
-    registry->AddInterface(base::Bind(CreateResourceUsageReporter),
-                           base::ThreadTaskRunnerHandle::Get());
 #if defined(OS_WIN)
         // TODO(crbug.com/798782): remove when the Cloud print chrome/service is
         // removed.
