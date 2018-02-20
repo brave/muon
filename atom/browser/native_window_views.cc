@@ -197,9 +197,7 @@ NativeWindowViews::NativeWindowViews(
     params.shadow_type = views::Widget::InitParams::SHADOW_TYPE_NONE;*/
 
   bool focusable;
-  bool show;
-  if ((options.Get(options::kFocusable, &focusable) && !focusable) ||
-      (options.Get(options::kShow, &show) && !show))
+  if (options.Get(options::kFocusable, &focusable) && !focusable)
     params.activatable = views::Widget::InitParams::ACTIVATABLE_NO;
 
 #if defined(OS_WIN)
@@ -218,6 +216,10 @@ NativeWindowViews::NativeWindowViews(
    */
   if (parent)
     params.parent = parent->GetNativeWindow();
+
+  bool show;
+  if (options.Get(options::kShow, &show) && !show)
+    params.activatable = views::Widget::InitParams::ACTIVATABLE_NO;
 
   params.native_widget =
       new views::DesktopNativeWidgetAura(window_.get());
