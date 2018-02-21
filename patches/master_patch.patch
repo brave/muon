@@ -992,6 +992,18 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
  
    return nullptr;
  }
+diff --git a/chrome/test/chromedriver/BUILD.gn b/chrome/test/chromedriver/BUILD.gn
+index 7e92977ef0118fb9b7ff61298eb614b59dfb5e1c..31c20ad17438eda2d7a9b947cc017349c44ab5b3 100644
+--- a/chrome/test/chromedriver/BUILD.gn
++++ b/chrome/test/chromedriver/BUILD.gn
+@@ -318,6 +318,7 @@ executable("chromedriver") {
+     ":lib",
+     "//build/config:exe_and_shlib_deps",
+     "//build/win:default_exe_manifest",
++    "//electron/chromium_src:net",
+   ]
+ }
+ 
 diff --git a/chrome/utility/importer/external_process_importer_bridge.h b/chrome/utility/importer/external_process_importer_bridge.h
 index 7e05c4e04f8e61b418d373a73bd8901347df4c76..e7e6d9fa5e0d54c7755fe3a38eca6f70a902411c 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.h
