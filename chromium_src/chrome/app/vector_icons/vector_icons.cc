@@ -7,16 +7,11 @@
 
 #include "chrome/app/vector_icons/vector_icons.h"
 
-#include "base/logging.h"
 #include "ui/gfx/vector_icon_types.h"
 
-#define PATH_ELEMENT_TEMPLATE(path_name, ...) \
-static constexpr gfx::PathElement path_name[] = {__VA_ARGS__};
+// Using upstream VECTOR_ICON_TEMPLATE causes compile failure on Windows.
+#define VECTOR_ICON_TEMPLATE(icon_name)                             \
+  const gfx::VectorIcon icon_name;
 
-#define VECTOR_ICON_TEMPLATE(icon_name, path_name, path_name_1x) \
-const gfx::VectorIcon icon_name = { path_name , path_name_1x };
-
-using namespace gfx;
-
-VECTOR_ICON_TEMPLATE(kBrowserToolsUpdateIcon, nullptr, nullptr)
-VECTOR_ICON_TEMPLATE(kUsbSecurityKeyIcon, nullptr, nullptr)
+VECTOR_ICON_TEMPLATE(kBrowserToolsUpdateIcon)
+VECTOR_ICON_TEMPLATE(kUsbSecurityKeyIcon)
