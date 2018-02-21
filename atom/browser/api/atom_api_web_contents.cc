@@ -66,6 +66,7 @@
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_list.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_impl.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_order_controller.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
@@ -808,7 +809,7 @@ void WebContents::AddNewContents(content::WebContents* source,
   if (was_blocked)
     *was_blocked = blocked;
 
-  if (blocked) {
+  if (was_blocked && *was_blocked) {
     auto guest = brave::TabViewGuest::FromWebContents(new_contents);
     if (guest) {
       guest->Destroy(true);
@@ -862,8 +863,9 @@ void WebContents::IsPlaceholder(mate::Arguments* args) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper) {
     args->Return(tab_helper->is_placeholder());
+  } else {
+    args->Return(false);
   }
-  args->Return(false);
 }
 
 void WebContents::AttachGuest(mate::Arguments* args) {
@@ -1219,6 +1221,23 @@ void WebContents::TabSelectionChanged(TabStripModel* tab_strip_model,
   Emit("tab-selection-changed");
 }
 
+void WebContents::TabReplacedAt(TabStripModel* tab_strip_model,
+                                content::WebContents* old_contents,
+                                content::WebContents* new_contents,
+                                int index) {
+  if (old_contents == web_contents()) {
+    ::Browser* browser = nullptr;
+    for (auto* b : *BrowserList::GetInstance()) {
+      if (b->tab_strip_model() == tab_strip_model) {
+        browser = b;
+        break;
+      }
+    }
+
+    Emit("tab-replaced-at",
+        browser->session_id().id(), index, new_contents);
+  }
+}
 
 bool WebContents::OnGoToEntryOffset(int offset) {
   GoToOffset(offset);
