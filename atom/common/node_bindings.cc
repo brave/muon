@@ -205,7 +205,7 @@ node::Environment* NodeBindings::CreateEnvironment(
   for (size_t i = 0; i < args.size(); ++i) {
     debug_options.ParseOption(args[i]);
   }
-  if (debug_options.inspector_enabled() || debug_options.debugger_enabled()) {
+  if (debug_options.inspector_enabled()) {
     // always enable the inspector
     debug_options.ParseOption("--inspect");
     env->inspector_agent()->Start(
