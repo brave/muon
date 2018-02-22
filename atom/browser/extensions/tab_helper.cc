@@ -722,6 +722,7 @@ void TabHelper::ExecuteScript(
       GURL(),  // No webview src.
       file_url,  // No file url.
       false,  // user gesture
+      base::nullopt,  // css_origin
       result,
       callback);
 }
