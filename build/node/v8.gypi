@@ -1,5 +1,5 @@
 {
- 'includes': ['../../../v8/gypfiles/toolchain.gypi', '../../../v8/gypfiles/features.gypi'],
+ 'includes': ['v8/toolchain.gypi', 'v8/features.gypi'],
  'variables': {
    'icu_path': '../../../third_party/icu',
    'icu_use_data_file_flag': 1,
