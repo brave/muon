@@ -64,7 +64,9 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       int child_process_id,
       content::PosixFileDescriptorInfo* mappings) override;
 #endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
-  void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
+  void RenderProcessWillLaunch(
+      content::RenderProcessHost* host,
+      service_manager::mojom::ServiceRequest* service_request) override;
   void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
                                       int child_process_id) override;
   content::PlatformNotificationService*
@@ -138,6 +140,13 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
 
   std::unique_ptr<net::ClientCertStore> CreateClientCertStore(
       content::ResourceContext* resource_context) override;
+
+  std::vector<content::ContentBrowserClient::ServiceManifestInfo>
+     GetExtraServiceManifests() override;
+
+  // brightray::BrowserClient:
+  brightray::BrowserMainParts* OverrideCreateBrowserMainParts(
+      const content::MainFunctionParams&) override;
 
  protected:
   bool IsValidStoragePartitionId(

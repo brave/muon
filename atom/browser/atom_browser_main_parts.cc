@@ -29,6 +29,7 @@
 #include "base/trace_event/trace_event.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/chrome_browser_main_extra_parts.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
@@ -131,6 +132,10 @@ AtomBrowserMainParts::AtomBrowserMainParts(
 }
 
 AtomBrowserMainParts::~AtomBrowserMainParts() {
+  for (int i = static_cast<int>(chrome_extra_parts_.size())-1; i >= 0; --i)
+    delete chrome_extra_parts_[i];
+  chrome_extra_parts_.clear();
+
   // Leak the JavascriptEnvironment on exit.
   // This is to work around the bug that V8 would be waiting for background
   // tasks to finish on exit, while somehow it waits forever in Electron, more
@@ -394,6 +399,12 @@ void AtomBrowserMainParts::PostMainMessageLoopStart() {
 #endif
 }
 
+void AtomBrowserMainParts::ServiceManagerConnectionStarted(
+    content::ServiceManagerConnection* connection) {
+  for (size_t i = 0; i < chrome_extra_parts_.size(); ++i)
+    chrome_extra_parts_[i]->ServiceManagerConnectionStarted(connection);
+}
+
 void AtomBrowserMainParts::PostMainMessageLoopRun() {
   browser_context_ = nullptr;
   brightray::BrowserMainParts::PostMainMessageLoopRun();
@@ -432,6 +443,10 @@ void AtomBrowserMainParts::PostDestroyThreads() {
   ignore_result(fake_browser_process_.release());
 
   browser_shutdown::ShutdownPostThreadsStop(restart_flags);
+}
+
+void AtomBrowserMainParts::AddParts(ChromeBrowserMainExtraParts* parts) {
+  chrome_extra_parts_.push_back(parts);
 }
 
 }  // namespace atom
