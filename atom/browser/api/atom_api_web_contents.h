@@ -361,6 +361,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void TabStripEmpty() override;
   void TabSelectionChanged(TabStripModel* tab_strip_model,
                            const ui::ListSelectionModel& old_model) override;
+  void TabReplacedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* old_contents,
+                     content::WebContents* new_contents,
+                     int index) override;
 
   // content::WebContentsDelegate:
   void RegisterProtocolHandler(content::WebContents* web_contents,

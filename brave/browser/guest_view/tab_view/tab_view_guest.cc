@@ -318,6 +318,11 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 
       if (attached() &&
           web_contents()->GetController().IsInitialNavigation()) {
+        // don't reload if we're already loading
+        if (web_contents()->GetController().GetPendingEntry() &&
+            web_contents()->GetController().GetPendingEntry()->GetURL() == src_) {
+          return;
+        }
         NavigateGuest(src_.spec(), true);
       }
     }

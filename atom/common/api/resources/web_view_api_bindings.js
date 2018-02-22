@@ -99,9 +99,7 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
 
 WebViewImpl.prototype.detachGuest = function () {
   if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
-    this.guest.detach(() => {
-      this.guest = new GuestView('webview')
-    })
+    this.guest.detach()
   }
 }
 

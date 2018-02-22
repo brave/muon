@@ -382,11 +382,11 @@ void TabHelper::SetActive(bool active) {
 }
 
 void TabHelper::WasShown() {
-  if (discarded_) {
+  auto helper = content::RestoreHelper::FromWebContents(web_contents());
+  if (helper) {
     // load the tab if it is shown without being activate (tab preview)
     discarded_ = false;
     SetAutoDiscardable(true);
-    auto helper = content::RestoreHelper::FromWebContents(web_contents());
     if (helper) {
       helper->RemoveRestoreHelper();
     }
@@ -470,11 +470,7 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 }
 
 bool TabHelper::Discard() {
-  if (guest()->attached()) {
-    int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-    return !!GetTabManager()->DiscardTabById(
-        web_contents_id, resource_coordinator::DiscardReason::kProactive);
-  } else {
+  if (web_contents()->GetController().IsInitialNavigation()) {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
     auto helper = content::RestoreHelper::FromWebContents(web_contents());
@@ -483,6 +479,12 @@ bool TabHelper::Discard() {
     // registered as a discarded tab
     SetAutoDiscardable(false);
     return true;
+  } else {
+    if (guest()->attached()) {
+      int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
+      return !!GetTabManager()->DiscardTabById(
+          web_contents_id, resource_coordinator::DiscardReason::kProactive);
+    }
   }
 }
 
