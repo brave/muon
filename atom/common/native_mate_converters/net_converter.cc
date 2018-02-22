@@ -102,6 +102,35 @@ v8::Local<v8::Value> Converter<const net::HttpResponseHeaders*>::ToV8(
   return ConvertToV8(isolate, response_headers);
 }
 
+bool Converter<const net::HttpResponseHeaders*>::FromV8(
+    v8::Isolate* isolate,
+    v8::Local<v8::Value> val,
+    net::HttpResponseHeaders* out) {
+  if (!val->IsObject()) {
+    return false;
+  }
+  auto context = isolate->GetCurrentContext();
+  auto headers = v8::Local<v8::Object>::Cast(val);
+  auto keys = headers->GetOwnPropertyNames();
+  for (uint32_t i = 0; i < keys->Length(); i++) {
+    v8::Local<v8::String> key, value;
+    if (!keys->Get(i)->ToString(context).ToLocal(&key)) {
+      return false;
+    }
+    if (!headers->Get(key)->ToString(context).ToLocal(&value)) {
+      return false;
+    }
+    v8::String::Utf8Value key_utf8(key);
+    v8::String::Utf8Value value_utf8(value);
+    std::string k(*key_utf8, key_utf8.length());
+    std::string v(*value_utf8, value_utf8.length());
+    std::ostringstream tmp;
+    tmp << k << ": " << v;
+    out->AddHeader(tmp.str());
+  }
+  return true;
+}
+
 bool Converter<net::HttpRequestHeaders>::FromV8(v8::Isolate* isolate,
                                           v8::Handle<v8::Value> val,
                                           net::HttpRequestHeaders* out) {
@@ -137,6 +166,13 @@ void FillRequestDetails(base::DictionaryValue* details,
   GetUploadData(list.get(), request);
   if (!list->empty())
     details->Set("uploadData", std::move(list));
+  std::unique_ptr<base::DictionaryValue> headers_value(
+      new base::DictionaryValue);
+  for (net::HttpRequestHeaders::Iterator it(request->extra_request_headers());
+       it.GetNext();) {
+    headers_value->SetString(it.name(), it.value());
+  }
+  details->Set("headers", std::move(headers_value));
 }
 
 void GetUploadData(base::ListValue* upload_data_list,
