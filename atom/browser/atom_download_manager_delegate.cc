@@ -139,7 +139,12 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
   if (path.empty()) {
     std::vector<base::FilePath::StringType> extensions;
     base::FilePath::StringType extension;
-    if (GetItemExtension(item, &extension)) {
+    if (!GetItemExtension(item, &extension)) {
+      extension = target_path.Extension();
+      if (!extension.empty())
+        extension.erase(extension.begin());  // Erase preceding '.'.
+    }
+    if (!extension.empty()) {
       extensions.push_back(extension);
       file_type_info.extensions.push_back(extensions);
     }
