@@ -156,7 +156,8 @@ void TabHelper::DestroyTab(content::WebContents* tab) {
 
 // static
 int TabHelper::GetTabStripIndex(int window_id, int index) {
-  for (TabContentsIterator it; !it.done(); it.Next()) {
+  auto& all_tabs = AllTabContentses();
+  for (auto it = all_tabs.begin(), end = all_tabs.end(); it != end; ++it) {
     auto tab_helper = FromWebContents(*it);
     if (tab_helper &&
         tab_helper->get_index() == index &&
