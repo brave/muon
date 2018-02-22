@@ -2592,7 +2592,7 @@
         '-Wno-nonportable-include-path',
       ],
     },
-    'includes': [ '../v8/gypfiles/set_clang_warning_flags.gypi', ],
+    'includes': [ 'build/node/v8/set_clang_warning_flags.gypi', ],
     'defines': [
       # Don't use deprecated V8 APIs anywhere.
       'V8_DEPRECATION_WARNINGS',
