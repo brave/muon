@@ -51,7 +51,6 @@
 #include "muon/browser/muon_browser_process_impl.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
 #include "v8/include/v8.h"
-#include "v8/include/v8-debug.h"
 
 #if defined(OS_MACOSX)
 #include <Security/Security.h>
