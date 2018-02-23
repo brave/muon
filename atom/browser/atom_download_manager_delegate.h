@@ -44,8 +44,9 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate {
   // Get the save path set on the associated api::DownloadItem object
   void GetItemSavePath(content::DownloadItem* item, base::FilePath* path);
 
-  bool GetItemExtension(content::DownloadItem* item,
-                         base::FilePath::StringType* extension);
+  bool GetExtension(content::DownloadItem* item,
+                    const base::FilePath& target_path,
+                    base::FilePath::StringType* extension);
 
   void OnDownloadItemSelected(const content::DownloadTargetCallback& callback,
                               api::DownloadItem* download_item,

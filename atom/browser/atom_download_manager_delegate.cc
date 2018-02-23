@@ -55,17 +55,27 @@ void AtomDownloadManagerDelegate::GetItemSavePath(content::DownloadItem* item,
     *path = download->GetSavePath();
 }
 
-bool AtomDownloadManagerDelegate::GetItemExtension(
+bool AtomDownloadManagerDelegate::GetExtension(
     content::DownloadItem* item,
+    const base::FilePath& target_path,
     base::FilePath::StringType* extension) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
   api::DownloadItem* download = api::DownloadItem::FromWrappedClass(isolate,
                                                                     item);
-  if (download && !download->GetMimeType().empty())
-      return net::GetPreferredExtensionForMimeType(
-            download->GetMimeType(), extension);
+  if (download && !download->GetMimeType().empty()) {
+    if (net::GetPreferredExtensionForMimeType(download->GetMimeType(),
+                                              extension))
+      return true;
+  }
+
+  base::FilePath::StringType target_extension = target_path.Extension();
+  if (!target_extension.empty()) {
+    target_extension.erase(target_extension.begin());  // Erase preceding '.'.
+    *extension = target_extension;
+    return true;
+  }
   return false;
 }
 
@@ -139,12 +149,7 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
   if (path.empty()) {
     std::vector<base::FilePath::StringType> extensions;
     base::FilePath::StringType extension;
-    if (!GetItemExtension(item, &extension)) {
-      extension = target_path.Extension();
-      if (!extension.empty())
-        extension.erase(extension.begin());  // Erase preceding '.'.
-    }
-    if (!extension.empty()) {
+    if (GetExtension(item, target_path, &extension)) {
       extensions.push_back(extension);
       file_type_info.extensions.push_back(extensions);
     }
