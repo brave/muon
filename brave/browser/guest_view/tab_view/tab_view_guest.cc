@@ -54,6 +54,15 @@ using guest_view::GuestViewManager;
 
 namespace brave {
 
+namespace {
+
+bool HasWindow(WebContents* web_contents) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
+  return (tab_helper->window_id() != -1);
+
+}
+
+}
 // static
 GuestViewBase* TabViewGuest::Create(WebContents* owner_web_contents) {
   return new TabViewGuest(owner_web_contents);
@@ -108,7 +117,7 @@ void TabViewGuest::WebContentsCreated(
 WebContents* TabViewGuest::OpenURLFromTab(
     WebContents* source,
     const content::OpenURLParams& params) {
-  if (!attached()) {
+  if (!HasWindow(web_contents())) {
     TabViewGuest* opener = GetOpener();
     // If the guest wishes to navigate away prior to attachment then we save the
     // navigation to perform upon attachment. Navigation initializes a lot of
@@ -287,7 +296,7 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
     auto it = GetOpener()->pending_new_windows_.find(this);
     if (it != GetOpener()->pending_new_windows_.end()) {
       const NewWindowInfo& new_window_info = it->second;
-      if (attached()) {
+      if (HasWindow(web_contents())) {
         if (new_window_info.changed || !web_contents()->HasOpener()) {
           NavigateGuest(
               new_window_info.url.spec(), false /* force_navigation */);
@@ -298,7 +307,7 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         GetOpener()->pending_new_windows_.erase(this);
       }
       is_pending_new_window = true;
-    } else if (attached() && clone_) {
+    } else if (HasWindow(web_contents()) && clone_) {
       clone_ = false;
       web_contents()->GetController().CopyStateFrom(
           GetOpener()->web_contents()->GetController(), true);
@@ -316,7 +325,7 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         src_ = GURL(src);
       }
 
-      if (attached() &&
+      if (HasWindow(web_contents()) &&
           web_contents()->GetController().IsInitialNavigation()) {
         // don't reload if we're already loading
         if (web_contents()->GetController().GetPendingEntry() &&
@@ -390,7 +399,7 @@ void TabViewGuest::WillDestroy() {
     api_web_contents_->WebContentsDestroyed();
   api_web_contents_ = nullptr;
 
-  if (!attached() && GetOpener())
+  if (!HasWindow(web_contents()) && GetOpener())
     GetOpener()->pending_new_windows_.erase(this);
 }
 
