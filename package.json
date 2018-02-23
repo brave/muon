@@ -36,5 +36,8 @@
     "lint-docs": "standard-markdown docs",
     "preinstall": "node -e 'process.exit(0)'",
     "test": "python ./script/test.py"
+  },
+  "dependencies": {
+    "electron-ipc-stream": "^0.2.0"
   }
 }
