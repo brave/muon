@@ -39,7 +39,7 @@ Below is a lifecycle that [shadowcodex](https://github.com/shadowcodex) created.
 
 In the case of the following extension.js file, shadowcodex is using the `chrome.ipcRenderer` to call the functions via a lifecycle in the renderer thread. For example a simple vuejs app is shown:
 
-> Note: In order to use `chrome.ipcRenderer` your render file must be loaded with `chrome://brave/` and this one in particular is loaded like `mainWindow.loadURL('chrome://brave/' + path.join(__dirname, '../client/index.html'))`
+> Note: In order to use `chrome.ipcRenderer` your render file must be loaded with `chrome://brave/` and this one in particular is loaded like `mainWindow.loadURL(path.join('chrome://brave', __dirname, '../client/index.html'))`
 
 ### Vuejs renderer lifecycle hook
 
