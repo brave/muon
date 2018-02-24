@@ -242,6 +242,16 @@ void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
   api_web_contents_->guest_delegate_ = this;
   web_contents()->SetDelegate(api_web_contents_);
 
+  web_contents()->GetMainFrame()->ResumeBlockedRequestsForFrame();
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+
+  if (!tab_helper->IsDiscarded()) {
+    api_web_contents_->ResumeLoadingCreatedWebContents();
+
+    web_contents()->WasHidden();
+    web_contents()->WasShown();
+  }
+
   ApplyAttributes(create_params);
 }
 
@@ -342,22 +352,13 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
-  web_contents()->GetMainFrame()->ResumeBlockedRequestsForFrame();
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-
-  if (!tab_helper->IsDiscarded()) {
-    api_web_contents_->ResumeLoadingCreatedWebContents();
-
-    web_contents()->WasHidden();
-    web_contents()->WasShown();
-  }
-
   ApplyAttributes(*attach_params());
 
   if (web_contents()->GetController().IsInitialNavigation()) {
     web_contents()->GetController().LoadIfNecessary();
   }
 
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   tab_helper->DidAttach();
 
   api_web_contents_->Emit("did-attach",
