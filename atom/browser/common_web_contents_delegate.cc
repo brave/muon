@@ -490,8 +490,12 @@ void CommonWebContentsDelegate::OnSaveFileSelected(
     const std::string& content,
     const std::vector<base::FilePath>& paths) {
   DCHECK(!paths.empty());
-  WriteToFile(paths[0], content);
-  OnDevToolsSaveToFile(url);
+  saved_files_[url] = paths[0];
+  BrowserThread::PostTaskAndReply(
+      BrowserThread::FILE, FROM_HERE,
+      base::Bind(&WriteToFile, paths[0], content),
+      base::Bind(&CommonWebContentsDelegate::OnDevToolsSaveToFile,
+                 base::Unretained(this), url));
 }
 void CommonWebContentsDelegate::OnSaveFileSelectionCancelled(
     const std::string url) {
