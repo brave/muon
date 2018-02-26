@@ -574,6 +574,13 @@ void AtomExtensionSystem::InstallUpdate(
   NOTREACHED();
 }
 
+bool AtomExtensionSystem::FinishDelayedInstallationIfReady(
+    const std::string& extension_id,
+    bool install_immediately) {
+  NOTREACHED();
+  return false;
+}
+
 void AtomExtensionSystem::RegisterExtensionWithRequestContexts(
     const Extension* extension,
     const base::Closure& callback) {
