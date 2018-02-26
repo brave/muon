@@ -416,6 +416,11 @@ bool AtomExtensionsBrowserClient::IsRunningInForcedAppMode() {
   return false;
 }
 
+bool AtomExtensionsBrowserClient::IsAppModeForcedForApp(
+    const ExtensionId& extension_id) {
+  return false;
+}
+
 bool AtomExtensionsBrowserClient::IsLoggedInAsPublicAccount() {
   return false;
 }
