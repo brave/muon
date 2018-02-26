@@ -139,6 +139,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   static void BuildPrototype(v8::Isolate* isolate,
                              v8::Local<v8::FunctionTemplate> prototype);
 
+  void InitManagedWebContents();
+
   brightray::InspectableWebContents* managed_web_contents() const override;
 
   void Clone(mate::Arguments* args);

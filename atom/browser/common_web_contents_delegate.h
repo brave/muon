@@ -34,6 +34,8 @@ class CommonWebContentsDelegate
   void InitWithWebContents(content::WebContents* web_contents,
                            AtomBrowserContext* browser_context);
 
+  void CreateManagedWebContents(content::WebContents* web_contents);
+
   // Set the window as owner window.
   virtual void SetOwnerWindow(NativeWindow* owner_window);
   virtual void SetOwnerWindow(content::WebContents* web_contents,

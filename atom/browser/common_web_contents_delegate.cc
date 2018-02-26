@@ -180,15 +180,18 @@ CommonWebContentsDelegate::CommonWebContentsDelegate()
 CommonWebContentsDelegate::~CommonWebContentsDelegate() {
 }
 
+void CommonWebContentsDelegate::CreateManagedWebContents(
+    content::WebContents* web_contents) {
+  // Create InspectableWebContents.
+  web_contents_.reset(brightray::InspectableWebContents::Create(web_contents));
+  web_contents_->SetDelegate(this);
+}
+
 void CommonWebContentsDelegate::InitWithWebContents(
     content::WebContents* web_contents,
     AtomBrowserContext* browser_context) {
   browser_context_ = browser_context;
   web_contents->SetDelegate(this);
-
-  // Create InspectableWebContents.
-  web_contents_.reset(brightray::InspectableWebContents::Create(web_contents));
-  web_contents_->SetDelegate(this);
 }
 
 void CommonWebContentsDelegate::SetOwnerWindow(NativeWindow* owner_window) {

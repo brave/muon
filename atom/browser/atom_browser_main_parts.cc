@@ -219,11 +219,12 @@ int AtomBrowserMainParts::PreCreateThreads() {
   feature_list->RegisterFieldTrialOverride(ukm::kUkmFeature.name,
                       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 
-  field_trial = feature_list->GetFieldTrial(
-      features::kGuestViewCrossProcessFrames);
-  feature_list->RegisterFieldTrialOverride(
-                      features::kGuestViewCrossProcessFrames.name,
-                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+  // field_trial = feature_list->GetFieldTrial(
+  //     features::kGuestViewCrossProcessFrames);
+  // feature_list->RegisterFieldTrialOverride(
+  //                     features::kGuestViewCrossProcessFrames.name,
+  //                     base::FeatureList::OVERRIDE_DISABLE_FEATURE,
+  //                     field_trial);
 
   // enable fill-on-account-select
   field_trial = feature_list->GetFieldTrial(

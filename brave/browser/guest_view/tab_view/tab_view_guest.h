@@ -76,6 +76,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void GuestReady() final;
   void WillDestroy() final;
   void DidInitialize(const base::DictionaryValue& create_params) final;
+  void SignalWhenReady(const base::Closure& callback) final;
 
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;

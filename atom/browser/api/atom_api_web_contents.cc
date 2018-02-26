@@ -529,13 +529,20 @@ void WebContents::CreateWebContents(v8::Isolate* isolate,
   CompleteInit(isolate, web_contents, options);
 }
 
+void WebContents::InitManagedWebContents() {
+  CreateManagedWebContents(web_contents());
+  managed_web_contents()->GetView()->SetDelegate(this);
+}
+
 void WebContents::CompleteInit(v8::Isolate* isolate,
     content::WebContents *web_contents,
     const mate::Dictionary& options) {
   Observe(web_contents);
 
   InitWithWebContents(web_contents, GetBrowserContext());
-  managed_web_contents()->GetView()->SetDelegate(this);
+
+  if (!IsGuest())
+    InitManagedWebContents();
 
   // Save the preferences in C++.
   new WebContentsPreferences(web_contents, options);

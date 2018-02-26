@@ -371,6 +371,11 @@ int TabViewGuest::GetTaskPrefix() const {
   return -1;
 }
 
+void TabViewGuest::SignalWhenReady(const base::Closure& callback) {
+  guest_view::GuestView<TabViewGuest>::SignalWhenReady(callback);
+  api_web_contents_->InitManagedWebContents();
+}
+
 void TabViewGuest::GuestReady() {
   // we don't use guest only processes and don't want those limitations
   CHECK(!web_contents()->GetMainFrame()->GetProcess()->IsForGuestsOnly());
