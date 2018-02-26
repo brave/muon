@@ -160,19 +160,4 @@ AtomResourceDispatcherHostDelegate::CreateLoginDelegate(
   return new LoginHandler(auth_info, request);
 }
 
-std::unique_ptr<net::ClientCertStore>
-AtomResourceDispatcherHostDelegate::CreateClientCertStore(
-    content::ResourceContext* resource_context) {
-  #if defined(USE_NSS_CERTS)
-    return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreNSS(
-        net::ClientCertStoreNSS::PasswordDelegateFactory()));
-  #elif defined(OS_WIN)
-    return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreWin());
-  #elif defined(OS_MACOSX)
-    return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreMac());
-  #elif defined(USE_OPENSSL)
-    return std::unique_ptr<net::ClientCertStore>();
-  #endif
-}
-
 }  // namespace atom

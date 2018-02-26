@@ -61,6 +61,7 @@
 #include "mojo/public/cpp/bindings/scoped_interface_endpoint_handle.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "net/base/filename_util.h"
+#include "net/ssl/client_cert_store.h"
 #include "services/data_decoder/public/interfaces/constants.mojom.h"
 #include "services/metrics/metrics_mojo_service.h"
 #include "services/metrics/public/interfaces/constants.mojom.h"
@@ -91,6 +92,18 @@
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "chrome/services/printing/public/interfaces/constants.mojom.h"
 #endif
+
+#if defined(USE_NSS_CERTS)
+#include "net/ssl/client_cert_store_nss.h"
+#endif
+
+#if defined(OS_MACOSX)
+#include "net/ssl/client_cert_store_mac.h"
+#endif  // defined(OS_MACOSX)
+
+#if defined(OS_WIN)
+#include "net/ssl/client_cert_store_win.h"
+#endif  // defined(OS_WIN)
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 #include "base/debug/leak_annotations.h"
@@ -802,6 +815,21 @@ std::unique_ptr<content::NavigationUIData>
 BraveContentBrowserClient::GetNavigationUIData(
     content::NavigationHandle* navigation_handle) {
   return base::MakeUnique<ChromeNavigationUIData>(navigation_handle);
+}
+
+std::unique_ptr<net::ClientCertStore>
+BraveContentBrowserClient::CreateClientCertStore(
+    content::ResourceContext* resource_context) {
+#if defined(USE_NSS_CERTS)
+  return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreNSS(
+      net::ClientCertStoreNSS::PasswordDelegateFactory()));
+#elif defined(OS_WIN)
+  return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreWin());
+#elif defined(OS_MACOSX)
+  return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreMac());
+#elif defined(USE_OPENSSL)
+  return std::unique_ptr<net::ClientCertStore>();
+#endif
 }
 
 void BraveContentBrowserClient::InitFrameInterfaces() {
