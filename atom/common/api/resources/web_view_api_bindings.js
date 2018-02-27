@@ -44,6 +44,8 @@ const syncMethods = [
 var WEB_VIEW_API_METHODS = [
   'attachGuest',
   'detachGuest',
+  'getId',
+  'getGuestId'
 ].concat(asyncMethods).concat(syncMethods)
 
 asyncMethods.forEach((method) => {
@@ -120,6 +122,10 @@ WebViewImpl.prototype.setTabId = function (tabID) {
 
 WebViewImpl.prototype.getId = function () {
   return this.tabID
+}
+
+WebViewImpl.prototype.getGuestId = function () {
+  return this.guest.getId()
 }
 
 WebViewImpl.prototype.getURL = function () {
