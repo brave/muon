@@ -22,6 +22,10 @@ class WorkerBindings : public extensions::ObjectBackedNativeHandler {
  public:
   WorkerBindings(extensions::ScriptContext* context, V8WorkerThread* worker);
   ~WorkerBindings() override;
+
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   static bool OnMessage(v8::Isolate* isolate,
                         base::PlatformThreadId thread_id,
                         v8::Local<v8::Value> message);

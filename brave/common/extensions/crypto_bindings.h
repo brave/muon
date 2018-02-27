@@ -18,6 +18,9 @@ class CryptoBindings : public extensions::ObjectBackedNativeHandler {
   explicit CryptoBindings(extensions::ScriptContext* context);
   ~CryptoBindings() override;
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);
  private:
   void EncryptString(const v8::FunctionCallbackInfo<v8::Value>& args);

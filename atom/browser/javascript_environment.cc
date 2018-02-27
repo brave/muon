@@ -146,7 +146,7 @@ JavascriptEnvironment::JavascriptEnvironment()
   {
     std::unique_ptr<ModuleSystem> module_system(
         new ModuleSystem(script_context_.get(), &source_map_));
-    script_context_->set_module_system(std::move(module_system));
+    script_context_->SetModuleSystem(std::move(module_system));
     script_context_->module_system()->RegisterNativeHandler(
       "path", std::unique_ptr<extensions::NativeHandler>(
           new brave::PathBindings(script_context_.get(), &source_map_)));

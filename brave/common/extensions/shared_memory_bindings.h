@@ -64,6 +64,9 @@ class SharedMemoryBindings : public extensions::ObjectBackedNativeHandler {
   explicit SharedMemoryBindings(extensions::ScriptContext* context);
   ~SharedMemoryBindings() override;
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);
 
  private:

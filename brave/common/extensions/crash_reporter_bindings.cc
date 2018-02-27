@@ -16,28 +16,30 @@ namespace brave {
 
 CrashReporterBindings::CrashReporterBindings(
         extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction("SetEnabled",
-      base::Bind(&CrashReporterBindings::SetEnabled,
-          base::Unretained(this)));
-  RouteFunction("SetChannelCrashValue",
-                base::Bind(&CrashReporterBindings::SetChannelCrashValue,
-                           base::Unretained(this)));
-  RouteFunction("SetJavascriptInfoCrashValue",
-                base::Bind(&CrashReporterBindings::SetJavascriptInfoCrashValue,
-                           base::Unretained(this)));
-  RouteFunction("SetNodeEnvCrashValue",
-                base::Bind(&CrashReporterBindings::SetNodeEnvCrashValue,
-                           base::Unretained(this)));
-  RouteFunction("SetVersionCrashValue",
-                base::Bind(&CrashReporterBindings::SetVersionCrashValue,
-                           base::Unretained(this)));
-  RouteFunction("DumpWithoutCrashing",
-      base::Bind(&CrashReporterBindings::DumpWithoutCrashing,
-          base::Unretained(this)));
-}
+    : extensions::ObjectBackedNativeHandler(context) {}
 
-CrashReporterBindings::~CrashReporterBindings() {
+CrashReporterBindings::~CrashReporterBindings() {}
+
+void CrashReporterBindings::AddRoutes() {
+  RouteHandlerFunction(
+      "SetEnabled",
+      base::Bind(&CrashReporterBindings::SetEnabled, base::Unretained(this)));
+  RouteHandlerFunction("SetChannelCrashValue",
+                       base::Bind(&CrashReporterBindings::SetChannelCrashValue,
+                                  base::Unretained(this)));
+  RouteHandlerFunction(
+      "SetJavascriptInfoCrashValue",
+      base::Bind(&CrashReporterBindings::SetJavascriptInfoCrashValue,
+                 base::Unretained(this)));
+  RouteHandlerFunction("SetNodeEnvCrashValue",
+                       base::Bind(&CrashReporterBindings::SetNodeEnvCrashValue,
+                                  base::Unretained(this)));
+  RouteHandlerFunction("SetVersionCrashValue",
+                       base::Bind(&CrashReporterBindings::SetVersionCrashValue,
+                                  base::Unretained(this)));
+  RouteHandlerFunction("DumpWithoutCrashing",
+                       base::Bind(&CrashReporterBindings::DumpWithoutCrashing,
+                                  base::Unretained(this)));
 }
 
 // static

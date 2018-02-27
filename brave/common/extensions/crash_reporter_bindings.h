@@ -21,6 +21,9 @@ class CrashReporterBindings : public extensions::ObjectBackedNativeHandler {
   explicit CrashReporterBindings(extensions::ScriptContext* context);
   ~CrashReporterBindings() override;
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);
  private:
   void SetEnabled(const v8::FunctionCallbackInfo<v8::Value>& args);

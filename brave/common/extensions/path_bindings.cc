@@ -18,17 +18,18 @@ PathBindings::PathBindings(
         extensions::ScriptContext* context,
         extensions::SourceMap* source_map)
     : extensions::ObjectBackedNativeHandler(context),
-      source_map_(source_map) {
-  RouteFunction("append",
-              base::Bind(&PathBindings::Append, base::Unretained(this)));
-  RouteFunction("dirname",
-              base::Bind(&PathBindings::DirName, base::Unretained(this)));
-  RouteFunction("require",
-              base::Bind(&PathBindings::Require, base::Unretained(this)));
-  // TODO(bridiver) - implement require.paths
-}
+      source_map_(source_map) {}
 
-PathBindings::~PathBindings() {
+PathBindings::~PathBindings() {}
+
+void PathBindings::AddRoutes() {
+  RouteHandlerFunction("append",
+                base::Bind(&PathBindings::Append, base::Unretained(this)));
+  RouteHandlerFunction("dirname",
+                base::Bind(&PathBindings::DirName, base::Unretained(this)));
+  RouteHandlerFunction("require",
+                base::Bind(&PathBindings::Require, base::Unretained(this)));
+  // TODO(bridiver) - implement require.paths
 }
 
 void PathBindings::Append(

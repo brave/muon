@@ -60,19 +60,23 @@ void OnMessageInternal(const std::pair<uint8_t*, size_t>& buf) {
 }  // namespace
 
 WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
-                                V8WorkerThread* worker)
+                               V8WorkerThread* worker)
     : extensions::ObjectBackedNativeHandler(context),
       worker_(worker),
-      weak_ptr_factory_(this) {
-  RouteFunction("postMessage",
-      base::Bind(&WorkerBindings::PostMessage,
-                 weak_ptr_factory_.GetWeakPtr()));
-  RouteFunction("close",
-      base::Bind(&WorkerBindings::Close, weak_ptr_factory_.GetWeakPtr()));
-  RouteFunction("onerror",
-      base::Bind(&WorkerBindings::OnError, weak_ptr_factory_.GetWeakPtr()));
+      weak_ptr_factory_(this) {}
 
-  v8::Local<v8::Context> v8_context = context->v8_context();
+WorkerBindings::~WorkerBindings() {}
+
+void WorkerBindings::AddRoutes() {
+  RouteHandlerFunction(
+      "postMessage",
+      base::Bind(&WorkerBindings::PostMessage, weak_ptr_factory_.GetWeakPtr()));
+  RouteHandlerFunction("close", base::Bind(&WorkerBindings::Close,
+                                           weak_ptr_factory_.GetWeakPtr()));
+  RouteHandlerFunction("onerror", base::Bind(&WorkerBindings::OnError,
+                                             weak_ptr_factory_.GetWeakPtr()));
+
+  v8::Local<v8::Context> v8_context = context()->v8_context();
   v8::Isolate* isolate = v8_context->GetIsolate();
 
   // onmessage handler
@@ -86,7 +90,7 @@ WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
   SetReadOnlyProperty(v8_context, location,
       v8::String::NewFromUtf8(isolate, "pathname",
           v8::NewStringType::kNormal).ToLocalChecked(),
-      v8::String::NewFromUtf8(isolate, worker->module_name().c_str(),
+      v8::String::NewFromUtf8(isolate, worker_->module_name().c_str(),
           v8::NewStringType::kNormal).ToLocalChecked());
 
   // read-only props
@@ -118,22 +122,12 @@ WorkerBindings::WorkerBindings(extensions::ScriptContext* context,
       v8::String::NewFromUtf8(isolate, "worker",
           v8::NewStringType::kNormal).ToLocalChecked());
 
-
-  context->module_system()->SetNativeLazyField(v8_context->Global(),
-      "postMessage",
-      "worker",
-      "postMessage");
-  context->module_system()->SetNativeLazyField(v8_context->Global(),
-      "close",
-      "worker",
-      "close");
-  context->module_system()->SetNativeLazyField(v8_context->Global(),
-      "onerror",
-      "worker",
-      "onerror");
-}
-
-WorkerBindings::~WorkerBindings() {
+  context()->module_system()->SetNativeLazyField(
+      v8_context->Global(), "postMessage", "worker", "postMessage");
+  context()->module_system()->SetNativeLazyField(v8_context->Global(), "close",
+                                                 "worker", "close");
+  context()->module_system()->SetNativeLazyField(
+      v8_context->Global(), "onerror", "worker", "onerror");
 }
 
 void WorkerBindings::OnErrorOnUIThread(const std::string& message,

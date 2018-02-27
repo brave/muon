@@ -269,16 +269,18 @@ gin::WrapperInfo WrappableGURL::kWrapperInfo = { gin::kEmbedderNativeGin };
 }  // namespace
 
 URLBindings::URLBindings(extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction("New",
-            base::Bind(&URLBindings::New, base::Unretained(this)));
-  RouteFunction("FormatForDisplay",
-            base::Bind(&URLBindings::FormatForDisplay, base::Unretained(this)));
-  RouteFunction("Parse",
-            base::Bind(&URLBindings::Parse, base::Unretained(this)));
-}
+    : extensions::ObjectBackedNativeHandler(context) {}
 
-URLBindings::~URLBindings() {
+URLBindings::~URLBindings() {}
+
+void URLBindings::AddRoutes() {
+  RouteHandlerFunction("New",
+                       base::Bind(&URLBindings::New, base::Unretained(this)));
+  RouteHandlerFunction(
+      "FormatForDisplay",
+      base::Bind(&URLBindings::FormatForDisplay, base::Unretained(this)));
+  RouteHandlerFunction("Parse",
+                       base::Bind(&URLBindings::Parse, base::Unretained(this)));
 }
 
 // static

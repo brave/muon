@@ -41,29 +41,25 @@ class ScriptExecutionCallback : public blink::WebScriptExecutionCallback {
 }  // namespace
 
 WebFrameBindings::WebFrameBindings(extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction(
-      "executeJavaScript",
-      base::Bind(&WebFrameBindings::ExecuteJavaScript,
-          base::Unretained(this)));
-  RouteFunction(
-      "setZoomLevel",
-      base::Bind(&WebFrameBindings::SetZoomLevel,
-          base::Unretained(this)));
-  RouteFunction(
-      "setZoomLevelLimits",
-      base::Bind(&WebFrameBindings::SetZoomLevelLimits,
-          base::Unretained(this)));
-  RouteFunction(
-      "setPageScaleLimits",
-      base::Bind(&WebFrameBindings::SetPageScaleLimits,
-          base::Unretained(this)));
-  RouteFunction(
-      "setGlobal",
-      base::Bind(&WebFrameBindings::SetGlobal, base::Unretained(this)));
-}
+    : extensions::ObjectBackedNativeHandler(context) {}
 
-WebFrameBindings::~WebFrameBindings() {
+WebFrameBindings::~WebFrameBindings() {}
+
+void WebFrameBindings::AddRoutes() {
+  RouteHandlerFunction(
+      "executeJavaScript",
+      base::Bind(&WebFrameBindings::ExecuteJavaScript, base::Unretained(this)));
+  RouteHandlerFunction(
+      "setZoomLevel",
+      base::Bind(&WebFrameBindings::SetZoomLevel, base::Unretained(this)));
+  RouteHandlerFunction("setZoomLevelLimits",
+                       base::Bind(&WebFrameBindings::SetZoomLevelLimits,
+                                  base::Unretained(this)));
+  RouteHandlerFunction("setPageScaleLimits",
+                       base::Bind(&WebFrameBindings::SetPageScaleLimits,
+                                  base::Unretained(this)));
+  RouteHandlerFunction("setGlobal", base::Bind(&WebFrameBindings::SetGlobal,
+                                               base::Unretained(this)));
 }
 
 void WebFrameBindings::ExecuteJavaScript(
