@@ -42,12 +42,14 @@ FileBindings::FileBindings(extensions::ScriptContext* context)
     : extensions::ObjectBackedNativeHandler(context),
       file_task_runner_(base::CreateSequencedTaskRunnerWithTraits(
           {base::MayBlock(), base::TaskPriority::BACKGROUND,
-            base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {
-  RouteFunction("WriteImportantFile",
-      base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
-}
+           base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {}
 
-FileBindings::~FileBindings() {
+FileBindings::~FileBindings() {}
+
+void FileBindings::AddRoutes() {
+  RouteHandlerFunction(
+      "WriteImportantFile",
+      base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
 }
 
 // static

@@ -30,6 +30,8 @@ class JavascriptBindings : public content::RenderFrameObserver,
 
   void GetBinding(const v8::FunctionCallbackInfo<v8::Value>& args);
 
+  void AddRoutes() override;
+
  private:
   void IPCSendShared(mate::Arguments* args,
             const base::string16& channel,

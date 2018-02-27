@@ -18,6 +18,9 @@ class WebFrameBindings : public extensions::ObjectBackedNativeHandler {
   explicit WebFrameBindings(extensions::ScriptContext* context);
   virtual ~WebFrameBindings();
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   void WebFrame(const v8::FunctionCallbackInfo<v8::Value>& args);
 
   void SetZoomLevel(const v8::FunctionCallbackInfo<v8::Value>& args);

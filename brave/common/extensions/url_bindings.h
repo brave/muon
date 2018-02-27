@@ -17,6 +17,9 @@ class URLBindings : public extensions::ObjectBackedNativeHandler {
   explicit URLBindings(extensions::ScriptContext* context);
   ~URLBindings() override;
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);
  private:
   void New(const v8::FunctionCallbackInfo<v8::Value>& args);

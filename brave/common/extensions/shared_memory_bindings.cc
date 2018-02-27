@@ -169,12 +169,13 @@ void SharedMemoryWrapper::BuildPrototype(v8::Isolate* isolate,
 }
 
 SharedMemoryBindings::SharedMemoryBindings(extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction("Create",
-      base::Bind(&SharedMemoryBindings::Create, base::Unretained(this)));
-}
+    : extensions::ObjectBackedNativeHandler(context) {}
 
-SharedMemoryBindings::~SharedMemoryBindings() {
+SharedMemoryBindings::~SharedMemoryBindings() {}
+
+void SharedMemoryBindings::AddRoutes() {
+  RouteHandlerFunction("Create", base::Bind(&SharedMemoryBindings::Create,
+                                            base::Unretained(this)));
 }
 
 // static

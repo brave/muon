@@ -27,6 +27,9 @@ class FileBindings : public extensions::ObjectBackedNativeHandler,
   explicit FileBindings(extensions::ScriptContext* context);
   ~FileBindings() override;
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);
 
  private:

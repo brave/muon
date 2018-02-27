@@ -16,6 +16,9 @@ class ContentSettingsBindings : public extensions::ObjectBackedNativeHandler {
   explicit ContentSettingsBindings(extensions::ScriptContext* context);
   virtual ~ContentSettingsBindings();
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
   void GetCurrentSetting(
       const v8::FunctionCallbackInfo<v8::Value>& args);
   void GetContentTypes(
