@@ -76,6 +76,19 @@ index 4bb4a043cbbcb562aed8926867660547cd7f018c..769bc73607b600d549b6185a37d6b0cc
    branding_path_component = "chromium"
  }
 +}
+diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
+index fff8488778d7fb667e7683ee882c43baa2d4e94f..0317a8b0bf3d97a1449ac199905f14261b701b2e 100644
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -1829,7 +1829,7 @@ config("default_optimization") {
+     # The NaCl IRT is a special case and always wants its own config.
+     # It gets optimized the same way regardless of the type of build.
+     configs = [ "//build/config/nacl:irt_optimize" ]
+-  } else if (is_debug) {
++  } else if (is_debug || !is_official_build) {
+     configs = [ ":no_optimize" ]
+   } else if (optimize_for_fuzzing) {
+     assert(!is_win, "Fuzzing optimize level not supported on Windows")
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
 index fc113d6a32c6d11e5676ce77011ef3aa55e916ef..97ca6793ffdc97b85074d40883cc650d0044b0ca 100644
 --- a/build/toolchain/mac/BUILD.gn
@@ -1870,7 +1883,7 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-index b73e62a0420f77db2874260a6f5e141264018cb8..c0f24ad844cb53eb813e4dc6ad7f8eef20ca7fc4 100644
+index 9a59d4f569de1ea8f5cd84849e313b4512576043..8e12398d8a153f9710650e35f21b1f5b9de83dd3 100644
 --- a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
 +++ b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
 @@ -3237,6 +3237,7 @@ void WebViewImpl::DidCloseContextMenu() {
