@@ -1064,13 +1064,17 @@ void WebContents::ExitFullscreenModeForTab(content::WebContents* source) {
   Emit("leave-html-full-screen");
 }
 
-void WebContents::RendererUnresponsive(content::WebContents* source) {
+void WebContents::RendererUnresponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host) {
   Emit("unresponsive");
   if ((type_ == BROWSER_WINDOW) && owner_window())
     owner_window()->RendererUnresponsive(source);
 }
 
-void WebContents::RendererResponsive(content::WebContents* source) {
+void WebContents::RendererResponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host) {
   Emit("responsive");
   if ((type_ == BROWSER_WINDOW) && owner_window())
     owner_window()->RendererResponsive(source);
