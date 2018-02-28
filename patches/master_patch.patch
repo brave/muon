@@ -162,6 +162,60 @@ index e2faffbfcb27da0329d3e388fea8758d49139e8e..d8cdceffbc4b048395957dcae935a4c4
            "safe_browsing::mojom::SafeBrowsing",
            "translate::mojom::ContentTranslateDriver"
          ],
+diff --git a/chrome/browser/download/download_target_determiner.cc b/chrome/browser/download/download_target_determiner.cc
+index 4f4dadd98fd997e9659d10e6989916dbb0bb899e..154fda998fc09854da13fef567fa43c5410efe40 100644
+--- a/chrome/browser/download/download_target_determiner.cc
++++ b/chrome/browser/download/download_target_determiner.cc
+@@ -112,6 +112,9 @@ DownloadTargetDeterminer::DownloadTargetDeterminer(
+   DCHECK_CURRENTLY_ON(BrowserThread::UI);
+   DCHECK(download_);
+   DCHECK(delegate);
++#if !defined(MUON_CHROMIUM_BUILD)
++  next_state_ = STATE_CHECK_DOWNLOAD_URL;
++#endif
+   download_->AddObserver(this);
+ 
+   DoLoop();
+@@ -328,6 +331,9 @@ DownloadTargetDeterminer::Result
+   DCHECK(!virtual_path_.empty());
+ 
+   next_state_ = STATE_PROMPT_USER_FOR_DOWNLOAD_PATH;
++#if !defined(MUON_CHROMIUM_BUILD)
++  next_state_ = STATE_DETERMINE_LOCAL_PATH;
++#endif
+   if (download_->GetState() != DownloadItem::IN_PROGRESS)
+     return CONTINUE;
+ 
+@@ -450,6 +456,9 @@ DownloadTargetDeterminer::Result
+   DCHECK(local_path_.empty());
+ 
+   next_state_ = STATE_DETERMINE_MIME_TYPE;
++#if !defined(MUON_CHROMIUM_BUILD)
++  next_state_ = STATE_CHECK_VISITED_REFERRER_BEFORE;
++#endif
+ 
+   delegate_->DetermineLocalPath(
+       download_,
+@@ -650,7 +659,11 @@ DownloadTargetDeterminer::Result
+     DownloadTargetDeterminer::DoCheckDownloadUrl() {
+   DCHECK_CURRENTLY_ON(BrowserThread::UI);
+   DCHECK(!virtual_path_.empty());
++
+   next_state_ = STATE_CHECK_VISITED_REFERRER_BEFORE;
++#if !defined(MUON_CHROMIUM_BUILD)
++  next_state_ = STATE_RESERVE_VIRTUAL_PATH;
++#endif
+ 
+   // If user has validated a dangerous download, don't check.
+   if (danger_type_ == content::DOWNLOAD_DANGER_TYPE_USER_VALIDATED)
+@@ -730,6 +743,7 @@ void DownloadTargetDeterminer::CheckVisitedReferrerBeforeDone(
+   danger_level_ = GetDangerLevel(
+       visited_referrer_before ? VISITED_REFERRER : NO_VISITS_TO_REFERRER);
+   if (danger_level_ != DownloadFileType::NOT_DANGEROUS &&
++      danger_level_ != DownloadFileType::ALLOW_ON_USER_GESTURE &&
+       danger_type_ == content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS)
+     danger_type_ = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
+   DoLoop();
 diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
 index 864a6951115dda5ed74963f18b35692960397d50..3e1a2b719521ac2c60bae05f94e409bc4c7da022 100644
 --- a/chrome/browser/importer/external_process_importer_client.h
@@ -512,6 +566,50 @@ index d85ddf9db90d332a31f839e7600b8d6e5ec61356..2dbe745b19001ce55631e625b6c597b2
    // Finds TabStripModel which has a WebContents whose id is the given
    // |tab_id|, and returns the WebContents index and the TabStripModel.
    int FindTabStripModelById(int32_t tab_id, TabStripModel** model) const;
+diff --git a/chrome/browser/safe_browsing/chrome_password_protection_service.cc b/chrome/browser/safe_browsing/chrome_password_protection_service.cc
+index 4275342f9244aa005521882c23767662fa2a681c..de4b9e02182dd4ed34e248d993c2a5f1e480d020 100644
+--- a/chrome/browser/safe_browsing/chrome_password_protection_service.cc
++++ b/chrome/browser/safe_browsing/chrome_password_protection_service.cc
+@@ -672,8 +672,7 @@ bool ChromePasswordProtectionService::UserClickedThroughSBInterstitial(
+ }
+ 
+ AccountInfo ChromePasswordProtectionService::GetAccountInfo() {
+-  SigninManagerBase* signin_manager =
+-      SigninManagerFactory::GetForProfileIfExists(profile_);
++  SigninManagerBase* signin_manager = nullptr;
+ 
+   return signin_manager ? signin_manager->GetAuthenticatedAccountInfo()
+                         : AccountInfo();
+diff --git a/chrome/browser/safe_browsing/chrome_password_protection_service.h b/chrome/browser/safe_browsing/chrome_password_protection_service.h
+index 9f9a34a962f52c4f9a56b1f0bd25ab350c5cdd05..fefa41dac43a699f3c8fe5b9ac2ef4df6496a451 100644
+--- a/chrome/browser/safe_browsing/chrome_password_protection_service.h
++++ b/chrome/browser/safe_browsing/chrome_password_protection_service.h
+@@ -40,7 +40,7 @@ using url::Origin;
+ void ShowPasswordReuseModalWarningDialog(
+     content::WebContents* web_contents,
+     ChromePasswordProtectionService* service,
+-    OnWarningDone done_callback);
++    OnWarningDone done_callback) {}
+ 
+ // Called by ChromeContentBrowserClient to create a
+ // PasswordProtectionNavigationThrottle if appropriate.
+diff --git a/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc b/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
+index 7d32a4cc7a0f1d2230d1f965431a291424ae0db1..ed699539f22fad86ad581553974079c9b68038a9 100644
+--- a/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
++++ b/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
+@@ -293,10 +293,12 @@ bool CheckClientDownloadRequest::IsSupportedDownload(
+     return false;
+   }
+   // This check should be last, so we know the earlier checks passed.
++#if defined(MUON_CHROMIUM_BUILD)
+   if (!FileTypePolicies::GetInstance()->IsCheckedBinaryFile(target_path)) {
+     *reason = REASON_NOT_BINARY_FILE;
+     return false;
+   }
++#endif
+   *type = download_protection_util::GetDownloadType(target_path);
+   return true;
+ }
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index dadf0a941c71b1ec2e5cae6934246f9e6d7ebb89..34f323d8f0ef6150110463bb199075a96e5cd130 100644
 --- a/chrome/common/BUILD.gn
@@ -1788,6 +1886,19 @@ index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8
    };
  
    proto.attachedCallback = function() {
+diff --git a/google_apis/google_api_keys.cc b/google_apis/google_api_keys.cc
+index 2e8437ed136e682540835ef4738e3519f9cb6051..4ec8bd06b4ee76a398947540c76e2450ed4cdcca 100644
+--- a/google_apis/google_api_keys.cc
++++ b/google_apis/google_api_keys.cc
+@@ -28,7 +28,7 @@
+ 
+ // Used to indicate an unset key/id/secret.  This works better with
+ // various unit tests than leaving the token empty.
+-#define DUMMY_API_TOKEN "dummytoken"
++#define DUMMY_API_TOKEN "AIzaSyAH90V94EcZBP5oH7oc-mXQrSKgASVxER8"
+ 
+ #if !defined(GOOGLE_API_KEY)
+ #define GOOGLE_API_KEY DUMMY_API_TOKEN
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
 index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f747a2edf60 100644
 --- a/media/base/media_switches.cc
@@ -1801,6 +1912,30 @@ index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f74
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
+diff --git a/net/base/linked_hash_map.h b/net/base/linked_hash_map.h
+index 921764f79c603fd8b8037ac52ca2ebabb0440ebd..a7f71c080f52e35310d90b6815b1c1a190ed1063 100644
+--- a/net/base/linked_hash_map.h
++++ b/net/base/linked_hash_map.h
+@@ -142,8 +142,7 @@ class linked_hash_map {
+   // map and list, a CHECK() error will occur.
+   iterator erase(iterator position) {
+     typename MapType::iterator found = map_.find(position->first);
+-    CHECK(found->second == position)
+-        << "Inconsisent iterator for map and list, or the iterator is invalid.";
++    CHECK(found->second == position);
+ 
+     map_.erase(found);
+     return list_.erase(position);
+@@ -222,8 +221,7 @@ class linked_hash_map {
+     typename ListType::iterator last = list_.end();
+     --last;
+ 
+-    CHECK(map_.insert(std::make_pair(pair.first, last)).second)
+-        << "Map and list are inconsistent";
++    CHECK(map_.insert(std::make_pair(pair.first, last)).second);
+ 
+     return std::make_pair(last, true);
+   }
 diff --git a/net/http/BUILD.gn b/net/http/BUILD.gn
 index d00da41da1d8bbc40d8a85d582c1966ed22eaaf1..6a3b54e91eafb8f187989c9c954be0008343aa63 100644
 --- a/net/http/BUILD.gn

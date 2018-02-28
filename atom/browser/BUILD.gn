@@ -22,6 +22,8 @@ source_set("browser") {
   ]
 
   deps = [
+    "//electron/chromium_src/chrome/browser/prerender",
+    "//chrome/browser/safe_browsing",
     "//electron:common",
     "//electron/muon/app",
     # @todo(bridiver) fix circular dep

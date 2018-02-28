@@ -6,6 +6,7 @@ source_set("prerender") {
   ]
 
   deps = [
+    "//chrome/browser:resource_prefetch_predictor_proto",
     "//electron/chromium_src:sessions",
     "//components/history/content/browser",
     "//components/history/core/browser",

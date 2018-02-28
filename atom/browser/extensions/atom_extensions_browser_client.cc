@@ -67,12 +67,10 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
 #include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
-#include "extensions/common/file_util.h"
-#include "net/url_request/url_request_simple_job.h"
-
-
 #include "electron/brave/common/extensions/api/generated_api_registration.h"
 #include "extensions/browser/api/generated_api_registration.h"
+#include "extensions/common/file_util.h"
+#include "net/url_request/url_request_simple_job.h"
 
 namespace {
 

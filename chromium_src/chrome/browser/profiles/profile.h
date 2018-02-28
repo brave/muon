@@ -123,6 +123,8 @@ class Profile : public atom::AtomBrowserContext {
   // Return the original "recording" profile. This method returns this if the
   // profile is not incognito.
   virtual Profile* GetOriginalProfile() = 0;
+ 
+  bool IsLegacySupervised() {return false;}
 
   // Return the original "recording" profile. This method returns this if the
   // profile is not incognito.

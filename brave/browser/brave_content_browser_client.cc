@@ -658,7 +658,9 @@ void BraveContentBrowserClient::OverrideWebkitPrefs(
   prefs->hyperlink_auditing_enabled = false;
   // Custom preferences of guest page.
   auto web_contents = content::WebContents::FromRenderViewHost(host);
-  atom::WebContentsPreferences::OverrideWebkitPrefs(web_contents, prefs);
+  if (web_contents) {
+    atom::WebContentsPreferences::OverrideWebkitPrefs(web_contents, prefs);
+  }
   #if BUILDFLAG(ENABLE_EXTENSIONS)
     extensions_part_->OverrideWebkitPrefs(host, prefs);
   #endif

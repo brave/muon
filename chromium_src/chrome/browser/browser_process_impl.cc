@@ -232,6 +232,9 @@ void BrowserProcessImpl::StartTearDown() {
   DCHECK(IsShuttingDown());
 
   browser_shutdown::SetTryingToQuit(true);
+ 
+  if (safe_browsing_service_.get())
+    safe_browsing_service()->ShutDown();
 
   for (content::RenderProcessHost::iterator i(
           content::RenderProcessHost::AllHostsIterator());
@@ -249,6 +252,31 @@ void BrowserProcessImpl::StartTearDown() {
     local_state()->CommitPendingWrite();
   }
 }
+
+safe_browsing::SafeBrowsingService* 
+    BrowserProcessImpl::safe_browsing_service() {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (!created_safe_browsing_service_)
+    CreateSafeBrowsingService();
+  return safe_browsing_service_.get();
+}
+
+safe_browsing::ClientSideDetectionService*
+    BrowserProcessImpl::safe_browsing_detection_service() {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (safe_browsing_service())
+    return safe_browsing_service()->safe_browsing_detection_service();
+  return NULL;
+}
+
+void BrowserProcessImpl::CreateSafeBrowsingService() {
+  DCHECK(!safe_browsing_service_);
+  created_safe_browsing_service_ = true;
+  safe_browsing_service_ =
+      safe_browsing::SafeBrowsingService::CreateSafeBrowsingService();
+  safe_browsing_service_->Initialize();
+}
+
 
 void BrowserProcessImpl::SetApplicationLocale(const std::string& locale) {
   locale_ = locale;
@@ -664,16 +692,6 @@ BackgroundModeManager* BrowserProcessImpl::background_mode_manager() {
 void BrowserProcessImpl::set_background_mode_manager_for_test(
     std::unique_ptr<BackgroundModeManager> manager) {
   NOTIMPLEMENTED();
-}
-
-safe_browsing::SafeBrowsingService*
-BrowserProcessImpl::safe_browsing_service() {
-  return nullptr;
-}
-
-safe_browsing::ClientSideDetectionService*
-BrowserProcessImpl::safe_browsing_detection_service() {
-  return nullptr;
 }
 
 subresource_filter::ContentRulesetService*
