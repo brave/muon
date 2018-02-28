@@ -10,7 +10,7 @@
 
 #include "base/callback.h"
 #include "content/public/browser/permission_manager.h"
-#include "services/device/public/interfaces/geolocation_control.mojom.h"
+#include "services/device/public/mojom/geolocation_control.mojom.h"
 
 namespace content {
 class WebContents;
