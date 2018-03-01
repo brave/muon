@@ -15,6 +15,7 @@
 #include "atom/common/node_includes.h"
 #include "base/guid.h"
 #include "base/strings/utf_string_conversions.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/values.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "chrome/browser/password_manager/password_store_factory.h"
@@ -198,9 +199,12 @@ namespace atom {
 namespace api {
 
 Autofill::Autofill(v8::Isolate* isolate,
-                 content::BrowserContext* browser_context)
-      : browser_context_(browser_context),
-      weak_ptr_factory_(this) {
+                   content::BrowserContext* browser_context)
+    : browser_context_(browser_context),
+      weak_ptr_factory_(this),
+      db_task_runner_(base::CreateSingleThreadTaskRunnerWithTraits(
+          {base::MayBlock(), base::TaskPriority::USER_VISIBLE,
+           base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {
   Init(isolate);
   personal_data_manager_ =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
@@ -426,8 +430,8 @@ void Autofill::ClearAutocompleteData() {
     web_data_service->RemoveFormElementsAddedBetween(delete_begin,
                                                      delete_end);
     // thread. So wait for it.
-    content::BrowserThread::PostTaskAndReply(
-        content::BrowserThread::DB, FROM_HERE, base::DoNothing(),
+    db_task_runner_->PostTaskAndReply(
+        FROM_HERE, base::DoNothing(),
         base::Bind(&Autofill::OnClearedAutocompleteData,
                    weak_ptr_factory_.GetWeakPtr()));
 
@@ -453,8 +457,8 @@ void Autofill::ClearAutofillData() {
                                                         delete_end);
     // The above calls are done on the UI thread but do their work on the DB
     // thread. So wait for it.
-    content::BrowserThread::PostTaskAndReply(
-        content::BrowserThread::DB, FROM_HERE, base::DoNothing(),
+    db_task_runner_->PostTaskAndReply(
+        FROM_HERE, base::DoNothing(),
         base::Bind(&Autofill::OnClearedAutofillData,
                    weak_ptr_factory_.GetWeakPtr()));
 
