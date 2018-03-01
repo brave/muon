@@ -600,7 +600,7 @@ describe('protocol module', function () {
     })
   })
 
-  describe.only('protocol.registerStreamProtocol', () => {
+  describe('protocol.registerStreamProtocol', () => {
     it('sends Stream as response', (done) => {
       const handler = (request, callback) => callback(getStream())
       protocol.registerStreamProtocol(protocolName, handler, (error) => {

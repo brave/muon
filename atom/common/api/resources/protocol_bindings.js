@@ -15,18 +15,28 @@ var protocol = {
   registerStreamProtocol: function (scheme, handler) {
     ipc.on('chrome-protocol-stream-handler-' + scheme, function (evt, request, requestId) {
       console.log('protocol', 'chrome-protocol-stream-handler-' + scheme, requestId)
-      const cb = (data) => {
-        const headers = data.headers
-        const statusCode = data.statusCode
-        const stream = data.data
-        // const ipcStream = new IpcStream(`chrome-protocol-stream-handled-${requestId}-stream`)
-        stream.on('data', (chunk) => {
-          ipc.send(`chrome-protocol-stream-handled-${requestId}-stream`, JSON.stringify(chunk))
-        })
-        stream.on('end', () => {
-          ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-finish`)
-          ipc.send(`chrome-protocol-stream-handled-${requestId}`, {headers, statusCode})
-        })
+      const cb = (res) => {
+        if (typeof res.pipe === 'function') {
+          res = { data: res }
+        }
+
+        res.headers = res.headers || {}
+        res.statusCode = res.statusCode || 200
+
+        ipc.send(`chrome-protocol-stream-handled-${requestId}-headers`, { headers: res.headers, statusCode: res.statusCode })
+
+        res.data
+          .on('data', (chunk) => {
+            const data = JSON.stringify(chunk)
+            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-data`, data)
+          })
+          .on('error', (err) => {
+            const data = { message: err.message, stack: err.stack }
+            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-error`, data)
+          })
+          .on('end', () => {
+            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-finish`)
+          })
       }
       handler(request, cb)
     })
