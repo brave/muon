@@ -140,6 +140,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::unique_ptr<content::NavigationUIData> GetNavigationUIData(
     content::NavigationHandle* navigation_handle) override;
 
+  bool IsHandledURL(const GURL& url) override;
+
  protected:
   bool IsValidStoragePartitionId(
     content::BrowserContext* browser_context,
