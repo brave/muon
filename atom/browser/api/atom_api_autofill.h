@@ -12,6 +12,7 @@
 
 #include "atom/browser/api/trackable_object.h"
 #include "base/callback.h"
+#include "base/single_thread_task_runner.h"
 #include "brave/browser/brave_browser_context.h"
 #include "components/autofill/core/browser/personal_data_manager_observer.h"
 #include "components/password_manager/core/browser/password_store.h"
@@ -113,6 +114,8 @@ class Autofill : public mate::TrackableObject<Autofill>,
   std::unique_ptr<BravePasswordStoreConsumer> password_list_consumer_;
 
   std::unique_ptr<BravePasswordStoreConsumer> password_blacked_list_consumer_;
+
+  scoped_refptr<base::SingleThreadTaskRunner> db_task_runner_;
 
   DISALLOW_COPY_AND_ASSIGN(Autofill);
 };

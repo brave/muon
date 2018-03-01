@@ -10,7 +10,6 @@
 #include "base/memory/ptr_util.h"
 #include "base/strings/string_util.h"
 #include "base/task_scheduler/post_task.h"
-#include "base/threading/sequenced_worker_pool.h"
 #include "browser/net_log.h"
 #include "browser/network_delegate.h"
 #include "chrome/browser/net/chrome_mojo_proxy_resolver_factory.h"
@@ -117,7 +116,6 @@ URLRequestContextGetter::URLRequestContextGetter(
     const base::FilePath& base_path,
     bool in_memory,
     scoped_refptr<base::SingleThreadTaskRunner> io_task_runner,
-    scoped_refptr<base::SingleThreadTaskRunner> file_task_runner,
     content::ProtocolHandlerMap* protocol_handlers,
     content::URLRequestInterceptorScopedVector protocol_interceptors)
     : delegate_(delegate),
@@ -125,7 +123,6 @@ URLRequestContextGetter::URLRequestContextGetter(
       base_path_(base_path),
       in_memory_(in_memory),
       io_task_runner_(io_task_runner),
-      file_task_runner_(file_task_runner),
       protocol_interceptors_(std::move(protocol_interceptors)),
       job_factory_(nullptr),
       shutting_down_(false) {
@@ -142,7 +139,7 @@ URLRequestContextGetter::URLRequestContextGetter(
   // must synchronously run on the glib message loop. This will be passed to
   // the URLRequestContextStorage on the IO thread in GetURLRequestContext().
   proxy_config_service_ = net::ProxyResolutionService::CreateSystemProxyConfigService(
-      file_task_runner_);
+      io_task_runner_);
 }
 
 URLRequestContextGetter::~URLRequestContextGetter() {}

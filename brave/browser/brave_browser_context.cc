@@ -527,25 +527,30 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
     // Initialize autofill db
     base::FilePath webDataPath = GetPath().Append(kWebDataFilename);
 
+    auto ui_task_runner =
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI);
+    auto db_task_runner = base::CreateSingleThreadTaskRunnerWithTraits(
+        {base::MayBlock(), base::TaskPriority::USER_VISIBLE,
+         base::TaskShutdownBehavior::BLOCK_SHUTDOWN});
+
     CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-    web_database_ = new WebDatabaseService(webDataPath,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::DB));
+    web_database_ =
+       new WebDatabaseService(webDataPath, ui_task_runner, db_task_runner);
     web_database_->AddTable(base::WrapUnique(new autofill::AutofillTable));
     web_database_->AddTable(base::WrapUnique(new LoginsTable));
     web_database_->LoadDatabase();
 
     autofill_data_ = new autofill::AutofillWebDataService(
         web_database_,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::DB),
+        ui_task_runner,
+        db_task_runner,
         base::Bind(&DatabaseErrorCallback));
     autofill_data_->Init();
 
 #if defined(OS_WIN)
     password_data_ = new PasswordWebDataService(
         web_database_,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
+        ui_task_runner,
         base::Bind(&PasswordErrorCallback));
     password_data_->Init();
 #endif
