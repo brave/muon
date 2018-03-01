@@ -1,5 +1,4 @@
 var ipc = require('ipc_utils')
-// var IpcStream = require('../../../../lib/common/electron-ipc-stream')
 
 var protocol = {
   registerStringProtocol: function (scheme, handler) {
