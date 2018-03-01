@@ -2554,7 +2554,11 @@ v8::Local<v8::Value> WebContents::TabValue() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
   std::unique_ptr<base::DictionaryValue> value(
-    ExtensionTabUtil::CreateTabObject(web_contents())->ToValue().release());
+      ExtensionTabUtil::CreateTabObject(
+          web_contents(), ExtensionTabUtil::ScrubTabBehaviour::kScrubTab,
+          nullptr)
+          ->ToValue()
+          .release());
 
   return content::V8ValueConverter::Create()->ToV8Value(
       value.get(), isolate()->GetCurrentContext());
