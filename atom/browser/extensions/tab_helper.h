@@ -183,7 +183,7 @@ class TabHelper : public content::WebContentsObserver,
   void DidCloneToNewWebContents(
       content::WebContents* old_web_contents,
       content::WebContents* new_web_contents) override;
-  void WasShown() override;
+  void OnVisibilityChanged(content::Visibility visibility) override;
 
   // Our content script observers. Declare at top so that it will outlive all
   // other members, since they might add themselves as observers.

@@ -381,9 +381,9 @@ void TabHelper::SetActive(bool active) {
   }
 }
 
-void TabHelper::WasShown() {
+void TabHelper::OnVisibilityChanged(content::Visibility visibility) {
   auto helper = content::RestoreHelper::FromWebContents(web_contents());
-  if (helper) {
+  if (visibility == content::Visibility::VISIBLE && helper) {
     // load the tab if it is shown without being activate (tab preview)
     discarded_ = false;
     SetAutoDiscardable(true);
