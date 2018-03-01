@@ -661,37 +661,22 @@ void BraveBrowserContext::set_last_selected_directory(
 
 namespace atom {
 
-void CreateDirectoryAndSignal(const base::FilePath& path,
-                              base::WaitableEvent* done_creating) {
+// Creates the profile directory synchronously if it doesn't exist. If
+// |create_readme| is true, the profile README will be created asynchronously i
+// the profile directory.
+void CreateProfileDirectory(const base::FilePath& path) {
+  // Create the profile directory synchronously otherwise we would need to
+  // sequence every otherwise independent I/O operation inside the profile
+  // directory with this operation. base::PathExists() and
+  // base::CreateDirectory() should be lightweight I/O operations and avoiding
+  // the headache of sequencing all otherwise unrelated I/O after these
+  // justifies running them on the main thread.
+  base::ThreadRestrictions::ScopedAllowIO allow_io_to_create_directory;
+
   if (!base::PathExists(path)) {
     DVLOG(1) << "Creating directory " << path.value();
     base::CreateDirectory(path);
   }
-  done_creating->Signal();
-}
-
-// Task that blocks the FILE thread until CreateDirectoryAndSignal() finishes on
-// the IO task runner
-void BlockFileThreadOnDirectoryCreate(base::WaitableEvent* done_creating) {
-  done_creating->Wait();
-}
-
-// Initiates creation of profile directory on |io_task_runner| and ensures that
-// FILE thread is blocked until that operation finishes. If |create_readme| is
-// true, the profile README will be created in the profile directory.
-void CreateProfileDirectory(base::SequencedTaskRunner* io_task_runner,
-                            const base::FilePath& path) {
-  base::WaitableEvent* done_creating =
-      new base::WaitableEvent(base::WaitableEvent::ResetPolicy::AUTOMATIC,
-                              base::WaitableEvent::InitialState::NOT_SIGNALED);
-  io_task_runner->PostTask(
-      FROM_HERE, base::Bind(&CreateDirectoryAndSignal, path, done_creating));
-  // Block the FILE thread until directory is created on I/O task runner to make
-  // sure that we don't attempt any operation until that part completes.
-  BrowserThread::PostTask(
-      BrowserThread::FILE, FROM_HERE,
-      base::Bind(&BlockFileThreadOnDirectoryCreate,
-                 base::Owned(done_creating)));
 }
 
 // TODO(bridiver) find a better way to do this
@@ -719,7 +704,7 @@ AtomBrowserContext* AtomBrowserContext::From(
       base::CreateSequencedTaskRunnerWithTraits(
           {base::TaskShutdownBehavior::BLOCK_SHUTDOWN, base::MayBlock()});
 
-  CreateProfileDirectory(io_task_runner.get(), path);
+  CreateProfileDirectory(path);
 
   auto profile = new brave::BraveBrowserContext(partition, in_memory, options,
                                                 io_task_runner);
