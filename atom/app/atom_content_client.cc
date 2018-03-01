@@ -117,6 +117,9 @@ AtomContentClient::~AtomContentClient() {
 }
 
 void AtomContentClient::SetActiveURL(const GURL& url, std::string top_origin) {
+  static crash_reporter::CrashKeyString<1024> active_url("url-chunk");
+  active_url.Set(url.possibly_invalid_spec());
+
   static crash_reporter::CrashKeyString<64> top_origin_key("top-origin");
   top_origin_key.Set(top_origin);
 }
