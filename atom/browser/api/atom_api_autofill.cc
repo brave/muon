@@ -426,11 +426,10 @@ void Autofill::ClearAutocompleteData() {
     web_data_service->RemoveFormElementsAddedBetween(delete_begin,
                                                      delete_end);
     // thread. So wait for it.
-    content::BrowserThread::PostTaskAndReply(content::BrowserThread::DB,
-      FROM_HERE,
-      base::Bind(&base::DoNothing),
-      base::Bind(&Autofill::OnClearedAutocompleteData,
-                 weak_ptr_factory_.GetWeakPtr()));
+    content::BrowserThread::PostTaskAndReply(
+        content::BrowserThread::DB, FROM_HERE, base::DoNothing(),
+        base::Bind(&Autofill::OnClearedAutocompleteData,
+                   weak_ptr_factory_.GetWeakPtr()));
 
     autofill::PersonalDataManager* data_manager =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
@@ -454,11 +453,10 @@ void Autofill::ClearAutofillData() {
                                                         delete_end);
     // The above calls are done on the UI thread but do their work on the DB
     // thread. So wait for it.
-    content::BrowserThread::PostTaskAndReply(content::BrowserThread::DB,
-      FROM_HERE,
-      base::Bind(&base::DoNothing),
-      base::Bind(&Autofill::OnClearedAutofillData,
-                 weak_ptr_factory_.GetWeakPtr()));
+    content::BrowserThread::PostTaskAndReply(
+        content::BrowserThread::DB, FROM_HERE, base::DoNothing(),
+        base::Bind(&Autofill::OnClearedAutofillData,
+                   weak_ptr_factory_.GetWeakPtr()));
 
     autofill::PersonalDataManager* data_manager =
       autofill::PersonalDataManagerFactory::GetForBrowserContext(
