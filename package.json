@@ -36,6 +36,5 @@
     "lint-docs": "standard-markdown docs",
     "preinstall": "node -e 'process.exit(0)'",
     "test": "python ./script/test.py"
-  },
-  "dependencies": {}
+  }
 }

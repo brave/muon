@@ -13,9 +13,8 @@ var protocol = {
 
   registerStreamProtocol: function (scheme, handler) {
     ipc.on('chrome-protocol-stream-handler-' + scheme, function (evt, request, requestId) {
-      console.log('protocol', 'chrome-protocol-stream-handler-' + scheme, requestId)
       const cb = (res) => {
-        if (typeof res.pipe === 'function') {
+        if (res == null || typeof res.pipe === 'function') {
           res = { data: res }
         }
 
@@ -23,6 +22,10 @@ var protocol = {
         res.statusCode = res.statusCode || 200
 
         ipc.send(`chrome-protocol-stream-handled-${requestId}-headers`, { headers: res.headers, statusCode: res.statusCode })
+
+        if (res.data == null) {
+          return ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-end`)
+        }
 
         res.data
           .on('data', (chunk) => {
@@ -34,7 +37,7 @@ var protocol = {
             ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-error`, data)
           })
           .on('end', () => {
-            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-finish`)
+            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-end`)
           })
       }
       handler(request, cb)
