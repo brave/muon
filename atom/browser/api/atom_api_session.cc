@@ -322,8 +322,7 @@ void ClearHostResolverCacheInIO(
     cache->clear();
     DCHECK_EQ(0u, cache->size());
     if (!callback.is_null())
-      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
-                              base::Bind(&base::DoNothing));
+      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, base::DoNothing());
   }
 }
 
