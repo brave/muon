@@ -11,6 +11,7 @@ source_set("browser") {
   public_deps = [
     "//content/public/browser",
     "//content/public/common",
+    "//net",
     "//electron/vendor/brightray:browser",
     "//ui/events",
     "//components/security_state/content",
@@ -22,8 +23,6 @@ source_set("browser") {
   ]
 
   deps = [
-    "//electron/chromium_src/chrome/browser/prerender",
-    "//chrome/browser/safe_browsing",
     "//electron:common",
     "//electron/muon/app",
     # @todo(bridiver) fix circular dep

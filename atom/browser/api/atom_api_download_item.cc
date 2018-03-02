@@ -10,13 +10,13 @@
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
-#include "atom/common/node_includes.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread_task_runner_handle.h"
-#include "content/browser/download/download_item_impl.h"
 #include "content/public/browser/download_item.h"
 #include "native_mate/dictionary.h"
 #include "net/base/filename_util.h"
+
+#include "atom/common/node_includes.h"
 
 namespace mate {
 

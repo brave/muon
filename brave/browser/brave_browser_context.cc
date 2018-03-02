@@ -18,6 +18,7 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/download/download_prefs.h"
 #include "chrome/browser/io_thread.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/common/chrome_paths.h"
@@ -439,10 +440,6 @@ void BraveBrowserContext::CreateProfilePrefs(
               extension_prefs, overlay_pref_names, std::move(delegate)));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
-    base::FilePath download_dir;
-    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &download_dir);
-    pref_registry_->RegisterFilePathPref(prefs::kDownloadDefaultDirectory,
-                                        download_dir);
     pref_registry_->RegisterDictionaryPref("app_state");
     pref_registry_->RegisterDictionaryPref(
         extensions::pref_names::kPrefContentSettings);
@@ -454,10 +451,8 @@ void BraveBrowserContext::CreateProfilePrefs(
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionPerHostZoomLevels);
     pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);
     pref_registry_->RegisterBooleanPref(prefs::kPrintPreviewDisabled, false);
-    pref_registry_->RegisterBooleanPref(prefs::kSafeBrowsingEnabled, true);
-    pref_registry_->RegisterBooleanPref(prefs::kPromptForDownload, true);
-    pref_registry_->RegisterFilePathPref(prefs::kSaveFileDefaultDirectory,
-      download_dir);
+    safe_browsing::RegisterProfilePrefs(pref_registry_.get());
+    DownloadPrefs::RegisterProfilePrefs(pref_registry_.get());
 #if BUILDFLAG(ENABLE_PLUGINS)
     PluginInfoHostImpl::RegisterUserPrefs(pref_registry_.get());
     PepperFlashSettingsManager::RegisterProfilePrefs(pref_registry_.get());

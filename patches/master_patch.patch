@@ -566,33 +566,6 @@ index d85ddf9db90d332a31f839e7600b8d6e5ec61356..2dbe745b19001ce55631e625b6c597b2
    // Finds TabStripModel which has a WebContents whose id is the given
    // |tab_id|, and returns the WebContents index and the TabStripModel.
    int FindTabStripModelById(int32_t tab_id, TabStripModel** model) const;
-diff --git a/chrome/browser/safe_browsing/chrome_password_protection_service.cc b/chrome/browser/safe_browsing/chrome_password_protection_service.cc
-index 4275342f9244aa005521882c23767662fa2a681c..de4b9e02182dd4ed34e248d993c2a5f1e480d020 100644
---- a/chrome/browser/safe_browsing/chrome_password_protection_service.cc
-+++ b/chrome/browser/safe_browsing/chrome_password_protection_service.cc
-@@ -672,8 +672,7 @@ bool ChromePasswordProtectionService::UserClickedThroughSBInterstitial(
- }
- 
- AccountInfo ChromePasswordProtectionService::GetAccountInfo() {
--  SigninManagerBase* signin_manager =
--      SigninManagerFactory::GetForProfileIfExists(profile_);
-+  SigninManagerBase* signin_manager = nullptr;
- 
-   return signin_manager ? signin_manager->GetAuthenticatedAccountInfo()
-                         : AccountInfo();
-diff --git a/chrome/browser/safe_browsing/chrome_password_protection_service.h b/chrome/browser/safe_browsing/chrome_password_protection_service.h
-index 9f9a34a962f52c4f9a56b1f0bd25ab350c5cdd05..fefa41dac43a699f3c8fe5b9ac2ef4df6496a451 100644
---- a/chrome/browser/safe_browsing/chrome_password_protection_service.h
-+++ b/chrome/browser/safe_browsing/chrome_password_protection_service.h
-@@ -40,7 +40,7 @@ using url::Origin;
- void ShowPasswordReuseModalWarningDialog(
-     content::WebContents* web_contents,
-     ChromePasswordProtectionService* service,
--    OnWarningDone done_callback);
-+    OnWarningDone done_callback) {}
- 
- // Called by ChromeContentBrowserClient to create a
- // PasswordProtectionNavigationThrottle if appropriate.
 diff --git a/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc b/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
 index 7d32a4cc7a0f1d2230d1f965431a291424ae0db1..ed699539f22fad86ad581553974079c9b68038a9 100644
 --- a/chrome/browser/safe_browsing/download_protection/check_client_download_request.cc
@@ -1886,19 +1859,6 @@ index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8
    };
  
    proto.attachedCallback = function() {
-diff --git a/google_apis/google_api_keys.cc b/google_apis/google_api_keys.cc
-index 2e8437ed136e682540835ef4738e3519f9cb6051..4ec8bd06b4ee76a398947540c76e2450ed4cdcca 100644
---- a/google_apis/google_api_keys.cc
-+++ b/google_apis/google_api_keys.cc
-@@ -28,7 +28,7 @@
- 
- // Used to indicate an unset key/id/secret.  This works better with
- // various unit tests than leaving the token empty.
--#define DUMMY_API_TOKEN "dummytoken"
-+#define DUMMY_API_TOKEN "AIzaSyAH90V94EcZBP5oH7oc-mXQrSKgASVxER8"
- 
- #if !defined(GOOGLE_API_KEY)
- #define GOOGLE_API_KEY DUMMY_API_TOKEN
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
 index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f747a2edf60 100644
 --- a/media/base/media_switches.cc
@@ -1912,30 +1872,6 @@ index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f74
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
-diff --git a/net/base/linked_hash_map.h b/net/base/linked_hash_map.h
-index 921764f79c603fd8b8037ac52ca2ebabb0440ebd..a7f71c080f52e35310d90b6815b1c1a190ed1063 100644
---- a/net/base/linked_hash_map.h
-+++ b/net/base/linked_hash_map.h
-@@ -142,8 +142,7 @@ class linked_hash_map {
-   // map and list, a CHECK() error will occur.
-   iterator erase(iterator position) {
-     typename MapType::iterator found = map_.find(position->first);
--    CHECK(found->second == position)
--        << "Inconsisent iterator for map and list, or the iterator is invalid.";
-+    CHECK(found->second == position);
- 
-     map_.erase(found);
-     return list_.erase(position);
-@@ -222,8 +221,7 @@ class linked_hash_map {
-     typename ListType::iterator last = list_.end();
-     --last;
- 
--    CHECK(map_.insert(std::make_pair(pair.first, last)).second)
--        << "Map and list are inconsistent";
-+    CHECK(map_.insert(std::make_pair(pair.first, last)).second);
- 
-     return std::make_pair(last, true);
-   }
 diff --git a/net/http/BUILD.gn b/net/http/BUILD.gn
 index d00da41da1d8bbc40d8a85d582c1966ed22eaaf1..6a3b54e91eafb8f187989c9c954be0008343aa63 100644
 --- a/net/http/BUILD.gn

@@ -3,17 +3,18 @@ source_set("safe_browsing") {
   configs += [ "//electron/chromium_src:chromium_src_config" ]
 
   sources = [
-    "safe_browsing_service.cc",
+    "password_reuse_modal_warning_dialog.cc",
+  ]
+
+  public_deps = [
+    "//chrome/browser/safe_browsing",
+    "//content/public/browser",
   ]
 
   deps = [
-    "//components/safe_browsing/common:interfaces",
-    "//third_party/protobuf:protobuf_lite",
+    "//electron/chromium_src/chrome/browser/interstitials",
+    "//electron/chromium_src/chrome/browser/prerender",
+    "//electron/chromium_src/chrome/browser/signin",
   ]
-
-  if (is_win) {
-    cflags = [ "/wd4172", ]
-  } else {
-    cflags = [ "-Wnoreturn-stack-address" ]
-  }
 }
+
