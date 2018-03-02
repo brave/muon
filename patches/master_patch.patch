@@ -1415,7 +1415,7 @@ index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e81851363
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 3484edd85788c62a55a62b33df6a33de117d04d2..057264b3b90e40ed40d14b2529dbaef93726d833 100644
+index 829401d6438671f55a9caf3a8f5eb5dc38234332..8ea576f35c95b7a0dbe050788a8d6b302ba75550 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1724,7 +1724,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
@@ -1803,10 +1803,10 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-index d91e3b1430736d8997d5a9546944f3f7db985e01..9a0a23b8a12da7118acbe485d779b4341bdc9af4 100644
+index 8ab197693ed861ee46b954297d05c5e2edb2c4a8..cfb1728bceb69a94be687de2fb38a6297aa90491 100644
 --- a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
 +++ b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-@@ -3252,6 +3252,7 @@ void WebViewImpl::DidCloseContextMenu() {
+@@ -3259,6 +3259,7 @@ void WebViewImpl::DidCloseContextMenu() {
    LocalFrame* frame = page_->GetFocusController().FocusedFrame();
    if (frame)
      frame->Selection().SetCaretBlinkingSuspended(false);
