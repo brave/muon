@@ -45,7 +45,7 @@ class BraveJavaScriptDialogManager : public content::JavaScriptDialogManager {
 
   // JavaScriptDialogManager:
   void RunJavaScriptDialog(content::WebContents* web_contents,
-                           const GURL& alerting_frame_url,
+                           content::RenderFrameHost* render_frame_host,
                            content::JavaScriptDialogType dialog_type,
                            const base::string16& message_text,
                            const base::string16& default_prompt_text,
