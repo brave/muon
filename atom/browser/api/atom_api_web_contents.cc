@@ -2555,7 +2555,7 @@ v8::Local<v8::Value> WebContents::TabValue() {
 
   std::unique_ptr<base::DictionaryValue> value(
       ExtensionTabUtil::CreateTabObject(
-          web_contents(), ExtensionTabUtil::ScrubTabBehaviour::kScrubTab,
+          web_contents(), ExtensionTabUtil::kScrubTab,
           nullptr)
           ->ToValue()
           .release());
