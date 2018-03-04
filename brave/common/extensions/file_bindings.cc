@@ -13,7 +13,6 @@
 #include "base/sequenced_task_runner.h"
 #include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_task_runner_handle.h"
-#include "base/threading/sequenced_worker_pool.h"
 #include "brave/common/converters/string16_converter.h"
 #include "content/public/browser/browser_thread.h"
 #include "extensions/renderer/script_context.h"
