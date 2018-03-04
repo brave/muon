@@ -63,7 +63,7 @@
 #include "muon/app/muon_crash_reporter_client.h"
 #include "net/base/filename_util.h"
 #include "net/ssl/client_cert_store.h"
-#include "services/data_decoder/public/interfaces/constants.mojom.h"
+#include "services/data_decoder/public/mojom/constants.mojom.h"
 #include "services/metrics/metrics_mojo_service.h"
 #include "services/metrics/public/mojom/constants.mojom.h"
 #include "services/proxy_resolver/public/mojom/proxy_resolver.mojom.h"
@@ -93,7 +93,7 @@
 #endif
 
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
-#include "chrome/services/printing/public/interfaces/constants.mojom.h"
+#include "chrome/services/printing/public/mojom/constants.mojom.h"
 #endif
 
 #if defined(USE_NSS_CERTS)
