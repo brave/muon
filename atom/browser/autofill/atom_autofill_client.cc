@@ -113,6 +113,10 @@ syncer::SyncService* AtomAutofillClient::GetSyncService() {
   return nullptr;
 }
 
+identity::IdentityManager* AtomAutofillClient::GetIdentityManager() {
+  return nullptr;
+}
+
 IdentityProvider* AtomAutofillClient::GetIdentityProvider() {
   if (!identity_provider_) {
      identity_provider_.reset(new StubIdentityProvider());
