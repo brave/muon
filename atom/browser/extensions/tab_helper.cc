@@ -183,6 +183,18 @@ bool TabHelper::AttachGuest(int window_id, int index) {
   return false;
 }
 
+bool TabHelper::ReplaceGuestContents(content::WebContents* new_contents) {
+  if (guest()->attached()) {
+    auto new_contents_helper = FromWebContents(new_contents);
+    // Replace the detached tab with the null placeholder
+    browser_->tab_strip_model()->ReplaceWebContentsAt(
+        get_index(), new_contents);
+    return true;
+  }
+
+  return false;
+}
+
 content::WebContents* TabHelper::DetachGuest() {
   if (guest()->attached()) {
     // create temporary null placeholder

@@ -72,6 +72,7 @@ class TabHelper : public content::WebContentsObserver,
                             content::WebContents::CreateParams create_params);
   static void DestroyTab(content::WebContents* tab);
 
+  bool ReplaceGuestContents(content::WebContents* new_contents);
   bool AttachGuest(int window_id, int index);
   content::WebContents* DetachGuest();
 

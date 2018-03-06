@@ -895,6 +895,20 @@ void WebContents::AttachGuest(mate::Arguments* args) {
   }
 }
 
+void WebContents::ReplaceGuestContents(mate::Arguments* args) {
+  content::WebContents* new_contents = nullptr;
+  if (!args->GetNext(&new_contents)) {
+    args->ThrowError("`new_contents` is a required field");
+    return;
+  }
+
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    args->Return(tab_helper->ReplaceGuestContents(new_contents));
+  else
+    args->Return(false);
+}
+
 void WebContents::DetachGuest(mate::Arguments* args) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper)
@@ -1178,11 +1192,14 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
                                    content::WebContents* new_contents,
                                    int index,
                                    int reason) {
-  auto new_api_web_contents = CreateFrom(isolate(), new_contents);
-  new_api_web_contents->Emit("set-active", true);
-  if (old_contents) {
+  if (new_contents == web_contents()) {
+    auto new_api_web_contents = CreateFrom(isolate(), new_contents);
+    new_api_web_contents->Emit("set-active", true);
+  }
+
+  if (old_contents == web_contents()) {
     auto old_api_web_contents = CreateFrom(isolate(), old_contents);
-    old_api_web_contents->Emit("set-active", false);
+    old_api_web_contents->Emit("set-active", false, new_contents);
   }
 }
 
@@ -2730,6 +2747,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("forceClose", &WebContents::DestroyWebContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
+      .SetMethod("replaceGuestContents", &WebContents::ReplaceGuestContents)
       .SetMethod("_attachGuest", &WebContents::AttachGuest)
       .SetMethod("_detachGuest", &WebContents::DetachGuest)
       .SetMethod("isPlaceholder", &WebContents::IsPlaceholder)
