@@ -185,14 +185,25 @@ bool TabHelper::AttachGuest(int window_id, int index) {
 
 bool TabHelper::ReplaceGuestContents(content::WebContents* new_contents) {
   if (guest()->attached()) {
-    auto new_contents_helper = FromWebContents(new_contents);
-    // Replace the detached tab with the null placeholder
-    browser_->tab_strip_model()->ReplaceWebContentsAt(
-        get_index(), new_contents);
-    return true;
-  }
+    brave::TabViewGuest* old_guest = guest();
+    int guest_instance_id = old_guest->guest_instance_id();
 
-  return false;
+    auto new_helper = FromWebContents(new_contents);
+
+    brave::TabViewGuest* new_guest = new_helper->guest();
+    web_contents()->WasHidden();
+
+    const base::DictionaryValue* attach_params =
+      old_guest->attach_params()->CreateDeepCopy().release();
+    new_guest->SetAttachParams(*attach_params);
+
+    old_guest->DetachGuest();
+    new_guest->AttachGuest(new_guest->guest_instance_id());
+
+    return true;
+  } else {
+    return false;
+  }
 }
 
 content::WebContents* TabHelper::DetachGuest() {

@@ -1192,12 +1192,10 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
                                    content::WebContents* new_contents,
                                    int index,
                                    int reason) {
-  if (new_contents == web_contents()) {
-    auto new_api_web_contents = CreateFrom(isolate(), new_contents);
-    new_api_web_contents->Emit("set-active", true);
-  }
+  auto new_api_web_contents = CreateFrom(isolate(), new_contents);
+  new_api_web_contents->Emit("set-active", true);
 
-  if (old_contents == web_contents()) {
+  if (old_contents) {
     auto old_api_web_contents = CreateFrom(isolate(), old_contents);
     old_api_web_contents->Emit("set-active", false, new_contents);
   }
@@ -1260,7 +1258,7 @@ void WebContents::TabReplacedAt(TabStripModel* tab_strip_model,
 
     if (g_browser_process->GetTabManager()->IsTabDiscarded(new_contents))
       Emit("discarded");
-      
+
     Emit("tab-replaced-at",
         browser->session_id().id(), index, new_contents);
   }
