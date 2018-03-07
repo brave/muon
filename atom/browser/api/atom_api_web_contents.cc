@@ -1180,12 +1180,28 @@ void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
   }
 }
 
+void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* contents,
+                     int index,
+                     bool active) {
+  if (type_ != BROWSER_WINDOW)
+    return;
+
+  if (owner_window() && owner_window()->browser() &&
+      tab_strip_model == owner_window()->browser()->tab_strip_model()) {
+    Emit("tab-inserted-at",
+        contents, index, active);
+  }
+}
+
 void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
   if (contents != web_contents())
     return;
+
   if (owner_window() && owner_window()->browser())
     owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
-  Emit("tab-detached-at", index);
+
+  Emit("tab-detached-at", extensions::TabHelper::IdForTab(contents), index);
 }
 
 void WebContents::ActiveTabChanged(content::WebContents* old_contents,
@@ -1199,15 +1215,6 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
     auto old_api_web_contents = CreateFrom(isolate(), old_contents);
     old_api_web_contents->Emit("set-active", false, new_contents);
   }
-}
-
-void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
-                                content::WebContents* contents,
-                                int index,
-                                bool foreground) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-inserted-at", index, foreground);
 }
 
 void WebContents::TabMoved(content::WebContents* contents,
@@ -1574,8 +1581,6 @@ void WebContents::SetOwnerWindow(NativeWindow* new_owner_window) {
   if (owner_window() == new_owner_window)
     return;
 
-  if (owner_window())
-    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
   new_owner_window->browser()->tab_strip_model()->AddObserver(this);
 
   SetOwnerWindow(web_contents(), new_owner_window);
@@ -1609,9 +1614,6 @@ void WebContents::WebContentsDestroyed() {
 
   is_being_destroyed_ = true;
 
-  if (owner_window() && owner_window()->browser())
-    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
-
   // clear out fullscreen state
   if (CommonWebContentsDelegate::IsFullscreenForTabOrPending(web_contents())) {
     ExitFullscreenModeForTab(nullptr);
@@ -1624,6 +1626,12 @@ void WebContents::WebContentsDestroyed() {
   // This event is only for internal use, which is emitted when WebContents is
   // being destroyed.
   Emit("will-destroy");
+
+  if (owner_window() && owner_window()->browser()) {
+    TabDetachedAt(web_contents(),
+        owner_window()->browser()->tab_strip_model()
+            ->GetIndexOfWebContents(web_contents()));
+  }
 
   // Cleanup relationships with other parts.
   RemoveFromWeakMap();
