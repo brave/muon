@@ -1,6 +1,7 @@
 use_relative_paths = True
 
 deps = {
+  "vendor/tor": "https://github.com/jumde/tor.git@699bb803baba942c6bcd50542183b283fa191163",
   "vendor/node": "https://github.com/brave/node.git@488de2b7222f90667d373e40baf1761ccf27628e",
   "vendor/ad-block": "https://github.com/brave/ad-block.git@b74f508be52931604199195905d3113bf450c851",
   "vendor/tracking-protection": "https://github.com/brave/tracking-protection.git@f4e56becfc197b76cbb726b6813afe1c9dd55b88",
