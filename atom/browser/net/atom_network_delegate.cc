@@ -389,7 +389,7 @@ void AtomNetworkDelegate::OnCompleted(net::URLRequest* request,
                                       bool started,
                                       int net_error) {
   // OnCompleted may happen before other events.
-  OnURLRequestDestroyed(request);
+  callbacks_.erase(request->identifier());
 
   if (net_error != net::OK) {
     OnErrorOccurred(request, started, net_error);
