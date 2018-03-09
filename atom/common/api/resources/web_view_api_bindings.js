@@ -118,9 +118,20 @@ WebViewImpl.prototype.attachGuest = function (guestInstanceId) {
     return this.attachWindow$(guestInstanceId)
 }
 
+WebViewImpl.prototype.eventWrapper = function (tabID, event) {
+  if (event.type == 'destroyed') {
+    GuestViewInternal.removeListener(tabID, this.currentEventWrapper)
+  }
+  this.dispatchEvent(event)
+}
 
 WebViewImpl.prototype.setTabId = function (tabID) {
+  if (this.tabID) {
+    GuestViewInternal.removeListener(this.tabID, this.currentEventWrapper)
+  }
   this.tabID = tabID
+  this.currentEventWrapper = this.eventWrapper.bind(this, tabID)
+  GuestViewInternal.addListener(tabID, this.currentEventWrapper)
 }
 
 WebViewImpl.prototype.getId = function () {
