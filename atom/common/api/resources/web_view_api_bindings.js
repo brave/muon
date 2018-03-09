@@ -81,7 +81,12 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
   const guestInstanceId = opt_guestInstanceId || this.guest.getId()
 
   if (opt_guestInstanceId) {
-    if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
+    // detach if attached so that attached contents is not destroyed
+    // but never try to call detach on a destroyed contents guest,
+    // as that request will never be fulfilled.
+    if ((!this.webContents_ || !this.webContents_.isDestroyed()) &&
+    this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED
+    ) {
       this.guest.detach()
     }
 
@@ -100,19 +105,17 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
 }
 
 WebViewImpl.prototype.detachGuest = function () {
+  // do not attempt to call detach on a destroyed web contents
+  if (this.webContents_ && this.webContents_.isDestroyed()) {
+    return
+  }
   if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
     this.guest.detach()
   }
 }
 
 WebViewImpl.prototype.attachGuest = function (guestInstanceId) {
-  if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
-    this.guest.detach(() => {
-      return this.attachWindow$(guestInstanceId)
-    })
-  } else {
     return this.attachWindow$(guestInstanceId)
-  }
 }
 
 
