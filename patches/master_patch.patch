@@ -148,7 +148,7 @@ index 19cb2b02d4c944988f9f928b3dbda166a9233d3f..af1bd76f33cf607d112d1dd094995571
            "translate::mojom::ContentTranslateDriver"
          ],
 diff --git a/chrome/browser/chrome_service.cc b/chrome/browser/chrome_service.cc
-index 3ea50d9bfd1cca4a78585be2066d1f203a92b5e4..f3bfb605482b45d06fc20c40856dd72e3b3f310a 100644
+index 1bd2e1d014ec61491a2904b30c9197da3691c46d..87dd94ff56138b4d81f9b05c0c49f7fc644d7ed4 100644
 --- a/chrome/browser/chrome_service.cc
 +++ b/chrome/browser/chrome_service.cc
 @@ -31,8 +31,6 @@ ChromeService::ChromeService() {
@@ -159,7 +159,7 @@ index 3ea50d9bfd1cca4a78585be2066d1f203a92b5e4..f3bfb605482b45d06fc20c40856dd72e
 -      base::Bind(&startup_metric_utils::StartupMetricHostImpl::Create));
  #if BUILDFLAG(ENABLE_SPELLCHECK)
    registry_with_source_info_.AddInterface(
-       base::Bind(&SpellCheckHostImpl::Create),
+       base::BindRepeating(&SpellCheckHostChromeImpl::Create),
 diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
 index 864a6951115dda5ed74963f18b35692960397d50..3e1a2b719521ac2c60bae05f94e409bc4c7da022 100644
 --- a/chrome/browser/importer/external_process_importer_client.h
