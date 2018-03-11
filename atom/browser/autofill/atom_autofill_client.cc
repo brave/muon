@@ -83,9 +83,24 @@ void AtomAutofillClient::Initialize(atom::api::WebContents* api_web_contents) {
 void AtomAutofillClient::DidAcceptSuggestion(const std::string& value,
                                              int frontend_id,
                                              int index) {
+  suggestion_value_ = base::UTF8ToUTF16(value);
+  suggestion_frontend_id_ = frontend_id;
+  suggestion_index_ = index;
+  if (GetPrefs()->GetBoolean(prefs::kAutofillConfirmEnabled) &&
+      frontend_id > autofill::PopupItemId::POPUP_ITEM_ID_AUTOCOMPLETE_ENTRY) {
+    delegate_->QueryAutofillValues(frontend_id);
+  } else if (delegate_) {
+    delegate_->DidAcceptSuggestion(suggestion_value_,
+                                   suggestion_frontend_id_,
+                                   suggestion_index_);
+  }
+}
+
+void AtomAutofillClient::DidConfirmAutofill() {
   if (delegate_) {
-    delegate_->DidAcceptSuggestion(base::UTF8ToUTF16(value), frontend_id,
-                                   index);
+    delegate_->DidAcceptSuggestion(suggestion_value_,
+                                   suggestion_frontend_id_,
+                                   suggestion_index_);
   }
 }
 
@@ -267,6 +282,16 @@ bool AtomAutofillClient::IsContextSecure() {
           net::IsCertStatusMinorError(ssl_status.cert_status)) &&
          !(ssl_status.content_status &
            content::SSLStatus::RAN_INSECURE_CONTENT);
+}
+
+void AtomAutofillClient::DidGetAutofillValues(
+    const std::vector<base::string16>& values) {
+  if (values.size() == 1 && delegate_)
+    delegate_->DidAcceptSuggestion(suggestion_value_,
+                                   suggestion_frontend_id_,
+                                   suggestion_index_);
+  else
+    api_web_contents_->Emit("before-autofill", values);
 }
 
 }  // namespace autofill

@@ -44,6 +44,7 @@ class AtomAutofillClient
   void Initialize(atom::api::WebContents* api_web_contents);
   void DidAcceptSuggestion(const std::string& value, int frontend_id,
                            int index);
+  void DidConfirmAutofill();
 
   // AutofillClient:
   SaveCardBubbleController* GetSaveCardBubbleController() override;
@@ -97,11 +98,20 @@ class AtomAutofillClient
   bool IsAutofillSupported() override { return true; }
   void ExecuteCommand(int id) override {}
 
+  void DidGetAutofillValues(const std::vector<base::string16>& values) override;
+
   // content::WebContentsObserver implementation.
   void WebContentsDestroyed() override;
  private:
   explicit AtomAutofillClient(content::WebContents* web_contents);
   friend class content::WebContentsUserData<AtomAutofillClient>;
+
+  base::string16 suggestion_value_;
+
+  int suggestion_frontend_id_;
+
+  int suggestion_index_;
+
 
   atom::api::WebContents* api_web_contents_;
 

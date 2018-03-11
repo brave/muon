@@ -287,6 +287,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
                                    bool allowed);
 
   void AutofillSelect(const std::string& value, int frontend_id, int index);
+  void AutofillConfirm();
   void AutofillPopupHidden();
 
   void AttachGuest(mate::Arguments* args);
