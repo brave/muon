@@ -34,6 +34,7 @@
 #include "third_party/WebKit/public/platform/URLConversion.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
 #include "third_party/WebKit/public/platform/WebSocketHandshakeThrottle.h"
+#include "third_party/WebKit/public/web/WebFrameWidget.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebPlugin.h"
 #include "third_party/WebKit/public/web/WebPluginParams.h"
@@ -60,6 +61,7 @@
 using autofill::AutofillAgent;
 using autofill::PasswordAutofillAgent;
 using autofill::PasswordGenerationAgent;
+using blink::WebFrameWidget;
 using blink::WebLocalFrame;
 using blink::WebPlugin;
 using blink::WebPluginParams;
@@ -194,6 +196,12 @@ void BraveContentRendererClient::RenderViewCreated(
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
 
   new password_manager::CredentialManagerClient(render_view);
+
+  blink::WebFrameWidget* web_frame_widget = render_view->GetWebFrameWidget();
+
+  if (web_frame_widget) {
+    web_frame_widget->SetBaseBackgroundColor(SK_ColorTRANSPARENT);
+  }
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   // This is a workaround keeping the behavior that, the Blink side spellcheck
