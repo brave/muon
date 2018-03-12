@@ -12,6 +12,10 @@
 #include "base/bind.h"
 #include "base/files/file_util.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/browser_finder.h"
+#include "chrome/browser/ui/browser_list.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_context.h"
@@ -25,6 +29,19 @@ namespace {
 
 const DownloadPathReservationTracker::FilenameConflictAction
     kDefaultPlatformConflictAction = DownloadPathReservationTracker::UNIQUIFY;
+
+NativeWindow* GetNativeWindowFromWebContents(content::WebContents* web_contents) {
+  DCHECK(web_contents);
+  auto relay = NativeWindowRelay::FromWebContents(web_contents);
+  return relay ? relay->window.get() : nullptr;
+}
+
+// Blank newtab on download should be closed after starting download.
+void CloseWebContentsIfNeeded(content::WebContents* web_contents) {
+  DCHECK(web_contents);
+  Browser* browser = chrome::FindBrowserWithWebContents(web_contents);
+  web_contents->Close();
+}
 
 }  // namespace
 
@@ -79,13 +96,6 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
     path = target_path;
   }
 
-  NativeWindow* window = nullptr;
-  content::WebContents* web_contents = item->GetWebContents();
-  auto relay = web_contents ? NativeWindowRelay::FromWebContents(web_contents)
-                            : nullptr;
-  if (relay)
-    window = relay->window.get();
-
   GetItemSavePath(item, &path);
 
   // Show save dialog if save path was not set already on item
@@ -99,6 +109,20 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
         download_manager_->GetBrowserContext());
     profile->GetPrefs()->SetFilePath(prefs::kDownloadDefaultDirectory,
                                           path.DirName());
+  }
+
+  // To show file save dialog, |window| always must be valid.
+  NativeWindow* window = nullptr;
+  if (content::WebContents* web_contents = item->GetWebContents()) {
+    window = GetNativeWindowFromWebContents(web_contents);
+    CloseWebContentsIfNeeded(web_contents);
+  }
+
+  // If we can't find proper |window| for showing save dialog, cancel
+  // and cleanup current download.
+  if (!window) {
+    OnDownloadItemSelectionCancelled(callback, item);
+    return;
   }
 
   if (path.empty())
