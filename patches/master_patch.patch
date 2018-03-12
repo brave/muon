@@ -1844,6 +1844,36 @@ index a433afd0217830b49ddb3381ad55afeae2381840..ddcca749666f956c6317676dbcdd48da
    DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
  }
  
+diff --git a/net/url_request/url_request_http_job.cc b/net/url_request/url_request_http_job.cc
+index da7a19865989404f3147ca3e29a13f7f29f175d4..47fa22638f7450367c9014d2f2fa70f1659d2f15 100644
+--- a/net/url_request/url_request_http_job.cc
++++ b/net/url_request/url_request_http_job.cc
+@@ -415,8 +415,10 @@ void URLRequestHttpJob::NotifyBeforeSendHeadersCallback(
+ }
+ 
+ void URLRequestHttpJob::NotifyHeadersComplete() {
+-  DCHECK(!response_info_);
++  std::string first_party_host = request_->site_for_cookies().host();
++  std::string request_host = request_->url().host();
+ 
++  DCHECK(!response_info_);
+   response_info_ = transaction_->GetResponseInfo();
+ 
+   // Save boolean, as we'll need this info at destruction time, and filters may
+@@ -426,8 +428,11 @@ void URLRequestHttpJob::NotifyHeadersComplete() {
+   if (!is_cached_content_ && throttling_entry_.get())
+     throttling_entry_->UpdateWithResponse(GetResponseCode());
+ 
+-  // The ordering of these calls is not important.
+-  ProcessStrictTransportSecurityHeader();
++  if (first_party_host == request_host) {
++    // The ordering of these calls is not important.
++    ProcessStrictTransportSecurityHeader();
++  }
++
+   ProcessPublicKeyPinsHeader();
+   ProcessExpectCTHeader();
+ #if BUILDFLAG(ENABLE_REPORTING)
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h
@@ -1870,7 +1900,7 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-index b73e62a0420f77db2874260a6f5e141264018cb8..c0f24ad844cb53eb813e4dc6ad7f8eef20ca7fc4 100644
+index 9a59d4f569de1ea8f5cd84849e313b4512576043..8e12398d8a153f9710650e35f21b1f5b9de83dd3 100644
 --- a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
 +++ b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
 @@ -3237,6 +3237,7 @@ void WebViewImpl::DidCloseContextMenu() {
