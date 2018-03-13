@@ -1270,6 +1270,130 @@ index f924fe268f0334d522898ffcc51d82e39fc77a8f..42bac4005b86ccec4d5a45b2c8067e4c
    config->rev_checking_required_local_anchors =
        rev_checking_required_local_anchors_.GetValue();
    config->sha1_local_anchors_enabled = sha1_local_anchors_enabled_.GetValue();
+diff --git a/components/viz/common/BUILD.gn b/components/viz/common/BUILD.gn
+index b1f1c511c79360cf52bea03a84199b540feac507..7f80c1f0eb2918e7d46a884299e087524ac74d4b 100644
+--- a/components/viz/common/BUILD.gn
++++ b/components/viz/common/BUILD.gn
+@@ -119,6 +119,8 @@ viz_component("common") {
+     "resources/single_release_callback.h",
+     "resources/transferable_resource.cc",
+     "resources/transferable_resource.h",
++    "surfaces/child_local_surface_id_allocator.cc",
++    "surfaces/child_local_surface_id_allocator.h",
+     "surfaces/frame_sink_id.cc",
+     "surfaces/frame_sink_id.h",
+     "surfaces/frame_sink_id_allocator.h",
+@@ -195,6 +197,8 @@ viz_source_set("unit_tests") {
+     "quads/render_pass_unittest.cc",
+     "resources/platform_color_unittest.cc",
+     "surfaces/surface_sequence_generator_unittest.cc",
++    "surfaces/child_local_surface_id_allocator_unittest.cc",
++    "surfaces/parent_local_surface_id_allocator_unittest.cc",
+     "yuv_readback_unittest.cc",
+   ]
+ 
+diff --git a/components/viz/common/surfaces/parent_local_surface_id_allocator.cc b/components/viz/common/surfaces/parent_local_surface_id_allocator.cc
+index a5a5512f3d7fd7efdce8f761616f7b8451fb24c0..2fa2bc4a3adc580b71f174102f5d56b67243308a 100644
+--- a/components/viz/common/surfaces/parent_local_surface_id_allocator.cc
++++ b/components/viz/common/surfaces/parent_local_surface_id_allocator.cc
+@@ -4,21 +4,43 @@
+ 
+ #include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
+ 
+-#include <stdint.h>
+-
+ #include "base/rand_util.h"
+-#include "base/unguessable_token.h"
+ 
+ namespace viz {
+ 
+-ParentLocalSurfaceIdAllocator::ParentLocalSurfaceIdAllocator() : next_id_(1u) {}
++namespace {
++constexpr uint32_t kInvalidParentSequenceNumber = 0;
++constexpr uint32_t kInitialChildSequenceNumber = 1;
++}  // namespace
++
++ParentLocalSurfaceIdAllocator::ParentLocalSurfaceIdAllocator()
++    : last_known_local_surface_id_(kInvalidParentSequenceNumber,
++                                   kInitialChildSequenceNumber,
++                                   base::UnguessableToken()) {}
++
++const LocalSurfaceId& ParentLocalSurfaceIdAllocator::UpdateFromChild(
++    const LocalSurfaceId& child_allocated_local_surface_id) {
++  DCHECK_GE(child_allocated_local_surface_id.child_sequence_number(),
++            last_known_local_surface_id_.child_sequence_number());
++
++  last_known_local_surface_id_ =
++      LocalSurfaceId(last_known_local_surface_id_.parent_sequence_number(),
++                     child_allocated_local_surface_id.child_sequence_number(),
++                     last_known_local_surface_id_.nonce());
++  return last_known_local_surface_id_;
++}
+ 
+-ParentLocalSurfaceIdAllocator::~ParentLocalSurfaceIdAllocator() {}
++void ParentLocalSurfaceIdAllocator::Reset(
++    const LocalSurfaceId& local_surface_id) {
++  last_known_local_surface_id_ = local_surface_id;
++}
+ 
+-LocalSurfaceId ParentLocalSurfaceIdAllocator::GenerateId() {
+-  LocalSurfaceId id(next_id_, base::UnguessableToken::Create());
+-  next_id_++;
+-  return id;
++const LocalSurfaceId& ParentLocalSurfaceIdAllocator::GenerateId() {
++  last_known_local_surface_id_ =
++      LocalSurfaceId(last_known_local_surface_id_.parent_sequence_number() + 1,
++                     last_known_local_surface_id_.child_sequence_number(),
++                     base::UnguessableToken::Create());
++  return last_known_local_surface_id_;
+ }
+ 
+ }  // namespace viz
+diff --git a/components/viz/common/surfaces/parent_local_surface_id_allocator.h b/components/viz/common/surfaces/parent_local_surface_id_allocator.h
+index d30d27227a4cf86bfbf355c1007c46098a361958..a1b32a9883fee1658b1b7c5166c0c96c2e3409c3 100644
+--- a/components/viz/common/surfaces/parent_local_surface_id_allocator.h
++++ b/components/viz/common/surfaces/parent_local_surface_id_allocator.h
+@@ -8,6 +8,7 @@
+ #include <stdint.h>
+ 
+ #include "base/macros.h"
++#include "base/unguessable_token.h"
+ #include "components/viz/common/surfaces/surface_id.h"
+ #include "components/viz/common/viz_common_export.h"
+ 
+@@ -21,12 +22,29 @@ namespace viz {
+ class VIZ_COMMON_EXPORT ParentLocalSurfaceIdAllocator {
+  public:
+   ParentLocalSurfaceIdAllocator();
+-  ~ParentLocalSurfaceIdAllocator();
++  ParentLocalSurfaceIdAllocator(ParentLocalSurfaceIdAllocator&& other) =
++      default;
++  ParentLocalSurfaceIdAllocator& operator=(
++      ParentLocalSurfaceIdAllocator&& other) = default;
++  ~ParentLocalSurfaceIdAllocator() = default;
+ 
+-  LocalSurfaceId GenerateId();
++  // When a child-allocated LocalSurfaceId arrives in the parent, the parent
++  // needs to update its understanding of the last generated message so the
++  // messages can continue to monotonically increase.
++  const LocalSurfaceId& UpdateFromChild(
++      const LocalSurfaceId& child_allocated_local_surface_id);
++
++  // Resets this allocator with the provided |local_surface_id| as a seed.
++  void Reset(const LocalSurfaceId& local_surface_id);
++
++  const LocalSurfaceId& GenerateId();
++
++  const LocalSurfaceId& last_known_local_surface_id() const {
++    return last_known_local_surface_id_;
++  }
+ 
+  private:
+-  uint32_t next_id_;
++  LocalSurfaceId last_known_local_surface_id_;
+ 
+   DISALLOW_COPY_AND_ASSIGN(ParentLocalSurfaceIdAllocator);
+ };
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
 index 61d38021262f80337b45fe592128b9955d8c2f01..f0dd54b962e3d6c3588f7ef83e90831f52395da0 100644
 --- a/content/app/content_main_runner.cc
@@ -1293,10 +1417,34 @@ index 61d38021262f80337b45fe592128b9955d8c2f01..f0dd54b962e3d6c3588f7ef83e90831f
      if (delegate_)
        delegate_->PreSandboxStartup();
 diff --git a/content/browser/browser_plugin/browser_plugin_guest.cc b/content/browser/browser_plugin/browser_plugin_guest.cc
-index cb122b1bcdb3787276ec98f51d40fe417eb07748..1406a9687dc7d1f9ce3fee19fe501e2e71c1313e 100644
+index cb122b1bcdb3787276ec98f51d40fe417eb07748..186982f063bdffe3cb5070e7d7cbdf477c94535a 100644
 --- a/content/browser/browser_plugin/browser_plugin_guest.cc
 +++ b/content/browser/browser_plugin/browser_plugin_guest.cc
-@@ -881,6 +881,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
+@@ -372,17 +372,18 @@ void BrowserPluginGuest::InitInternal(
+ 
+   DCHECK(GetWebContents()->GetRenderViewHost());
+ 
+-  // Initialize the device scale factor by calling |NotifyScreenInfoChanged|.
+-  auto* render_widget_host = RenderWidgetHostImpl::From(
+-      GetWebContents()->GetRenderViewHost()->GetWidget());
+-  render_widget_host->NotifyScreenInfoChanged();
+-
+   // TODO(chrishtr): this code is wrong. The navigate_on_drag_drop field will
+   // be reset again the next time preferences are updated.
+   WebPreferences prefs =
+       GetWebContents()->GetRenderViewHost()->GetWebkitPreferences();
+   prefs.navigate_on_drag_drop = false;
+   GetWebContents()->GetRenderViewHost()->UpdateWebkitPreferences(prefs);
++
++  base::Optional<viz::LocalSurfaceId> child_local_surface_id;
++  if (local_surface_id_.is_valid())
++    child_local_surface_id = local_surface_id_;
++  SendMessageToEmbedder(std::make_unique<BrowserPluginMsg_Attach_ACK>(
++      browser_plugin_instance_id(), child_local_surface_id));
+ }
+ 
+ BrowserPluginGuest::~BrowserPluginGuest() {
+@@ -881,6 +882,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
    }
  
    delegate_->DidDetach();
@@ -1305,6 +1453,20 @@ index cb122b1bcdb3787276ec98f51d40fe417eb07748..1406a9687dc7d1f9ce3fee19fe501e2e
  }
  
  void BrowserPluginGuest::OnDragStatusUpdate(int browser_plugin_instance_id,
+@@ -1080,9 +1083,10 @@ void BrowserPluginGuest::OnUpdateResizeParams(
+     const ScreenInfo& screen_info,
+     uint64_t sequence_number,
+     const viz::LocalSurfaceId& local_surface_id) {
+-  if ((frame_rect_.size() != frame_rect.size() ||
+-       screen_info_ != screen_info) &&
+-      local_surface_id_ == local_surface_id) {
++  if (local_surface_id_ > local_surface_id ||
++      ((frame_rect_.size() != frame_rect.size() ||
++        screen_info_ != screen_info) &&
++       local_surface_id_ == local_surface_id)) {
+     SiteInstance* owner_site_instance = delegate_->GetOwnerSiteInstance();
+     bad_message::ReceivedBadMessage(
+         owner_site_instance->GetProcess(),
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index 6e105e13b6c5624e2a879471128a90951843e1c4..fe305b57d19f19494cd89ea7af6ae2592405d197 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
@@ -1318,6 +1480,22 @@ index 6e105e13b6c5624e2a879471128a90951843e1c4..fe305b57d19f19494cd89ea7af6ae259
    int routing_id = MSG_ROUTING_NONE;
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
    // the filter might mutate it.
+diff --git a/content/browser/frame_host/render_widget_host_view_guest.cc b/content/browser/frame_host/render_widget_host_view_guest.cc
+index 9c03e285ca6a60d383ba8fd2295895fe2a2f5ac9..79cd9241964a26c4725735a1105faf479822115b 100644
+--- a/content/browser/frame_host/render_widget_host_view_guest.cc
++++ b/content/browser/frame_host/render_widget_host_view_guest.cc
+@@ -169,11 +169,9 @@ void RenderWidgetHostViewGuest::Hide() {
+ }
+ 
+ void RenderWidgetHostViewGuest::SetSize(const gfx::Size& size) {
+-  host_->WasResized();
+ }
+ 
+ void RenderWidgetHostViewGuest::SetBounds(const gfx::Rect& rect) {
+-  SetSize(rect.size());
+ }
+ 
+ void RenderWidgetHostViewGuest::Focus() {
 diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493ff3c9050 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
@@ -1331,6 +1509,52 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  @property(readonly) NSTimeInterval timestamp;
  
  @end
+diff --git a/content/browser/renderer_host/render_widget_host_impl.cc b/content/browser/renderer_host/render_widget_host_impl.cc
+index 5618cc8d35b7155e8bfc82aedae08b5bd8a20ea1..71e87977be561e2e09fc852c51010017bc12e851 100644
+--- a/content/browser/renderer_host/render_widget_host_impl.cc
++++ b/content/browser/renderer_host/render_widget_host_impl.cc
+@@ -14,6 +14,7 @@
+ #include "base/bind.h"
+ #include "base/command_line.h"
+ #include "base/containers/hash_tables.h"
++#include "base/debug/dump_without_crashing.h"
+ #include "base/i18n/rtl.h"
+ #include "base/lazy_instance.h"
+ #include "base/location.h"
+@@ -2709,17 +2710,24 @@ void RenderWidgetHostImpl::SubmitCompositorFrame(
+   if (local_surface_id == last_local_surface_id_ &&
+       SurfacePropertiesMismatch(new_surface_properties,
+                                 last_surface_properties_)) {
++    std::string error = base::StringPrintf(
++        "[OOPIF? %d] %s\n", view_ && view_->IsRenderWidgetHostViewChildFrame(),
++        new_surface_properties.ToDiffString(last_surface_properties_).c_str());
++    LOG(ERROR) << "Surface invariants violation: " << error;
++
+     static auto* crash_key = base::debug::AllocateCrashKeyString(
+         "surface-invariants-violation", base::debug::CrashKeySize::Size256);
+-    base::debug::ScopedCrashKeyString key_value(
+-        crash_key,
+-        base::StringPrintf(
+-            "[OOPIF? %d] %s\n",
+-            view_ && view_->IsRenderWidgetHostViewChildFrame(),
+-            new_surface_properties.ToDiffString(last_surface_properties_)
+-                .c_str()));
+-    bad_message::ReceivedBadMessage(
+-        GetProcess(), bad_message::RWH_SURFACE_INVARIANTS_VIOLATION);
++    base::debug::ScopedCrashKeyString key_value(crash_key, error);
++    base::debug::DumpWithoutCrashing();
++
++    if (view_) {
++      frame.metadata.begin_frame_ack.has_damage = false;
++      view_->OnDidNotProduceFrame(frame.metadata.begin_frame_ack);
++    }
++    std::vector<viz::ReturnedResource> resources =
++        viz::TransferableResource::ReturnResources(frame.resource_list);
++    renderer_compositor_frame_sink_->DidReceiveCompositorFrameAck(resources);
++
+     return;
+   }
+ 
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
 index 5bebf776d70dd1d326058a0402d1aaa5c02b6e39..83e83794b2d4a036946e5d7287d304851959737b 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
@@ -1494,6 +1718,25 @@ index 35c4ee35242ac1e21beb94ae6b844dff14e04580..fdfc3b0ac56774fc5fd6a591ccad052c
  - (bool)isValidDragTarget:(content::RenderWidgetHostImpl*)targetRWH {
    return targetRWH->GetProcess()->GetID() == dragStartProcessID_ ||
           GetRenderViewHostID(webContents_->GetRenderViewHost()) !=
+diff --git a/content/common/browser_plugin/browser_plugin_messages.h b/content/common/browser_plugin/browser_plugin_messages.h
+index 6d19348f95bc734fbf4becae13c8b31efc215d94..dde0524f7aaf1675d1fef4556c48c8786b946680 100644
+--- a/content/common/browser_plugin/browser_plugin_messages.h
++++ b/content/common/browser_plugin/browser_plugin_messages.h
+@@ -174,6 +174,14 @@ IPC_MESSAGE_ROUTED3(BrowserPluginHostMsg_RequireSequence,
+ // -----------------------------------------------------------------------------
+ // These messages are from the browser process to the embedder.
+ 
++// Indicates that an attach request has completed. The provided
++// |child_local_surface_id| is used as the seed for the
++// ParentLocalSurfaceIdAllocator.
++IPC_MESSAGE_CONTROL2(
++    BrowserPluginMsg_Attach_ACK,
++    int /* browser_plugin_instance_id */,
++    base::Optional<viz::LocalSurfaceId> /* child_local_surface_id */)
++
+ // When the guest crashes, the browser process informs the embedder through this
+ // message.
+ IPC_MESSAGE_CONTROL1(BrowserPluginMsg_GuestGone,
 diff --git a/content/common/content_switches_internal.cc b/content/common/content_switches_internal.cc
 index f4b0773a6f13456f1789abb0e6f614aee9fd4a41..304e731d8c05d8258e32288afce21c518a580d89 100644
 --- a/content/common/content_switches_internal.cc
@@ -1548,10 +1791,106 @@ index dea1648536460774761801f9bdd87dc2e699ef61..b8ca82e411dc16251ed83ee203f73ee8
  #else
        autoplay_policy(AutoplayPolicy::kNoUserGestureRequired),
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 19e2c163a59affb17a8bda65c951f909143c5219..f52a9bd08b6057b22360c746a00c5ea6727385ad 100644
+index 19e2c163a59affb17a8bda65c951f909143c5219..1b6779970737d40689604d77cd1aa5c07f098475 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
-@@ -582,8 +582,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
+@@ -121,6 +121,7 @@ bool BrowserPlugin::OnMessageReceived(const IPC::Message& message) {
+   bool handled = true;
+   IPC_BEGIN_MESSAGE_MAP(BrowserPlugin, message)
+     IPC_MESSAGE_HANDLER(BrowserPluginMsg_AdvanceFocus, OnAdvanceFocus)
++    IPC_MESSAGE_HANDLER(BrowserPluginMsg_Attach_ACK, OnAttachACK)
+     IPC_MESSAGE_HANDLER(BrowserPluginMsg_GuestGone, OnGuestGone)
+     IPC_MESSAGE_HANDLER(BrowserPluginMsg_GuestReady, OnGuestReady)
+     IPC_MESSAGE_HANDLER(BrowserPluginMsg_ResizeDueToAutoResize,
+@@ -200,8 +201,6 @@ void BrowserPlugin::Attach() {
+       browser_plugin_instance_id_,
+       attach_params));
+ 
+-  attached_ = true;
+-
+   // Post an update event to the associated accessibility object.
+   auto* render_frame =
+       RenderFrameImpl::FromRoutingID(render_frame_routing_id());
+@@ -216,7 +215,6 @@ void BrowserPlugin::Attach() {
+   }
+ 
+   sent_resize_params_ = base::nullopt;
+-  WasResized();
+ }
+ 
+ void BrowserPlugin::Detach() {
+@@ -231,6 +229,10 @@ void BrowserPlugin::Detach() {
+       new BrowserPluginHostMsg_Detach(browser_plugin_instance_id_));
+ }
+ 
++const viz::LocalSurfaceId& BrowserPlugin::GetLocalSurfaceId() const {
++  return parent_local_surface_id_allocator_.last_known_local_surface_id();
++}
++
+ #if defined(USE_AURA)
+ void BrowserPlugin::CreateMusWindowAndEmbed(
+     const base::UnguessableToken& embed_token) {
+@@ -246,8 +248,8 @@ void BrowserPlugin::CreateMusWindowAndEmbed(
+   DCHECK(renderer_window_tree_client);
+   mus_embedded_frame_ =
+       renderer_window_tree_client->CreateMusEmbeddedFrame(this, embed_token);
+-  if (attached() && local_surface_id_.is_valid()) {
+-    mus_embedded_frame_->SetWindowBounds(local_surface_id_,
++  if (attached() && GetLocalSurfaceId().is_valid()) {
++    mus_embedded_frame_->SetWindowBounds(GetLocalSurfaceId(),
+                                          FrameRectInPixels());
+   }
+ }
+@@ -265,11 +267,12 @@ void BrowserPlugin::WasResized() {
+       sent_resize_params_->screen_info != pending_resize_params_.screen_info;
+ 
+   if (synchronized_params_changed)
+-    local_surface_id_ = parent_local_surface_id_allocator_.GenerateId();
++    parent_local_surface_id_allocator_.GenerateId();
+ 
+   if (enable_surface_synchronization_ && frame_sink_id_.is_valid()) {
+     compositing_helper_->SetPrimarySurfaceId(
+-        viz::SurfaceId(frame_sink_id_, local_surface_id_), frame_rect().size());
++        viz::SurfaceId(frame_sink_id_, GetLocalSurfaceId()),
++        frame_rect().size());
+   }
+ 
+   bool position_changed =
+@@ -282,7 +285,7 @@ void BrowserPlugin::WasResized() {
+     BrowserPluginManager::Get()->Send(
+         new BrowserPluginHostMsg_UpdateResizeParams(
+             browser_plugin_instance_id_, frame_rect(), screen_info(),
+-            auto_size_sequence_number(), local_surface_id_));
++            auto_size_sequence_number(), GetLocalSurfaceId()));
+   }
+ 
+   if (delegate_ && size_changed)
+@@ -293,7 +296,7 @@ void BrowserPlugin::WasResized() {
+ 
+ #if defined(USE_AURA)
+   if (IsRunningWithMus() && mus_embedded_frame_) {
+-    mus_embedded_frame_->SetWindowBounds(local_surface_id_,
++    mus_embedded_frame_->SetWindowBounds(GetLocalSurfaceId(),
+                                          FrameRectInPixels());
+   }
+ #endif
+@@ -309,6 +312,15 @@ void BrowserPlugin::OnAdvanceFocus(int browser_plugin_instance_id,
+   render_view->GetWebView()->AdvanceFocus(reverse);
+ }
+ 
++void BrowserPlugin::OnAttachACK(
++    int browser_plugin_instance_id,
++    const base::Optional<viz::LocalSurfaceId>& child_local_surface_id) {
++  attached_ = true;
++  if (child_local_surface_id)
++    parent_local_surface_id_allocator_.Reset(*child_local_surface_id);
++  WasResized();
++}
++
+ void BrowserPlugin::OnGuestGone(int browser_plugin_instance_id) {
+   guest_crashed_ = true;
+   compositing_helper_->ChildFrameGone();
+@@ -582,8 +594,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
  
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
@@ -1560,6 +1899,38 @@ index 19e2c163a59affb17a8bda65c951f909143c5219..f52a9bd08b6057b22360c746a00c5ea6
  
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
+diff --git a/content/renderer/browser_plugin/browser_plugin.h b/content/renderer/browser_plugin/browser_plugin.h
+index 7480991fb448ba16fa26a6e57785e9ba4d817c9a..ae28e24fb227ee13b6b149c896ae8b24832e0df5 100644
+--- a/content/renderer/browser_plugin/browser_plugin.h
++++ b/content/renderer/browser_plugin/browser_plugin.h
+@@ -88,6 +88,9 @@ class CONTENT_EXPORT BrowserPlugin : public blink::WebPlugin,
+   // currently attached to, if any.
+   void Detach();
+ 
++  // Returns the last allocated LocalSurfaceId.
++  const viz::LocalSurfaceId& GetLocalSurfaceId() const;
++
+   void WasResized();
+ 
+   // Returns whether a message should be forwarded to BrowserPlugin.
+@@ -185,6 +188,9 @@ class CONTENT_EXPORT BrowserPlugin : public blink::WebPlugin,
+   // IPC message handlers.
+   // Please keep in alphabetical order.
+   void OnAdvanceFocus(int instance_id, bool reverse);
++  void OnAttachACK(
++      int browser_plugin_instance_id,
++      const base::Optional<viz::LocalSurfaceId>& child_local_surface_id);
+   void OnGuestGone(int instance_id);
+   void OnGuestReady(int instance_id, const viz::FrameSinkId& frame_sink_id);
+   void OnResizeDueToAutoResize(int browser_plugin_instance_id,
+@@ -242,7 +248,6 @@ class CONTENT_EXPORT BrowserPlugin : public blink::WebPlugin,
+   std::vector<EditCommand> edit_commands_;
+ 
+   viz::FrameSinkId frame_sink_id_;
+-  viz::LocalSurfaceId local_surface_id_;
+   viz::ParentLocalSurfaceIdAllocator parent_local_surface_id_allocator_;
+ 
+   bool enable_surface_synchronization_ = false;
 diff --git a/device/geolocation/BUILD.gn b/device/geolocation/BUILD.gn
 index 65dfbb8360c2127bd2ccdb3732a01d2e4acc6575..9789296cf5c1f133433941a27ee1dfcbd01210a9 100644
 --- a/device/geolocation/BUILD.gn
@@ -2036,3 +2407,509 @@ index 9389f25f034d131f9aab4bd521db7999c12c5a5c..382d93ef0f641bdf80ca6ce84d143867
  
    return true;
  }
+diff --git a/components/viz/common/surfaces/child_local_surface_id_allocator.cc b/components/viz/common/surfaces/child_local_surface_id_allocator.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..f8c1d90482a405b82a042c83827fcc011b830f63
+--- /dev/null
++++ b/components/viz/common/surfaces/child_local_surface_id_allocator.cc
+@@ -0,0 +1,42 @@
++// Copyright 2018 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "components/viz/common/surfaces/child_local_surface_id_allocator.h"
++
++#include <stdint.h>
++
++#include "base/rand_util.h"
++
++namespace viz {
++
++const LocalSurfaceId& ChildLocalSurfaceIdAllocator::UpdateFromParent(
++    const LocalSurfaceId& parent_allocated_local_surface_id) {
++  DCHECK_GE(parent_allocated_local_surface_id.parent_sequence_number(),
++            last_known_local_surface_id_.parent_sequence_number());
++  // Thie verifies that we only update the nonce if the parent sequence number
++  // has changed.
++  DCHECK(parent_allocated_local_surface_id.parent_sequence_number() >
++             last_known_local_surface_id_.parent_sequence_number() ||
++         parent_allocated_local_surface_id.nonce() ==
++             last_known_local_surface_id_.nonce());
++
++  last_known_local_surface_id_ =
++      LocalSurfaceId(parent_allocated_local_surface_id.parent_sequence_number(),
++                     last_known_local_surface_id_.child_sequence_number(),
++                     parent_allocated_local_surface_id.nonce());
++  return last_known_local_surface_id_;
++}
++
++const LocalSurfaceId& ChildLocalSurfaceIdAllocator::GenerateId() {
++  // UpdateFromParent must be called before we can generate a valid ID.
++  DCHECK_NE(last_known_local_surface_id_.parent_sequence_number(), 0u);
++
++  last_known_local_surface_id_ =
++      LocalSurfaceId(last_known_local_surface_id_.parent_sequence_number(),
++                     last_known_local_surface_id_.child_sequence_number() + 1,
++                     last_known_local_surface_id_.nonce());
++  return last_known_local_surface_id_;
++}
++
++}  // namespace viz
+diff --git a/components/viz/common/surfaces/child_local_surface_id_allocator.h b/components/viz/common/surfaces/child_local_surface_id_allocator.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..7bb3c01452d3b28d33be9ca26b65418a46fd58a5
+--- /dev/null
++++ b/components/viz/common/surfaces/child_local_surface_id_allocator.h
+@@ -0,0 +1,51 @@
++// Copyright 2018 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef COMPONENTS_VIZ_COMMON_SURFACES_CHILD_LOCAL_SURFACE_ID_ALLOCATOR_H_
++#define COMPONENTS_VIZ_COMMON_SURFACES_CHILD_LOCAL_SURFACE_ID_ALLOCATOR_H_
++
++#include <stdint.h>
++
++#include "base/macros.h"
++#include "base/unguessable_token.h"
++#include "components/viz/common/surfaces/surface_id.h"
++#include "components/viz/common/viz_common_export.h"
++
++namespace viz {
++
++// This is a helper class for generating local surface IDs for a single
++// FrameSink. This is not threadsafe, to use from multiple threads wrap this
++// class in a mutex.
++// The parent embeds a child's surface. The child allocates a surface when it
++// changes its contents or surface parameters, for example.
++// This is that child allocator.
++class VIZ_COMMON_EXPORT ChildLocalSurfaceIdAllocator {
++ public:
++  ChildLocalSurfaceIdAllocator() = default;
++  ChildLocalSurfaceIdAllocator(ChildLocalSurfaceIdAllocator&& other) = default;
++  ChildLocalSurfaceIdAllocator& operator=(
++      ChildLocalSurfaceIdAllocator&& other) = default;
++  ~ChildLocalSurfaceIdAllocator() = default;
++
++  // When a parent-allocated LocalSurfaceId arrives in the child, the child
++  // needs to update its understanding of the last generated message so the
++  // messages can continue to monotonically increase.
++  const LocalSurfaceId& UpdateFromParent(
++      const LocalSurfaceId& parent_allocated_local_surface_id);
++
++  const LocalSurfaceId& GenerateId();
++
++  const LocalSurfaceId& last_known_local_surface_id() const {
++    return last_known_local_surface_id_;
++  }
++
++ private:
++  LocalSurfaceId last_known_local_surface_id_;
++
++  DISALLOW_COPY_AND_ASSIGN(ChildLocalSurfaceIdAllocator);
++};
++
++}  // namespace viz
++
++#endif  // COMPONENTS_VIZ_COMMON_SURFACES_CHILD_LOCAL_SURFACE_ID_ALLOCATOR_H_
+diff --git a/components/viz/common/surfaces/child_local_surface_id_allocator_unittest.cc b/components/viz/common/surfaces/child_local_surface_id_allocator_unittest.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..9147c144578b9a8679e59d7cd471b9e9f32e67b9
+--- /dev/null
++++ b/components/viz/common/surfaces/child_local_surface_id_allocator_unittest.cc
+@@ -0,0 +1,180 @@
++// Copyright 2018 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "components/viz/common/surfaces/child_local_surface_id_allocator.h"
++
++#include "testing/gtest/include/gtest/gtest.h"
++
++// ChildLocalSurfaceIdAllocator has 1 accessor which does not alter state:
++// - last_known_local_surface_id()
++//
++// For every operation which changes state we can test:
++// - the operation completed as expected,
++// - the accessors did not change, and/or
++// - the accessors changed in the way we expected.
++
++namespace viz {
++namespace {
++
++::testing::AssertionResult ParentSequenceNumberIsNotSet(
++    const LocalSurfaceId& local_surface_id);
++::testing::AssertionResult ChildSequenceNumberIsNotSet(
++    const LocalSurfaceId& local_surface_id);
++::testing::AssertionResult NonceIsEmpty(const LocalSurfaceId& local_surface_id);
++
++LocalSurfaceId GetFakeParentAllocatedLocalSurfaceId();
++ChildLocalSurfaceIdAllocator GetParentUpdatedAllocator();
++
++}  // namespace
++
++// The default constructor should initialize its last-known LocalSurfaceId (and
++// all of its components) to an invalid state.
++TEST(ChildLocalSurfaceIdAllocatorTest,
++     DefaultConstructorShouldNotSetLocalSurfaceIdComponents) {
++  ChildLocalSurfaceIdAllocator default_constructed_child_allocator;
++
++  const LocalSurfaceId& default_local_surface_id =
++      default_constructed_child_allocator.last_known_local_surface_id();
++  EXPECT_FALSE(default_local_surface_id.is_valid());
++  EXPECT_TRUE(ParentSequenceNumberIsNotSet(default_local_surface_id));
++  EXPECT_TRUE(ChildSequenceNumberIsNotSet(default_local_surface_id));
++  EXPECT_TRUE(NonceIsEmpty(default_local_surface_id));
++}
++
++// The move constructor should move the last-known LocalSurfaceId.
++TEST(ChildLocalSurfaceIdAllocatorTest,
++     MoveConstructorShouldMoveLastKnownLocalSurfaceId) {
++  ChildLocalSurfaceIdAllocator moving_child_allocator =
++      GetParentUpdatedAllocator();
++  LocalSurfaceId premoved_local_surface_id =
++      moving_child_allocator.last_known_local_surface_id();
++
++  ChildLocalSurfaceIdAllocator moved_to_child_allocator =
++      std::move(moving_child_allocator);
++
++  EXPECT_EQ(premoved_local_surface_id,
++            moved_to_child_allocator.last_known_local_surface_id());
++}
++
++// The move assignment operator should move the last-known LocalSurfaceId.
++TEST(ChildLocalSurfaceIdAllocatorTest,
++     MoveAssignmentOperatorShouldMoveLastKnownLocalSurfaceId) {
++  ChildLocalSurfaceIdAllocator moving_child_allocator =
++      GetParentUpdatedAllocator();
++  LocalSurfaceId premoved_local_surface_id =
++      moving_child_allocator.last_known_local_surface_id();
++  ChildLocalSurfaceIdAllocator moved_to_child_allocator;
++  EXPECT_NE(premoved_local_surface_id,
++            moved_to_child_allocator.last_known_local_surface_id());
++
++  moved_to_child_allocator = std::move(moving_child_allocator);
++
++  EXPECT_EQ(premoved_local_surface_id,
++            moved_to_child_allocator.last_known_local_surface_id());
++}
++
++// UpdateFromParent() on a child allocator should accept the parent's sequence
++// number and nonce. But it should continue to use its own child sequence
++// number.
++TEST(ChildLocalSurfaceIdAllocatorTest,
++     UpdateFromParentOnlyUpdatesExpectedLocalSurfaceIdComponents) {
++  ChildLocalSurfaceIdAllocator parent_updated_child_allocator;
++  LocalSurfaceId preupdate_local_surface_id =
++      parent_updated_child_allocator.last_known_local_surface_id();
++  LocalSurfaceId parent_allocated_local_surface_id =
++      GetFakeParentAllocatedLocalSurfaceId();
++  EXPECT_NE(preupdate_local_surface_id.parent_sequence_number(),
++            parent_allocated_local_surface_id.parent_sequence_number());
++  EXPECT_NE(preupdate_local_surface_id.child_sequence_number(),
++            parent_allocated_local_surface_id.child_sequence_number());
++  EXPECT_NE(preupdate_local_surface_id.nonce(),
++            parent_allocated_local_surface_id.nonce());
++
++  const LocalSurfaceId& returned_local_surface_id =
++      parent_updated_child_allocator.UpdateFromParent(
++          parent_allocated_local_surface_id);
++
++  const LocalSurfaceId& postupdate_local_surface_id =
++      parent_updated_child_allocator.last_known_local_surface_id();
++  EXPECT_EQ(postupdate_local_surface_id.parent_sequence_number(),
++            parent_allocated_local_surface_id.parent_sequence_number());
++  EXPECT_NE(postupdate_local_surface_id.child_sequence_number(),
++            parent_allocated_local_surface_id.child_sequence_number());
++  EXPECT_EQ(postupdate_local_surface_id.nonce(),
++            parent_allocated_local_surface_id.nonce());
++  EXPECT_EQ(returned_local_surface_id,
++            parent_updated_child_allocator.last_known_local_surface_id());
++}
++
++// GenerateId() on a child allocator should monotonically increment the child
++// sequence number.
++TEST(ChildLocalSurfaceIdAllocatorTest,
++     GenerateIdOnlyUpdatesExpectedLocalSurfaceIdComponents) {
++  ChildLocalSurfaceIdAllocator generating_child_allocator =
++      GetParentUpdatedAllocator();
++  LocalSurfaceId pregenerateid_local_surface_id =
++      generating_child_allocator.last_known_local_surface_id();
++
++  const LocalSurfaceId& returned_local_surface_id =
++      generating_child_allocator.GenerateId();
++
++  const LocalSurfaceId& postgenerateid_local_surface_id =
++      generating_child_allocator.last_known_local_surface_id();
++  EXPECT_EQ(pregenerateid_local_surface_id.parent_sequence_number(),
++            postgenerateid_local_surface_id.parent_sequence_number());
++  EXPECT_EQ(pregenerateid_local_surface_id.child_sequence_number() + 1,
++            postgenerateid_local_surface_id.child_sequence_number());
++  EXPECT_EQ(pregenerateid_local_surface_id.nonce(),
++            postgenerateid_local_surface_id.nonce());
++  EXPECT_EQ(returned_local_surface_id,
++            generating_child_allocator.last_known_local_surface_id());
++}
++
++namespace {
++
++::testing::AssertionResult ParentSequenceNumberIsNotSet(
++    const LocalSurfaceId& local_surface_id) {
++  constexpr uint32_t kInvalidParentSequenceNumber = 0;
++  if (local_surface_id.parent_sequence_number() == kInvalidParentSequenceNumber)
++    return ::testing::AssertionSuccess();
++
++  return ::testing::AssertionFailure() << "parent_sequence_number() is set";
++}
++
++::testing::AssertionResult ChildSequenceNumberIsNotSet(
++    const LocalSurfaceId& local_surface_id) {
++  constexpr uint32_t kInvalidChildSequenceNumber = 0;
++  if (local_surface_id.child_sequence_number() == kInvalidChildSequenceNumber)
++    return ::testing::AssertionSuccess();
++
++  return ::testing::AssertionFailure() << "child_sequence_number() is set";
++}
++
++::testing::AssertionResult NonceIsEmpty(
++    const LocalSurfaceId& local_surface_id) {
++  if (local_surface_id.nonce().is_empty())
++    return ::testing::AssertionSuccess();
++
++  return ::testing::AssertionFailure() << "nonce() is not empty";
++}
++
++LocalSurfaceId GetFakeParentAllocatedLocalSurfaceId() {
++  constexpr uint32_t kParentSequenceNumber = 3;
++  constexpr uint32_t kChildSequenceNumber = 1;
++  const base::UnguessableToken nonce = base::UnguessableToken::Create();
++
++  return LocalSurfaceId(kParentSequenceNumber, kChildSequenceNumber, nonce);
++}
++
++ChildLocalSurfaceIdAllocator GetParentUpdatedAllocator() {
++  ChildLocalSurfaceIdAllocator parent_updated_child_allocator;
++  LocalSurfaceId parent_allocated_local_surface_id =
++      GetFakeParentAllocatedLocalSurfaceId();
++  parent_updated_child_allocator.UpdateFromParent(
++      parent_allocated_local_surface_id);
++  return parent_updated_child_allocator;
++}
++
++}  // namespace
++}  // namespace viz
+diff --git a/components/viz/common/surfaces/parent_local_surface_id_allocator_unittest.cc b/components/viz/common/surfaces/parent_local_surface_id_allocator_unittest.cc
+new file mode 100644
+index 0000000000000000000000000000000000000000..ada5b99a868f5b3014bac2d6c963840e12ca9b67
+--- /dev/null
++++ b/components/viz/common/surfaces/parent_local_surface_id_allocator_unittest.cc
+@@ -0,0 +1,209 @@
++// Copyright 2018 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
++
++#include "testing/gtest/include/gtest/gtest.h"
++
++// ParentLocalSurfaceIdAllocator has 1 accessor which does not alter state:
++// - last_known_local_surface_id()
++//
++// For every operation which changes state we can test:
++// - the operation completed as expected,
++// - the accessors did not change, and/or
++// - the accessors changed in the way we expected.
++
++namespace viz {
++namespace {
++
++::testing::AssertionResult ParentSequenceNumberIsNotSet(
++    const LocalSurfaceId& local_surface_id);
++::testing::AssertionResult ChildSequenceNumberIsSet(
++    const LocalSurfaceId& local_surface_id);
++::testing::AssertionResult NonceIsEmpty(const LocalSurfaceId& local_surface_id);
++
++LocalSurfaceId GetFakeChildAllocatedLocalSurfaceId();
++ParentLocalSurfaceIdAllocator GetChildUpdatedAllocator();
++
++}  // namespace
++
++// The default constructor should initialize its last-known LocalSurfaceId (and
++// all of its components) to an invalid state.
++TEST(ParentLocalSurfaceIdAllocatorTest,
++     DefaultConstructorShouldNotSetLocalSurfaceIdComponents) {
++  ParentLocalSurfaceIdAllocator default_constructed_parent_allocator;
++
++  const LocalSurfaceId& default_local_surface_id =
++      default_constructed_parent_allocator.last_known_local_surface_id();
++  EXPECT_FALSE(default_local_surface_id.is_valid());
++  EXPECT_TRUE(ParentSequenceNumberIsNotSet(default_local_surface_id));
++  EXPECT_TRUE(ChildSequenceNumberIsSet(default_local_surface_id));
++  EXPECT_TRUE(NonceIsEmpty(default_local_surface_id));
++}
++
++// The move constructor should move the last-known LocalSurfaceId.
++TEST(ParentLocalSurfaceIdAllocatorTest,
++     MoveConstructorShouldMoveLastKnownLocalSurfaceId) {
++  ParentLocalSurfaceIdAllocator moving_parent_allocator =
++      GetChildUpdatedAllocator();
++  LocalSurfaceId premoved_local_surface_id =
++      moving_parent_allocator.last_known_local_surface_id();
++
++  ParentLocalSurfaceIdAllocator moved_to_parent_allocator =
++      std::move(moving_parent_allocator);
++
++  EXPECT_EQ(premoved_local_surface_id,
++            moved_to_parent_allocator.last_known_local_surface_id());
++}
++
++// The move assignment operator should move the last-known LocalSurfaceId.
++TEST(ParentLocalSurfaceIdAllocatorTest,
++     MoveAssignmentOperatorShouldMoveLastKnownLocalSurfaceId) {
++  ParentLocalSurfaceIdAllocator moving_parent_allocator =
++      GetChildUpdatedAllocator();
++  LocalSurfaceId premoved_local_surface_id =
++      moving_parent_allocator.last_known_local_surface_id();
++  ParentLocalSurfaceIdAllocator moved_to_parent_allocator;
++  EXPECT_NE(premoved_local_surface_id,
++            moved_to_parent_allocator.last_known_local_surface_id());
++
++  moved_to_parent_allocator = std::move(moving_parent_allocator);
++
++  EXPECT_EQ(premoved_local_surface_id,
++            moved_to_parent_allocator.last_known_local_surface_id());
++}
++
++// UpdateFromChild() on a parent allocator should accept the child's sequence
++// number. But it should continue to use its own parent sequence number and
++// nonce.
++TEST(ParentLocalSurfaceIdAllocatorTest,
++     UpdateFromChildOnlyUpdatesExpectedLocalSurfaceIdComponents) {
++  ParentLocalSurfaceIdAllocator child_updated_parent_allocator;
++  LocalSurfaceId preupdate_local_surface_id =
++      child_updated_parent_allocator.last_known_local_surface_id();
++  LocalSurfaceId child_allocated_local_surface_id =
++      GetFakeChildAllocatedLocalSurfaceId();
++  EXPECT_NE(preupdate_local_surface_id.parent_sequence_number(),
++            child_allocated_local_surface_id.parent_sequence_number());
++  EXPECT_NE(preupdate_local_surface_id.child_sequence_number(),
++            child_allocated_local_surface_id.child_sequence_number());
++  EXPECT_NE(preupdate_local_surface_id.nonce(),
++            child_allocated_local_surface_id.nonce());
++
++  const LocalSurfaceId& returned_local_surface_id =
++      child_updated_parent_allocator.UpdateFromChild(
++          child_allocated_local_surface_id);
++
++  const LocalSurfaceId& postupdate_local_surface_id =
++      child_updated_parent_allocator.last_known_local_surface_id();
++  EXPECT_NE(postupdate_local_surface_id.parent_sequence_number(),
++            child_allocated_local_surface_id.parent_sequence_number());
++  EXPECT_EQ(postupdate_local_surface_id.child_sequence_number(),
++            child_allocated_local_surface_id.child_sequence_number());
++  EXPECT_NE(postupdate_local_surface_id.nonce(),
++            child_allocated_local_surface_id.nonce());
++  EXPECT_EQ(returned_local_surface_id,
++            child_updated_parent_allocator.last_known_local_surface_id());
++}
++
++// GenerateId() on a parent allocator should monotonically increment the parent
++// sequence number and create a new nonce.
++TEST(ParentLocalSurfaceIdAllocatorTest,
++     GenerateIdOnlyUpdatesExpectedLocalSurfaceIdComponents) {
++  ParentLocalSurfaceIdAllocator generating_parent_allocator =
++      GetChildUpdatedAllocator();
++  LocalSurfaceId pregenerateid_local_surface_id =
++      generating_parent_allocator.last_known_local_surface_id();
++
++  const LocalSurfaceId& returned_local_surface_id =
++      generating_parent_allocator.GenerateId();
++
++  const LocalSurfaceId& postgenerateid_local_surface_id =
++      generating_parent_allocator.last_known_local_surface_id();
++  EXPECT_EQ(pregenerateid_local_surface_id.parent_sequence_number() + 1,
++            postgenerateid_local_surface_id.parent_sequence_number());
++  EXPECT_EQ(pregenerateid_local_surface_id.child_sequence_number(),
++            postgenerateid_local_surface_id.child_sequence_number());
++  EXPECT_NE(pregenerateid_local_surface_id.nonce(),
++            postgenerateid_local_surface_id.nonce());
++  EXPECT_EQ(returned_local_surface_id,
++            generating_parent_allocator.last_known_local_surface_id());
++}
++
++// This test verifies that calling reset with a LocalSurfaceId updates the
++// last_known_local_surface_id and affects GenerateId.
++TEST(ParentLocalSurfaceIdAllocatorTest, ResetUpdatesComponents) {
++  ParentLocalSurfaceIdAllocator default_constructed_parent_allocator;
++
++  LocalSurfaceId default_local_surface_id =
++      default_constructed_parent_allocator.last_known_local_surface_id();
++  EXPECT_FALSE(default_local_surface_id.is_valid());
++  EXPECT_TRUE(ParentSequenceNumberIsNotSet(default_local_surface_id));
++  EXPECT_TRUE(ChildSequenceNumberIsSet(default_local_surface_id));
++  EXPECT_FALSE(NonceIsEmpty(default_local_surface_id));
++
++  LocalSurfaceId new_local_surface_id(
++      1u, 1u, base::UnguessableToken::Deserialize(0, 1u));
++
++  default_constructed_parent_allocator.Reset(new_local_surface_id);
++  EXPECT_EQ(new_local_surface_id,
++            default_constructed_parent_allocator.last_known_local_surface_id());
++
++  LocalSurfaceId generated_id =
++      default_constructed_parent_allocator.GenerateId();
++
++  EXPECT_EQ(generated_id.nonce(), new_local_surface_id.nonce());
++  EXPECT_EQ(generated_id.child_sequence_number(),
++            new_local_surface_id.child_sequence_number());
++  EXPECT_EQ(generated_id.parent_sequence_number(),
++            new_local_surface_id.child_sequence_number() + 1);
++}
++
++namespace {
++
++::testing::AssertionResult ParentSequenceNumberIsNotSet(
++    const LocalSurfaceId& local_surface_id) {
++  constexpr uint32_t kInvalidParentSequenceNumber = 0;
++  if (local_surface_id.parent_sequence_number() == kInvalidParentSequenceNumber)
++    return ::testing::AssertionSuccess();
++
++  return ::testing::AssertionFailure() << "parent_sequence_number() is set";
++}
++
++::testing::AssertionResult ChildSequenceNumberIsSet(
++    const LocalSurfaceId& local_surface_id) {
++  constexpr uint32_t kInvalidChildSequenceNumber = 0;
++  if (local_surface_id.child_sequence_number() != kInvalidChildSequenceNumber)
++    return ::testing::AssertionSuccess();
++
++  return ::testing::AssertionFailure() << "child_sequence_number() is not set";
++}
++
++::testing::AssertionResult NonceIsEmpty(
++    const LocalSurfaceId& local_surface_id) {
++  if (local_surface_id.nonce().is_empty())
++    return ::testing::AssertionSuccess();
++
++  return ::testing::AssertionFailure() << "nonce() is not empty";
++}
++
++LocalSurfaceId GetFakeChildAllocatedLocalSurfaceId() {
++  constexpr uint32_t kParentSequenceNumber = 1;
++  constexpr uint32_t kChildSequenceNumber = 3;
++  const base::UnguessableToken nonce = base::UnguessableToken::Create();
++
++  return LocalSurfaceId(kParentSequenceNumber, kChildSequenceNumber, nonce);
++}
++
++ParentLocalSurfaceIdAllocator GetChildUpdatedAllocator() {
++  ParentLocalSurfaceIdAllocator child_updated_parent_allocator;
++  LocalSurfaceId child_allocated_local_surface_id =
++      GetFakeChildAllocatedLocalSurfaceId();
++  child_updated_parent_allocator.UpdateFromChild(
++      child_allocated_local_surface_id);
++  return child_updated_parent_allocator;
++}
++
++}  // namespace
++}  // namespace viz
