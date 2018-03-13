@@ -1845,35 +1845,36 @@ index a433afd0217830b49ddb3381ad55afeae2381840..ddcca749666f956c6317676dbcdd48da
  }
  
 diff --git a/net/url_request/url_request_http_job.cc b/net/url_request/url_request_http_job.cc
-index da7a19865989404f3147ca3e29a13f7f29f175d4..47fa22638f7450367c9014d2f2fa70f1659d2f15 100644
+index da7a19865989404f3147ca3e29a13f7f29f175d4..fb068a5fd4b082293e310c47ffaa140dc2b547e7 100644
 --- a/net/url_request/url_request_http_job.cc
 +++ b/net/url_request/url_request_http_job.cc
-@@ -415,8 +415,10 @@ void URLRequestHttpJob::NotifyBeforeSendHeadersCallback(
- }
+@@ -416,6 +416,8 @@ void URLRequestHttpJob::NotifyBeforeSendHeadersCallback(
  
  void URLRequestHttpJob::NotifyHeadersComplete() {
--  DCHECK(!response_info_);
+   DCHECK(!response_info_);
 +  std::string first_party_host = request_->site_for_cookies().host();
 +  std::string request_host = request_->url().host();
  
-+  DCHECK(!response_info_);
    response_info_ = transaction_->GetResponseInfo();
  
-   // Save boolean, as we'll need this info at destruction time, and filters may
-@@ -426,8 +428,11 @@ void URLRequestHttpJob::NotifyHeadersComplete() {
+@@ -426,10 +428,13 @@ void URLRequestHttpJob::NotifyHeadersComplete() {
    if (!is_cached_content_ && throttling_entry_.get())
      throttling_entry_->UpdateWithResponse(GetResponseCode());
  
 -  // The ordering of these calls is not important.
 -  ProcessStrictTransportSecurityHeader();
+-  ProcessPublicKeyPinsHeader();
+-  ProcessExpectCTHeader();
 +  if (first_party_host == request_host) {
 +    // The ordering of these calls is not important.
++    ProcessPublicKeyPinsHeader();
 +    ProcessStrictTransportSecurityHeader();
++    ProcessExpectCTHeader();
 +  }
 +
-   ProcessPublicKeyPinsHeader();
-   ProcessExpectCTHeader();
  #if BUILDFLAG(ENABLE_REPORTING)
+   ProcessReportToHeader();
+   ProcessNetworkErrorLoggingHeader();
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h
