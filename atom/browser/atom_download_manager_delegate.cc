@@ -12,10 +12,6 @@
 #include "base/bind.h"
 #include "base/files/file_util.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/browser.h"
-#include "chrome/browser/ui/browser_finder.h"
-#include "chrome/browser/ui/browser_list.h"
-#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/pref_names.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_context.h"
@@ -39,8 +35,8 @@ NativeWindow* GetNativeWindowFromWebContents(content::WebContents* web_contents)
 // Blank newtab on download should be closed after starting download.
 void CloseWebContentsIfNeeded(content::WebContents* web_contents) {
   DCHECK(web_contents);
-  Browser* browser = chrome::FindBrowserWithWebContents(web_contents);
-  web_contents->Close();
+  if (web_contents->GetController().IsInitialNavigation())
+    web_contents->Close();
 }
 
 }  // namespace
@@ -98,6 +94,30 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
 
   GetItemSavePath(item, &path);
 
+  // To show file save dialog, |window| always must be valid.
+  NativeWindow* window = nullptr;
+  if (content::WebContents* web_contents = item->GetWebContents()) {
+    window = GetNativeWindowFromWebContents(web_contents);
+    // TODO(): If we want to use WebContents internally for file download, we
+    // should revisit here. If that happens with single tab, browser is
+    // closed.
+    CloseWebContentsIfNeeded(web_contents);
+  }
+
+  // If we can't find proper |window| for showing save dialog, cancel
+  // and cleanup current download.
+  // TODO(): If we want to use WebContents internaly for download, we should
+  // revisit here. Currently, we cancel it.
+  if (!window) {
+    item->Remove();
+    base::FilePath path;
+    callback.Run(path,
+                 content::DownloadItem::TARGET_DISPOSITION_PROMPT,
+                 content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
+    return;
+  }
+
   // Show save dialog if save path was not set already on item
   file_dialog::DialogSettings settings;
   settings.parent_window = window;
@@ -109,20 +129,6 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
         download_manager_->GetBrowserContext());
     profile->GetPrefs()->SetFilePath(prefs::kDownloadDefaultDirectory,
                                           path.DirName());
-  }
-
-  // To show file save dialog, |window| always must be valid.
-  NativeWindow* window = nullptr;
-  if (content::WebContents* web_contents = item->GetWebContents()) {
-    window = GetNativeWindowFromWebContents(web_contents);
-    CloseWebContentsIfNeeded(web_contents);
-  }
-
-  // If we can't find proper |window| for showing save dialog, cancel
-  // and cleanup current download.
-  if (!window) {
-    OnDownloadItemSelectionCancelled(callback, item);
-    return;
   }
 
   if (path.empty())
