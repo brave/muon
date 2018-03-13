@@ -94,19 +94,6 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
 
   GetItemSavePath(item, &path);
 
-  // Show save dialog if save path was not set already on item
-  file_dialog::DialogSettings settings;
-  settings.parent_window = window;
-  settings.title = item->GetURL().spec();
-  settings.default_path = target_path;
-  if (path.empty() && file_dialog::ShowSaveDialog(settings, &path)) {
-    // Remember the last selected download directory.
-    Profile* profile = static_cast<Profile*>(
-        download_manager_->GetBrowserContext());
-    profile->GetPrefs()->SetFilePath(prefs::kDownloadDefaultDirectory,
-                                          path.DirName());
-  }
-
   // To show file save dialog, |window| always must be valid.
   NativeWindow* window = nullptr;
   if (content::WebContents* web_contents = item->GetWebContents()) {
@@ -122,8 +109,26 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
   // TODO(): If we want to use WebContents internaly for download, we should
   // revisit here. Currently, we cancel it.
   if (!window) {
-    OnDownloadItemSelectionCancelled(callback, item);
+    item->Remove();
+    base::FilePath path;
+    callback.Run(path,
+                 content::DownloadItem::TARGET_DISPOSITION_PROMPT,
+                 content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
     return;
+  }
+
+  // Show save dialog if save path was not set already on item
+  file_dialog::DialogSettings settings;
+  settings.parent_window = window;
+  settings.title = item->GetURL().spec();
+  settings.default_path = target_path;
+  if (path.empty() && file_dialog::ShowSaveDialog(settings, &path)) {
+    // Remember the last selected download directory.
+    Profile* profile = static_cast<Profile*>(
+        download_manager_->GetBrowserContext());
+    profile->GetPrefs()->SetFilePath(prefs::kDownloadDefaultDirectory,
+                                          path.DirName());
   }
 
   if (path.empty())
