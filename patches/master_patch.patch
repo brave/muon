@@ -1802,18 +1802,20 @@ index c921e6f316ee9a00c6b48270f84167c22deb8ce6..36d51e77b2ca10d45fe44636b9820f74
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
 diff --git a/net/http/BUILD.gn b/net/http/BUILD.gn
-index d00da41da1d8bbc40d8a85d582c1966ed22eaaf1..6a3b54e91eafb8f187989c9c954be0008343aa63 100644
+index d00da41da1d8bbc40d8a85d582c1966ed22eaaf1..c308acaeabef9e90161aeef293fc1a2f743dbe07 100644
 --- a/net/http/BUILD.gn
 +++ b/net/http/BUILD.gn
-@@ -10,7 +10,7 @@ compiled_action("generate_transport_security_state") {
+@@ -10,8 +10,8 @@ compiled_action("generate_transport_security_state") {
  
    # Inputs in order expected by the command line of the tool.
    inputs = [
 -    "transport_security_state_static.json",
+-    "transport_security_state_static.pins",
 +    "//electron/atom/browser/resources/transport_security_state_static.json",
-     "transport_security_state_static.pins",
++    "//electron/atom/browser/resources/transport_security_state_static.pins",
      "transport_security_state_static.template",
    ]
+   outputs = [
 diff --git a/net/http/http_util.cc b/net/http/http_util.cc
 index 9361272ce0d539dd4bfa1b66b07cb416fe867b14..2df550bc5c628f9029f44328922dac267bbc17b1 100644
 --- a/net/http/http_util.cc
