@@ -11,7 +11,7 @@ import("//v8/gni/v8.gni")
 import("//build/compiled_action.gni")
 import("//build/util/branding.gni")
 import("//build/util/process_version.gni")
-import("//media/cdm/ppapi/cdm_paths.gni")
+import("//media/cdm/library_cdm/cdm_paths.gni")
 import("//electron/build/config.gni")
 import("//chrome/process_version_rc_template.gni")
 
