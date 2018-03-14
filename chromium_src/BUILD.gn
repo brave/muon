@@ -1178,7 +1178,7 @@ source_set("tab_manager") {
 
   deps = [
     ":lifetime",
-    "//components/feature_engagement:features",
+    "//components/feature_engagement:buildflags",
     "//services/metrics",
   ]
 
