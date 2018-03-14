@@ -1392,12 +1392,14 @@ void WebContents::DidFinishNavigation(
   bool is_main_frame = navigation_handle->IsInMainFrame();
   auto url = navigation_handle->GetURL();
 
+  const net::HttpResponseHeaders* headers = navigation_handle->GetResponseHeaders();
   Emit("did-get-response-details",
        navigation_handle->GetSocketAddress().IsEmpty(), url,
        navigation_handle->GetPreviousURL(),
-       navigation_handle->GetResponseHeaders()->response_code(),
+       headers ? headers->response_code() : 0,
        navigation_handle->IsPost() ? "POST" : "GET",
        navigation_handle->GetReferrer().url,
+       headers,
        is_main_frame ? "mainFrame" : "subFrame");
 
   // deprecated event handling
