@@ -22,7 +22,6 @@
 #include "v8/include/v8.h"
 #include "net/base/escape.h"
 
-using extensions::v8_helpers::SetProperty;
 using extensions::v8_helpers::IsTrue;
 
 namespace brave {
