@@ -178,12 +178,15 @@ BraveBrowserContext::BraveBrowserContext(
   }
 
   std::string tor_proxy;
+  std::string tor_path;
   if (options.GetString("tor_proxy", &tor_proxy)) {
     tor_proxy_ = GURL(tor_proxy);
     if (!tor_process_.IsValid()) {
-      base::FilePath tor("/usr/local/bin/tor");
-      base::CommandLine cmdline(tor);
-      tor_process_ = base::LaunchProcess(cmdline, base::LaunchOptions());
+      if (options.GetString("tor_path", &tor_path)) {
+        base::FilePath tor(tor_path);
+        base::CommandLine cmdline(tor);
+        tor_process_ = base::LaunchProcess(cmdline, base::LaunchOptions());
+      }
     }
   }
 
@@ -858,4 +861,3 @@ AtomBrowserContext* AtomBrowserContext::From(
 }
 
 }  // namespace atom
-
