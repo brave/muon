@@ -437,8 +437,7 @@ content::ServiceWorkerContext* GetServiceWorkerContext(
 
 // Called when CapturePage is done.
 void OnCapturePageDone(base::Callback<void(const gfx::Image&)> callback,
-                       const SkBitmap& bitmap,
-                       content::ReadbackResponse response) {
+                       const SkBitmap& bitmap) {
   callback.Run(gfx::Image::CreateFrom1xBitmap(bitmap));
 }
 
@@ -2441,8 +2440,7 @@ void WebContents::CapturePage(mate::Arguments* args) {
 
   host->GetView()->CopyFromSurface(gfx::Rect(rect.origin(), view_size),
       bitmap_size,
-      base::Bind(&OnCapturePageDone, callback),
-      kBGRA_8888_SkColorType);
+      base::Bind(&OnCapturePageDone, callback));
 }
 
 void WebContents::GetPreferredSize(mate::Arguments* args) {
