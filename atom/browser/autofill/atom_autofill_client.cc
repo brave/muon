@@ -22,7 +22,6 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/ssl_status.h"
 #include "content/public/common/origin_util.h"
-#include "google_apis/gaia/identity_provider.h"
 #include "native_mate/dictionary.h"
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(autofill::AtomAutofillClient);
@@ -42,28 +41,6 @@ struct Converter<autofill::Suggestion> {
   }
 };
 }  // namespace mate
-
-class StubIdentityProvider : public IdentityProvider{
- public:
-  StubIdentityProvider() {}
-  ~StubIdentityProvider() override {}
-
-  std::string GetActiveUsername() override {
-    return std::string();
-  };
-
-  std::string GetActiveAccountId() override {
-    return std::string();
-  ;}
-
-  OAuth2TokenService* GetTokenService() override {
-    return nullptr;
-  };
-
-  bool RequestLogin() override {
-    return false;
-  };
-};
 
 namespace autofill {
 
@@ -115,13 +92,6 @@ syncer::SyncService* AtomAutofillClient::GetSyncService() {
 
 identity::IdentityManager* AtomAutofillClient::GetIdentityManager() {
   return nullptr;
-}
-
-IdentityProvider* AtomAutofillClient::GetIdentityProvider() {
-  if (!identity_provider_) {
-     identity_provider_.reset(new StubIdentityProvider());
-  }
-  return identity_provider_.get();
 }
 
 ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
