@@ -1605,6 +1605,21 @@ index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e81851363
    return (renderWidgetHostView_->GetTextInputType() !=
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
+diff --git a/content/browser/renderer_host/render_widget_targeter.cc b/content/browser/renderer_host/render_widget_targeter.cc
+index 40549b7e067f24731733f69440be4da97c104084..abae93fb83ae6febd44f0e0cd1cd2b328142e6f2 100644
+--- a/content/browser/renderer_host/render_widget_targeter.cc
++++ b/content/browser/renderer_host/render_widget_targeter.cc
+@@ -140,7 +140,9 @@ void RenderWidgetTargeter::FindTargetAndDispatch(
+   // TODO(kenrb, wjmaclean): Asynchronous hit tests don't work properly with
+   // GuestViews, so rely on the synchronous result.
+   // See https://crbug.com/802378.
+-  if (result.should_query_view && !target->IsRenderWidgetHostViewGuest()) {
++  if (result.should_query_view &&
++      (!target->IsRenderWidgetHostViewGuest()
++        || event.GetType() != blink::WebInputEvent::kMouseWheel)) {
+     // TODO(kenrb, sadrul): When all event types support asynchronous hit
+     // testing, we should be able to have FindTargetSynchronously return the
+     // view and location to use for the renderer hit test query.
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index 829401d6438671f55a9caf3a8f5eb5dc38234332..8ea576f35c95b7a0dbe050788a8d6b302ba75550 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
