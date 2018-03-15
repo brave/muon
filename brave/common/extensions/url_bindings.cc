@@ -103,10 +103,6 @@ class WrappableGURL : public GURL,
     return GURL::SchemeIsBlob();
   }
 
-  bool SchemeIsSuborigin() const {
-    return GURL::SchemeIsSuborigin();
-  }
-
   std::string GetContent() const {
     return GURL::GetContent();
   }
@@ -232,7 +228,6 @@ class WrappableGURL : public GURL,
         .SetMethod("schemeIsCryptographic",
             &WrappableGURL::SchemeIsCryptographic)
         .SetMethod("schemeIsBlob", &WrappableGURL::SchemeIsBlob)
-        .SetMethod("schemeIsSuborigin", &WrappableGURL::SchemeIsSuborigin)
         .SetMethod("getContent", &WrappableGURL::GetContent)
         .SetMethod("hostIsIPAddress", &WrappableGURL::HostIsIPAddress)
         .SetMethod("hasScheme", &WrappableGURL::has_scheme)
