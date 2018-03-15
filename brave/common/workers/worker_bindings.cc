@@ -16,7 +16,6 @@
 #include "v8/include/v8.h"
 
 using content::BrowserThread;
-using extensions::v8_helpers::SetProperty;
 using extensions::v8_helpers::IsTrue;
 
 namespace brave {
@@ -80,10 +79,12 @@ void WorkerBindings::AddRoutes() {
   v8::Isolate* isolate = v8_context->GetIsolate();
 
   // onmessage handler
-  SetProperty(v8_context, v8_context->Global(),
-      v8::String::NewFromUtf8(isolate, "onmessage",
-          v8::NewStringType::kNormal).ToLocalChecked(),
+  auto maybe_set = v8_context->Global()->CreateDataProperty(
+      v8_context,
+      v8::String::NewFromUtf8(isolate, "onmessage", v8::NewStringType::kNormal)
+          .ToLocalChecked(),
       v8::Null(isolate));
+  DCHECK(maybe_set.IsJust() && maybe_set.FromJust());
 
   // pathname
   v8::Local<v8::Object> location = v8::Object::New(isolate);
