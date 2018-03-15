@@ -110,10 +110,8 @@ void BraveContentRendererClient::RenderThreadStarted() {
   }
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
-  if (!spellcheck_) {
-    spellcheck_.reset(new SpellCheck(this));
-    thread->AddObserver(spellcheck_.get());
-  }
+  if (!spellcheck_)
+    InitSpellCheck();
 #endif
 }
 
@@ -232,9 +230,22 @@ bool BraveContentRendererClient::WillSendRequest(
   return false;
 }
 
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+void BraveContentRendererClient::InitSpellCheck() {
+  spellcheck_ = std::make_unique<SpellCheck>(&registry_, this);
+}
+#endif
+
 std::unique_ptr<blink::WebSocketHandshakeThrottle>
 BraveContentRendererClient::CreateWebSocketHandshakeThrottle() {
   return nullptr;
+}
+
+void BraveContentRendererClient::OnBindInterface(
+    const service_manager::BindSourceInfo& remote_info,
+    const std::string& name,
+    mojo::ScopedMessagePipeHandle handle) {
+  registry_.TryBindInterface(name, &handle);
 }
 
 }  // namespace brave

@@ -61,16 +61,28 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
   std::unique_ptr<blink::WebSocketHandshakeThrottle>
       CreateWebSocketHandshakeThrottle() override;
 
+#if BUILDFLAG(ENABLE_SPELLCHECK)
+  void InitSpellCheck();
+#endif
+
  private:
+  void OnBindInterface(const service_manager::BindSourceInfo& remote_info,
+                       const std::string& name,
+                       mojo::ScopedMessagePipeHandle handle) override;
+
   atom::ContentSettingsManager* content_settings_manager_;  // not owned
 
+#if BUILDFLAG(ENABLE_SPELLCHECK)
   std::unique_ptr<SpellCheck> spellcheck_;
+#endif
 
   std::unique_ptr<ChromeRenderThreadObserver> chrome_observer_;
   std::unique_ptr<web_cache::WebCacheImpl> web_cache_impl_;
 
   std::unique_ptr<network_hints::PrescientNetworkingDispatcher>
       prescient_networking_dispatcher_;
+
+  service_manager::BinderRegistry registry_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveContentRendererClient);
 };

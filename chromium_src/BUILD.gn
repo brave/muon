@@ -586,6 +586,7 @@ source_set("browser") {
     sources += [
       "//chrome/browser/spellchecker/spell_check_host_chrome_impl.cc",
       "//chrome/browser/spellchecker/spell_check_host_chrome_impl.h",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl_mac.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
       "//chrome/browser/spellchecker/spellcheck_dictionary.h",
@@ -593,7 +594,6 @@ source_set("browser") {
       "//chrome/browser/spellchecker/spellcheck_factory.h",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.h",
-      "//chrome/browser/spellchecker/spellcheck_message_filter_platform_mac.cc",
       "//chrome/browser/spellchecker/spellcheck_service.cc",
       "//chrome/browser/spellchecker/spellcheck_service.h",
     ]
