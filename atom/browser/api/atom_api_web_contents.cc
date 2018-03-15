@@ -1389,9 +1389,20 @@ void WebContents::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   Emit("did-finish-navigation", navigation_handle);
 
-  // deprecated event handling
   bool is_main_frame = navigation_handle->IsInMainFrame();
   auto url = navigation_handle->GetURL();
+
+  const net::HttpResponseHeaders* headers = navigation_handle->GetResponseHeaders();
+  Emit("did-get-response-details",
+       navigation_handle->GetSocketAddress().IsEmpty(), url,
+       navigation_handle->GetPreviousURL(),
+       headers ? headers->response_code() : 0,
+       navigation_handle->IsPost() ? "POST" : "GET",
+       navigation_handle->GetReferrer().url,
+       headers,
+       is_main_frame ? "mainFrame" : "subFrame");
+
+  // deprecated event handling
   if (navigation_handle->HasCommitted() && !navigation_handle->IsErrorPage()) {
     bool is_in_page = navigation_handle->IsSameDocument();
     bool is_renderer_initiated = navigation_handle->IsRendererInitiated();
