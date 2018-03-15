@@ -153,11 +153,4 @@ bool AtomResourceDispatcherHostDelegate::HandleExternalProtocol(
   return true;
 }
 
-content::ResourceDispatcherHostLoginDelegate*
-AtomResourceDispatcherHostDelegate::CreateLoginDelegate(
-    net::AuthChallengeInfo* auth_info,
-    net::URLRequest* request) {
-  return new LoginHandler(auth_info, request);
-}
-
 }  // namespace atom
