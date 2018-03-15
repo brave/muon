@@ -24,6 +24,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/extensions/chrome_component_extension_resource_manager.h"
 #include "chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h"
+#include "chrome/browser/extensions/chrome_url_request_util.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
 #include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
 #include "chrome/common/chrome_paths.h"
@@ -335,32 +336,30 @@ AtomExtensionsBrowserClient::MaybeCreateResourceBundleRequestJob(
     const base::FilePath& directory_path,
     const std::string& content_security_policy,
     bool send_cors_header) {
-  base::FilePath resources_path;
-  base::FilePath relative_path;
+  return chrome_url_request_util::MaybeCreateURLRequestResourceBundleJob(
+      request, network_delegate, directory_path, content_security_policy,
+      send_cors_header);
+}
 
-  PathService::Get(chrome::DIR_RESOURCES, &resources_path);
+base::FilePath AtomExtensionsBrowserClient::GetBundleResourcePath(
+    const network::ResourceRequest& request,
+    const base::FilePath& extension_resources_path,
+    int* resource_id) const {
+  return chrome_url_request_util::GetBundleResourcePath(
+      request, extension_resources_path, resource_id);
+}
 
-  if (PathService::Get(chrome::DIR_RESOURCES, &resources_path) &&
-      resources_path.AppendRelativePath(directory_path, &relative_path)) {
-    base::FilePath request_path =
-        extensions::file_util::ExtensionURLToRelativeFilePath(request->url());
-    int resource_id = 0;
-    if (ExtensionsBrowserClient::Get()
-            ->GetComponentExtensionResourceManager()
-            ->IsComponentExtensionResource(
-                directory_path, request_path, &resource_id)) {
-      relative_path = relative_path.Append(request_path);
-      relative_path = relative_path.NormalizePathSeparators();
-
-      return new URLRequestResourceBundleJob(request,
-                                             network_delegate,
-                                             relative_path,
-                                             resource_id,
-                                             content_security_policy,
-                                             send_cors_header);
-    }
-  }
-  return NULL;
+void AtomExtensionsBrowserClient::LoadResourceFromResourceBundle(
+    const network::ResourceRequest& request,
+    network::mojom::URLLoaderRequest loader,
+    const base::FilePath& resource_relative_path,
+    int resource_id,
+    const std::string& content_security_policy,
+    network::mojom::URLLoaderClientPtr client,
+    bool send_cors_header) {
+  chrome_url_request_util::LoadResourceFromResourceBundle(
+      request, std::move(loader), resource_relative_path, resource_id,
+      content_security_policy, std::move(client), send_cors_header);
 }
 
 bool AtomExtensionsBrowserClient::AllowCrossRendererResourceLoad(
