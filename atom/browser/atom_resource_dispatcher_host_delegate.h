@@ -20,9 +20,6 @@ class AtomResourceDispatcherHostDelegate
   bool HandleExternalProtocol(
       const GURL& url,
       content::ResourceRequestInfo* info) override;
-  content::ResourceDispatcherHostLoginDelegate* CreateLoginDelegate(
-      net::AuthChallengeInfo* auth_info,
-      net::URLRequest* request) override;
 };
 
 }  // namespace atom
