@@ -8,18 +8,22 @@
 #include <memory>
 #include <vector>
 
+#include "build/build_config.h"
 #include "content/public/utility/content_utility_client.h"
+#include "printing/features/features.h"
 
 namespace base {
 class FilePath;
 struct FileDescriptor;
 }
 
+namespace printing {
+class PrintingHandler;
+}
+
 namespace shell {
 class InterfaceRegistry;
 }
-
-class UtilityMessageHandler;
 
 namespace atom {
 
@@ -36,9 +40,10 @@ class AtomContentUtilityClient : public content::ContentUtilityClient {
   static void PreSandboxStartup();
 
  private:
-  // IPC message handlers.
-  using Handlers = std::vector<std::unique_ptr<UtilityMessageHandler>>;
-  Handlers handlers_;
+#if defined(OS_WIN) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
+  // Last IPC message handler.
+  std::unique_ptr<printing::PrintingHandler> printing_handler_;
+#endif
 
   // True if the utility process runs with elevated privileges.
   bool utility_process_running_elevated_;
