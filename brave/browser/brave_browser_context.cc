@@ -164,7 +164,7 @@ BraveBrowserContext::BraveBrowserContext(
 
   if (in_memory) {
     original_context_ = static_cast<BraveBrowserContext*>(
-        atom::AtomBrowserContext::From(partition, false));
+        atom::AtomBrowserContext::From("", false));
     original_context_->otr_context_ = this;
   }
   CreateProfilePrefs(io_task_runner_);
@@ -623,8 +623,7 @@ atom::AtomBrowserContext* BraveBrowserContext::FromPartition(
     return atom::AtomBrowserContext::From(
         name == "default" ? "" : name, false, options);
   } else {
-    return atom::AtomBrowserContext::From(
-        partition == "default" ? "" : partition, true, options);
+    return atom::AtomBrowserContext::From(partition, true, options);
   }
 }
 
@@ -705,7 +704,7 @@ AtomBrowserContext* AtomBrowserContext::From(
 
   // TODO(bridiver) - pass the path to initialize the browser context
   // TODO(bridiver) - create these with the profile manager
-  base::FilePath path;
+  base::FilePath path = base::FilePath::FromUTF8Unsafe("");
   PathService::Get(chrome::DIR_USER_DATA, &path);
   if (!in_memory && !partition.empty())
     path = path.Append(FILE_PATH_LITERAL("Partitions"))
@@ -719,7 +718,9 @@ AtomBrowserContext* AtomBrowserContext::From(
       base::CreateSequencedTaskRunnerWithTraits(
           {base::TaskShutdownBehavior::BLOCK_SHUTDOWN, base::MayBlock()});
 
-  CreateProfileDirectory(io_task_runner.get(), path);
+  if (!in_memory) {
+    CreateProfileDirectory(io_task_runner.get(), path);
+  }
 
   auto profile = new brave::BraveBrowserContext(partition, in_memory, options,
                                                 io_task_runner);
@@ -728,4 +729,3 @@ AtomBrowserContext* AtomBrowserContext::From(
 }
 
 }  // namespace atom
-
