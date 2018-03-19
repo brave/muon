@@ -27,7 +27,6 @@ namespace {
 // Should only be called from the IO thread, since it accesses an
 // net::URLRequest.
 void ResetLoginHandlerForRequest(net::URLRequest* request) {
-  content::ResourceDispatcherHost::Get()->ClearLoginDelegateForRequest(request);
 }
 
 }  // namespace
