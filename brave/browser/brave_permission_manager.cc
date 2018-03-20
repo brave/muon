@@ -4,12 +4,17 @@
 
 #include "brave/browser/brave_permission_manager.h"
 
+#include <utility>
+
+#include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/permission_type.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
-#include "device/geolocation/geolocation_provider.h"
+#include "content/public/common/service_manager_connection.h"
+#include "services/device/public/interfaces/constants.mojom.h"
+#include "services/service_manager/public/cpp/connector.h"
 
 namespace brave {
 
@@ -123,6 +128,22 @@ int BravePermissionManager::RequestPermissions(
   return kNoPendingOperation;
 }
 
+device::mojom::GeolocationControl*
+BravePermissionManager::GetGeolocationControl() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (geolocation_control_)
+    return geolocation_control_.get();
+
+  auto request = mojo::MakeRequest(&geolocation_control_);
+  if (!content::ServiceManagerConnection::GetForProcess())
+    return geolocation_control_.get();
+
+  service_manager::Connector* connector =
+      content::ServiceManagerConnection::GetForProcess()->GetConnector();
+  connector->BindInterface(device::mojom::kServiceName, std::move(request));
+  return geolocation_control_.get();
+}
+
 void BravePermissionManager::OnPermissionResponse(
     int request_id,
     const GURL& origin,
@@ -136,8 +157,7 @@ void BravePermissionManager::OnPermissionResponse(
       for (int i = 0; i < permissions.size(); i++) {
         if (permissions[i] == content::PermissionType::GEOLOCATION) {
           if (status[i] == blink::mojom::PermissionStatus::GRANTED) {
-            device::GeolocationProvider::GetInstance()
-                ->UserDidOptIntoLocationServices();
+            GetGeolocationControl()->UserDidOptIntoLocationServices();
           }
         }
       }

@@ -179,7 +179,6 @@ class Window : public mate::TrackableObject<Window>,
   v8::Local<v8::Value> GetParentWindow() const;
   std::vector<v8::Local<v8::Object>> GetChildWindows() const;
   bool IsModal() const;
-  v8::Local<v8::Value> GetNativeWindowHandle();
 
 #if defined(OS_WIN)
   typedef base::Callback<void(v8::Local<v8::Value>,

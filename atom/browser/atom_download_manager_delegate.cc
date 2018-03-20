@@ -28,6 +28,19 @@ namespace {
 const DownloadPathReservationTracker::FilenameConflictAction
     kDefaultPlatformConflictAction = DownloadPathReservationTracker::UNIQUIFY;
 
+NativeWindow* GetNativeWindowFromWebContents(content::WebContents* web_contents) {
+  DCHECK(web_contents);
+  auto relay = NativeWindowRelay::FromWebContents(web_contents);
+  return relay ? relay->window.get() : nullptr;
+}
+
+// Blank newtab on download should be closed after starting download.
+void CloseWebContentsIfNeeded(content::WebContents* web_contents) {
+  DCHECK(web_contents);
+  if (web_contents->GetController().IsInitialNavigation())
+    web_contents->Close();
+}
+
 }  // namespace
 
 AtomDownloadManagerDelegate::AtomDownloadManagerDelegate(
@@ -135,14 +148,31 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
     path = target_path;
   }
 
-  NativeWindow* window = nullptr;
-  content::WebContents* web_contents = item->GetWebContents();
-  auto relay = web_contents ? NativeWindowRelay::FromWebContents(web_contents)
-                            : nullptr;
-  if (relay)
-    window = relay->window.get();
-
   GetItemSavePath(item, &path);
+
+  // To show file save dialog, |window| always must be valid.
+  NativeWindow* window = nullptr;
+  if (content::WebContents* web_contents = item->GetWebContents()) {
+    window = GetNativeWindowFromWebContents(web_contents);
+    // TODO(): If we want to use WebContents internally for file download, we
+    // should revisit here. If that happens with single tab, browser is
+    // closed.
+    CloseWebContentsIfNeeded(web_contents);
+  }
+
+  // If we can't find proper |window| for showing save dialog, cancel
+  // and cleanup current download.
+  // TODO(): If we want to use WebContents internaly for download, we should
+  // revisit here. Currently, we cancel it.
+  if (!window) {
+    item->Remove();
+    base::FilePath path;
+    callback.Run(path,
+                 content::DownloadItem::TARGET_DISPOSITION_PROMPT,
+                 content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
+    return;
+  }
 
   // Show save dialog if save path was not set already on item
   ui::SelectFileDialog::FileTypeInfo file_type_info;

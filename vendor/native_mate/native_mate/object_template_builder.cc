@@ -6,6 +6,8 @@
 
 namespace mate {
 
+ObjectTemplateBuilder::ObjectTemplateBuilder(v8::Isolate* isolate)
+    : ObjectTemplateBuilder(isolate, v8::ObjectTemplate::New(isolate)) {}
 ObjectTemplateBuilder::ObjectTemplateBuilder(
     v8::Isolate* isolate,
     v8::Local<v8::ObjectTemplate> templ)

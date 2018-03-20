@@ -20,9 +20,18 @@ CrashReporterBindings::CrashReporterBindings(
   RouteFunction("SetEnabled",
       base::Bind(&CrashReporterBindings::SetEnabled,
           base::Unretained(this)));
-  RouteFunction("SetCrashKeyValue",
-      base::Bind(&CrashReporterBindings::SetCrashKeyValue,
-          base::Unretained(this)));
+  RouteFunction("SetChannelCrashValue",
+                base::Bind(&CrashReporterBindings::SetChannelCrashValue,
+                           base::Unretained(this)));
+  RouteFunction("SetJavascriptInfoCrashValue",
+                base::Bind(&CrashReporterBindings::SetJavascriptInfoCrashValue,
+                           base::Unretained(this)));
+  RouteFunction("SetNodeEnvCrashValue",
+                base::Bind(&CrashReporterBindings::SetNodeEnvCrashValue,
+                           base::Unretained(this)));
+  RouteFunction("SetVersionCrashValue",
+                base::Bind(&CrashReporterBindings::SetVersionCrashValue,
+                           base::Unretained(this)));
   RouteFunction("DumpWithoutCrashing",
       base::Bind(&CrashReporterBindings::DumpWithoutCrashing,
           base::Unretained(this)));
@@ -40,8 +49,17 @@ v8::Local<v8::Object> CrashReporterBindings::API(
 
   v8::Local<v8::Object> crash_reporter = v8::Object::New(context->isolate());
   context->module_system()->SetNativeLazyField(
-      crash_reporter,
-      "setCrashKeyValue", "muon_crash_reporter", "SetCrashKeyValue");
+      crash_reporter, "setChannelCrashValue", "muon_crash_reporter",
+      "SetChannelCrashValue");
+  context->module_system()->SetNativeLazyField(
+      crash_reporter, "setJavascriptInfoCrashValue", "muon_crash_reporter",
+      "SetJavascriptInfoCrashValue");
+  context->module_system()->SetNativeLazyField(
+      crash_reporter, "setNodeEnvCrashValue", "muon_crash_reporter",
+      "SetNodeEnvCrashValue");
+  context->module_system()->SetNativeLazyField(
+      crash_reporter, "setVersionCrashValue", "muon_crash_reporter",
+      "SetVersionCrashValue");
   context->module_system()->SetNativeLazyField(
       crash_reporter,
       "setEnabled", "muon_crash_reporter", "SetEnabled");
@@ -68,17 +86,52 @@ void CrashReporterBindings::DumpWithoutCrashing(
   base::debug::DumpWithoutCrashing();
 }
 
-void CrashReporterBindings::SetCrashKeyValue(
+void CrashReporterBindings::SetChannelCrashValue(
     const v8::FunctionCallbackInfo<v8::Value>& args) {
-  if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsString()) {
+  if (args.Length() != 1 || !args[0]->IsString()) {
     GetIsolate()->ThrowException(v8::String::NewFromUtf8(
-        GetIsolate(), "Invalid arguments to 'setCrashKeyValue'"));
+        GetIsolate(), "Invalid argument to 'setChannelCrashValue'"));
     return;
   }
 
-  std::string key(*v8::String::Utf8Value(args[0]));
-  std::string value(*v8::String::Utf8Value(args[1]));
-  MuonCrashReporterClient::SetCrashKeyValue(key, value);
+  std::string value(*v8::String::Utf8Value(args[0]));
+  MuonCrashReporterClient::SetChannelCrashValue(value);
+}
+
+void CrashReporterBindings::SetJavascriptInfoCrashValue(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  if (args.Length() != 1 || !args[0]->IsString()) {
+    GetIsolate()->ThrowException(v8::String::NewFromUtf8(
+        GetIsolate(), "Invalid argument to 'setJavascriptInfoCrashValue'"));
+    return;
+  }
+
+  std::string value(*v8::String::Utf8Value(args[0]));
+  MuonCrashReporterClient::SetJavascriptInfoCrashValue(value);
+}
+
+void CrashReporterBindings::SetNodeEnvCrashValue(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  if (args.Length() != 1 || !args[0]->IsString()) {
+    GetIsolate()->ThrowException(v8::String::NewFromUtf8(
+        GetIsolate(), "Invalid argument to 'setNodeEnvCrashValue'"));
+    return;
+  }
+
+  std::string value(*v8::String::Utf8Value(args[0]));
+  MuonCrashReporterClient::SetNodeEnvCrashValue(value);
+}
+
+void CrashReporterBindings::SetVersionCrashValue(
+    const v8::FunctionCallbackInfo<v8::Value>& args) {
+  if (args.Length() != 1 || !args[0]->IsString()) {
+    GetIsolate()->ThrowException(v8::String::NewFromUtf8(
+        GetIsolate(), "Invalid argument to 'setVersionCrashValue'"));
+    return;
+  }
+
+  std::string value(*v8::String::Utf8Value(args[0]));
+  MuonCrashReporterClient::SetVersionCrashValue(value);
 }
 
 }  // namespace brave

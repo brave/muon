@@ -9,7 +9,6 @@
 #include "base/base_switches.h"
 #include "base/bind.h"
 #include "base/command_line.h"
-#include "base/debug/crash_logging.h"
 #include "base/debug/leak_annotations.h"
 #include "base/path_service.h"
 #include "chrome/browser/metrics/metrics_reporting_state.h"
@@ -119,16 +118,19 @@ void MuonCrashReporterClient::InitCrashReporting() {
   breakpad::InitCrashReporter(process_type);
 #endif
 #endif  // !defined(OS_WIN)
+
   std::string version =
       command_line->GetSwitchValueASCII(atom::options::kAppVersion);
   if (!version.empty())
-    SetCrashKeyValue("_version", version);
+    SetVersionCrashValue(version);
+
   std::string channel =
         command_line->GetSwitchValueASCII(atom::options::kAppChannel);
   if (!channel.empty())
-    SetCrashKeyValue(crash_keys::kChannel, channel);
+    SetChannelCrashValue(channel);
 
-  SetCrashKeyValue("muon-version", ATOM_VERSION_STRING);
+  static crash_reporter::CrashKeyString<32> muon_version_key("muon-version");
+  muon_version_key.Set(ATOM_VERSION_STRING);
 }
 
 //  static
@@ -141,11 +143,32 @@ void MuonCrashReporterClient::SetCrashReportingEnabled(bool enabled) {
       base::Bind(&SetCrashReportingEnabledForProcess));
 }
 
+// static
+void MuonCrashReporterClient::SetChannelCrashValue(
+    const std::string& value) {
+  static crash_reporter::CrashKeyString<16> channel_key("channel");
+  channel_key.Set(base::StringPiece(value));
+}
+
 //  static
-void MuonCrashReporterClient::SetCrashKeyValue(const std::string& key,
-                                                const std::string& value) {
-  base::debug::SetCrashKeyValue(
-      base::StringPiece(key), base::StringPiece(value));
+void MuonCrashReporterClient::SetJavascriptInfoCrashValue(
+    const std::string& value) {
+  static crash_reporter::CrashKeyString<1024> javascript_info_key("javascript-info");
+  javascript_info_key.Set(base::StringPiece(value));
+}
+
+// static
+void MuonCrashReporterClient::SetNodeEnvCrashValue(
+    const std::string& value) {
+  static crash_reporter::CrashKeyString<32> node_env_key("node-env");
+  node_env_key.Set(base::StringPiece(value));
+}
+
+// static
+void MuonCrashReporterClient::SetVersionCrashValue(
+    const std::string& value) {
+  static crash_reporter::CrashKeyString<32> version_key("_version");
+  version_key.Set(base::StringPiece(value));
 }
 
 //  static

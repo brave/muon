@@ -171,6 +171,7 @@ source_set("browser") {
     "//electron/atom/browser",
     "//ui/message_center",
     "//net:features",
+    "//pdf",
   ]
 
   sources = [
@@ -216,8 +217,6 @@ source_set("browser") {
     "//chrome/browser/gpu/gpu_mode_manager.cc",
     "//chrome/browser/gpu/gpu_mode_manager.h",
     "//chrome/browser/gpu/gpu_profile_cache.h",
-    "//chrome/browser/gpu/gl_string_manager.cc",
-    "//chrome/browser/gpu/gl_string_manager.h",
 
     "chrome/browser/io_thread.cc",
     "//chrome/browser/io_thread.h",
@@ -235,6 +234,8 @@ source_set("browser") {
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
     "//chrome/browser/net/default_network_context_params.cc",
     "//chrome/browser/net/default_network_context_params.h",
+    "//chrome/browser/net/proxy_config_monitor.cc",
+    "//chrome/browser/net/proxy_config_monitor.h",
     "//chrome/browser/net/proxy_service_factory.cc",
     "//chrome/browser/net/proxy_service_factory.h",
     "//chrome/browser/net/sth_distributor_provider.cc",
@@ -276,6 +277,7 @@ source_set("browser") {
     "//chrome/browser/platform_util_linux.cc",
     "//chrome/browser/platform_util_win.cc",
 
+    "//chrome/browser/process_singleton_mac.mm",
     "//chrome/browser/process_singleton_posix.cc",
     "//chrome/browser/process_singleton_win.cc",
     "//chrome/browser/process_singleton.h",
@@ -349,6 +351,10 @@ source_set("browser") {
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
+      "//chrome/browser/permissions/permission_request.cc",
+      "//chrome/browser/permissions/permission_request.h",
+      "chrome/browser/permissions/permission_request_manager.cc",
+      "//chrome/browser/permissions/permission_request_manager.h",
       "//chrome/browser/printing/pdf_to_emf_converter.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.h",
       "//chrome/browser/ui/views/certificate_viewer_win.cc",
@@ -578,8 +584,8 @@ source_set("browser") {
   }
   if (enable_spellcheck) {
     sources += [
-      "//chrome/browser/spellchecker/spell_check_host_impl.cc",
-      "//chrome/browser/spellchecker/spell_check_host_impl.h",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl.cc",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl.h",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
       "//chrome/browser/spellchecker/spellcheck_dictionary.h",
@@ -644,11 +650,12 @@ source_set("menu_bar") {
   ]
 
   if (use_gio) {
+    configs += [ "//build/linux:gio_config" ]
+
     deps = [
       "//components/sync",
       "//ipc:mojom",
       "//third_party/protobuf:protobuf_lite",
-      "//build/linux/libgio",
     ]
   }
 }
@@ -960,8 +967,13 @@ source_set("metrics") {
     "//components/metrics_services_manager",
     "//components/version_info",
     "//content/public/browser",
-    "//third_party/crashpad/crashpad/client:client",
   ]
+
+  if (is_mac) {
+    deps += [
+      "//third_party/crashpad/crashpad/client:client",
+    ]
+  }
 }
 
 source_set("search") {
@@ -1093,8 +1105,6 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tab_contents/core_tab_helper.h",
     "//chrome/browser/ui/tabs/tab_strip_model.cc",
     "//chrome/browser/ui/tabs/tab_strip_model.h",
-    "//chrome/browser/ui/tabs/tab_strip_model_impl.cc",
-    "//chrome/browser/ui/tabs/tab_strip_model_impl.h",
     "//chrome/browser/ui/tabs/tab_strip_model_delegate.h",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.h",
