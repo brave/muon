@@ -233,7 +233,7 @@ class ResolveProxyHelper {
 
   Session::ResolveProxyCallback callback_;
   net::ProxyInfo proxy_info_;
-  net::ProxyService::PacRequest* pac_req_;
+  net::ProxyService::Request* pac_req_;
   scoped_refptr<base::SingleThreadTaskRunner> original_thread_;
 
   DISALLOW_COPY_AND_ASSIGN(ResolveProxyHelper);

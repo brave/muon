@@ -189,10 +189,6 @@ void PrintPreviewMessageHandler::OnRequestPrintPreview(
   if (base::ContainsKey(print_to_pdf_options_map_, key)) {
     auto options = print_to_pdf_options_map_[key].get();
     options->SetBoolean(printing::kSettingPrintToPDF, true);
-    options->SetInteger(kPreviewInitiatorHostId,
-                        rfh->GetProcess()->GetID());
-    options->SetInteger(printing::kPreviewInitiatorRoutingId,
-                         rfh->GetRoutingID());
     options->SetInteger(kSettingDpiHorizontal, kPointsPerInch);
     options->SetInteger(kSettingDpiVertical, kPointsPerInch);
 

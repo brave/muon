@@ -15,10 +15,11 @@
 #include "base/logging.h"
 #include "base/pickle.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/task_scheduler/post_task.h"
 #include "base/values.h"
 
 #if defined(OS_WIN)
-#include "atom/node/osfhandle.h"
+#include <io.h>
 #endif
 
 #include "base/threading/thread_restrictions.h"
@@ -118,28 +119,29 @@ bool FillFileInfoWithNode(Archive::FileInfo* info,
 }  // namespace
 
 Archive::Archive(const base::FilePath& path)
-    : path_(path),
-      file_(path_, base::File::FLAG_OPEN | base::File::FLAG_READ),
+    : path_(path), file_(base::File::FILE_OK), header_size_(0) {
+  base::ThreadRestrictions::ScopedAllowIO allow_io;
+  file_.Initialize(path_, base::File::FLAG_OPEN | base::File::FLAG_READ);
 #if defined(OS_WIN)
-      fd_(node::open_osfhandle(
-              reinterpret_cast<intptr_t>(file_.GetPlatformFile()), 0)),
+  fd_ = _open_osfhandle(reinterpret_cast<intptr_t>(file_.GetPlatformFile()), 0);
 #elif defined(OS_POSIX)
-      fd_(file_.GetPlatformFile()),
+  fd_ = file_.GetPlatformFile();
 #else
-      fd_(-1),
+  fd_ = -1;
 #endif
-      header_size_(0) {
 }
 
 Archive::~Archive() {
   base::ThreadRestrictions::SetIOAllowed(true);  // TODO(bridiver) ugh electron
 #if defined(OS_WIN)
   if (fd_ != -1) {
-    node::close(fd_);
+    _close(fd_);
     // Don't close the handle since we already closed the fd.
     file_.TakePlatformFile();
   }
 #endif
+  base::ThreadRestrictions::ScopedAllowIO allow_io;
+  file_.Close();
 }
 
 bool Archive::Init() {
@@ -155,7 +157,10 @@ bool Archive::Init() {
   int len;
 
   buf.resize(8);
-  len = file_.ReadAtCurrentPos(buf.data(), buf.size());
+  {
+    base::ThreadRestrictions::ScopedAllowIO allow_io;
+    len = file_.ReadAtCurrentPos(buf.data(), buf.size());
+  }
   if (len != static_cast<int>(buf.size())) {
     PLOG(ERROR) << "Failed to read header size from " << path_.value();
     return false;
@@ -169,7 +174,10 @@ bool Archive::Init() {
   }
 
   buf.resize(size);
-  len = file_.ReadAtCurrentPos(buf.data(), buf.size());
+  {
+    base::ThreadRestrictions::ScopedAllowIO allow_io;
+    len = file_.ReadAtCurrentPos(buf.data(), buf.size());
+  }
   if (len != static_cast<int>(buf.size())) {
     PLOG(ERROR) << "Failed to read header from " << path_.value();
     return false;
@@ -185,7 +193,7 @@ bool Archive::Init() {
   std::string error;
   base::JSONReader reader;
   std::unique_ptr<base::Value> value(reader.ReadToValue(header));
-  if (!value || !value->IsType(base::Value::Type::DICTIONARY)) {
+  if (!value || !value->is_dict()) {
     LOG(ERROR) << "Failed to parse header: " << error;
     return false;
   }

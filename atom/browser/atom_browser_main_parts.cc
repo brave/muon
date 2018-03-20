@@ -165,11 +165,12 @@ base::Closure AtomBrowserMainParts::RegisterDestructionCallback(
   return base::Bind(&Erase<std::list<base::Closure>>, &destructors_, iter);
 }
 
-void AtomBrowserMainParts::PreEarlyInitialization() {
+int AtomBrowserMainParts::PreEarlyInitialization() {
   brightray::BrowserMainParts::PreEarlyInitialization();
 #if defined(OS_POSIX)
   HandleSIGCHLD();
 #endif
+  return content::RESULT_CODE_NORMAL_EXIT;
 }
 
 int AtomBrowserMainParts::PreCreateThreads() {
@@ -230,6 +231,14 @@ int AtomBrowserMainParts::PreCreateThreads() {
   feature_list->RegisterFieldTrialOverride(
       password_manager::features::kFillOnAccountSelect.name,
       base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
+
+  // disable touchpad and wheel scroll latching.
+  field_trial = feature_list->GetFieldTrial(
+      features::kTouchpadAndWheelScrollLatching);
+  feature_list->RegisterFieldTrialOverride(
+      features::kTouchpadAndWheelScrollLatching.name,
+      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
 
   fake_browser_process_->PreCreateThreads(
       *base::CommandLine::ForCurrentProcess());

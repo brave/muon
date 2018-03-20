@@ -67,7 +67,7 @@
 #include "chrome/browser/ssl/security_state_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
-#include "chrome/browser/ui/tabs/tab_strip_model_impl.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_order_controller.h"
 #include "chrome/common/custom_handlers/protocol_handler.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
@@ -88,7 +88,6 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
-#include "content/public/browser/resource_request_details.h"
 #include "content/public/browser/security_style_explanations.h"
 #include "content/public/browser/service_worker_context.h"
 #include "content/public/browser/site_instance.h"
@@ -773,13 +772,12 @@ void WebContents::AddNewContents(content::WebContents* source,
         browser = owner_window()->browser();
       }
       if (browser) {
-        // FIXME(svillar): The OrderController is exposed just for tests
         int index =
-            static_cast<TabStripModelImpl*>(browser->tab_strip_model())
-                ->order_controller()
-                ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                          active ? TabStripModel::ADD_ACTIVE
-                                                 : TabStripModel::ADD_NONE);
+          browser->tab_strip_model()->order_controller()->
+            DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                    active ?
+                                    TabStripModel::ADD_ACTIVE :
+                                    TabStripModel::ADD_NONE);
         tab_helper->SetTabIndex(index);
         tab_helper->SetActive(active);
       }
@@ -1065,9 +1063,7 @@ void WebContents::ExitFullscreenModeForTab(content::WebContents* source) {
   Emit("leave-html-full-screen");
 }
 
-void WebContents::RendererUnresponsive(
-    content::WebContents* source,
-    const content::WebContentsUnresponsiveState& unresponsive_state) {
+void WebContents::RendererUnresponsive(content::WebContents* source) {
   Emit("unresponsive");
   if ((type_ == BROWSER_WINDOW) && owner_window())
     owner_window()->RendererUnresponsive(source);
@@ -1383,20 +1379,6 @@ void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
   bool is_main_frame = !render_frame_host->GetParent();
   Emit("did-fail-load", error_code, error_description, url,
       is_main_frame);
-}
-
-void WebContents::DidGetResourceResponseStart(
-    const content::ResourceRequestDetails& details) {
-  const net::HttpResponseHeaders* headers = details.headers.get();
-  Emit("did-get-response-details",
-       details.socket_address.IsEmpty(),
-       details.url,
-       details.original_url,
-       details.http_response_code,
-       details.method,
-       details.referrer,
-       headers,
-       ResourceTypeToString(details.resource_type));
 }
 
 void WebContents::DidStartLoading() {
@@ -1796,9 +1778,7 @@ bool WebContents::IsLoading() const {
 bool WebContents::IsLoadingMainFrame() const {
   // Comparing site instances works because Electron always creates a new site
   // instance when navigating, regardless of origin. See AtomBrowserClient.
-  return (web_contents()->GetLastCommittedURL().is_empty() ||
-          web_contents()->GetSiteInstance() !=
-          web_contents()->GetPendingSiteInstance()) && IsLoading();
+  return web_contents()->IsLoadingToDifferentDocument();
 }
 
 bool WebContents::IsWaitingForResponse() const {

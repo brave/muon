@@ -121,7 +121,7 @@ void DevToolsManagerDelegate::DevToolsAgentHostDetached(
 
 bool DevToolsManagerDelegate::HandleCommand(
     content::DevToolsAgentHost* agent_host,
-    int session_id,
+    content::DevToolsAgentHostClient* client,
     base::DictionaryValue* command) {
   return false;
 }

@@ -9,6 +9,10 @@
 #include <string>
 #include <vector>
 
+#if defined(OS_WIN)
+#include <windows.h>
+#endif
+
 #include "atom/browser/browser_observer.h"
 #include "atom/browser/window_list_observer.h"
 #include "base/compiler_specific.h"

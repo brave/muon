@@ -19,3 +19,4 @@ const gfx::VectorIcon icon_name = { path_name , path_name_1x };
 using namespace gfx;
 
 VECTOR_ICON_TEMPLATE(kBrowserToolsUpdateIcon, nullptr, nullptr)
+VECTOR_ICON_TEMPLATE(kUsbSecurityKeyIcon, nullptr, nullptr)

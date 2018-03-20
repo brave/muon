@@ -672,6 +672,9 @@ void InspectableWebContentsImpl::SetIsDocked(const DispatchCallback& callback,
 void InspectableWebContentsImpl::OpenInNewTab(const std::string& url) {
 }
 
+void InspectableWebContentsImpl::ShowItemInFolder(
+    const std::string& file_system_path) {}
+
 void InspectableWebContentsImpl::SaveToFile(
     const std::string& url, const std::string& content, bool save_as) {
   if (delegate_)
@@ -921,7 +924,7 @@ void InspectableWebContentsImpl::CloseContents(content::WebContents* source) {
 content::ColorChooser* InspectableWebContentsImpl::OpenColorChooser(
     content::WebContents* source,
     SkColor color,
-    const std::vector<content::ColorSuggestion>& suggestions) {
+    const std::vector<blink::mojom::ColorSuggestionPtr>& suggestions) {
   auto delegate = web_contents_->GetDelegate();
   if (delegate)
     return delegate->OpenColorChooser(source, color, suggestions);

@@ -51,6 +51,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/sessions/content/content_record_password_state.h"
 #include "components/signin/core/browser/signin_manager.h"
+#include "components/ukm/content/source_url_recorder.h"
 #include "components/version_info/version_info.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/navigation_entry.h"
@@ -63,6 +64,7 @@
 #include "extensions/features/features.h"
 #include "google_apis/gaia/gaia_urls.h"
 #include "net/base/url_util.h"
+#include "net/cert/cert_status_flags.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
 #include "third_party/re2/src/re2/re2.h"
 
@@ -197,8 +199,15 @@ bool BravePasswordManagerClient::IsSavingAndFillingEnabledForCurrentPage()
 }
 
 bool BravePasswordManagerClient::IsFillingEnabledForCurrentPage() const {
-  return !DidLastPageLoadEncounterSSLErrors() &&
-         IsPasswordManagementEnabledForCurrentPage();
+  const bool ssl_errors = net::IsCertStatusError(GetMainFrameCertStatus());
+
+  if (log_manager_->IsLoggingActive()) {
+    password_manager::BrowserSavePasswordProgressLogger logger(
+        log_manager_.get());
+    logger.LogBoolean(Logger::STRING_SSL_ERRORS_PRESENT, ssl_errors);
+  }
+
+  return !ssl_errors && IsPasswordManagementEnabledForCurrentPage();
 }
 
 void BravePasswordManagerClient::PostHSTSQueryForHost(
@@ -331,8 +340,7 @@ void BravePasswordManagerClient::HidePasswordGenerationPopup() {
 PasswordManagerMetricsRecorder&
 BravePasswordManagerClient::GetMetricsRecorder() {
   if (!metrics_recorder_) {
-    metrics_recorder_.emplace(GetUkmRecorder(), GetUkmSourceId(),
-                              GetMainFrameURL());
+    metrics_recorder_.emplace(GetUkmSourceId(), GetMainFrameURL());
   }
   return metrics_recorder_.value();
 }
@@ -343,7 +351,8 @@ void BravePasswordManagerClient::DidFinishNavigation(
     return;
 
   if (!navigation_handle->IsSameDocument())
-    ukm_source_id_.reset();
+    // Send any collected metrics by destroying the metrics recorder.
+    metrics_recorder_.reset();
 
   // From this point on, the ContentCredentialManager will service API calls in
   // the context of the new WebContents::GetLastCommittedURL, which may very
@@ -400,20 +409,8 @@ void BravePasswordManagerClient::CheckProtectedPasswordEntry(
     bool password_field_exists) {}
 #endif
 
-ukm::UkmRecorder* BravePasswordManagerClient::GetUkmRecorder() {
-  return ukm::UkmRecorder::Get();
-}
-
 ukm::SourceId BravePasswordManagerClient::GetUkmSourceId() {
-  // TODO(crbug.com/732846): The UKM Source should be recycled (e.g. from the
-  // web contents), once the UKM framework provides a mechanism for that.
-  if (!ukm_source_id_) {
-    ukm_source_id_ = ukm::UkmRecorder::GetNewSourceID();
-    ukm::UkmRecorder* ukm_recorder = GetUkmRecorder();
-    if (ukm_recorder)
-      ukm_recorder->UpdateSourceURL(*ukm_source_id_, GetMainFrameURL());
-  }
-  return *ukm_source_id_;
+  return ukm::GetSourceIdForWebContentsDocument(web_contents());
 }
 
 password_manager::PasswordSyncState
@@ -446,21 +443,12 @@ bool BravePasswordManagerClient::WasLastNavigationHTTPError() const {
   return false;
 }
 
-bool BravePasswordManagerClient::DidLastPageLoadEncounterSSLErrors() const {
+net::CertStatus BravePasswordManagerClient::GetMainFrameCertStatus() const {
   content::NavigationEntry* entry =
       web_contents()->GetController().GetLastCommittedEntry();
-  bool ssl_errors = true;
-  if (!entry) {
-    ssl_errors = false;
-  } else {
-    ssl_errors = net::IsCertStatusError(entry->GetSSL().cert_status);
-  }
-  if (log_manager_->IsLoggingActive()) {
-    password_manager::BrowserSavePasswordProgressLogger logger(
-        log_manager_.get());
-    logger.LogBoolean(Logger::STRING_SSL_ERRORS_PRESENT, ssl_errors);
-  }
-  return ssl_errors;
+  if (!entry)
+    return 0;
+  return entry->GetSSL().cert_status;
 }
 
 bool BravePasswordManagerClient::IsIncognito() const {
@@ -590,7 +578,7 @@ const password_manager::LogManager* BravePasswordManagerClient::GetLogManager()
 
 // static
 void BravePasswordManagerClient::BindCredentialManager(
-    password_manager::mojom::CredentialManagerAssociatedRequest request,
+    password_manager::mojom::CredentialManagerRequest request,
     content::RenderFrameHost* render_frame_host) {
   // Only valid for the main frame.
   if (render_frame_host->GetParent())

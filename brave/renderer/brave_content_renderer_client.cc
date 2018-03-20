@@ -24,7 +24,6 @@
 #include "components/autofill/content/renderer/password_autofill_agent.h"
 #include "components/autofill/content/renderer/password_generation_agent.h"
 #include "components/network_hints/renderer/prescient_networking_dispatcher.h"
-#include "components/password_manager/content/renderer/credential_manager_client.h"
 #include "components/plugins/renderer/plugin_placeholder.h"
 #include "components/printing/renderer/print_render_frame_helper.h"
 #include "components/spellcheck/spellcheck_build_features.h"
@@ -101,8 +100,7 @@ void BraveContentRendererClient::RenderThreadStarted() {
       new network_hints::PrescientNetworkingDispatcher());
 
   for (auto& origin : secure_origin_whitelist::GetWhitelist()) {
-    WebSecurityPolicy::AddOriginTrustworthyWhiteList(
-        WebSecurityOrigin::Create(origin));
+    WebSecurityPolicy::AddOriginTrustworthyWhiteList(WebSecurityOrigin(origin));
   }
 
   for (auto& scheme :
@@ -192,18 +190,6 @@ void BraveContentRendererClient::RenderFrameCreated(
 void BraveContentRendererClient::RenderViewCreated(
     content::RenderView* render_view) {
   new ChromeRenderViewObserver(render_view, web_cache_impl_.get());
-
-  new password_manager::CredentialManagerClient(render_view);
-
-#if BUILDFLAG(ENABLE_SPELLCHECK)
-  // This is a workaround keeping the behavior that, the Blink side spellcheck
-  // enabled state is initialized on RenderView creation.
-  // TODO(xiaochengh): Design better way to sync between Chrome-side and
-  // Blink-side spellcheck enabled states.  See crbug.com/710097.
-  if (SpellCheckProvider* provider =
-          SpellCheckProvider::Get(render_view->GetMainRenderFrame()))
-    provider->EnableSpellcheck(spellcheck_->IsSpellcheckEnabled());
-#endif
 }
 
 bool BraveContentRendererClient::OverrideCreatePlugin(
@@ -235,7 +221,6 @@ bool BraveContentRendererClient::WillSendRequest(
     blink::WebLocalFrame* frame,
     ui::PageTransition transition_type,
     const blink::WebURL& url,
-    std::vector<std::unique_ptr<content::URLLoaderThrottle>>* throttles,
     GURL* new_url) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (ChromeExtensionsRendererClient::GetInstance()->WillSendRequest(

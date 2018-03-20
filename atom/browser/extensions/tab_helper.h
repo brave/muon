@@ -58,7 +58,7 @@ class Extension;
 // window of the tab.
 class TabHelper : public content::WebContentsObserver,
                   public content::WebContentsUserData<TabHelper>,
-                  public chrome::BrowserListObserver,
+                  public BrowserListObserver,
                   public atom::NativeWindowObserver,
                   public TabStripModelObserver {
  public:
