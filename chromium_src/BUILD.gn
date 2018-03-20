@@ -184,7 +184,7 @@ source_set("browser") {
     "//chrome/browser/browser_shutdown.cc",
     "//chrome/browser/browser_shutdown.h",
     "//chrome/browser/chrome_notification_types.h",
-    "chrome/browser/chrome_service.cc",
+    "//chrome/browser/chrome_service.cc",
     "//chrome/browser/chrome_service.h",
     "chrome/browser/custom_handlers/protocol_handler_registry.cc",
     "//chrome/browser/custom_handlers/protocol_handler_registry.h",
