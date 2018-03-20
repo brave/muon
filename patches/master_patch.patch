@@ -2342,12 +2342,13 @@ diff --git a/net/socket/socks5_client_socket.h b/net/socket/socks5_client_socket
 index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e00cd5251 100644
 --- a/net/socket/socks5_client_socket.h
 +++ b/net/socket/socks5_client_socket.h
-@@ -19,6 +19,7 @@
+@@ -19,7 +19,8 @@
  #include "net/base/net_export.h"
  #include "net/dns/host_resolver.h"
  #include "net/log/net_log_with_source.h"
 +#include "net/socket/socks_client_socket_pool.h"
  #include "net/socket/stream_socket.h"
+ #include "net/traffic_annotation/network_traffic_annotation.h"
  #include "url/gurl.h"
  
 @@ -81,6 +82,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
@@ -2387,19 +2388,21 @@ index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6
  #include "net/socket/socks_client_socket.h"
  #include "net/socket/transport_client_socket_pool.h"
  
-@@ -146,8 +146,10 @@ int SOCKSConnectJob::DoSOCKSConnect() {
+@@ -146,9 +146,11 @@ int SOCKSConnectJob::DoSOCKSConnect() {
  
    // Add a SOCKS connection on top of the tcp socket.
    if (socks_params_->is_socks_v5()) {
 -    socket_.reset(new SOCKS5ClientSocket(std::move(transport_socket_handle_),
--                                         socks_params_->destination()));
+-                                         socks_params_->destination(),
+-                                         socks_params_->traffic_annotation()));
 +    socket_.reset(new SOCKS5ClientSocketAuth(
 +            std::move(transport_socket_handle_),
 +            socks_params_->destination(),
++            socks_params_->traffic_annotation(),
 +            socks_params_->transport_params()->destination().host_port_pair()));
    } else {
-     socket_.reset(new SOCKSClientSocket(std::move(transport_socket_handle_),
-                                         socks_params_->destination(),
+     socket_.reset(new SOCKSClientSocket(
+         std::move(transport_socket_handle_), socks_params_->destination(),
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h

@@ -10,8 +10,10 @@ namespace net {
 SOCKS5ClientSocketAuth::SOCKS5ClientSocketAuth(
     std::unique_ptr<ClientSocketHandle> transport_socket,
     const HostResolver::RequestInfo& req_info,
+    const NetworkTrafficAnnotationTag& traffic_annotation,
     const HostPortPair& proxy_host_port)
-    : SOCKS5ClientSocket(std::move(transport_socket), req_info),
+    : SOCKS5ClientSocket(std::move(transport_socket), req_info,
+                         traffic_annotation),
       proxy_host_port_(proxy_host_port),
       next_state_(STATE_INIT_WRITE) {
 }

@@ -13,6 +13,7 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocketAuth : public SOCKS5ClientSocket {
  public:
   SOCKS5ClientSocketAuth(std::unique_ptr<ClientSocketHandle> transport_socket,
                          const HostResolver::RequestInfo& req_info,
+                         const NetworkTrafficAnnotationTag& traffic_annotation,
                          const HostPortPair& proxy_host_port);
   ~SOCKS5ClientSocketAuth() override;
  private:
