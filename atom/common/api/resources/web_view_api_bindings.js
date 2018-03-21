@@ -84,12 +84,7 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
     // detach if attached so that attached contents is not destroyed
     // but never try to call detach on a destroyed contents guest,
     // as that request will never be fulfilled.
-    if ((!this.webContents_ || !this.webContents_.isDestroyed()) &&
-    this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED
-    ) {
-      this.guest.detach()
-    }
-
+    this.detachGuest() // no need to await detaching since we create a new guest
     this.guest = new GuestView('webview', guestInstanceId)
   }
 
@@ -106,12 +101,18 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
 
 WebViewImpl.prototype.detachGuest = function () {
   // do not attempt to call detach on a destroyed web contents
-  if (this.webContents_ && this.webContents_.isDestroyed()) {
-    return
+  if (
+    (this.webContents_ && this.webContents_.isDestroyed()) ||
+    this.guest.guestIsDetaching_ ||
+    this.guest.getState() !== GuestViewImpl.GuestState.GUEST_STATE_ATTACHED
+  ) {
+    return Promise.resolve()
   }
-  if (this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
-    this.guest.detach()
-  }
+  this.guest.guestIsDetaching_ = true
+  return new Promise(resolve => this.guest.detach(() => {
+    this.guest.guestIsDetaching_ = false
+    resolve()
+  }))
 }
 
 WebViewImpl.prototype.attachGuest = function (guestInstanceId) {
