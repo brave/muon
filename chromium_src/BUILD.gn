@@ -1199,6 +1199,9 @@ source_set("sessions") {
 }
 
 source_set("net") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
+
   sources = [
     "net/base/host_port_pair_auth.cc",
     "net/base/url_auth_util.cc",
