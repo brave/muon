@@ -16,6 +16,7 @@
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
 #include "content/public/browser/render_frame_host.h"
@@ -103,11 +104,20 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
   if (options.Get("parent", &parent))
     parent_window_.Reset(isolate, parent.ToV8());
 
+  auto* inspectable_web_contents = web_contents->managed_web_contents();
+
   // Creates BrowserWindow.
   window_.reset(NativeWindow::Create(
-      web_contents->managed_web_contents(),
+      inspectable_web_contents,
       options,
       parent.IsEmpty() ? nullptr : parent->window_.get()));
+
+  ::Browser::CreateParams create_params(::Browser::Type::TYPE_TABBED,
+      Profile::FromBrowserContext(inspectable_web_contents->
+          GetWebContents()->GetBrowserContext()));
+  create_params.window = window_.get();
+  window_->SetBrowser(new ::Browser(create_params));
+
   window_->browser()->session_id().set_id(-1);
   web_contents->SetOwnerWindow(window_.get());
 
