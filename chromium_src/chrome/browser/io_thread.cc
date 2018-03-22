@@ -41,6 +41,7 @@
 #include "net/url_request/url_request_context_getter.h"
 #include "services/network/ignore_errors_cert_verifier.h"
 #include "services/network/network_service.h"
+#include "services/network/public/cpp/features.h"
 #include "services/network/public/cpp/network_switches.h"
 #include "services/network/url_request_context_builder_mojo.h"
 #include "vendor/brightray/common/content_client.h"
@@ -150,21 +151,7 @@ IOThread::Globals* IOThread::globals() {
   return globals_;
 }
 
-IOThread::Globals::
-SystemRequestContextLeakChecker::SystemRequestContextLeakChecker(
-    Globals* globals)
-    : globals_(globals) {
-  DCHECK(globals_);
-}
-
-IOThread::Globals::
-SystemRequestContextLeakChecker::~SystemRequestContextLeakChecker() {
-  globals_->system_request_context->AssertNoURLRequests();
-}
-
-IOThread::Globals::Globals()
-    : system_request_context(nullptr),
-      system_request_context_leak_checker(this) {}
+IOThread::Globals::Globals() : system_request_context(nullptr) {}
 
 IOThread::Globals::~Globals() {}
 
@@ -404,13 +391,13 @@ std::unique_ptr<net::HostResolver> CreateGlobalHostResolver(
   // through a designated test server.
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
-  if (!command_line.HasSwitch(switches::kHostResolverRules))
+  if (!command_line.HasSwitch(network::switches::kHostResolverRules))
     return global_host_resolver;
 
   auto remapped_resolver = std::make_unique<net::MappedHostResolver>(
       std::move(global_host_resolver));
   remapped_resolver->SetRulesFromString(
-      command_line.GetSwitchValueASCII(switches::kHostResolverRules));
+      command_line.GetSwitchValueASCII(network::switches::kHostResolverRules));
   return std::move(remapped_resolver);
 }
 
@@ -486,7 +473,8 @@ void IOThread::ConstructSystemRequestContext() {
         std::move(builder)->Create(std::move(network_context_params_).get(),
                                    !is_quic_allowed_on_init_, net_log_);
     globals_->system_request_context =
-        globals_->system_request_context_owner.url_request_context.get();
+        globals_->system_request_context_owner.url_request_context_getter
+            ->GetURLRequestContext();
   } else {
     globals_->system_network_context =
         content::GetNetworkServiceImpl()->CreateNetworkContextWithBuilder(
