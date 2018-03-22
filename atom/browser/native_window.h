@@ -70,6 +70,9 @@ class NativeWindow : public base::SupportsUserData,
   // Find a window from its WebContents
   static NativeWindow* FromWebContents(content::WebContents* web_contents);
 
+  // Take ownership of |browser|.
+  void SetBrowser(::Browser* browser);
+
   void InitFromOptions(const mate::Dictionary& options);
 
   ::Browser* browser() const { return browser_.get(); }

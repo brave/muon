@@ -23,7 +23,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
-#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
 #include "components/prefs/pref_service.h"
@@ -91,13 +90,6 @@ NativeWindow::NativeWindow(
   prefs->subpixel_rendering = params.subpixel_rendering;
 #endif
 
-  // add to browser list
-  ::Browser::CreateParams create_params(::Browser::Type::TYPE_TABBED,
-      Profile::FromBrowserContext(inspectable_web_contents_->
-          GetWebContents()->GetBrowserContext()));
-  create_params.window = this;
-  browser_.reset(new ::Browser(create_params));
-
   WindowList::AddWindow(this);
 }
 
@@ -116,6 +108,10 @@ NativeWindow* NativeWindow::FromWebContents(
       return window;
   }
   return nullptr;
+}
+
+void NativeWindow::SetBrowser(::Browser* browser) {
+  browser_.reset(browser);
 }
 
 void NativeWindow::InitFromOptions(const mate::Dictionary& options) {
