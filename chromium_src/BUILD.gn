@@ -166,6 +166,7 @@ source_set("browser") {
     "//components/ssl_config",
     "//components/spellcheck:build_features",
     "//components/safe_browsing:csd_proto",
+    "//components/safe_browsing:features",
     "//components/storage_monitor",
     "//content/public/browser",
     "//electron/atom/browser",
