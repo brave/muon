@@ -425,17 +425,17 @@ void BraveBrowserContext::CreateProfilePrefs(
     overlay_pref_names_.push_back(extensions::pref_names::kPrefContentSettings);
     overlay_pref_names_.push_back(prefs::kPartitionPerHostZoomLevels);
     std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
-    user_prefs_.reset(
+    user_prefs_ =
         original_context()->user_prefs()->CreateIncognitoPrefService(
-          extension_prefs, overlay_pref_names_, std::move(delegate)));
+            extension_prefs, overlay_pref_names_, std::move(delegate));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else if (HasParentContext()) {
     // overlay pref names only apply to incognito
     std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
     std::vector<const char*> overlay_pref_names;
-    user_prefs_.reset(
-            original_context()->user_prefs()->CreateIncognitoPrefService(
-              extension_prefs, overlay_pref_names, std::move(delegate)));
+    user_prefs_ =
+        original_context()->user_prefs()->CreateIncognitoPrefService(
+            extension_prefs, overlay_pref_names, std::move(delegate));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
     base::FilePath download_dir;
