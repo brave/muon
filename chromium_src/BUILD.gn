@@ -353,6 +353,8 @@ source_set("browser") {
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
+      "//chrome/browser/permissions/attestation_permission_request.cc",
+      "//chrome/browser/permissions/attestation_permission_request.h",
       "//chrome/browser/permissions/permission_request.cc",
       "//chrome/browser/permissions/permission_request.h",
       "chrome/browser/permissions/permission_request_manager.cc",
