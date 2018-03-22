@@ -335,8 +335,12 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         src_ = GURL(src);
       }
 
-      if (HasWindow(web_contents()) &&
-          web_contents()->GetController().IsInitialNavigation()) {
+      if (web_contents()->GetController().IsInitialNavigation()) {
+        if (web_contents()->GetController().NeedsReload()) {
+          web_contents()->GetController().LoadIfNecessary();
+          return;
+        }
+
         // don't reload if we're already loading
         if (web_contents()->GetController().GetPendingEntry() &&
             web_contents()->GetController().GetPendingEntry()->GetURL() ==
@@ -353,10 +357,6 @@ void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
   ApplyAttributes(*attach_params());
-
-  if (web_contents()->GetController().IsInitialNavigation()) {
-    web_contents()->GetController().LoadIfNecessary();
-  }
 
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   tab_helper->DidAttach();
