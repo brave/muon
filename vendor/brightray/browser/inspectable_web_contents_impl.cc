@@ -695,7 +695,7 @@ void InspectableWebContentsImpl::RequestFileSystems() {
 void InspectableWebContentsImpl::AddFileSystem(
     const std::string& type) {
   if (delegate_)
-    delegate_->DevToolsAddFileSystem(base::FilePath());
+    delegate_->DevToolsAddFileSystem(base::FilePath(), type);
 }
 
 void InspectableWebContentsImpl::RemoveFileSystem(

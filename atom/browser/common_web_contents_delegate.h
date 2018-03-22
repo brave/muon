@@ -93,7 +93,8 @@ class CommonWebContentsDelegate
   void DevToolsAppendToFile(const std::string& url,
                             const std::string& content) override;
   void DevToolsRequestFileSystems() override;
-  void DevToolsAddFileSystem(const base::FilePath& path) override;
+  void DevToolsAddFileSystem(const base::FilePath& path,
+                             const std::string& type) override;
   void DevToolsRemoveFileSystem(
       const base::FilePath& file_system_path) override;
   void DevToolsIndexPath(int request_id,
@@ -118,10 +119,12 @@ class CommonWebContentsDelegate
                           const std::vector<base::FilePath>& paths);
   void OnSaveFileSelectionCancelled(const std::string url);
 
-  void OnAddFileSelected(const std::vector<base::FilePath>& paths);
+  void OnAddFileSelected(const std::string& path,
+                         const std::vector<base::FilePath>& paths);
   void OnAddFileSelectionCancelled();
 
-  void DevToolsAddFileSystemInteral(const base::FilePath& path);
+  void DevToolsAddFileSystemInteral(const base::FilePath& path,
+                                    const std::string& type);
 
   // Callback for when DevToolsSaveToFile has completed.
   void OnDevToolsSaveToFile(const std::string& url);
