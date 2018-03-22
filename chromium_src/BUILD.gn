@@ -295,6 +295,7 @@ source_set("browser") {
     "//chrome/browser/speech/tts_platform.cc",
     "//chrome/browser/speech/tts_platform.h",
     "//chrome/browser/speech/tts_win.cc",
+    "chrome/browser/ui/browser_dialogs.cc",
     "//chrome/browser/ui/browser_dialogs.h",
     "chrome/browser/ui/simple_message_box.cc",
     "chrome/browser/ui/user_manager.cc",
