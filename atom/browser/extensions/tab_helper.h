@@ -149,6 +149,10 @@ class TabHelper : public content::WebContentsObserver,
   explicit TabHelper(content::WebContents* contents);
   friend class content::WebContentsUserData<TabHelper>;
 
+  void TabInsertedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* contents,
+                     int index,
+                     bool active) override;
   void TabDetachedAt(content::WebContents* contents, int index) override;
   void TabReplacedAt(TabStripModel* tab_strip_model,
                      content::WebContents* old_contents,

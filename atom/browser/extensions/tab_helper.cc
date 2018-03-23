@@ -482,6 +482,16 @@ void TabHelper::SetBrowser(Browser* browser) {
   }
 }
 
+void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* contents,
+                     int index,
+                     bool active) {
+  if (contents != web_contents())
+    return;
+
+  guest()->Load();
+}
+
 void TabHelper::SetWindowId(const int32_t& id) {
   if (SessionTabHelper::FromWebContents(web_contents())->window_id().id() == id)
     return;
@@ -500,7 +510,7 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 }
 
 bool TabHelper::Discard() {
-  if (web_contents()->GetController().IsInitialNavigation()) {
+  if (!browser_) {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
     auto helper = content::RestoreHelper::FromWebContents(web_contents());
@@ -510,11 +520,9 @@ bool TabHelper::Discard() {
     SetAutoDiscardable(false);
     return true;
   } else {
-    if (guest()->attached()) {
-      int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-      return !!GetTabManager()->DiscardTabById(
-          web_contents_id, resource_coordinator::DiscardReason::kProactive);
-    }
+    int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
+    return !!GetTabManager()->DiscardTabById(
+        web_contents_id, resource_coordinator::DiscardReason::kProactive);
   }
 }
 
