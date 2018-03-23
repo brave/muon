@@ -41,14 +41,14 @@ WebContents* GuestTabManager::CreateNullContents(
     TabStripModel* model, WebContents* old_contents) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
-  auto tab_helper = extensions::TabHelper::FromWebContents(old_contents);
-  DCHECK(tab_helper && tab_helper->guest());
-
-  auto embedder = tab_helper->guest()->embedder_web_contents();
+  auto guest = brave::TabViewGuest::FromWebContents(old_contents);
+  DCHECK(guest);
+  auto owner = guest->owner_web_contents();
+  DCHECK(owner);
 
   WebContents::CreateParams params(old_contents->GetBrowserContext());
   params.initially_hidden = true;
-  auto contents = extensions::TabHelper::CreateTab(embedder, params);
+  auto contents = extensions::TabHelper::CreateTab(owner, params);
   content::RestoreHelper::CreateForWebContents(contents);
   return contents;
 }
