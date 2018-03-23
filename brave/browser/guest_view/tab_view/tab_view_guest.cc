@@ -337,10 +337,6 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
       }
 
       auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-      if (tab_helper->IsDiscarded()) {
-        return;
-      }
-
       if (web_contents()->GetController().IsInitialNavigation()) {
         if (web_contents()->GetController().NeedsReload()) {
           web_contents()->GetController().LoadIfNecessary();
