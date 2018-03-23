@@ -59,8 +59,8 @@ void CheckDownloadUrlDone(
 const DownloadPathReservationTracker::FilenameConflictAction
     kDefaultPlatformConflictAction = DownloadPathReservationTracker::UNIQUIFY;
 
-NativeWindow*
-GetNativeWindowFromWebContents(content::WebContents* web_contents) {
+NativeWindow* GetNativeWindowFromWebContents(
+    content::WebContents* web_contents) {
   DCHECK(web_contents);
   auto relay = NativeWindowRelay::FromWebContents(web_contents);
   return relay ? relay->window.get() : nullptr;
@@ -398,8 +398,8 @@ void AtomDownloadManagerDelegate::OnDownloadTargetDetermined(
 
   // If we can't find proper |window| for showing save dialog, cancel
   // and cleanup current download.
-  // TODO(ltilve): If we want to use WebContents internaly for download,
-  // we should revisit here. Currently, we cancel it.
+  // TODO(ltilve): If we want to use WebContents internaly for download, we
+  // should revisit here. Currently, we cancel it.
   if (!window) {
     item->Remove();
     base::FilePath path;
