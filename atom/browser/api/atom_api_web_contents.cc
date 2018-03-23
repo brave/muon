@@ -559,7 +559,7 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   std::string name;
   options.Get("name", &name);
 
-  if (!IsBackgroundPage()) {
+  if (!IsBackgroundPage() && type_ != BROWSER_WINDOW) {
     // Initialize the tab helper
     extensions::TabHelper::CreateForWebContents(web_contents);
 
@@ -785,7 +785,10 @@ void WebContents::AddNewContents(content::WebContents* source,
       tab_helper->SetWindowId(browser->session_id().id());
     }
 
-    if (tab_helper->get_index() == TabStripModel::kNoTab) {
+    // insert non-opener links after the current tab
+    if (tab_helper->get_index() == TabStripModel::kNoTab &&
+        extensions::TabHelper::FromWebContents(source) &&
+        !new_contents->HasOpener()) {
       // FIXME(svillar): The OrderController is exposed just for tests
       int index =
           browser->tab_strip_model()
