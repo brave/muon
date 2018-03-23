@@ -160,8 +160,17 @@ void TabViewGuest::LoadURLWithParams(
 }
 
 void TabViewGuest::Load() {
-  if (web_contents()->GetController().IsInitialNavigation())
-    NavigateGuest(src_.spec(), true);
+  web_contents()->GetMainFrame()->ResumeBlockedRequestsForFrame();
+
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (!tab_helper->IsDiscarded()) {
+    api_web_contents_->ResumeLoadingCreatedWebContents();
+
+    web_contents()->WasHidden();
+    web_contents()->WasShown();
+  }
+
+  ApplyAttributes(*attach_params());
 }
 
 void TabViewGuest::NavigateGuest(const std::string& src,
@@ -242,17 +251,9 @@ void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
   api_web_contents_->guest_delegate_ = this;
   web_contents()->SetDelegate(api_web_contents_);
 
-  web_contents()->GetMainFrame()->ResumeBlockedRequestsForFrame();
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-
-  if (!tab_helper->IsDiscarded()) {
-    api_web_contents_->ResumeLoadingCreatedWebContents();
-
-    web_contents()->WasHidden();
-    web_contents()->WasShown();
+  if (!attach_params()) {
+    SetAttachParams(create_params);
   }
-
-  ApplyAttributes(create_params);
 }
 
 void TabViewGuest::CreateWebContents(
@@ -335,6 +336,11 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         src_ = GURL(src);
       }
 
+      auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+      if (tab_helper->IsDiscarded()) {
+        return;
+      }
+
       if (web_contents()->GetController().IsInitialNavigation()) {
         if (web_contents()->GetController().NeedsReload()) {
           web_contents()->GetController().LoadIfNecessary();
@@ -400,7 +406,7 @@ void TabViewGuest::WillDestroy() {
     api_web_contents_->WebContentsDestroyed();
   api_web_contents_ = nullptr;
 
-  if (!HasWindow(web_contents()) && GetOpener())
+  if (GetOpener())
     GetOpener()->pending_new_windows_.erase(this);
 }
 
