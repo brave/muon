@@ -774,6 +774,16 @@ bool BraveContentBrowserClient::ShouldAllowOpenURL(
   return true;
 }
 
+bool BraveContentBrowserClient::IsURLAcceptableForWebUI(
+    content::BrowserContext* browser_context,
+    const GURL& url) {
+#if !defined(OFFICIAL_BUILD)
+  if (url.host() == "localhost")
+    return true;
+#endif
+  return ContentBrowserClient::IsURLAcceptableForWebUI(browser_context, url);
+}
+
 base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
   base::FilePath user_data_dir;
   PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
