@@ -362,8 +362,10 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   new_guest->SetAttachParams(*attach_params);
   new_guest->TabIdChanged();
 
-  old_guest->DetachGuest();
-  new_guest->AttachGuest(new_guest->guest_instance_id());
+  if (old_guest->attached()) {
+    old_guest->DetachGuest();
+    new_guest->AttachGuest(new_guest->guest_instance_id());
+  }
 }
 
 void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
