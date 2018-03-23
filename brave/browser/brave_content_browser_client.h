@@ -104,6 +104,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       std::vector<std::string>* additional_schemes) override;
   bool ShouldAllowOpenURL(content::SiteInstance* site_instance,
                                       const GURL& url) override;
+  bool IsURLAcceptableForWebUI(content::BrowserContext* browser_context,
+                                const GURL& url) override;
   void BrowserURLHandlerCreated(
       content::BrowserURLHandler* handler) override;
   void SiteInstanceGotProcess(
