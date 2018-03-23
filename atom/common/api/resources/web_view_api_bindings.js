@@ -109,7 +109,12 @@ WebViewImpl.prototype.detachGuest = function () {
     return Promise.resolve()
   }
   this.guest.guestIsDetaching_ = true
+  // perform detach
   return new Promise(resolve => this.guest.detach(() => {
+    // don't forward tab events to this webview anymore
+    if (this.tabID && this.currentEventWrapper) {
+      GuestViewInternal.removeListener(this.tabID, this.currentEventWrapper)
+    }
     this.guest.guestIsDetaching_ = false
     resolve()
   }))
