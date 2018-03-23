@@ -29,7 +29,8 @@ namespace {
 const DownloadPathReservationTracker::FilenameConflictAction
     kDefaultPlatformConflictAction = DownloadPathReservationTracker::UNIQUIFY;
 
-NativeWindow* GetNativeWindowFromWebContents(content::WebContents* web_contents) {
+NativeWindow* GetNativeWindowFromWebContents(
+    content::WebContents* web_contents) {
   DCHECK(web_contents);
   auto relay = NativeWindowRelay::FromWebContents(web_contents);
   return relay ? relay->window.get() : nullptr;
@@ -156,16 +157,16 @@ void AtomDownloadManagerDelegate::OnDownloadPathGenerated(
   if (content::WebContents* web_contents =
           content::DownloadItemUtils::GetWebContents(item)) {
     window = GetNativeWindowFromWebContents(web_contents);
-    // TODO(): If we want to use WebContents internally for file download, we
-    // should revisit here. If that happens with single tab, browser is
+    // TODO(ltilve): If we want to use WebContents internally for file download,
+    // we should revisit here. If that happens with single tab, browser is
     // closed.
     CloseWebContentsIfNeeded(web_contents);
   }
 
   // If we can't find proper |window| for showing save dialog, cancel
   // and cleanup current download.
-  // TODO(): If we want to use WebContents internaly for download, we should
-  // revisit here. Currently, we cancel it.
+  // TODO(ltilve): If we want to use WebContents internaly for download, we
+  // should revisit here. Currently, we cancel it.
   if (!window) {
     item->Remove();
     base::FilePath path;
