@@ -512,6 +512,9 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 }
 
 bool TabHelper::Discard() {
+  if (IsDiscarded())
+    return false;
+
   if (!browser_) {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
