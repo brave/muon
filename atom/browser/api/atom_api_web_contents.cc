@@ -422,6 +422,10 @@ mate::Handle<api::Session> SessionFromOptions(v8::Isolate* isolate,
     if (options.Get("tor_path", &tor_path)) {
       session_options.SetString("tor_path", tor_path);
     }
+    std::string tor_data_dir;
+    if (options.Get("tor_data_dir", &tor_data_dir)) {
+      session_options.SetString("tor_data_dir", tor_data_dir);
+    }
     session = Session::FromPartition(isolate, partition, session_options);
   } else {
     // Use the default session if not specified.

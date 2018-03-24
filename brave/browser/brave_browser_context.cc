@@ -180,12 +180,43 @@ BraveBrowserContext::BraveBrowserContext(
   std::string tor_proxy;
   std::string tor_path;
   if (options.GetString("tor_proxy", &tor_proxy)) {
+    url::Parsed url;
+    url::ParseStandardURL(
+      tor_proxy.c_str(),
+      std::min(tor_proxy.size(),
+               static_cast<size_t>(std::numeric_limits<int>::max())),
+      &url);
+    std::string tor_host, tor_port;
+    if (url.host.is_valid()) {
+      tor_host =
+        std::string(tor_proxy.begin() + url.host.begin,
+                    tor_proxy.begin() + url.host.begin + url.host.len);
+    }
+    if (url.port.is_valid()) {
+      tor_port =
+        std::string(tor_proxy.begin() + url.port.begin,
+                    tor_proxy.begin() + url.port.begin + url.port.len);
+    }
     tor_proxy_ = GURL(tor_proxy);
     if (!tor_process_.IsValid()) {
       if (options.GetString("tor_path", &tor_path)) {
         base::FilePath tor(tor_path);
         base::CommandLine cmdline(tor);
-        tor_process_ = base::LaunchProcess(cmdline, base::LaunchOptions());
+        base::LaunchOptions launchopts;
+        cmdline.AppendArg("--ignore-missing-torrc");
+        cmdline.AppendArg("-f");
+        cmdline.AppendArg("/nonexistent");
+        cmdline.AppendArg("--defaults-torrc");
+        cmdline.AppendArg("/nonexistent");
+        cmdline.AppendArg("--SocksPort");
+        cmdline.AppendArg(tor_host + ":" + tor_port);
+        std::string datadir;
+        if (options.GetString("tor_data_dir", &datadir)) {
+          cmdline.AppendArg("--DataDirectory");
+          cmdline.AppendArg(datadir);
+        }
+        launchopts.kill_on_parent_death = true;
+        tor_process_ = base::LaunchProcess(cmdline, launchopts);
       }
     }
   }
