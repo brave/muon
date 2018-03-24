@@ -73,7 +73,7 @@ syncMethods.forEach((method) => {
 // -----------------------------------------------------------------------------
 // Custom API method implementations.
 const attachWindow = WebViewImpl.prototype.attachWindow$
-WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
+WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId, webContents) {
   if (this.guest.getId() === opt_guestInstanceId &&
       this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
     return true
@@ -91,10 +91,14 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
   const attached = GuestViewContainer.prototype.attachWindow$.call(this)
 
   if (attached) {
-    WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
-      // cache webContents_
+    // cache webContents_
+    if (webContents) {
       this.webContents_ = webContents
-    })
+    } else {
+      WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
+        this.webContents_ = webContents
+      })
+    }
   }
   return attached
 }
@@ -102,7 +106,9 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId) {
 WebViewImpl.prototype.detachGuest = function () {
   // do not attempt to call detach on a destroyed web contents
   if (
-    (this.webContents_ && this.webContents_.isDestroyed()) ||
+    !this.webContents_ ||
+    this.webContents_.isDestroyed() ||
+    !this.guest ||
     this.guest.guestIsDetaching_ ||
     this.guest.getState() !== GuestViewImpl.GuestState.GUEST_STATE_ATTACHED
   ) {
@@ -110,18 +116,26 @@ WebViewImpl.prototype.detachGuest = function () {
   }
   this.guest.guestIsDetaching_ = true
   // perform detach
-  return new Promise(resolve => this.guest.detach(() => {
-    // don't forward tab events to this webview anymore
-    if (this.tabID && this.currentEventWrapper) {
-      GuestViewInternal.removeListener(this.tabID, this.currentEventWrapper)
+  // resolve when detached or destroyed
+  return new Promise(resolve => {
+    // guest may destroy or detach
+    if (this.webContents_) {
+      this.webContents_.addListener('will-destroy', resolve)
     }
-    this.guest.guestIsDetaching_ = false
-    resolve()
-  }))
+    this.guest.detach(() => {
+      this.webContents_.removeListener('will-destroy', resolve)
+      // don't forward tab events to this webview anymore
+      if (this.tabID && this.currentEventWrapper) {
+        GuestViewInternal.removeListener(this.tabID, this.currentEventWrapper)
+      }
+      this.guest.guestIsDetaching_ = false
+      resolve()
+    })
+  })
 }
 
-WebViewImpl.prototype.attachGuest = function (guestInstanceId) {
-    return this.attachWindow$(guestInstanceId)
+WebViewImpl.prototype.attachGuest = function (guestInstanceId, webContents) {
+    return this.attachWindow$(guestInstanceId, webContents)
 }
 
 WebViewImpl.prototype.eventWrapper = function (tabID, event) {
