@@ -90,7 +90,6 @@ source_set("browser") {
     "api/save_page_handler.cc",
     "api/save_page_handler.h",
     "browser/resources/transport_security_state_static.json",
-    "browser/resources/transport_security_state_static.pins",
     "auto_updater.cc",
     "auto_updater.h",
     "atom_browser_client.cc",
