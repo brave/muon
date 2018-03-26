@@ -35,9 +35,18 @@
 #include "extensions/utility/utility_handler.h"
 #endif
 
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "chrome/services/printing/printing_service.h"
+#include "chrome/services/printing/public/interfaces/constants.mojom.h"
+#endif
+
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW) || \
     (BUILDFLAG(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
 #include "chrome/utility/printing_handler.h"
+#endif
+
+#if defined(OS_WIN)
+#include "chrome/services/printing/pdf_to_emf_converter_factory.h"
 #endif
 
 namespace atom {
@@ -106,6 +115,13 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   if (!utility_process_running_elevated_) {
     registry->AddInterface(base::Bind(CreateResourceUsageReporter),
                            base::ThreadTaskRunnerHandle::Get());
+#if defined(OS_WIN)
+        // TODO(crbug.com/798782): remove when the Cloud print chrome/service is
+        // removed.
+    registry->AddInterface(
+        base::Bind(printing::PdfToEmfConverterFactory::Create),
+        base::ThreadTaskRunnerHandle::Get());
+#endif
   }
 
   connection->AddConnectionFilter(
@@ -140,6 +156,15 @@ void AtomContentUtilityClient::RegisterServices(
     base::Bind(&BraveProfileImportService::CreateService);
   services->emplace(chrome::mojom::kProfileImportServiceName,
                     profile_import_info);
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+  {
+    service_manager::EmbeddedServiceInfo printing_info;
+    printing_info.factory =
+      base::Bind(&printing::PrintingService::CreateService);
+    services->emplace(printing::mojom::kChromePrintingServiceName,
+                      printing_info);
+  }
+#endif
 }
 
 // static
