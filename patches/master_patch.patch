@@ -160,6 +160,17 @@ index 10faefae1df8921bcdf0f7a43b0b3a279c171880..2b1a8ffee85bdbe3749a7e1be4619214
  #if BUILDFLAG(ENABLE_SPELLCHECK)
      registry_with_source_info_.AddInterface(
          base::BindRepeating(&SpellCheckHostChromeImpl::Create), ui_task_runner);
+@@ -130,8 +128,8 @@ class ChromeService::ExtraParts : public ChromeBrowserMainExtraParts {
+     // ChromeService::BindConnector() can race with ChromeService::OnStart().
+     ChromeService::GetInstance()->InitConnector();
+ 
+-    connection->GetConnector()->StartService(
+-        service_manager::Identity(chrome::mojom::kServiceName));
++    //connection->GetConnector()->StartService(
++    //    service_manager::Identity(chrome::mojom::kServiceName));
+   }
+ 
+   DISALLOW_COPY_AND_ASSIGN(ExtraParts);
 diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
 index 864a6951115dda5ed74963f18b35692960397d50..3e1a2b719521ac2c60bae05f94e409bc4c7da022 100644
 --- a/chrome/browser/importer/external_process_importer_client.h
