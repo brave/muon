@@ -9,6 +9,7 @@
 #include "brave/browser/brave_permission_manager.h"
 #include "brightray/browser/media/media_stream_devices_controller.h"
 #include "content/public/browser/browser_context.h"
+#include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(atom::WebContentsPermissionHelper);
@@ -55,25 +56,27 @@ WebContentsPermissionHelper::~WebContentsPermissionHelper() {
 void WebContentsPermissionHelper::RequestPermission(
     content::PermissionType permission,
     const base::Callback<void(bool)>& callback,
-    const GURL& security_origin, bool user_gesture) {
-  auto rfh = web_contents_->GetMainFrame();
+    content::RenderFrameHost* rfh,
+    const GURL& frame_url, bool user_gesture) {
+  GURL url;
   auto permission_manager = static_cast<brave::BravePermissionManager*>(
       web_contents_->GetBrowserContext()->GetPermissionManager());
-  GURL origin;
-  if (security_origin.is_empty()) {
-    origin = web_contents_->GetLastCommittedURL();
+
+  if (frame_url.is_empty()) {
+    url = web_contents_->GetLastCommittedURL();
   } else {
-    origin = security_origin;
+    url = frame_url;
   }
+
   permission_manager->RequestPermission(
-      permission, rfh, origin, user_gesture,
+      permission, rfh, url, user_gesture,
       base::Bind(&OnPermissionResponse, callback));
 }
 
 void WebContentsPermissionHelper::RequestFullscreenPermission(
     const base::Callback<void(bool)>& callback) {
   RequestPermission((content::PermissionType)(PermissionType::FULLSCREEN),
-                    callback);
+                    callback, web_contents_->GetMainFrame());
 }
 
 void WebContentsPermissionHelper::RequestMediaAccessPermission(
@@ -82,29 +85,39 @@ void WebContentsPermissionHelper::RequestMediaAccessPermission(
   auto callback = base::Bind(&MediaAccessAllowed, request, response_callback);
   // The permission type doesn't matter here, AUDIO_CAPTURE/VIDEO_CAPTURE
   // are presented as same type in content_converter.h.
-  RequestPermission(content::PermissionType::AUDIO_CAPTURE, callback,
+  auto rfh = content::RenderFrameHost::FromID(request.render_process_id,
+      request.render_frame_id);
+  if (!rfh)
+    callback.Run(false);
+
+  RequestPermission(content::PermissionType::AUDIO_CAPTURE, callback, rfh,
                     request.security_origin);
 }
 
 void WebContentsPermissionHelper::RequestWebNotificationPermission(
     const base::Callback<void(bool)>& callback) {
-  RequestPermission(content::PermissionType::NOTIFICATIONS, callback);
+  RequestPermission(content::PermissionType::NOTIFICATIONS, callback,
+    web_contents_->GetMainFrame());
 }
 
 void WebContentsPermissionHelper::RequestPointerLockPermission(
     bool user_gesture) {
   RequestPermission((content::PermissionType)(PermissionType::POINTER_LOCK),
                     base::Bind(&OnPointerLockResponse, web_contents_),
+                    web_contents_->GetMainFrame(),
                     GURL(),
                     user_gesture);
 }
 
 void WebContentsPermissionHelper::RequestOpenExternalPermission(
     const base::Callback<void(bool)>& callback,
+    content::RenderFrameHost* rfh,
+    const GURL& frame_url,
     bool user_gesture) {
   RequestPermission((content::PermissionType)(PermissionType::OPEN_EXTERNAL),
                     callback,
-                    GURL(),
+                    rfh,
+                    frame_url,
                     user_gesture);
 }
 
@@ -114,6 +127,7 @@ void WebContentsPermissionHelper::RequestProtocolRegistrationPermission(
   RequestPermission((content::PermissionType)
       (PermissionType::PROTOCOL_REGISTRATION),
                     callback,
+                    web_contents_->GetMainFrame(),
                     GURL(),
                     user_gesture);
 }

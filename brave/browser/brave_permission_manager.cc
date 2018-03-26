@@ -88,7 +88,7 @@ int BravePermissionManager::RequestPermissions(
     const std::vector<blink::mojom::PermissionStatus>&)>& response_callback) {
   int render_frame_id = MSG_ROUTING_NONE;
   int render_process_id = MSG_ROUTING_NONE;
-  GURL url;
+  GURL current_origin;
   // web notifications do not currently have an available render_frame_host
   if (render_frame_host) {
     render_process_id = render_frame_host->GetProcess()->GetID();
@@ -98,7 +98,7 @@ int BravePermissionManager::RequestPermissions(
 
     if (web_contents) {
       render_frame_id = render_frame_host->GetRoutingID();
-      url = web_contents->GetURL();
+      current_origin = web_contents->GetLastCommittedURL();
     }
   }
   std::vector<blink::mojom::PermissionStatus> permissionStatuses;
@@ -120,7 +120,8 @@ int BravePermissionManager::RequestPermissions(
                                permissions);
     pending_requests_[request_id_] =
         { render_process_id, render_frame_id, callback, permissions.size() };
-    request_handler_.Run(requesting_origin, url, permissions, callback);
+    request_handler_.Run(current_origin, requesting_origin, permissions,
+      callback);
     return request_id_;
   }
 

@@ -11,6 +11,7 @@
 #include "atom/common/platform_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/render_frame_host.h"
 #include "net/base/escape.h"
 #include "net/ssl/client_cert_store.h"
 #include "url/gurl.h"
@@ -43,11 +44,27 @@ void OnOpenExternal(const GURL& escaped_url,
 
 void HandleExternalProtocolInUI(
     const GURL& url,
-    const content::ResourceRequestInfo::WebContentsGetter& web_contents_getter,
+    int render_process_id,
+    int render_frame_id,
+    int frame_tree_node_id,
     bool has_user_gesture) {
-  content::WebContents* web_contents = web_contents_getter.Run();
+  content::RenderFrameHost* rfh = NULL;
+  content::WebContents* web_contents =
+    content::WebContents::FromFrameTreeNodeId(frame_tree_node_id);
+
+  if (!web_contents) {
+    rfh = content::RenderFrameHost::FromID(render_process_id,
+        render_frame_id);
+    if (rfh) {
+      web_contents = content::WebContents::FromRenderFrameHost(rfh);
+    }
+  }
+
   if (!web_contents)
     return;
+
+  if (!rfh)
+    rfh = web_contents->GetMainFrame();
 
   auto permission_helper =
       WebContentsPermissionHelper::FromWebContents(web_contents);
@@ -56,7 +73,8 @@ void HandleExternalProtocolInUI(
 
   GURL escaped_url(net::EscapeExternalHandlerValue(url.spec()));
   auto callback = base::Bind(&OnOpenExternal, escaped_url);
-  permission_helper->RequestOpenExternalPermission(callback, has_user_gesture);
+  permission_helper->RequestOpenExternalPermission(callback, rfh,
+    url, has_user_gesture);
 }
 
 }  // namespace
@@ -70,7 +88,9 @@ bool AtomResourceDispatcherHostDelegate::HandleExternalProtocol(
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
                           base::Bind(&HandleExternalProtocolInUI,
                                      url,
-                                     info->GetWebContentsGetterForRequest(),
+                                     info->GetChildID(),
+                                     info->GetRenderFrameID(),
+                                     info->GetFrameTreeNodeId(),
                                      info->HasUserGesture()));
   return true;
 }
