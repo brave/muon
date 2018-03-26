@@ -88,6 +88,10 @@
 #include "components/spellcheck/browser/spellcheck_message_filter_platform.h"
 #endif
 
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "chrome/services/printing/public/interfaces/constants.mojom.h"
+#endif
+
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 #include "base/debug/leak_annotations.h"
 #include "components/crash/content/app/breakpad_linux.h"
@@ -333,6 +337,11 @@ void BraveContentBrowserClient::RegisterOutOfProcessServices(
 
   (*services)[proxy_resolver::mojom::kProxyResolverServiceName] =
       l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROXY_RESOLVER_NAME);
+
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+    (*services)[printing::mojom::kChromePrintingServiceName] =
+      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PRINTING_SERVICE_NAME);
+#endif
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
