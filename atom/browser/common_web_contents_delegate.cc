@@ -67,14 +67,17 @@ const char kRootName[] = "<root>";
 struct FileSystem {
   FileSystem() {
   }
-  FileSystem(const std::string& file_system_name,
+  FileSystem(const std::string& type,
+             const std::string& file_system_name,
              const std::string& root_url,
              const std::string& file_system_path)
-    : file_system_name(file_system_name),
+    : type(type),
+      file_system_name(file_system_name),
       root_url(root_url),
       file_system_path(file_system_path) {
   }
 
+  std::string type;
   std::string file_system_name;
   std::string root_url;
   std::string file_system_path;
@@ -107,6 +110,7 @@ std::string RegisterFileSystem(content::WebContents* web_contents,
 
 FileSystem CreateFileSystemStruct(
     content::WebContents* web_contents,
+    const std::string& type,
     const std::string& file_system_id,
     const std::string& file_system_path) {
   const GURL origin = web_contents->GetURL().GetOrigin();
@@ -114,11 +118,12 @@ FileSystem CreateFileSystemStruct(
       storage::GetIsolatedFileSystemName(origin, file_system_id);
   std::string root_url = storage::GetIsolatedFileSystemRootURIString(
       origin, file_system_id, kRootName);
-  return FileSystem(file_system_name, root_url, file_system_path);
+  return FileSystem(type, file_system_name, root_url, file_system_path);
 }
 
 base::DictionaryValue* CreateFileSystemValue(const FileSystem& file_system) {
   auto* file_system_value = new base::DictionaryValue();
+  file_system_value->SetString("type", file_system.type);
   file_system_value->SetString("fileSystemName", file_system.file_system_name);
   file_system_value->SetString("rootURL", file_system.root_url);
   file_system_value->SetString("fileSystemPath", file_system.file_system_path);
@@ -146,16 +151,18 @@ PrefService* GetPrefService(content::WebContents* web_contents) {
   return static_cast<atom::AtomBrowserContext*>(context)->prefs();
 }
 
-std::set<std::string> GetAddedFileSystemPaths(
+std::map<std::string, std::string> GetAddedFileSystemPaths(
     content::WebContents* web_contents) {
   auto pref_service = GetPrefService(web_contents);
   const base::DictionaryValue* file_system_paths_value =
       pref_service->GetDictionary(prefs::kDevToolsFileSystemPaths);
-  std::set<std::string> result;
+  std::map<std::string, std::string> result;
   if (file_system_paths_value) {
     base::DictionaryValue::Iterator it(*file_system_paths_value);
     for (; !it.IsAtEnd(); it.Advance()) {
-      result.insert(it.key());
+      std::string type =
+          it.value().is_string() ? it.value().GetString() : std::string();
+      result[it.key()] = type;
     }
   }
   return result;
@@ -164,8 +171,10 @@ std::set<std::string> GetAddedFileSystemPaths(
 bool IsDevToolsFileSystemAdded(
     content::WebContents* web_contents,
     const std::string& file_system_path) {
-  auto file_system_paths = GetAddedFileSystemPaths(web_contents);
-  return file_system_paths.find(file_system_path) != file_system_paths.end();
+  auto pref_service = GetPrefService(web_contents);
+  const base::DictionaryValue* file_systems_paths_value =
+      pref_service->GetDictionary(prefs::kDevToolsFileSystemPaths);
+  return file_systems_paths_value->HasKey(file_system_path);
 }
 
 }  // namespace
@@ -378,12 +387,14 @@ void CommonWebContentsDelegate::DevToolsRequestFileSystems() {
 
   std::vector<FileSystem> file_systems;
   for (auto file_system_path : file_system_paths) {
-    base::FilePath path = base::FilePath::FromUTF8Unsafe(file_system_path);
+    base::FilePath path =
+      base::FilePath::FromUTF8Unsafe(file_system_path.first);
     std::string file_system_id = RegisterFileSystem(GetDevToolsWebContents(),
                                                     path);
     FileSystem file_system = CreateFileSystemStruct(GetDevToolsWebContents(),
+                                                    file_system_path.second,
                                                     file_system_id,
-                                                    file_system_path);
+                                                    file_system_path.first);
     file_systems.push_back(file_system);
   }
 
@@ -396,18 +407,18 @@ void CommonWebContentsDelegate::DevToolsRequestFileSystems() {
 }
 
 void CommonWebContentsDelegate::DevToolsAddFileSystem(
-    const base::FilePath& file_system_path) {
+    const base::FilePath& file_system_path, const std::string& type) {
   if (file_system_path.empty()) {
     new extensions::FileEntryPicker(
       GetWebContents(), file_system_path,
       ui::SelectFileDialog::FileTypeInfo(),
-      ui::SelectFileDialog::SELECT_UPLOAD_FOLDER,
+      ui::SelectFileDialog::SELECT_FOLDER,
       base::Bind(&CommonWebContentsDelegate::OnAddFileSelected,
-                 weak_ptr_factory_.GetWeakPtr()),
+                 weak_ptr_factory_.GetWeakPtr(), type),
       base::Bind(&CommonWebContentsDelegate::OnAddFileSelectionCancelled,
                  weak_ptr_factory_.GetWeakPtr()));
   } else {
-    DevToolsAddFileSystemInteral(file_system_path);
+    DevToolsAddFileSystemInteral(file_system_path, type);
   }
 }
 
@@ -505,34 +516,35 @@ void CommonWebContentsDelegate::OnSaveFileSelectionCancelled(
 }
 
 void CommonWebContentsDelegate::OnAddFileSelected(
-    const std::vector<base::FilePath>& paths) {
+    const std::string& type, const std::vector<base::FilePath>& paths) {
   DCHECK(!paths.empty());
-  DevToolsAddFileSystemInteral(paths[0]);
+  DevToolsAddFileSystemInteral(paths[0], type);
 }
 
 void CommonWebContentsDelegate::OnAddFileSelectionCancelled() {}
 
 void CommonWebContentsDelegate::DevToolsAddFileSystemInteral(
-    const base::FilePath& path) {
+    const base::FilePath& path, const std::string& type) {
   std::string file_system_id = RegisterFileSystem(GetDevToolsWebContents(),
                                                   path);
   if (IsDevToolsFileSystemAdded(GetDevToolsWebContents(), path.AsUTF8Unsafe()))
     return;
 
   FileSystem file_system = CreateFileSystemStruct(GetDevToolsWebContents(),
-                                                 file_system_id,
-                                                 path.AsUTF8Unsafe());
+                                                  type,
+                                                  file_system_id,
+                                                  path.AsUTF8Unsafe());
   std::unique_ptr<base::DictionaryValue> file_system_value(
       CreateFileSystemValue(file_system));
 
   auto pref_service = GetPrefService(GetDevToolsWebContents());
   DictionaryPrefUpdate update(pref_service, prefs::kDevToolsFileSystemPaths);
   update.Get()->SetWithoutPathExpansion(
-      path.AsUTF8Unsafe(), base::MakeUnique<base::Value>());
+      path.AsUTF8Unsafe(), base::MakeUnique<base::Value>(type));
 
   web_contents_->CallClientFunction("DevToolsAPI.fileSystemAdded",
                                     file_system_value.get(),
-                                    nullptr, nullptr);
+                                    nullptr);
 }
 
 void CommonWebContentsDelegate::OnDevToolsSaveToFile(
