@@ -441,6 +441,18 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
           api::CryptotokenPrivateCanOriginAssertAppIdFunction::
               histogram_value(),
       },
+      {
+          &NewExtensionFunction<
+              api::CryptotokenPrivateIsAppIdHashInEnterpriseContextFunction>,
+              api::CryptotokenPrivateIsAppIdHashInEnterpriseContextFunction::function_name(),
+              api::CryptotokenPrivateIsAppIdHashInEnterpriseContextFunction::histogram_value(),
+      },
+      {
+          &NewExtensionFunction<
+              api::CryptotokenPrivateCanAppIdGetAttestationFunction>,
+              api::CryptotokenPrivateCanAppIdGetAttestationFunction::function_name(),
+              api::CryptotokenPrivateCanAppIdGetAttestationFunction::histogram_value(),
+      },
   };
 
   for (const auto& entry : chromeEntries) {
