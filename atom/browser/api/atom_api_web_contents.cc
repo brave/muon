@@ -1174,74 +1174,55 @@ void WebContents::AuthorizePlugin(mate::Arguments* args) {
 void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
                              int index) {
-  if (contents != web_contents())
-    return;
-
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  auto tab_helper = extensions::TabHelper::FromWebContents(contents);
   if (tab_helper) {
-    Emit("pinned", tab_helper->is_pinned());
-  }
-}
-
-void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
-                     content::WebContents* contents,
-                     int index,
-                     bool active) {
-  if (type_ != BROWSER_WINDOW)
-    return;
-
-  if (owner_window() && owner_window()->browser() &&
-      tab_strip_model == owner_window()->browser()->tab_strip_model()) {
-    Emit("tab-inserted-at",
-        contents, index, active);
+    auto api_web_contents = CreateFrom(isolate(), contents);
+    api_web_contents->Emit("pinned", tab_helper->is_pinned());
   }
 }
 
 void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
-  if (contents != web_contents())
-    return;
+  int window_id = -1;
 
   if (owner_window() && owner_window()->browser())
-    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+    window_id = owner_window()->browser()->session_id().id();
 
-  Emit("tab-detached-at", extensions::TabHelper::IdForTab(contents), index);
+  CreateFrom(isolate(), contents)->Emit("tab-detached-at", index, window_id);
+  // Emit("tab-detached-at", contents, index, window_id);
 }
 
 void WebContents::ActiveTabChanged(content::WebContents* old_contents,
                                    content::WebContents* new_contents,
                                    int index,
                                    int reason) {
-  auto new_api_web_contents = CreateFrom(isolate(), new_contents);
-  new_api_web_contents->Emit("set-active", true);
+  CreateFrom(isolate(), new_contents)->Emit("set-active", true);
+  if (old_contents)
+    CreateFrom(isolate(), old_contents)->Emit("set-active", false);
+}
 
-  if (old_contents) {
-    auto old_api_web_contents = CreateFrom(isolate(), old_contents);
-    old_api_web_contents->Emit("set-active", false, new_contents);
-  }
+void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
+                                content::WebContents* contents,
+                                int index,
+                                bool foreground) {
+  Emit("tab-inserted-at", contents, index, foreground);
 }
 
 void WebContents::TabMoved(content::WebContents* contents,
                            int from_index,
                            int to_index) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-moved", from_index, to_index);
+  CreateFrom(isolate(), contents)->Emit("tab-moved", from_index, to_index);
 }
 
 void WebContents::TabClosingAt(TabStripModel* tab_strip_model,
                                content::WebContents* contents,
                                int index) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-closing-at", index);
+  CreateFrom(isolate(), contents)->Emit("tab-closing-at", index);
 }
 
 void WebContents::TabChangedAt(content::WebContents* contents,
                                int index,
                                TabChangeType change_type) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-changed-at", index);
+  CreateFrom(isolate(), contents)->Emit("tab-changed-at", index);
 }
 
 void WebContents::TabStripEmpty() {
@@ -1257,21 +1238,16 @@ void WebContents::TabReplacedAt(TabStripModel* tab_strip_model,
                                 content::WebContents* old_contents,
                                 content::WebContents* new_contents,
                                 int index) {
-  if (old_contents == web_contents()) {
-    ::Browser* browser = nullptr;
-    for (auto* b : *BrowserList::GetInstance()) {
-      if (b->tab_strip_model() == tab_strip_model) {
-        browser = b;
-        break;
-      }
+  ::Browser* browser = nullptr;
+  for (auto* b : *BrowserList::GetInstance()) {
+    if (b->tab_strip_model() == tab_strip_model) {
+      browser = b;
+      break;
     }
-
-    if (g_browser_process->GetTabManager()->IsTabDiscarded(new_contents))
-      Emit("discarded");
-
-    Emit("tab-replaced-at",
-        browser->session_id().id(), index, new_contents);
   }
+
+  Emit("tab-replaced-at",
+      browser->session_id().id(), index, new_contents);
 }
 
 bool WebContents::OnGoToEntryOffset(int offset) {
@@ -1584,7 +1560,11 @@ void WebContents::SetOwnerWindow(NativeWindow* new_owner_window) {
   if (owner_window() == new_owner_window)
     return;
 
-  new_owner_window->browser()->tab_strip_model()->AddObserver(this);
+  if (type_ == BROWSER_WINDOW) {
+    if (owner_window())
+      owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+    new_owner_window->browser()->tab_strip_model()->AddObserver(this);
+  }
 
   SetOwnerWindow(web_contents(), new_owner_window);
 }
@@ -1616,6 +1596,9 @@ void WebContents::WebContentsDestroyed() {
   }
 
   is_being_destroyed_ = true;
+
+  if (type_ == BROWSER_WINDOW && owner_window() && owner_window()->browser())
+    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
 
   // clear out fullscreen state
   if (CommonWebContentsDelegate::IsFullscreenForTabOrPending(web_contents())) {
