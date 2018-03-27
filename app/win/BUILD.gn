@@ -195,11 +195,14 @@ action("generate_breakpad_symbols") {
   args = [
     "--symbols-dir=" + rebase_path(symbols_dir),
     "--jobs=16",
+    "--clear",
+    "--dump-syms-exe=" + rebase_path(root_out_dir) + "/dump_syms.exe",
     rebase_path(root_out_dir)
   ]
 
   deps = [
     ":electron_app",
+    "//third_party/breakpad:dump_syms",
   ]
 
   script = "//electron/tools/win/generate_breakpad_symbols.py"
