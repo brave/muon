@@ -19,7 +19,6 @@ import threading
 
 CONCURRENT_TASKS=4
 SOURCE_ROOT=os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-DUMP_SYMS=os.path.join(SOURCE_ROOT, 'breakpad', 'src', 'tools', 'windows', 'binaries', 'dump_syms.exe')
 
 
 def GetCommandOutput(command):
@@ -61,7 +60,7 @@ def GenerateSymbols(options, binaries):
         with print_lock:
           print "Generating symbols for %s" % binary
 
-      syms = GetCommandOutput([DUMP_SYMS, binary])
+      syms = GetCommandOutput([options.dump_syms_exe, binary])
       module_line = re.match("MODULE [^ ]+ [^ ]+ ([0-9A-Fa-f]+) (.*)\r\n", syms)
       if module_line == None:
         with print_lock:
@@ -101,11 +100,21 @@ def main():
                     type='int', help='Number of parallel tasks to run.')
   parser.add_option('-v', '--verbose', action='store_true',
                     help='Print verbose status output.')
+  parser.add_option('--dump-syms-exe', default='', action='store',
+                    type='string', help='Location of dump_syms.exe.')
 
   (options, directories) = parser.parse_args()
 
   if not options.symbols_dir:
     print "Required option --symbols-dir missing."
+    return 1
+
+  if not options.dump_syms_exe:
+    print "Required option --dump-syms-exe missing."
+    return 1
+
+  if not os.path.isfile(options.dump_syms_exe):
+    print "%s does is missing. Please check the path for --dump-syms-exe." % options.dump_syms_exe
     return 1
 
   if options.clear:
