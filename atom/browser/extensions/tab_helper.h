@@ -95,6 +95,8 @@ class TabHelper : public content::WebContentsObserver,
   void SetPinned(bool pinned);
   bool IsPinned() const;
 
+  bool MoveTo(int index, int window_id, bool foreground);
+
   bool Discard();
 
   bool IsDiscarded();

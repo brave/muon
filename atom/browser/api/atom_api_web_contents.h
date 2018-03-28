@@ -343,6 +343,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void OnSafeBrowsingHit(
     const security_interstitials::UnsafeResource& resource) override;
 
+  void MoveTo(mate::Arguments* args);
+
   // TabStripModelObserver
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
