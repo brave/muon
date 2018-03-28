@@ -558,6 +558,28 @@ bool TabHelper::IsPinned() const {
   return pinned_;
 }
 
+bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
+  for (auto* b : *BrowserList::GetInstance()) {
+    if (b->session_id().id() == window_id) {
+      if (get_index() != TabStripModel::kNoTab)
+        browser()->tab_strip_model()->DetachWebContentsAt(get_index());
+
+      UpdateBrowser(b);
+
+      if (index != TabStripModel::kNoTab) {
+        int add_types = TabStripModel::ADD_NONE;
+        add_types |= foreground ? TabStripModel::ADD_ACTIVE : 0;
+        b->tab_strip_model()->InsertWebContentsAt(
+            index, web_contents(), add_types);
+      } else {
+        b->tab_strip_model()->AppendWebContents(web_contents(), foreground);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 void TabHelper::SetTabIndex(int index) {
   index_ = index;
   if (browser()) {

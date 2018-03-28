@@ -1171,6 +1171,32 @@ void WebContents::AuthorizePlugin(mate::Arguments* args) {
       web_contents(), true, resource_id);
 }
 
+void WebContents::MoveTo(mate::Arguments* args) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (!tab_helper) {
+    args->ThrowError("Only tabs can be moved");
+    return;
+  }
+
+  auto browser = tab_helper->browser();
+
+  int index = -1;
+  args->GetNext(&index);
+
+  int window_id = -1;
+  args->GetNext(&window_id);
+
+  if (index == -1 && window_id == -1)
+    return;
+
+  if (window_id == -1) {
+    tab_helper->SetTabIndex(index);
+  } else {
+    if (!tab_helper->MoveTo(index, window_id, true))
+      args->ThrowError("Could not find window");
+  }
+}
+
 void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
                              int index) {
@@ -2743,6 +2769,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("_attachGuest", &WebContents::AttachGuest)
       .SetMethod("_detachGuest", &WebContents::DetachGuest)
       .SetMethod("isPlaceholder", &WebContents::IsPlaceholder)
+      .SetMethod("moveTo", &WebContents::MoveTo)
       .SetMethod("savePassword", &WebContents::SavePassword)
       .SetMethod("neverSavePassword", &WebContents::NeverSavePassword)
       .SetMethod("updatePassword", &WebContents::UpdatePassword)

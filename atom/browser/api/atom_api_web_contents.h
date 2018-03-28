@@ -337,6 +337,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   void AuthorizePlugin(mate::Arguments* args);
 
+  void MoveTo(mate::Arguments* args);
+
   // TabStripModelObserver
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
