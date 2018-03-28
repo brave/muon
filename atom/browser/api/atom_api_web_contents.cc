@@ -1207,16 +1207,6 @@ void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
   }
 }
 
-void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
-  int window_id = -1;
-
-  if (owner_window() && owner_window()->browser())
-    window_id = owner_window()->browser()->session_id().id();
-
-  CreateFrom(isolate(), contents)->Emit("tab-detached-at", index, window_id);
-  // Emit("tab-detached-at", contents, index, window_id);
-}
-
 void WebContents::ActiveTabChanged(content::WebContents* old_contents,
                                    content::WebContents* new_contents,
                                    int index,
@@ -1226,11 +1216,28 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
     CreateFrom(isolate(), old_contents)->Emit("set-active", false);
 }
 
+void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
+  int window_id = -1;
+
+  if (owner_window() && owner_window()->browser())
+    window_id = owner_window()->browser()->session_id().id();
+
+  CreateFrom(isolate(), contents)->Emit("tab-detached-at", index, window_id);
+  Emit("tab-detached-at", contents, index, window_id);
+}
+
 void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
                                 content::WebContents* contents,
                                 int index,
                                 bool foreground) {
-  Emit("tab-inserted-at", contents, index, foreground);
+  int window_id = -1;
+
+  if (owner_window() && owner_window()->browser())
+    window_id = owner_window()->browser()->session_id().id();
+
+  CreateFrom(isolate(), contents)->Emit("tab-inserted-at",
+      index, foreground, window_id);
+  Emit("tab-inserted-at", contents, index, foreground, window_id);
 }
 
 void WebContents::TabMoved(content::WebContents* contents,
