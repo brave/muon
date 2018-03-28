@@ -1279,6 +1279,8 @@ void WebContents::TabReplacedAt(TabStripModel* tab_strip_model,
     }
   }
 
+  CreateFrom(isolate(), old_contents)->Emit("tab-replaced-at",
+      browser->session_id().id(), index, new_contents);
   Emit("tab-replaced-at",
       browser->session_id().id(), index, new_contents);
 }
