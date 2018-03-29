@@ -114,6 +114,19 @@ index 4304cc82494f57b7bbc4d1f3dff0fab96e30aef3..77130b344ba1e03e34e5faa752cd2590
  }
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+diff --git a/chrome/app/BUILD.gn b/chrome/app/BUILD.gn
+index 149008e26e3fe8d8f5c7ca52928ed0b8f7bca159..59c25af63c8b492770732bfb570edc4405a4f87e 100644
+--- a/chrome/app/BUILD.gn
++++ b/chrome/app/BUILD.gn
+@@ -424,6 +424,8 @@ if (!is_android) {
+   chrome_packaged_services += [ "//chrome/utility:profile_import_manifest" ]
+ }
+ 
++chrome_packaged_services += [ "//electron/app:tor_launcher_manifest" ]
++
+ service_manifest("chrome_manifest") {
+   source = "chrome_manifest.json"
+ }
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
 index cd82cd63bfff860abdd765ad6e35355caffc3a43..9d24c0c3a7b315c10b519e0ae5b0eea04a880ddc 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
@@ -127,6 +140,14 @@ index cd82cd63bfff860abdd765ad6e35355caffc3a43..9d24c0c3a7b315c10b519e0ae5b0eea0
            "safe_browsing::mojom::SafeBrowsing",
            "translate::mojom::ContentTranslateDriver"
          ],
+@@ -49,6 +49,7 @@
+         "patch": [ "patch_file" ],
+         "pdf_compositor": [ "compositor" ],
+         "profile_import": [ "import" ],
++        "tor_launcher": [ "tor_launcher" ],
+         "profiling": [ "profiling" ],
+         "proxy_resolver": [ "factory" ],
+         "preferences": [ "pref_client", "pref_control" ],
 diff --git a/chrome/browser/chrome_service.cc b/chrome/browser/chrome_service.cc
 index a6e8369996c9538a1969a8eef3091c00eecb5ec1..eff895a8593ad0edaaa6e38e1c6f013af5fb3c46 100644
 --- a/chrome/browser/chrome_service.cc
@@ -2181,6 +2202,21 @@ index e23f2e6e9d9deb5fcd93f39c0e88c63ead47ac87..5c3e259474eec476038ee70bc90d6f0d
  // The time spent sending the CONNECT request to the SOCKS server.
  EVENT_TYPE(SOCKS5_HANDSHAKE_WRITE)
  
+diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
+index 369a1ca0c222526b3daf5250d221e43c37c2e2a3..c204d21b19981f1944730203018a9848c006c827 100644
+--- a/net/proxy/proxy_service.cc
++++ b/net/proxy/proxy_service.cc
+@@ -1476,7 +1476,9 @@ void ProxyService::ResetConfigService(
+ 
+ void ProxyService::ForceReloadProxyConfig() {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+-  ResetProxyConfig(false);
++  // MUON(darkdh): It should be force fetching config according to the API
++  // description
++  ResetProxyConfig(true);
+   ApplyProxyConfigIfAvailable();
+ }
+ 
 diff --git a/net/socket/socks5_client_socket.cc b/net/socket/socks5_client_socket.cc
 index 6b436878f780c0307f3a5508aa5909ad4ce7a23f..8f05c300becbe477c224d803934d60d46f158685 100644
 --- a/net/socket/socks5_client_socket.cc
@@ -2324,19 +2360,6 @@ index 0e16d7eecb8a2aa7e7403788c888849c1ba4db79..4c5ee5dab477f8e8e39276f1466bc8a9
    } else {
      socket_.reset(new SOCKSClientSocket(
          std::move(transport_socket_handle_), socks_params_->destination(),
-diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
-index 369a1ca0c222526b3daf5250d221e43c37c2e2a3..ff58dc77128ece681a757bebb91f424f82ee14c0 100644
---- a/net/proxy/proxy_service.cc
-+++ b/net/proxy/proxy_service.cc
-@@ -1476,7 +1476,7 @@ void ProxyService::ResetConfigService(
- 
- void ProxyService::ForceReloadProxyConfig() {
-   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
--  ResetProxyConfig(false);
-+  ResetProxyConfig(true);
-   ApplyProxyConfigIfAvailable();
- }
- 
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h
