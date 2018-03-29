@@ -134,8 +134,21 @@ index 960921acd7ebb0ba99092745e8d30bca76821f2a..a223e8ea1db840d5abc8587adfb8970a
  }
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+diff --git a/chrome/app/BUILD.gn b/chrome/app/BUILD.gn
+index 149008e26e3fe8d8f5c7ca52928ed0b8f7bca159..59c25af63c8b492770732bfb570edc4405a4f87e 100644
+--- a/chrome/app/BUILD.gn
++++ b/chrome/app/BUILD.gn
+@@ -424,6 +424,8 @@ if (!is_android) {
+   chrome_packaged_services += [ "//chrome/utility:profile_import_manifest" ]
+ }
+ 
++chrome_packaged_services += [ "//electron/app:tor_launcher_manifest" ]
++
+ service_manifest("chrome_manifest") {
+   source = "chrome_manifest.json"
+ }
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
-index 19cb2b02d4c944988f9f928b3dbda166a9233d3f..af1bd76f33cf607d112d1dd0949955712ea32845 100644
+index 19cb2b02d4c944988f9f928b3dbda166a9233d3f..cddd71e1aef22f4930626f09a545c738cc305474 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
 +++ b/chrome/browser/chrome_content_browser_manifest_overlay.json
 @@ -12,7 +12,7 @@
@@ -147,6 +160,14 @@ index 19cb2b02d4c944988f9f928b3dbda166a9233d3f..af1bd76f33cf607d112d1dd094995571
            "safe_browsing::mojom::SafeBrowsing",
            "translate::mojom::ContentTranslateDriver"
          ],
+@@ -49,6 +49,7 @@
+         "patch": [ "patch_file" ],
+         "pdf_compositor": [ "compositor" ],
+         "profile_import": [ "import" ],
++        "tor_launcher": [ "tor_launcher" ],
+         "profiling": [ "profiling" ],
+         "proxy_resolver": [ "factory" ],
+         "preferences": [ "pref_client", "pref_control" ],
 diff --git a/chrome/browser/chrome_service.cc b/chrome/browser/chrome_service.cc
 index 1bd2e1d014ec61491a2904b30c9197da3691c46d..87dd94ff56138b4d81f9b05c0c49f7fc644d7ed4 100644
 --- a/chrome/browser/chrome_service.cc
@@ -2258,10 +2279,10 @@ index 6eaa321ef4b8d5d743cab4448ed695ac1a02fabf..19020dbe84515b22d061a2bb80881592
  }
  
 diff --git a/net/log/net_log_event_type_list.h b/net/log/net_log_event_type_list.h
-index 551953165f93c8d8e4772f0e905f1c4819aaf3b5..caf6df58e858580b165e6ff689572a3d26525510 100644
+index 8e942348ddd7aeb96caf6a8dd896845a7cc867e4..0cbd4b89975ddc4eb0aaee29582fd4a348898df8 100644
 --- a/net/log/net_log_event_type_list.h
 +++ b/net/log/net_log_event_type_list.h
-@@ -2108,6 +2108,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
+@@ -2118,6 +2118,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
  // The time spent waiting for the "greeting" response from the SOCKS server.
  EVENT_TYPE(SOCKS5_GREET_READ)
  
@@ -2295,11 +2316,26 @@ index ed81ebbb26b4f439d618c115b32f49249d9284a6..ebfa79de63e40539a09d072a62c8522f
      if (!ok)
        return ProxyServer();  // Invalid -- failed parsing <host>[":"<port>]
  
+diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
+index 369a1ca0c222526b3daf5250d221e43c37c2e2a3..c204d21b19981f1944730203018a9848c006c827 100644
+--- a/net/proxy/proxy_service.cc
++++ b/net/proxy/proxy_service.cc
+@@ -1476,7 +1476,9 @@ void ProxyService::ResetConfigService(
+ 
+ void ProxyService::ForceReloadProxyConfig() {
+   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+-  ResetProxyConfig(false);
++  // MUON(darkdh): It should be force fetching config according to the API
++  // description
++  ResetProxyConfig(true);
+   ApplyProxyConfigIfAvailable();
+ }
+ 
 diff --git a/net/socket/socks5_client_socket.cc b/net/socket/socks5_client_socket.cc
-index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce67473e2b8188 100644
+index 6b436878f780c0307f3a5508aa5909ad4ce7a23f..8f05c300becbe477c224d803934d60d46f158685 100644
 --- a/net/socket/socks5_client_socket.cc
 +++ b/net/socket/socks5_client_socket.cc
-@@ -245,6 +245,9 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
+@@ -256,6 +256,9 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
          net_log_.EndEventWithNetErrorCode(NetLogEventType::SOCKS5_GREET_READ,
                                            rv);
          break;
@@ -2309,7 +2345,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
        case STATE_HANDSHAKE_WRITE:
          DCHECK_EQ(OK, rv);
          net_log_.BeginEvent(NetLogEventType::SOCKS5_HANDSHAKE_WRITE);
-@@ -274,8 +277,6 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
+@@ -285,8 +288,6 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
    return rv;
  }
  
@@ -2318,7 +2354,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
  int SOCKS5ClientSocket::DoGreetWrite() {
    // Since we only have 1 byte to send the hostname length in, if the
    // URL has a hostname longer than 255 characters we can't send it.
-@@ -285,8 +286,12 @@ int SOCKS5ClientSocket::DoGreetWrite() {
+@@ -296,8 +297,12 @@ int SOCKS5ClientSocket::DoGreetWrite() {
    }
  
    if (buffer_.empty()) {
@@ -2333,7 +2369,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
      bytes_sent_ = 0;
    }
  
-@@ -345,14 +350,32 @@ int SOCKS5ClientSocket::DoGreetReadComplete(int result) {
+@@ -356,14 +361,32 @@ int SOCKS5ClientSocket::DoGreetReadComplete(int result) {
                        NetLog::IntCallback("version", buffer_[0]));
      return ERR_SOCKS_CONNECTION_FAILED;
    }
@@ -2369,10 +2405,10 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
  }
  
 diff --git a/net/socket/socks5_client_socket.h b/net/socket/socks5_client_socket.h
-index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e00cd5251 100644
+index 364ac53391d67773ce967be9dc48ccf335156478..a24c15e0776887243c47cf36991a2e98c8bcb76a 100644
 --- a/net/socket/socks5_client_socket.h
 +++ b/net/socket/socks5_client_socket.h
-@@ -19,7 +19,8 @@
+@@ -19,6 +19,7 @@
  #include "net/base/net_export.h"
  #include "net/dns/host_resolver.h"
  #include "net/log/net_log_with_source.h"
@@ -2380,8 +2416,7 @@ index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e
  #include "net/socket/stream_socket.h"
  #include "net/traffic_annotation/network_traffic_annotation.h"
  #include "url/gurl.h"
- 
-@@ -81,6 +82,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+@@ -85,6 +86,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
      STATE_GREET_WRITE_COMPLETE,
      STATE_GREET_READ,
      STATE_GREET_READ_COMPLETE,
@@ -2390,7 +2425,7 @@ index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e
      STATE_HANDSHAKE_WRITE,
      STATE_HANDSHAKE_WRITE_COMPLETE,
      STATE_HANDSHAKE_READ,
-@@ -115,6 +118,14 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+@@ -119,6 +122,14 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
    int DoGreetReadComplete(int result);
    int DoGreetWrite();
    int DoGreetWriteComplete(int result);
@@ -2406,7 +2441,7 @@ index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e
    // Writes the SOCKS handshake buffer into |handshake|
    // and return OK on success.
 diff --git a/net/socket/socks_client_socket_pool.cc b/net/socket/socks_client_socket_pool.cc
-index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6ea5b4919 100644
+index 0e16d7eecb8a2aa7e7403788c888849c1ba4db79..4c5ee5dab477f8e8e39276f1466bc8a9253b530d 100644
 --- a/net/socket/socks_client_socket_pool.cc
 +++ b/net/socket/socks_client_socket_pool.cc
 @@ -16,7 +16,7 @@
@@ -2418,7 +2453,7 @@ index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6
  #include "net/socket/socks_client_socket.h"
  #include "net/socket/transport_client_socket_pool.h"
  
-@@ -146,9 +146,11 @@ int SOCKSConnectJob::DoSOCKSConnect() {
+@@ -149,9 +149,11 @@ int SOCKSConnectJob::DoSOCKSConnect() {
  
    // Add a SOCKS connection on top of the tcp socket.
    if (socks_params_->is_socks_v5()) {
@@ -2433,19 +2468,6 @@ index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6
    } else {
      socket_.reset(new SOCKSClientSocket(
          std::move(transport_socket_handle_), socks_params_->destination(),
-diff --git a/net/proxy/proxy_service.cc b/net/proxy/proxy_service.cc
-index 369a1ca0c222526b3daf5250d221e43c37c2e2a3..ff58dc77128ece681a757bebb91f424f82ee14c0 100644
---- a/net/proxy/proxy_service.cc
-+++ b/net/proxy/proxy_service.cc
-@@ -1476,7 +1476,7 @@ void ProxyService::ResetConfigService(
- 
- void ProxyService::ForceReloadProxyConfig() {
-   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
--  ResetProxyConfig(false);
-+  ResetProxyConfig(true);
-   ApplyProxyConfigIfAvailable();
- }
- 
 diff --git a/net/url_request/url_request_job.h b/net/url_request/url_request_job.h
 index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a945454f16 100644
 --- a/net/url_request/url_request_job.h

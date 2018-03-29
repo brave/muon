@@ -6,32 +6,9 @@ import("//build/config/ui.gni")
 import("//tools/grit/grit_rule.gni")
 import("//services/service_manager/public/service_manifest.gni")
 
-service_manifest("brave_content_packaged_services_manifest_overlay") {
-  source = "//chrome/browser/chrome_content_packaged_services_manifest_overlay.json"
-  packaged_services = [
-    "//chrome/utility:profile_import_manifest",
-  ]
-}
-
-group("brave_content_manifest_overlays") {
-  deps = [
-    "//chrome/app:chrome_content_manifest_overlays",
-    ":brave_content_packaged_services_manifest_overlay",
-  ]
-}
-
-if (use_aura) {
-  service_manifest("brave_content_packaged_services_manifest") {
-    source_manifest = "//content/public/app:packaged_services_manifest"
-    overlays = [ ":brave_content_packaged_services_manifest_overlay" ]
-  }
-
-  group("service_manifests") {
-    data_deps = [
-      "//chrome/app:service_manifests",
-      ":brave_content_packaged_services_manifest_overlay",
-    ]
-  }
+service_manifest("tor_launcher_manifest") {
+  name = "tor_launcher"
+  source = "//electron//brave/utility/tor/tor_manifest.json"
 }
 
 grit("brave_strings") {

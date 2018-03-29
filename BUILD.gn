@@ -18,6 +18,7 @@ import("//ui/base/ui_features.gni")
 import("//v8/gni/v8.gni")
 import("//third_party/icu/config.gni")
 import("//media/cdm/ppapi/cdm_paths.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
 import("//electron/build/config.gni")
 
 group("electron") {
@@ -54,7 +55,7 @@ group("electron") {
   }
 
   if (use_aura && (is_win || is_linux)) {
-    data_deps += [ "app:service_manifests" ]
+    data_deps += [ "//chrome/app:service_manifests" ]
   }
 }
 
@@ -83,7 +84,7 @@ grit("brave_resources") {
   ]
 
   deps = [
-    "app:brave_content_manifest_overlays",
+    "//chrome/app:chrome_content_manifest_overlays",
     "//chrome/browser/safe_browsing",
   ]
 
@@ -238,6 +239,7 @@ source_set("common") {
     "//base",
     "//components/url_formatter",
     "//content/public/child",
+    ":mojo_bindings",
   ]
 
   if (enable_extensions) {
@@ -245,6 +247,18 @@ source_set("common") {
       "brave/common/extensions/api",
     ]
   }
+
+}
+
+mojom("mojo_bindings") {
+  sources = [
+    "brave/common/tor/tor.mojom",
+  ]
+
+  public_deps = [
+    "//mojo/common:common_custom_types",
+    "//mojo/public/mojom/base",
+  ]
 }
 
 source_set("utility") {
@@ -265,6 +279,7 @@ source_set("utility") {
     "//components/cookie_config",
     "//services/proxy_resolver:lib",
     "//third_party/protobuf:protobuf_lite",
+    ":tor",
   ]
 
   if (use_glib) {
@@ -287,6 +302,19 @@ source_set("utility") {
     "brave/utility/importer/firefox_importer.h",
     "brave/utility/importer/importer_creator.cc",
     "brave/utility/importer/importer_creator.h",
+  ]
+}
+
+source_set("tor") {
+  sources = [
+    "brave/utility/tor/tor_impl.cc",
+    "brave/utility/tor/tor_impl.h",
+    "brave/utility/tor/tor_service.cc",
+    "brave/utility/tor/tor_service.h",
+  ]
+
+  deps = [
+    ":mojo_bindings",
   ]
 }
 

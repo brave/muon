@@ -10,7 +10,9 @@
 #include "base/files/file_path.h"
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
+#include "brave/common/tor/tor.mojom.h"
 #include "brave/utility/importer/brave_profile_import_service.h"
+#include "brave/utility/tor/tor_service.h"
 #include "chrome/common/importer/profile_import.mojom.h"
 #include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
@@ -165,6 +167,12 @@ void AtomContentUtilityClient::RegisterServices(
                       printing_info);
   }
 #endif
+
+  service_manager::EmbeddedServiceInfo tor_info;
+  tor_info.factory =
+    base::Bind(&TorService::CreateService);
+  services->emplace(tor::mojom::kTorServiceName,
+                    tor_info);
 }
 
 // static
