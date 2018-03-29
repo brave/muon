@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "atom/browser/atom_browser_context.h"
+#include "brave/common/tor/tor.mojom.h"
 #include "content/public/browser/host_zoom_map.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/profiles/storage_partition_descriptor.h"
@@ -158,6 +159,13 @@ class BraveBrowserContext : public Profile {
       url_request_context_getter,
     const base::FilePath partition_path);
 
+  void LaunchTorProcess(base::WaitableEvent* tor_launched,
+                        const std::string& tor_path,
+                        const std::string& tor_host,
+                        const std::string& tor_port);
+  void OnTorLauncherCrashed();
+  void OnTorLaunched(base::WaitableEvent* tor_launched, bool result);
+
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<sync_preferences::PrefServiceSyncable> user_prefs_;
   std::unique_ptr<PrefChangeRegistrar> user_prefs_registrar_;
@@ -177,7 +185,7 @@ class BraveBrowserContext : public Profile {
   bool isolated_storage_;
   GURL tor_proxy_;
   bool in_memory_;
-  base::Process tor_process_;
+  tor::mojom::TorLauncherPtr tor_launcher_;
 
   URLRequestContextGetterMap url_request_context_getter_map_;
 
