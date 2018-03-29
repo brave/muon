@@ -86,7 +86,7 @@ void ProfileManager::OnProfileCreated(Profile* profile,
   auto brave_browser_context =
     brave::BraveBrowserContext::FromBrowserContext(profile);
   if ((!profile->IsOffTheRecord() ||
-       brave_browser_context->IsIsolatedStorage())&&
+       brave_browser_context->IsIsolatedStorage()) &&
       !GetProfileByPath(profile->GetPath())) {
     AddProfile(profile);
   }
