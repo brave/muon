@@ -1648,12 +1648,6 @@ void WebContents::WebContentsDestroyed() {
   // being destroyed.
   Emit("will-destroy");
 
-  if (owner_window() && owner_window()->browser()) {
-    TabDetachedAt(web_contents(),
-        owner_window()->browser()->tab_strip_model()
-            ->GetIndexOfWebContents(web_contents()));
-  }
-
   // Cleanup relationships with other parts.
   RemoveFromWeakMap();
 
