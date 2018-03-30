@@ -114,23 +114,33 @@ WebViewImpl.prototype.detachGuest = function () {
   ) {
     return Promise.resolve()
   }
-  this.guest.guestIsDetaching_ = true
+  // the instance properties can change whilst detaching via the attachGuest function
+  const guestToDetach = this.guest
+  const webContents = this.webContents_
+  const tabID = this.tabID
+  const currentEventWrapper = this.currentEventWrapper
+  guestToDetach.guestIsDetaching_ = true
   // perform detach
   // resolve when detached or destroyed
   return new Promise(resolve => {
-    // guest may destroy or detach
-    if (this.webContents_) {
-      this.webContents_.addListener('will-destroy', resolve)
+    // guest may destroy or detach instead of running callback
+    if (webContents && !webContents.isDestroyed()) {
+      webContents.addListener('will-destroy', resolve)
     }
-    this.guest.detach(() => {
-      this.webContents_.removeListener('will-destroy', resolve)
-      // don't forward tab events to this webview anymore
-      if (this.tabID && this.currentEventWrapper) {
-        GuestViewInternal.removeListener(this.tabID, this.currentEventWrapper)
+    guestToDetach.detach(() => {
+      // detach successful so don't need to resolve on destroy
+      if (webContents && !webContents.isDestroyed()) {
+        webContents.removeListener('will-destroy', resolve)
       }
-      this.guest.guestIsDetaching_ = false
       resolve()
     })
+  })
+  // don't forward previously-attached tab events to this webview anymore
+  .then(() => {
+    guestToDetach.guestIsDetaching_ = false
+    if (tabID && currentEventWrapper) {
+      GuestViewInternal.removeListener(tabID, currentEventWrapper)
+    }
   })
 }
 
