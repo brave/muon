@@ -1,19 +1,67 @@
+source_set("install_verification") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ "//electron/chromium_src:chromium_src_config" ]
+
+  sources = [
+    "//chrome/browser/install_verification/win/install_verification.cc",
+    "//chrome/browser/install_verification/win/install_verification.h",
+    "//chrome/browser/install_verification/win/loaded_module_verification.cc",
+    "//chrome/browser/install_verification/win/loaded_module_verification.h",
+    "//chrome/browser/install_verification/win/module_ids.h",
+    "//chrome/browser/install_verification/win/module_info.h",
+    "//chrome/browser/install_verification/win/module_list.cc",
+    "//chrome/browser/install_verification/win/module_list.h",
+    "//chrome/browser/install_verification/win/module_verification_common.cc",
+    "//chrome/browser/install_verification/win/module_verification_common.h",
+    "//electron/chromium_src/chrome/browser/install_verification/win/module_ids.cc",
+  ]
+}
+
+source_set("ui_extensions") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ "//electron/chromium_src:chromium_src_config" ]
+
+  sources = [
+    "//electron/chromium_src/chrome/browser/ui/browser_commands.cc",
+    "//chrome/browser/ui/browser_commands.h",
+    "//electron/chromium_src/chrome/browser/ui/extensions/hosted_app_browser_controller.cc",
+  ]
+
+  deps = [
+    "//chrome/common:mojo_bindings",
+    "//printing/features",
+  ]
+}
+
+source_set("net") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ "//electron/chromium_src:chromium_src_config" ]
+
+  sources = [
+    "//chrome/browser/net/service_providers_win.cc",
+    "//chrome/browser/net/service_providers_win.h",
+  ]
+}
+
 source_set("safe_browsing") {
   configs += [ "//electron/build:electron_config" ]
   configs += [ "//electron/chromium_src:chromium_src_config" ]
 
   sources = [
-    "safe_browsing_service.cc",
+    "password_reuse_modal_warning_dialog.cc",
+  ]
+
+  public_deps = [
+    "//chrome/browser/safe_browsing",
+    "//content/public/browser",
   ]
 
   deps = [
-    "//components/safe_browsing/common:interfaces",
-    "//third_party/protobuf:protobuf_lite",
+    ":install_verification",
+    ":net",
+    ":ui_extensions",
+    "//electron/chromium_src/chrome/browser/interstitials",
+    "//electron/chromium_src/chrome/browser/prerender",
+    "//electron/chromium_src/chrome/browser/signin",
   ]
-
-  if (is_win) {
-    cflags = [ "/wd4172", ]
-  } else {
-    cflags = [ "-Wnoreturn-stack-address" ]
-  }
 }

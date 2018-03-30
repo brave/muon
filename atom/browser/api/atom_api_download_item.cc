@@ -12,6 +12,7 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread_task_runner_handle.h"
+#include "content/public/browser/download_item.h"
 #include "native_mate/dictionary.h"
 #include "net/base/filename_util.h"
 
@@ -78,15 +79,20 @@ DownloadItem::~DownloadItem() {
 }
 
 void DownloadItem::OnDownloadUpdated(content::DownloadItem* item) {
-  if (download_item_->IsDone()) {
+  if (download_item_->IsDangerous()) {
+    Emit("dangerous");
+  } else if (download_item_->IsDone()) {
     Emit("done", item->GetState());
-
     // Destroy the item once item is downloaded.
     base::ThreadTaskRunnerHandle::Get()->PostTask(
         FROM_HERE, GetDestroyClosure());
   } else {
     Emit("updated", item->GetState());
   }
+}
+
+DownloadDangerType DownloadItem::GetDangerType() const {
+  return download_item_->GetDangerType();
 }
 
 void DownloadItem::OnDownloadRemoved(content::DownloadItem* download) {
@@ -162,6 +168,10 @@ content::DownloadItem::DownloadState DownloadItem::GetState() const {
 
 bool DownloadItem::IsDone() const {
   return download_item_->IsDone();
+}
+
+bool DownloadItem::IsDangerous() const {
+  return download_item_->IsDangerous();
 }
 
 void DownloadItem::SetSavePath(const base::FilePath& path) {
