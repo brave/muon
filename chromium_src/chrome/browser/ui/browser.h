@@ -101,6 +101,7 @@ class Browser : public content::WebContentsDelegate {
 
   explicit Browser(const CreateParams& params);
   ~Browser();
+  content::WebContents* OpenURL(const content::OpenURLParams& params);
 
   // void WillDestroyNativeObject();
 

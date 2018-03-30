@@ -18,6 +18,7 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/download/download_prefs.h"
 #include "chrome/browser/io_thread.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/common/chrome_paths.h"
@@ -36,6 +37,7 @@
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
 #include "components/pref_registry/pref_registry_syncable.h"
+#include "components/safe_browsing/common/safe_browsing_prefs.h"
 #include "components/sync_preferences/pref_service_syncable.h"
 #include "components/sync_preferences/pref_service_syncable_factory.h"
 #include "components/user_prefs/user_prefs.h"
@@ -438,10 +440,6 @@ void BraveBrowserContext::CreateProfilePrefs(
               extension_prefs, overlay_pref_names, std::move(delegate)));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
-    base::FilePath download_dir;
-    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &download_dir);
-    pref_registry_->RegisterFilePathPref(prefs::kDownloadDefaultDirectory,
-                                        download_dir);
     pref_registry_->RegisterDictionaryPref("app_state");
     pref_registry_->RegisterDictionaryPref(
         extensions::pref_names::kPrefContentSettings);
@@ -453,6 +451,8 @@ void BraveBrowserContext::CreateProfilePrefs(
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionPerHostZoomLevels);
     pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);
     pref_registry_->RegisterBooleanPref(prefs::kPrintPreviewDisabled, false);
+    safe_browsing::RegisterProfilePrefs(pref_registry_.get());
+    DownloadPrefs::RegisterProfilePrefs(pref_registry_.get());
 #if BUILDFLAG(ENABLE_PLUGINS)
     PluginInfoHostImpl::RegisterUserPrefs(pref_registry_.get());
     PepperFlashSettingsManager::RegisterProfilePrefs(pref_registry_.get());
@@ -728,4 +728,3 @@ AtomBrowserContext* AtomBrowserContext::From(
 }
 
 }  // namespace atom
-

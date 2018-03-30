@@ -87,23 +87,6 @@ struct Converter<file_dialog::DialogSettings> {
 
 namespace {
 
-// Consider downloads 'dangerous' if they go to the home directory on Linux and
-// to the desktop on any platform.
-bool DownloadPathIsDangerous(const base::FilePath& download_path) {
-#if defined(OS_LINUX)
-  base::FilePath home_dir = base::GetHomeDir();
-  if (download_path == home_dir) {
-    return true;
-  }
-#endif
-  base::FilePath desktop_dir;
-  if (!PathService::Get(base::DIR_USER_DESKTOP, &desktop_dir)) {
-    NOTREACHED();
-    return false;
-  }
-  return (download_path == desktop_dir);
-}
-
 void ShowMessageBox(int type,
                     const std::vector<std::string>& buttons,
                     int default_id,
@@ -173,12 +156,10 @@ void ShowDialog(const file_dialog::DialogSettings& settings,
       NOTREACHED();
     }
   }
-  if (DownloadPathIsDangerous(default_path)) {
-    // This is only useful on platforms that support
-    // DIR_DEFAULT_DOWNLOADS_SAFE.
-    if (!PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS_SAFE, &default_path)) {
-      NOTREACHED();
-    }
+  // This is only useful on platforms that support
+  // DIR_DEFAULT_DOWNLOADS_SAFE.
+  if (!PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS_SAFE, &default_path)) {
+    NOTREACHED();
   }
   file_type_info.include_all_files = settings.include_all_files;
   file_type_info.extension_description_overrides =

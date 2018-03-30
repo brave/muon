@@ -23,6 +23,7 @@
       <include name="IDR_CHROME_CONTENT_RENDERER_MANIFEST_OVERLAY" file="${root_gen_dir}\chrome\app\chrome_content_renderer_manifest_overlay.json" type="BINDATA" />
       <include name="IDR_CHROME_CONTENT_UTILITY_MANIFEST_OVERLAY" file="${root_gen_dir}\chrome\app\chrome_content_utility_manifest_overlay.json" type="BINDATA" />
       <include name="IDR_CRYPTOTOKEN_MANIFEST" file="..\..\chrome\browser\resources\cryptotoken\manifest.json" type="BINDATA" />
+      <include name="IDR_DOWNLOAD_FILE_TYPES_PB" file="${root_gen_dir}\chrome\browser\resources\safe_browsing\download_file_types.pb" use_base_dir="false" type="BINDATA" />
     </includes>
   </release>
 </grit>

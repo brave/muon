@@ -84,6 +84,7 @@ grit("brave_resources") {
 
   deps = [
     "app:brave_content_manifest_overlays",
+    "//chrome/browser/safe_browsing",
   ]
 
   resource_ids = "//electron/resource_ids"

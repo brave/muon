@@ -11,6 +11,7 @@ source_set("browser") {
   public_deps = [
     "//content/public/browser",
     "//content/public/common",
+    "//net",
     "//electron/vendor/brightray:browser",
     "//ui/events",
     "//components/security_state/content",

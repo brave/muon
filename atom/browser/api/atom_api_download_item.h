@@ -9,6 +9,7 @@
 
 #include "atom/browser/api/trackable_object.h"
 #include "base/files/file_path.h"
+#include "content/public/browser/download_danger_type.h"
 #include "content/public/browser/download_item.h"
 #include "native_mate/handle.h"
 #include "url/gurl.h"
@@ -16,6 +17,8 @@
 namespace atom {
 
 namespace api {
+
+using content::DownloadDangerType;
 
 class DownloadItem : public mate::TrackableObject<DownloadItem>,
                      public content::DownloadItem::Observer {
@@ -46,6 +49,8 @@ class DownloadItem : public mate::TrackableObject<DownloadItem>,
   std::string GetGuid() const;
   void SetPrompt(bool prompt);
   bool ShouldPrompt();
+  bool IsDangerous() const;
+  DownloadDangerType GetDangerType() const;
 
  protected:
   DownloadItem(v8::Isolate* isolate, content::DownloadItem* download_item);

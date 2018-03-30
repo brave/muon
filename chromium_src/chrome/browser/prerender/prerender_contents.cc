@@ -14,6 +14,8 @@ namespace prerender {
 void PrerenderContents::DidNavigate(
     const history::HistoryAddPageArgs& add_page_args) {}
 
+void PrerenderContents::Destroy(FinalStatus final_status) {}
+
 PrerenderContents* PrerenderContents::FromWebContents(
     content::WebContents* web_contents) {
   return NULL;
