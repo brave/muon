@@ -48,6 +48,9 @@ class CommonWebContentsDelegate
   // Returns the WebContents of devtools.
   content::WebContents* GetDevToolsWebContents() const;
 
+  // Set whether window is fullscreenable by HTML5 api.
+  // If disabled, the window will not resize when the HTML5
+  // fullscreen api is triggered.
   void SetHtmlApiFullscreenable(bool html_fullscreenable) {
     html_fullscreenable_ = html_fullscreenable;
   }
