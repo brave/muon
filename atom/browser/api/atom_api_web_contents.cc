@@ -560,10 +560,7 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   std::string name;
   options.Get("name", &name);
 
-  if (!IsBackgroundPage() && type_ != BROWSER_WINDOW) {
-    // Initialize the tab helper
-    extensions::TabHelper::CreateForWebContents(web_contents);
-
+  if (!IsBackgroundPage()) {
     if (name == "browserAction") {
       // hack for browserAction
       // see TabHelper::SetBrowser
@@ -575,6 +572,8 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
     brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
 
     if (IsGuest()) {
+      // Initialize the tab helper
+      extensions::TabHelper::CreateForWebContents(web_contents);
       // Initialize autofill client
       autofill::AtomAutofillClient::CreateForWebContents(web_contents);
       std::string locale = static_cast<brave::BraveContentBrowserClient*>(
