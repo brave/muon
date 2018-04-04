@@ -510,6 +510,59 @@ index 440fdf8df66efce1b68a0463189986a6a0b0353a..7cc8fb11ecb5e2caa67e4e92d6d4526e
    // Finds TabStripModel which has a WebContents whose id is the given
    // |tab_id|, and returns the WebContents index and the TabStripModel.
    int FindTabStripModelById(int32_t tab_id, TabStripModel** model) const;
+diff --git a/chrome/browser/safe_browsing/BUILD.gn b/chrome/browser/safe_browsing/BUILD.gn
+index d870ac227ab6f84380bed881d7e1df664ca22266..6c7c6b22c1b5941cb0623cd9d1898271bb26b5c6 100644
+--- a/chrome/browser/safe_browsing/BUILD.gn
++++ b/chrome/browser/safe_browsing/BUILD.gn
+@@ -13,32 +13,6 @@ proto_library("chunk_proto") {
+ 
+ static_library("safe_browsing") {
+   sources = [
+-    "chrome_cleaner/chrome_cleaner_controller_impl_win.cc",
+-    "chrome_cleaner/chrome_cleaner_controller_impl_win.h",
+-    "chrome_cleaner/chrome_cleaner_controller_win.h",
+-    "chrome_cleaner/chrome_cleaner_fetcher_win.cc",
+-    "chrome_cleaner/chrome_cleaner_fetcher_win.h",
+-    "chrome_cleaner/chrome_cleaner_navigation_util_win.cc",
+-    "chrome_cleaner/chrome_cleaner_navigation_util_win.h",
+-    "chrome_cleaner/chrome_cleaner_reboot_dialog_controller_impl_win.cc",
+-    "chrome_cleaner/chrome_cleaner_reboot_dialog_controller_impl_win.h",
+-    "chrome_cleaner/chrome_cleaner_reboot_dialog_controller_win.h",
+-    "chrome_cleaner/chrome_cleaner_runner_win.cc",
+-    "chrome_cleaner/chrome_cleaner_runner_win.h",
+-    "chrome_cleaner/chrome_cleaner_scanner_results.cc",
+-    "chrome_cleaner/chrome_cleaner_scanner_results.h",
+-    "chrome_cleaner/chrome_cleaner_state_change_observer_win.cc",
+-    "chrome_cleaner/chrome_cleaner_state_change_observer_win.h",
+-    "chrome_cleaner/reporter_runner_win.cc",
+-    "chrome_cleaner/reporter_runner_win.h",
+-    "chrome_cleaner/settings_resetter_win.cc",
+-    "chrome_cleaner/settings_resetter_win.h",
+-    "chrome_cleaner/srt_chrome_prompt_impl.cc",
+-    "chrome_cleaner/srt_chrome_prompt_impl.h",
+-    "chrome_cleaner/srt_client_info_win.cc",
+-    "chrome_cleaner/srt_client_info_win.h",
+-    "chrome_cleaner/srt_field_trial_win.cc",
+-    "chrome_cleaner/srt_field_trial_win.h",
+     "safe_browsing_controller_client.cc",
+     "safe_browsing_controller_client.h",
+     "safe_browsing_tab_observer.cc",
+@@ -49,15 +23,11 @@ static_library("safe_browsing") {
+ 
+   deps = [
+     "//chrome/app:generated_resources",
+-    "//components/chrome_cleaner/public/interfaces",
+     "//components/safe_browsing/common:interfaces",
+   ]
+ 
+   if (enable_extensions) {
+     sources += [
+-      "chrome_cleaner/chrome_cleaner_dialog_controller_impl_win.cc",
+-      "chrome_cleaner/chrome_cleaner_dialog_controller_impl_win.h",
+-      "chrome_cleaner/chrome_cleaner_dialog_controller_win.h",
+       "settings_reset_prompt/default_settings_fetcher.cc",
+       "settings_reset_prompt/default_settings_fetcher.h",
+       "settings_reset_prompt/settings_reset_prompt_config.cc",
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index d08a945c6b11a918fa5faedcb1c87c269772e877..c45ee400756147e646f76079fafc1718854a4c53 100644
 --- a/chrome/common/BUILD.gn
