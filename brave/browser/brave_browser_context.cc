@@ -182,45 +182,14 @@ BraveBrowserContext::BraveBrowserContext(
     isolated_storage_ = isolated_storage;
   }
 
-  std::string tor_path;
   std::string tor_proxy;
-  if (options.GetString("tor_path", &tor_path) &&
-      options.GetString("tor_proxy", &tor_proxy)) {
-    url::Parsed url;
-    url::ParseStandardURL(
-      tor_proxy.c_str(),
-      std::min(tor_proxy.size(),
-               static_cast<size_t>(std::numeric_limits<int>::max())),
-      &url);
-    std::string tor_host, tor_port;
-    if (url.host.is_valid()) {
-      tor_host =
-        std::string(tor_proxy.begin() + url.host.begin,
-                    tor_proxy.begin() + url.host.begin + url.host.len);
-    }
-    if (url.port.is_valid()) {
-      tor_port =
-        std::string(tor_proxy.begin() + url.port.begin,
-                    tor_proxy.begin() + url.port.begin + url.port.len);
-    }
+  if (options.GetString("tor_proxy", &tor_proxy)) {
+    tor_proxy_ = tor_proxy;
+  }
 
-     content::ServiceManagerConnection::GetForProcess()
-       ->GetConnector()
-       ->BindInterface(tor::mojom::kTorServiceName,
-                       &tor_launcher_);
-
-     tor_launcher_.set_connection_error_handler(
-        base::BindOnce(&BraveBrowserContext::OnTorLauncherCrashed,
-                       base::Unretained(this)));
+  std::string tor_path;
+  if (options.GetString("tor_path", &tor_path)) {
     tor_path_ = tor_path;
-    tor_host_ = tor_host;
-    tor_port_ = tor_port;
-
-    BrowserThread::PostTask(
-        BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
-        base::Bind(&BraveBrowserContext::LaunchTorProcess,
-                   base::Unretained(this)));
-    tor_proxy_ = GURL(tor_proxy);
   }
 
   if (in_memory) {
@@ -387,11 +356,15 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
           std::move(request_interceptors));
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
-    BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
-                            base::Bind(&BraveBrowserContext::TorSetProxy,
-                                          base::Unretained(this),
-                                          url_request_context_getter,
-                                          partition_path));
+    if (tor_proxy_.size() && tor_path_.size()) {
+      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
+                            base::Bind(&net::ProxyConfigServiceTor::TorSetProxy,
+                                            url_request_context_getter,
+                                            tor_proxy_,
+                                            tor_path_,
+                                            isolated_storage_,
+                                            partition_path));
+    }
     return url_request_context_getter.get();
   } else {
     return nullptr;
@@ -479,75 +452,11 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
       ->OnDefaultZoomLevelChanged();
 }
 
-void BraveBrowserContext::TorSetProxy(
-    scoped_refptr<brightray::URLRequestContextGetter>
-      url_request_context_getter,
-    const base::FilePath partition_path) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  if (!url_request_context_getter || !isolated_storage_)
-    return;
-  if (tor_proxy_.is_valid()) {
-    auto proxy_service = url_request_context_getter->GetURLRequestContext()->
-      proxy_service();
-    // Notice CreateRequestContextForStoragePartition will only be called once
-    // per partition_path so there is no need to cache password per origin
-    std::string origin = partition_path.DirName().BaseName().value();
-    std::unique_ptr<net::ProxyConfigServiceTor>
-      config(new net::ProxyConfigServiceTor(tor_proxy_));
-    config->SetUsername(origin);
-    proxy_service->ResetConfigService(std::move(config));
-  }
-}
-
 content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
   if (!permission_manager_.get())
     permission_manager_.reset(new BravePermissionManager);
   return permission_manager_.get();
 }
-
-void BraveBrowserContext::LaunchTorProcess() {
-  std::vector<std::string> args;
-  args.push_back("--ignore-missing-torrc");
-  args.push_back("-f");
-  args.push_back("/nonexistent");
-  args.push_back("--defaults-torrc");
-  args.push_back("/nonexistent");
-  args.push_back("--SocksPort");
-  args.push_back(tor_host_ + ":" + tor_port_);
-  base::FilePath user_data_dir;
-  PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
-  if (!user_data_dir.empty()) {
-    args.push_back("--DataDirectory");
-    base::FilePath tor_data_path =
-      user_data_dir.Append(FILE_PATH_LITERAL("tor"))
-      .Append(FILE_PATH_LITERAL("data"));
-    base::CreateDirectory(tor_data_path);
-    args.push_back(tor_data_path.value());
-  }
-  tor_launcher_->Launch(base::FilePath(tor_path_), args,
-                        base::Bind(&BraveBrowserContext::OnTorLaunched,
-                                   base::Unretained(this)));
-  tor_launcher_->SetCrashHandler(base::Bind(&BraveBrowserContext::OnTorCrashed,
-                                            base::Unretained(this)));
-}
-
-void BraveBrowserContext::OnTorLauncherCrashed() {
-  LOG(ERROR) << "Tor Launcher Crashed";
-}
-
-void BraveBrowserContext::OnTorLaunched(bool result) {
-  if (!result)
-    LOG(ERROR) << "Tor Launching Failed";
-}
-
-void BraveBrowserContext::OnTorCrashed(int32_t pid) {
-  LOG(ERROR) << "Tor Process(" << pid << ") Crashed";
-  BrowserThread::PostTask(
-      BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
-      base::Bind(&BraveBrowserContext::LaunchTorProcess,
-                 base::Unretained(this)));
-}
-
 
 content::BackgroundFetchDelegate*
 BraveBrowserContext::GetBackgroundFetchDelegate() {

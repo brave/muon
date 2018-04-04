@@ -167,5 +167,7 @@ source_set("proxy") {
 
   deps = [
     "//net",
+    "//third_party/leveldatabase",
+    "//third_party/WebKit/public:blink_headers",
   ]
 }
