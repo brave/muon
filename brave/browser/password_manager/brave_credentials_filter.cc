@@ -17,8 +17,8 @@ BraveCredentialsFilter::FilterResults(
   return results;
 }
 
-bool BraveCredentialsFilter::ShouldSave(const autofill::PasswordForm& form,
-                                        const GURL& main_frame_url) const {
+bool BraveCredentialsFilter::ShouldSave(
+    const autofill::PasswordForm& form) const {
   return true;
 }
 
