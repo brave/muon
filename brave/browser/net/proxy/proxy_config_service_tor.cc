@@ -4,32 +4,142 @@
 
 #include "brave/browser/net/proxy/proxy_config_service_tor.h"
 
+#include <memory>
+#include <utility>
 #include <vector>
 
+#include "base/path_service.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
+#include "chrome/common/chrome_paths.h"
 #include "crypto/random.h"
-#include "url/gurl.h"
+#include "net/proxy/proxy_service.h"
+#include "net/url_request/url_request_context.h"
+#include "services/service_manager/public/cpp/connector.h"
 
 namespace net {
 
+using content::BrowserThread;
 const int kTorPasswordLength = 16;
 
-ProxyConfigServiceTor::ProxyConfigServiceTor(const GURL& url)
-  : url_(url) {
-    config_.proxy_rules().ParseFromString(url_.spec());
+ProxyConfigServiceTor::ProxyConfigServiceTor(const std::string tor_path,
+  const std::string tor_proxy) {
+    if (tor_path.length() && tor_proxy.length()) {
+      tor_path_ = tor_path;
+      url::Parsed url;
+      url::ParseStandardURL(
+        tor_proxy.c_str(),
+        std::min(tor_proxy.size(),
+                 static_cast<size_t>(std::numeric_limits<int>::max())),
+        &url);
+      if (url.scheme.is_valid()) {
+        scheme_ =
+          std::string(tor_proxy.begin() + url.scheme.begin,
+                      tor_proxy.begin() + url.scheme.begin + url.scheme.len);
+      }
+      if (url.host.is_valid()) {
+        host_ =
+          std::string(tor_proxy.begin() + url.host.begin,
+                      tor_proxy.begin() + url.host.begin + url.host.len);
+      }
+      if (url.port.is_valid()) {
+        port_ =
+          std::string(tor_proxy.begin() + url.port.begin,
+                      tor_proxy.begin() + url.port.begin + url.port.len);
+      }
+
+      content::ServiceManagerConnection::GetForProcess()
+        ->GetConnector()
+        ->BindInterface(tor::mojom::kTorServiceName,
+                        &tor_launcher_);
+
+      tor_launcher_.set_connection_error_handler(
+        base::BindOnce(&ProxyConfigServiceTor::OnTorLauncherCrashed,
+                       base::Unretained(this)));
+
+      BrowserThread::PostTask(
+          BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
+          base::Bind(&ProxyConfigServiceTor::LaunchTorProcess,
+                     base::Unretained(this)));
+    }
+    config_.proxy_rules().ParseFromString(std::string(scheme_ + "://" + host_
+      + ":" + port_));
+}
+
+void ProxyConfigServiceTor::OnTorCrashed(int32_t pid) {
+  LOG(ERROR) << "Tor Process(" << pid << ") Crashed";
+  BrowserThread::PostTask(
+      BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
+      base::Bind(&ProxyConfigServiceTor::LaunchTorProcess,
+                 base::Unretained(this)));
 }
 
 ProxyConfigServiceTor::~ProxyConfigServiceTor() {}
 
+void ProxyConfigServiceTor::LaunchTorProcess() {
+  std::vector<std::string> args;
+  args.push_back("--ignore-missing-torrc");
+  args.push_back("-f");
+  args.push_back("/nonexistent");
+  args.push_back("--defaults-torrc");
+  args.push_back("/nonexistent");
+  args.push_back("--SocksPort");
+  args.push_back(host_ + ":" + port_);
+  base::FilePath user_data_dir;
+  PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
+  if (!user_data_dir.empty()) {
+    args.push_back("--DataDirectory");
+    base::FilePath tor_data_path =
+      user_data_dir.Append(FILE_PATH_LITERAL("tor"))
+      .Append(FILE_PATH_LITERAL("data"));
+    base::CreateDirectory(tor_data_path);
+    args.push_back(tor_data_path.value());
+  }
+  tor_launcher_->Launch(base::FilePath(tor_path_), args,
+                        base::Bind(&ProxyConfigServiceTor::OnTorLaunched,
+                                   base::Unretained(this)));
+  tor_launcher_->SetCrashHandler(base::Bind(
+                        &ProxyConfigServiceTor::OnTorCrashed,
+                        base::Unretained(this)));
+}
+
+void ProxyConfigServiceTor::TorSetProxy(
+    scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter,
+    const std::string tor_proxy,
+    const std::string tor_path,
+    const bool isolated_storage,
+    const base::FilePath partition_path) {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+  if (!url_request_context_getter || !isolated_storage)
+    return;
+  auto proxy_service = url_request_context_getter->GetURLRequestContext()->
+    proxy_service();
+  // Notice CreateRequestContextForStoragePartition will only be called once
+  // per partition_path so there is no need to cache password per origin
+  std::string origin = partition_path.DirName().BaseName().value();
+  std::unique_ptr<net::ProxyConfigServiceTor>
+    config(new ProxyConfigServiceTor(tor_path, tor_proxy));
+  config->SetUsername(origin);
+  proxy_service->ResetConfigService(std::move(config));
+}
+
+void ProxyConfigServiceTor::OnTorLauncherCrashed() {
+  LOG(ERROR) << "Tor Launcher Crashed";
+}
+
+void ProxyConfigServiceTor::OnTorLaunched(bool result) {
+  if (!result)
+    LOG(ERROR) << "Tor Launching Failed";
+}
+
 ProxyConfigServiceTor::ConfigAvailability
     ProxyConfigServiceTor::GetLatestProxyConfig(ProxyConfig* config) {
-  if (!url_.is_valid())
+  if (scheme_ != kSocksProxy || host_.empty() || port_.empty())
     return CONFIG_UNSET;
   std::string password = GenerateNewPassword();
-  std::string url = url_.spec();
-  base::ReplaceFirstSubstringAfterOffset(
-    &url, 0, "//", "//" + username_ + ":" + password + "@");
+  std::string url = std::string(scheme_ + "://" + username_ + ":" + password +
+    "@" + host_ + ":" + port_);
   config_.proxy_rules().ParseFromString(url);
   *config = config_;
   return CONFIG_VALID;
