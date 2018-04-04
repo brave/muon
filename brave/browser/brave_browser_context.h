@@ -162,12 +162,10 @@ class BraveBrowserContext : public Profile {
       url_request_context_getter,
     const base::FilePath partition_path);
 
-  void LaunchTorProcess(base::WaitableEvent* tor_launched,
-                        const std::string& tor_path,
-                        const std::string& tor_host,
-                        const std::string& tor_port);
+  void LaunchTorProcess();
   void OnTorLauncherCrashed();
-  void OnTorLaunched(base::WaitableEvent* tor_launched, bool result);
+  void OnTorLaunched(bool result);
+  void OnTorCrashed(int32_t pid);
 
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<sync_preferences::PrefServiceSyncable> user_prefs_;
@@ -187,6 +185,9 @@ class BraveBrowserContext : public Profile {
   std::unique_ptr<base::WaitableEvent> ready_;
   bool isolated_storage_;
   GURL tor_proxy_;
+  std::string tor_path_;
+  std::string tor_host_;
+  std::string tor_port_;
   bool in_memory_;
   tor::mojom::TorLauncherPtr tor_launcher_;
 
