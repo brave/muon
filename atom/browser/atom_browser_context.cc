@@ -69,6 +69,9 @@ AtomBrowserContext::AtomBrowserContext(
 }
 
 AtomBrowserContext::~AtomBrowserContext() {
+  BrowserThread::DeleteSoon(BrowserThread::UI,
+                              FROM_HERE,
+                              download_manager_delegate_.release());
 }
 
 std::unique_ptr<net::URLRequestJobFactory>
