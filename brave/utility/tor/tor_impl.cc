@@ -14,14 +14,57 @@
 #include "base/threading/thread.h"
 #include "base/threading/thread_task_runner_handle.h"
 
+#if defined(OS_POSIX)
+int pipehack[2];
+
+static void SIGCHLDHandler(int signal) {
+  pid_t p;
+  int status;
+
+  if ((p = waitpid(-1, &status, WNOHANG)) != -1) {
+    write(pipehack[1], &p, sizeof(pid_t));
+  }
+}
+
+static void SetupPipeHack() {
+  if (pipe(pipehack) == -1)
+    LOG(ERROR) << "pipehack";
+
+  int flags;
+  for (size_t i = 0; i < 2; ++i) {
+    if ((flags = fcntl(pipehack[i], F_GETFL)) == -1)
+      LOG(ERROR) << "get flags";
+    flags |= O_NONBLOCK;
+    flags |= O_CLOEXEC;
+    if (fcntl(pipehack[i], F_SETFL, flags) == -1)
+      LOG(ERROR) << "set flags";
+  }
+
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  action.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &action, NULL);
+
+  memset(&action, 0, sizeof(action));
+  action.sa_handler = SIGCHLDHandler;
+  sigaction(SIGCHLD, &action, NULL);
+}
+#endif
+
 namespace brave {
 
 TorLauncherImpl::TorLauncherImpl(
     std::unique_ptr<service_manager::ServiceContextRef> service_ref)
-    : service_ref_(std::move(service_ref)) {}
+    : service_ref_(std::move(service_ref)) {
+  SetupPipeHack();
+}
 
 TorLauncherImpl::~TorLauncherImpl() {
   if (tor_process_.IsValid()) {
+#if defined(OS_POSIX)
+    for (size_t i = 0; i < 2; ++i)
+      close(pipehack[i]);
+#endif
     tor_process_.Terminate(0, false);
 #if defined(OS_MACOSX)
     base::PostTaskWithTraits(
@@ -33,23 +76,9 @@ TorLauncherImpl::~TorLauncherImpl() {
   }
 }
 
-#if defined(OS_POSIX)
-void SIGCHLDHandler(int signal) {
-  pid_t p;
-  int status;
-
-  while ((p = waitpid(-1, &status, WNOHANG)) != -1) {
-    LOG(ERROR) << "Tor process terminated";
-    // TODO(darkdh): handle tor got killed by other factors
-  }
-}
-#endif
-
 void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
                              const std::vector<std::string>& args,
                              LaunchCallback callback) {
-  if (tor_process_.IsValid())
-    return;
   base::CommandLine cmdline(tor_bin);
   for (size_t i = 0; i < args.size(); ++i) {
     cmdline.AppendArg(args[i]);
@@ -61,6 +90,7 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
   tor_process_ = base::LaunchProcess(cmdline, launchopts);
 
   bool result;
+  // TODO(darkdh): return success when tor connected to tor network
   if (tor_process_.IsValid())
     result = true;
   else
@@ -69,31 +99,38 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
   if (callback)
     std::move(callback).Run(result);
 
-  child_monitor_thread_.reset(new base::Thread("child_monitor_thread"));
-  if (!child_monitor_thread_->Start()) {
-    NOTREACHED();
-  }
+  if (!child_monitor_thread_.get()) {
+    child_monitor_thread_.reset(new base::Thread("child_monitor_thread"));
+    if (!child_monitor_thread_->Start()) {
+      NOTREACHED();
+    }
 
-  child_monitor_thread_->task_runner()->PostTask(
+    child_monitor_thread_->task_runner()->PostTask(
       FROM_HERE,
       base::BindOnce(&TorLauncherImpl::MonitorChild, base::Unretained(this)));
+  }
 }
 
-void TorLauncherImpl::IsTorAlive(IsTorAliveCallback callback) {
-  if (callback)
-    std::move(callback).Run(tor_process_.IsValid());
+void TorLauncherImpl::SetCrashHandler(SetCrashHandlerCallback callback) {
+  crash_handler_callback_ = std::move(callback);
 }
 
 void TorLauncherImpl::MonitorChild() {
 #if defined(OS_POSIX)
-  struct sigaction action;
-  memset(&action, 0, sizeof(action));
-  action.sa_handler = SIGCHLDHandler;
-  sigaction(SIGCHLD, &action, NULL);
+  pid_t pid;
+
+  while (1) {
+      if (read(pipehack[0], &pid, sizeof(pid_t)) > 0) {
+        if (crash_handler_callback_)
+          std::move(crash_handler_callback_).Run(pid);
+        continue;
+      }
+      continue;
+  }
 #elif defined(OS_WINDOWS)
   WaitForSingleObject(tor_process_.Handle(), INFINITE);
-  LOG(ERROR) << "Tor process terminated";
-  // TODO(darkdh): handle tor got killed by other factors
+  if (crash_handler_callback_)
+    std::move(crash_handler_callback_).Run(pid);
 #else
 #error unsupported platforms
 #endif
