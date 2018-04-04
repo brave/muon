@@ -12,5 +12,6 @@ interface TorLauncher {
   Launch(mojo.common.mojom.FilePath tor_bin, array<string> args)
     => (bool result);
 
+  // TODO(darkdh): info of callback can be more granular
   SetCrashHandler() => (int32 pid);
 };
