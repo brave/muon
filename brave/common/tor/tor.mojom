@@ -12,5 +12,5 @@ interface TorLauncher {
   Launch(mojo.common.mojom.FilePath tor_bin, array<string> args)
     => (bool result);
 
-  IsTorAlive() => (bool result);
+  SetCrashHandler() => (int32 pid);
 };
