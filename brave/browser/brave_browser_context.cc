@@ -203,19 +203,23 @@ BraveBrowserContext::BraveBrowserContext(
         std::string(tor_proxy.begin() + url.port.begin,
                     tor_proxy.begin() + url.port.begin + url.port.len);
     }
-    std::unique_ptr<base::WaitableEvent> tor_launched(
-      new base::WaitableEvent(
-        base::WaitableEvent::ResetPolicy::MANUAL,
-        base::WaitableEvent::InitialState::NOT_SIGNALED));
+
+     content::ServiceManagerConnection::GetForProcess()
+       ->GetConnector()
+       ->BindInterface(tor::mojom::kTorServiceName,
+                       &tor_launcher_);
+
+     tor_launcher_.set_connection_error_handler(
+        base::BindOnce(&BraveBrowserContext::OnTorLauncherCrashed,
+                       base::Unretained(this)));
+    tor_path_ = tor_path;
+    tor_host_ = tor_host;
+    tor_port_ = tor_port;
+
     BrowserThread::PostTask(
         BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
         base::Bind(&BraveBrowserContext::LaunchTorProcess,
-                   base::Unretained(this),
-                   tor_launched.get(),
-                   tor_path,
-                   tor_host,
-                   tor_port));
-    tor_launched->Wait();
+                   base::Unretained(this)));
     tor_proxy_ = GURL(tor_proxy);
   }
 
@@ -501,18 +505,7 @@ content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
   return permission_manager_.get();
 }
 
-void BraveBrowserContext::LaunchTorProcess(base::WaitableEvent* tor_launched,
-                                           const std::string& tor_path,
-                                           const std::string& tor_host,
-                                           const std::string& tor_port) {
-  content::ServiceManagerConnection::GetForProcess()
-    ->GetConnector()
-    ->BindInterface(tor::mojom::kTorServiceName,
-                    &tor_launcher_);
-
-  tor_launcher_.set_connection_error_handler(
-    base::BindOnce(&BraveBrowserContext::OnTorLauncherCrashed,
-                   base::Unretained(this)));
+void BraveBrowserContext::LaunchTorProcess() {
   std::vector<std::string> args;
   args.push_back("--ignore-missing-torrc");
   args.push_back("-f");
@@ -520,7 +513,7 @@ void BraveBrowserContext::LaunchTorProcess(base::WaitableEvent* tor_launched,
   args.push_back("--defaults-torrc");
   args.push_back("/nonexistent");
   args.push_back("--SocksPort");
-  args.push_back(tor_host + ":" + tor_port);
+  args.push_back(tor_host_ + ":" + tor_port_);
   base::FilePath user_data_dir;
   PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   if (!user_data_dir.empty()) {
@@ -531,22 +524,30 @@ void BraveBrowserContext::LaunchTorProcess(base::WaitableEvent* tor_launched,
     base::CreateDirectory(tor_data_path);
     args.push_back(tor_data_path.value());
   }
-  tor_launcher_->Launch(base::FilePath(tor_path), args,
+  tor_launcher_->Launch(base::FilePath(tor_path_), args,
                         base::Bind(&BraveBrowserContext::OnTorLaunched,
-                                   base::Unretained(this),
-                                   tor_launched));
+                                   base::Unretained(this)));
+  tor_launcher_->SetCrashHandler(base::Bind(&BraveBrowserContext::OnTorCrashed,
+                                            base::Unretained(this)));
 }
 
 void BraveBrowserContext::OnTorLauncherCrashed() {
   LOG(ERROR) << "Tor Launcher Crashed";
 }
 
-void BraveBrowserContext::OnTorLaunched(base::WaitableEvent* tor_launched,
-                                        bool result) {
+void BraveBrowserContext::OnTorLaunched(bool result) {
   if (!result)
     LOG(ERROR) << "Tor Launching Failed";
-  tor_launched->Signal();
 }
+
+void BraveBrowserContext::OnTorCrashed(int32_t pid) {
+  LOG(ERROR) << "Tor Process(" << pid << ") Crashed";
+  BrowserThread::PostTask(
+      BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
+      base::Bind(&BraveBrowserContext::LaunchTorProcess,
+                 base::Unretained(this)));
+}
+
 
 content::BackgroundFetchDelegate*
 BraveBrowserContext::GetBackgroundFetchDelegate() {
