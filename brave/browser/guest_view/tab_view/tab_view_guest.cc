@@ -299,6 +299,7 @@ void TabViewGuest::CreateWebContents(
 
 void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
   bool is_pending_new_window = false;
+  bool clone = false;
   if (GetOpener()) {
     // We need to do a navigation here if the target URL has changed between
     // the time the WebContents was created and the time it was attached.
@@ -318,39 +319,34 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         GetOpener()->pending_new_windows_.erase(this);
       }
       is_pending_new_window = true;
-    } else if (HasWindow(web_contents()) && clone_) {
-      clone_ = false;
+    } else if (params.GetBoolean("clone", &clone) && clone) {
       web_contents()->GetController().CopyStateFrom(
           GetOpener()->web_contents()->GetController(), true);
+      return;
     }
   }
 
   // handle navigation for src attribute changes
   if (!is_pending_new_window) {
-    bool clone = false;
-    if (params.GetBoolean("clone", &clone) && clone) {
-      clone_ = true;
-    } else {
-      std::string src;
-      if (params.GetString("src", &src)) {
-        src_ = GURL(src);
+    std::string src;
+    if (params.GetString("src", &src)) {
+      src_ = GURL(src);
+    }
+
+    auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+    if (web_contents()->GetController().IsInitialNavigation()) {
+      if (web_contents()->GetController().NeedsReload()) {
+        web_contents()->GetController().LoadIfNecessary();
+        return;
       }
 
-      auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-      if (web_contents()->GetController().IsInitialNavigation()) {
-        if (web_contents()->GetController().NeedsReload()) {
-          web_contents()->GetController().LoadIfNecessary();
-          return;
-        }
-
-        // don't reload if we're already loading
-        if (web_contents()->GetController().GetPendingEntry() &&
-            web_contents()->GetController().GetPendingEntry()->GetURL() ==
-            src_) {
-          return;
-        }
-        NavigateGuest(src_.spec(), true);
+      // don't reload if we're already loading
+      if (web_contents()->GetController().GetPendingEntry() &&
+          web_contents()->GetController().GetPendingEntry()->GetURL() ==
+          src_) {
+        return;
       }
+      NavigateGuest(src_.spec(), true);
     }
   }
 }
@@ -421,7 +417,6 @@ bool TabViewGuest::IsAutoSizeSupported() const {
 TabViewGuest::TabViewGuest(WebContents* owner_web_contents)
     : GuestView<TabViewGuest>(owner_web_contents),
       api_web_contents_(nullptr),
-      clone_(false),
       can_run_detached_(true) {
 }
 
