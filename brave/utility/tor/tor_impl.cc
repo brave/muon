@@ -21,8 +21,15 @@ static void SIGCHLDHandler(int signal) {
   pid_t p;
   int status;
 
-  if ((p = waitpid(-1, &status, WNOHANG)) != -1) {
-    write(pipehack[1], &p, sizeof(pid_t));
+  if ((p = waitpid(-1, &status, WNOHANG | WUNTRACED)) != -1) {
+    if (WIFSIGNALED(status) || WCOREDUMP(status)) {
+      write(pipehack[1], &p, sizeof(pid_t));
+    } else if (WIFEXITED(status)) {
+      // TODO(darkdh): Handle "Address already in use" issue. Not notifying as
+      // workaroud for now to prevent infinitely relaunch
+      if (!WEXITSTATUS(status))
+        write(pipehack[1], &p, sizeof(pid_t));
+    }
   }
 }
 
@@ -34,7 +41,8 @@ static void SetupPipeHack() {
   for (size_t i = 0; i < 2; ++i) {
     if ((flags = fcntl(pipehack[i], F_GETFL)) == -1)
       LOG(ERROR) << "get flags";
-    flags |= O_NONBLOCK;
+    if (i == 1)
+      flags |= O_NONBLOCK;
     flags |= O_CLOEXEC;
     if (fcntl(pipehack[i], F_SETFL, flags) == -1)
       LOG(ERROR) << "set flags";
@@ -52,6 +60,27 @@ static void SetupPipeHack() {
 #endif
 
 namespace brave {
+
+class TorLauncherDelegate : public base::LaunchOptions::PreExecDelegate {
+ public:
+   TorLauncherDelegate(){}
+   ~TorLauncherDelegate () override {}
+
+   void RunAsyncSafe() override {
+#if defined(OS_POSIX)
+     for (size_t i = 0; i < 2; ++i)
+       close(pipehack[i]);
+#endif
+    // TODO(darkdh): doesn't prevent ctrl+c propagated by terminal
+     struct sigaction action;
+     memset(&action, 0, sizeof(action));
+     action.sa_handler = SIG_IGN;
+     sigaction(SIGINT, &action, NULL);
+   }
+ private:
+   DISALLOW_COPY_AND_ASSIGN(TorLauncherDelegate);
+
+};
 
 TorLauncherImpl::TorLauncherImpl(
     std::unique_ptr<service_manager::ServiceContextRef> service_ref)
@@ -84,6 +113,8 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
     cmdline.AppendArg(args[i]);
   }
   base::LaunchOptions launchopts;
+  TorLauncherDelegate tor_launcher_delegate;
+  launchopts.pre_exec_delegate = &tor_launcher_delegate;
 #if defined(OS_LINUX)
   launchopts.kill_on_parent_death = true;
 #endif
@@ -124,8 +155,10 @@ void TorLauncherImpl::MonitorChild() {
         if (crash_handler_callback_)
           std::move(crash_handler_callback_).Run(pid);
         continue;
+      } else {
+        // pipes closed
+        break;
       }
-      continue;
   }
 #elif defined(OS_WINDOWS)
   WaitForSingleObject(tor_process_.Handle(), INFINITE);
