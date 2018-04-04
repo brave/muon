@@ -14,8 +14,10 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/download/download_completion_blocker.h"
 #include "chrome/browser/download/download_item_model.h"
+#include "chrome/browser/download/download_prefs.h"
 #include "chrome/browser/extensions/api/file_system/file_entry_picker.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/safe_browsing/download_protection/download_protection_util.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/common/safe_browsing/file_type_policies.h"
@@ -258,6 +260,7 @@ AtomDownloadManagerDelegate::~AtomDownloadManagerDelegate() {
   if (download_manager_) {
     DCHECK_EQ(static_cast<content::DownloadManagerDelegate*>(this),
               download_manager_->GetDelegate());
+    download_prefs_.reset();
     download_manager_->SetDelegate(nullptr);
     download_manager_ = nullptr;
   }

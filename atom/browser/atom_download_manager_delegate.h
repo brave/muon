@@ -14,10 +14,8 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/task_scheduler/post_task.h"
 #include "chrome/browser/download/download_path_reservation_tracker.h"
-#include "chrome/browser/download/download_prefs.h"
 #include "chrome/browser/download/download_target_determiner.h"
 #include "chrome/browser/safe_browsing/download_protection/download_protection_service.h"
-#include "chrome/browser/safe_browsing/download_protection/download_protection_util.h"
 #include "content/public/browser/download_manager_delegate.h"
 
 class DownloadPrefs;
