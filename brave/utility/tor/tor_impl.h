@@ -27,11 +27,12 @@ class TorLauncherImpl : public tor::mojom::TorLauncher {
   void Launch(const base::FilePath& tor_bin,
               const std::vector<std::string>& args,
               LaunchCallback callback) override;
-  void IsTorAlive(IsTorAliveCallback callback) override;
+  void SetCrashHandler(SetCrashHandlerCallback callback) override;
 
  private:
   void MonitorChild();
 
+  SetCrashHandlerCallback crash_handler_callback_;
   std::unique_ptr<base::Thread> child_monitor_thread_;
   base::Process tor_process_;
   const std::unique_ptr<service_manager::ServiceContextRef> service_ref_;
