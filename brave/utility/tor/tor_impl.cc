@@ -63,23 +63,22 @@ namespace brave {
 
 class TorLauncherDelegate : public base::LaunchOptions::PreExecDelegate {
  public:
-   TorLauncherDelegate(){}
-   ~TorLauncherDelegate () override {}
+    TorLauncherDelegate() {}
+    ~TorLauncherDelegate() override {}
 
-   void RunAsyncSafe() override {
+    void RunAsyncSafe() override {
 #if defined(OS_POSIX)
-     for (size_t i = 0; i < 2; ++i)
-       close(pipehack[i]);
+      for (size_t i = 0; i < 2; ++i)
+        close(pipehack[i]);
 #endif
-    // TODO(darkdh): doesn't prevent ctrl+c propagated by terminal
-     struct sigaction action;
-     memset(&action, 0, sizeof(action));
-     action.sa_handler = SIG_IGN;
-     sigaction(SIGINT, &action, NULL);
-   }
+      // TODO(darkdh): doesn't prevent ctrl+c propagated by terminal
+      struct sigaction action;
+      memset(&action, 0, sizeof(action));
+      action.sa_handler = SIG_IGN;
+      sigaction(SIGINT, &action, NULL);
+    }
  private:
-   DISALLOW_COPY_AND_ASSIGN(TorLauncherDelegate);
-
+    DISALLOW_COPY_AND_ASSIGN(TorLauncherDelegate);
 };
 
 TorLauncherImpl::TorLauncherImpl(
