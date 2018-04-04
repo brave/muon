@@ -236,10 +236,6 @@ content::WebContents* TabHelper::DetachGuest() {
 void TabHelper::DidAttach() {
   MaybeRequestWindowClose();
 
-  if (active_) {
-    browser_->tab_strip_model()->ActivateTabAt(get_index(), true);
-    active_ = false;
-  }
   if (is_placeholder()) {
     guest()->SetCanRunInDetachedState(false);
     if (!pinned_ && !IsDiscarded()) {
@@ -382,6 +378,19 @@ void TabHelper::TabPinnedStateChanged(TabStripModel* tab_strip_model,
     return;
 
   MaybeAttachOrCreatePinnedTab();
+}
+
+void TabHelper::ActiveTabChanged(content::WebContents* old_contents,
+                                content::WebContents* new_contents,
+                                int index,
+                                int reason) {
+  if (old_contents == web_contents()) {
+    active_ = false;
+  }
+
+  if (new_contents == web_contents()) {
+    active_ = true;
+  }
 }
 
 void TabHelper::SetActive(bool active) {
@@ -590,8 +599,8 @@ void TabHelper::SetTabIndex(int index) {
 
 bool TabHelper::is_active() const {
   if (browser()) {
-    return browser()->tab_strip_model()->GetActiveWebContents()==
-      web_contents();
+    return browser()->tab_strip_model()->GetActiveWebContents() ==
+        web_contents();
   } else {
     return active_;
   }
