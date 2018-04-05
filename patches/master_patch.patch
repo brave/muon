@@ -2109,6 +2109,21 @@ index b7fb84846acdd37de8593a1180dfaedd2fbc431c..3b4be3019ec0dd2fa0ed636bc6a56ea2
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
+diff --git a/net/BUILD.gn b/net/BUILD.gn
+index 7676ff4cbf84735a5d844983c8b857ad50cc3d06..28aaaa6fe54ce14c68d578940025cce9dcc94895 100644
+--- a/net/BUILD.gn
++++ b/net/BUILD.gn
+@@ -355,6 +355,10 @@ component("net") {
+     "ssl/ssl_server_config.h",
+     "ssl/token_binding.cc",
+     "ssl/token_binding.h",
++    # muon override
++    "//electron/chromium_src/net/base/host_port_pair_auth.cc",
++    "//electron/chromium_src/net/base/url_auth_util.cc",
++    "//electron/chromium_src/net/socket/socks5_client_socket_auth.cc",
+   ]
+   net_unfiltered_sources = []
+ 
 diff --git a/net/base/host_port_pair.cc b/net/base/host_port_pair.cc
 index ec8248449dbcd4156e361fcc8781ce0712f26a02..e9f4dce79a73c1949293c45486606377f4f11ebb 100644
 --- a/net/base/host_port_pair.cc
