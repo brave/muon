@@ -57,7 +57,7 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
 
   void LaunchTorProcess();
   void OnTorLauncherCrashed();
-  void OnTorCrashed(int32_t pid);
+  void OnTorCrashed(int64_t pid);
   void OnTorLaunched(bool result);
 
 
