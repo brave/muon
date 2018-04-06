@@ -299,7 +299,6 @@ void TabViewGuest::CreateWebContents(
 
 void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
   bool is_pending_new_window = false;
-  bool clone = false;
   if (GetOpener()) {
     // We need to do a navigation here if the target URL has changed between
     // the time the WebContents was created and the time it was attached.
@@ -319,10 +318,6 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         GetOpener()->pending_new_windows_.erase(this);
       }
       is_pending_new_window = true;
-    } else if (params.GetBoolean("clone", &clone) && clone) {
-      web_contents()->GetController().CopyStateFrom(
-          GetOpener()->web_contents()->GetController(), true);
-      return;
     }
   }
 
