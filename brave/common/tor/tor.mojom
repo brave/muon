@@ -13,5 +13,5 @@ interface TorLauncher {
     => (bool result);
 
   // TODO(darkdh): info of callback can be more granular
-  SetCrashHandler() => (int32 pid);
+  SetCrashHandler() => (int64 pid);
 };
