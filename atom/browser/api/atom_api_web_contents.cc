@@ -2241,16 +2241,6 @@ bool WebContents::IsFocused() const {
 }
 #endif
 
-void WebContents::OnCloneCreated(const mate::Dictionary& options,
-    base::Callback<void(content::WebContents*)> callback,
-    content::WebContents* clone) {
-  brave::TabViewGuest* guest = brave::TabViewGuest::FromWebContents(clone);
-  if (guest_delegate_) {
-    guest->SetOpener(static_cast<brave::TabViewGuest*>(guest_delegate_));
-  }
-  callback.Run(clone);
-}
-
 void WebContents::Clone(mate::Arguments* args) {
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
@@ -2265,7 +2255,6 @@ void WebContents::Clone(mate::Arguments* args) {
   } else {
     options = mate::Dictionary::CreateEmpty(isolate());
   }
-  options.Set("userGesture", true);
 
   base::Callback<void(content::WebContents*)> callback;
   if (!args->GetNext(&callback)) {
@@ -2278,15 +2267,24 @@ void WebContents::Clone(mate::Arguments* args) {
     return;
   }
 
-  base::DictionaryValue create_params;
-  create_params.SetBoolean("clone", true);
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  int opener_tab_id = GetID();
+  options.Set("openerTabId", opener_tab_id);
+  options.Set("userGesture", true);
+  options.Set("windowId", tab_helper->window_id());
+  options.Set("clone", true);
 
-  extensions::TabHelper::CreateTab(web_contents(),
-      GetBrowserContext(),
+
+  auto owner = brave::TabViewGuest::FromWebContents(
+      web_contents())->owner_web_contents();
+
+  base::DictionaryValue create_params;
+
+  extensions::TabHelper::CreateTab(owner,
+      web_contents()->GetBrowserContext(),
       create_params,
-      base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
-        base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
-            options, callback)));
+      base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
+          options, callback));
 }
 
 void WebContents::SetActive(bool active) {
@@ -2918,6 +2916,12 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
   if (!source)
     source = web_contents();
+
+  bool clone = false;
+  if (options.Get("clone", &clone) && clone) {
+    tab->GetController().CopyStateFrom(
+        source->GetController(), true);
+  }
 
   bool was_blocked = false;
   AddNewContents(source,

@@ -331,10 +331,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
       base::Callback<void(content::WebContents*)> callback,
       content::WebContents* tab);
 
-  void OnCloneCreated(const mate::Dictionary& options,
-      base::Callback<void(content::WebContents*)> callback,
-      content::WebContents* clone);
-
   void AuthorizePlugin(mate::Arguments* args);
 
   void MoveTo(mate::Arguments* args);
