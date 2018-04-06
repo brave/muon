@@ -66,12 +66,8 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(const std::string tor_path,
       + ":" + port_));
 }
 
-void ProxyConfigServiceTor::OnTorCrashed(int32_t pid) {
+void ProxyConfigServiceTor::OnTorCrashed(int64_t pid) {
   LOG(ERROR) << "Tor Process(" << pid << ") Crashed";
-  BrowserThread::PostTask(
-      BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
-      base::Bind(&ProxyConfigServiceTor::LaunchTorProcess,
-                 base::Unretained(this)));
 }
 
 ProxyConfigServiceTor::~ProxyConfigServiceTor() {}
