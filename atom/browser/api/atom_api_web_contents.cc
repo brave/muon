@@ -571,10 +571,9 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
     zoom::ZoomController::CreateForWebContents(web_contents);
     brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
 
-    // Initialize the tab helper
-    extensions::TabHelper::CreateForWebContents(web_contents);
-
     if (IsGuest()) {
+      // Initialize the tab helper
+      extensions::TabHelper::CreateForWebContents(web_contents);
       // Initialize autofill client
       autofill::AtomAutofillClient::CreateForWebContents(web_contents);
       std::string locale = static_cast<brave::BraveContentBrowserClient*>(
