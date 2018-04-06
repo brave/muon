@@ -18,19 +18,10 @@
 int pipehack[2];
 
 static void SIGCHLDHandler(int signal) {
-  pid_t p;
-  int status;
-
-  if ((p = waitpid(-1, &status, WNOHANG | WUNTRACED)) != -1) {
-    if (WIFSIGNALED(status) || WCOREDUMP(status)) {
-      write(pipehack[1], &p, sizeof(pid_t));
-    } else if (WIFEXITED(status)) {
-      // TODO(darkdh): Handle "Address already in use" issue. Not notifying as
-      // workaroud for now to prevent infinitely relaunch
-      if (!WEXITSTATUS(status))
-        write(pipehack[1], &p, sizeof(pid_t));
-    }
-  }
+  int error = errno;
+  char ch = 0;
+  write(pipehack[1], &ch, 1);
+  errno = error;
 }
 
 static void SetupPipeHack() {
@@ -43,16 +34,16 @@ static void SetupPipeHack() {
       LOG(ERROR) << "get flags";
     if (i == 1)
       flags |= O_NONBLOCK;
-    flags |= O_CLOEXEC;
     if (fcntl(pipehack[i], F_SETFL, flags) == -1)
       LOG(ERROR) << "set flags";
+    if ((flags = fcntl(pipehack[i], F_GETFD)) == -1)
+      LOG(ERROR) << "get fd flags";
+    flags |= FD_CLOEXEC;
+    if (fcntl(pipehack[i], F_SETFD, flags) == -1)
+      LOG(ERROR) << "set fd flags";
   }
 
   struct sigaction action;
-  memset(&action, 0, sizeof(action));
-  action.sa_handler = SIG_IGN;
-  sigaction(SIGPIPE, &action, NULL);
-
   memset(&action, 0, sizeof(action));
   action.sa_handler = SIGCHLDHandler;
   sigaction(SIGCHLD, &action, NULL);
@@ -70,12 +61,8 @@ class TorLauncherDelegate : public base::LaunchOptions::PreExecDelegate {
 #if defined(OS_POSIX)
       for (size_t i = 0; i < 2; ++i)
         close(pipehack[i]);
+      setsid();
 #endif
-      // TODO(darkdh): doesn't prevent ctrl+c propagated by terminal
-      struct sigaction action;
-      memset(&action, 0, sizeof(action));
-      action.sa_handler = SIG_IGN;
-      sigaction(SIGINT, &action, NULL);
     }
  private:
     DISALLOW_COPY_AND_ASSIGN(TorLauncherDelegate);
@@ -89,11 +76,11 @@ TorLauncherImpl::TorLauncherImpl(
 
 TorLauncherImpl::~TorLauncherImpl() {
   if (tor_process_.IsValid()) {
+    tor_process_.Terminate(0, false);
 #if defined(OS_POSIX)
     for (size_t i = 0; i < 2; ++i)
       close(pipehack[i]);
 #endif
-    tor_process_.Terminate(0, false);
 #if defined(OS_MACOSX)
     base::PostTaskWithTraits(
         FROM_HERE, {base::MayBlock(), base::TaskPriority::BACKGROUND},
@@ -147,13 +134,24 @@ void TorLauncherImpl::SetCrashHandler(SetCrashHandlerCallback callback) {
 
 void TorLauncherImpl::MonitorChild() {
 #if defined(OS_POSIX)
-  pid_t pid;
+  char buf[PIPE_BUF];
 
   while (1) {
-      if (read(pipehack[0], &pid, sizeof(pid_t)) > 0) {
-        if (crash_handler_callback_)
-          std::move(crash_handler_callback_).Run(pid);
-        continue;
+      if (read(pipehack[0], buf, sizeof(buf)) > 0) {
+        pid_t pid;
+        int status;
+
+        if ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) != -1) {
+          if (WIFSIGNALED(status)) {
+            LOG(ERROR) << "tor got terminated by signal " << WTERMSIG(status);
+          } else if (WCOREDUMP(status)) {
+            LOG(ERROR) << "tor coredumped";
+          } else if (WIFEXITED(status)) {
+            LOG(ERROR) << "tor exit (" << WEXITSTATUS(status) << ")";
+          }
+          if (crash_handler_callback_)
+            std::move(crash_handler_callback_).Run(pid);
+        }
       } else {
         // pipes closed
         break;
