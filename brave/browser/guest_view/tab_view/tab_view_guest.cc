@@ -160,8 +160,6 @@ void TabViewGuest::LoadURLWithParams(
 }
 
 void TabViewGuest::Load() {
-  web_contents()->GetMainFrame()->ResumeBlockedRequestsForFrame();
-
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (!tab_helper->IsDiscarded()) {
     api_web_contents_->ResumeLoadingCreatedWebContents();
@@ -359,8 +357,6 @@ void TabViewGuest::DidAttachToEmbedder() {
 }
 
 void TabViewGuest::DidDetachFromEmbedder() {
-  web_contents()->GetMainFrame()->BlockRequestsForFrame();
-
   if (api_web_contents_) {
     api_web_contents_->Emit("did-detach",
         extensions::TabHelper::IdForTab(web_contents()));
