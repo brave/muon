@@ -450,16 +450,23 @@ void Session::FlushStorageData() {
   storage_partition->Flush();
 }
 
-void Session::SetProxy(const net::ProxyConfig& config,
-                       const base::Closure& callback) {
+void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
+                  const net::ProxyConfig& config,
+                  const base::Closure& callback) {
   auto proxy_service =
-    request_context_getter_->GetURLRequestContext()->proxy_service();
+    getter->GetURLRequestContext()->proxy_service();
   proxy_service->ResetConfigService(base::WrapUnique(
       new net::ProxyConfigServiceFixed(config)));
   // Refetches and applies the new pac script if provided.
   proxy_service->ForceReloadProxyConfig();
-  if (callback)
-    callback.Run();
+  BrowserThread::PostTask(
+    BrowserThread::UI, FROM_HERE, callback);
+}
+
+void Session::SetProxy(const net::ProxyConfig& config,
+                       const base::Closure& callback) {
+  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
+    base::Bind(&SetProxyInIO, request_context_getter_, config, callback));
 }
 
 void Session::SetDownloadPath(const base::FilePath& path) {

@@ -31,15 +31,15 @@ const char kSocksProxy[] = "socks5";
 // Implementation of ProxyConfigService that returns a tor specific result.
 class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
  public:
-  explicit ProxyConfigServiceTor(const std::string tor_path,
-    const std::string tor_proxy);
+  explicit ProxyConfigServiceTor(const base::FilePath::StringType& tor_path,
+    const std::string& tor_proxy);
   ~ProxyConfigServiceTor() override;
 
   static void TorSetProxy(
     scoped_refptr<brightray::URLRequestContextGetter>
       url_request_context_getter,
     const std::string tor_proxy,
-    const std::string tor_path,
+    const base::FilePath::StringType& tor_path,
     const bool isolated_storage,
     const base::FilePath partition_path);
 
@@ -68,7 +68,7 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
   std::string host_;
   std::string port_;
   std::string username_;
-  std::string tor_path_;
+  base::FilePath::StringType tor_path_;
 };
 
 }  // namespace net
