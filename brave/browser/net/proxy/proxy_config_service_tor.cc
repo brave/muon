@@ -22,8 +22,9 @@ namespace net {
 using content::BrowserThread;
 const int kTorPasswordLength = 16;
 
-ProxyConfigServiceTor::ProxyConfigServiceTor(const std::string tor_path,
-  const std::string tor_proxy) {
+ProxyConfigServiceTor::ProxyConfigServiceTor(
+  const base::FilePath::StringType& tor_path,
+  const std::string& tor_proxy) {
     if (tor_path.length() && tor_proxy.length()) {
       tor_path_ = tor_path;
       url::Parsed url;
@@ -73,25 +74,15 @@ void ProxyConfigServiceTor::OnTorCrashed(int64_t pid) {
 ProxyConfigServiceTor::~ProxyConfigServiceTor() {}
 
 void ProxyConfigServiceTor::LaunchTorProcess() {
-  std::vector<std::string> args;
-  args.push_back("--ignore-missing-torrc");
-  args.push_back("-f");
-  args.push_back("/nonexistent");
-  args.push_back("--defaults-torrc");
-  args.push_back("/nonexistent");
-  args.push_back("--SocksPort");
-  args.push_back(host_ + ":" + port_);
   base::FilePath user_data_dir;
+  base::FilePath tor_data_path;
   PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   if (!user_data_dir.empty()) {
-    args.push_back("--DataDirectory");
-    base::FilePath tor_data_path =
-      user_data_dir.Append(FILE_PATH_LITERAL("tor"))
+    tor_data_path = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
       .Append(FILE_PATH_LITERAL("data"));
     base::CreateDirectory(tor_data_path);
-    args.push_back(tor_data_path.value());
   }
-  tor_launcher_->Launch(base::FilePath(tor_path_), args,
+  tor_launcher_->Launch(base::FilePath(tor_path_), host_, port_, tor_data_path,
                         base::Bind(&ProxyConfigServiceTor::OnTorLaunched,
                                    base::Unretained(this)));
   tor_launcher_->SetCrashHandler(base::Bind(
@@ -103,7 +94,7 @@ void ProxyConfigServiceTor::TorSetProxy(
     scoped_refptr<brightray::URLRequestContextGetter>
       url_request_context_getter,
     const std::string tor_proxy,
-    const std::string tor_path,
+    const base::FilePath::StringType& tor_path,
     const bool isolated_storage,
     const base::FilePath partition_path) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
@@ -113,7 +104,7 @@ void ProxyConfigServiceTor::TorSetProxy(
     proxy_service();
   // Notice CreateRequestContextForStoragePartition will only be called once
   // per partition_path so there is no need to cache password per origin
-  std::string origin = partition_path.DirName().BaseName().value();
+  std::string origin = partition_path.DirName().BaseName().AsUTF8Unsafe();
   std::unique_ptr<net::ProxyConfigServiceTor>
     config(new ProxyConfigServiceTor(tor_path, tor_proxy));
   config->SetUsername(origin);
