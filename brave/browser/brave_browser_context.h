@@ -175,7 +175,7 @@ class BraveBrowserContext : public Profile {
   bool isolated_storage_;
   bool in_memory_;
   std::string tor_proxy_;
-  std::string tor_path_;
+  base::FilePath::StringType tor_path_;
 
   URLRequestContextGetterMap url_request_context_getter_map_;
 
