@@ -52,26 +52,28 @@ static void SetupPipeHack() {
 
 namespace brave {
 
+#if defined(OS_POSIX)
 class TorLauncherDelegate : public base::LaunchOptions::PreExecDelegate {
  public:
     TorLauncherDelegate() {}
     ~TorLauncherDelegate() override {}
 
     void RunAsyncSafe() override {
-#if defined(OS_POSIX)
       for (size_t i = 0; i < 2; ++i)
         close(pipehack[i]);
       setsid();
-#endif
     }
  private:
     DISALLOW_COPY_AND_ASSIGN(TorLauncherDelegate);
 };
+#endif
 
 TorLauncherImpl::TorLauncherImpl(
     std::unique_ptr<service_manager::ServiceContextRef> service_ref)
     : service_ref_(std::move(service_ref)) {
+#if defined(OS_POSIX)
   SetupPipeHack();
+#endif
 }
 
 TorLauncherImpl::~TorLauncherImpl() {
@@ -92,19 +94,32 @@ TorLauncherImpl::~TorLauncherImpl() {
 }
 
 void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
-                             const std::vector<std::string>& args,
+                             const std::string& tor_host,
+                             const std::string& tor_port,
+                             const base::FilePath& tor_data_dir,
                              LaunchCallback callback) {
-  base::CommandLine cmdline(tor_bin);
-  for (size_t i = 0; i < args.size(); ++i) {
-    cmdline.AppendArg(args[i]);
+  base::CommandLine args(tor_bin);
+  args.AppendArg("--ignore-missing-torrc");
+  args.AppendArg("-f");
+  args.AppendArg("/nonexistent");
+  args.AppendArg("--defaults-torrc");
+  args.AppendArg("/nonexistent");
+  args.AppendArg("--SocksPort");
+  args.AppendArg(tor_host + ":" + tor_port);
+  if (!tor_data_dir.empty()) {
+    args.AppendArg("--DataDirectory");
+    args.AppendArgPath(tor_data_dir);
   }
+
   base::LaunchOptions launchopts;
+#if defined(OS_POSIX)
   TorLauncherDelegate tor_launcher_delegate;
   launchopts.pre_exec_delegate = &tor_launcher_delegate;
+#endif
 #if defined(OS_LINUX)
   launchopts.kill_on_parent_death = true;
 #endif
-  tor_process_ = base::LaunchProcess(cmdline, launchopts);
+  tor_process_ = base::LaunchProcess(args, launchopts);
 
   bool result;
   // TODO(darkdh): return success when tor connected to tor network
@@ -157,10 +172,11 @@ void TorLauncherImpl::MonitorChild() {
         break;
       }
   }
-#elif defined(OS_WINDOWS)
+#elif defined(OS_WIN)
   WaitForSingleObject(tor_process_.Handle(), INFINITE);
   if (crash_handler_callback_)
-    std::move(crash_handler_callback_).Run(pid);
+    std::move(crash_handler_callback_).
+      Run(base::GetProcId(tor_process_.Handle()));
 #else
 #error unsupported platforms
 #endif

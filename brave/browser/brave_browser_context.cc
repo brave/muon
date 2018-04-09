@@ -201,7 +201,7 @@ BraveBrowserContext::BraveBrowserContext(
     tor_proxy_ = tor_proxy;
   }
 
-  std::string tor_path;
+  base::FilePath::StringType tor_path;
   if (options.GetString("tor_path", &tor_path)) {
     tor_path_ = tor_path;
   }
@@ -367,7 +367,7 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
     if (tor_proxy_.size() && tor_path_.size()) {
-      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
+      BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
                             base::Bind(&net::ProxyConfigServiceTor::TorSetProxy,
                                             url_request_context_getter,
                                             tor_proxy_,
