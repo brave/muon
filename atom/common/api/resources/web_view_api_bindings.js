@@ -73,7 +73,7 @@ syncMethods.forEach((method) => {
 // -----------------------------------------------------------------------------
 // Custom API method implementations.
 const attachWindow = WebViewImpl.prototype.attachWindow$
-WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId, webContents) {
+WebViewImpl.prototype.attachWindow$ = async function (opt_guestInstanceId, webContents) {
   if (this.guest.getId() === opt_guestInstanceId &&
       this.guest.getState() === GuestViewImpl.GuestState.GUEST_STATE_ATTACHED) {
     return true
@@ -81,10 +81,12 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId, webContents
   const guestInstanceId = opt_guestInstanceId || this.guest.getId()
 
   if (opt_guestInstanceId) {
-    // detach if attached so that attached contents is not destroyed
+    // Detach if attached so that attached contents is not destroyed
     // but never try to call detach on a destroyed contents guest,
     // as that request will never be fulfilled.
-    this.detachGuest() // no need to await detaching since we create a new guest
+    // Also do not change this.guest if the guest has not finished detaching yet,
+    // so wait for that to be completed.
+    await this.detachGuest()
     this.guest = new GuestView('webview', guestInstanceId)
   }
 
@@ -104,6 +106,10 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId, webContents
 }
 
 WebViewImpl.prototype.detachGuest = function () {
+  // only allow 1 guest detach / attach at a time
+  if (this.detachOperation_) {
+    return this.detachOperation_
+  }
   // Do not attempt to call detach on a
   // destroyed or detached or detaching web contents.
   if (
@@ -111,7 +117,6 @@ WebViewImpl.prototype.detachGuest = function () {
     this.webContents_.isDestroyed() ||
     !this.webContents_.attached ||
     !this.guest ||
-    this.guest.guestIsDetaching_ ||
     this.guest.getState() !== GuestViewImpl.GuestState.GUEST_STATE_ATTACHED
   ) {
     return Promise.resolve()
@@ -121,14 +126,14 @@ WebViewImpl.prototype.detachGuest = function () {
   const webContents = this.webContents_
   const tabID = this.tabID
   const currentEventWrapper = this.currentEventWrapper
-  guestToDetach.guestIsDetaching_ = true
   // perform detach
   // resolve when detached or destroyed
-  return new Promise(resolve => {
+  this.detachOperation_ = new Promise(resolve => {
     // guest may destroy or detach instead of running callback
     if (webContents && !webContents.isDestroyed()) {
       webContents.addListener('will-destroy', resolve)
     }
+    // try to detach
     guestToDetach.detach(() => {
       // detach successful so don't need to resolve on destroy
       if (webContents && !webContents.isDestroyed()) {
@@ -139,11 +144,12 @@ WebViewImpl.prototype.detachGuest = function () {
   })
   // don't forward previously-attached tab events to this webview anymore
   .then(() => {
-    guestToDetach.guestIsDetaching_ = false
+    this.detachOperation_ = null
     if (tabID && currentEventWrapper) {
       GuestViewInternal.removeListener(tabID, currentEventWrapper)
     }
   })
+  return this.detachOperation_
 }
 
 WebViewImpl.prototype.attachGuest = function (guestInstanceId, webContents) {
