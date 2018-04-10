@@ -1467,6 +1467,29 @@ index cb122b1bcdb3787276ec98f51d40fe417eb07748..186982f063bdffe3cb5070e7d7cbdf47
      SiteInstance* owner_site_instance = delegate_->GetOwnerSiteInstance();
      bad_message::ReceivedBadMessage(
          owner_site_instance->GetProcess(),
+diff --git a/content/browser/find_request_manager.cc b/content/browser/find_request_manager.cc
+index b38fc35cc144bd4fa2c8093d169088dd5bd27c4d..d87f2e9fdd3365f4ce22711e662292d6748e5ac9 100644
+--- a/content/browser/find_request_manager.cc
++++ b/content/browser/find_request_manager.cc
+@@ -86,6 +86,8 @@ FrameTreeNode* GetParent(FrameTreeNode* node) {
+   // The parent frame may be in another WebContents.
+   if (node->IsMainFrame()) {
+     auto* contents = WebContentsImpl::FromFrameTreeNode(node);
++    if (static_cast<WebContentsImpl*>(contents)->GetBrowserPluginGuest())
++      return nullptr;
+     if (GuestMode::IsCrossProcessFrameGuest(contents)) {
+       int node_id = contents->GetOuterDelegateFrameTreeNodeId();
+       if (node_id != FrameTreeNode::kFrameTreeNodeInvalidId)
+@@ -625,6 +627,9 @@ RenderFrameHost* FindRequestManager::Traverse(RenderFrameHost* from_rfh,
+                                               bool forward,
+                                               bool matches_only,
+                                               bool wrap) const {
++  if (static_cast<WebContentsImpl*>(contents_)->GetBrowserPluginGuest() &&
++      WebContents::FromRenderFrameHost(from_rfh) != contents_)
++    from_rfh = GetInitialFrame(forward);
+   DCHECK(from_rfh);
+   FrameTreeNode* node =
+       static_cast<RenderFrameHostImpl*>(from_rfh)->frame_tree_node();
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index 6e105e13b6c5624e2a879471128a90951843e1c4..fe305b57d19f19494cd89ea7af6ae2592405d197 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
