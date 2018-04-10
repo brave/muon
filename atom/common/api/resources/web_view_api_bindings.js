@@ -104,10 +104,12 @@ WebViewImpl.prototype.attachWindow$ = function (opt_guestInstanceId, webContents
 }
 
 WebViewImpl.prototype.detachGuest = function () {
-  // do not attempt to call detach on a destroyed web contents
+  // Do not attempt to call detach on a
+  // destroyed or detached or detaching web contents.
   if (
     !this.webContents_ ||
     this.webContents_.isDestroyed() ||
+    !this.webContents_.attached ||
     !this.guest ||
     this.guest.guestIsDetaching_ ||
     this.guest.getState() !== GuestViewImpl.GuestState.GUEST_STATE_ATTACHED
