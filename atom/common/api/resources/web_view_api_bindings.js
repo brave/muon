@@ -93,39 +93,64 @@ WebViewImpl.prototype.attachWindow$ = async function (opt_guestInstanceId, webCo
   const attached = GuestViewContainer.prototype.attachWindow$.call(this)
 
   if (attached) {
-    // cache webContents_
-    if (webContents) {
+    this.attachedGuestInstanceId = guestInstanceId
+    this.attachedWebContentsOp = webContents
+      ? Promise.resolve(webContents)
+      : new Promise(resolve => {
+          if (webContents) {
+            resolve(webContents)
+          } else {
+            WebViewInternal.getWebContents(guestInstanceId, (remoteWebContents) => { 
+              // are we still looking for this contents?
+              // or are we detached / attached to something different
+              if (this.attachedGuestInstanceId && this.attachedGuestInstanceId !== guestInstanceId) {
+                if (this.attachedWebContentsOp) {
+                  this.attachedWebContentsOp.then(resolve)
+                  return
+                }
+                resolve(null)
+              }
+              resolve(remoteWebContents)
+            })
+          }
+        })
+    // backwards compat for sync methods
+    this.attachedWebContentsOp.then(webContents => {
       this.webContents_ = webContents
-    } else {
-      WebViewInternal.getWebContents(guestInstanceId, (webContents) => {
-        this.webContents_ = webContents
-      })
-    }
+    })
   }
   return attached
 }
 
-WebViewImpl.prototype.detachGuest = function () {
+WebViewImpl.prototype.detachGuest = async function () {
   // only allow 1 guest detach / attach at a time
   if (this.detachOperation_) {
     return this.detachOperation_
   }
+  // the instance properties can change whilst detaching via the attachGuest function
+  const guestToDetach = this.guest
+  const tabID = this.tabID
+  const currentEventWrapper = this.currentEventWrapper
+  let webContents
+  if (this.attachedWebContentsOp) {
+    webContents = await this.attachedWebContentsOp
+  }
+  // clear attach properties
+  this.attachedWebContentsOp = null
+  this.attachedGuestInstanceId = null
+  // Perform detach or noop.
   // Do not attempt to call detach on a
   // destroyed or detached or detaching web contents.
   if (
-    !this.webContents_ ||
-    this.webContents_.isDestroyed() ||
-    !this.webContents_.attached ||
+    !webContents ||
+    webContents.isDestroyed() ||
+    !webContents.attached ||
     !this.guest ||
     this.guest.getState() !== GuestViewImpl.GuestState.GUEST_STATE_ATTACHED
   ) {
+    // already detached, noop
     return Promise.resolve()
   }
-  // the instance properties can change whilst detaching via the attachGuest function
-  const guestToDetach = this.guest
-  const webContents = this.webContents_
-  const tabID = this.tabID
-  const currentEventWrapper = this.currentEventWrapper
   // perform detach
   // resolve when detached or destroyed
   this.detachOperation_ = new Promise(resolve => {
