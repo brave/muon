@@ -900,20 +900,6 @@ void WebContents::AttachGuest(mate::Arguments* args) {
   }
 }
 
-void WebContents::ReplaceGuestContents(mate::Arguments* args) {
-  content::WebContents* new_contents = nullptr;
-  if (!args->GetNext(&new_contents)) {
-    args->ThrowError("`new_contents` is a required field");
-    return;
-  }
-
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (tab_helper)
-    args->Return(tab_helper->ReplaceGuestContents(new_contents));
-  else
-    args->Return(false);
-}
-
 void WebContents::DetachGuest(mate::Arguments* args) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper)
@@ -2783,7 +2769,6 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("forceClose", &WebContents::DestroyWebContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
       .SetMethod("autofillPopupHidden", &WebContents::AutofillPopupHidden)
-      .SetMethod("replaceGuestContents", &WebContents::ReplaceGuestContents)
       .SetMethod("_attachGuest", &WebContents::AttachGuest)
       .SetMethod("_detachGuest", &WebContents::DetachGuest)
       .SetMethod("isPlaceholder", &WebContents::IsPlaceholder)

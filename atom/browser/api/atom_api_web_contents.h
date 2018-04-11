@@ -291,7 +291,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void AutofillSelect(const std::string& value, int frontend_id, int index);
   void AutofillPopupHidden();
 
-  void ReplaceGuestContents(mate::Arguments* args);
   void AttachGuest(mate::Arguments* args);
   void DetachGuest(mate::Arguments* args);
   void IsPlaceholder(mate::Arguments* args);
