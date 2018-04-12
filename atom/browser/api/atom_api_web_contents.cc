@@ -2439,7 +2439,7 @@ void WebContents::CapturePage(mate::Arguments* args) {
 
   host->GetView()->CopyFromSurface(gfx::Rect(rect.origin(), view_size),
       bitmap_size,
-      base::Bind(&OnCapturePageDone, callback));
+      base::BindOnce(&OnCapturePageDone, callback));
 }
 
 void WebContents::GetPreferredSize(mate::Arguments* args) {
