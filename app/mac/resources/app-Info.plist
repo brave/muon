@@ -34,7 +34,5 @@
   <true/>
   <key>NSHighResolutionCapable</key>
   <true/>
-  <key>LSFileQuarantineEnabled</key>
-  <true/>
 </dict>
 </plist>
