@@ -20,6 +20,8 @@
 #include "components/component_updater/configurator_impl.h"
 #include "components/prefs/pref_service.h"
 #include "components/update_client/component_patcher_operation.h"
+#include "content/public/browser/browser_thread.h"
+#include "content/public/common/service_manager_connection.h"
 #include "net/url_request/url_request_context_getter.h"
 
 
@@ -150,7 +152,10 @@ scoped_refptr<net::URLRequestContextGetter>
 
 std::unique_ptr<service_manager::Connector>
     BraveConfigurator::CreateServiceManagerConnector() const {
-  return nullptr;
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  return content::ServiceManagerConnection::GetForProcess()
+      ->GetConnector()
+      ->Clone();
 }
 
 bool BraveConfigurator::EnabledComponentUpdates() const {
