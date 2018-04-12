@@ -144,6 +144,15 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::vector<content::ContentBrowserClient::ServiceManifestInfo>
      GetExtraServiceManifests() override;
 
+  content::ResourceDispatcherHostLoginDelegate* CreateLoginDelegate(
+      net::AuthChallengeInfo* auth_info,
+      content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+      bool is_main_frame,
+      const GURL& url,
+      bool first_auth_attempt,
+      const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
+          auth_required_callback) override;
+
   // brightray::BrowserClient:
   brightray::BrowserMainParts* OverrideCreateBrowserMainParts(
       const content::MainFunctionParams&) override;

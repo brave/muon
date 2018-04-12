@@ -869,4 +869,20 @@ void BraveContentBrowserClient::InitFrameInterfaces() {
       base::BindRepeating(&BravePasswordManagerClient::BindCredentialManager));
 }
 
+content::ResourceDispatcherHostLoginDelegate*
+BraveContentBrowserClient::CreateLoginDelegate(
+    net::AuthChallengeInfo* auth_info,
+    content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+    bool is_main_frame,
+    const GURL& url,
+    bool first_auth_attempt,
+    const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
+        auth_required_callback) {
+// TODO: Return a proper atom/browser/login_handler.h or port CreateLoginPrompt there
+//    return CreateLoginPrompt(auth_info, web_contents_getter, is_main_frame, url,
+//                           auth_required_callback); */
+
+  return;
+}
+
 }  // namespace brave
