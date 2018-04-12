@@ -1981,8 +1981,7 @@ void WebContents::InspectElement(int x, int y) {
     OpenDevTools(nullptr);
   scoped_refptr<content::DevToolsAgentHost> agent(
     content::DevToolsAgentHost::GetOrCreateFor(web_contents()));
-  agent->InspectElement(
-      managed_web_contents()->GetWebContents()->GetMainFrame(), x, y);
+  agent->InspectElement(web_contents()->GetFocusedFrame(), x, y);
 }
 
 void WebContents::InspectServiceWorker() {
