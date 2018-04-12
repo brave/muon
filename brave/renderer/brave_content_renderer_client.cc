@@ -6,6 +6,7 @@
 
 #include "atom/renderer/content_settings_manager.h"
 #include "brave/renderer/printing/brave_print_render_frame_helper_delegate.h"
+#include "chrome/common/constants.mojom.h"
 #include "chrome/common/render_messages.h"
 #include "chrome/common/secure_origin_whitelist.h"
 #include "chrome/renderer/chrome_render_frame_observer.h"
@@ -30,6 +31,7 @@
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
 #include "extensions/features/features.h"
+#include "services/service_manager/public/cpp/service_context.h"
 #include "third_party/WebKit/public/platform/URLConversion.h"
 #include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
 #include "third_party/WebKit/public/platform/WebSocketHandshakeThrottle.h"
@@ -75,6 +77,8 @@ BraveContentRendererClient::BraveContentRendererClient() {
 
 void BraveContentRendererClient::RenderThreadStarted() {
   content::RenderThread* thread = content::RenderThread::Get();
+
+  connector_ = service_manager::Connector::Create(&connector_request_);
 
   content_settings_manager_ = atom::ContentSettingsManager::GetInstance();
   #if defined(OS_WIN)
@@ -231,6 +235,13 @@ bool BraveContentRendererClient::WillSendRequest(
   return false;
 }
 
+void BraveContentRendererClient::CreateRendererService(
+    service_manager::mojom::ServiceRequest service_request) {
+  service_context_ = std::make_unique<service_manager::ServiceContext>(
+      std::make_unique<service_manager::ForwardingService>(this),
+      std::move(service_request));
+}
+
 #if BUILDFLAG(ENABLE_SPELLCHECK)
 void BraveContentRendererClient::InitSpellCheck() {
   spellcheck_ = std::make_unique<SpellCheck>(&registry_, this);
@@ -242,11 +253,27 @@ BraveContentRendererClient::CreateWebSocketHandshakeThrottle() {
   return nullptr;
 }
 
+void BraveContentRendererClient::OnStart() {
+  context()->connector()->BindConnectorRequest(std::move(connector_request_));
+}
+
 void BraveContentRendererClient::OnBindInterface(
     const service_manager::BindSourceInfo& remote_info,
     const std::string& name,
     mojo::ScopedMessagePipeHandle handle) {
   registry_.TryBindInterface(name, &handle);
 }
+
+void BraveContentRendererClient::GetInterface(
+    const std::string& interface_name,
+    mojo::ScopedMessagePipeHandle interface_pipe) {
+  // In some tests, this may not be configured.
+  if (!connector_)
+    return;
+  connector_->BindInterface(
+      service_manager::Identity(chrome::mojom::kServiceName), interface_name,
+      std::move(interface_pipe));
+}
+
 
 }  // namespace brave

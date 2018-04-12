@@ -60,15 +60,21 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
     GURL* new_url) override;
   std::unique_ptr<blink::WebSocketHandshakeThrottle>
       CreateWebSocketHandshakeThrottle() override;
+  void CreateRendererService(
+      service_manager::mojom::ServiceRequest service_request) override;
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
   void InitSpellCheck();
 #endif
 
  private:
+  // service_manager::Service:
+  void OnStart() override;
   void OnBindInterface(const service_manager::BindSourceInfo& remote_info,
                        const std::string& name,
                        mojo::ScopedMessagePipeHandle handle) override;
+  void GetInterface(const std::string& name,
+                    mojo::ScopedMessagePipeHandle request_handle) override;
 
   atom::ContentSettingsManager* content_settings_manager_;  // not owned
 
@@ -82,6 +88,9 @@ class BraveContentRendererClient : public ChromeContentRendererClient {
   std::unique_ptr<network_hints::PrescientNetworkingDispatcher>
       prescient_networking_dispatcher_;
 
+  std::unique_ptr<service_manager::Connector> connector_;
+  service_manager::mojom::ConnectorRequest connector_request_;
+  std::unique_ptr<service_manager::ServiceContext> service_context_;
   service_manager::BinderRegistry registry_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveContentRendererClient);
