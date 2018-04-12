@@ -18,7 +18,5 @@
   <true/>
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
-  <key>LSFileQuarantineEnabled</key>
-  <true/>
 </dict>
 </plist>
