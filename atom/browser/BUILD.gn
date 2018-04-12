@@ -309,6 +309,8 @@ source_set("browser") {
     ]
 
     sources += [
+      "//chrome/browser/extensions/chrome_url_request_util.cc",
+      "//chrome/browser/extensions/chrome_url_request_util.h",
       "extensions/api/atom_extensions_api_client.cc",
       "extensions/api/atom_extensions_api_client.h",
       "extensions/atom_browser_client_extensions_part.cc",

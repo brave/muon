@@ -18,16 +18,17 @@ namespace brave {
 
 CryptoBindings::CryptoBindings(
         extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction("EncryptString",
-      base::Bind(&CryptoBindings::EncryptString,
-          base::Unretained(this)));
-  RouteFunction("DecryptString",
-      base::Bind(&CryptoBindings::DecryptString,
-          base::Unretained(this)));
-}
+    : extensions::ObjectBackedNativeHandler(context) {}
 
-CryptoBindings::~CryptoBindings() {
+CryptoBindings::~CryptoBindings() {}
+
+void CryptoBindings::AddRoutes() {
+  RouteHandlerFunction(
+      "EncryptString",
+      base::Bind(&CryptoBindings::EncryptString, base::Unretained(this)));
+  RouteHandlerFunction(
+      "DecryptString",
+      base::Bind(&CryptoBindings::DecryptString, base::Unretained(this)));
 }
 
 // static

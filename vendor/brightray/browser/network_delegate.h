@@ -5,11 +5,12 @@
 #ifndef BRIGHTRAY_BROWSER_NETWORK_DELEGATE_H_
 #define BRIGHTRAY_BROWSER_NETWORK_DELEGATE_H_
 
+#include <set>
 #include <string>
 #include <vector>
 
 #include "net/base/network_delegate.h"
-#include "net/proxy/proxy_server.h"
+#include "net/base/proxy_server.h"
 
 namespace brightray {
 
@@ -70,7 +71,9 @@ class NetworkDelegate : public net::NetworkDelegate {
       const GURL& target_url,
       const GURL& referrer_url) const override;
   bool OnCanQueueReportingReport(const url::Origin& origin) const override;
-  bool OnCanSendReportingReport(const url::Origin& origin) const override;
+  void OnCanSendReportingReports(std::set<url::Origin> origins,
+                                 base::OnceCallback<void(std::set<url::Origin>)>
+                                     result_callback) const override;
   bool OnCanSetReportingClient(const url::Origin& origin,
                                const GURL& endpoint) const override;
   bool OnCanUseReportingClient(const url::Origin& origin,

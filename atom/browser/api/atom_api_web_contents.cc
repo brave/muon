@@ -77,6 +77,7 @@
 #include "content/browser/frame_host/navigation_entry_impl.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/browser_plugin_guest_manager.h"
+#include "content/public/browser/download_request_utils.h"
 #include "content/public/browser/favicon_status.h"
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "content/public/browser/navigation_details.h"
@@ -131,9 +132,9 @@ using guest_view::GuestViewManager;
 namespace mate {
 
 template<>
-struct Converter<content::DownloadItem*> {
+struct Converter<download::DownloadItem*> {
   static v8::Local<v8::Value> ToV8(
-      v8::Isolate* isolate, content::DownloadItem* val) {
+      v8::Isolate* isolate, download::DownloadItem* val) {
     if (!val)
       return v8::Null(isolate);
     return atom::api::DownloadItem::Create(isolate, val).ToV8();
@@ -436,8 +437,7 @@ content::ServiceWorkerContext* GetServiceWorkerContext(
 
 // Called when CapturePage is done.
 void OnCapturePageDone(base::Callback<void(const gfx::Image&)> callback,
-                       const SkBitmap& bitmap,
-                       content::ReadbackResponse response) {
+                       const SkBitmap& bitmap) {
   callback.Run(gfx::Image::CreateFrom1xBitmap(bitmap));
 }
 
@@ -1063,13 +1063,17 @@ void WebContents::ExitFullscreenModeForTab(content::WebContents* source) {
   Emit("leave-html-full-screen");
 }
 
-void WebContents::RendererUnresponsive(content::WebContents* source) {
+void WebContents::RendererUnresponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host) {
   Emit("unresponsive");
   if ((type_ == BROWSER_WINDOW) && owner_window())
     owner_window()->RendererUnresponsive(source);
 }
 
-void WebContents::RendererResponsive(content::WebContents* source) {
+void WebContents::RendererResponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host) {
   Emit("responsive");
   if ((type_ == BROWSER_WINDOW) && owner_window())
     owner_window()->RendererResponsive(source);
@@ -1724,9 +1728,9 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
   web_contents()->GetController().LoadURLWithParams(params);
 }
 
-void OnDownloadStarted(base::Callback<void(content::DownloadItem*)> callback,
-                        content::DownloadItem* item,
-                        content::DownloadInterruptReason reason) {
+void OnDownloadStarted(base::Callback<void(download::DownloadItem*)> callback,
+                        download::DownloadItem* item,
+                        download::DownloadInterruptReason reason) {
   content::BrowserThread::PostTask(content::BrowserThread::UI, FROM_HERE,
       base::Bind(callback, item));
 }
@@ -1737,7 +1741,8 @@ void WebContents::DownloadURL(const GURL& url,
   auto download_manager =
     content::BrowserContext::GetDownloadManager(browser_context);
 
-  auto params = content::DownloadUrlParameters::CreateForWebContentsMainFrame(
+  auto params =
+      content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents(), url, NO_TRAFFIC_ANNOTATION_YET);
 
   bool prompt_for_location = false;
@@ -1751,7 +1756,7 @@ void WebContents::DownloadURL(const GURL& url,
     params->set_suggested_name(suggested_name);
   }
 
-  base::Callback<void(content::DownloadItem*)> callback;
+  base::Callback<void(download::DownloadItem*)> callback;
   if (args && args->GetNext(&callback)) {
     params->set_callback(base::Bind(OnDownloadStarted, callback));
   }
@@ -1976,8 +1981,7 @@ void WebContents::InspectElement(int x, int y) {
     OpenDevTools(nullptr);
   scoped_refptr<content::DevToolsAgentHost> agent(
     content::DevToolsAgentHost::GetOrCreateFor(web_contents()));
-  agent->InspectElement(static_cast<brightray::InspectableWebContentsImpl*>(
-      managed_web_contents()), x, y);
+  agent->InspectElement(web_contents()->GetFocusedFrame(), x, y);
 }
 
 void WebContents::InspectServiceWorker() {
@@ -2435,8 +2439,7 @@ void WebContents::CapturePage(mate::Arguments* args) {
 
   host->GetView()->CopyFromSurface(gfx::Rect(rect.origin(), view_size),
       bitmap_size,
-      base::Bind(&OnCapturePageDone, callback),
-      kBGRA_8888_SkColorType);
+      base::BindOnce(&OnCapturePageDone, callback));
 }
 
 void WebContents::GetPreferredSize(mate::Arguments* args) {
@@ -2548,7 +2551,11 @@ v8::Local<v8::Value> WebContents::TabValue() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
   std::unique_ptr<base::DictionaryValue> value(
-    ExtensionTabUtil::CreateTabObject(web_contents())->ToValue().release());
+      ExtensionTabUtil::CreateTabObject(
+          web_contents(), ExtensionTabUtil::kDontScrubTab,
+          nullptr)
+          ->ToValue()
+          .release());
 
   return content::V8ValueConverter::Create()->ToV8Value(
       value.get(), isolate()->GetCurrentContext());

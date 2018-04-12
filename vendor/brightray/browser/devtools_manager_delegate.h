@@ -38,8 +38,6 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
     const GURL& url) override {return nullptr;}
   std::string GetDiscoveryPageHTML() override
     {return std::string();}
-  std::string GetFrontendResource(const std::string& path) override
-    {return std::string();}
 
   // content::DevToolsAgentHostObserver overrides.
   void DevToolsAgentHostAttached(

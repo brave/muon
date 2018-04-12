@@ -46,7 +46,6 @@ KeyedService* PersonalDataManagerFactory::BuildServiceInstanceFor(
                 ->GetAutofillWebdataService(),
                 user_prefs::UserPrefs::Get(context),
                 nullptr,
-                nullptr,
                 context->IsOffTheRecord());
   return service;
 }

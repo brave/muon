@@ -202,10 +202,10 @@ index 6e569ec82db970ba8f1004f811ff08cc59794005..905a293ad046e5653352ec59a278df3a
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index a4af6667d9e73a67b3b218850b9ba06009afb0df..e1b3830a2d6a73ba648b4bb56612f1bc1be43d04 100644
+index f2b10dec0018b7e66ad4a5b9c77bd2510c6d6442..337540bd51b58f3edd931eae1eae13dfa24b1d8d 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
-@@ -156,6 +156,14 @@ class Android(object):
+@@ -150,6 +150,14 @@ class Android(object):
        blueprint.write('    ],\n')
        blueprint.write('}\n\n')
  
@@ -220,7 +220,7 @@ index a4af6667d9e73a67b3b218850b9ba06009afb0df..e1b3830a2d6a73ba648b4bb56612f1bc
      # Legacy Android.mk format, only used by Trusty in new branches
      with open('sources.mk', 'w+') as makefile:
        makefile.write(self.header)
-@@ -204,6 +212,7 @@ class Bazel(object):
+@@ -198,6 +206,7 @@ class Bazel(object):
        self.PrintVariableSection(out, 'crypto_sources', files['crypto'])
        self.PrintVariableSection(out, 'tool_sources', files['tool'])
        self.PrintVariableSection(out, 'tool_headers', files['tool_headers'])
@@ -228,7 +228,7 @@ index a4af6667d9e73a67b3b218850b9ba06009afb0df..e1b3830a2d6a73ba648b4bb56612f1bc
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -305,6 +314,8 @@ class GN(object):
+@@ -299,6 +308,8 @@ class GN(object):
        self.PrintVariableSection(out, 'ssl_sources',
                                  files['ssl'] + files['ssl_headers'] +
                                  files['ssl_internal_headers'])
@@ -237,7 +237,7 @@ index a4af6667d9e73a67b3b218850b9ba06009afb0df..e1b3830a2d6a73ba648b4bb56612f1bc
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -593,6 +604,21 @@ def main(platforms):
+@@ -587,6 +598,21 @@ def main(platforms):
    ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
@@ -259,7 +259,7 @@ index a4af6667d9e73a67b3b218850b9ba06009afb0df..e1b3830a2d6a73ba648b4bb56612f1bc
  
    # third_party/fiat/p256.c lives in third_party/fiat, but it is a FIPS
    # fragment, not a normal source file.
-@@ -662,6 +688,7 @@ def main(platforms):
+@@ -656,6 +682,7 @@ def main(platforms):
        'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,

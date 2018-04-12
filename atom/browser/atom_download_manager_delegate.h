@@ -33,18 +33,18 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate {
   // content::DownloadManagerDelegate:
   void Shutdown() override;
   bool DetermineDownloadTarget(
-      content::DownloadItem* download,
+      download::DownloadItem* download,
       const content::DownloadTargetCallback& callback) override;
   bool ShouldOpenDownload(
-      content::DownloadItem* download,
+      download::DownloadItem* download,
       const content::DownloadOpenDelayedCallback& callback) override;
   void GetNextId(const content::DownloadIdCallback& callback) override;
 
  private:
   // Get the save path set on the associated api::DownloadItem object
-  void GetItemSavePath(content::DownloadItem* item, base::FilePath* path);
+  void GetItemSavePath(download::DownloadItem* item, base::FilePath* path);
 
-  bool GetExtension(content::DownloadItem* item,
+  bool GetExtension(download::DownloadItem* item,
                     const base::FilePath& target_path,
                     base::FilePath::StringType* extension);
 
@@ -54,7 +54,7 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate {
 
   void OnDownloadItemSelectionCancelled(
       const content::DownloadTargetCallback& callback,
-      content::DownloadItem* item);
+      download::DownloadItem* item);
 
 
   content::DownloadManager* download_manager_;

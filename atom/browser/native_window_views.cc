@@ -808,15 +808,14 @@ void NativeWindowViews::SetBackgroundColor(const std::string& color_name) {
 }
 
 void NativeWindowViews::SetHasShadow(bool has_shadow) {
-  wm::SetShadowElevation(
-      GetNativeWindow(),
-      has_shadow ? wm::ShadowElevation::MEDIUM: wm::ShadowElevation::NONE);
+  wm::SetShadowElevation(GetNativeWindow(),
+                         has_shadow ? ::wm::kShadowElevationInactiveWindow
+                                    : wm::kShadowElevationNone);
 }
 
 bool NativeWindowViews::HasShadow() {
-  wm::ShadowElevation elevation =
-      GetNativeWindow()->GetProperty(wm::kShadowElevationKey);
-  return elevation != wm::ShadowElevation::NONE;
+  int elevation = GetNativeWindow()->GetProperty(wm::kShadowElevationKey);
+  return elevation != wm::kShadowElevationNone;
 }
 
 void NativeWindowViews::SetIgnoreMouseEvents(bool ignore) {
@@ -1140,10 +1139,6 @@ bool NativeWindowViews::CanMinimize() const {
 
 base::string16 NativeWindowViews::GetWindowTitle() const {
   return base::UTF8ToUTF16(title_);
-}
-
-bool NativeWindowViews::ShouldHandleSystemCommands() const {
-  return true;
 }
 
 views::Widget* NativeWindowViews::GetWidget() {

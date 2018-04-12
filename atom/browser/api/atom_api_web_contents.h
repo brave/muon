@@ -431,8 +431,12 @@ class WebContents : public mate::TrackableObject<WebContents>,
                                  const GURL& origin) override;
   void ExitFullscreenModeForTab(content::WebContents* source) override;
   void ContentsZoomChange(bool zoom_in) override;
-  void RendererUnresponsive(content::WebContents* source) override;
-  void RendererResponsive(content::WebContents* source) override;
+  void RendererUnresponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
+  void RendererResponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
   bool OnContextMenuShow();
   void OnContextMenuClose();
   bool HandleContextMenu(const content::ContextMenuParams& params) override;

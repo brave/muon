@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "base/sequenced_task_runner.h"
 #include "brightray/browser/inspectable_web_contents_delegate.h"
 #include "brightray/browser/inspectable_web_contents_impl.h"
 #include "brightray/browser/inspectable_web_contents_view_delegate.h"
@@ -180,6 +181,8 @@ class CommonWebContentsDelegate
   DevToolsIndexingJobsMap devtools_indexing_jobs_;
 
   base::WeakPtrFactory<CommonWebContentsDelegate> weak_ptr_factory_;
+
+  scoped_refptr<base::SequencedTaskRunner> file_task_runner_;
 
   DISALLOW_COPY_AND_ASSIGN(CommonWebContentsDelegate);
 };

@@ -6,6 +6,7 @@
 
 #include "brave/browser/brave_content_browser_client.h"
 
+#include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/common/options_switches.h"
@@ -46,7 +47,6 @@
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
-#include "components/spellcheck/spellcheck_build_features.h"
 #include "components/variations/variations_switches.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
@@ -61,11 +61,14 @@
 #include "mojo/public/cpp/bindings/scoped_interface_endpoint_handle.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "net/base/filename_util.h"
-#include "services/data_decoder/public/interfaces/constants.mojom.h"
+#include "net/ssl/client_cert_store.h"
+#include "services/data_decoder/public/mojom/constants.mojom.h"
 #include "services/metrics/metrics_mojo_service.h"
-#include "services/metrics/public/interfaces/constants.mojom.h"
-#include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
+#include "services/metrics/public/mojom/constants.mojom.h"
+#include "services/proxy_resolver/public/mojom/proxy_resolver.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
+#include "services/service_manager/public/cpp/connector.h"
+#include "services/service_manager/public/mojom/connector.mojom.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -84,13 +87,21 @@
 #include "ui/views/mus/mus_client.h"
 #endif
 
-#if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
-#include "components/spellcheck/browser/spellcheck_message_filter_platform.h"
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "chrome/services/printing/public/mojom/constants.mojom.h"
 #endif
 
-#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
-#include "chrome/services/printing/public/interfaces/constants.mojom.h"
+#if defined(USE_NSS_CERTS)
+#include "net/ssl/client_cert_store_nss.h"
 #endif
+
+#if defined(OS_MACOSX)
+#include "net/ssl/client_cert_store_mac.h"
+#endif  // defined(OS_MACOSX)
+
+#if defined(OS_WIN)
+#include "net/ssl/client_cert_store_win.h"
+#endif  // defined(OS_WIN)
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 #include "base/debug/leak_annotations.h"
@@ -242,6 +253,17 @@ bool BraveContentBrowserClient::IsValidStoragePartitionId(
   return GURL(partition_id).is_valid();
 }
 
+brightray::BrowserMainParts*
+BraveContentBrowserClient::OverrideCreateBrowserMainParts(
+    const content::MainFunctionParams& params) {
+  auto* main_parts = AtomBrowserClient::OverrideCreateBrowserMainParts(params);
+
+  static_cast<atom::AtomBrowserMainParts*>(main_parts)->AddParts(
+      ChromeService::GetInstance()->CreateExtraParts());
+
+  return main_parts;
+}
+
 void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
     content::BrowserContext* browser_context,
     const GURL& site,
@@ -322,7 +344,7 @@ void BraveContentBrowserClient::RegisterInProcessServices(
     StaticServiceMap* services) {
   {
     service_manager::EmbeddedServiceInfo info;
-    info.factory = base::Bind(&ChromeService::Create);
+    info.factory = ChromeService::GetInstance()->CreateChromeServiceFactory();
     services->insert(std::make_pair(chrome::mojom::kServiceName, info));
   }
   service_manager::EmbeddedServiceInfo info;
@@ -381,16 +403,14 @@ void BraveContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
 #endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
 
 void BraveContentBrowserClient::RenderProcessWillLaunch(
-    content::RenderProcessHost* host) {
+    content::RenderProcessHost* host,
+    service_manager::mojom::ServiceRequest* service_request) {
+
   int id = host->GetID();
   Profile* profile = Profile::FromBrowserContext(host->GetBrowserContext());
 
   host->AddFilter(new printing::PrintingMessageFilter(id, profile));
   host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
-
-#if BUILDFLAG(USE_BROWSER_SPELLCHECKER)
-  host->AddFilter(new SpellCheckMessageFilterPlatform(id));
-#endif
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   extensions_part_->RenderProcessWillLaunch(host);
@@ -404,6 +424,16 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   rc_interface->SetContentSettingRules(rules);
   bool is_incognito_process = profile->IsOffTheRecord();
   rc_interface->SetInitialConfiguration(is_incognito_process);
+
+  service_manager::mojom::ServicePtr service;
+  *service_request = mojo::MakeRequest(&service);
+  service_manager::mojom::PIDReceiverPtr pid_receiver;
+  service_manager::Identity renderer_identity = host->GetChildIdentity();
+  ChromeService::GetInstance()->connector()->StartService(
+      service_manager::Identity(chrome::mojom::kRendererServiceName,
+                                renderer_identity.user_id(),
+                                renderer_identity.instance()),
+      std::move(service), mojo::MakeRequest(&pid_receiver));
 }
 
 GURL BraveContentBrowserClient::GetEffectiveURL(
@@ -800,6 +830,29 @@ std::unique_ptr<content::NavigationUIData>
 BraveContentBrowserClient::GetNavigationUIData(
     content::NavigationHandle* navigation_handle) {
   return base::MakeUnique<ChromeNavigationUIData>(navigation_handle);
+}
+
+std::unique_ptr<net::ClientCertStore>
+BraveContentBrowserClient::CreateClientCertStore(
+    content::ResourceContext* resource_context) {
+#if defined(USE_NSS_CERTS)
+  return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreNSS(
+      net::ClientCertStoreNSS::PasswordDelegateFactory()));
+#elif defined(OS_WIN)
+  return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreWin());
+#elif defined(OS_MACOSX)
+  return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreMac());
+#elif defined(USE_OPENSSL)
+  return std::unique_ptr<net::ClientCertStore>();
+#endif
+}
+
+std::vector<content::ContentBrowserClient::ServiceManifestInfo>
+BraveContentBrowserClient::GetExtraServiceManifests() {
+  return std::vector<content::ContentBrowserClient::ServiceManifestInfo>({
+      {chrome::mojom::kRendererServiceName,
+       IDR_CHROME_RENDERER_SERVICE_MANIFEST},
+  });
 }
 
 void BraveContentBrowserClient::InitFrameInterfaces() {

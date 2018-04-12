@@ -22,6 +22,9 @@ class PathBindings : public extensions::ObjectBackedNativeHandler {
       extensions::SourceMap* source_map);
   ~PathBindings() override;
 
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
+
  private:
   void Append(const v8::FunctionCallbackInfo<v8::Value>& args);
   void DirName(const v8::FunctionCallbackInfo<v8::Value>& args);

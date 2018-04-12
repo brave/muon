@@ -10,6 +10,7 @@
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "base/files/file_path.h"
+#include "base/task_scheduler/post_task.h"
 #include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/browser_thread.h"
 #include "extensions/features/features.h"
@@ -141,8 +142,8 @@ void WebRequest::Fetch(mate::Arguments* args) {
     fetcher->SetExtraRequestHeaders(headers.ToString());
   if (!path.empty())
     fetcher->SaveResponseToFileAtPath(
-        path,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE));
+        path, base::CreateSequencedTaskRunnerWithTraits(
+                  {base::MayBlock(), base::TaskPriority::BACKGROUND}));
   fetcher->Start();
   fetchers_[fetcher] = FetchCallback(callback);
 }

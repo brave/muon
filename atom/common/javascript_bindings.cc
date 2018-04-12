@@ -39,13 +39,15 @@ std::vector<v8::Local<v8::Value>> ListValueToVector(v8::Isolate* isolate,
 JavascriptBindings::JavascriptBindings(content::RenderFrame* render_frame,
                                        extensions::ScriptContext* context)
     : content::RenderFrameObserver(render_frame),
-      extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction(
+      extensions::ObjectBackedNativeHandler(context) {}
+
+JavascriptBindings::~JavascriptBindings() {}
+
+void JavascriptBindings::AddRoutes() {
+  RouteHandlerFunction(
       "GetBinding",
       base::Bind(&JavascriptBindings::GetBinding, base::Unretained(this)));
 }
-
-JavascriptBindings::~JavascriptBindings() {}
 
 void JavascriptBindings::OnDestruct() {
   // don't self delete on render frame destruction

@@ -26,9 +26,6 @@
 #include "content/public/browser/network_service_instance.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
-#include "content/public/network/ignore_errors_cert_verifier.h"
-#include "content/public/network/network_service.h"
-#include "content/public/network/url_request_context_builder_mojo.h"
 #include "extensions/features/features.h"
 #include "net/cert/cert_verifier.h"
 #include "net/cert/ct_known_logs.h"
@@ -42,6 +39,11 @@
 #include "net/http/http_auth_preferences.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
+#include "services/network/ignore_errors_cert_verifier.h"
+#include "services/network/network_service.h"
+#include "services/network/public/cpp/features.h"
+#include "services/network/public/cpp/network_switches.h"
+#include "services/network/url_request_context_builder_mojo.h"
 #include "vendor/brightray/common/content_client.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -149,21 +151,7 @@ IOThread::Globals* IOThread::globals() {
   return globals_;
 }
 
-IOThread::Globals::
-SystemRequestContextLeakChecker::SystemRequestContextLeakChecker(
-    Globals* globals)
-    : globals_(globals) {
-  DCHECK(globals_);
-}
-
-IOThread::Globals::
-SystemRequestContextLeakChecker::~SystemRequestContextLeakChecker() {
-  globals_->system_request_context->AssertNoURLRequests();
-}
-
-IOThread::Globals::Globals()
-    : system_request_context(nullptr),
-      system_request_context_leak_checker(this) {}
+IOThread::Globals::Globals() : system_request_context(nullptr) {}
 
 IOThread::Globals::~Globals() {}
 
@@ -268,7 +256,7 @@ void IOThread::CleanUp() {
   UnregisterSTHObserver(ct_tree_tracker_.get());
   ct_tree_tracker_.reset();
 
-  globals_->system_request_context->proxy_service()->OnShutdown();
+  globals_->system_request_context->proxy_resolution_service()->OnShutdown();
 
 #if defined(USE_NSS_CERTS)
   net::SetURLRequestContextForNSSHttpIO(nullptr);
@@ -403,13 +391,13 @@ std::unique_ptr<net::HostResolver> CreateGlobalHostResolver(
   // through a designated test server.
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
-  if (!command_line.HasSwitch(switches::kHostResolverRules))
+  if (!command_line.HasSwitch(network::switches::kHostResolverRules))
     return global_host_resolver;
 
   auto remapped_resolver = std::make_unique<net::MappedHostResolver>(
       std::move(global_host_resolver));
   remapped_resolver->SetRulesFromString(
-      command_line.GetSwitchValueASCII(switches::kHostResolverRules));
+      command_line.GetSwitchValueASCII(network::switches::kHostResolverRules));
   return std::move(remapped_resolver);
 }
 
@@ -434,17 +422,17 @@ IOThread::CreateDefaultAuthHandlerFactory(net::HostResolver* host_resolver) {
 }
 
 void IOThread::SetUpProxyService(
-    content::URLRequestContextBuilderMojo* builder) const {
+    network::URLRequestContextBuilderMojo* builder) const {
   builder->set_pac_quick_check_enabled(WpadQuickCheckEnabled());
   builder->set_pac_sanitize_url_policy(
       PacHttpsUrlStrippingEnabled()
-          ? net::ProxyService::SanitizeUrlPolicy::SAFE
-          : net::ProxyService::SanitizeUrlPolicy::UNSAFE);
+          ? net::ProxyResolutionService::SanitizeUrlPolicy::SAFE
+          : net::ProxyResolutionService::SanitizeUrlPolicy::UNSAFE);
 }
 
 void IOThread::ConstructSystemRequestContext() {
-  std::unique_ptr<content::URLRequestContextBuilderMojo> builder =
-      base::MakeUnique<content::URLRequestContextBuilderMojo>();
+  std::unique_ptr<network::URLRequestContextBuilderMojo> builder =
+      base::MakeUnique<network::URLRequestContextBuilderMojo>();
 
   builder->set_user_agent(GetUserAgent());
   std::unique_ptr<atom::AtomNetworkDelegate>
@@ -466,7 +454,7 @@ void IOThread::ConstructSystemRequestContext() {
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
   builder->SetCertVerifier(
-      content::IgnoreErrorsCertVerifier::MaybeWrapCertVerifier(
+      network::IgnoreErrorsCertVerifier::MaybeWrapCertVerifier(
           command_line, switches::kUserDataDir, std::move(cert_verifier)));
 
   std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
@@ -480,12 +468,13 @@ void IOThread::ConstructSystemRequestContext() {
 
   globals_->quic_disabled = true;
 
-  if (base::FeatureList::IsEnabled(features::kNetworkService)) {
+  if (base::FeatureList::IsEnabled(network::features::kNetworkService)) {
     globals_->system_request_context_owner =
         std::move(builder)->Create(std::move(network_context_params_).get(),
                                    !is_quic_allowed_on_init_, net_log_);
     globals_->system_request_context =
-        globals_->system_request_context_owner.url_request_context.get();
+        globals_->system_request_context_owner.url_request_context_getter
+            ->GetURLRequestContext();
   } else {
     globals_->system_network_context =
         content::GetNetworkServiceImpl()->CreateNetworkContextWithBuilder(
