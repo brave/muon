@@ -148,7 +148,7 @@ index b016c0546d9af6301427a926a050da3bb0c15e59..bfa5786a2dd7376ecfff98a80e5a3835
            "translate::mojom::ContentTranslateDriver"
          ],
 diff --git a/chrome/browser/chrome_service.cc b/chrome/browser/chrome_service.cc
-index 10faefae1df8921bcdf0f7a43b0b3a279c171880..2b1a8ffee85bdbe3749a7e1be4619214fa748ea6 100644
+index 10faefae1df8921bcdf0f7a43b0b3a279c171880..209dc2ef99fc0664ac8c6be7537bb82d527e0a79 100644
 --- a/chrome/browser/chrome_service.cc
 +++ b/chrome/browser/chrome_service.cc
 @@ -46,8 +46,6 @@ class ChromeService::IOThreadContext : public service_manager::Service {
@@ -160,14 +160,12 @@ index 10faefae1df8921bcdf0f7a43b0b3a279c171880..2b1a8ffee85bdbe3749a7e1be4619214
  #if BUILDFLAG(ENABLE_SPELLCHECK)
      registry_with_source_info_.AddInterface(
          base::BindRepeating(&SpellCheckHostChromeImpl::Create), ui_task_runner);
-@@ -130,8 +128,8 @@ class ChromeService::ExtraParts : public ChromeBrowserMainExtraParts {
-     // ChromeService::BindConnector() can race with ChromeService::OnStart().
+@@ -131,7 +129,7 @@ class ChromeService::ExtraParts : public ChromeBrowserMainExtraParts {
      ChromeService::GetInstance()->InitConnector();
  
--    connection->GetConnector()->StartService(
+     connection->GetConnector()->StartService(
 -        service_manager::Identity(chrome::mojom::kServiceName));
-+    //connection->GetConnector()->StartService(
-+    //    service_manager::Identity(chrome::mojom::kServiceName));
++       service_manager::Identity(chrome::mojom::kServiceName));
    }
  
    DISALLOW_COPY_AND_ASSIGN(ExtraParts);
