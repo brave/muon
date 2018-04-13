@@ -167,8 +167,7 @@ void BraveContentRendererClient::RenderFrameCreated(
   new PepperHelper(render_frame);
 #endif
 
-  new NetErrorHelper(render_frame,
-                     chrome_observer_ ? chrome_observer_->is_online() : true);
+  new NetErrorHelper(render_frame);
 
   PasswordAutofillAgent* password_autofill_agent =
       new PasswordAutofillAgent(render_frame, registry);
