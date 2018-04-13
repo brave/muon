@@ -22,6 +22,8 @@ namespace net {
 using content::BrowserThread;
 const int kTorPasswordLength = 16;
 
+static bool g_tor_launched = false;
+
 ProxyConfigServiceTor::ProxyConfigServiceTor(
   const base::FilePath::StringType& tor_path,
   const std::string& tor_proxy) {
@@ -49,19 +51,21 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(
                       tor_proxy.begin() + url.port.begin + url.port.len);
       }
 
-      content::ServiceManagerConnection::GetForProcess()
-        ->GetConnector()
-        ->BindInterface(tor::mojom::kTorServiceName,
-                        &tor_launcher_);
+      if (!g_tor_launched) {
+        content::ServiceManagerConnection::GetForProcess()
+          ->GetConnector()
+          ->BindInterface(tor::mojom::kTorServiceName,
+                          &tor_launcher_);
 
-      tor_launcher_.set_connection_error_handler(
-        base::BindOnce(&ProxyConfigServiceTor::OnTorLauncherCrashed,
-                       base::Unretained(this)));
+        tor_launcher_.set_connection_error_handler(
+          base::BindOnce(&ProxyConfigServiceTor::OnTorLauncherCrashed,
+                         base::Unretained(this)));
 
-      BrowserThread::PostTask(
+        BrowserThread::PostTask(
           BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
           base::Bind(&ProxyConfigServiceTor::LaunchTorProcess,
                      base::Unretained(this)));
+      }
     }
     config_.proxy_rules().ParseFromString(std::string(scheme_ + "://" + host_
       + ":" + port_));
@@ -69,6 +73,7 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(
 
 void ProxyConfigServiceTor::OnTorCrashed(int64_t pid) {
   LOG(ERROR) << "Tor Process(" << pid << ") Crashed";
+  g_tor_launched = false;
 }
 
 ProxyConfigServiceTor::~ProxyConfigServiceTor() {}
@@ -118,6 +123,8 @@ void ProxyConfigServiceTor::OnTorLauncherCrashed() {
 void ProxyConfigServiceTor::OnTorLaunched(bool result) {
   if (!result)
     LOG(ERROR) << "Tor Launching Failed";
+  else
+    g_tor_launched = true;
 }
 
 ProxyConfigServiceTor::ConfigAvailability
