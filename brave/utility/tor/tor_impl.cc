@@ -17,7 +17,7 @@
 #if defined(OS_POSIX)
 int pipehack[2];
 
-static void SIGCHLDHandler(int signal) {
+static void SIGCHLDHandler(int signo) {
   int error = errno;
   char ch = 0;
   write(pipehack[1], &ch, 1);
@@ -32,6 +32,9 @@ static void SetupPipeHack() {
   for (size_t i = 0; i < 2; ++i) {
     if ((flags = fcntl(pipehack[i], F_GETFL)) == -1)
       LOG(ERROR) << "get flags";
+    // Nonblock write end on SIGCHLD handler which will notify monitor thread
+    // by sending one byte to pipe whose read end is blocked and wait for
+    // SIGCHLD to arrives to avoid busy reading
     if (i == 1)
       flags |= O_NONBLOCK;
     if (fcntl(pipehack[i], F_SETFL, flags) == -1)
@@ -48,6 +51,15 @@ static void SetupPipeHack() {
   action.sa_handler = SIGCHLDHandler;
   sigaction(SIGCHLD, &action, NULL);
 }
+
+static void TearDownPipeHack() {
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  action.sa_handler = SIG_DFL;
+  sigaction(SIGCHLD, &action, NULL);
+  for (size_t i = 0; i < 2; ++i)
+    close(pipehack[i]);
+}
 #endif
 
 namespace brave {
@@ -59,8 +71,8 @@ class TorLauncherDelegate : public base::LaunchOptions::PreExecDelegate {
     ~TorLauncherDelegate() override {}
 
     void RunAsyncSafe() override {
-      for (size_t i = 0; i < 2; ++i)
-        close(pipehack[i]);
+      // Makes tor process a new leader of process group so that it won't get
+      // affected by ctrl+c (SIGINT) in current terminal
       setsid();
     }
  private:
@@ -80,8 +92,7 @@ TorLauncherImpl::~TorLauncherImpl() {
   if (tor_process_.IsValid()) {
     tor_process_.Terminate(0, false);
 #if defined(OS_POSIX)
-    for (size_t i = 0; i < 2; ++i)
-      close(pipehack[i]);
+    TearDownPipeHack();
 #endif
 #if defined(OS_MACOSX)
     base::PostTaskWithTraits(
@@ -156,7 +167,7 @@ void TorLauncherImpl::MonitorChild() {
         pid_t pid;
         int status;
 
-        if ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) != -1) {
+        if ((pid = waitpid(-1, &status, WNOHANG)) != -1) {
           if (WIFSIGNALED(status)) {
             LOG(ERROR) << "tor got terminated by signal " << WTERMSIG(status);
           } else if (WCOREDUMP(status)) {
