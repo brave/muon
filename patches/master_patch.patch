@@ -918,10 +918,10 @@ index 1ec9a536a3784808f4bdb948c85c6a169088c347..c28e2377769fd916e1b51b01426d5651
  
  static_library("test_support") {
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
-index 700886c6ce89c43e05b16f24326ebb81b4614933..ccfe99b7572016f366b84f93a143cd1d078c2e59 100644
+index 910bf38b9c46f42edc29693af2df93b6878c9fcf..597104088e0b2062a4357365623e71644f6fb1c2 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
 +++ b/chrome/renderer/chrome_content_renderer_client.cc
-@@ -1511,6 +1511,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
+@@ -1510,6 +1510,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
  #endif
  }
  
@@ -929,7 +929,7 @@ index 700886c6ce89c43e05b16f24326ebb81b4614933..ccfe99b7572016f366b84f93a143cd1d
  void ChromeContentRendererClient::RecordRappor(const std::string& metric,
                                                 const std::string& sample) {
    if (!rappor_recorder_) {
-@@ -1528,6 +1529,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
+@@ -1527,6 +1528,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
    }
    rappor_recorder_->RecordRapporURL(metric, url);
  }
@@ -1189,27 +1189,24 @@ index 0738b6917057019a9e006a3a34fcf6164017cb46..ce3de6082c9ad8014d80a216f0c23c06
  
  // static
 diff --git a/components/metrics/metrics_service_accessor.cc b/components/metrics/metrics_service_accessor.cc
-index f00d2e8523f6f80aedd0dedcf7c8d2bc2985a0f1..565df12cd4a4c2ea7a89434709aec65331dc932b 100644
+index f00d2e8523f6f80aedd0dedcf7c8d2bc2985a0f1..4d75db134dbe537505dd87f33fdbc0204244efcb 100644
 --- a/components/metrics/metrics_service_accessor.cc
 +++ b/components/metrics/metrics_service_accessor.cc
-@@ -17,6 +17,7 @@ namespace {
- bool g_force_official_enabled_test = false;
- 
- bool IsMetricsReportingEnabledForOfficialBuild(PrefService* pref_service) {
+@@ -30,14 +30,14 @@ bool IsMetricsReportingEnabledForOfficialBuild(PrefService* pref_service) {
+ // static
+ bool MetricsServiceAccessor::IsMetricsReportingEnabled(
+     PrefService* pref_service) {
+-#if defined(GOOGLE_CHROME_BUILD)
 +#if !defined(MUON_CHROMIUM_BUILD)
-   // In official builds, disable metrics when reporting field trials are
-   // forced; otherwise, use the value of the user's preference to determine
-   // whether to enable metrics reporting.
-@@ -24,7 +25,10 @@ bool IsMetricsReportingEnabledForOfficialBuild(PrefService* pref_service) {
-              switches::kForceFieldTrials) &&
-          pref_service->GetBoolean(prefs::kMetricsReportingEnabled);
- }
--
-+#else
-+  // In non-official builds, disable metrics reporting completely.
-+  return false;
+   return IsMetricsReportingEnabledForOfficialBuild(pref_service);
+ #else
+   // In non-official builds, disable metrics reporting completely.
+   return g_force_official_enabled_test
+              ? IsMetricsReportingEnabledForOfficialBuild(pref_service)
+              : false;
+-#endif  // defined(GOOGLE_CHROME_BUILD)
 +#endif  // !defined(MUON_CHROMIUM_BUILD)
- }  // namespace
+ }
  
  // static
 diff --git a/components/os_crypt/key_storage_libsecret.cc b/components/os_crypt/key_storage_libsecret.cc
@@ -1375,7 +1372,7 @@ index 487198015037c38670805ff79dddb8161907dde5..05eebd4ee44ab32174fc80b88b9f1ee1
  }
  
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 477374eb92204634f19906ccc9e84deee83a400b..31914504adf3149c025f4a932d10afe3ad32d0f6 100644
+index ac90d44c48a0a9b81d23eb6b8e7aac96e26704d2..9b951c4522d0167e94b0109ffb10410fa0463cbf 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -137,6 +137,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1391,7 +1388,7 @@ index 477374eb92204634f19906ccc9e84deee83a400b..31914504adf3149c025f4a932d10afe3
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1628,6 +1634,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1636,6 +1642,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
    if (render_widget_host_) {
      render_widget_host_->SetActive(active);
      if (active) {
@@ -1402,7 +1399,7 @@ index 477374eb92204634f19906ccc9e84deee83a400b..31914504adf3149c025f4a932d10afe3
        if (HasFocus())
          render_widget_host_->Focus();
      } else {
-@@ -1900,7 +1910,14 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -1908,7 +1918,14 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1417,7 +1414,7 @@ index 477374eb92204634f19906ccc9e84deee83a400b..31914504adf3149c025f4a932d10afe3
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2133,8 +2150,10 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -2141,8 +2158,10 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1428,7 +1425,7 @@ index 477374eb92204634f19906ccc9e84deee83a400b..31914504adf3149c025f4a932d10afe3
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2998,6 +3017,11 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -3006,6 +3025,11 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
