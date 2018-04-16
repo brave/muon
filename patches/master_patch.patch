@@ -1189,26 +1189,19 @@ index 0738b6917057019a9e006a3a34fcf6164017cb46..ce3de6082c9ad8014d80a216f0c23c06
  
  // static
 diff --git a/components/metrics/metrics_service_accessor.cc b/components/metrics/metrics_service_accessor.cc
-index f00d2e8523f6f80aedd0dedcf7c8d2bc2985a0f1..4d75db134dbe537505dd87f33fdbc0204244efcb 100644
+index f00d2e8523f6f80aedd0dedcf7c8d2bc2985a0f1..84c5fc55eaa567cd23a7a61de64bfd00a22294f7 100644
 --- a/components/metrics/metrics_service_accessor.cc
 +++ b/components/metrics/metrics_service_accessor.cc
-@@ -30,14 +30,14 @@ bool IsMetricsReportingEnabledForOfficialBuild(PrefService* pref_service) {
+@@ -30,7 +30,8 @@ bool IsMetricsReportingEnabledForOfficialBuild(PrefService* pref_service) {
  // static
  bool MetricsServiceAccessor::IsMetricsReportingEnabled(
      PrefService* pref_service) {
 -#if defined(GOOGLE_CHROME_BUILD)
-+#if !defined(MUON_CHROMIUM_BUILD)
++  //TODO(darkdh): use SetForceIsMetricsReportingEnabledPrefLookup without patch
++#if defined(GOOGLE_CHROME_BUILD) || !defined(MUON_CHROMIUM_BUILD)
    return IsMetricsReportingEnabledForOfficialBuild(pref_service);
  #else
    // In non-official builds, disable metrics reporting completely.
-   return g_force_official_enabled_test
-              ? IsMetricsReportingEnabledForOfficialBuild(pref_service)
-              : false;
--#endif  // defined(GOOGLE_CHROME_BUILD)
-+#endif  // !defined(MUON_CHROMIUM_BUILD)
- }
- 
- // static
 diff --git a/components/os_crypt/key_storage_libsecret.cc b/components/os_crypt/key_storage_libsecret.cc
 index a1b5b975bc89c4891643adab17ce0b00ba2a8032..229928f2381eaecf6d3180109dd9aaa7725a010e 100644
 --- a/components/os_crypt/key_storage_libsecret.cc
