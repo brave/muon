@@ -47,6 +47,7 @@
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
+#include "components/unzip_service/public/interfaces/constants.mojom.h"
 #include "components/variations/variations_switches.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
@@ -364,6 +365,8 @@ void BraveContentBrowserClient::RegisterOutOfProcessServices(
     (*services)[printing::mojom::kChromePrintingServiceName] =
       l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PRINTING_SERVICE_NAME);
 #endif
+    (*services)[unzip::mojom::kServiceName] =
+      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_UNZIP_NAME);
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
