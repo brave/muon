@@ -13,6 +13,8 @@
 #include "brave/utility/importer/brave_profile_import_service.h"
 #include "chrome/common/importer/profile_import.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
+#include "components/unzip_service/public/interfaces/constants.mojom.h"
+#include "components/unzip_service/unzip_service.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/service_manager_connection.h"
 #include "content/public/common/simple_connection_filter.h"
@@ -127,6 +129,12 @@ void AtomContentUtilityClient::RegisterServices(
                       printing_info);
   }
 #endif
+  {
+    service_manager::EmbeddedServiceInfo service_info;
+    service_info.factory =
+        base::BindRepeating(&unzip::UnzipService::CreateService);
+    services->emplace(unzip::mojom::kServiceName, service_info);
+  }
 }
 
 // static

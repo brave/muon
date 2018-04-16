@@ -4,6 +4,8 @@
 
 #include "brave/renderer/brave_content_renderer_client.h"
 
+#include <utility>
+
 #include "atom/renderer/content_settings_manager.h"
 #include "brave/renderer/printing/brave_print_render_frame_helper_delegate.h"
 #include "chrome/common/constants.mojom.h"
