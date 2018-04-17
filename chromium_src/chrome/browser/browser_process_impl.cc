@@ -741,6 +741,10 @@ void BrowserProcessImpl::OnKeepAliveRestartStateChanged(bool can_restart) {}
 void BrowserProcessImpl::ResourceDispatcherHostCreated() {}
 
 void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
+  // Prevents non GOOGLE_CHROME_BUILD unconditionally return false for
+  // MetricsServiceAccessor::IsMetricsReportingEnabled
+  ChromeMetricsServiceAccessor::SetForceIsMetricsReportingEnabledPrefLookup(
+    true);
 	GoogleUpdateSettings::CollectStatsConsentTaskRunner()->PostTask(
 		FROM_HERE,
 		base::BindOnce(
