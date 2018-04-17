@@ -1575,9 +1575,18 @@ index e8d2800c34367edc70ba29c7077bc1037f7b96df..bea186f8b8eae0e9f210d441a02fe2d6
            "blink::mojom::EngagementClient",
            "blink::mojom::InstallationService",
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 973f835727b6d0050669a1bea76c84f53be85340..993c3eac61c60fe83121587572e1dbaedc052f8a 100644
+index 973f835727b6d0050669a1bea76c84f53be85340..abe5e6f4a947758f3dcee1a5e8260109c47e6e59 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
+@@ -214,7 +214,7 @@ void BrowserPlugin::Detach() {
+ 
+   attached_ = false;
+   guest_crashed_ = false;
+-  web_layer_ = nullptr;
++  // web_layer_ = nullptr;
+ 
+   BrowserPluginManager::Get()->Send(
+       new BrowserPluginHostMsg_Detach(browser_plugin_instance_id_));
 @@ -596,8 +596,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
  
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
