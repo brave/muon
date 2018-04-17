@@ -1770,19 +1770,6 @@ index d985c0df7a9cb9543003ac32751f3fc80633248a..02bd6daf7e48de8345ce3be506e02110
    };
  
    proto.attachedCallback = function() {
-diff --git a/gin/converter.h b/gin/converter.h
-index c47ec0af00087ca113f45465523c383f8aa18eb0..40a8b39e74d145f26c124eb438548e9e9147d828 100644
---- a/gin/converter.h
-+++ b/gin/converter.h
-@@ -231,7 +231,7 @@ struct ToV8Traits<T, true> {
-   static bool TryConvertToV8(v8::Isolate* isolate,
-                              T input,
-                              v8::Local<v8::Value>* output) {
--    auto maybe = ConvertToV8(isolate->GetCurrentContext(), input);
-+    auto maybe = ConvertToV8(isolate, input);
-     if (maybe.IsEmpty())
-       return false;
-     *output = maybe.ToLocalChecked();
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
 index 94b9cc352bccb74a6830ac5daea6c94ce693e511..177afce2d683bf7a04051c4c1f3fd56ef95cef32 100644
 --- a/media/base/media_switches.cc
