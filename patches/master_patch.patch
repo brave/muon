@@ -76,27 +76,6 @@ index 4bb4a043cbbcb562aed8926867660547cd7f018c..769bc73607b600d549b6185a37d6b0cc
    branding_path_component = "chromium"
  }
 +}
-diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
-index 7fa01dcbe6daf97d1afea6141f34ecce02a9837b..14649ee85015cd199403f4ecabc688f018a0032d 100644
---- a/build/toolchain/mac/BUILD.gn
-+++ b/build/toolchain/mac/BUILD.gn
-@@ -234,13 +234,15 @@ template("mac_toolchain") {
-     }
- 
-     tool("alink") {
-+      rspfile = "{{output}}.rsp"
-       script =
-           rebase_path("//build/toolchain/mac/filter_libtool.py", root_build_dir)
--      command = "$env_wrapper rm -f {{output}} && TOOL_VERSION=${tool_versions.filter_libtool} python $script libtool -static {{arflags}} -o {{output}} {{inputs}}"
-+      command = "$env_wrapper rm -f {{output}} && TOOL_VERSION=${tool_versions.filter_libtool} python $script libtool -static {{arflags}} -o {{output}} -filelist \"$rspfile\""
-       description = "LIBTOOL-STATIC {{output}}"
-       outputs = [
-         "{{output_dir}}/{{target_output_name}}{{output_extension}}",
-       ]
-+      rspfile_content = "{{inputs_newline}}"
-       default_output_dir = "{{target_out_dir}}"
-       default_output_extension = ".a"
-       output_prefix = "lib"
 diff --git a/build/toolchain/win/BUILD.gn b/build/toolchain/win/BUILD.gn
 index 53f767a0bddb274ad6b46098d45c703914f712f6..5b48281c1d944763053f237e618bf688778e269b 100644
 --- a/build/toolchain/win/BUILD.gn
