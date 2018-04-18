@@ -19,7 +19,7 @@
 #include "content/public/common/service_manager_connection.h"
 #include "content/public/common/simple_connection_filter.h"
 #include "content/public/utility/utility_thread.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"

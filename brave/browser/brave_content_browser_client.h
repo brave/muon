@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "atom/browser/atom_browser_client.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 
 namespace content {

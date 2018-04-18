@@ -2,9 +2,9 @@ import("//build/buildflag_header.gni")
 import("//build/config/chrome_build.gni")
 import("//build/config/compiler/compiler.gni")
 import("//build/config/features.gni")
-import("//extensions/features/features.gni")
-import("//ppapi/features/features.gni")
-import("//printing/features/features.gni")
+import("//extensions/buildflags/buildflags.gni")
+import("//ppapi/buildflags/buildflags.gni")
+import("//printing/buildflags/buildflags.gni")
 
 source_set("browser") {
   configs += [
@@ -52,7 +52,7 @@ source_set("browser") {
     "//components/autofill/content/browser",
     "//components/autofill/core/browser",
     "//components/resources",
-    "//components/spellcheck:build_features",
+    "//components/spellcheck:buildflags",
     "//components/subresource_filter/content/browser",
     "//components/subresource_filter/core/browser",
     "//components/sync_preferences",

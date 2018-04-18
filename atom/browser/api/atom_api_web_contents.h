@@ -22,7 +22,7 @@
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/common/context_menu_params.h"
 #include "content/public/common/favicon_url.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "ipc/ipc_sender.h"
 #include "native_mate/handle.h"
 #include "ui/gfx/image/image.h"
