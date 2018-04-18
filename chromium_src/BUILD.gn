@@ -104,8 +104,6 @@ source_set("renderer") {
   configs += [ ":chromium_src_config" ]
 
   sources = [
-    "//chrome/browser/renderer_preferences_util.cc",
-    "//chrome/browser/renderer_preferences_util.h",
     "chrome/renderer/content_settings_observer.cc",
     "chrome/renderer/content_settings_observer.h",
   ]
@@ -254,6 +252,8 @@ source_set("browser") {
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
+    "//chrome/browser/renderer_preferences_util.cc",
+    "//chrome/browser/renderer_preferences_util.h",
 
     "//chrome/browser/site_details.cc",
     "//chrome/browser/site_details.h",
