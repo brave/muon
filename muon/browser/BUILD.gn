@@ -1,4 +1,4 @@
-import("//printing/features/features.gni")
+import("//printing/buildflags/buildflags.gni")
 
 source_set("browser") {
   public_configs = [
