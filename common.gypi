@@ -1524,9 +1524,9 @@
     # Be sure to synchronize with build/module_args/v8.gni
 
     'v8_extra_library_files': [
-      '../third_party/WebKit/Source/core/streams/ByteLengthQueuingStrategy.js',
-      '../third_party/WebKit/Source/core/streams/CountQueuingStrategy.js',
-      '../third_party/WebKit/Source/core/streams/ReadableStream.js',
+      '../third_party/blink/rendering/core/streams/ByteLengthQueuingStrategy.js',
+      '../third_party/blink/rendering/core/streams/CountQueuingStrategy.js',
+      '../third_party/blink/rendering/core/streams/ReadableStream.js',
     ],
     'v8_experimental_extra_library_files': [
     ],
