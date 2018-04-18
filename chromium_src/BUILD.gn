@@ -673,12 +673,8 @@ source_set("devtools") {
     "//chrome/browser/devtools/devtools_embedder_message_dispatcher.h",
     "//chrome/browser/devtools/devtools_file_system_indexer.cc",
     "//chrome/browser/devtools/devtools_file_system_indexer.h",
-    "//chrome/browser/devtools/devtools_protocol.cc",
-    "//chrome/browser/devtools/devtools_protocol.h",
     "//chrome/browser/devtools/url_constants.cc",
     "//chrome/browser/devtools/url_constants.h",
-    "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.cc",
-    "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.h",
   ]
 
   configs += [
@@ -693,7 +689,6 @@ source_set("devtools") {
     "//net",
     "//third_party/blink/public:buildflags",
     "//ui/events:dom_keycode_converter",
-    "//chrome/browser/devtools:devtools_protocol_constants",
   ]
 }
 
@@ -1092,8 +1087,6 @@ source_set("tab_manager") {
     "//chrome/browser/resource_coordinator/tab_manager_stats_collector.h",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.cc",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.h",
-    "//chrome/browser/resource_coordinator/tab_stats.cc",
-    "//chrome/browser/resource_coordinator/tab_stats.h",
     "//chrome/browser/resource_coordinator/time.cc",
     "//chrome/browser/resource_coordinator/time.h",
     "//chrome/browser/memory_details.cc",
