@@ -1,6 +1,6 @@
 import("//build/config/ui.gni")
 import("//build/config/features.gni")
-import("//extensions/features/features.gni")
+import("//extensions/buildflags/buildflags.gni")
 import("//media/media_options.gni")
 
 source_set("browser") {

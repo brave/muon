@@ -2,8 +2,8 @@ import("//build/buildflag_header.gni")
 import("//build/config/chrome_build.gni")
 import("//build/config/compiler/compiler.gni")
 import("//build/config/features.gni")
-import("//extensions/features/features.gni")
-import("//printing/features/features.gni")
+import("//extensions/buildflags/buildflags.gni")
+import("//printing/buildflags/buildflags.gni")
 
 source_set("node") {
   public_configs = [
@@ -65,7 +65,7 @@ source_set("node") {
   deps = [
     "//electron/muon/app",
     "//content/public/common",
-    "//media:media_features",
+    "//media:media_buildflags",
     "//third_party/blink/public:blink_headers",
     "//electron/brave/common/converters",
   ]

@@ -39,7 +39,7 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/web_preferences.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "net/ssl/client_cert_identity.h"
 #include "net/ssl/ssl_cert_request_info.h"
 #include "ppapi/host/ppapi_host.h"

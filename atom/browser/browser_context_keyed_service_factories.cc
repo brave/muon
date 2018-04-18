@@ -11,9 +11,9 @@
 #include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/password_manager/password_store_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
-#include "components/spellcheck/spellcheck_build_features.h"
-#include "extensions/features/features.h"
-#include "ppapi/features/features.h"
+#include "components/spellcheck/spellcheck_buildflags.h"
+#include "extensions/buildflags/buildflags.h"
+#include "ppapi/buildflags/buildflags.h"
 #if BUILDFLAG(ENABLE_PLUGINS)
 #include "chrome/browser/plugins/plugin_prefs_factory.h"
 #endif

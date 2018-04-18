@@ -26,7 +26,7 @@
 #include "content/public/browser/network_service_instance.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "net/cert/cert_verifier.h"
 #include "net/cert/ct_known_logs.h"
 #include "net/cert/ct_log_verifier.h"

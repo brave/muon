@@ -30,7 +30,7 @@ source_set("app") {
     "//content/public/common",
     "//components/rappor/public/interfaces",
     "//gpu/config",
-    "//media:media_features",
+    "//media:media_buildflags",
     "//third_party/widevine/cdm:headers",
   ]
 }
