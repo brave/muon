@@ -11,8 +11,8 @@
 #include "components/content_settings/core/common/content_settings_pattern.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/renderer/render_thread.h"
-#include "third_party/WebKit/public/web/WebDocument.h"
-#include "third_party/WebKit/public/web/WebLocalFrame.h"
+#include "third_party/blink/public/web/web_document.h"
+#include "third_party/blink/public/web/web_local_frame.h"
 #include "url/gurl.h"
 #include "url/url_constants.h"
 

@@ -69,8 +69,8 @@ source_set("browser") {
     "//mojo/public/cpp/bindings",
     "//services/device/public/mojom",
     "//services/identity:lib",
-    "//third_party/WebKit/public:image_resources",
-    "//third_party/WebKit/public:resources",
+    "//third_party/blink/public:image_resources",
+    "//third_party/blink/public:resources",
   ]
 
   if (is_linux) {
@@ -146,7 +146,7 @@ source_set("apis") {
     "//electron/muon/browser",
     "//v8:v8",
     "//v8:v8_libplatform",
-    "//third_party/WebKit/public:blink_headers",
+    "//third_party/blink/public:blink_headers",
   ]
 
   public_deps = [
