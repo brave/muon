@@ -1905,10 +1905,10 @@ index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a9
    // Called to read raw (pre-filtered) data from this Job. Reads at most
    // |buf_size| bytes into |buf|.
    // Possible return values:
-diff --git a/third_party/WebKit/Source/core/editing/EditingBehavior.h b/third_party/WebKit/Source/core/editing/EditingBehavior.h
-index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f5492a19549e 100644
---- a/third_party/WebKit/Source/core/editing/EditingBehavior.h
-+++ b/third_party/WebKit/Source/core/editing/EditingBehavior.h
+diff --git a/third_party/blink/renderer/core/editing/editing_behavior.h b/third_party/blink/renderer/core/editing/editing_behavior.h
+index 90f13baf5daa216c0832b39137ba87f60aa2ccd2..643caf4e6825e3da6678af6a1a981c42d2bb782b 100644
+--- a/third_party/blink/renderer/core/editing/editing_behavior.h
++++ b/third_party/blink/renderer/core/editing/editing_behavior.h
 @@ -42,7 +42,7 @@ class CORE_EXPORT EditingBehavior {
    // area, maintain the horizontal position on Windows and Android but extend it
    // to the boundary of the editable content on Mac and Linux.
@@ -1918,11 +1918,11 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
    }
  
    bool ShouldSelectReplacement() const {
-diff --git a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-index 494a9bc0f29407192a4c2091eb21b553779a2615..ffd7b3557457beb4833c1520850a4d612393ba5f 100644
---- a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-+++ b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-@@ -3232,6 +3232,7 @@ void WebViewImpl::DidCloseContextMenu() {
+diff --git a/third_party/blink/renderer/core/exported/web_view_impl.cc b/third_party/blink/renderer/core/exported/web_view_impl.cc
+index 0d070fb8df7c9fe1510affdb25d1a87956b03bae..be8c8db8366e05dc17be19b37752901399282a65 100644
+--- a/third_party/blink/renderer/core/exported/web_view_impl.cc
++++ b/third_party/blink/renderer/core/exported/web_view_impl.cc
+@@ -3216,6 +3216,7 @@ void WebViewImpl::DidCloseContextMenu() {
    LocalFrame* frame = page_->GetFocusController().FocusedFrame();
    if (frame)
      frame->Selection().SetCaretBlinkingSuspended(false);
@@ -1930,11 +1930,11 @@ index 494a9bc0f29407192a4c2091eb21b553779a2615..ffd7b3557457beb4833c1520850a4d61
  }
  
  void WebViewImpl::HidePopups() {
-diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index c8fb3957f4d0c681e9bd81478da3ded2110f1a6f..89f1953453c036ebeed78199506b9f4d942d6b92 100644
---- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-+++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -323,6 +323,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+diff --git a/third_party/blink/renderer/core/html/media/autoplay_policy.cc b/third_party/blink/renderer/core/html/media/autoplay_policy.cc
+index a3616165308ae647fa7a4df47979b85f32b83003..37627f4763bad9afc8766bf9541f8224b1ceea8e 100644
+--- a/third_party/blink/renderer/core/html/media/autoplay_policy.cc
++++ b/third_party/blink/renderer/core/html/media/autoplay_policy.cc
+@@ -322,6 +322,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
    if (element_->GetLoadType() == WebMediaPlayer::kLoadTypeMediaStream)
      return false;
  
@@ -1947,7 +1947,7 @@ index c8fb3957f4d0c681e9bd81478da3ded2110f1a6f..89f1953453c036ebeed78199506b9f4d
    // We want to allow muted video to autoplay if:
    // - the flag is enabled;
    // - Data Saver is not enabled;
-@@ -339,6 +345,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -338,6 +344,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
        IsAutoplayAllowedPerSettings()) {
      return false;
    }
@@ -1960,10 +1960,10 @@ index c8fb3957f4d0c681e9bd81478da3ded2110f1a6f..89f1953453c036ebeed78199506b9f4d
  
    return true;
  }
-diff --git a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
-index 30400494164b2d2cc5d1fa5726914e965633ea55..0c982379766e07267f54d7e19f03f1e3d0fd0887 100644
---- a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
-+++ b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
+diff --git a/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.cc b/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.cc
+index a05468a6fd0cefa3f9ad6ab478427db7a64fe06d..0d057af72cc40aba676e97921d71cd57396f7a85 100644
+--- a/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.cc
++++ b/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.cc
 @@ -49,7 +49,8 @@ v8::Isolate* MainThreadIsolate() {
  static V8PerIsolateData* g_main_thread_per_isolate_data = nullptr;
  

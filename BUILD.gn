@@ -116,12 +116,12 @@ repack("packed_extra_resources") {
     "$root_gen_dir/brave/brave_strings.pak",
     "$root_gen_dir/chrome/common_resources.pak",
     "$root_gen_dir/chrome/component_extension_resources.pak",
-    "$root_gen_dir/blink/public/resources/blink_resources.pak",
     "$root_gen_dir/content/app/strings/content_strings_en-US.pak",
     "$root_gen_dir/content/browser/tracing/tracing_resources.pak",
     "$root_gen_dir/content/content_resources.pak",
     "$root_gen_dir/mojo/public/js/mojo_bindings_resources.pak",
     "$root_gen_dir/net/net_resources.pak",
+    "$root_gen_dir/third_party/blink/public/resources/blink_resources.pak",
     "$root_gen_dir/ui/resources/webui_resources.pak",
     "$root_gen_dir/ui/strings/app_locale_settings_en-US.pak",
     "$root_gen_dir/ui/strings/ui_strings_en-US.pak",
@@ -142,8 +142,8 @@ repack("packed_extra_resources") {
     "//content/browser/tracing:resources",
     "//mojo/public/js:resources",
     "//net:net_resources",
-    "//third_party/WebKit/public:image_resources",
-    "//third_party/WebKit/public:resources",
+    "//third_party/blink/public:image_resources",
+    "//third_party/blink/public:resources",
     "//ui/resources",
     "//ui/strings",
     "//components/resources:components_resources",
@@ -200,7 +200,7 @@ group("child_dependencies") {
     ":utility",
     "//base",
     "//content/public/child",
-    "//third_party/WebKit/public:blink_devtools_frontend_resources",
+    "//third_party/blink/public:blink_devtools_frontend_resources",
   ]
   if (use_aura) {
     public_deps += [ "//ui/views/mus" ]
@@ -310,7 +310,7 @@ source_set("renderer") {
     "chromium_src:renderer",
     ":common",
     "//components/autofill/content/renderer",
-    "//third_party/WebKit/public:blink_headers",
+    "//third_party/blink/public:blink_headers",
   ]
 
   data_deps = [
@@ -382,7 +382,7 @@ source_set("native_mate") {
 
   deps = [
     "build/node",
-    "//third_party/WebKit/public:blink_headers",
+    "//third_party/blink/public:blink_headers",
   ]
 }
 

@@ -18,7 +18,7 @@ source_set("browser") {
     "//components/autofill/content/browser:browser",
     "//components/password_manager/core/common",
     "//third_party/protobuf:protobuf_lite",
-    "//third_party/WebKit/public:blink_headers",
+    "//third_party/blink/public:blink_headers",
   ]
 
   deps = [
