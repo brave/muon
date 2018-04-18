@@ -184,26 +184,26 @@ bool TabHelper::AttachGuest(int window_id, int index) {
 content::WebContents* TabHelper::DetachGuest() {
   if (guest()->attached()) {
     // create temporary null placeholder
-    auto null_contents = GetTabManager()->CreateNullContents(
-        browser_->tab_strip_model(), web_contents());
+    // auto null_contents = GetTabManager()->CreateNullContents(
+    //     browser_->tab_strip_model(), web_contents());
 
-    null_contents->GetController().CopyStateFrom(
-        web_contents()->GetController(), false);
+    // null_contents->GetController().CopyStateFrom(
+    //     web_contents()->GetController(), false);
 
-    auto null_helper = FromWebContents(null_contents);
-    null_helper->index_ = get_index();
-    null_helper->pinned_ = pinned_;
-    // transfer window closing state
-    null_helper->window_closing_ = window_closing_;
-    window_closing_ = false;
+    // auto null_helper = FromWebContents(null_contents);
+    // null_helper->index_ = get_index();
+    // null_helper->pinned_ = pinned_;
+    //// transfer window closing state
+    // null_helper->window_closing_ = window_closing_;
+    // window_closing_ = false;
 
-    null_helper->SetPlaceholder(true);
+    // null_helper->SetPlaceholder(true);
 
-    // Replace the detached tab with the null placeholder
-    browser_->tab_strip_model()->ReplaceWebContentsAt(
-        get_index(), null_contents);
+    //// Replace the detached tab with the null placeholder
+    // browser_->tab_strip_model()->ReplaceWebContentsAt(
+    //     get_index(), null_contents);
 
-    return null_contents;
+    // return null_contents;
   }
   return nullptr;
 }
@@ -480,9 +480,10 @@ bool TabHelper::Discard() {
     return true;
   } else {
     if (guest()->attached()) {
-      int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-      return !!GetTabManager()->DiscardTabById(
-          web_contents_id, resource_coordinator::DiscardReason::kProactive);
+      // int64_t web_contents_id =
+      // TabManager::IdFromWebContents(web_contents());
+      // return !!GetTabManager()->DiscardTabById(
+      //     web_contents_id, resource_coordinator::DiscardReason::kProactive);
     }
   }
 }
@@ -491,7 +492,7 @@ bool TabHelper::IsDiscarded() {
   if (discarded_) {
     return true;
   }
-  return GetTabManager()->IsTabDiscarded(web_contents());
+  // return GetTabManager()->IsTabDiscarded(web_contents());
 }
 
 void TabHelper::SetPinned(bool pinned) {
