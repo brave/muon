@@ -20,6 +20,7 @@
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/resource_coordinator/discard_reason.h"
+#include "chrome/browser/resource_coordinator/tab_lifecycle_unit_external.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -75,8 +76,9 @@ namespace extensions {
 
 namespace {
 
-TabManager* GetTabManager() {
-  return g_browser_process->GetTabManager();
+resource_coordinator::GuestTabManager* GetTabManager() {
+  return static_cast<resource_coordinator::GuestTabManager*>(
+    g_browser_process->GetTabManager());
 }
 
 }  // namespace
@@ -512,9 +514,11 @@ bool TabHelper::Discard() {
     SetAutoDiscardable(false);
     return true;
   } else {
-    int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-    return !!GetTabManager()->DiscardTabById(
-        web_contents_id, resource_coordinator::DiscardReason::kProactive);
+//    if (guest()->attached()) {
+//      return resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+//          web_contents())->DiscardTab();
+//    }
+//    return false;
   }
 }
 
@@ -522,7 +526,11 @@ bool TabHelper::IsDiscarded() {
   if (discarded_) {
     return true;
   }
-  return GetTabManager()->IsTabDiscarded(web_contents());
+  auto* tab_lifecycle_unit_external =
+      resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+          web_contents());
+  return tab_lifecycle_unit_external &&
+         tab_lifecycle_unit_external->IsDiscarded();
 }
 
 void TabHelper::SetPinned(bool pinned) {
