@@ -51,7 +51,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/common/content_switches.h"
 #include "content/renderer/worker_thread_registry.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "muon/browser/muon_browser_process_impl.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"

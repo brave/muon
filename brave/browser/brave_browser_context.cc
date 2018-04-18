@@ -47,7 +47,7 @@
 #include "content/public/browser/dom_storage_context.h"
 #include "content/public/browser/storage_partition.h"
 #include "extensions/browser/pref_names.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
 #include "net/url_request/url_request_context.h"

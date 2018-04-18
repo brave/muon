@@ -3,11 +3,11 @@ import("//build/config/ui.gni")
 import("//build/config/crypto.gni")
 import("//components/os_crypt/features.gni")
 import("//components/spellcheck/spellcheck_build_features.gni")
-import("//extensions/features/features.gni")
+import("//extensions/buildflags/buildflags.gni")
 import("//media/media_options.gni")
-import("//ppapi/features/features.gni")
-import("//printing/features/features.gni")
-import("//rlz/features/features.gni")
+import("//ppapi/buildflags/buildflags.gni")
+import("//printing/buildflags/buildflags.gni")
+import("//rlz/buildflags/buildflags.gni")
 
 config("chromium_src_config") {
   if (is_clang) {
@@ -119,7 +119,7 @@ source_set("renderer") {
     "//content/public/common",
     "//chrome/renderer",
     "//components/content_settings/core/common",
-    "//components/spellcheck:build_features",
+    "//components/spellcheck:buildflags",
     "//third_party/blink/public:blink_headers",
   ]
 
@@ -164,14 +164,14 @@ source_set("browser") {
     "//components/policy/core/common",
     "//components/prefs",
     "//components/ssl_config",
-    "//components/spellcheck:build_features",
+    "//components/spellcheck:buildflags",
     "//components/safe_browsing:csd_proto",
     "//components/safe_browsing:features",
     "//components/storage_monitor",
     "//content/public/browser",
     "//electron/atom/browser",
     "//ui/message_center",
-    "//net:features",
+    "//net:buildflags",
     "//pdf",
   ]
 
@@ -569,7 +569,7 @@ source_set("browser") {
       deps += [
         "//components/spellcheck/browser",
         "//extensions/browser",
-        "//rlz/features",
+        "//rlz/buildflags",
       ]
     }
     if (use_aura) {
@@ -691,7 +691,7 @@ source_set("devtools") {
     "//base",
     "//content/public/browser",
     "//net",
-    "//third_party/blink/public:features",
+    "//third_party/blink/public:buildflags",
     "//ui/events:dom_keycode_converter",
     "//chrome/browser/devtools:devtools_protocol_constants",
   ]
