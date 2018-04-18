@@ -68,6 +68,8 @@ void GuestTabManager::TabReplacedAt(TabStripModel* tab_strip_model,
                                int index) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
+  TabManager::TabReplacedAt(tab_strip_model, old_contents, new_contents, index);
+
   auto helper = content::RestoreHelper::FromWebContents(new_contents);
   // prevent the navigation controller from trying to autoload on
   // controller->SetActive(true)

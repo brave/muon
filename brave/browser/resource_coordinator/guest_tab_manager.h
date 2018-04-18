@@ -32,6 +32,11 @@ class GuestTabManager : public TabManager {
  public:
   GuestTabManager();
 
+  content::WebContents* CreateNullContents(
+      TabStripModel* model,
+      content::WebContents* old_contents) override;
+  void DestroyOldContents(content::WebContents* old_contents) override;
+
  private:
   void ActiveTabChanged(content::WebContents* old_contents,
                         content::WebContents* new_contents,
@@ -42,10 +47,7 @@ class GuestTabManager : public TabManager {
                        content::WebContents* new_contents,
                        int index) override;
 
-  content::WebContents* CreateNullContents(
-      TabStripModel* model, content::WebContents* old_contents) override;
-  void DestroyOldContents(content::WebContents* old_contents) override;
-
+ private:
   DISALLOW_COPY_AND_ASSIGN(GuestTabManager);
 };
 
