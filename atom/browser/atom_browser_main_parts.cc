@@ -47,6 +47,7 @@
 #include "content/public/common/content_switches.h"
 #include "device/geolocation/geolocation_provider.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
+#include "media/base/media_switches.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "muon/browser/muon_browser_process_impl.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
@@ -241,6 +242,13 @@ int AtomBrowserMainParts::PreCreateThreads() {
       features::kTouchpadAndWheelScrollLatching);
   feature_list->RegisterFieldTrialOverride(
       features::kTouchpadAndWheelScrollLatching.name,
+      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
+  // Disable Unified Autoplay to prevents it from overriding our default value
+  field_trial = feature_list->GetFieldTrial(
+      media::kUnifiedAutoplay);
+  feature_list->RegisterFieldTrialOverride(
+      media::kUnifiedAutoplay.name,
       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 
 
