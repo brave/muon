@@ -23,6 +23,7 @@
 #include "chrome/browser/printing/background_printing_manager.h"
 #include "chrome/browser/printing/print_job_manager.h"
 #include "chrome/browser/profiles/profile_manager.h"
+#include "chrome/browser/resource_coordinator/tab_lifecycle_unit_source.h"
 #include "chrome/browser/shell_integration.h"
 #include "chrome/browser/status_icons/status_tray.h"
 #include "chrome/browser/ui/user_manager.h"
@@ -357,8 +358,12 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
 resource_coordinator::TabManager* BrowserProcessImpl::GetTabManager() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 #if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
-  if (!tab_manager_.get())
-    tab_manager_.reset(new resource_coordinator::GuestTabManager());
+  if (!tab_manager_) {
+    tab_manager_ = std::make_unique<resource_coordinator::GuestTabManager>();
+    tab_lifecycle_unit_source_ =
+        std::make_unique<resource_coordinator::TabLifecycleUnitSource>();
+    tab_lifecycle_unit_source_->AddObserver(tab_manager_.get());
+  }
   return tab_manager_.get();
 #else
   return nullptr;

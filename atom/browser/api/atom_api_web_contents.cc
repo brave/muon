@@ -2812,13 +2812,29 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
     tab_helper->SetPinned(pinned);
   }
 
+  int window_id = -1;
+  ::Browser *browser = nullptr;
+  if (options.Get("windowId", &window_id) && window_id != -1) {
+    auto api_window =
+        mate::TrackableObject<Window>::FromWeakMapID(isolate(), window_id);
+    if (api_window) {
+      browser = api_window->window()->browser();
+      tab_helper->SetWindowId(window_id);
+    }
+  }
+  if (!browser) {
+    browser = owner_window()->browser();
+  }
+
+  // This call needs to happen before setting autoDiscardable in order for the
+  // TabLifecycleUnitHolder for this tab to be created (which happens when
+  // inserting the tab in the TabStripModel).
+  tab_helper->SetBrowser(browser);
+
   bool autoDiscardable = true;
   if (options.Get("autoDiscardable", &autoDiscardable)) {
     tab_helper->SetAutoDiscardable(autoDiscardable);
   }
-
-  int opener_tab_id = TabStripModel::kNoTab;
-    options.Get("openerTabId", &opener_tab_id);
 
   bool discarded = false;
   if (options.Get("discarded", &discarded) && discarded && !active) {
@@ -2852,22 +2868,9 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
     tab_helper->Discard();
   }
 
-  int window_id = -1;
-  ::Browser *browser = nullptr;
-  if (options.Get("windowId", &window_id) && window_id != -1) {
-    auto api_window =
-        mate::TrackableObject<Window>::FromWeakMapID(isolate(), window_id);
-    if (api_window) {
-      browser = api_window->window()->browser();
-      tab_helper->SetWindowId(window_id);
-    }
-  }
-  if (!browser) {
-    browser = owner_window()->browser();
-  }
-
+  int opener_tab_id = TabStripModel::kNoTab;
+  options.Get("openerTabId", &opener_tab_id);
   tab_helper->SetOpener(opener_tab_id);
-  tab_helper->SetBrowser(browser);
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != TabStripModel::kNoTab) {

@@ -37,36 +37,39 @@ namespace resource_coordinator {
 
 GuestTabManager::GuestTabManager() : TabManager() {}
 
-WebContents* GuestTabManager::CreateNullContents(
-    TabStripModel* model, WebContents* old_contents) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-
-  auto tab_helper = extensions::TabHelper::FromWebContents(old_contents);
-  DCHECK(tab_helper && tab_helper->guest());
-
-  auto embedder = tab_helper->guest()->embedder_web_contents();
-
-  WebContents::CreateParams params(old_contents->GetBrowserContext());
-  params.initially_hidden = true;
-  auto contents = extensions::TabHelper::CreateTab(embedder, params);
-  content::RestoreHelper::CreateForWebContents(contents);
-  return contents;
-}
-
-void GuestTabManager::DestroyOldContents(WebContents* old_contents) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-
-  auto tab_helper = extensions::TabHelper::FromWebContents(old_contents);
-  DCHECK(tab_helper && tab_helper->guest());
-  // Let the guest destroy itself after the detach message has been received
-  tab_helper->guest()->SetCanRunInDetachedState(false);
-}
+// WebContents* GuestTabManager::CreateNullContents(
+//     TabStripModel* model, WebContents* old_contents) {
+//   DCHECK_CURRENTLY_ON(BrowserThread::UI);
+//
+//   auto tab_helper = extensions::TabHelper::FromWebContents(old_contents);
+//   DCHECK(tab_helper && tab_helper->guest());
+//
+//   auto embedder = tab_helper->guest()->embedder_web_contents();
+//
+//   WebContents::CreateParams params(old_contents->GetBrowserContext());
+//   params.initially_hidden = true;
+//   auto contents = extensions::TabHelper::CreateTab(embedder, params);
+//   content::RestoreHelper::CreateForWebContents(contents);
+//   return contents;
+// }
+//
+// void GuestTabManager::DestroyOldContents(WebContents* old_contents) {
+//   DCHECK_CURRENTLY_ON(BrowserThread::UI);
+//
+//   auto tab_helper = extensions::TabHelper::FromWebContents(old_contents);
+//   DCHECK(tab_helper && tab_helper->guest());
+//   // Let the guest destroy itself after the detach message has been
+//   received
+//   tab_helper->guest()->SetCanRunInDetachedState(false);
+// }
 
 void GuestTabManager::TabReplacedAt(TabStripModel* tab_strip_model,
                                content::WebContents* old_contents,
                                content::WebContents* new_contents,
                                int index) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
+
+  TabManager::TabReplacedAt(tab_strip_model, old_contents, new_contents, index);
 
   auto helper = content::RestoreHelper::FromWebContents(new_contents);
   // prevent the navigation controller from trying to autoload on

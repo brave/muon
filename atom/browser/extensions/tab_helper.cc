@@ -19,6 +19,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/resource_coordinator/discard_reason.h"
+#include "chrome/browser/resource_coordinator/tab_lifecycle_unit_external.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -184,26 +185,26 @@ bool TabHelper::AttachGuest(int window_id, int index) {
 content::WebContents* TabHelper::DetachGuest() {
   if (guest()->attached()) {
     // create temporary null placeholder
-    auto null_contents = GetTabManager()->CreateNullContents(
-        browser_->tab_strip_model(), web_contents());
+    // auto null_contents = GetTabManager()->CreateNullContents(
+    //     browser_->tab_strip_model(), web_contents());
 
-    null_contents->GetController().CopyStateFrom(
-        web_contents()->GetController(), false);
+    // null_contents->GetController().CopyStateFrom(
+    //     web_contents()->GetController(), false);
 
-    auto null_helper = FromWebContents(null_contents);
-    null_helper->index_ = get_index();
-    null_helper->pinned_ = pinned_;
-    // transfer window closing state
-    null_helper->window_closing_ = window_closing_;
-    window_closing_ = false;
+    // auto null_helper = FromWebContents(null_contents);
+    // null_helper->index_ = get_index();
+    // null_helper->pinned_ = pinned_;
+    //// transfer window closing state
+    // null_helper->window_closing_ = window_closing_;
+    // window_closing_ = false;
 
-    null_helper->SetPlaceholder(true);
+    // null_helper->SetPlaceholder(true);
 
-    // Replace the detached tab with the null placeholder
-    browser_->tab_strip_model()->ReplaceWebContentsAt(
-        get_index(), null_contents);
+    //// Replace the detached tab with the null placeholder
+    // browser_->tab_strip_model()->ReplaceWebContentsAt(
+    //     get_index(), null_contents);
 
-    return null_contents;
+    // return null_contents;
   }
   return nullptr;
 }
@@ -480,10 +481,10 @@ bool TabHelper::Discard() {
     return true;
   } else {
     if (guest()->attached()) {
-      int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-      return !!GetTabManager()->DiscardTabById(
-          web_contents_id, resource_coordinator::DiscardReason::kProactive);
+      return resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+          web_contents())->DiscardTab();
     }
+    return false;
   }
 }
 
@@ -491,7 +492,11 @@ bool TabHelper::IsDiscarded() {
   if (discarded_) {
     return true;
   }
-  return GetTabManager()->IsTabDiscarded(web_contents());
+  auto* tab_lifecycle_unit_external =
+      resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+          web_contents());
+  return tab_lifecycle_unit_external &&
+         tab_lifecycle_unit_external->IsDiscarded();
 }
 
 void TabHelper::SetPinned(bool pinned) {
