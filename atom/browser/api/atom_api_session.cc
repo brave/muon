@@ -48,7 +48,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/storage_partition.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/base/load_flags.h"
