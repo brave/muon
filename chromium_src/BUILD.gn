@@ -349,6 +349,15 @@ source_set("browser") {
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.cc",
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.h",
     ]
+  } 
+
+  if (is_linux) {
+    sources += [
+      "chrome/browser/themes/theme_service.cc",
+      "//chrome/browser/themes/theme_service.h",
+      "chrome/browser/themes/theme_service_factory.cc",
+      "//chrome/browser/themes/theme_service_factory.h",
+     ]
   }
 
   if (is_win) {

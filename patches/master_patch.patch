@@ -433,33 +433,6 @@ index a5ea92f2878459b49f88d4895c7d18f2e157dd6c..9cffca0352713bce12b4035c02612cd7
      }
    }
  
-diff --git a/chrome/browser/renderer_preferences_util.cc b/chrome/browser/renderer_preferences_util.cc
-index ef8350dd1f99470c0e535f39ac48b8ff867d1105..200803d01a0ee6bce2d5b3b7d97ac735a96f6ef1 100644
---- a/chrome/browser/renderer_preferences_util.cc
-+++ b/chrome/browser/renderer_preferences_util.cc
-@@ -139,7 +139,9 @@ void UpdateFromSystemSettings(content::RendererPreferences* prefs,
- #if defined(USE_AURA) && defined(OS_LINUX) && !defined(OS_CHROMEOS)
-   views::LinuxUI* linux_ui = views::LinuxUI::instance();
-   if (linux_ui) {
-// Muon uses BuildGtkUi for LinuxUI so we don't need to check if we are using 
-// the System Theme but we want to preserve the attributes passed from GTK UI 
-// to Webkit
-+#if defined(MUON_CHROMIUM_BUILD)
-     if (ThemeServiceFactory::GetForProfile(profile)->UsingSystemTheme()) {
-+#endif
-       prefs->focus_ring_color = linux_ui->GetFocusRingColor();
-       prefs->thumb_active_color = linux_ui->GetThumbActiveColor();
-       prefs->thumb_inactive_color = linux_ui->GetThumbInactiveColor();
-@@ -150,7 +152,9 @@ void UpdateFromSystemSettings(content::RendererPreferences* prefs,
-         linux_ui->GetInactiveSelectionBgColor();
-       prefs->inactive_selection_fg_color =
-         linux_ui->GetInactiveSelectionFgColor();
-+#if defined(MUON_CHROMIUM_BUILD)
-     }
-+#endif
- 
-     // If we have a linux_ui object, set the caret blink interval regardless of
-     // whether we're in native theme mode.
 diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
 index 633dc40d895baee17ebe617c14cd4333fd044dad..59eb777fae2a1b1d69d097ffe0e7af126628d317 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.cc
