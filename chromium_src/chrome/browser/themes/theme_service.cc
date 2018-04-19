@@ -24,8 +24,6 @@ ThemeService::ThemeService()
       weak_ptr_factory_(this) {}
 
 ThemeService::~ThemeService() {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  FreePlatformCaches();
 }
 
 void ThemeService::Init(Profile* profile) {
