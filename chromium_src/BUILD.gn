@@ -146,7 +146,6 @@ source_set("browser") {
     ":favicon",
     ":history",
     ":metrics",
-    ":net",
     ":password_manager",
     ":permissions",
     ":sessions",
@@ -1242,19 +1241,5 @@ source_set("sessions") {
     "//chrome/app:generated_resources",
     "//third_party/icu",
     "//third_party/protobuf:protobuf_lite",
-  ]
-}
-
-source_set("net") {
-  configs += [ "//electron/build:electron_config" ]
-  configs += [ ":chromium_src_config" ]
-
-  sources = [
-    "net/base/host_port_pair_auth.cc",
-    "net/base/url_auth_util.cc",
-    "net/socket/socks5_client_socket_auth.cc",
-  ]
-  deps = [
-    "//net",
   ]
 }
