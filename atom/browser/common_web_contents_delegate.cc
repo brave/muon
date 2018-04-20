@@ -417,7 +417,8 @@ void CommonWebContentsDelegate::DevToolsRemoveFileSystem(
 
 void CommonWebContentsDelegate::DevToolsIndexPath(
     int request_id,
-    const std::string& file_system_path) {
+    const std::string& file_system_path,
+    const std::vector<std::string>& excluded_folders) {
   if (!IsDevToolsFileSystemAdded(GetDevToolsWebContents(), file_system_path)) {
     OnDevToolsIndexingDone(request_id, file_system_path);
     return;
@@ -428,6 +429,7 @@ void CommonWebContentsDelegate::DevToolsIndexPath(
       scoped_refptr<DevToolsFileSystemIndexer::FileSystemIndexingJob>(
           devtools_file_system_indexer_->IndexPath(
               file_system_path,
+              excluded_folders,
               base::Bind(
                   &CommonWebContentsDelegate::OnDevToolsIndexingWorkCalculated,
                   base::Unretained(this),

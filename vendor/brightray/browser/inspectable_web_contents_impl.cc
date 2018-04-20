@@ -697,9 +697,25 @@ void InspectableWebContentsImpl::UpgradeDraggedFileSystemPermissions(
 }
 
 void InspectableWebContentsImpl::IndexPath(
-    int request_id, const std::string& file_system_path) {
-  if (delegate_)
-    delegate_->DevToolsIndexPath(request_id, file_system_path);
+    int request_id,
+    const std::string& file_system_path,
+    const std::string& excluded_folders_message) {
+  if (delegate_) {
+    std::vector<std::string> excluded_folders;
+    std::unique_ptr<base::Value> parsed_excluded_folders =
+        base::JSONReader::Read(excluded_folders_message);
+    if (parsed_excluded_folders && parsed_excluded_folders->is_list()) {
+      const std::vector<base::Value>& folder_paths =
+          parsed_excluded_folders->GetList();
+      for (const base::Value& folder_path : folder_paths) {
+        if (folder_path.is_string())
+          excluded_folders.push_back(folder_path.GetString());
+      }
+    }
+
+    delegate_->DevToolsIndexPath(request_id, file_system_path,
+                                 excluded_folders);
+  }
 }
 
 void InspectableWebContentsImpl::StopIndexing(int request_id) {
