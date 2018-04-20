@@ -68,6 +68,9 @@ const int kDevToolsActionTakenBoundary = 100;
 const char kDevToolsPanelShownHistogram[] = "DevTools.PanelShown";
 const int kDevToolsPanelShownBoundary = 20;
 
+static const char kDefaultFrontendURL[] =
+      "chrome-devtools://devtools/bundled/devtools_app.html";
+
 const size_t kMaxMessageChunkSize = IPC::Channel::kMaximumMessageSize / 4;
 
 void RectToDictionary(const gfx::Rect& bounds, base::DictionaryValue* dict) {
@@ -259,31 +262,15 @@ GURL GetRemoteBaseURL() {
 }
 
 GURL GetDevToolsURL(bool can_dock,
-                                    const std::string& panel) {
-  std::string url(chrome::kChromeUIDevToolsURL);
-  std::string url_string(url +
-                         ((url.find("?") == std::string::npos) ? "?" : "&"));
-  // switch (frontend_type) {
-  //   case kFrontendRemote:
-  //     url_string += "&remoteFrontend=true";
-  //     break;
-  //   case kFrontendWorker:
-  //     url_string += "&isSharedWorker=true";
-  //     break;
-  //   case kFrontendNode:
-  //     url_string += "&nodeFrontend=true";
-  //   // Fall through
-  //   case kFrontendV8:
-  //     url_string += "&v8only=true";
-  //     break;
-  //   case kFrontendDefault:
-  //   default:
-  //     break;
-  // }
+                    const std::string& panel) {
+  // FrontendType == kFrontendDefault
+  std::string url_string(kDefaultFrontendURL);
 
-  url_string += "&remoteBase=" + GetRemoteBaseURL().spec();
+  url_string += "?remoteBase=" + GetRemoteBaseURL().spec();
   if (can_dock)
     url_string += "&can_dock=true";
+  if (panel.size())
+    url_string += "&panel=" + panel;
   return SanitizeFrontendURL(GURL(url_string));
 }
 
