@@ -448,7 +448,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
                  int active_match_ordinal,
                  bool final_update) override;
   bool CheckMediaAccessPermission(
-      content::WebContents* web_contents,
+      content::RenderFrameHost* render_frame_host,
       const GURL& security_origin,
       content::MediaStreamType type) override;
   void RequestMediaAccessPermission(
