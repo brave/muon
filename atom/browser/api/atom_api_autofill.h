@@ -20,6 +20,7 @@
 
 namespace autofill {
 class AutofillProfile;
+class CreditCard;
 class PersonalDataManager;
 }
 
