@@ -804,7 +804,7 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
 #endif
 }
 
-content::ResourceDispatcherHostLoginDelegate*
+scoped_refptr<content::LoginDelegate>
 BraveContentBrowserClient::CreateLoginDelegate(
     net::AuthChallengeInfo* auth_info,
     content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
@@ -813,7 +813,7 @@ BraveContentBrowserClient::CreateLoginDelegate(
     bool first_auth_attempt,
     const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
         auth_required_callback) {
-  return new atom::LoginHandler(auth_info, web_contents_getter, is_main_frame,
+  return base::MakeRefCounted<atom::LoginHandler>(auth_info, web_contents_getter, is_main_frame,
                           url, auth_required_callback);
 }
 
