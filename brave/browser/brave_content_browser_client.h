@@ -133,7 +133,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::unique_ptr<base::Value> GetServiceManifestOverlay(
       base::StringPiece name) override;
 
-  content::ResourceDispatcherHostLoginDelegate* CreateLoginDelegate(
+  scoped_refptr<content::LoginDelegate> CreateLoginDelegate(
       net::AuthChallengeInfo* auth_info,
       content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
       bool is_main_frame,
