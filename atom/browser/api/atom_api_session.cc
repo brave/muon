@@ -59,6 +59,7 @@
 #include "net/http/transport_security_state.h"
 #include "net/proxy_resolution/proxy_config_service_fixed.h"
 #include "net/proxy_resolution/proxy_resolution_service.h"
+#include "net/traffic_annotation/network_traffic_annotation.h"
 #include "net/url_request/static_http_user_agent_settings.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
@@ -297,8 +298,9 @@ void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
                   const base::Closure& callback) {
   auto proxy_service =
       getter->GetURLRequestContext()->proxy_resolution_service();
-  proxy_service->ResetConfigService(base::WrapUnique(
-      new net::ProxyConfigServiceFixed(config)));
+  proxy_service->ResetConfigService(
+      base::WrapUnique(new net::ProxyConfigServiceFixed(
+          net::ProxyConfigWithAnnotation(config, NO_TRAFFIC_ANNOTATION_YET))));
   // Refetches and applies the new pac script if provided.
   proxy_service->ForceReloadProxyConfig();
   BrowserThread::PostTask(
