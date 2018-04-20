@@ -6,7 +6,6 @@
 
 #include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 
-#include "atom/browser/login_handler.h"
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/common/platform_util.h"
 #include "base/strings/utf_string_conversions.h"

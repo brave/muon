@@ -7,6 +7,7 @@
 #include "brave/browser/brave_content_browser_client.h"
 
 #include "atom/browser/atom_browser_main_parts.h"
+#include "atom/browser/login_handler.h"
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/common/options_switches.h"
@@ -791,6 +792,19 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
 #else
   return false;
 #endif
+}
+
+content::ResourceDispatcherHostLoginDelegate*
+BraveContentBrowserClient::CreateLoginDelegate(
+    net::AuthChallengeInfo* auth_info,
+    content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+    bool is_main_frame,
+    const GURL& url,
+    bool first_auth_attempt,
+    const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
+        auth_required_callback) {
+  return new atom::LoginHandler(auth_info, web_contents_getter, is_main_frame,
+                          url, auth_required_callback);
 }
 
 std::unique_ptr<base::Value>
