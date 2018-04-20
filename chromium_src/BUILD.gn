@@ -104,8 +104,6 @@ source_set("renderer") {
   configs += [ ":chromium_src_config" ]
 
   sources = [
-    "//chrome/browser/renderer_preferences_util.cc",
-    "//chrome/browser/renderer_preferences_util.h",
     "chrome/renderer/content_settings_observer.cc",
     "chrome/renderer/content_settings_observer.h",
   ]
@@ -253,6 +251,8 @@ source_set("browser") {
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
+    "//chrome/browser/renderer_preferences_util.cc",
+    "//chrome/browser/renderer_preferences_util.h",
 
     "//chrome/browser/site_details.cc",
     "//chrome/browser/site_details.h",
@@ -348,6 +348,15 @@ source_set("browser") {
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.cc",
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.h",
     ]
+  } 
+
+  if (is_linux) {
+    sources += [
+      "chrome/browser/themes/theme_service.cc",
+      "//chrome/browser/themes/theme_service.h",
+      "chrome/browser/themes/theme_service_factory.cc",
+      "//chrome/browser/themes/theme_service_factory.h",
+     ]
   }
 
   if (is_win) {
