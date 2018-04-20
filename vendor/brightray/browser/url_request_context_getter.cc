@@ -249,7 +249,7 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         net::DhcpPacFileFetcherFactory dhcp_factory;
         dhcp_pac_file_fetcher = dhcp_factory.Create(url_request_context_.get());
 
-        proxy_service = network::CreateProxyServiceUsingMojoFactory(
+        proxy_service = network::CreateProxyResolutionServiceUsingMojoFactory(
             ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
             std::make_unique<net::PacFileFetcherImpl>(
