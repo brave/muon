@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "base/logging.h"
-#include "base/memory/ptr_util.h"
 #include "base/values.h"
 #include "native_mate/dictionary.h"
 
@@ -388,7 +387,7 @@ base::Value* V8ValueConverter::FromV8Array(
     else
       // JSON.stringify puts null in places where values don't serialize, for
       // example undefined and functions. Emulate that behavior.
-      result->Append(base::MakeUnique<base::Value>());
+      result->Append(std::make_unique<base::Value>());
   }
   return result;
 }

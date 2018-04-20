@@ -158,7 +158,7 @@ BrowserProcessImpl::BrowserProcessImpl(
 
   message_center::MessageCenter::Initialize();
 
-  net_log_ = base::MakeUnique<net_log::ChromeNetLog>();
+  net_log_ = std::make_unique<net_log::ChromeNetLog>();
 
   // TODO(darkdh): support this later
   // if (command_line.HasSwitch(switches::kLogNetLog)) {
@@ -320,8 +320,8 @@ void BrowserProcessImpl::PreCreateThreads(
   // TODO(mmenke): Once IOThread class is no longer needed (not the thread
   // itself), this can be created on first use.
   system_network_context_manager_ =
-      base::MakeUnique<SystemNetworkContextManager>();
-  io_thread_ = base::MakeUnique<IOThread>(
+      std::make_unique<SystemNetworkContextManager>();
+  io_thread_ = std::make_unique<IOThread>(
       local_state(), policy_service(), net_log_.get(),
       extension_event_router_forwarder(),
       system_network_context_manager_.get());
@@ -578,7 +578,7 @@ IconManager* BrowserProcessImpl::icon_manager() {
 GpuModeManager* BrowserProcessImpl::gpu_mode_manager() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (!gpu_mode_manager_)
-    gpu_mode_manager_ = base::MakeUnique<GpuModeManager>();
+    gpu_mode_manager_ = std::make_unique<GpuModeManager>();
   return gpu_mode_manager_.get();
 }
 
@@ -600,7 +600,7 @@ void BrowserProcessImpl::CreateBackgroundPrintingManager() {
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
   DCHECK(!background_printing_manager_);
   background_printing_manager_ =
-      base::MakeUnique<printing::BackgroundPrintingManager>();
+      std::make_unique<printing::BackgroundPrintingManager>();
 #else
   NOTIMPLEMENTED();
 #endif

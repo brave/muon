@@ -22,7 +22,6 @@
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "base/macros.h"
-#include "base/memory/ptr_util.h"
 #include "build/build_config.h"
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/profiles/profile_io_data.h"
@@ -765,7 +764,7 @@ base::Value* ProtocolHandlerRegistry::EncodeRegisteredHandlers() {
          j != i->second.end(); ++j) {
       std::unique_ptr<base::DictionaryValue> encoded = j->Encode();
       if (IsDefault(*j)) {
-        encoded->Set("default", base::MakeUnique<base::Value>(true));
+        encoded->Set("default", std::make_unique<base::Value>(true));
       }
       protocol_handlers->Append(std::move(encoded));
     }
