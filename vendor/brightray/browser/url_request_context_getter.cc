@@ -245,16 +245,16 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
 
       std::unique_ptr<net::ProxyResolutionService> proxy_service;
       if (use_v8) {
-        std::unique_ptr<net::DhcpProxyScriptFetcher> dhcp_proxy_script_fetcher;
-        net::DhcpProxyScriptFetcherFactory dhcp_factory;
-        dhcp_proxy_script_fetcher = dhcp_factory.Create(url_request_context_.get());
+        std::unique_ptr<net::DhcpPacFileFetcher> dhcp_pac_file_fetcher;
+        net::DhcpPacFileFetcherFactory dhcp_factory;
+        dhcp_pac_file_fetcher = dhcp_factory.Create(url_request_context_.get());
 
         proxy_service = network::CreateProxyServiceUsingMojoFactory(
             ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
-            std::make_unique<net::ProxyScriptFetcherImpl>(
+            std::make_unique<net::PacFileFetcherImpl>(
                 url_request_context_.get()),
-            std::move(dhcp_proxy_script_fetcher), host_resolver.get(), net_log_,
+            std::move(dhcp_pac_file_fetcher), host_resolver.get(), net_log_,
             url_request_context_->network_delegate());
       } else {
         proxy_service = net::ProxyResolutionService::CreateUsingSystemProxyResolver(
