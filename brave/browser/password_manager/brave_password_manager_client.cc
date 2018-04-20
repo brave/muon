@@ -92,7 +92,7 @@ void BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
 
   contents->SetUserData(
       UserDataKey(),
-      base::MakeUnique<BravePasswordManagerClient>(contents, autofill_client));
+      std::make_unique<BravePasswordManagerClient>(contents, autofill_client));
 }
 
 // static

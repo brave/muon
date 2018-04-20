@@ -76,7 +76,7 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   if (!connection)
     return;
 
-  auto registry = base::MakeUnique<service_manager::BinderRegistry>();
+  auto registry = std::make_unique<service_manager::BinderRegistry>();
   // If our process runs with elevated privileges, only add elevated Mojo
   // interfaces to the interface registry.
   if (!utility_process_running_elevated_) {
@@ -90,7 +90,7 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   }
 
   connection->AddConnectionFilter(
-      base::MakeUnique<content::SimpleConnectionFilter>(std::move(registry)));
+      std::make_unique<content::SimpleConnectionFilter>(std::move(registry)));
 }
 
 bool AtomContentUtilityClient::OnMessageReceived(

@@ -7,7 +7,6 @@
 #include <string>
 
 #include "base/bind.h"
-#include "base/memory/ptr_util.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"

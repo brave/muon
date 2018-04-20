@@ -719,7 +719,7 @@ bool TabHelper::ExecuteScriptInTab(mate::Arguments* args) {
   }
 
   ExecuteScript(extension_id, std::move(copy), result, callback, file_url,
-      true, base::MakeUnique<std::string>(file.empty() ? code_string : file));
+      true, std::make_unique<std::string>(file.empty() ? code_string : file));
   return true;
 }
 

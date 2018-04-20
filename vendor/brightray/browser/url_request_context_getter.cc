@@ -308,10 +308,10 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     storage_->set_http_server_properties(std::move(server_properties));
 
     std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
-        base::MakeUnique<net::MultiLogCTVerifier>();
+        std::make_unique<net::MultiLogCTVerifier>();
     ct_verifier->AddLogs(net::ct::CreateLogVerifiersForKnownLogs());
     storage_->set_cert_transparency_verifier(std::move(ct_verifier));
-    storage_->set_ct_policy_enforcer(base::MakeUnique<net::CTPolicyEnforcer>());
+    storage_->set_ct_policy_enforcer(std::make_unique<net::CTPolicyEnforcer>());
 
     net::HttpNetworkSession::Params network_session_params;
     network_session_params.ignore_certificate_errors = false;
