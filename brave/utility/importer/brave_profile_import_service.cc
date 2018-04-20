@@ -23,7 +23,7 @@ void OnProfileImportRequest(
     service_manager::ServiceContextRefFactory* ref_factory,
     chrome::mojom::ProfileImportRequest request) {
   mojo::MakeStrongBinding(
-      base::MakeUnique<BraveProfileImportImpl>(ref_factory->CreateRef()),
+      std::make_unique<BraveProfileImportImpl>(ref_factory->CreateRef()),
       std::move(request));
 }
 
@@ -36,7 +36,7 @@ BraveProfileImportService::~BraveProfileImportService() {}
 
 std::unique_ptr<service_manager::Service>
 BraveProfileImportService::CreateService() {
-  return base::MakeUnique<BraveProfileImportService>();
+  return std::make_unique<BraveProfileImportService>();
 }
 
 void BraveProfileImportService::OnStart() {
