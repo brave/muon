@@ -42,6 +42,7 @@
 #include "components/sync_preferences/pref_service_syncable_factory.h"
 #include "components/user_prefs/user_prefs.h"
 #include "components/zoom/zoom_event_manager.h"
+#include "components/webdata_services/web_data_service_wrapper.h"
 #include "components/webdata/common/webdata_constants.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
@@ -100,6 +101,15 @@ void NotifyOTRProfileDestroyedOnIOThread(void* original_profile,
       ->OnOTRBrowserContextDestroyed(original_profile, otr_profile);
 }
 #endif
+
+void DummyFlare(syncer::ModelType type) {}
+
+void ProfileErrorCallback(WebDataServiceWrapper::ErrorType error_type,
+                          sql::InitStatus status,
+                          const std::string& diagnostics) {
+  // TODO(bridiver) - this should be reported back to JS
+  LOG(ERROR) << "Error initializing web data service " << diagnostics;
+}
 
 // WATCH(bridiver) - chrome/browser/profiles/profile_impl.cc
 // Converts the kSessionExitedCleanly pref to the corresponding EXIT_TYPE.
@@ -212,11 +222,7 @@ BraveBrowserContext::~BraveBrowserContext() {
   }
 
   if (!IsOffTheRecord() && !HasParentContext()) {
-    autofill_data_->ShutdownOnUISequence();
-#if defined(OS_WIN)
-    password_data_->ShutdownOnUISequence();
-#endif
-    web_database_->ShutdownDatabase();
+    web_database_wrapper_->Shutdown();
 
     bool prefs_loaded = user_prefs_->GetInitializationStatus() !=
         PrefService::INITIALIZATION_STATUS_WAITING;
@@ -524,36 +530,12 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
           base::FilePath());
     }
 
-    // Initialize autofill db
-    base::FilePath webDataPath = GetPath().Append(kWebDataFilename);
-
-    auto ui_task_runner =
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI);
-    auto db_task_runner = base::CreateSingleThreadTaskRunnerWithTraits(
-        {base::MayBlock(), base::TaskPriority::USER_VISIBLE,
-         base::TaskShutdownBehavior::BLOCK_SHUTDOWN});
-
-    CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-    web_database_ =
-       new WebDatabaseService(webDataPath, ui_task_runner, db_task_runner);
-    web_database_->AddTable(base::WrapUnique(new autofill::AutofillTable));
-    web_database_->AddTable(base::WrapUnique(new LoginsTable));
-    web_database_->LoadDatabase();
-
-    autofill_data_ = new autofill::AutofillWebDataService(
-        web_database_,
-        ui_task_runner,
-        db_task_runner,
-        base::Bind(&DatabaseErrorCallback));
-    autofill_data_->Init();
-
-#if defined(OS_WIN)
-    password_data_ = new PasswordWebDataService(
-        web_database_,
-        ui_task_runner,
-        base::Bind(&PasswordErrorCallback));
-    password_data_->Init();
-#endif
+    const base::FilePath& profile_path = GetPath();
+    web_database_wrapper_.reset(new WebDataServiceWrapper(
+        profile_path, g_browser_process->GetApplicationLocale(),
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
+        base::Bind(&DummyFlare),
+        base::BindRepeating(&ProfileErrorCallback)));
   }
 
   user_prefs_registrar_->Init(user_prefs_.get());
@@ -591,13 +573,13 @@ BraveBrowserContext::CreateZoomLevelDelegate(
 
 scoped_refptr<autofill::AutofillWebDataService>
 BraveBrowserContext::GetAutofillWebdataService() {
-  return original_context()->autofill_data_;
+  return original_context()->web_database_wrapper_->GetAutofillWebData();
 }
 
 #if defined(OS_WIN)
 scoped_refptr<PasswordWebDataService>
 BraveBrowserContext::GetPasswordWebdataService() {
-  return original_context()->password_data_;
+  return original_context()->web_database_wrapper_->GetPasswordWebData();
 }
 #endif
 
