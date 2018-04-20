@@ -541,7 +541,7 @@ void CommonWebContentsDelegate::DevToolsAddFileSystemInteral(
   auto pref_service = GetPrefService(GetDevToolsWebContents());
   DictionaryPrefUpdate update(pref_service, prefs::kDevToolsFileSystemPaths);
   update.Get()->SetWithoutPathExpansion(
-      path.AsUTF8Unsafe(), base::MakeUnique<base::Value>(type));
+      path.AsUTF8Unsafe(), std::make_unique<base::Value>(type));
 
   web_contents_->CallClientFunction("DevToolsAPI.fileSystemAdded",
                                     file_system_value.get(),

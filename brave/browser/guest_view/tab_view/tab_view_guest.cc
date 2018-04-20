@@ -20,7 +20,6 @@
 #include "atom/common/native_mate_converters/content_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/browser/extensions/api/atom_extensions_api_client.h"
-#include "base/memory/ptr_util.h"
 #include "brave/browser/brave_browser_context.h"
 #include "build/build_config.h"
 #include "chrome/browser/browser_process.h"
@@ -181,7 +180,7 @@ void TabViewGuest::DidFinishNavigation(
                    web_contents()->GetController().GetEntryCount());
   args->SetInteger(webview::kInternalProcessId,
                    web_contents()->GetMainFrame()->GetProcess()->GetID());
-  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+  DispatchEventToView(std::make_unique<GuestViewEvent>(
       webview::kEventLoadCommit, std::move(args)));
 
   // find_helper_.CancelAllFindSessions();
@@ -197,14 +196,14 @@ void TabViewGuest::DidStartNavigation(
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   args->SetString(guest_view::kUrl, navigation_handle->GetURL().spec());
   args->SetBoolean(guest_view::kIsTopLevel, navigation_handle->IsInMainFrame());
-  DispatchEventToView(base::MakeUnique<GuestViewEvent>(webview::kEventLoadStart,
+  DispatchEventToView(std::make_unique<GuestViewEvent>(webview::kEventLoadStart,
                                                        std::move(args)));
 }
 
 void TabViewGuest::AttachGuest(int guestInstanceId) {
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   args->SetInteger("guestInstanceId", guestInstanceId);
-  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+  DispatchEventToView(std::make_unique<GuestViewEvent>(
       "webViewInternal.onAttachGuest", std::move(args)));
 }
 
@@ -212,14 +211,14 @@ void TabViewGuest::DetachGuest() {
   api_web_contents_->Emit("will-detach",
       extensions::TabHelper::IdForTab(web_contents()));
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
-  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+  DispatchEventToView(std::make_unique<GuestViewEvent>(
       "webViewInternal.onDetachGuest", std::move(args)));
 }
 
 void TabViewGuest::TabIdChanged() {
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
   args->SetInteger("tabID", extensions::TabHelper::IdForTab(web_contents()));
-  DispatchEventToView(base::MakeUnique<GuestViewEvent>(
+  DispatchEventToView(std::make_unique<GuestViewEvent>(
       "webViewInternal.onTabIdChanged", std::move(args)));
 }
 

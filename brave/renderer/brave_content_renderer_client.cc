@@ -180,7 +180,7 @@ void BraveContentRendererClient::RenderFrameCreated(
                     password_generation_agent, registry);
 #if BUILDFLAG(ENABLE_PRINTING)
   new printing::PrintRenderFrameHelper(
-      render_frame, base::MakeUnique<BravePrintRenderFrameHelperDelegate>());
+      render_frame, std::make_unique<BravePrintRenderFrameHelperDelegate>());
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)

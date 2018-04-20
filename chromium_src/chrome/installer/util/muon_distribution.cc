@@ -4,10 +4,9 @@
 
 #include "chrome/installer/util/muon_distribution.h"
 
-#include "base/memory/ptr_util.h"
 #include "chrome/installer/util/app_registration_data.h"
 #include "chrome/installer/util/non_updating_app_registration_data.h"
 
 MuonDistribution::MuonDistribution()
-    : BrowserDistribution(base::MakeUnique<NonUpdatingAppRegistrationData>(
+    : BrowserDistribution(std::make_unique<NonUpdatingAppRegistrationData>(
           L"Software\\Muon")) {}

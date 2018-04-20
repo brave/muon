@@ -301,7 +301,7 @@ ProfileManager::ProfileInfo* ProfileManager::RegisterProfile(
     Profile* profile,
     bool created) {
   TRACE_EVENT0("browser", "ProfileManager::RegisterProfile");
-  auto info = base::MakeUnique<ProfileInfo>(profile, created);
+  auto info = std::make_unique<ProfileInfo>(profile, created);
   ProfileInfo* info_raw = info.get();
   profiles_info_.insert(
       std::make_pair(profile->GetPath(), std::move(info)));

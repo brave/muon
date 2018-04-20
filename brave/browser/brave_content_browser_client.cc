@@ -824,7 +824,7 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!handle->IsInMainFrame())
     throttles.push_back(
-        base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
+        std::make_unique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
 }
@@ -832,7 +832,7 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 std::unique_ptr<content::NavigationUIData>
 BraveContentBrowserClient::GetNavigationUIData(
     content::NavigationHandle* navigation_handle) {
-  return base::MakeUnique<ChromeNavigationUIData>(navigation_handle);
+  return std::make_unique<ChromeNavigationUIData>(navigation_handle);
 }
 
 std::unique_ptr<net::ClientCertStore>
@@ -859,8 +859,8 @@ BraveContentBrowserClient::GetExtraServiceManifests() {
 }
 
 void BraveContentBrowserClient::InitFrameInterfaces() {
-  frame_interfaces_ = base::MakeUnique<service_manager::BinderRegistry>();
-  frame_interfaces_parameterized_ = base::MakeUnique<
+  frame_interfaces_ = std::make_unique<service_manager::BinderRegistry>();
+  frame_interfaces_parameterized_ = std::make_unique<
       service_manager::BinderRegistryWithArgs<content::RenderFrameHost*>>();
 
   frame_interfaces_parameterized_->AddInterface(

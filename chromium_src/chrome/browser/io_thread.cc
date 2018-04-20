@@ -432,7 +432,7 @@ void IOThread::SetUpProxyService(
 
 void IOThread::ConstructSystemRequestContext() {
   std::unique_ptr<network::URLRequestContextBuilderMojo> builder =
-      base::MakeUnique<network::URLRequestContextBuilderMojo>();
+      std::make_unique<network::URLRequestContextBuilderMojo>();
 
   builder->set_user_agent(GetUserAgent());
   std::unique_ptr<atom::AtomNetworkDelegate>
@@ -458,7 +458,7 @@ void IOThread::ConstructSystemRequestContext() {
           command_line, switches::kUserDataDir, std::move(cert_verifier)));
 
   std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
-      base::MakeUnique<net::MultiLogCTVerifier>();
+      std::make_unique<net::MultiLogCTVerifier>();
   // Add built-in logs
   ct_verifier->AddLogs(globals_->ct_logs);
 
