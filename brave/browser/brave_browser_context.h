@@ -17,6 +17,9 @@
 #include "components/prefs/overlay_user_pref_store.h"
 #include "components/webdata/common/web_database_service.h"
 
+#if defined(OS_WIN)
+class PasswordWebDataService;
+#endif
 class PrefChangeRegistrar;
 class WebDataServiceWrapper;
 
