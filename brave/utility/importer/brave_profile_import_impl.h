@@ -19,7 +19,7 @@ class BraveProfileImportImpl : public ProfileImportImpl {
   // chrome::mojom::ProfileImport:
   void StartImport(const importer::SourceProfile& source_profile,
                    uint16_t items,
-                   std::unique_ptr<base::DictionaryValue> localized_strings,
+                   base::Value localized_strings,
                    chrome::mojom::ProfileImportObserverPtr observer) override;
 
   DISALLOW_COPY_AND_ASSIGN(BraveProfileImportImpl);
