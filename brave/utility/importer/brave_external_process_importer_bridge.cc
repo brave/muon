@@ -40,7 +40,7 @@ void BraveExternalProcessImporterBridge::SetCookies(
 }
 
 BraveExternalProcessImporterBridge::BraveExternalProcessImporterBridge(
-    const base::DictionaryValue& localized_strings,
+    base::Value localized_strings,
     scoped_refptr<chrome::mojom::ThreadSafeProfileImportObserverPtr> observer)
   : ExternalProcessImporterBridge(localized_strings, observer) {}
 
