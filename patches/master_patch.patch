@@ -1938,10 +1938,10 @@ index 551953165f93c8d8e4772f0e905f1c4819aaf3b5..caf6df58e858580b165e6ff689572a3d
  // The time spent sending the CONNECT request to the SOCKS server.
  EVENT_TYPE(SOCKS5_HANDSHAKE_WRITE)
  
-diff --git a/net/proxy/proxy_server.cc b/net/proxy/proxy_server.cc
+diff --git a/net/base/proxy_server.cc b/net/base/proxy_server.cc
 index ed81ebbb26b4f439d618c115b32f49249d9284a6..ebfa79de63e40539a09d072a62c8522fef7cf0f4 100644
---- a/net/proxy/proxy_server.cc
-+++ b/net/proxy/proxy_server.cc
+--- a/net/base/proxy_server.cc
++++ b/net/base/proxy_server.cc
 @@ -8,6 +8,7 @@
  
  #include "base/strings/string_util.h"
