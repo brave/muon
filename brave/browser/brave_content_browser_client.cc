@@ -47,7 +47,7 @@
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
-#include "components/unzip_service/public/interfaces/constants.mojom.h"
+#include "components/services/unzip/public/interfaces/constants.mojom.h"
 #include "components/variations/variations_switches.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
