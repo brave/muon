@@ -4,7 +4,7 @@
 
 #include "chrome/browser/download/download_crx_util.h"
 
-using content::DownloadItem;
+using download::DownloadItem;
 
 namespace download_crx_util {
 

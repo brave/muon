@@ -49,9 +49,9 @@ void CheckDownloadUrlDone(
     safe_browsing::DownloadCheckResult result) {
   if (result == safe_browsing::DownloadCheckResult::SAFE ||
       result == safe_browsing::DownloadCheckResult::UNKNOWN) {
-    callback.Run(content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
+    callback.Run(download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
   } else {
-    callback.Run(content::DOWNLOAD_DANGER_TYPE_DANGEROUS_URL);
+    callback.Run(download::DOWNLOAD_DANGER_TYPE_DANGEROUS_URL);
   }
 }
 #endif  // FULL_SAFE_BROWSING
@@ -108,15 +108,15 @@ bool AtomDownloadManagerDelegate::IsDownloadReadyForCompletion(
 
     // In case the service was disabled between the download starting and now,
     // we need to restore the danger state.
-    content::DownloadDangerType danger_type = item->GetDangerType();
+    download::DownloadDangerType danger_type = item->GetDangerType();
     if (DownloadItemModel(item).GetDangerLevel() !=
             DownloadFileType::NOT_DANGEROUS &&
-        (danger_type == content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
+        (danger_type == download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
          danger_type ==
-             content::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT)) {
+             download::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT)) {
       item->OnContentCheckCompleted(
-            content::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE,
-            content::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
+            download::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE,
+            download::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
 
       content::BrowserThread::PostTask(content::BrowserThread::UI, FROM_HERE,
                                        internal_complete_callback);
@@ -192,7 +192,7 @@ void AtomDownloadManagerDelegate::CheckDownloadUrl(
     return;
   }
 #endif
-  callback.Run(content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
+  callback.Run(download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
 }
 
 #if defined(FULL_SAFE_BROWSING)
@@ -203,43 +203,43 @@ void AtomDownloadManagerDelegate::CheckClientDownloadDone(
   if (!item || (item->GetState() != DownloadItem::IN_PROGRESS))
     return;
 
-  if (item->GetDangerType() == content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
+  if (item->GetDangerType() == download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
       item->GetDangerType() ==
-      content::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT) {
-    content::DownloadDangerType danger_type =
-        content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS;
+      download::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT) {
+    download::DownloadDangerType danger_type =
+        download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS;
 
     switch (result) {
       case safe_browsing::DownloadCheckResult::UNKNOWN:
         if (DownloadItemModel(item).GetDangerLevel() !=
             DownloadFileType::NOT_DANGEROUS) {
-          danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
+          danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
         }
         break;
       case safe_browsing::DownloadCheckResult::SAFE:
         if (DownloadItemModel(item).GetDangerLevel() ==
             DownloadFileType::DANGEROUS) {
-          danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
+          danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
         }
         break;
       case safe_browsing::DownloadCheckResult::DANGEROUS:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_CONTENT;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_CONTENT;
         break;
       case safe_browsing::DownloadCheckResult::UNCOMMON:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_UNCOMMON_CONTENT;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_UNCOMMON_CONTENT;
         break;
       case safe_browsing::DownloadCheckResult::DANGEROUS_HOST:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_HOST;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_HOST;
         break;
       case safe_browsing::DownloadCheckResult::POTENTIALLY_UNWANTED:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_POTENTIALLY_UNWANTED;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_POTENTIALLY_UNWANTED;
         break;
     }
 
-    if (danger_type != content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS) {
+    if (danger_type != download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS) {
       item->OnContentCheckCompleted(
           danger_type,
-          content::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
+          download::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
     }
   }
 
@@ -431,14 +431,6 @@ void AtomDownloadManagerDelegate::OnDownloadTargetDetermined(
                  base::Passed(std::move(target_info)), download_item),
       base::Bind(&AtomDownloadManagerDelegate::OnDownloadItemSelectionCancelled,
                  base::Unretained(this), callback, item));
-  } else {
-    if (download_item)
-      download_item->SetSavePath(path);
-
-    callback.Run(path, download::DownloadItem::TARGET_DISPOSITION_PROMPT,
-                 download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
-                 download::DOWNLOAD_INTERRUPT_REASON_NONE);
-  }
 }
 
 void AtomDownloadManagerDelegate::Shutdown() {

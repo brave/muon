@@ -12,7 +12,7 @@
 #include "chrome/browser/browser_process_impl.h"
 #include "chrome/browser/loader/safe_browsing_resource_throttle.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
-#include "components/offline_pages/features/features.h"
+#include "components/offline_pages/buildflags/buildflags.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/resource_request_info.h"
@@ -131,7 +131,7 @@ void AtomResourceDispatcherHostDelegate::AppendStandardResourceThrottles(
 #if defined(SAFE_BROWSING_DB_LOCAL) || defined(SAFE_BROWSING_DB_REMOTE)
   if (!first_throttle) {
     first_throttle = MaybeCreateSafeBrowsingResourceThrottle(
-        request, resource_type, safe_browsing_.get());
+        request, resource_type, safe_browsing_.get(), nullptr);
   }
 #endif  // defined(SAFE_BROWSING_DB_LOCAL) || defined(SAFE_BROWSING_DB_REMOTE)
 

@@ -198,6 +198,9 @@ source_set("browser") {
     "//chrome/browser/chrome_device_client.cc",
     "//chrome/browser/chrome_device_client.h",
 
+    "//chrome/browser/data_reduction_proxy_util.cc",
+    "//chrome/browser/data_reduction_proxy_util.h",
+
     # extensions
     "//chrome/browser/extensions/global_shortcut_listener.cc",
     "//chrome/browser/extensions/global_shortcut_listener.h",
@@ -349,7 +352,7 @@ source_set("browser") {
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.cc",
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.h",
     ]
-  } 
+  }
 
   if (is_linux) {
     sources += [
@@ -549,8 +552,6 @@ source_set("browser") {
         "//chrome/browser/extensions/extension_tab_util.h",
         "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.cc",
         "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h",
-        "chrome/browser/extensions/api/experience_sampling_private/experience_sampling.cc",
-        "//chrome/browser/extensions/api/experience_sampling_private/experience_sampling.h",
         "chrome/browser/extensions/api/messaging/incognito_connectability.cc",
         "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
         "//chrome/browser/extensions/api/messaging/chrome_messaging_delegate.cc",

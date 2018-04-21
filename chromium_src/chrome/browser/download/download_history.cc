@@ -1,8 +1,8 @@
 #include "chrome/browser/download/download_history.h"
 
-#include "content/public/browser/download_item.h"
+#include "components/download/public/common/download_item.h"
 
 bool DownloadHistory::WasRestoredFromHistory(
-    const content::DownloadItem* download) const {
+    const download::DownloadItem* download) const {
   return true;
 }
