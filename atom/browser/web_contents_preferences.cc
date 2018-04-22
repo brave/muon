@@ -93,8 +93,6 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
   if (web_preferences.GetBoolean(options::kExperimentalFeatures, &b) && b)
     command_line->AppendSwitch(
         ::switches::kEnableExperimentalWebPlatformFeatures);
-  if (web_preferences.GetBoolean(options::kExperimentalCanvasFeatures, &b) && b)
-    command_line->AppendSwitch(::switches::kEnableExperimentalCanvasFeatures);
 
   // --background-color.
   std::string color;
