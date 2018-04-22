@@ -380,7 +380,7 @@ void BravePasswordManagerClient::OnInputEvent(
   password_reuse_detection_manager_.OnKeyPressed(key_event.text);
 }
 
-PrefService* BravePasswordManagerClient::GetPrefs() {
+PrefService* BravePasswordManagerClient::GetPrefs() const {
   return profile_->GetPrefs();
 }
 
