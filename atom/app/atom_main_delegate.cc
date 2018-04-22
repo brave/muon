@@ -23,7 +23,6 @@
 #include "base/path_service.h"
 #include "base/trace_event/trace_log.h"
 #include "brightray/common/application_info.h"
-#include "chrome/child/child_profiling.h"
 #include "chrome/common/chrome_constants.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_paths_internal.h"
@@ -250,9 +249,6 @@ bool AtomMainDelegate::BasicStartupComplete(int* exit_code) {
   chrome::common::mac::EnableCFBundleBlocker();
 #endif
 
-#if !defined(CHROME_MULTIPLE_DLL_BROWSER)
-  ChildProfiling::ProcessStarted();
-#endif
   Profiling::ProcessStarted();
 
   base::trace_event::TraceLog::GetInstance()->SetArgumentFilterPredicate(
@@ -328,7 +324,6 @@ void AtomMainDelegate::PreSandboxStartup() {
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
 void AtomMainDelegate::ZygoteForked() {
-  ChildProfiling::ProcessStarted();
   Profiling::ProcessStarted();
   if (Profiling::BeingProfiled()) {
     base::debug::RestartProfilingAfterFork();
