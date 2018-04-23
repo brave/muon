@@ -102,8 +102,6 @@ source_set("browser") {
     "atom_browser_main_parts.h",
     "atom_quota_permission_context.cc",
     "atom_quota_permission_context.h",
-    "atom_resource_dispatcher_host_delegate.cc",
-    "atom_resource_dispatcher_host_delegate.h",
     "atom_speech_recognition_manager_delegate.cc",
     "atom_speech_recognition_manager_delegate.h",
     "autofill/atom_autofill_client.cc",
