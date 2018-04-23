@@ -29,8 +29,6 @@ class SSLCertRequestInfo;
 
 namespace atom {
 
-class AtomResourceDispatcherHostDelegate;
-
 class AtomBrowserClient : public brightray::BrowserClient,
                           public content::RenderProcessHostObserver {
  public:

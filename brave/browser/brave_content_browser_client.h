@@ -40,6 +40,15 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::string GetApplicationLocale() override;
   static void SetApplicationLocale(std::string locale);
 
+  bool HandleExternalProtocol(
+      const GURL& url,
+      content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+      int child_id,
+      content::NavigationUIData* navigation_data,
+      bool is_main_frame,
+      ui::PageTransition page_transition,
+      bool has_user_gesture) override;
+
  protected:
   // content::ContentBrowserClient:
   content::WebContentsViewDelegate* GetWebContentsViewDelegate(
