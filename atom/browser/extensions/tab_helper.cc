@@ -487,8 +487,7 @@ void TabHelper::SetWindowId(const int32_t& id) {
   if (SessionTabHelper::FromWebContents(web_contents())->window_id().id() == id)
     return;
 
-  SessionID session;
-  session.set_id(id);
+  SessionID session = SessionID::FromSerializedValue(id);
   SessionTabHelper::FromWebContents(web_contents())->SetWindowID(session);
 }
 
@@ -843,13 +842,13 @@ content::WebContents* TabHelper::GetTabById(int32_t tab_id,
 
 // static
 int32_t TabHelper::IdForTab(const content::WebContents* tab) {
-  return SessionTabHelper::IdForTab(tab);
+  return SessionTabHelper::IdForTab(tab).id();
 }
 
 // static
 int32_t TabHelper::IdForWindowContainingTab(
     const content::WebContents* tab) {
-  return SessionTabHelper::IdForWindowContainingTab(tab);
+  return SessionTabHelper::IdForWindowContainingTab(tab).id();
 }
 
 }  // namespace extensions

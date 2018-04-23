@@ -100,6 +100,7 @@ class Browser : public content::WebContentsDelegate {
   // Constructors, Creation, Showing //////////////////////////////////////////
 
   explicit Browser(const CreateParams& params);
+  explicit Browser(const CreateParams& params, SessionID session_id);
   ~Browser();
 
   // void WillDestroyNativeObject();
