@@ -221,19 +221,18 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
   return true;
 }
 
-bool BraveContentRendererClient::WillSendRequest(
+void BraveContentRendererClient::WillSendRequest(
     blink::WebLocalFrame* frame,
     ui::PageTransition transition_type,
     const blink::WebURL& url,
-    GURL* new_url) {
+    const url::Origin* initiator_origin,
+    GURL* new_url,
+    bool* attach_same_site_cookies) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  if (ChromeExtensionsRendererClient::GetInstance()->WillSendRequest(
-          frame, transition_type, url, new_url)) {
-    return true;
-  }
+  ChromeExtensionsRendererClient::GetInstance()->WillSendRequest(
+      frame, transition_type, url, initiator_origin, new_url,
+      attach_same_site_cookies);
 #endif
-
-  return false;
 }
 
 void BraveContentRendererClient::CreateRendererService(
