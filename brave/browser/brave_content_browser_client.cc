@@ -10,6 +10,7 @@
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/common/options_switches.h"
+#include "atom/common/platform_util.h"
 #include "base/base_switches.h"
 #include "base/json/json_reader.h"
 #include "base/lazy_instance.h"
@@ -61,6 +62,7 @@
 #include "gpu/config/gpu_switches.h"
 #include "mojo/public/cpp/bindings/scoped_interface_endpoint_handle.h"
 #include "muon/app/muon_crash_reporter_client.h"
+#include "net/base/escape.h"
 #include "net/base/filename_util.h"
 #include "net/ssl/client_cert_store.h"
 #include "services/data_decoder/public/mojom/constants.mojom.h"
@@ -216,6 +218,40 @@ base::LazyInstance<std::string>::DestructorAtExit io_thread_application_locale;
 void SetApplicationLocaleOnIOThread(const std::string& locale) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
   io_thread_application_locale.Get() = locale;
+}
+
+void OnOpenExternal(const GURL& escaped_url, bool allowed) {
+  if (allowed)
+    platform_util::OpenExternal(
+#if defined(OS_WIN)
+        base::UTF8ToUTF16(escaped_url.spec()),
+#else
+        escaped_url,
+#endif
+        true);
+}
+
+void LaunchURL(
+    const GURL& url,
+    const content::ResourceRequestInfo::WebContentsGetter& web_contents_getter,
+    bool has_user_gesture) {
+  // If there is no longer a WebContents, the request may have raced with tab
+  // closing. Don't fire the external request. (It may have been a prerender.)
+  content::WebContents* web_contents = web_contents_getter.Run();
+  if (!web_contents)
+    return;
+
+  content::RenderFrameHost* rfh = web_contents->GetMainFrame();
+
+  auto permission_helper =
+      atom::WebContentsPermissionHelper::FromWebContents(web_contents);
+  if (!permission_helper)
+    return;
+
+  GURL escaped_url(net::EscapeExternalHandlerValue(url.spec()));
+  auto callback = base::Bind(&OnOpenExternal, escaped_url);
+  permission_helper->RequestOpenExternalPermission(callback, rfh, url,
+                                                   has_user_gesture);
 }
 
 }  // namespace
@@ -870,6 +906,20 @@ void BraveContentBrowserClient::InitFrameInterfaces() {
                      BindPasswordManagerDriver));
   frame_interfaces_parameterized_->AddInterface(
       base::BindRepeating(&BravePasswordManagerClient::BindCredentialManager));
+}
+
+bool BraveContentBrowserClient::HandleExternalProtocol(
+    const GURL& url,
+    content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+    int child_id,
+    content::NavigationUIData* navigation_data,
+    bool is_main_frame,
+    ui::PageTransition page_transition,
+    bool has_user_gesture) {
+  BrowserThread::PostTask(
+      BrowserThread::UI, FROM_HERE,
+      base::Bind(&LaunchURL, url, web_contents_getter, has_user_gesture));
+  return true;
 }
 
 }  // namespace brave
