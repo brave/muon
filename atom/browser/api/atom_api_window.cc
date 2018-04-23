@@ -112,13 +112,16 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
       options,
       parent.IsEmpty() ? nullptr : parent->window_.get()));
 
+  // ID is set at this point, don't move below the ::Browser call
+  InitWith(isolate, wrapper);
+
   ::Browser::CreateParams create_params(::Browser::Type::TYPE_TABBED,
       Profile::FromBrowserContext(inspectable_web_contents->
           GetWebContents()->GetBrowserContext()));
   create_params.window = window_.get();
-  window_->SetBrowser(new ::Browser(create_params));
+  window_->SetBrowser(
+      new ::Browser(create_params, SessionID::FromSerializedValue(ID())));
 
-  window_->browser()->session_id().set_id(-1);
   web_contents->SetOwnerWindow(window_.get());
 
 #if defined(TOOLKIT_VIEWS)
@@ -131,7 +134,6 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
   window_->InitFromOptions(options);
   window_->AddObserver(this);
 
-  InitWith(isolate, wrapper);
   AttachAsUserData(window_.get());
 
   // We can only append this window to parent window's child windows after this
@@ -139,7 +141,6 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
   if (!parent.IsEmpty())
     parent->child_windows_.Set(isolate, ID(), wrapper);
 
-  window_->browser()->session_id().set_id(ID());
   Emit("initialized");
 }
 
