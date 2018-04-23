@@ -629,7 +629,7 @@ void TabHelper::RenderFrameCreated(content::RenderFrameHost* host) {
   // Look up the extension API frame ID to force the mapping to be cached.
   // This is needed so that cached information is available for tabId in the
   // filtering callbacks.
-  ExtensionApiFrameIdMap::Get()->CacheFrameData(host);
+  ExtensionApiFrameIdMap::Get()->InitializeRenderFrameData(host);
 }
 
 void TabHelper::WebContentsDestroyed() {
