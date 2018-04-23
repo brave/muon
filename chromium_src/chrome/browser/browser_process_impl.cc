@@ -96,6 +96,10 @@
 #include "content/public/browser/plugin_service.h"
 #endif
 
+#if BUILDFLAG(ENABLE_WEBRTC)
+#include "chrome/browser/media/webrtc/webrtc_event_log_manager.h"
+#endif
+
 #if defined(OS_WIN)
 #include "chrome/common/chrome_constants.h"
 #include "chrome/install_static/install_util.h"
