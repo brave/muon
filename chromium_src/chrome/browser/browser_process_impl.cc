@@ -60,7 +60,6 @@
 #include "chrome/browser/icon_manager.h"
 #include "chrome/browser/intranet_redirect_detector.h"
 #include "chrome/browser/io_thread.h"
-#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #include "chrome/browser/media_galleries/media_file_system_registry.h"
 #include "chrome/browser/metrics/thread_watcher.h"
 #include "chrome/browser/notifications/notification_platform_bridge.h"
@@ -93,6 +92,11 @@
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "chrome/browser/plugins/plugin_finder.h"
 #include "content/public/browser/plugin_service.h"
+#endif
+
+#if BUILDFLAG(ENABLE_WEBRTC)
+#include "chrome/browser/media/webrtc/webrtc_event_log_manager.h"
+#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #endif
 
 #if defined(OS_WIN)
