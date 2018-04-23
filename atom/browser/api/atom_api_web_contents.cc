@@ -1733,7 +1733,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
 
   std::string user_agent;
   if (options.Get("userAgent", &user_agent)) {
-    web_contents()->SetUserAgentOverride(user_agent);
+    web_contents()->SetUserAgentOverride(user_agent, true);
     params.override_user_agent =
         content::NavigationController::UA_OVERRIDE_TRUE;
   }
@@ -1922,7 +1922,7 @@ bool WebContents::IsCrashed() const {
 
 void WebContents::SetUserAgent(const std::string& user_agent,
                                mate::Arguments* args) {
-  web_contents()->SetUserAgentOverride(user_agent);
+  web_contents()->SetUserAgentOverride(user_agent, true);
 }
 
 std::string WebContents::GetUserAgent() {
