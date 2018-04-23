@@ -8,9 +8,9 @@
 #include "atom/browser/extensions/shared_user_script_master.h"
 
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
-#include "chrome/common/extensions/manifest_handlers/content_scripts_handler.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/common/host_id.h"
+#include "extensions/common/manifest_handlers/content_scripts_handler.h"
 
 namespace extensions {
 
