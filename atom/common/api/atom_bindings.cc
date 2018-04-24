@@ -38,16 +38,16 @@ v8::Local<v8::Value> GetProcessMemoryInfo(v8::Isolate* isolate) {
       base::ProcessMetrics::CreateCurrentProcessMetrics());
 
   mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
-  dict.Set("workingSetSize",
-           static_cast<double>(metrics->GetWorkingSetSize() >> 10));
-  dict.Set("peakWorkingSetSize",
-           static_cast<double>(metrics->GetPeakWorkingSetSize() >> 10));
+  // dict.Set("workingSetSize",
+  //          static_cast<double>(metrics->GetWorkingSetSize() >> 10));
+  // dict.Set("peakWorkingSetSize",
+  //          static_cast<double>(metrics->GetPeakWorkingSetSize() >> 10));
 
-  size_t private_bytes, shared_bytes;
-  if (metrics->GetMemoryBytes(&private_bytes, &shared_bytes)) {
-    dict.Set("privateBytes", static_cast<double>(private_bytes >> 10));
-    dict.Set("sharedBytes", static_cast<double>(shared_bytes >> 10));
-  }
+  // size_t private_bytes, shared_bytes;
+  // if (metrics->GetMemoryBytes(&private_bytes, &shared_bytes)) {
+  //   dict.Set("privateBytes", static_cast<double>(private_bytes >> 10));
+  //   dict.Set("sharedBytes", static_cast<double>(shared_bytes >> 10));
+  // }
 
   return dict.GetHandle();
 }
