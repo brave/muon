@@ -28,7 +28,9 @@ namespace content {
 class WebContents;
 }
 
-class IdentityProvider;
+namespace identity {
+class IdentityManager;
+}
 
 namespace autofill {
 
@@ -51,7 +53,7 @@ class AtomAutofillClient
   scoped_refptr<AutofillWebDataService> GetDatabase() override;
   PrefService* GetPrefs() override;
   syncer::SyncService* GetSyncService() override;
-  IdentityProvider* GetIdentityProvider() override;
+  identity::IdentityManager* GetIdentityManager() override;
   ukm::UkmRecorder* GetUkmRecorder() override;
   autofill::AddressNormalizer* GetAddressNormalizer() override;
   void ShowAutofillSettings() override;
@@ -106,8 +108,6 @@ class AtomAutofillClient
   atom::api::WebContents* api_web_contents_;
 
   base::WeakPtr<AutofillPopupDelegate> delegate_;
-
-  std::unique_ptr<IdentityProvider> identity_provider_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomAutofillClient);
 };

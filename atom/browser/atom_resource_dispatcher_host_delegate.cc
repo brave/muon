@@ -6,14 +6,13 @@
 
 #include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 
-#include "atom/browser/login_handler.h"
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/common/platform_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "chrome/browser/browser_process_impl.h"
 #include "chrome/browser/loader/safe_browsing_resource_throttle.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
-#include "components/offline_pages/features/features.h"
+#include "components/offline_pages/buildflags/buildflags.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/resource_request_info.h"
@@ -132,7 +131,7 @@ void AtomResourceDispatcherHostDelegate::AppendStandardResourceThrottles(
 #if defined(SAFE_BROWSING_DB_LOCAL) || defined(SAFE_BROWSING_DB_REMOTE)
   if (!first_throttle) {
     first_throttle = MaybeCreateSafeBrowsingResourceThrottle(
-        request, resource_type, safe_browsing_.get());
+        request, resource_type, safe_browsing_.get(), nullptr);
   }
 #endif  // defined(SAFE_BROWSING_DB_LOCAL) || defined(SAFE_BROWSING_DB_REMOTE)
 
@@ -151,28 +150,6 @@ bool AtomResourceDispatcherHostDelegate::HandleExternalProtocol(
                                      info->GetFrameTreeNodeId(),
                                      info->HasUserGesture()));
   return true;
-}
-
-content::ResourceDispatcherHostLoginDelegate*
-AtomResourceDispatcherHostDelegate::CreateLoginDelegate(
-    net::AuthChallengeInfo* auth_info,
-    net::URLRequest* request) {
-  return new LoginHandler(auth_info, request);
-}
-
-std::unique_ptr<net::ClientCertStore>
-AtomResourceDispatcherHostDelegate::CreateClientCertStore(
-    content::ResourceContext* resource_context) {
-  #if defined(USE_NSS_CERTS)
-    return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreNSS(
-        net::ClientCertStoreNSS::PasswordDelegateFactory()));
-  #elif defined(OS_WIN)
-    return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreWin());
-  #elif defined(OS_MACOSX)
-    return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreMac());
-  #elif defined(USE_OPENSSL)
-    return std::unique_ptr<net::ClientCertStore>();
-  #endif
 }
 
 }  // namespace atom

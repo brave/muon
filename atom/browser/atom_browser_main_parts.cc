@@ -29,6 +29,7 @@
 #include "base/trace_event/trace_event.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/chrome_browser_main_extra_parts.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
@@ -46,11 +47,11 @@
 #include "content/public/common/content_switches.h"
 #include "device/geolocation/geolocation_provider.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
+#include "media/base/media_switches.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "muon/browser/muon_browser_process_impl.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
 #include "v8/include/v8.h"
-#include "v8/include/v8-debug.h"
 
 #if defined(OS_MACOSX)
 #include <Security/Security.h>
@@ -131,6 +132,10 @@ AtomBrowserMainParts::AtomBrowserMainParts(
 }
 
 AtomBrowserMainParts::~AtomBrowserMainParts() {
+  for (int i = static_cast<int>(chrome_extra_parts_.size())-1; i >= 0; --i)
+    delete chrome_extra_parts_[i];
+  chrome_extra_parts_.clear();
+
   // Leak the JavascriptEnvironment on exit.
   // This is to work around the bug that V8 would be waiting for background
   // tasks to finish on exit, while somehow it waits forever in Electron, more
@@ -237,6 +242,13 @@ int AtomBrowserMainParts::PreCreateThreads() {
       features::kTouchpadAndWheelScrollLatching);
   feature_list->RegisterFieldTrialOverride(
       features::kTouchpadAndWheelScrollLatching.name,
+      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
+  // Disable Unified Autoplay to prevents it from overriding our default value
+  field_trial = feature_list->GetFieldTrial(
+      media::kUnifiedAutoplay);
+  feature_list->RegisterFieldTrialOverride(
+      media::kUnifiedAutoplay.name,
       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 
 
@@ -394,6 +406,12 @@ void AtomBrowserMainParts::PostMainMessageLoopStart() {
 #endif
 }
 
+void AtomBrowserMainParts::ServiceManagerConnectionStarted(
+    content::ServiceManagerConnection* connection) {
+  for (size_t i = 0; i < chrome_extra_parts_.size(); ++i)
+    chrome_extra_parts_[i]->ServiceManagerConnectionStarted(connection);
+}
+
 void AtomBrowserMainParts::PostMainMessageLoopRun() {
   browser_context_ = nullptr;
   brightray::BrowserMainParts::PostMainMessageLoopRun();
@@ -432,6 +450,10 @@ void AtomBrowserMainParts::PostDestroyThreads() {
   ignore_result(fake_browser_process_.release());
 
   browser_shutdown::ShutdownPostThreadsStop(restart_flags);
+}
+
+void AtomBrowserMainParts::AddParts(ChromeBrowserMainExtraParts* parts) {
+  chrome_extra_parts_.push_back(parts);
 }
 
 }  // namespace atom

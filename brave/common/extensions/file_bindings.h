@@ -16,7 +16,6 @@
 namespace base {
 class FilePath;
 class SequencedTaskRunner;
-class SequencedWorkerPool;
 }
 
 namespace brave {
@@ -26,6 +25,9 @@ class FileBindings : public extensions::ObjectBackedNativeHandler,
  public:
   explicit FileBindings(extensions::ScriptContext* context);
   ~FileBindings() override;
+
+  // ObjectBackedNativeHandler:
+  void AddRoutes() override;
 
   static v8::Local<v8::Object> API(extensions::ScriptContext* context);
 

@@ -76,7 +76,8 @@ int SOCKS5ClientSocketAuth::Authenticate(
                buffer_left_);
         next_state_ = STATE_WRITE_COMPLETE;
         net_log.BeginEvent(NetLogEventType::SOCKS5_AUTH_WRITE);
-        rv = transport.socket()->Write(iobuf_.get(), buffer_left_, callback);
+        rv = transport.socket()->Write(iobuf_.get(), buffer_left_, callback,
+            traffic_annotation_);
         break;
 
       case STATE_WRITE_COMPLETE:

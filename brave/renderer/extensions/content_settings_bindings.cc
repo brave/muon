@@ -43,18 +43,17 @@ namespace brave {
 
 ContentSettingsBindings::ContentSettingsBindings(
     extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction(
-      "getCurrent",
-      base::Bind(&ContentSettingsBindings::GetCurrentSetting,
-          base::Unretained(this)));
-  RouteFunction(
-      "getContentTypes",
-      base::Bind(&ContentSettingsBindings::GetContentTypes,
-          base::Unretained(this)));
-}
+    : extensions::ObjectBackedNativeHandler(context) {}
 
-ContentSettingsBindings::~ContentSettingsBindings() {
+ContentSettingsBindings::~ContentSettingsBindings() {}
+
+void ContentSettingsBindings::AddRoutes() {
+  RouteHandlerFunction("getCurrent",
+                       base::Bind(&ContentSettingsBindings::GetCurrentSetting,
+                                  base::Unretained(this)));
+  RouteHandlerFunction("getContentTypes",
+                       base::Bind(&ContentSettingsBindings::GetContentTypes,
+                                  base::Unretained(this)));
 }
 
 void ContentSettingsBindings::GetCurrentSetting(

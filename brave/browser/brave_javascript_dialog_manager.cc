@@ -99,7 +99,7 @@ BraveJavaScriptDialogManager::~BraveJavaScriptDialogManager() {
 
 void BraveJavaScriptDialogManager::RunJavaScriptDialog(
     content::WebContents* web_contents,
-    const GURL& alerting_frame_url,
+    content::RenderFrameHost* render_frame_host,
     content::JavaScriptDialogType dialog_type,
     const base::string16& message_text,
     const base::string16& default_prompt_text,
@@ -151,7 +151,8 @@ void BraveJavaScriptDialogManager::RunJavaScriptDialog(
 
   bool is_alert = dialog_type == content::JAVASCRIPT_DIALOG_TYPE_ALERT;
   base::string16 dialog_title =
-      GetTitle(web_contents, alerting_frame_url, is_alert);
+      GetTitle(web_contents, render_frame_host->GetLastCommittedURL(),
+               is_alert);
 
   LogUMAMessageLengthStats(message_text);
 

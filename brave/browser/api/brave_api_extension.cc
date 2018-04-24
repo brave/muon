@@ -18,6 +18,7 @@
 #include "base/files/file_path.h"
 #include "base/json/json_string_value_serializer.h"
 #include "base/strings/string_util.h"
+#include "base/task_scheduler/post_task.h"
 #include "brave/common/converters/callback_converter.h"
 #include "brave/common/converters/file_path_converter.h"
 #include "brave/common/converters/gurl_converter.h"
@@ -100,7 +101,7 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
     const extensions::Manifest::Location& manifest_location,
     int flags,
     std::string* error) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::FILE);
+  base::AssertBlockingAllowed();
 
   scoped_refptr<extensions::Extension> extension(extensions::Extension::Create(
       path, manifest_location, manifest, flags, error));
@@ -158,10 +159,12 @@ gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
       .SetMethod("setReverseURLHandler", &Extension::SetReverseURLHandler);
 }
 
-Extension::Extension(v8::Isolate* isolate,
-                 BraveBrowserContext* browser_context)
+Extension::Extension(v8::Isolate* isolate, BraveBrowserContext* browser_context)
     : isolate_(isolate),
-      browser_context_(browser_context) {
+      browser_context_(browser_context),
+      // TODO(hferreiro): review this
+      file_task_runner_(
+          base::CreateSequencedTaskRunnerWithTraits({base::MayBlock()})) {
   extensions::ExtensionRegistry::Get(browser_context_)->AddObserver(this);
 }
 
@@ -212,7 +215,7 @@ void Extension::LoadOnFILEThread(const base::FilePath path,
     std::unique_ptr<base::DictionaryValue> manifest,
     extensions::Manifest::Location manifest_location,
     int flags) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::FILE);
+  base::AssertBlockingAllowed();
 
   std::string error;
   if (manifest->empty()) {
@@ -283,11 +286,10 @@ void Extension::Load(gin::Arguments* args) {
   std::unique_ptr<base::DictionaryValue> manifest_copy =
       manifest.CreateDeepCopy();
 
-  content::BrowserThread::PostTask(
-        content::BrowserThread::FILE, FROM_HERE,
-        base::Bind(&Extension::LoadOnFILEThread,
-            base::Unretained(this),
-            path, Passed(&manifest_copy), manifest_location, flags));
+  file_task_runner_->PostTask(
+      FROM_HERE,
+      base::Bind(&Extension::LoadOnFILEThread, base::Unretained(this), path,
+                 Passed(&manifest_copy), manifest_location, flags));
 }
 
 void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {

@@ -18,7 +18,6 @@
 #include "base/observer_list.h"
 #include "base/supports_user_data.h"
 #include "chrome/browser/ui/browser_window.h"
-#include "content/public/browser/readback_types.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "extensions/browser/app_window/size_constraints.h"
@@ -70,6 +69,9 @@ class NativeWindow : public base::SupportsUserData,
 
   // Find a window from its WebContents
   static NativeWindow* FromWebContents(content::WebContents* web_contents);
+
+  // Take ownership of |browser|.
+  void SetBrowser(::Browser* browser);
 
   void InitFromOptions(const mate::Dictionary& options);
 

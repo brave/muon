@@ -277,4 +277,4 @@ void ChromeExtensionsDispatcherDelegate::OnActiveExtensionsUpdated(
 
 void ChromeExtensionsDispatcherDelegate::InitializeBindingsSystem(
     extensions::Dispatcher* dispatcher,
-    extensions::APIBindingsSystem* bindings_system) {}
+    extensions::NativeExtensionBindingsSystem* bindings_system) {}

@@ -54,7 +54,7 @@ void StopWorker(int document_cookie) {
 }
 
 char* CopyPDFDataOnIOThread(
-    const PrintHostMsg_DidPreviewDocument_Params& params) {
+    const PrintHostMsg_DidPrintContent_Params& params) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
   std::unique_ptr<base::SharedMemory> shared_buf(
       new base::SharedMemory(params.metafile_data_handle, true));
@@ -106,14 +106,15 @@ void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
   if (base::ContainsKey(print_to_pdf_options_map_, key))
     print_to_pdf_options_map_.erase(key);
 
+  const PrintHostMsg_DidPrintContent_Params& content = params.content;
   BrowserThread::PostTaskAndReplyWithResult(
       BrowserThread::IO,
       FROM_HERE,
-      base::Bind(&CopyPDFDataOnIOThread, params),
+      base::Bind(&CopyPDFDataOnIOThread, content),
       base::Bind(&PrintPreviewMessageHandler::RunPrintToPDFCallback,
                  weak_ptr_factory_.GetWeakPtr(),
                  params.preview_request_id,
-                 params.data_size));
+                 content.data_size));
 }
 
 void PrintPreviewMessageHandler::OnError(content::RenderFrameHost* rfh,

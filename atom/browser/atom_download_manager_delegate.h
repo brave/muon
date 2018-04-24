@@ -43,36 +43,36 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate,
   // content::DownloadManagerDelegate:
   void Shutdown() override;
   bool DetermineDownloadTarget(
-      content::DownloadItem* download,
+      download::DownloadItem* download,
       const content::DownloadTargetCallback& callback) override;
   bool ShouldOpenDownload(
-      content::DownloadItem* download,
+      download::DownloadItem* download,
       const content::DownloadOpenDelayedCallback& callback) override;
   void GetNextId(const content::DownloadIdCallback& callback) override;
-  bool ShouldCompleteDownload(content::DownloadItem* item,
+  bool ShouldCompleteDownload(download::DownloadItem* item,
                               const base::Closure& complete_callback) override;
 
  protected:
   virtual safe_browsing::DownloadProtectionService*
       GetDownloadProtectionService();
-  void CheckDownloadUrl(content::DownloadItem* download,
+  void CheckDownloadUrl(download::DownloadItem* download,
                             const base::FilePath& suggested_virtual_path,
                             const CheckDownloadUrlCallback& callback) override;
-  void NotifyExtensions(content::DownloadItem* download,
+  void NotifyExtensions(download::DownloadItem* download,
                         const base::FilePath& suggested_virtual_path,
                         const NotifyExtensionsCallback& callback) override;
   void ReserveVirtualPath(
-      content::DownloadItem* download,
+      download::DownloadItem* download,
       const base::FilePath& virtual_path,
       bool create_directory,
       DownloadPathReservationTracker::FilenameConflictAction conflict_action,
       const ReservedPathCallback& callback) override;
 
-  void RequestConfirmation(content::DownloadItem* download,
+  void RequestConfirmation(download::DownloadItem* download,
                            const base::FilePath& suggested_virtual_path,
                            DownloadConfirmationReason reason,
                            const ConfirmationCallback& callback) override;
-  void DetermineLocalPath(content::DownloadItem* download,
+  void DetermineLocalPath(download::DownloadItem* download,
                           const base::FilePath& virtual_path,
                           const LocalPathCallback& callback) override;
 
@@ -81,12 +81,12 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate,
 
  private:
     bool IsDownloadReadyForCompletion(
-        content::DownloadItem* item,
+        download::DownloadItem* item,
         const base::Closure& internal_complete_callback);
 
-  void GetItemSavePath(content::DownloadItem* item, base::FilePath* path);
+  void GetItemSavePath(download::DownloadItem* item, base::FilePath* path);
 
-  bool GetExtension(content::DownloadItem* item,
+  bool GetExtension(download::DownloadItem* item,
                     const base::FilePath& target_path,
                     base::FilePath::StringType* extension);
 
@@ -97,7 +97,7 @@ class AtomDownloadManagerDelegate : public content::DownloadManagerDelegate,
 
   void OnDownloadItemSelectionCancelled(
       const content::DownloadTargetCallback& callback,
-      content::DownloadItem* item);
+      download::DownloadItem* item);
 
   void CheckClientDownloadDone(uint32_t download_id,
                                safe_browsing::DownloadCheckResult result);

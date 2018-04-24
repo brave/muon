@@ -24,7 +24,7 @@
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_thread.h"
-#include "content/public/browser/download_danger_type.h"
+#include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/download_manager.h"
 #include "net/base/filename_util.h"
 #include "net/base/mime_util.h"
@@ -35,8 +35,8 @@ namespace atom {
 namespace {
 
 using content::BrowserThread;
-using content::DownloadItem;
 using content::DownloadManager;
+using download::DownloadItem;
 using safe_browsing::DownloadFileType;
 using safe_browsing::DownloadProtectionService;
 
@@ -49,9 +49,9 @@ void CheckDownloadUrlDone(
     safe_browsing::DownloadCheckResult result) {
   if (result == safe_browsing::DownloadCheckResult::SAFE ||
       result == safe_browsing::DownloadCheckResult::UNKNOWN) {
-    callback.Run(content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
+    callback.Run(download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
   } else {
-    callback.Run(content::DOWNLOAD_DANGER_TYPE_DANGEROUS_URL);
+    callback.Run(download::DOWNLOAD_DANGER_TYPE_DANGEROUS_URL);
   }
 }
 #endif  // FULL_SAFE_BROWSING
@@ -59,8 +59,8 @@ void CheckDownloadUrlDone(
 const DownloadPathReservationTracker::FilenameConflictAction
     kDefaultPlatformConflictAction = DownloadPathReservationTracker::UNIQUIFY;
 
-NativeWindow*
-GetNativeWindowFromWebContents(content::WebContents* web_contents) {
+NativeWindow* GetNativeWindowFromWebContents(
+    content::WebContents* web_contents) {
   DCHECK(web_contents);
   auto relay = NativeWindowRelay::FromWebContents(web_contents);
   return relay ? relay->window.get() : nullptr;
@@ -108,15 +108,15 @@ bool AtomDownloadManagerDelegate::IsDownloadReadyForCompletion(
 
     // In case the service was disabled between the download starting and now,
     // we need to restore the danger state.
-    content::DownloadDangerType danger_type = item->GetDangerType();
+    download::DownloadDangerType danger_type = item->GetDangerType();
     if (DownloadItemModel(item).GetDangerLevel() !=
             DownloadFileType::NOT_DANGEROUS &&
-        (danger_type == content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
+        (danger_type == download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
          danger_type ==
-             content::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT)) {
+             download::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT)) {
       item->OnContentCheckCompleted(
-            content::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE,
-            content::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
+            download::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE,
+            download::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
 
       content::BrowserThread::PostTask(content::BrowserThread::UI, FROM_HERE,
                                        internal_complete_callback);
@@ -192,7 +192,7 @@ void AtomDownloadManagerDelegate::CheckDownloadUrl(
     return;
   }
 #endif
-  callback.Run(content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
+  callback.Run(download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS);
 }
 
 #if defined(FULL_SAFE_BROWSING)
@@ -203,43 +203,43 @@ void AtomDownloadManagerDelegate::CheckClientDownloadDone(
   if (!item || (item->GetState() != DownloadItem::IN_PROGRESS))
     return;
 
-  if (item->GetDangerType() == content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
+  if (item->GetDangerType() == download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS ||
       item->GetDangerType() ==
-      content::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT) {
-    content::DownloadDangerType danger_type =
-        content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS;
+      download::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT) {
+    download::DownloadDangerType danger_type =
+        download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS;
 
     switch (result) {
       case safe_browsing::DownloadCheckResult::UNKNOWN:
         if (DownloadItemModel(item).GetDangerLevel() !=
             DownloadFileType::NOT_DANGEROUS) {
-          danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
+          danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
         }
         break;
       case safe_browsing::DownloadCheckResult::SAFE:
         if (DownloadItemModel(item).GetDangerLevel() ==
             DownloadFileType::DANGEROUS) {
-          danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
+          danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
         }
         break;
       case safe_browsing::DownloadCheckResult::DANGEROUS:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_CONTENT;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_CONTENT;
         break;
       case safe_browsing::DownloadCheckResult::UNCOMMON:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_UNCOMMON_CONTENT;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_UNCOMMON_CONTENT;
         break;
       case safe_browsing::DownloadCheckResult::DANGEROUS_HOST:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_DANGEROUS_HOST;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_HOST;
         break;
       case safe_browsing::DownloadCheckResult::POTENTIALLY_UNWANTED:
-        danger_type = content::DOWNLOAD_DANGER_TYPE_POTENTIALLY_UNWANTED;
+        danger_type = download::DOWNLOAD_DANGER_TYPE_POTENTIALLY_UNWANTED;
         break;
     }
 
-    if (danger_type != content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS) {
+    if (danger_type != download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS) {
       item->OnContentCheckCompleted(
           danger_type,
-          content::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
+          download::DOWNLOAD_INTERRUPT_REASON_FILE_BLOCKED);
     }
   }
 
@@ -266,7 +266,7 @@ AtomDownloadManagerDelegate::~AtomDownloadManagerDelegate() {
   }
 }
 
-void AtomDownloadManagerDelegate::GetItemSavePath(DownloadItem* item,
+void AtomDownloadManagerDelegate::GetItemSavePath(download::DownloadItem* item,
                                                   base::FilePath* path) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Locker locker(isolate);
@@ -278,7 +278,7 @@ void AtomDownloadManagerDelegate::GetItemSavePath(DownloadItem* item,
 }
 
 bool AtomDownloadManagerDelegate::GetExtension(
-    content::DownloadItem* item,
+    download::DownloadItem* item,
     const base::FilePath& target_path,
     base::FilePath::StringType* extension) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
@@ -323,13 +323,13 @@ void AtomDownloadManagerDelegate:: OnDownloadItemSelected(
 
 void AtomDownloadManagerDelegate::OnDownloadItemSelectionCancelled(
     const content::DownloadTargetCallback& callback,
-    DownloadItem* item) {
+    download::DownloadItem* item) {
   item->Remove();
   base::FilePath path;
   callback.Run(path,
-               DownloadItem::TARGET_DISPOSITION_PROMPT,
-               content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
-               content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
+               download::DownloadItem::TARGET_DISPOSITION_PROMPT,
+               download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+               download::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
 }
 
 void AtomDownloadManagerDelegate::DetermineLocalPath(
@@ -387,7 +387,8 @@ void AtomDownloadManagerDelegate::OnDownloadTargetDetermined(
 
   // To show file save dialog, |window| always must be valid.
   NativeWindow* window = nullptr;
-  if (content::WebContents* web_contents = item->GetWebContents()) {
+  if (content::WebContents* web_contents =
+          content::DownloadItemUtils::GetWebContents(item)) {
     window = GetNativeWindowFromWebContents(web_contents);
     // TODO(ltilve): If we want to use WebContents internally for file download,
     // we should revisit here. If that happens with single tab, browser is
@@ -397,15 +398,15 @@ void AtomDownloadManagerDelegate::OnDownloadTargetDetermined(
 
   // If we can't find proper |window| for showing save dialog, cancel
   // and cleanup current download.
-  // TODO(ltilve): If we want to use WebContents internaly for download,
-  // we should revisit here. Currently, we cancel it.
+  // TODO(ltilve): If we want to use WebContents internaly for download, we
+  // should revisit here. Currently, we cancel it.
   if (!window) {
     item->Remove();
     base::FilePath path;
     callback.Run(path,
-                 content::DownloadItem::TARGET_DISPOSITION_PROMPT,
-                 content::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
-                 content::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
+                 download::DownloadItem::TARGET_DISPOSITION_PROMPT,
+                 download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 download::DOWNLOAD_INTERRUPT_REASON_USER_CANCELED);
     return;
   }
 
@@ -438,7 +439,7 @@ void AtomDownloadManagerDelegate::Shutdown() {
 }
 
 bool AtomDownloadManagerDelegate::DetermineDownloadTarget(
-    DownloadItem* download,
+    download::DownloadItem* download,
     const content::DownloadTargetCallback& callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
@@ -498,14 +499,14 @@ void AtomDownloadManagerDelegate::ReserveVirtualPath(
 }
 
 bool AtomDownloadManagerDelegate::ShouldOpenDownload(
-    DownloadItem* download,
+    download::DownloadItem* download,
     const content::DownloadOpenDelayedCallback& callback) {
   return true;
 }
 
 void AtomDownloadManagerDelegate::GetNextId(
     const content::DownloadIdCallback& callback) {
-  static uint32_t next_id = DownloadItem::kInvalidId + 1;
+  static uint32_t next_id = download::DownloadItem::kInvalidId + 1;
   callback.Run(next_id++);
 }
 

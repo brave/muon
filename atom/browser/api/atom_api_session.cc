@@ -45,9 +45,8 @@
 #include "chrome/common/pref_names.h"
 #include "components/history/core/browser/history_service.h"
 #include "components/prefs/pref_service.h"
-#include "content/network/throttling/network_conditions.h"
-#include "content/network/throttling/throttling_controller.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/storage_partition.h"
 #include "extensions/features/features.h"
 #include "native_mate/dictionary.h"
@@ -58,8 +57,8 @@
 #include "net/http/http_auth_handler_factory.h"
 #include "net/http/http_auth_preferences.h"
 #include "net/http/transport_security_state.h"
-#include "net/proxy/proxy_config_service_fixed.h"
-#include "net/proxy/proxy_service.h"
+#include "net/proxy_resolution/proxy_config_service_fixed.h"
+#include "net/proxy_resolution/proxy_service.h"
 #include "net/url_request/static_http_user_agent_settings.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
@@ -71,9 +70,7 @@
 #endif
 
 using content::BrowserThread;
-using content::NetworkConditions;
 using content::StoragePartition;
-using content::ThrottlingController;
 
 namespace {
 
@@ -217,8 +214,8 @@ class ResolveProxyHelper {
                     const GURL& url) {
     DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
-    net::ProxyService* proxy_service =
-        context_getter->GetURLRequestContext()->proxy_service();
+    net::ProxyResolutionService* proxy_service =
+        context_getter->GetURLRequestContext()->proxy_resolution_service();
     net::CompletionCallback completion_callback =
         base::Bind(&ResolveProxyHelper::OnResolveProxyCompleted,
                    base::Unretained(this));
@@ -235,7 +232,7 @@ class ResolveProxyHelper {
 
   Session::ResolveProxyCallback callback_;
   net::ProxyInfo proxy_info_;
-  net::ProxyService::Request* pac_req_;
+  net::ProxyResolutionService::Request* pac_req_;
   scoped_refptr<base::SingleThreadTaskRunner> original_thread_;
 
   DISALLOW_COPY_AND_ASSIGN(ResolveProxyHelper);
@@ -298,7 +295,8 @@ void DoCacheActionInIO(
 void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
                   const net::ProxyConfig& config,
                   const base::Closure& callback) {
-  auto proxy_service = getter->GetURLRequestContext()->proxy_service();
+  auto proxy_service =
+      getter->GetURLRequestContext()->proxy_resolution_service();
   proxy_service->ResetConfigService(base::WrapUnique(
       new net::ProxyConfigServiceFixed(config)));
   // Refetches and applies the new pac script if provided.
@@ -324,8 +322,7 @@ void ClearHostResolverCacheInIO(
     cache->clear();
     DCHECK_EQ(0u, cache->size());
     if (!callback.is_null())
-      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
-                              base::Bind(&base::DoNothing));
+      BrowserThread::PostTask(BrowserThread::UI, FROM_HERE, base::DoNothing());
   }
 }
 
@@ -389,16 +386,15 @@ void Session::DefaultDownloadDirectoryChanged() {
 }
 
 void Session::OnDownloadCreated(content::DownloadManager* manager,
-                                content::DownloadItem* item) {
+                                download::DownloadItem* item) {
   if (item->IsSavePackageDownload())
     return;
 
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
-  bool prevent_default = Emit(
-      "will-download",
-      DownloadItem::Create(isolate(), item),
-      item->GetWebContents());
+  bool prevent_default =
+      Emit("will-download", DownloadItem::Create(isolate(), item),
+           content::DownloadItemUtils::GetWebContents(item));
   if (prevent_default) {
     item->Cancel(true);
     item->Remove();

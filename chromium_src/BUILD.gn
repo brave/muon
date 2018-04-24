@@ -198,6 +198,9 @@ source_set("browser") {
     "//chrome/browser/chrome_device_client.cc",
     "//chrome/browser/chrome_device_client.h",
 
+    "//chrome/browser/data_reduction_proxy_util.cc",
+    "//chrome/browser/data_reduction_proxy_util.h",
+
     # extensions
     "//chrome/browser/extensions/global_shortcut_listener.cc",
     "//chrome/browser/extensions/global_shortcut_listener.h",
@@ -301,6 +304,7 @@ source_set("browser") {
     "//chrome/browser/speech/tts_platform.cc",
     "//chrome/browser/speech/tts_platform.h",
     "//chrome/browser/speech/tts_win.cc",
+    "chrome/browser/ui/browser_dialogs.cc",
     "//chrome/browser/ui/browser_dialogs.h",
     "chrome/browser/ui/simple_message_box.cc",
     "chrome/browser/ui/user_manager.cc",
@@ -348,7 +352,7 @@ source_set("browser") {
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.cc",
       "//chrome/browser/crash_upload_list/crash_upload_list_crashpad.h",
     ]
-  } 
+  }
 
   if (is_linux) {
     sources += [
@@ -366,6 +370,8 @@ source_set("browser") {
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
+      "//chrome/browser/permissions/attestation_permission_request.cc",
+      "//chrome/browser/permissions/attestation_permission_request.h",
       "//chrome/browser/permissions/permission_request.cc",
       "//chrome/browser/permissions/permission_request.h",
       "chrome/browser/permissions/permission_request_manager.cc",
@@ -546,8 +552,6 @@ source_set("browser") {
         "//chrome/browser/extensions/extension_tab_util.h",
         "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.cc",
         "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h",
-        "chrome/browser/extensions/api/experience_sampling_private/experience_sampling.cc",
-        "//chrome/browser/extensions/api/experience_sampling_private/experience_sampling.h",
         "chrome/browser/extensions/api/messaging/incognito_connectability.cc",
         "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
         "//chrome/browser/extensions/api/messaging/chrome_messaging_delegate.cc",
@@ -603,6 +607,7 @@ source_set("browser") {
     sources += [
       "//chrome/browser/spellchecker/spell_check_host_chrome_impl.cc",
       "//chrome/browser/spellchecker/spell_check_host_chrome_impl.h",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl_mac.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
       "//chrome/browser/spellchecker/spellcheck_dictionary.h",
@@ -610,7 +615,6 @@ source_set("browser") {
       "//chrome/browser/spellchecker/spellcheck_factory.h",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.h",
-      "//chrome/browser/spellchecker/spellcheck_message_filter_platform_mac.cc",
       "//chrome/browser/spellchecker/spellcheck_service.cc",
       "//chrome/browser/spellchecker/spellcheck_service.h",
     ]
@@ -842,6 +846,8 @@ source_set("password_manager") {
   sources = [
     "//chrome/browser/browsing_data/browsing_data_helper.h",
     "//chrome/browser/browsing_data/browsing_data_helper.cc",
+    "//chrome/browser/password_manager/password_manager_util_linux.cc",
+    "//chrome/browser/password_manager/password_manager_util_linux.h",
     "//chrome/browser/password_manager/password_manager_util_win.h",
     "//chrome/browser/password_manager/password_manager_util_win.cc",
     "//chrome/browser/password_manager/password_store_factory.cc",
@@ -954,7 +960,7 @@ source_set("downloads") {
     "//base",
     "//chrome/common",
     "//components/download/content/factory",
-    "//components/download/public",
+    "//components/download/public/background_service:public",
     "//content/public/browser",
     "//net",
     "//url",
@@ -1178,7 +1184,7 @@ source_set("tab_manager") {
 
   deps = [
     ":lifetime",
-    "//components/feature_engagement:features",
+    "//components/feature_engagement:buildflags",
     "//services/metrics",
   ]
 

@@ -1,8 +1,8 @@
 diff --git a/base/threading/thread_restrictions.h b/base/threading/thread_restrictions.h
-index abfde3aaab1f1bc6cb8f925576b8e049e00cc798..8b28f6112caf232a473401d95b70ca97ff174dfa 100644
+index e63c406810b4deca5a9770fd196bd50f3a3a4070..14927de39b63a16e28f7c53d64396b2e97124fc9 100644
 --- a/base/threading/thread_restrictions.h
 +++ b/base/threading/thread_restrictions.h
-@@ -33,6 +33,13 @@ class StatisticsProviderImpl;
+@@ -34,6 +34,13 @@ class StatisticsProviderImpl;
  namespace chrome_browser_net {
  class Predictor;
  }
@@ -16,7 +16,7 @@ index abfde3aaab1f1bc6cb8f925576b8e049e00cc798..8b28f6112caf232a473401d95b70ca97
  namespace content {
  class BrowserGpuChannelHostFactory;
  class BrowserGpuMemoryBufferManager;
-@@ -418,6 +425,9 @@ class BASE_EXPORT ThreadRestrictions {
+@@ -430,6 +437,9 @@ class BASE_EXPORT ThreadRestrictions {
    friend class ui::CommandBufferLocal;
    friend class ui::GpuState;
  
@@ -27,7 +27,7 @@ index abfde3aaab1f1bc6cb8f925576b8e049e00cc798..8b28f6112caf232a473401d95b70ca97
    // BEGIN USAGE THAT NEEDS TO BE FIXED.
    friend class ::chromeos::BlockingMethodCaller;  // http://crbug.com/125360
 diff --git a/build/config/BUILDCONFIG.gn b/build/config/BUILDCONFIG.gn
-index 853c8492ce95d1cfaab058c799546e20f9d52cb4..e4bd9f124ea0d024f4d3102550631bc46a74d453 100644
+index 7d60dd920904d3f98573680e311096f0b9cb252e..e20be4554ef50dd52fa28e23d4de361fe2bb12f6 100644
 --- a/build/config/BUILDCONFIG.gn
 +++ b/build/config/BUILDCONFIG.gn
 @@ -152,6 +152,8 @@ declare_args() {
@@ -39,7 +39,7 @@ index 853c8492ce95d1cfaab058c799546e20f9d52cb4..e4bd9f124ea0d024f4d3102550631bc4
  }
  
  declare_args() {
-@@ -534,6 +536,13 @@ default_compiler_configs = [
+@@ -535,6 +537,13 @@ default_compiler_configs = [
    "//build/config/coverage:default_coverage",
    "//build/config/sanitizers:default_sanitizer_flags",
  ]
@@ -77,7 +77,7 @@ index 4bb4a043cbbcb562aed8926867660547cd7f018c..769bc73607b600d549b6185a37d6b0cc
  }
 +}
 diff --git a/build/toolchain/mac/BUILD.gn b/build/toolchain/mac/BUILD.gn
-index f66bca0ea2c85577dd5b28ddfdbe252f1824df2e..2334814336d4f0b7abf78e00e8d2412e18668eba 100644
+index 7fa01dcbe6daf97d1afea6141f34ecce02a9837b..14649ee85015cd199403f4ecabc688f018a0032d 100644
 --- a/build/toolchain/mac/BUILD.gn
 +++ b/build/toolchain/mac/BUILD.gn
 @@ -234,13 +234,15 @@ template("mac_toolchain") {
@@ -98,7 +98,7 @@ index f66bca0ea2c85577dd5b28ddfdbe252f1824df2e..2334814336d4f0b7abf78e00e8d2412e
        default_output_extension = ".a"
        output_prefix = "lib"
 diff --git a/build/toolchain/win/BUILD.gn b/build/toolchain/win/BUILD.gn
-index df1a50fcffb20da8d2d78c259a826e9a0f8cd1cf..65fd8cdfe5cbb8d1de10da27b50086f15d0a5028 100644
+index 53f767a0bddb274ad6b46098d45c703914f712f6..5b48281c1d944763053f237e618bf688778e269b 100644
 --- a/build/toolchain/win/BUILD.gn
 +++ b/build/toolchain/win/BUILD.gn
 @@ -6,6 +6,7 @@ import("//build/config/clang/clang.gni")
@@ -119,12 +119,12 @@ index df1a50fcffb20da8d2d78c259a826e9a0f8cd1cf..65fd8cdfe5cbb8d1de10da27b50086f1
    goma_prefix = ""
  }
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 960921acd7ebb0ba99092745e8d30bca76821f2a..a223e8ea1db840d5abc8587adfb8970ad51c14e3 100644
+index fbcf20cd0411d39a99642acf2674bf7de2804608..6b07c8f2e0827d17b97aa1cfeb24d7b7d513e539 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -36,6 +36,11 @@ if (is_android) {
+@@ -38,6 +38,11 @@ if (is_android) {
    import("//build/util/version.gni")
-   import("//media/cdm/ppapi/cdm_paths.gni")
+   import("//media/cdm/library_cdm/cdm_paths.gni")
    import("//third_party/icu/config.gni")
 +  if (!muon_chromium_build) {
 +    # Avoid mac app/framework naming conflicts
@@ -135,11 +135,11 @@ index 960921acd7ebb0ba99092745e8d30bca76821f2a..a223e8ea1db840d5abc8587adfb8970a
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
-index 19cb2b02d4c944988f9f928b3dbda166a9233d3f..af1bd76f33cf607d112d1dd0949955712ea32845 100644
+index b016c0546d9af6301427a926a050da3bb0c15e59..bfa5786a2dd7376ecfff98a80e5a38359db79668 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
 +++ b/chrome/browser/chrome_content_browser_manifest_overlay.json
-@@ -12,7 +12,7 @@
-           "extensions::StashService",
+@@ -13,7 +13,7 @@
+           "metrics::mojom::CallStackProfileCollector",
            "metrics::mojom::LeakDetector",
            "mojom::ModuleEventSink",
 -          "rappor::mojom::RapporRecorder",
@@ -148,18 +148,20 @@ index 19cb2b02d4c944988f9f928b3dbda166a9233d3f..af1bd76f33cf607d112d1dd094995571
            "translate::mojom::ContentTranslateDriver"
          ],
 diff --git a/chrome/browser/chrome_service.cc b/chrome/browser/chrome_service.cc
-index 1bd2e1d014ec61491a2904b30c9197da3691c46d..87dd94ff56138b4d81f9b05c0c49f7fc644d7ed4 100644
+index 10faefae1df8921bcdf0f7a43b0b3a279c171880..270ebefdc5fd892ca4badbd2b8beb2998cfe0abb 100644
 --- a/chrome/browser/chrome_service.cc
 +++ b/chrome/browser/chrome_service.cc
-@@ -31,8 +31,6 @@ ChromeService::ChromeService() {
-   registry_.AddInterface(
-       base::Bind(&chromeos::Launchable::Bind, base::Unretained(&launchable_)));
+@@ -46,8 +46,10 @@ class ChromeService::IOThreadContext : public service_manager::Service {
+                                                base::Unretained(&launchable_)),
+                            ui_task_runner);
  #endif
--  registry_.AddInterface(
--      base::Bind(&startup_metric_utils::StartupMetricHostImpl::Create));
++#if defined(MUON_CHROMIUM_BUILD)
+     registry_.AddInterface(base::BindRepeating(
+         &startup_metric_utils::StartupMetricHostImpl::Create));
++#endif
  #if BUILDFLAG(ENABLE_SPELLCHECK)
-   registry_with_source_info_.AddInterface(
-       base::BindRepeating(&SpellCheckHostChromeImpl::Create),
+     registry_with_source_info_.AddInterface(
+         base::BindRepeating(&SpellCheckHostChromeImpl::Create), ui_task_runner);
 diff --git a/chrome/browser/importer/external_process_importer_client.h b/chrome/browser/importer/external_process_importer_client.h
 index 864a6951115dda5ed74963f18b35692960397d50..3e1a2b719521ac2c60bae05f94e409bc4c7da022 100644
 --- a/chrome/browser/importer/external_process_importer_client.h
@@ -223,7 +225,7 @@ index 2592dea8c30aa5e7b9daf614a63fe964471bab7a..5fede5d8ee00b4b06d437b4272ec19a0
      callback_fn.Run(updated_pref);
  }
 diff --git a/chrome/browser/password_manager/password_store_factory.cc b/chrome/browser/password_manager/password_store_factory.cc
-index 54e54a5a1f922b84746b2f62c900857206257a24..00e706352dd09a0c8a7d5773c966ea2e392c45b3 100644
+index cb8bd43871271083038b0555340d4c328f9b8bae..1b442fbf4dfebfc709e90021bb1600a9fa80c67b 100644
 --- a/chrome/browser/password_manager/password_store_factory.cc
 +++ b/chrome/browser/password_manager/password_store_factory.cc
 @@ -113,8 +113,10 @@ PasswordStoreFactory::PasswordStoreFactory()
@@ -245,7 +247,7 @@ index 54e54a5a1f922b84746b2f62c900857206257a24..00e706352dd09a0c8a7d5773c966ea2e
  #if defined(OS_WIN) || defined(OS_MACOSX) || \
      (defined(OS_LINUX) && !defined(OS_CHROMEOS))
    std::unique_ptr<password_manager::PasswordStoreSigninNotifier> notifier =
-       base::MakeUnique<password_manager::PasswordStoreSigninNotifierImpl>(
+       std::make_unique<password_manager::PasswordStoreSigninNotifierImpl>(
            profile);
    ps->SetPasswordStoreSigninNotifier(std::move(notifier));
 +#endif
@@ -253,10 +255,10 @@ index 54e54a5a1f922b84746b2f62c900857206257a24..00e706352dd09a0c8a7d5773c966ea2e
  
    return ps;
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
-index 59761b2d81799cc48ffa8b6b7f64c3d3e53f34b1..01c8ebbad98aacba021196cc138d1280aea42050 100644
+index ba01494ae09d034d139c6fdfa03e9468dfad6829..0ce699084f61594bba83eee9cf8f1b4517d281be 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
 +++ b/chrome/browser/printing/print_view_manager_base.cc
-@@ -71,13 +71,13 @@ using PrintSettingsCallback =
+@@ -73,13 +73,13 @@ using PrintSettingsCallback =
  
  void ShowWarningMessageBox(const base::string16& message) {
    // Runs always on the UI thread.
@@ -276,7 +278,7 @@ index 59761b2d81799cc48ffa8b6b7f64c3d3e53f34b1..01c8ebbad98aacba021196cc138d1280
  
  #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 diff --git a/chrome/browser/renderer_host/chrome_extension_message_filter.cc b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
-index 5b98dda96e08f425ac1d63b119874f30be0d0ed9..1ae5ce0126b509b3d56aa84f23c75b69b2609864 100644
+index 30897fe6780343110f48a05b56827bd8476342b6..aef7d7b993743037776eccc62df09c92342a622b 100644
 --- a/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 +++ b/chrome/browser/renderer_host/chrome_extension_message_filter.cc
 @@ -16,16 +16,19 @@
@@ -299,7 +301,7 @@ index 5b98dda96e08f425ac1d63b119874f30be0d0ed9..1ae5ce0126b509b3d56aa84f23c75b69
  #include "extensions/common/extension_messages.h"
  #include "extensions/common/extension_set.h"
  #include "extensions/common/file_util.h"
-@@ -41,6 +44,7 @@ const uint32_t kFilteredMessageClasses[] = {
+@@ -41,6 +44,7 @@ const uint32_t kExtensionFilteredMessageClasses[] = {
      ChromeExtensionMsgStart, ExtensionMsgStart,
  };
  
@@ -316,7 +318,7 @@ index 5b98dda96e08f425ac1d63b119874f30be0d0ed9..1ae5ce0126b509b3d56aa84f23c75b69
  }  // namespace
  
 @@ -63,7 +68,7 @@ ChromeExtensionMessageFilter::ChromeExtensionMessageFilter(
-                            arraysize(kFilteredMessageClasses)),
+                            arraysize(kExtensionFilteredMessageClasses)),
        render_process_id_(render_process_id),
        profile_(profile),
 -      activity_log_(extensions::ActivityLog::GetInstance(profile)),
@@ -434,10 +436,10 @@ index a5ea92f2878459b49f88d4895c7d18f2e157dd6c..9cffca0352713bce12b4035c02612cd7
    }
  
 diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
-index 633dc40d895baee17ebe617c14cd4333fd044dad..59eb777fae2a1b1d69d097ffe0e7af126628d317 100644
+index 7bcce4951f872e0c68f39abbebab736ccc54509f..0b55725bef29558e8a9f98069f99983a091f2daa 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.cc
 +++ b/chrome/browser/resource_coordinator/tab_manager.cc
-@@ -661,7 +661,8 @@ void TabManager::AddTabStats(const BrowserInfo& browser_info,
+@@ -660,7 +660,8 @@ void TabManager::AddTabStats(const BrowserInfo& browser_info,
    TabStripModel* tab_strip_model = browser_info.tab_strip_model;
    for (int i = 0; i < tab_strip_model->count(); i++) {
      WebContents* contents = tab_strip_model->GetWebContentsAt(i);
@@ -447,7 +449,7 @@ index 633dc40d895baee17ebe617c14cd4333fd044dad..59eb777fae2a1b1d69d097ffe0e7af12
        TabStats stats;
        stats.is_app = browser_info.browser_is_app;
        stats.is_internal_page = IsInternalPage(contents->GetLastCommittedURL());
-@@ -766,6 +767,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
+@@ -765,6 +766,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
    }
  }
  
@@ -465,7 +467,7 @@ index 633dc40d895baee17ebe617c14cd4333fd044dad..59eb777fae2a1b1d69d097ffe0e7af12
  WebContents* TabManager::DiscardWebContentsAt(int index,
                                                TabStripModel* model,
                                                DiscardReason reason) {
-@@ -781,8 +793,7 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
+@@ -780,8 +792,7 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
        "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
        old_contents->NeedToFireBeforeUnload());
  
@@ -475,7 +477,7 @@ index 633dc40d895baee17ebe617c14cd4333fd044dad..59eb777fae2a1b1d69d097ffe0e7af12
    // Copy over the state from the navigation controller to preserve the
    // back/forward history and to continue to display the correct title/favicon.
    //
-@@ -842,7 +853,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
+@@ -841,7 +852,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
    // TODO(jamescook): This breaks script connections with other tabs.
    // Find a different approach that doesn't do that, perhaps based on
    // RenderFrameProxyHosts.
@@ -511,10 +513,10 @@ index 440fdf8df66efce1b68a0463189986a6a0b0353a..7cc8fb11ecb5e2caa67e4e92d6d4526e
    // |tab_id|, and returns the WebContents index and the TabStripModel.
    int FindTabStripModelById(int32_t tab_id, TabStripModel** model) const;
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index d08a945c6b11a918fa5faedcb1c87c269772e877..c45ee400756147e646f76079fafc1718854a4c53 100644
+index 7ca361112ae6553b5d55c0118868b6592466e466..b3cbde0364a0de8e75fe06fdf86a72321078145a 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
-@@ -500,6 +500,12 @@ static_library("common") {
+@@ -503,6 +503,12 @@ static_library("common") {
      ]
      public_deps += [ "//chrome/common:version_header" ]
    }
@@ -705,7 +707,7 @@ index c172f8a5bc534465ff4d063a52f9bb510b7e36af..437026ae26eec5dce80edb73929a0fbc
  #if defined(OS_MACOSX)
    TYPE_SAFARI          = 3,
 diff --git a/chrome/common/importer/profile_import.mojom b/chrome/common/importer/profile_import.mojom
-index d5fa210c58244a5c9bc2aed4fa80d903920f604e..3f24c00ba2024fb1a6553d4fc69dae5f71c4d08c 100644
+index ce703fd88ae73abd0d1cb91247adbc802d43993a..f39b4ee9a95b435e7ec4b5bb2eecb4e94c4a2139 100644
 --- a/chrome/common/importer/profile_import.mojom
 +++ b/chrome/common/importer/profile_import.mojom
 @@ -17,6 +17,9 @@ struct ImportedBookmarkEntry;
@@ -813,10 +815,10 @@ index b5f779d03cfec8ce1db9354d85020acaa10c3a5b..04db5469f8b3705bbf0c36fe6eef5ce1
    // (https://msdn.microsoft.com/library/windows/desktop/dd378457.aspx).
    std::wstring user_data_dir = GetEnvironmentString16(L"LOCALAPPDATA");
 diff --git a/chrome/installer/util/browser_distribution.cc b/chrome/installer/util/browser_distribution.cc
-index ac6a3e41ef2c4e82eab088b39abc0d17c4db0f0e..5149d6638b5146d8dc21aed5cc508d613c26fd69 100644
+index 33c105c968dc46b62ab39ee766f1ecce4449c358..9ba97762a3f354dcc56826a7c7a090e19c72f4d4 100644
 --- a/chrome/installer/util/browser_distribution.cc
 +++ b/chrome/installer/util/browser_distribution.cc
-@@ -20,6 +20,10 @@
+@@ -19,6 +19,10 @@
  #include "chrome/installer/util/l10n_string_util.h"
  #include "chrome/installer/util/non_updating_app_registration_data.h"
  
@@ -827,7 +829,7 @@ index ac6a3e41ef2c4e82eab088b39abc0d17c4db0f0e..5149d6638b5146d8dc21aed5cc508d61
  namespace {
  
  // The BrowserDistribution object is never freed.
-@@ -55,6 +59,7 @@ BrowserDistribution* BrowserDistribution::GetOrCreateBrowserDistribution(
+@@ -54,6 +58,7 @@ BrowserDistribution* BrowserDistribution::GetOrCreateBrowserDistribution(
  BrowserDistribution* BrowserDistribution::GetDistribution() {
    BrowserDistribution* dist = NULL;
  
@@ -835,7 +837,7 @@ index ac6a3e41ef2c4e82eab088b39abc0d17c4db0f0e..5149d6638b5146d8dc21aed5cc508d61
  #if defined(GOOGLE_CHROME_BUILD)
    dist = GetOrCreateBrowserDistribution<GoogleChromeDistribution>(
        &g_browser_distribution);
-@@ -62,7 +67,10 @@ BrowserDistribution* BrowserDistribution::GetDistribution() {
+@@ -61,7 +66,10 @@ BrowserDistribution* BrowserDistribution::GetDistribution() {
    dist = GetOrCreateBrowserDistribution<BrowserDistribution>(
        &g_browser_distribution);
  #endif
@@ -892,7 +894,7 @@ index d7734d8883c3e438ece3d509b7bb331931831178..6e6cdda19c271de7e5429db02b3e17b2
  }
  # Note: Update the test expectations in GetBaseMessageIdForMode.GoogleStringIds
 diff --git a/chrome/renderer/BUILD.gn b/chrome/renderer/BUILD.gn
-index 3f68c173d1c2f233c0b69fefa162df97b1e7ee69..ab93976eed7f2feb0f627e11ba4b3624b98b37ec 100644
+index 1ec9a536a3784808f4bdb948c85c6a169088c347..c28e2377769fd916e1b51b01426d5651dc80ac81 100644
 --- a/chrome/renderer/BUILD.gn
 +++ b/chrome/renderer/BUILD.gn
 @@ -414,6 +414,19 @@ static_library("renderer") {
@@ -916,10 +918,10 @@ index 3f68c173d1c2f233c0b69fefa162df97b1e7ee69..ab93976eed7f2feb0f627e11ba4b3624
  
  static_library("test_support") {
 diff --git a/chrome/renderer/chrome_content_renderer_client.cc b/chrome/renderer/chrome_content_renderer_client.cc
-index 47aceed2a5138e4eb7bf1cfa2cfc6f13ff78fe71..eecfd302b5097ec0ec06f736803c9c47b69e1de1 100644
+index 910bf38b9c46f42edc29693af2df93b6878c9fcf..597104088e0b2062a4357365623e71644f6fb1c2 100644
 --- a/chrome/renderer/chrome_content_renderer_client.cc
 +++ b/chrome/renderer/chrome_content_renderer_client.cc
-@@ -1517,6 +1517,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
+@@ -1510,6 +1510,7 @@ ChromeContentRendererClient::CreateBrowserPluginDelegate(
  #endif
  }
  
@@ -927,7 +929,7 @@ index 47aceed2a5138e4eb7bf1cfa2cfc6f13ff78fe71..eecfd302b5097ec0ec06f736803c9c47
  void ChromeContentRendererClient::RecordRappor(const std::string& metric,
                                                 const std::string& sample) {
    if (!rappor_recorder_) {
-@@ -1534,6 +1535,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
+@@ -1527,6 +1528,7 @@ void ChromeContentRendererClient::RecordRapporURL(const std::string& metric,
    }
    rappor_recorder_->RecordRapporURL(metric, url);
  }
@@ -936,10 +938,10 @@ index 47aceed2a5138e4eb7bf1cfa2cfc6f13ff78fe71..eecfd302b5097ec0ec06f736803c9c47
  void ChromeContentRendererClient::AddImageContextMenuProperties(
      const WebURLResponse& response,
 diff --git a/chrome/renderer/chrome_content_renderer_client.h b/chrome/renderer/chrome_content_renderer_client.h
-index 691d07ff66e08562701b2e537b00bb41b6da3667..f7eb6521853ddaf0edfd1e11f609f26188c3651a 100644
+index a7d4d8906d5d7c3a9fdbb2939a2008c8e3f7752d..5041ab3c30f1b0679413fa382b7d6503c743d951 100644
 --- a/chrome/renderer/chrome_content_renderer_client.h
 +++ b/chrome/renderer/chrome_content_renderer_client.h
-@@ -191,9 +191,9 @@ class ChromeContentRendererClient
+@@ -193,9 +193,9 @@ class ChromeContentRendererClient
        content::RenderFrame* render_frame,
        const std::string& mime_type,
        const GURL& original_url) override;
@@ -953,7 +955,7 @@ index 691d07ff66e08562701b2e537b00bb41b6da3667..f7eb6521853ddaf0edfd1e11f609f261
        const blink::WebURLResponse& response,
        bool is_image_in_context_a_placeholder_image,
 diff --git a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc b/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
-index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d8245a529 100644
+index 611d2b865e6c0ee90bedca8395c1a884fd5e5698..babf86d7d83a8692e0e0549f4c18eb7f5fb04894 100644
 --- a/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
 +++ b/chrome/renderer/pepper/chrome_renderer_pepper_host_factory.cc
 @@ -100,11 +100,11 @@ ChromeRendererPepperHostFactory::CreateResourceHost(
@@ -962,12 +964,12 @@ index 12d432198186daf817c0b903af985b05ce17cda2..ddbfdb1765d6f8505c35a70b9465b99d
    // access to the other private interfaces.
 -  switch (message.type()) {
 -    case PpapiHostMsg_UMA_Create::ID: {
--      return base::MakeUnique<PepperUMAHost>(host_, instance, resource);
+-      return std::make_unique<PepperUMAHost>(host_, instance, resource);
 -    }
 -  }
 +  // switch (message.type()) {
 +  //   case PpapiHostMsg_UMA_Create::ID: {
-+  //     return base::MakeUnique<PepperUMAHost>(host_, instance, resource);
++  //     return std::make_unique<PepperUMAHost>(host_, instance, resource);
 +  //   }
 +  // }
  
@@ -986,7 +988,7 @@ index 7e05c4e04f8e61b418d373a73bd8901347df4c76..e7e6d9fa5e0d54c7755fe3a38eca6f70
    // Holds strings needed by the external importer because the resource
    // bundle isn't available to the external process.
 diff --git a/chrome/utility/importer/firefox_importer.cc b/chrome/utility/importer/firefox_importer.cc
-index cf98536e46b057d11b76e810e8e4348872855a2d..b243aca10dcc93ec5b7a99d368d0f62024d1d32b 100644
+index 528b73ffb2a3c667f8cfd7ef01b65b34236765a3..7b1c9b38ac9bf2bb8dae76afd50de7ef10b0148d 100644
 --- a/chrome/utility/importer/firefox_importer.cc
 +++ b/chrome/utility/importer/firefox_importer.cc
 @@ -161,14 +161,12 @@ void FirefoxImporter::StartImport(const importer::SourceProfile& source_profile,
@@ -1019,10 +1021,10 @@ index 8c6dafc83d25a697a6ca235faf4e0dc386a8828b..f6465167a32f27c496caaa4015a9cd10
    FRIEND_TEST_ALL_PREFIXES(FirefoxImporterTest, ImportBookmarksV25);
    void ImportBookmarks();
 diff --git a/chrome/utility/importer/profile_import_impl.h b/chrome/utility/importer/profile_import_impl.h
-index 4fb2499aa536d3618df2bbc4072fb23420f42c2e..65b6268d8d85545799a6a47e59b4adb7c0e5fa45 100644
+index e37c604f04ca527f4949442ada1872bd48697cf4..e990a6ebe2e1fa1ef7c4c88e7bf4829373653651 100644
 --- a/chrome/utility/importer/profile_import_impl.h
 +++ b/chrome/utility/importer/profile_import_impl.h
-@@ -35,6 +35,7 @@ class ProfileImportImpl : public chrome::mojom::ProfileImport {
+@@ -34,6 +34,7 @@ class ProfileImportImpl : public chrome::mojom::ProfileImport {
    ~ProfileImportImpl() override;
  
   private:
@@ -1043,7 +1045,7 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
-index c72cd3622b86d29a66f2e003cd4331e99a0aa68c..5b48960f3042c0aecb2228272a36152273b8ed65 100644
+index 460f7ac4defaca672afc97884c5f35e58f21836e..a440df43d423ca414053a7b2167258c93e89c223 100644
 --- a/components/crash/content/app/breakpad_linux.cc
 +++ b/components/crash/content/app/breakpad_linux.cc
 @@ -86,8 +86,10 @@ namespace breakpad {
@@ -1058,7 +1060,7 @@ index c72cd3622b86d29a66f2e003cd4331e99a0aa68c..5b48960f3042c0aecb2228272a361522
  #endif
  
  bool g_is_crash_reporter_enabled = false;
-@@ -1342,6 +1344,7 @@ void ExecUploadProcessOrTerminate(const BreakpadInfo& info,
+@@ -1346,6 +1348,7 @@ void ExecUploadProcessOrTerminate(const BreakpadInfo& info,
      header_content_type,
      post_file,
      kUploadURL,
@@ -1066,7 +1068,7 @@ index c72cd3622b86d29a66f2e003cd4331e99a0aa68c..5b48960f3042c0aecb2228272a361522
      "--timeout=10",  // Set a timeout so we don't hang forever.
      "--tries=1",     // Don't retry if the upload fails.
      "-O",  // Output reply to the file descriptor path.
-@@ -1884,6 +1887,7 @@ void HandleCrashDump(const BreakpadInfo& info) {
+@@ -1888,6 +1891,7 @@ void HandleCrashDump(const BreakpadInfo& info) {
  
          const size_t kCrashIdLength = 16;
          char id_buf[kCrashIdLength + 1];
@@ -1117,10 +1119,10 @@ index dbd2ae8df59756c61d28091cff70098c897db8f4..84fbc695c817c87deb902d8b6f69d3f1
        link.href = href;
        link.target = '_blank';
 diff --git a/components/guest_view/browser/guest_view_base.cc b/components/guest_view/browser/guest_view_base.cc
-index 9a4a5613f9e072d35d8b965b5454060601d9f524..43135cd561c4651d1c0bc7f62e0cff8d3bd8d5d3 100644
+index 865dec78f433ae6e526b10a6e0fce4631a944342..c95188210bf3699dacb0ab2ae823e2c951ef3c43 100644
 --- a/components/guest_view/browser/guest_view_base.cc
 +++ b/components/guest_view/browser/guest_view_base.cc
-@@ -439,8 +439,12 @@ void GuestViewBase::DidDetach() {
+@@ -437,8 +437,12 @@ void GuestViewBase::DidDetach() {
    owner_web_contents()->GetRenderViewHost()->Send(
        new GuestViewMsg_GuestDetached(element_instance_id_));
    element_instance_id_ = kInstanceIDNone;
@@ -1135,10 +1137,10 @@ index 9a4a5613f9e072d35d8b965b5454060601d9f524..43135cd561c4651d1c0bc7f62e0cff8d
  
  WebContents* GuestViewBase::GetOwnerWebContents() const {
 diff --git a/components/guest_view/browser/guest_view_base.h b/components/guest_view/browser/guest_view_base.h
-index da1748a87d0e2cc4efed512bfdd9c09b0092ff5a..c252368370a9873e7ffe3d5b72749f74975ae982 100644
+index 32341e9197a71fe2215c67e5b2e936b171043d76..25f6b04bafc86c44a243d933a55444a5eb0d4eb7 100644
 --- a/components/guest_view/browser/guest_view_base.h
 +++ b/components/guest_view/browser/guest_view_base.h
-@@ -247,6 +247,9 @@ class GuestViewBase : public content::BrowserPluginGuestDelegate,
+@@ -244,6 +244,9 @@ class GuestViewBase : public content::BrowserPluginGuestDelegate,
    // an opportunity to perform setup actions after attachment.
    virtual void DidAttachToEmbedder() {}
  
@@ -1186,19 +1188,6 @@ index 0738b6917057019a9e006a3a34fcf6164017cb46..ce3de6082c9ad8014d80a216f0c23c06
  }
  
  // static
-diff --git a/components/metrics/metrics_service_accessor.cc b/components/metrics/metrics_service_accessor.cc
-index 467210af09ccba687fad513c5a43047a43a7e5a0..a109474bc5988060884257bfeca93a8360c40529 100644
---- a/components/metrics/metrics_service_accessor.cc
-+++ b/components/metrics/metrics_service_accessor.cc
-@@ -16,7 +16,7 @@ namespace metrics {
- // static
- bool MetricsServiceAccessor::IsMetricsReportingEnabled(
-     PrefService* pref_service) {
--#if defined(GOOGLE_CHROME_BUILD)
-+#if defined(GOOGLE_CHROME_BUILD) || !defined(MUON_CHROMIUM_BUILD)
-   // In official builds, disable metrics when reporting field trials are
-   // forced; otherwise, use the value of the user's preference to determine
-   // whether to enable metrics reporting.
 diff --git a/components/os_crypt/key_storage_libsecret.cc b/components/os_crypt/key_storage_libsecret.cc
 index a1b5b975bc89c4891643adab17ce0b00ba2a8032..229928f2381eaecf6d3180109dd9aaa7725a010e 100644
 --- a/components/os_crypt/key_storage_libsecret.cc
@@ -1252,10 +1241,10 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
 diff --git a/components/ssl_config/ssl_config_service_manager_pref.cc b/components/ssl_config/ssl_config_service_manager_pref.cc
-index f924fe268f0334d522898ffcc51d82e39fc77a8f..42bac4005b86ccec4d5a45b2c8067e4c923980f0 100644
+index bd0ba311df28f87bf464175e5b2eb3e926c3fa83..e6c06ede9c5e77eb0769fc308388a1175de406f4 100644
 --- a/components/ssl_config/ssl_config_service_manager_pref.cc
 +++ b/components/ssl_config/ssl_config_service_manager_pref.cc
-@@ -298,10 +298,14 @@ void SSLConfigServiceManagerPref::GetSSLConfigFromPrefs(
+@@ -293,10 +293,14 @@ void SSLConfigServiceManagerPref::GetSSLConfigFromPrefs(
      net::SSLConfig* config) {
    // rev_checking_enabled was formerly a user-settable preference, but now
    // it is managed-only.
@@ -1270,135 +1259,11 @@ index f924fe268f0334d522898ffcc51d82e39fc77a8f..42bac4005b86ccec4d5a45b2c8067e4c
    config->rev_checking_required_local_anchors =
        rev_checking_required_local_anchors_.GetValue();
    config->sha1_local_anchors_enabled = sha1_local_anchors_enabled_.GetValue();
-diff --git a/components/viz/common/BUILD.gn b/components/viz/common/BUILD.gn
-index b1f1c511c79360cf52bea03a84199b540feac507..7f80c1f0eb2918e7d46a884299e087524ac74d4b 100644
---- a/components/viz/common/BUILD.gn
-+++ b/components/viz/common/BUILD.gn
-@@ -119,6 +119,8 @@ viz_component("common") {
-     "resources/single_release_callback.h",
-     "resources/transferable_resource.cc",
-     "resources/transferable_resource.h",
-+    "surfaces/child_local_surface_id_allocator.cc",
-+    "surfaces/child_local_surface_id_allocator.h",
-     "surfaces/frame_sink_id.cc",
-     "surfaces/frame_sink_id.h",
-     "surfaces/frame_sink_id_allocator.h",
-@@ -195,6 +197,8 @@ viz_source_set("unit_tests") {
-     "quads/render_pass_unittest.cc",
-     "resources/platform_color_unittest.cc",
-     "surfaces/surface_sequence_generator_unittest.cc",
-+    "surfaces/child_local_surface_id_allocator_unittest.cc",
-+    "surfaces/parent_local_surface_id_allocator_unittest.cc",
-     "yuv_readback_unittest.cc",
-   ]
- 
-diff --git a/components/viz/common/surfaces/parent_local_surface_id_allocator.cc b/components/viz/common/surfaces/parent_local_surface_id_allocator.cc
-index a5a5512f3d7fd7efdce8f761616f7b8451fb24c0..2fa2bc4a3adc580b71f174102f5d56b67243308a 100644
---- a/components/viz/common/surfaces/parent_local_surface_id_allocator.cc
-+++ b/components/viz/common/surfaces/parent_local_surface_id_allocator.cc
-@@ -4,21 +4,43 @@
- 
- #include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
- 
--#include <stdint.h>
--
- #include "base/rand_util.h"
--#include "base/unguessable_token.h"
- 
- namespace viz {
- 
--ParentLocalSurfaceIdAllocator::ParentLocalSurfaceIdAllocator() : next_id_(1u) {}
-+namespace {
-+constexpr uint32_t kInvalidParentSequenceNumber = 0;
-+constexpr uint32_t kInitialChildSequenceNumber = 1;
-+}  // namespace
-+
-+ParentLocalSurfaceIdAllocator::ParentLocalSurfaceIdAllocator()
-+    : last_known_local_surface_id_(kInvalidParentSequenceNumber,
-+                                   kInitialChildSequenceNumber,
-+                                   base::UnguessableToken()) {}
-+
-+const LocalSurfaceId& ParentLocalSurfaceIdAllocator::UpdateFromChild(
-+    const LocalSurfaceId& child_allocated_local_surface_id) {
-+  DCHECK_GE(child_allocated_local_surface_id.child_sequence_number(),
-+            last_known_local_surface_id_.child_sequence_number());
-+
-+  last_known_local_surface_id_ =
-+      LocalSurfaceId(last_known_local_surface_id_.parent_sequence_number(),
-+                     child_allocated_local_surface_id.child_sequence_number(),
-+                     last_known_local_surface_id_.nonce());
-+  return last_known_local_surface_id_;
-+}
- 
--ParentLocalSurfaceIdAllocator::~ParentLocalSurfaceIdAllocator() {}
-+void ParentLocalSurfaceIdAllocator::Reset(
-+    const LocalSurfaceId& local_surface_id) {
-+  last_known_local_surface_id_ = local_surface_id;
-+}
- 
--LocalSurfaceId ParentLocalSurfaceIdAllocator::GenerateId() {
--  LocalSurfaceId id(next_id_, base::UnguessableToken::Create());
--  next_id_++;
--  return id;
-+const LocalSurfaceId& ParentLocalSurfaceIdAllocator::GenerateId() {
-+  last_known_local_surface_id_ =
-+      LocalSurfaceId(last_known_local_surface_id_.parent_sequence_number() + 1,
-+                     last_known_local_surface_id_.child_sequence_number(),
-+                     base::UnguessableToken::Create());
-+  return last_known_local_surface_id_;
- }
- 
- }  // namespace viz
-diff --git a/components/viz/common/surfaces/parent_local_surface_id_allocator.h b/components/viz/common/surfaces/parent_local_surface_id_allocator.h
-index d30d27227a4cf86bfbf355c1007c46098a361958..a1b32a9883fee1658b1b7c5166c0c96c2e3409c3 100644
---- a/components/viz/common/surfaces/parent_local_surface_id_allocator.h
-+++ b/components/viz/common/surfaces/parent_local_surface_id_allocator.h
-@@ -8,6 +8,7 @@
- #include <stdint.h>
- 
- #include "base/macros.h"
-+#include "base/unguessable_token.h"
- #include "components/viz/common/surfaces/surface_id.h"
- #include "components/viz/common/viz_common_export.h"
- 
-@@ -21,12 +22,29 @@ namespace viz {
- class VIZ_COMMON_EXPORT ParentLocalSurfaceIdAllocator {
-  public:
-   ParentLocalSurfaceIdAllocator();
--  ~ParentLocalSurfaceIdAllocator();
-+  ParentLocalSurfaceIdAllocator(ParentLocalSurfaceIdAllocator&& other) =
-+      default;
-+  ParentLocalSurfaceIdAllocator& operator=(
-+      ParentLocalSurfaceIdAllocator&& other) = default;
-+  ~ParentLocalSurfaceIdAllocator() = default;
- 
--  LocalSurfaceId GenerateId();
-+  // When a child-allocated LocalSurfaceId arrives in the parent, the parent
-+  // needs to update its understanding of the last generated message so the
-+  // messages can continue to monotonically increase.
-+  const LocalSurfaceId& UpdateFromChild(
-+      const LocalSurfaceId& child_allocated_local_surface_id);
-+
-+  // Resets this allocator with the provided |local_surface_id| as a seed.
-+  void Reset(const LocalSurfaceId& local_surface_id);
-+
-+  const LocalSurfaceId& GenerateId();
-+
-+  const LocalSurfaceId& last_known_local_surface_id() const {
-+    return last_known_local_surface_id_;
-+  }
- 
-  private:
--  uint32_t next_id_;
-+  LocalSurfaceId last_known_local_surface_id_;
- 
-   DISALLOW_COPY_AND_ASSIGN(ParentLocalSurfaceIdAllocator);
- };
 diff --git a/content/app/content_main_runner.cc b/content/app/content_main_runner.cc
-index 61d38021262f80337b45fe592128b9955d8c2f01..f0dd54b962e3d6c3588f7ef83e90831f52395da0 100644
+index 00864253f7c97b98d1e66eb67e717588523559a1..847d20b9a6eefbd50616e8d746bef19bb025cbd1 100644
 --- a/content/app/content_main_runner.cc
 +++ b/content/app/content_main_runner.cc
-@@ -637,7 +637,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
+@@ -627,7 +627,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
  
      InitializeV8IfNeeded(command_line, process_type);
  
@@ -1407,7 +1272,7 @@ index 61d38021262f80337b45fe592128b9955d8c2f01..f0dd54b962e3d6c3588f7ef83e90831f
  #if defined(OS_WIN)
      bool should_enable_stack_dump = !process_type.empty();
  #else
-@@ -653,7 +653,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
+@@ -643,7 +643,7 @@ class ContentMainRunnerImpl : public ContentMainRunner {
              service_manager::switches::kDisableInProcessStackTraces)) {
        base::debug::EnableInProcessStackDumping();
      }
@@ -1417,34 +1282,10 @@ index 61d38021262f80337b45fe592128b9955d8c2f01..f0dd54b962e3d6c3588f7ef83e90831f
      if (delegate_)
        delegate_->PreSandboxStartup();
 diff --git a/content/browser/browser_plugin/browser_plugin_guest.cc b/content/browser/browser_plugin/browser_plugin_guest.cc
-index cb122b1bcdb3787276ec98f51d40fe417eb07748..186982f063bdffe3cb5070e7d7cbdf477c94535a 100644
+index 3e1786aa6901be8316e7db490e839a27fb138260..b2cdb1950d5328a82a8690b1f4d01d91a4327477 100644
 --- a/content/browser/browser_plugin/browser_plugin_guest.cc
 +++ b/content/browser/browser_plugin/browser_plugin_guest.cc
-@@ -372,17 +372,18 @@ void BrowserPluginGuest::InitInternal(
- 
-   DCHECK(GetWebContents()->GetRenderViewHost());
- 
--  // Initialize the device scale factor by calling |NotifyScreenInfoChanged|.
--  auto* render_widget_host = RenderWidgetHostImpl::From(
--      GetWebContents()->GetRenderViewHost()->GetWidget());
--  render_widget_host->NotifyScreenInfoChanged();
--
-   // TODO(chrishtr): this code is wrong. The navigate_on_drag_drop field will
-   // be reset again the next time preferences are updated.
-   WebPreferences prefs =
-       GetWebContents()->GetRenderViewHost()->GetWebkitPreferences();
-   prefs.navigate_on_drag_drop = false;
-   GetWebContents()->GetRenderViewHost()->UpdateWebkitPreferences(prefs);
-+
-+  base::Optional<viz::LocalSurfaceId> child_local_surface_id;
-+  if (local_surface_id_.is_valid())
-+    child_local_surface_id = local_surface_id_;
-+  SendMessageToEmbedder(std::make_unique<BrowserPluginMsg_Attach_ACK>(
-+      browser_plugin_instance_id(), child_local_surface_id));
- }
- 
- BrowserPluginGuest::~BrowserPluginGuest() {
-@@ -881,6 +882,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
+@@ -850,6 +850,8 @@ void BrowserPluginGuest::OnDetach(int browser_plugin_instance_id) {
    }
  
    delegate_->DidDetach();
@@ -1453,25 +1294,11 @@ index cb122b1bcdb3787276ec98f51d40fe417eb07748..186982f063bdffe3cb5070e7d7cbdf47
  }
  
  void BrowserPluginGuest::OnDragStatusUpdate(int browser_plugin_instance_id,
-@@ -1080,9 +1083,10 @@ void BrowserPluginGuest::OnUpdateResizeParams(
-     const ScreenInfo& screen_info,
-     uint64_t sequence_number,
-     const viz::LocalSurfaceId& local_surface_id) {
--  if ((frame_rect_.size() != frame_rect.size() ||
--       screen_info_ != screen_info) &&
--      local_surface_id_ == local_surface_id) {
-+  if (local_surface_id_ > local_surface_id ||
-+      ((frame_rect_.size() != frame_rect.size() ||
-+        screen_info_ != screen_info) &&
-+       local_surface_id_ == local_surface_id)) {
-     SiteInstance* owner_site_instance = delegate_->GetOwnerSiteInstance();
-     bad_message::ReceivedBadMessage(
-         owner_site_instance->GetProcess(),
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
-index 6e105e13b6c5624e2a879471128a90951843e1c4..fe305b57d19f19494cd89ea7af6ae2592405d197 100644
+index b3653373a51f62844978f96abc5d358cf32e35d9..f2ab809102b4805e0ed3257010e522882e5ba94b 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
 +++ b/content/browser/frame_host/render_frame_message_filter.cc
-@@ -572,7 +572,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
+@@ -578,7 +578,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
    PluginServiceFilter* filter = PluginServiceImpl::GetInstance()->GetFilter();
    std::vector<WebPluginInfo> plugins;
  
@@ -1480,24 +1307,8 @@ index 6e105e13b6c5624e2a879471128a90951843e1c4..fe305b57d19f19494cd89ea7af6ae259
    int routing_id = MSG_ROUTING_NONE;
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
    // the filter might mutate it.
-diff --git a/content/browser/frame_host/render_widget_host_view_guest.cc b/content/browser/frame_host/render_widget_host_view_guest.cc
-index 9c03e285ca6a60d383ba8fd2295895fe2a2f5ac9..79cd9241964a26c4725735a1105faf479822115b 100644
---- a/content/browser/frame_host/render_widget_host_view_guest.cc
-+++ b/content/browser/frame_host/render_widget_host_view_guest.cc
-@@ -169,11 +169,9 @@ void RenderWidgetHostViewGuest::Hide() {
- }
- 
- void RenderWidgetHostViewGuest::SetSize(const gfx::Size& size) {
--  host_->WasResized();
- }
- 
- void RenderWidgetHostViewGuest::SetBounds(const gfx::Rect& rect) {
--  SetSize(rect.size());
- }
- 
- void RenderWidgetHostViewGuest::Focus() {
 diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493ff3c9050 100644
+index 36c25c462ad15a7c023f118879aaba556381da66..c0aff85c5d3daa62c3f3f8162d43d06d6fe6dbf2 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 @@ -22,7 +22,7 @@
@@ -1510,10 +1321,10 @@ index 83a8792dbe1ee56e7541828861253b2d5d39cc22..52515549ce39704a701847d14143c493
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 5bebf776d70dd1d326058a0402d1aaa5c02b6e39..83e83794b2d4a036946e5d7287d304851959737b 100644
+index 487198015037c38670805ff79dddb8161907dde5..05eebd4ee44ab32174fc80b88b9f1ee1ad9676b2 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
-@@ -1686,8 +1686,23 @@ bool RenderWidgetHostViewAura::TransformPointToLocalCoordSpace(
+@@ -1669,8 +1669,23 @@ bool RenderWidgetHostViewAura::TransformPointToLocalCoordSpace(
        !delegated_frame_host_->TransformPointToLocalCoordSpace(
            point_in_pixels, original_surface, transformed_point))
      return false;
@@ -1540,10 +1351,10 @@ index 5bebf776d70dd1d326058a0402d1aaa5c02b6e39..83e83794b2d4a036946e5d7287d30485
  }
  
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e818513637e9327cc 100644
+index ac90d44c48a0a9b81d23eb6b8e7aac96e26704d2..9b951c4522d0167e94b0109ffb10410fa0463cbf 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -139,6 +139,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
+@@ -137,6 +137,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
  
  }  // namespace
  
@@ -1556,7 +1367,7 @@ index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e81851363
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1612,6 +1618,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1636,6 +1642,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
    if (render_widget_host_) {
      render_widget_host_->SetActive(active);
      if (active) {
@@ -1567,7 +1378,7 @@ index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e81851363
        if (HasFocus())
          render_widget_host_->Focus();
      } else {
-@@ -1875,7 +1885,14 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -1908,7 +1918,14 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1582,7 +1393,7 @@ index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e81851363
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2108,8 +2125,10 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -2141,8 +2158,10 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1593,7 +1404,7 @@ index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e81851363
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -2981,6 +3000,11 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -3006,6 +3025,11 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1606,7 +1417,7 @@ index 5d9a7a01faedc2a80aade71e65ca16d102f9efda..6be3c4c1f11e8f32559c408e81851363
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
 diff --git a/content/browser/renderer_host/render_widget_targeter.cc b/content/browser/renderer_host/render_widget_targeter.cc
-index 40549b7e067f24731733f69440be4da97c104084..8d8dbe70d45408a2c92eb3a4b491f132aabf2056 100644
+index 2282465f5cc8271a2098bb88cf4de56955972f21..87621775f2c587b45adcb5ec20c2a02c6d82dce0 100644
 --- a/content/browser/renderer_host/render_widget_targeter.cc
 +++ b/content/browser/renderer_host/render_widget_targeter.cc
 @@ -5,6 +5,7 @@
@@ -1617,7 +1428,7 @@ index 40549b7e067f24731733f69440be4da97c104084..8d8dbe70d45408a2c92eb3a4b491f132
  #include "content/browser/renderer_host/input/one_shot_timeout_monitor.h"
  #include "content/browser/renderer_host/render_widget_host_impl.h"
  #include "content/browser/renderer_host/render_widget_host_view_base.h"
-@@ -140,7 +141,13 @@ void RenderWidgetTargeter::FindTargetAndDispatch(
+@@ -149,7 +150,13 @@ void RenderWidgetTargeter::FindTargetAndDispatch(
    // TODO(kenrb, wjmaclean): Asynchronous hit tests don't work properly with
    // GuestViews, so rely on the synchronous result.
    // See https://crbug.com/802378.
@@ -1632,7 +1443,7 @@ index 40549b7e067f24731733f69440be4da97c104084..8d8dbe70d45408a2c92eb3a4b491f132
      // TODO(kenrb, sadrul): When all event types support asynchronous hit
      // testing, we should be able to have FindTargetSynchronously return the
      // view and location to use for the renderer hit test query.
-@@ -152,6 +159,9 @@ void RenderWidgetTargeter::FindTargetAndDispatch(
+@@ -161,6 +168,9 @@ void RenderWidgetTargeter::FindTargetAndDispatch(
    } else {
      FoundTarget(root_view, target, *event_ptr, latency, result.target_location);
    }
@@ -1643,10 +1454,10 @@ index 40549b7e067f24731733f69440be4da97c104084..8d8dbe70d45408a2c92eb3a4b491f132
  
  void RenderWidgetTargeter::ViewWillBeDestroyed(RenderWidgetHostViewBase* view) {
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 829401d6438671f55a9caf3a8f5eb5dc38234332..8ea576f35c95b7a0dbe050788a8d6b302ba75550 100644
+index c5f0ba58549cfe8e030d58d2e21e13151a7c5264..3d5dbce10e18ab39ffa988875e92cab9fbe5870f 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1724,7 +1724,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
+@@ -1727,7 +1727,8 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
    // This is set before initializing the render manager since
    // RenderFrameHostManager::Init calls back into us via its delegate to ask if
    // it should be hidden.
@@ -1656,7 +1467,7 @@ index 829401d6438671f55a9caf3a8f5eb5dc38234332..8ea576f35c95b7a0dbe050788a8d6b30
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2270,7 +2271,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2272,7 +2273,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
@@ -1667,10 +1478,10 @@ index 829401d6438671f55a9caf3a8f5eb5dc38234332..8ea576f35c95b7a0dbe050788a8d6b30
            : source_site_instance;
  
 diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/browser/web_contents/web_contents_view_mac.mm
-index 2c5dd9e99e6da2886063b4d4ca86605ca5ff13d3..9bf9e8a762cf3ec28b6d05e6a151a86698d2b7fe 100644
+index d3533591027d3e51955f495805c7ebb6e93c7972..0ccf890bfabe6d0df11ce362104446cebc06c39c 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -614,6 +614,7 @@ void WebContentsViewMac::CloseTab() {
+@@ -586,6 +586,7 @@ void WebContentsViewMac::CloseTab() {
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -1709,30 +1520,11 @@ index 35c4ee35242ac1e21beb94ae6b844dff14e04580..fdfc3b0ac56774fc5fd6a591ccad052c
  - (bool)isValidDragTarget:(content::RenderWidgetHostImpl*)targetRWH {
    return targetRWH->GetProcess()->GetID() == dragStartProcessID_ ||
           GetRenderViewHostID(webContents_->GetRenderViewHost()) !=
-diff --git a/content/common/browser_plugin/browser_plugin_messages.h b/content/common/browser_plugin/browser_plugin_messages.h
-index 6d19348f95bc734fbf4becae13c8b31efc215d94..dde0524f7aaf1675d1fef4556c48c8786b946680 100644
---- a/content/common/browser_plugin/browser_plugin_messages.h
-+++ b/content/common/browser_plugin/browser_plugin_messages.h
-@@ -174,6 +174,14 @@ IPC_MESSAGE_ROUTED3(BrowserPluginHostMsg_RequireSequence,
- // -----------------------------------------------------------------------------
- // These messages are from the browser process to the embedder.
- 
-+// Indicates that an attach request has completed. The provided
-+// |child_local_surface_id| is used as the seed for the
-+// ParentLocalSurfaceIdAllocator.
-+IPC_MESSAGE_CONTROL2(
-+    BrowserPluginMsg_Attach_ACK,
-+    int /* browser_plugin_instance_id */,
-+    base::Optional<viz::LocalSurfaceId> /* child_local_surface_id */)
-+
- // When the guest crashes, the browser process informs the embedder through this
- // message.
- IPC_MESSAGE_CONTROL1(BrowserPluginMsg_GuestGone,
 diff --git a/content/common/content_switches_internal.cc b/content/common/content_switches_internal.cc
-index f4b0773a6f13456f1789abb0e6f614aee9fd4a41..304e731d8c05d8258e32288afce21c518a580d89 100644
+index 27c25d3d25e18d9591b6ffd770fcd11875b231f7..01d2b4c88bf1c6f25441f7cd219e56df401f18f6 100644
 --- a/content/common/content_switches_internal.cc
 +++ b/content/common/content_switches_internal.cc
-@@ -156,7 +156,7 @@ void WaitForDebugger(const std::string& label) {
+@@ -115,7 +115,7 @@ void WaitForDebugger(const std::string& label) {
  #if defined(GOOGLE_CHROME_BUILD)
    std::string title = "Google Chrome";
  #else   // CHROMIUM_BUILD
@@ -1757,10 +1549,10 @@ index 0a6b0176a982782fd1472f607f811dd6c183c3fe..052ca73677cad3b10b494bf2ab823a04
    (*map_type)[key] = value;
    ResetKeyIterator();
 diff --git a/content/public/app/mojo/content_renderer_manifest.json b/content/public/app/mojo/content_renderer_manifest.json
-index 5efdd84bc0862047e218b31a281232caee905beb..aaada991eb3ee26a6effdf8c0b871a6ce1c17e0b 100644
+index e8d2800c34367edc70ba29c7077bc1037f7b96df..bea186f8b8eae0e9f210d441a02fe2d62718405e 100644
 --- a/content/public/app/mojo/content_renderer_manifest.json
 +++ b/content/public/app/mojo/content_renderer_manifest.json
-@@ -47,6 +47,7 @@
+@@ -48,6 +48,7 @@
      "navigation:frame": {
        "provides": {
          "browser": [
@@ -1768,120 +1560,20 @@ index 5efdd84bc0862047e218b31a281232caee905beb..aaada991eb3ee26a6effdf8c0b871a6c
            "blink::mojom::AppBannerController",
            "blink::mojom::EngagementClient",
            "blink::mojom::InstallationService",
-diff --git a/content/public/common/web_preferences.cc b/content/public/common/web_preferences.cc
-index dea1648536460774761801f9bdd87dc2e699ef61..b8ca82e411dc16251ed83ee203f73ee8c9b1adb0 100644
---- a/content/public/common/web_preferences.cc
-+++ b/content/public/common/web_preferences.cc
-@@ -232,7 +232,7 @@ WebPreferences::WebPreferences()
-       presentation_receiver(false),
-       media_controls_enabled(true),
-       do_not_update_selection_on_mutating_selection_range(false),
--#if defined(OS_ANDROID)
-+#if defined(OS_ANDROID) || !defined(MUON_CHROMIUM_BUILD)
-       autoplay_policy(AutoplayPolicy::kUserGestureRequired),
- #else
-       autoplay_policy(AutoplayPolicy::kNoUserGestureRequired),
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 19e2c163a59affb17a8bda65c951f909143c5219..1b6779970737d40689604d77cd1aa5c07f098475 100644
+index 973f835727b6d0050669a1bea76c84f53be85340..abe5e6f4a947758f3dcee1a5e8260109c47e6e59 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
-@@ -121,6 +121,7 @@ bool BrowserPlugin::OnMessageReceived(const IPC::Message& message) {
-   bool handled = true;
-   IPC_BEGIN_MESSAGE_MAP(BrowserPlugin, message)
-     IPC_MESSAGE_HANDLER(BrowserPluginMsg_AdvanceFocus, OnAdvanceFocus)
-+    IPC_MESSAGE_HANDLER(BrowserPluginMsg_Attach_ACK, OnAttachACK)
-     IPC_MESSAGE_HANDLER(BrowserPluginMsg_GuestGone, OnGuestGone)
-     IPC_MESSAGE_HANDLER(BrowserPluginMsg_GuestReady, OnGuestReady)
-     IPC_MESSAGE_HANDLER(BrowserPluginMsg_ResizeDueToAutoResize,
-@@ -200,8 +201,6 @@ void BrowserPlugin::Attach() {
-       browser_plugin_instance_id_,
-       attach_params));
+@@ -214,7 +214,7 @@ void BrowserPlugin::Detach() {
  
--  attached_ = true;
--
-   // Post an update event to the associated accessibility object.
-   auto* render_frame =
-       RenderFrameImpl::FromRoutingID(render_frame_routing_id());
-@@ -216,7 +215,6 @@ void BrowserPlugin::Attach() {
-   }
+   attached_ = false;
+   guest_crashed_ = false;
+-  web_layer_ = nullptr;
++  // web_layer_ = nullptr;
  
-   sent_resize_params_ = base::nullopt;
--  WasResized();
- }
- 
- void BrowserPlugin::Detach() {
-@@ -231,6 +229,10 @@ void BrowserPlugin::Detach() {
+   BrowserPluginManager::Get()->Send(
        new BrowserPluginHostMsg_Detach(browser_plugin_instance_id_));
- }
- 
-+const viz::LocalSurfaceId& BrowserPlugin::GetLocalSurfaceId() const {
-+  return parent_local_surface_id_allocator_.last_known_local_surface_id();
-+}
-+
- #if defined(USE_AURA)
- void BrowserPlugin::CreateMusWindowAndEmbed(
-     const base::UnguessableToken& embed_token) {
-@@ -246,8 +248,8 @@ void BrowserPlugin::CreateMusWindowAndEmbed(
-   DCHECK(renderer_window_tree_client);
-   mus_embedded_frame_ =
-       renderer_window_tree_client->CreateMusEmbeddedFrame(this, embed_token);
--  if (attached() && local_surface_id_.is_valid()) {
--    mus_embedded_frame_->SetWindowBounds(local_surface_id_,
-+  if (attached() && GetLocalSurfaceId().is_valid()) {
-+    mus_embedded_frame_->SetWindowBounds(GetLocalSurfaceId(),
-                                          FrameRectInPixels());
-   }
- }
-@@ -265,11 +267,12 @@ void BrowserPlugin::WasResized() {
-       sent_resize_params_->screen_info != pending_resize_params_.screen_info;
- 
-   if (synchronized_params_changed)
--    local_surface_id_ = parent_local_surface_id_allocator_.GenerateId();
-+    parent_local_surface_id_allocator_.GenerateId();
- 
-   if (enable_surface_synchronization_ && frame_sink_id_.is_valid()) {
-     compositing_helper_->SetPrimarySurfaceId(
--        viz::SurfaceId(frame_sink_id_, local_surface_id_), frame_rect().size());
-+        viz::SurfaceId(frame_sink_id_, GetLocalSurfaceId()),
-+        frame_rect().size());
-   }
- 
-   bool position_changed =
-@@ -282,7 +285,7 @@ void BrowserPlugin::WasResized() {
-     BrowserPluginManager::Get()->Send(
-         new BrowserPluginHostMsg_UpdateResizeParams(
-             browser_plugin_instance_id_, frame_rect(), screen_info(),
--            auto_size_sequence_number(), local_surface_id_));
-+            auto_size_sequence_number(), GetLocalSurfaceId()));
-   }
- 
-   if (delegate_ && size_changed)
-@@ -293,7 +296,7 @@ void BrowserPlugin::WasResized() {
- 
- #if defined(USE_AURA)
-   if (IsRunningWithMus() && mus_embedded_frame_) {
--    mus_embedded_frame_->SetWindowBounds(local_surface_id_,
-+    mus_embedded_frame_->SetWindowBounds(GetLocalSurfaceId(),
-                                          FrameRectInPixels());
-   }
- #endif
-@@ -309,6 +312,15 @@ void BrowserPlugin::OnAdvanceFocus(int browser_plugin_instance_id,
-   render_view->GetWebView()->AdvanceFocus(reverse);
- }
- 
-+void BrowserPlugin::OnAttachACK(
-+    int browser_plugin_instance_id,
-+    const base::Optional<viz::LocalSurfaceId>& child_local_surface_id) {
-+  attached_ = true;
-+  if (child_local_surface_id)
-+    parent_local_surface_id_allocator_.Reset(*child_local_surface_id);
-+  WasResized();
-+}
-+
- void BrowserPlugin::OnGuestGone(int browser_plugin_instance_id) {
-   guest_crashed_ = true;
-   compositing_helper_->ChildFrameGone();
-@@ -582,8 +594,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
+@@ -596,8 +596,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
  
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
@@ -1890,40 +1582,8 @@ index 19e2c163a59affb17a8bda65c951f909143c5219..1b6779970737d40689604d77cd1aa5c0
  
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
-diff --git a/content/renderer/browser_plugin/browser_plugin.h b/content/renderer/browser_plugin/browser_plugin.h
-index 7480991fb448ba16fa26a6e57785e9ba4d817c9a..ae28e24fb227ee13b6b149c896ae8b24832e0df5 100644
---- a/content/renderer/browser_plugin/browser_plugin.h
-+++ b/content/renderer/browser_plugin/browser_plugin.h
-@@ -88,6 +88,9 @@ class CONTENT_EXPORT BrowserPlugin : public blink::WebPlugin,
-   // currently attached to, if any.
-   void Detach();
- 
-+  // Returns the last allocated LocalSurfaceId.
-+  const viz::LocalSurfaceId& GetLocalSurfaceId() const;
-+
-   void WasResized();
- 
-   // Returns whether a message should be forwarded to BrowserPlugin.
-@@ -185,6 +188,9 @@ class CONTENT_EXPORT BrowserPlugin : public blink::WebPlugin,
-   // IPC message handlers.
-   // Please keep in alphabetical order.
-   void OnAdvanceFocus(int instance_id, bool reverse);
-+  void OnAttachACK(
-+      int browser_plugin_instance_id,
-+      const base::Optional<viz::LocalSurfaceId>& child_local_surface_id);
-   void OnGuestGone(int instance_id);
-   void OnGuestReady(int instance_id, const viz::FrameSinkId& frame_sink_id);
-   void OnResizeDueToAutoResize(int browser_plugin_instance_id,
-@@ -242,7 +248,6 @@ class CONTENT_EXPORT BrowserPlugin : public blink::WebPlugin,
-   std::vector<EditCommand> edit_commands_;
- 
-   viz::FrameSinkId frame_sink_id_;
--  viz::LocalSurfaceId local_surface_id_;
-   viz::ParentLocalSurfaceIdAllocator parent_local_surface_id_allocator_;
- 
-   bool enable_surface_synchronization_ = false;
 diff --git a/device/geolocation/BUILD.gn b/device/geolocation/BUILD.gn
-index 65dfbb8360c2127bd2ccdb3732a01d2e4acc6575..9789296cf5c1f133433941a27ee1dfcbd01210a9 100644
+index 7f891466af42491131dd78d4f247fa2af3e37224..06d53eb0d270afc22c235ae6c6affc8d05019932 100644
 --- a/device/geolocation/BUILD.gn
 +++ b/device/geolocation/BUILD.gn
 @@ -11,6 +11,7 @@ if (is_android) {
@@ -1983,7 +1643,7 @@ index 1661c0c65821de8e8e8ac5dbabaa582590c8f0cb..93340b7ce3db2718f64c983a2f688271
    content::WebContents* owner = guest->owner_web_contents();
    if (!owner)
 diff --git a/extensions/browser/guest_view/web_view/web_view_guest.cc b/extensions/browser/guest_view/web_view/web_view_guest.cc
-index f159279d8d8834a16c12a1d48e8067de3b364c98..644a788c267be6aeeb0609fbba729250468998b6 100644
+index 964cde2efecc21b72e96327dc50f1875aae80c58..858bda41501f8c5098f2801c5fd5d8a79f6da3a3 100644
 --- a/extensions/browser/guest_view/web_view/web_view_guest.cc
 +++ b/extensions/browser/guest_view/web_view/web_view_guest.cc
 @@ -308,7 +308,7 @@ std::string WebViewGuest::GetPartitionID(
@@ -1996,12 +1656,12 @@ index f159279d8d8834a16c12a1d48e8067de3b364c98..644a788c267be6aeeb0609fbba729250
  // static
  int WebViewGuest::GetOrGenerateRulesRegistryID(
 diff --git a/extensions/common/BUILD.gn b/extensions/common/BUILD.gn
-index 616fcbe0d432754418085a2c1e80db89e138c6ab..1cda479a5b2ab8ba2f33f07252ed3bc25914fc5c 100644
+index c1cb28cd43ee686296510b3f30e7e8282527a7ad..f44345210d8666bae88627dfcb027e3a4b6561bf 100644
 --- a/extensions/common/BUILD.gn
 +++ b/extensions/common/BUILD.gn
-@@ -295,6 +295,7 @@ if (enable_extensions) {
+@@ -297,6 +297,7 @@ if (enable_extensions) {
        "//components/crx_file",
-       "//components/nacl/common:features",
+       "//components/nacl/common:buildflags",
        "//components/url_matcher",
 +      "//content/public/common",
        "//crypto",
@@ -2054,10 +1714,10 @@ index 24ba9fd2be824110b84ac82700989c2e86b48ffb..0f11dbc0e84c2d63f839fc086feab3e1
        "chrome://media-router/*",
        "chrome://mobilesetup/*",
 diff --git a/extensions/renderer/module_system.cc b/extensions/renderer/module_system.cc
-index 25c4a7d5ddd46f830084bdb755479bfe1a44a265..669a68d93c425fc541a6a43f1df927990a87f77f 100644
+index 47f6a07065a0ae1146ed87ba6a016d820d78c535..929529081badd7bfac68224aa8af66866feb6d14 100644
 --- a/extensions/renderer/module_system.cc
 +++ b/extensions/renderer/module_system.cc
-@@ -409,11 +409,13 @@ void ModuleSystem::LazyFieldGetterInner(
+@@ -416,11 +416,13 @@ void ModuleSystem::LazyFieldGetterInner(
    // time, it means something went wrong. Bail out early rather than going
    // through the initialization process again (since bindings may not expect to
    // run multiple times).
@@ -2073,7 +1733,7 @@ index 25c4a7d5ddd46f830084bdb755479bfe1a44a265..669a68d93c425fc541a6a43f1df92799
    // the require()d module to belong to our context, not the current one.
    v8::Context::Scope context_scope(context);
 diff --git a/extensions/renderer/resources/guest_view/guest_view_container.js b/extensions/renderer/resources/guest_view/guest_view_container.js
-index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8c658431f 100644
+index d985c0df7a9cb9543003ac32751f3fc80633248a..02bd6daf7e48de8345ce3be506e02110af30872d 100644
 --- a/extensions/renderer/resources/guest_view/guest_view_container.js
 +++ b/extensions/renderer/resources/guest_view/guest_view_container.js
 @@ -26,6 +26,7 @@ function GuestViewContainer(element, viewType) {
@@ -2084,7 +1744,7 @@ index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8
    shadowRoot.appendChild(privates(this).internalElement);
  
    GuestViewInternalNatives.RegisterView(this.viewInstanceId, this, viewType);
-@@ -209,8 +210,9 @@ function registerInternalElement(viewType) {
+@@ -212,8 +213,9 @@ function registerInternalElement(viewType) {
    proto.createdCallback = function() {
      this.setAttribute('type', 'application/browser-plugin');
      this.setAttribute('id', 'browser-plugin-' + IdGenerator.GetNextId());
@@ -2096,11 +1756,24 @@ index 2ef77f4f6359618be7b37d0804a77dd4883dbc06..47f9059b1819810fc4284a9d63aae1d8
    };
  
    proto.attachedCallback = function() {
+diff --git a/gin/converter.h b/gin/converter.h
+index c47ec0af00087ca113f45465523c383f8aa18eb0..40a8b39e74d145f26c124eb438548e9e9147d828 100644
+--- a/gin/converter.h
++++ b/gin/converter.h
+@@ -231,7 +231,7 @@ struct ToV8Traits<T, true> {
+   static bool TryConvertToV8(v8::Isolate* isolate,
+                              T input,
+                              v8::Local<v8::Value>* output) {
+-    auto maybe = ConvertToV8(isolate->GetCurrentContext(), input);
++    auto maybe = ConvertToV8(isolate, input);
+     if (maybe.IsEmpty())
+       return false;
+     *output = maybe.ToLocalChecked();
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index b7fb84846acdd37de8593a1180dfaedd2fbc431c..3b4be3019ec0dd2fa0ed636bc6a56ea2867af948 100644
+index 94b9cc352bccb74a6830ac5daea6c94ce693e511..177afce2d683bf7a04051c4c1f3fd56ef95cef32 100644
 --- a/media/base/media_switches.cc
 +++ b/media/base/media_switches.cc
-@@ -350,7 +350,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
+@@ -351,7 +351,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
      return switches::autoplay::kDocumentUserActivationRequiredPolicy;
  
  // The default value is platform dependent.
@@ -2110,10 +1783,10 @@ index b7fb84846acdd37de8593a1180dfaedd2fbc431c..3b4be3019ec0dd2fa0ed636bc6a56ea2
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
 diff --git a/net/BUILD.gn b/net/BUILD.gn
-index 7676ff4cbf84735a5d844983c8b857ad50cc3d06..28aaaa6fe54ce14c68d578940025cce9dcc94895 100644
+index 081e063416980b17f5afb378b7a7923c78f4d7d6..df966270e03d368a59f1d08e49c5e2d8a3a953f6 100644
 --- a/net/BUILD.gn
 +++ b/net/BUILD.gn
-@@ -355,6 +355,10 @@ component("net") {
+@@ -356,6 +356,10 @@ component("net") {
      "ssl/ssl_server_config.h",
      "ssl/token_binding.cc",
      "ssl/token_binding.h",
@@ -2203,6 +1876,27 @@ index a5ee6bda3ff542624b484b7a11811b708fec3e11..0d635e6dd1242382bd5845f6cb7674dc
    // If |host_| represents an IPv6 address, this string will not contain
    // brackets around the address.
    std::string host_;
+diff --git a/net/base/proxy_server.cc b/net/base/proxy_server.cc
+index a6fb7788ea7c947b69d17f3a642b5a67ab29469a..54f170a448845bbf479b5d4e22c8b2eadd821db4 100644
+--- a/net/base/proxy_server.cc
++++ b/net/base/proxy_server.cc
+@@ -8,6 +8,7 @@
+ 
+ #include "base/strings/string_util.h"
+ #include "base/trace_event/memory_usage_estimator.h"
++#include "net/base/url_auth_util.h"
+ #include "net/base/url_util.h"
+ #include "net/http/http_util.h"
+ 
+@@ -244,7 +245,7 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
+     std::string host;
+     int port = -1;
+     // If the scheme has a host/port, parse it.
+-    bool ok = ParseHostAndPort(begin, end, &host, &port);
++    bool ok = ParseAuthHostAndPort(begin, end, &host, &port);
+     if (!ok)
+       return ProxyServer();  // Invalid -- failed parsing <host>[":"<port>]
+ 
 diff --git a/net/http/BUILD.gn b/net/http/BUILD.gn
 index d00da41da1d8bbc40d8a85d582c1966ed22eaaf1..c308acaeabef9e90161aeef293fc1a2f743dbe07 100644
 --- a/net/http/BUILD.gn
@@ -2234,10 +1928,10 @@ index 9361272ce0d539dd4bfa1b66b07cb416fe867b14..2df550bc5c628f9029f44328922dac26
  }
  
 diff --git a/net/http/transport_security_state.cc b/net/http/transport_security_state.cc
-index 6eaa321ef4b8d5d743cab4448ed695ac1a02fabf..19020dbe84515b22d061a2bb8088159267c2faac 100644
+index cd4e9c74a31c648b1944b51613481fb031a2ced7..43b35c2e962f008ed3e32204e715229a860334c3 100644
 --- a/net/http/transport_security_state.cc
 +++ b/net/http/transport_security_state.cc
-@@ -761,6 +761,10 @@ TransportSecurityState::TransportSecurityState()
+@@ -760,6 +760,10 @@ TransportSecurityState::TransportSecurityState()
    enable_static_pins_ = false;
    enable_static_expect_ct_ = false;
  #endif
@@ -2249,10 +1943,10 @@ index 6eaa321ef4b8d5d743cab4448ed695ac1a02fabf..19020dbe84515b22d061a2bb80881592
  }
  
 diff --git a/net/log/net_log_event_type_list.h b/net/log/net_log_event_type_list.h
-index 551953165f93c8d8e4772f0e905f1c4819aaf3b5..caf6df58e858580b165e6ff689572a3d26525510 100644
+index e23f2e6e9d9deb5fcd93f39c0e88c63ead47ac87..5c3e259474eec476038ee70bc90d6f0d188d84bd 100644
 --- a/net/log/net_log_event_type_list.h
 +++ b/net/log/net_log_event_type_list.h
-@@ -2108,6 +2108,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
+@@ -2118,6 +2118,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
  // The time spent waiting for the "greeting" response from the SOCKS server.
  EVENT_TYPE(SOCKS5_GREET_READ)
  
@@ -2265,32 +1959,11 @@ index 551953165f93c8d8e4772f0e905f1c4819aaf3b5..caf6df58e858580b165e6ff689572a3d
  // The time spent sending the CONNECT request to the SOCKS server.
  EVENT_TYPE(SOCKS5_HANDSHAKE_WRITE)
  
-diff --git a/net/proxy/proxy_server.cc b/net/proxy/proxy_server.cc
-index ed81ebbb26b4f439d618c115b32f49249d9284a6..ebfa79de63e40539a09d072a62c8522fef7cf0f4 100644
---- a/net/proxy/proxy_server.cc
-+++ b/net/proxy/proxy_server.cc
-@@ -8,6 +8,7 @@
- 
- #include "base/strings/string_util.h"
- #include "base/trace_event/memory_usage_estimator.h"
-+#include "net/base/url_auth_util.h"
- #include "net/base/url_util.h"
- #include "net/http/http_util.h"
- 
-@@ -232,7 +233,7 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
-     std::string host;
-     int port = -1;
-     // If the scheme has a host/port, parse it.
--    bool ok = ParseHostAndPort(begin, end, &host, &port);
-+    bool ok = ParseAuthHostAndPort(begin, end, &host, &port);
-     if (!ok)
-       return ProxyServer();  // Invalid -- failed parsing <host>[":"<port>]
- 
 diff --git a/net/socket/socks5_client_socket.cc b/net/socket/socks5_client_socket.cc
-index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce67473e2b8188 100644
+index 6b436878f780c0307f3a5508aa5909ad4ce7a23f..8f05c300becbe477c224d803934d60d46f158685 100644
 --- a/net/socket/socks5_client_socket.cc
 +++ b/net/socket/socks5_client_socket.cc
-@@ -245,6 +245,9 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
+@@ -256,6 +256,9 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
          net_log_.EndEventWithNetErrorCode(NetLogEventType::SOCKS5_GREET_READ,
                                            rv);
          break;
@@ -2300,7 +1973,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
        case STATE_HANDSHAKE_WRITE:
          DCHECK_EQ(OK, rv);
          net_log_.BeginEvent(NetLogEventType::SOCKS5_HANDSHAKE_WRITE);
-@@ -274,8 +277,6 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
+@@ -285,8 +288,6 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
    return rv;
  }
  
@@ -2309,7 +1982,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
  int SOCKS5ClientSocket::DoGreetWrite() {
    // Since we only have 1 byte to send the hostname length in, if the
    // URL has a hostname longer than 255 characters we can't send it.
-@@ -285,8 +286,12 @@ int SOCKS5ClientSocket::DoGreetWrite() {
+@@ -296,8 +297,12 @@ int SOCKS5ClientSocket::DoGreetWrite() {
    }
  
    if (buffer_.empty()) {
@@ -2324,7 +1997,7 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
      bytes_sent_ = 0;
    }
  
-@@ -345,14 +350,32 @@ int SOCKS5ClientSocket::DoGreetReadComplete(int result) {
+@@ -356,14 +361,32 @@ int SOCKS5ClientSocket::DoGreetReadComplete(int result) {
                        NetLog::IntCallback("version", buffer_[0]));
      return ERR_SOCKS_CONNECTION_FAILED;
    }
@@ -2360,10 +2033,10 @@ index 19cdfddbe0c533b18f57bfcdd25ff9958ac724dc..c99f6642e0204fc5c2c6e745dcce6747
  }
  
 diff --git a/net/socket/socks5_client_socket.h b/net/socket/socks5_client_socket.h
-index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e00cd5251 100644
+index 364ac53391d67773ce967be9dc48ccf335156478..19e6d9b9e946b10d584589aa5d443701deed4f03 100644
 --- a/net/socket/socks5_client_socket.h
 +++ b/net/socket/socks5_client_socket.h
-@@ -19,7 +19,8 @@
+@@ -19,6 +19,7 @@
  #include "net/base/net_export.h"
  #include "net/dns/host_resolver.h"
  #include "net/log/net_log_with_source.h"
@@ -2371,8 +2044,13 @@ index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e
  #include "net/socket/stream_socket.h"
  #include "net/traffic_annotation/network_traffic_annotation.h"
  #include "url/gurl.h"
+@@ -80,11 +81,14 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+   int GetLocalAddress(IPEndPoint* address) const override;
  
-@@ -81,6 +82,8 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+  private:
++  friend class SOCKS5ClientSocketAuth;
+   enum State {
+     STATE_GREET_WRITE,
      STATE_GREET_WRITE_COMPLETE,
      STATE_GREET_READ,
      STATE_GREET_READ_COMPLETE,
@@ -2381,7 +2059,7 @@ index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e
      STATE_HANDSHAKE_WRITE,
      STATE_HANDSHAKE_WRITE_COMPLETE,
      STATE_HANDSHAKE_READ,
-@@ -115,6 +118,14 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
+@@ -119,6 +123,14 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
    int DoGreetReadComplete(int result);
    int DoGreetWrite();
    int DoGreetWriteComplete(int result);
@@ -2397,7 +2075,7 @@ index afef312d001297ac1178b93fea92586102a54ac8..6f04733219580abd2477bfb0deaafd2e
    // Writes the SOCKS handshake buffer into |handshake|
    // and return OK on success.
 diff --git a/net/socket/socks_client_socket_pool.cc b/net/socket/socks_client_socket_pool.cc
-index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6ea5b4919 100644
+index 0e16d7eecb8a2aa7e7403788c888849c1ba4db79..4c5ee5dab477f8e8e39276f1466bc8a9253b530d 100644
 --- a/net/socket/socks_client_socket_pool.cc
 +++ b/net/socket/socks_client_socket_pool.cc
 @@ -16,7 +16,7 @@
@@ -2409,7 +2087,7 @@ index 86b4ac0d109fca5da44501b6fdb08d97b05fc28d..3294267b3e97cbc5c28a95473245fbc6
  #include "net/socket/socks_client_socket.h"
  #include "net/socket/transport_client_socket_pool.h"
  
-@@ -146,9 +146,11 @@ int SOCKSConnectJob::DoSOCKSConnect() {
+@@ -149,9 +149,11 @@ int SOCKSConnectJob::DoSOCKSConnect() {
  
    // Add a SOCKS connection on top of the tcp socket.
    if (socks_params_->is_socks_v5()) {
@@ -2450,10 +2128,10 @@ index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f549
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-index 8ab197693ed861ee46b954297d05c5e2edb2c4a8..cfb1728bceb69a94be687de2fb38a6297aa90491 100644
+index 494a9bc0f29407192a4c2091eb21b553779a2615..ffd7b3557457beb4833c1520850a4d612393ba5f 100644
 --- a/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
 +++ b/third_party/WebKit/Source/core/exported/WebViewImpl.cpp
-@@ -3259,6 +3259,7 @@ void WebViewImpl::DidCloseContextMenu() {
+@@ -3232,6 +3232,7 @@ void WebViewImpl::DidCloseContextMenu() {
    LocalFrame* frame = page_->GetFocusController().FocusedFrame();
    if (frame)
      frame->Selection().SetCaretBlinkingSuspended(false);
@@ -2462,10 +2140,10 @@ index 8ab197693ed861ee46b954297d05c5e2edb2c4a8..cfb1728bceb69a94be687de2fb38a629
  
  void WebViewImpl::HidePopups() {
 diff --git a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-index 0efc999d51329ba2f43a7887ff96bc99efaae6f2..965200042529cf4f61dbf2bbcd6b081250efc417 100644
+index c8fb3957f4d0c681e9bd81478da3ded2110f1a6f..89f1953453c036ebeed78199506b9f4d942d6b92 100644
 --- a/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
 +++ b/third_party/WebKit/Source/core/html/media/AutoplayPolicy.cpp
-@@ -300,6 +300,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -323,6 +323,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
    if (element_->GetLoadType() == WebMediaPlayer::kLoadTypeMediaStream)
      return false;
  
@@ -2478,7 +2156,7 @@ index 0efc999d51329ba2f43a7887ff96bc99efaae6f2..965200042529cf4f61dbf2bbcd6b0812
    // We want to allow muted video to autoplay if:
    // - the flag is enabled;
    // - Data Saver is not enabled;
-@@ -316,6 +322,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
+@@ -339,6 +345,12 @@ bool AutoplayPolicy::IsGestureNeededForPlaybackIfPendingUserGestureIsLocked()
        IsAutoplayAllowedPerSettings()) {
      return false;
    }
@@ -2492,10 +2170,10 @@ index 0efc999d51329ba2f43a7887ff96bc99efaae6f2..965200042529cf4f61dbf2bbcd6b0812
    return true;
  }
 diff --git a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
-index 8c62f1f4a06b96bcd37bb370dbc649c72bc8157f..7ddda69d1e7e974896170d73e0af02e4d241347e 100644
+index 30400494164b2d2cc5d1fa5726914e965633ea55..0c982379766e07267f54d7e19f03f1e3d0fd0887 100644
 --- a/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
 +++ b/third_party/WebKit/Source/platform/bindings/V8PerIsolateData.cpp
-@@ -50,7 +50,8 @@ v8::Isolate* MainThreadIsolate() {
+@@ -49,7 +49,8 @@ v8::Isolate* MainThreadIsolate() {
  static V8PerIsolateData* g_main_thread_per_isolate_data = nullptr;
  
  static void BeforeCallEnteredCallback(v8::Isolate* isolate) {
@@ -2506,10 +2184,10 @@ index 8c62f1f4a06b96bcd37bb370dbc649c72bc8157f..7ddda69d1e7e974896170d73e0af02e4
  
  static void MicrotasksCompletedCallback(v8::Isolate* isolate) {
 diff --git a/third_party/boringssl/BUILD.generated.gni b/third_party/boringssl/BUILD.generated.gni
-index f59afac5c3038d793f097bb7f8902734e11a600c..12fba44e3eca61675e861c118576a77ea68d9490 100644
+index 8a29de654c00602ec79913b86c33c7c7b32d4a81..e60d66b96961291f36b0a13e1cdd8fb6f543bc24 100644
 --- a/third_party/boringssl/BUILD.generated.gni
 +++ b/third_party/boringssl/BUILD.generated.gni
-@@ -373,6 +373,24 @@ ssl_sources = [
+@@ -377,6 +377,24 @@ ssl_sources = [
    "src/ssl/tls_record.cc",
  ]
  
@@ -2535,7 +2213,7 @@ index f59afac5c3038d793f097bb7f8902734e11a600c..12fba44e3eca61675e861c118576a77e
    "ios-aarch64/crypto/chacha/chacha-armv8.S",
    "ios-aarch64/crypto/fipsmodule/aesv8-armx64.S",
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index 86db99a4d85d353fac5d85b806dcff3369070dc3..95d6da41102e1579be58f01273b3075aa9a713a3 100644
+index 731952483ebe35a93001c7fa3f6918b6b3dffc4f..6a0a87ec770524ddf6a7c6fef96435169609ab6b 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
 @@ -44,7 +44,7 @@ config("no_asm_config") {
@@ -2580,7 +2258,7 @@ index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c
    ]
  }
 diff --git a/ui/views/controls/menu/menu_controller.cc b/ui/views/controls/menu/menu_controller.cc
-index 9389f25f034d131f9aab4bd521db7999c12c5a5c..382d93ef0f641bdf80ca6ce84d1438670350fe12 100644
+index 4feb2cd4b2e71f2a2c325c626f9146779d5bfb0d..442283f0ddf2687c24f6e65d55aa763b744a8bfb 100644
 --- a/ui/views/controls/menu/menu_controller.cc
 +++ b/ui/views/controls/menu/menu_controller.cc
 @@ -614,6 +614,7 @@ bool MenuController::OnMouseDragged(SubmenuView* source,
@@ -2603,509 +2281,3 @@ index 9389f25f034d131f9aab4bd521db7999c12c5a5c..382d93ef0f641bdf80ca6ce84d143867
  
    return true;
  }
-diff --git a/components/viz/common/surfaces/child_local_surface_id_allocator.cc b/components/viz/common/surfaces/child_local_surface_id_allocator.cc
-new file mode 100644
-index 0000000000000000000000000000000000000000..f8c1d90482a405b82a042c83827fcc011b830f63
---- /dev/null
-+++ b/components/viz/common/surfaces/child_local_surface_id_allocator.cc
-@@ -0,0 +1,42 @@
-+// Copyright 2018 The Chromium Authors. All rights reserved.
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#include "components/viz/common/surfaces/child_local_surface_id_allocator.h"
-+
-+#include <stdint.h>
-+
-+#include "base/rand_util.h"
-+
-+namespace viz {
-+
-+const LocalSurfaceId& ChildLocalSurfaceIdAllocator::UpdateFromParent(
-+    const LocalSurfaceId& parent_allocated_local_surface_id) {
-+  DCHECK_GE(parent_allocated_local_surface_id.parent_sequence_number(),
-+            last_known_local_surface_id_.parent_sequence_number());
-+  // Thie verifies that we only update the nonce if the parent sequence number
-+  // has changed.
-+  DCHECK(parent_allocated_local_surface_id.parent_sequence_number() >
-+             last_known_local_surface_id_.parent_sequence_number() ||
-+         parent_allocated_local_surface_id.nonce() ==
-+             last_known_local_surface_id_.nonce());
-+
-+  last_known_local_surface_id_ =
-+      LocalSurfaceId(parent_allocated_local_surface_id.parent_sequence_number(),
-+                     last_known_local_surface_id_.child_sequence_number(),
-+                     parent_allocated_local_surface_id.nonce());
-+  return last_known_local_surface_id_;
-+}
-+
-+const LocalSurfaceId& ChildLocalSurfaceIdAllocator::GenerateId() {
-+  // UpdateFromParent must be called before we can generate a valid ID.
-+  DCHECK_NE(last_known_local_surface_id_.parent_sequence_number(), 0u);
-+
-+  last_known_local_surface_id_ =
-+      LocalSurfaceId(last_known_local_surface_id_.parent_sequence_number(),
-+                     last_known_local_surface_id_.child_sequence_number() + 1,
-+                     last_known_local_surface_id_.nonce());
-+  return last_known_local_surface_id_;
-+}
-+
-+}  // namespace viz
-diff --git a/components/viz/common/surfaces/child_local_surface_id_allocator.h b/components/viz/common/surfaces/child_local_surface_id_allocator.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..7bb3c01452d3b28d33be9ca26b65418a46fd58a5
---- /dev/null
-+++ b/components/viz/common/surfaces/child_local_surface_id_allocator.h
-@@ -0,0 +1,51 @@
-+// Copyright 2018 The Chromium Authors. All rights reserved.
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#ifndef COMPONENTS_VIZ_COMMON_SURFACES_CHILD_LOCAL_SURFACE_ID_ALLOCATOR_H_
-+#define COMPONENTS_VIZ_COMMON_SURFACES_CHILD_LOCAL_SURFACE_ID_ALLOCATOR_H_
-+
-+#include <stdint.h>
-+
-+#include "base/macros.h"
-+#include "base/unguessable_token.h"
-+#include "components/viz/common/surfaces/surface_id.h"
-+#include "components/viz/common/viz_common_export.h"
-+
-+namespace viz {
-+
-+// This is a helper class for generating local surface IDs for a single
-+// FrameSink. This is not threadsafe, to use from multiple threads wrap this
-+// class in a mutex.
-+// The parent embeds a child's surface. The child allocates a surface when it
-+// changes its contents or surface parameters, for example.
-+// This is that child allocator.
-+class VIZ_COMMON_EXPORT ChildLocalSurfaceIdAllocator {
-+ public:
-+  ChildLocalSurfaceIdAllocator() = default;
-+  ChildLocalSurfaceIdAllocator(ChildLocalSurfaceIdAllocator&& other) = default;
-+  ChildLocalSurfaceIdAllocator& operator=(
-+      ChildLocalSurfaceIdAllocator&& other) = default;
-+  ~ChildLocalSurfaceIdAllocator() = default;
-+
-+  // When a parent-allocated LocalSurfaceId arrives in the child, the child
-+  // needs to update its understanding of the last generated message so the
-+  // messages can continue to monotonically increase.
-+  const LocalSurfaceId& UpdateFromParent(
-+      const LocalSurfaceId& parent_allocated_local_surface_id);
-+
-+  const LocalSurfaceId& GenerateId();
-+
-+  const LocalSurfaceId& last_known_local_surface_id() const {
-+    return last_known_local_surface_id_;
-+  }
-+
-+ private:
-+  LocalSurfaceId last_known_local_surface_id_;
-+
-+  DISALLOW_COPY_AND_ASSIGN(ChildLocalSurfaceIdAllocator);
-+};
-+
-+}  // namespace viz
-+
-+#endif  // COMPONENTS_VIZ_COMMON_SURFACES_CHILD_LOCAL_SURFACE_ID_ALLOCATOR_H_
-diff --git a/components/viz/common/surfaces/child_local_surface_id_allocator_unittest.cc b/components/viz/common/surfaces/child_local_surface_id_allocator_unittest.cc
-new file mode 100644
-index 0000000000000000000000000000000000000000..9147c144578b9a8679e59d7cd471b9e9f32e67b9
---- /dev/null
-+++ b/components/viz/common/surfaces/child_local_surface_id_allocator_unittest.cc
-@@ -0,0 +1,180 @@
-+// Copyright 2018 The Chromium Authors. All rights reserved.
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#include "components/viz/common/surfaces/child_local_surface_id_allocator.h"
-+
-+#include "testing/gtest/include/gtest/gtest.h"
-+
-+// ChildLocalSurfaceIdAllocator has 1 accessor which does not alter state:
-+// - last_known_local_surface_id()
-+//
-+// For every operation which changes state we can test:
-+// - the operation completed as expected,
-+// - the accessors did not change, and/or
-+// - the accessors changed in the way we expected.
-+
-+namespace viz {
-+namespace {
-+
-+::testing::AssertionResult ParentSequenceNumberIsNotSet(
-+    const LocalSurfaceId& local_surface_id);
-+::testing::AssertionResult ChildSequenceNumberIsNotSet(
-+    const LocalSurfaceId& local_surface_id);
-+::testing::AssertionResult NonceIsEmpty(const LocalSurfaceId& local_surface_id);
-+
-+LocalSurfaceId GetFakeParentAllocatedLocalSurfaceId();
-+ChildLocalSurfaceIdAllocator GetParentUpdatedAllocator();
-+
-+}  // namespace
-+
-+// The default constructor should initialize its last-known LocalSurfaceId (and
-+// all of its components) to an invalid state.
-+TEST(ChildLocalSurfaceIdAllocatorTest,
-+     DefaultConstructorShouldNotSetLocalSurfaceIdComponents) {
-+  ChildLocalSurfaceIdAllocator default_constructed_child_allocator;
-+
-+  const LocalSurfaceId& default_local_surface_id =
-+      default_constructed_child_allocator.last_known_local_surface_id();
-+  EXPECT_FALSE(default_local_surface_id.is_valid());
-+  EXPECT_TRUE(ParentSequenceNumberIsNotSet(default_local_surface_id));
-+  EXPECT_TRUE(ChildSequenceNumberIsNotSet(default_local_surface_id));
-+  EXPECT_TRUE(NonceIsEmpty(default_local_surface_id));
-+}
-+
-+// The move constructor should move the last-known LocalSurfaceId.
-+TEST(ChildLocalSurfaceIdAllocatorTest,
-+     MoveConstructorShouldMoveLastKnownLocalSurfaceId) {
-+  ChildLocalSurfaceIdAllocator moving_child_allocator =
-+      GetParentUpdatedAllocator();
-+  LocalSurfaceId premoved_local_surface_id =
-+      moving_child_allocator.last_known_local_surface_id();
-+
-+  ChildLocalSurfaceIdAllocator moved_to_child_allocator =
-+      std::move(moving_child_allocator);
-+
-+  EXPECT_EQ(premoved_local_surface_id,
-+            moved_to_child_allocator.last_known_local_surface_id());
-+}
-+
-+// The move assignment operator should move the last-known LocalSurfaceId.
-+TEST(ChildLocalSurfaceIdAllocatorTest,
-+     MoveAssignmentOperatorShouldMoveLastKnownLocalSurfaceId) {
-+  ChildLocalSurfaceIdAllocator moving_child_allocator =
-+      GetParentUpdatedAllocator();
-+  LocalSurfaceId premoved_local_surface_id =
-+      moving_child_allocator.last_known_local_surface_id();
-+  ChildLocalSurfaceIdAllocator moved_to_child_allocator;
-+  EXPECT_NE(premoved_local_surface_id,
-+            moved_to_child_allocator.last_known_local_surface_id());
-+
-+  moved_to_child_allocator = std::move(moving_child_allocator);
-+
-+  EXPECT_EQ(premoved_local_surface_id,
-+            moved_to_child_allocator.last_known_local_surface_id());
-+}
-+
-+// UpdateFromParent() on a child allocator should accept the parent's sequence
-+// number and nonce. But it should continue to use its own child sequence
-+// number.
-+TEST(ChildLocalSurfaceIdAllocatorTest,
-+     UpdateFromParentOnlyUpdatesExpectedLocalSurfaceIdComponents) {
-+  ChildLocalSurfaceIdAllocator parent_updated_child_allocator;
-+  LocalSurfaceId preupdate_local_surface_id =
-+      parent_updated_child_allocator.last_known_local_surface_id();
-+  LocalSurfaceId parent_allocated_local_surface_id =
-+      GetFakeParentAllocatedLocalSurfaceId();
-+  EXPECT_NE(preupdate_local_surface_id.parent_sequence_number(),
-+            parent_allocated_local_surface_id.parent_sequence_number());
-+  EXPECT_NE(preupdate_local_surface_id.child_sequence_number(),
-+            parent_allocated_local_surface_id.child_sequence_number());
-+  EXPECT_NE(preupdate_local_surface_id.nonce(),
-+            parent_allocated_local_surface_id.nonce());
-+
-+  const LocalSurfaceId& returned_local_surface_id =
-+      parent_updated_child_allocator.UpdateFromParent(
-+          parent_allocated_local_surface_id);
-+
-+  const LocalSurfaceId& postupdate_local_surface_id =
-+      parent_updated_child_allocator.last_known_local_surface_id();
-+  EXPECT_EQ(postupdate_local_surface_id.parent_sequence_number(),
-+            parent_allocated_local_surface_id.parent_sequence_number());
-+  EXPECT_NE(postupdate_local_surface_id.child_sequence_number(),
-+            parent_allocated_local_surface_id.child_sequence_number());
-+  EXPECT_EQ(postupdate_local_surface_id.nonce(),
-+            parent_allocated_local_surface_id.nonce());
-+  EXPECT_EQ(returned_local_surface_id,
-+            parent_updated_child_allocator.last_known_local_surface_id());
-+}
-+
-+// GenerateId() on a child allocator should monotonically increment the child
-+// sequence number.
-+TEST(ChildLocalSurfaceIdAllocatorTest,
-+     GenerateIdOnlyUpdatesExpectedLocalSurfaceIdComponents) {
-+  ChildLocalSurfaceIdAllocator generating_child_allocator =
-+      GetParentUpdatedAllocator();
-+  LocalSurfaceId pregenerateid_local_surface_id =
-+      generating_child_allocator.last_known_local_surface_id();
-+
-+  const LocalSurfaceId& returned_local_surface_id =
-+      generating_child_allocator.GenerateId();
-+
-+  const LocalSurfaceId& postgenerateid_local_surface_id =
-+      generating_child_allocator.last_known_local_surface_id();
-+  EXPECT_EQ(pregenerateid_local_surface_id.parent_sequence_number(),
-+            postgenerateid_local_surface_id.parent_sequence_number());
-+  EXPECT_EQ(pregenerateid_local_surface_id.child_sequence_number() + 1,
-+            postgenerateid_local_surface_id.child_sequence_number());
-+  EXPECT_EQ(pregenerateid_local_surface_id.nonce(),
-+            postgenerateid_local_surface_id.nonce());
-+  EXPECT_EQ(returned_local_surface_id,
-+            generating_child_allocator.last_known_local_surface_id());
-+}
-+
-+namespace {
-+
-+::testing::AssertionResult ParentSequenceNumberIsNotSet(
-+    const LocalSurfaceId& local_surface_id) {
-+  constexpr uint32_t kInvalidParentSequenceNumber = 0;
-+  if (local_surface_id.parent_sequence_number() == kInvalidParentSequenceNumber)
-+    return ::testing::AssertionSuccess();
-+
-+  return ::testing::AssertionFailure() << "parent_sequence_number() is set";
-+}
-+
-+::testing::AssertionResult ChildSequenceNumberIsNotSet(
-+    const LocalSurfaceId& local_surface_id) {
-+  constexpr uint32_t kInvalidChildSequenceNumber = 0;
-+  if (local_surface_id.child_sequence_number() == kInvalidChildSequenceNumber)
-+    return ::testing::AssertionSuccess();
-+
-+  return ::testing::AssertionFailure() << "child_sequence_number() is set";
-+}
-+
-+::testing::AssertionResult NonceIsEmpty(
-+    const LocalSurfaceId& local_surface_id) {
-+  if (local_surface_id.nonce().is_empty())
-+    return ::testing::AssertionSuccess();
-+
-+  return ::testing::AssertionFailure() << "nonce() is not empty";
-+}
-+
-+LocalSurfaceId GetFakeParentAllocatedLocalSurfaceId() {
-+  constexpr uint32_t kParentSequenceNumber = 3;
-+  constexpr uint32_t kChildSequenceNumber = 1;
-+  const base::UnguessableToken nonce = base::UnguessableToken::Create();
-+
-+  return LocalSurfaceId(kParentSequenceNumber, kChildSequenceNumber, nonce);
-+}
-+
-+ChildLocalSurfaceIdAllocator GetParentUpdatedAllocator() {
-+  ChildLocalSurfaceIdAllocator parent_updated_child_allocator;
-+  LocalSurfaceId parent_allocated_local_surface_id =
-+      GetFakeParentAllocatedLocalSurfaceId();
-+  parent_updated_child_allocator.UpdateFromParent(
-+      parent_allocated_local_surface_id);
-+  return parent_updated_child_allocator;
-+}
-+
-+}  // namespace
-+}  // namespace viz
-diff --git a/components/viz/common/surfaces/parent_local_surface_id_allocator_unittest.cc b/components/viz/common/surfaces/parent_local_surface_id_allocator_unittest.cc
-new file mode 100644
-index 0000000000000000000000000000000000000000..ada5b99a868f5b3014bac2d6c963840e12ca9b67
---- /dev/null
-+++ b/components/viz/common/surfaces/parent_local_surface_id_allocator_unittest.cc
-@@ -0,0 +1,209 @@
-+// Copyright 2018 The Chromium Authors. All rights reserved.
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
-+
-+#include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
-+
-+#include "testing/gtest/include/gtest/gtest.h"
-+
-+// ParentLocalSurfaceIdAllocator has 1 accessor which does not alter state:
-+// - last_known_local_surface_id()
-+//
-+// For every operation which changes state we can test:
-+// - the operation completed as expected,
-+// - the accessors did not change, and/or
-+// - the accessors changed in the way we expected.
-+
-+namespace viz {
-+namespace {
-+
-+::testing::AssertionResult ParentSequenceNumberIsNotSet(
-+    const LocalSurfaceId& local_surface_id);
-+::testing::AssertionResult ChildSequenceNumberIsSet(
-+    const LocalSurfaceId& local_surface_id);
-+::testing::AssertionResult NonceIsEmpty(const LocalSurfaceId& local_surface_id);
-+
-+LocalSurfaceId GetFakeChildAllocatedLocalSurfaceId();
-+ParentLocalSurfaceIdAllocator GetChildUpdatedAllocator();
-+
-+}  // namespace
-+
-+// The default constructor should initialize its last-known LocalSurfaceId (and
-+// all of its components) to an invalid state.
-+TEST(ParentLocalSurfaceIdAllocatorTest,
-+     DefaultConstructorShouldNotSetLocalSurfaceIdComponents) {
-+  ParentLocalSurfaceIdAllocator default_constructed_parent_allocator;
-+
-+  const LocalSurfaceId& default_local_surface_id =
-+      default_constructed_parent_allocator.last_known_local_surface_id();
-+  EXPECT_FALSE(default_local_surface_id.is_valid());
-+  EXPECT_TRUE(ParentSequenceNumberIsNotSet(default_local_surface_id));
-+  EXPECT_TRUE(ChildSequenceNumberIsSet(default_local_surface_id));
-+  EXPECT_TRUE(NonceIsEmpty(default_local_surface_id));
-+}
-+
-+// The move constructor should move the last-known LocalSurfaceId.
-+TEST(ParentLocalSurfaceIdAllocatorTest,
-+     MoveConstructorShouldMoveLastKnownLocalSurfaceId) {
-+  ParentLocalSurfaceIdAllocator moving_parent_allocator =
-+      GetChildUpdatedAllocator();
-+  LocalSurfaceId premoved_local_surface_id =
-+      moving_parent_allocator.last_known_local_surface_id();
-+
-+  ParentLocalSurfaceIdAllocator moved_to_parent_allocator =
-+      std::move(moving_parent_allocator);
-+
-+  EXPECT_EQ(premoved_local_surface_id,
-+            moved_to_parent_allocator.last_known_local_surface_id());
-+}
-+
-+// The move assignment operator should move the last-known LocalSurfaceId.
-+TEST(ParentLocalSurfaceIdAllocatorTest,
-+     MoveAssignmentOperatorShouldMoveLastKnownLocalSurfaceId) {
-+  ParentLocalSurfaceIdAllocator moving_parent_allocator =
-+      GetChildUpdatedAllocator();
-+  LocalSurfaceId premoved_local_surface_id =
-+      moving_parent_allocator.last_known_local_surface_id();
-+  ParentLocalSurfaceIdAllocator moved_to_parent_allocator;
-+  EXPECT_NE(premoved_local_surface_id,
-+            moved_to_parent_allocator.last_known_local_surface_id());
-+
-+  moved_to_parent_allocator = std::move(moving_parent_allocator);
-+
-+  EXPECT_EQ(premoved_local_surface_id,
-+            moved_to_parent_allocator.last_known_local_surface_id());
-+}
-+
-+// UpdateFromChild() on a parent allocator should accept the child's sequence
-+// number. But it should continue to use its own parent sequence number and
-+// nonce.
-+TEST(ParentLocalSurfaceIdAllocatorTest,
-+     UpdateFromChildOnlyUpdatesExpectedLocalSurfaceIdComponents) {
-+  ParentLocalSurfaceIdAllocator child_updated_parent_allocator;
-+  LocalSurfaceId preupdate_local_surface_id =
-+      child_updated_parent_allocator.last_known_local_surface_id();
-+  LocalSurfaceId child_allocated_local_surface_id =
-+      GetFakeChildAllocatedLocalSurfaceId();
-+  EXPECT_NE(preupdate_local_surface_id.parent_sequence_number(),
-+            child_allocated_local_surface_id.parent_sequence_number());
-+  EXPECT_NE(preupdate_local_surface_id.child_sequence_number(),
-+            child_allocated_local_surface_id.child_sequence_number());
-+  EXPECT_NE(preupdate_local_surface_id.nonce(),
-+            child_allocated_local_surface_id.nonce());
-+
-+  const LocalSurfaceId& returned_local_surface_id =
-+      child_updated_parent_allocator.UpdateFromChild(
-+          child_allocated_local_surface_id);
-+
-+  const LocalSurfaceId& postupdate_local_surface_id =
-+      child_updated_parent_allocator.last_known_local_surface_id();
-+  EXPECT_NE(postupdate_local_surface_id.parent_sequence_number(),
-+            child_allocated_local_surface_id.parent_sequence_number());
-+  EXPECT_EQ(postupdate_local_surface_id.child_sequence_number(),
-+            child_allocated_local_surface_id.child_sequence_number());
-+  EXPECT_NE(postupdate_local_surface_id.nonce(),
-+            child_allocated_local_surface_id.nonce());
-+  EXPECT_EQ(returned_local_surface_id,
-+            child_updated_parent_allocator.last_known_local_surface_id());
-+}
-+
-+// GenerateId() on a parent allocator should monotonically increment the parent
-+// sequence number and create a new nonce.
-+TEST(ParentLocalSurfaceIdAllocatorTest,
-+     GenerateIdOnlyUpdatesExpectedLocalSurfaceIdComponents) {
-+  ParentLocalSurfaceIdAllocator generating_parent_allocator =
-+      GetChildUpdatedAllocator();
-+  LocalSurfaceId pregenerateid_local_surface_id =
-+      generating_parent_allocator.last_known_local_surface_id();
-+
-+  const LocalSurfaceId& returned_local_surface_id =
-+      generating_parent_allocator.GenerateId();
-+
-+  const LocalSurfaceId& postgenerateid_local_surface_id =
-+      generating_parent_allocator.last_known_local_surface_id();
-+  EXPECT_EQ(pregenerateid_local_surface_id.parent_sequence_number() + 1,
-+            postgenerateid_local_surface_id.parent_sequence_number());
-+  EXPECT_EQ(pregenerateid_local_surface_id.child_sequence_number(),
-+            postgenerateid_local_surface_id.child_sequence_number());
-+  EXPECT_NE(pregenerateid_local_surface_id.nonce(),
-+            postgenerateid_local_surface_id.nonce());
-+  EXPECT_EQ(returned_local_surface_id,
-+            generating_parent_allocator.last_known_local_surface_id());
-+}
-+
-+// This test verifies that calling reset with a LocalSurfaceId updates the
-+// last_known_local_surface_id and affects GenerateId.
-+TEST(ParentLocalSurfaceIdAllocatorTest, ResetUpdatesComponents) {
-+  ParentLocalSurfaceIdAllocator default_constructed_parent_allocator;
-+
-+  LocalSurfaceId default_local_surface_id =
-+      default_constructed_parent_allocator.last_known_local_surface_id();
-+  EXPECT_FALSE(default_local_surface_id.is_valid());
-+  EXPECT_TRUE(ParentSequenceNumberIsNotSet(default_local_surface_id));
-+  EXPECT_TRUE(ChildSequenceNumberIsSet(default_local_surface_id));
-+  EXPECT_FALSE(NonceIsEmpty(default_local_surface_id));
-+
-+  LocalSurfaceId new_local_surface_id(
-+      1u, 1u, base::UnguessableToken::Deserialize(0, 1u));
-+
-+  default_constructed_parent_allocator.Reset(new_local_surface_id);
-+  EXPECT_EQ(new_local_surface_id,
-+            default_constructed_parent_allocator.last_known_local_surface_id());
-+
-+  LocalSurfaceId generated_id =
-+      default_constructed_parent_allocator.GenerateId();
-+
-+  EXPECT_EQ(generated_id.nonce(), new_local_surface_id.nonce());
-+  EXPECT_EQ(generated_id.child_sequence_number(),
-+            new_local_surface_id.child_sequence_number());
-+  EXPECT_EQ(generated_id.parent_sequence_number(),
-+            new_local_surface_id.child_sequence_number() + 1);
-+}
-+
-+namespace {
-+
-+::testing::AssertionResult ParentSequenceNumberIsNotSet(
-+    const LocalSurfaceId& local_surface_id) {
-+  constexpr uint32_t kInvalidParentSequenceNumber = 0;
-+  if (local_surface_id.parent_sequence_number() == kInvalidParentSequenceNumber)
-+    return ::testing::AssertionSuccess();
-+
-+  return ::testing::AssertionFailure() << "parent_sequence_number() is set";
-+}
-+
-+::testing::AssertionResult ChildSequenceNumberIsSet(
-+    const LocalSurfaceId& local_surface_id) {
-+  constexpr uint32_t kInvalidChildSequenceNumber = 0;
-+  if (local_surface_id.child_sequence_number() != kInvalidChildSequenceNumber)
-+    return ::testing::AssertionSuccess();
-+
-+  return ::testing::AssertionFailure() << "child_sequence_number() is not set";
-+}
-+
-+::testing::AssertionResult NonceIsEmpty(
-+    const LocalSurfaceId& local_surface_id) {
-+  if (local_surface_id.nonce().is_empty())
-+    return ::testing::AssertionSuccess();
-+
-+  return ::testing::AssertionFailure() << "nonce() is not empty";
-+}
-+
-+LocalSurfaceId GetFakeChildAllocatedLocalSurfaceId() {
-+  constexpr uint32_t kParentSequenceNumber = 1;
-+  constexpr uint32_t kChildSequenceNumber = 3;
-+  const base::UnguessableToken nonce = base::UnguessableToken::Create();
-+
-+  return LocalSurfaceId(kParentSequenceNumber, kChildSequenceNumber, nonce);
-+}
-+
-+ParentLocalSurfaceIdAllocator GetChildUpdatedAllocator() {
-+  ParentLocalSurfaceIdAllocator child_updated_parent_allocator;
-+  LocalSurfaceId child_allocated_local_surface_id =
-+      GetFakeChildAllocatedLocalSurfaceId();
-+  child_updated_parent_allocator.UpdateFromChild(
-+      child_allocated_local_surface_id);
-+  return child_updated_parent_allocator;
-+}
-+
-+}  // namespace
-+}  // namespace viz

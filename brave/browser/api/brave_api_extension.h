@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "base/sequenced_task_runner.h"
 #include "brave/browser/brave_browser_context.h"
 #include "extensions/browser/extension_registry_observer.h"
 #include "extensions/common/extension_set.h"
@@ -85,6 +86,8 @@ class Extension : public gin::Wrappable<Extension>,
   std::unique_ptr<base::DictionaryValue> LoadManifest(
       const base::FilePath& extension_root,
       std::string* error);
+
+  scoped_refptr<base::SequencedTaskRunner> file_task_runner_;
 
   DISALLOW_COPY_AND_ASSIGN(Extension);
 };

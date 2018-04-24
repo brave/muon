@@ -217,11 +217,6 @@ BrowserProcessImpl::extension_event_router_forwarder() {
   return extension_event_router_forwarder_.get();
 }
 
-message_center::MessageCenter* BrowserProcessImpl::message_center() {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  return message_center::MessageCenter::Get();
-}
-
 void BrowserProcessImpl::StartTearDown() {
   TRACE_EVENT0("shutdown", "BrowserProcessImpl::StartTearDown");
   // TODO(crbug.com/560486): Fix the tests that make the check of
@@ -519,8 +514,8 @@ void BrowserProcessImpl::EndSession() {
 void BrowserProcessImpl::FlushLocalStateAndReply(base::OnceClosure reply) {
   if (local_state_)
     local_state_->CommitPendingWrite();
-  local_state_task_runner_->PostTaskAndReply(
-      FROM_HERE, base::Bind(&base::DoNothing), std::move(reply));
+  local_state_task_runner_->PostTaskAndReply(FROM_HERE, base::DoNothing(),
+                                             std::move(reply));
 }
 
 net_log::ChromeNetLog* BrowserProcessImpl::net_log() {
@@ -555,7 +550,7 @@ BrowserProcessPlatformPart* BrowserProcessImpl::platform_part() {
 void BrowserProcessImpl::CreateNotificationUIManager() {
   DCHECK(!notification_ui_manager_);
   notification_ui_manager_.reset(NotificationUIManagerStub::Create());
-  created_notification_ui_manager_ = true;
+  created_notification_ui_manager_ = !!notification_ui_manager_;
 }
 
 NotificationUIManager* BrowserProcessImpl::notification_ui_manager() {
@@ -615,8 +610,7 @@ GpuModeManager* BrowserProcessImpl::gpu_mode_manager() {
   return gpu_mode_manager_.get();
 }
 
-void BrowserProcessImpl::CreateDevToolsHttpProtocolHandler(
-    const std::string& ip, uint16_t port) {
+void BrowserProcessImpl::CreateDevToolsProtocolHandler() {
   NOTIMPLEMENTED();
 }
 
@@ -747,6 +741,10 @@ void BrowserProcessImpl::OnKeepAliveRestartStateChanged(bool can_restart) {}
 void BrowserProcessImpl::ResourceDispatcherHostCreated() {}
 
 void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
+  // Prevents non GOOGLE_CHROME_BUILD unconditionally return false for
+  // MetricsServiceAccessor::IsMetricsReportingEnabled
+  ChromeMetricsServiceAccessor::SetForceIsMetricsReportingEnabledPrefLookup(
+    true);
 	GoogleUpdateSettings::CollectStatsConsentTaskRunner()->PostTask(
 		FROM_HERE,
 		base::BindOnce(

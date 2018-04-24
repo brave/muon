@@ -156,7 +156,8 @@ void TabHelper::DestroyTab(content::WebContents* tab) {
 
 // static
 int TabHelper::GetTabStripIndex(int window_id, int index) {
-  for (TabContentsIterator it; !it.done(); it.Next()) {
+  auto& all_tabs = AllTabContentses();
+  for (auto it = all_tabs.begin(), end = all_tabs.end(); it != end; ++it) {
     auto tab_helper = FromWebContents(*it);
     if (tab_helper &&
         tab_helper->get_index() == index &&
@@ -380,9 +381,9 @@ void TabHelper::SetActive(bool active) {
   }
 }
 
-void TabHelper::WasShown() {
+void TabHelper::OnVisibilityChanged(content::Visibility visibility) {
   auto helper = content::RestoreHelper::FromWebContents(web_contents());
-  if (helper) {
+  if (visibility == content::Visibility::VISIBLE && helper) {
     // load the tab if it is shown without being activate (tab preview)
     discarded_ = false;
     SetAutoDiscardable(true);
@@ -722,6 +723,7 @@ void TabHelper::ExecuteScript(
       GURL(),  // No webview src.
       file_url,  // No file url.
       false,  // user gesture
+      base::nullopt,  // css_origin
       result,
       callback);
 }

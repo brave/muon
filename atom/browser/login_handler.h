@@ -8,6 +8,8 @@
 #include "base/strings/string16.h"
 #include "base/synchronization/lock.h"
 #include "content/public/browser/resource_dispatcher_host_login_delegate.h"
+#include "content/public/browser/resource_request_info.h"
+#include "net/base/auth.h"
 
 namespace content {
 class WebContents;
@@ -15,7 +17,6 @@ class WebContents;
 
 namespace net {
 class AuthChallengeInfo;
-class URLRequest;
 }
 
 namespace atom {
@@ -23,7 +24,12 @@ namespace atom {
 // Handles the HTTP basic auth, must be created on IO thread.
 class LoginHandler : public content::ResourceDispatcherHostLoginDelegate {
  public:
-  LoginHandler(net::AuthChallengeInfo* auth_info, net::URLRequest* request);
+  LoginHandler(net::AuthChallengeInfo* auth_info,
+      content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+      bool is_main_frame,
+      const GURL& url,
+      const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
+          auth_required_callback);
 
   // Returns the WebContents associated with the request, must be called on UI
   // thread.
@@ -59,13 +65,10 @@ class LoginHandler : public content::ResourceDispatcherHostLoginDelegate {
   // Who/where/what asked for the authentication.
   scoped_refptr<net::AuthChallengeInfo> auth_info_;
 
-  // The request that wants login data.
-  // This should only be accessed on the IO loop.
-  net::URLRequest* request_;
+  content::ResourceRequestInfo::WebContentsGetter web_contents_getter_;
 
-  // Cached from the net::URLRequest, in case it goes NULL on us.
-  int render_process_host_id_;
-  int render_frame_id_;
+  base::Callback<void(const base::Optional<net::AuthCredentials>&)>
+      auth_required_callback_;
 
   DISALLOW_COPY_AND_ASSIGN(LoginHandler);
 };

@@ -8,6 +8,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "base/callback.h"
 #include "base/command_line.h"
@@ -19,6 +20,7 @@
 #include "content/public/common/main_function_params.h"
 
 class BrowserProcessImpl;
+class ChromeBrowserMainExtraParts;
 
 namespace brightray {
 class BrowserContext;
@@ -55,6 +57,9 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
 
   Browser* browser() { return browser_.get(); }
 
+  // Add additional ChromeBrowserMainExtraParts.
+  virtual void AddParts(ChromeBrowserMainExtraParts* parts);
+
  protected:
   // content::BrowserMainParts:
   int PreCreateThreads() override;
@@ -68,6 +73,8 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
 #if defined(OS_MACOSX) || defined(OS_WIN)
   void PreMainMessageLoopStart() override;
 #endif
+  void ServiceManagerConnectionStarted(
+      content::ServiceManagerConnection* connection) override;
 
   void OnMemoryPressure(
       base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level);
@@ -114,6 +121,10 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   std::list<base::Closure> destructors_;
 
   static AtomBrowserMainParts* self_;
+
+  // Vector of additional ChromeBrowserMainExtraParts.
+  // Parts are deleted in the inverse order they are added.
+  std::vector<ChromeBrowserMainExtraParts*> chrome_extra_parts_;
 
   DISALLOW_COPY_AND_ASSIGN(AtomBrowserMainParts);
 };

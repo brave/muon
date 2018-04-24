@@ -150,8 +150,9 @@ bool NetworkDelegate::OnCanQueueReportingReport(
   return true;
 }
 
-bool NetworkDelegate::OnCanSendReportingReport(
-    const url::Origin& origin) const {
+void NetworkDelegate::OnCanSendReportingReports(
+    std::set<url::Origin> origins,
+    base::OnceCallback<void(std::set<url::Origin>)> result_callback) const {
   return true;
 }
 
