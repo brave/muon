@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "brave/utility/tor/tor_impl.h"
+#include "brave/utility/tor/tor_launcher_impl.h"
 
 #include <utility>
 

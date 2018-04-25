@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "build/build_config.h"
-#include "brave/utility/tor/tor_impl.h"
+#include "brave/utility/tor/tor_launcher_impl.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
 
 namespace {
