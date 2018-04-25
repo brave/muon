@@ -14,7 +14,7 @@
 #include "base/files/file_util.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
-#include "brave/browser/net/proxy/proxy_config_service_tor.h"
+#include "brave/browser/net/proxy_resolution/proxy_config_service_tor.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
 #include "chrome/browser/browser_process.h"
@@ -60,7 +60,7 @@
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
-#include "net/proxy/proxy_service.h"
+#include "net/proxy_resolution/proxy_service.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "net/url_request/url_request_job_factory_impl.h"
@@ -361,7 +361,6 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
           partition_path,
           in_memory,
           BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
-          BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE),
           protocol_handlers,
           std::move(request_interceptors));
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
@@ -740,9 +739,10 @@ void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
     url_request_context_getter = (iter->second);
   else
     return;
-  auto proxy_service = url_request_context_getter->GetURLRequestContext()->
-    proxy_service();
-  proxy_service->ForceReloadProxyConfig();
+  auto proxy_resolution_service =
+    url_request_context_getter->GetURLRequestContext()->
+    proxy_resolution_service();
+  proxy_resolution_service->ForceReloadProxyConfig();
   if (callback)
     callback.Run();
 }

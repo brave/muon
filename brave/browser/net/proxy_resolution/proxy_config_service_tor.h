@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BRAVE_BROWSER_NET_PROXY_PROXY_CONFIG_SERVICE_TOR_H_
-#define BRAVE_BROWSER_NET_PROXY_PROXY_CONFIG_SERVICE_TOR_H_
+#ifndef BRAVE_BROWSER_NET_PROXY_RESOLUTION_PROXY_CONFIG_SERVICE_TOR_H_
+#define BRAVE_BROWSER_NET_PROXY_RESOLUTION_PROXY_CONFIG_SERVICE_TOR_H_
 
 #include <algorithm>
 #include <limits>
@@ -17,8 +17,8 @@
 #include "content/public/common/service_manager_connection.h"
 #include "net/base/net_errors.h"
 #include "net/base/net_export.h"
-#include "net/proxy/proxy_config.h"
-#include "net/proxy/proxy_config_service.h"
+#include "net/proxy_resolution/proxy_config.h"
+#include "net/proxy_resolution/proxy_config_service.h"
 #include "vendor/brightray/browser/browser_client.h"
 #include "vendor/brightray/browser/net_log.h"
 #include "vendor/brightray/browser/url_request_context_getter.h"
@@ -73,4 +73,4 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
 
 }  // namespace net
 
-#endif  // BRAVE_BROWSER_NET_PROXY_PROXY_CONFIG_SERVICE_TOR_H_
+#endif  // BRAVE_BROWSER_NET_PROXY_RESOLUTION_PROXY_CONFIG_SERVICE_TOR_H_

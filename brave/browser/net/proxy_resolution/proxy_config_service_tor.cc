@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "brave/browser/net/proxy/proxy_config_service_tor.h"
+#include "brave/browser/net/proxy_resolution/proxy_config_service_tor.h"
 
 #include <memory>
 #include <utility>
@@ -13,7 +13,7 @@
 #include "base/strings/string_util.h"
 #include "chrome/common/chrome_paths.h"
 #include "crypto/random.h"
-#include "net/proxy/proxy_service.h"
+#include "net/proxy_resolution/proxy_service.h"
 #include "net/url_request/url_request_context.h"
 #include "services/service_manager/public/cpp/connector.h"
 
@@ -106,7 +106,7 @@ void ProxyConfigServiceTor::TorSetProxy(
   if (!url_request_context_getter || !isolated_storage)
     return;
   auto proxy_service = url_request_context_getter->GetURLRequestContext()->
-    proxy_service();
+    proxy_resolution_service();
   // Notice CreateRequestContextForStoragePartition will only be called once
   // per partition_path so there is no need to cache password per origin
   std::string origin = partition_path.DirName().BaseName().AsUTF8Unsafe();
