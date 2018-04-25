@@ -311,8 +311,8 @@ source_set("utility") {
 
 source_set("tor") {
   sources = [
-    "brave/utility/tor/tor_impl.cc",
-    "brave/utility/tor/tor_impl.h",
+    "brave/utility/tor/tor_launcher_impl.cc",
+    "brave/utility/tor/tor_launcher_impl.h",
     "brave/utility/tor/tor_service.cc",
     "brave/utility/tor/tor_service.h",
   ]
