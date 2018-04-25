@@ -75,6 +75,10 @@
 #include "chrome/browser/plugins/plugin_info_host_impl.h"
 #endif
 
+#if defined(OS_WIN)
+#include "components/password_manager/core/browser/webdata/password_web_data_service_win.h"
+#endif
+
 using content::BrowserThread;
 using content::HostZoomMap;
 
