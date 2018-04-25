@@ -37,6 +37,7 @@
 #include "net/dns/mapped_host_resolver.h"
 #include "net/http/http_auth_handler_factory.h"
 #include "net/http/http_auth_preferences.h"
+#include "net/nqe/network_quality_estimator.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "services/network/ignore_errors_cert_verifier.h"
@@ -198,10 +199,6 @@ void IOThread::Init() {
   TRACE_EVENT0("startup", "IOThread::InitAsync");
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
 
-#if defined(USE_NSS_CERTS)
-  net::SetMessageLoopForNSSHttpIO();
-#endif
-
   DCHECK(!globals_);
   globals_ = new Globals;
 
@@ -242,10 +239,6 @@ void IOThread::Init() {
 }
 
 void IOThread::CleanUp() {
-#if defined(USE_NSS_CERTS)
-  net::ShutdownNSSHttpIO();
-#endif
-
   system_url_request_context_getter_ = nullptr;
 
   // Unlink the ct_tree_tracker_ from the global cert_transparency_verifier
@@ -471,9 +464,14 @@ void IOThread::ConstructSystemRequestContext() {
   globals_->quic_disabled = true;
 
   if (base::FeatureList::IsEnabled(network::features::kNetworkService)) {
-    globals_->system_request_context_owner =
-        std::move(builder)->Create(std::move(network_context_params_).get(),
-                                   !is_quic_allowed_on_init_, net_log_);
+    globals_->deprecated_network_quality_estimator =
+        std::make_unique<net::NetworkQualityEstimator>(
+            std::make_unique<net::NetworkQualityEstimatorParams>(
+                std::map<std::string, std::string>()),
+            net_log_);
+    globals_->system_request_context_owner = std::move(builder)->Create(
+        std::move(network_context_params_).get(), !is_quic_allowed_on_init_,
+        net_log_, globals_->deprecated_network_quality_estimator.get());
     globals_->system_request_context =
         globals_->system_request_context_owner.url_request_context_getter
             ->GetURLRequestContext();
