@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BRAVE_UTILITY_TOR_TOR_IMPL_H_
-#define BRAVE_UTILITY_TOR_TOR_IMPL_H_
+#ifndef BRAVE_UTILITY_TOR_TOR_LAUNCHER_IMPL_H_
+#define BRAVE_UTILITY_TOR_TOR_LAUNCHER_IMPL_H_
 
 #include <memory>
 #include <string>
@@ -43,4 +43,4 @@ class TorLauncherImpl : public tor::mojom::TorLauncher {
 
 }  // namespace brave
 
-#endif  // BRAVE_UTILITY_TOR_TOR_IMPL_H_
+#endif  // BRAVE_UTILITY_TOR_TOR_LAUNCHER_IMPL_H_
