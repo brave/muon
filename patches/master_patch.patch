@@ -1597,19 +1597,32 @@ index e8d2800c34367edc70ba29c7077bc1037f7b96df..bea186f8b8eae0e9f210d441a02fe2d6
            "blink::mojom::EngagementClient",
            "blink::mojom::InstallationService",
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index 973f835727b6d0050669a1bea76c84f53be85340..abe5e6f4a947758f3dcee1a5e8260109c47e6e59 100644
+index 973f835727b6d0050669a1bea76c84f53be85340..1894f1342a44906d7a9496efa1e466132ab4ee35 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
-@@ -214,7 +214,7 @@ void BrowserPlugin::Detach() {
+@@ -144,7 +144,7 @@ void BrowserPlugin::OnSetChildFrameSurface(
+   if (!attached() || base::FeatureList::IsEnabled(features::kMash))
+     return;
+ 
+-  if (!enable_surface_synchronization_) {
++  if (true) {
+     compositing_helper_->SetPrimarySurfaceId(surface_info.id(),
+                                              frame_rect().size());
+   }
+@@ -214,7 +214,11 @@ void BrowserPlugin::Detach() {
  
    attached_ = false;
    guest_crashed_ = false;
 -  web_layer_ = nullptr;
 +  // web_layer_ = nullptr;
++  compositing_helper_->SetPrimarySurfaceId(viz::SurfaceId(),
++                                             frame_rect().size());
++  compositing_helper_->SetFallbackSurfaceId(viz::SurfaceId(),
++                                            frame_rect().size());
  
    BrowserPluginManager::Get()->Send(
        new BrowserPluginHostMsg_Detach(browser_plugin_instance_id_));
-@@ -596,8 +596,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
+@@ -596,8 +600,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
  
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
