@@ -29,7 +29,6 @@
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/common/extensions/chrome_extensions_client.h"
-#include "extensions/utility/utility_handler.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
@@ -57,10 +56,6 @@ AtomContentUtilityClient::AtomContentUtilityClient()
 AtomContentUtilityClient::~AtomContentUtilityClient() = default;
 
 void AtomContentUtilityClient::UtilityThreadStarted() {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  extensions::utility_handler::UtilityThreadStarted();
-#endif
-
 #if defined(OS_WIN)
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
   utility_process_running_elevated_ = command_line->HasSwitch(
