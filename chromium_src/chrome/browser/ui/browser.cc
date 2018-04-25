@@ -61,18 +61,15 @@ Browser::Browser(const CreateParams& params, SessionID session_id)
       window_(params.window),
       tab_strip_model_delegate_(new brave::BraveTabStripModelDelegate()),
       tab_strip_model_(
-          new TabStripModel(tab_strip_model_delegate_.get(),
-            params.profile)),
+          std::make_unique<TabStripModel>(tab_strip_model_delegate_.get(),
+                                          params.profile)),
       app_name_(params.app_name),
       is_trusted_source_(params.trusted_source),
-      session_id_(session_id),
+      session_id_(SessionID::NewUnique()),
       initial_show_state_(params.initial_show_state),
       is_session_restore_(params.is_session_restore),
       weak_factory_(this) {
   BrowserList::AddBrowser(this);
-  content::NotificationService::current()->Notify(
-      chrome::NOTIFICATION_BROWSER_WINDOW_READY, content::Source<Browser>(this),
-      content::NotificationService::NoDetails());
 }
 
 Browser::~Browser() {
