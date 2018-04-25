@@ -12,7 +12,6 @@
 #include "base/time/time.h"
 #include "brave/utility/importer/brave_profile_import_service.h"
 #include "chrome/common/importer/profile_import.mojom.h"
-#include "chrome/utility/extensions/extensions_handler.h"
 #include "components/services/unzip/public/interfaces/constants.mojom.h"
 #include "components/services/unzip/unzip_service.h"
 #include "content/public/common/content_switches.h"
