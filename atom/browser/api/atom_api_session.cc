@@ -214,14 +214,14 @@ class ResolveProxyHelper {
                     const GURL& url) {
     DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
-    net::ProxyResolutionService* proxy_service =
+    net::ProxyResolutionService* proxy_resolution_service =
         context_getter->GetURLRequestContext()->proxy_resolution_service();
     net::CompletionCallback completion_callback =
         base::Bind(&ResolveProxyHelper::OnResolveProxyCompleted,
                    base::Unretained(this));
 
     // Start the request.
-    int result = proxy_service->ResolveProxy(
+    int result = proxy_resolution_service->ResolveProxy(
         url, "GET", &proxy_info_, completion_callback,
         &pac_req_, nullptr, net::NetLogWithSource());
 
@@ -452,12 +452,12 @@ void Session::FlushStorageData() {
 void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
                   const net::ProxyConfig& config,
                   const base::Closure& callback) {
-  auto proxy_service =
-    getter->GetURLRequestContext()->proxy_service();
-  proxy_service->ResetConfigService(base::WrapUnique(
+  auto proxy_resolution_service =
+    getter->GetURLRequestContext()->proxy_resolution_service();
+  proxy_resolution_service->ResetConfigService(base::WrapUnique(
       new net::ProxyConfigServiceFixed(config)));
   // Refetches and applies the new pac script if provided.
-  proxy_service->ForceReloadProxyConfig();
+  proxy_resolution_service->ForceReloadProxyConfig();
   BrowserThread::PostTask(
     BrowserThread::UI, FROM_HERE, callback);
 }
