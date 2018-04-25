@@ -41,7 +41,7 @@ class NativeWindowMac : public NativeWindow,
   void Show() override;
   void ShowInactive() override;
   void Hide() override;
-  bool IsVisible() override;
+  bool IsVisible() const override;
   bool IsEnabled() override;
   void Maximize() override;
   void Unmaximize() override;
