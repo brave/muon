@@ -319,9 +319,12 @@ source_set("browser") {
     "//chrome/browser/cache_stats_recorder.cc",
     "//chrome/browser/cache_stats_recorder.h",
 
+    "chrome/browser/google/google_brand.cc",
+    "//chrome/browser/google/google_brand.h",
     "//chrome/browser/upgrade_detector.cc",
     "//chrome/browser/upgrade_detector.h",
-    "chrome/browser/upgrade_detector_impl.cc",
+    "//chrome/browser/upgrade_detector_impl.cc",
+    "//chrome/browser/upgrade_detector_impl.h",
     "chrome/app/vector_icons/vector_icons.cc",
     "chrome/app/vector_icons/vector_icons.h",
     "//chrome/browser/service_process/service_process_control.cc",
@@ -406,6 +409,10 @@ source_set("browser") {
 
   if (is_mac) {
     sources += [
+      "//chrome/browser/mac/keystone_glue.h",
+      "//chrome/browser/mac/keystone_glue.mm",
+      "//chrome/browser/mac/keystone_registration.h",
+      "//chrome/browser/mac/keystone_registration.mm",
       "//chrome/browser/ui/certificate_viewer_mac.h",
       "//chrome/browser/ui/certificate_viewer_mac.mm",
       "chrome/browser/ui/certificate_viewer_mac_views.mm",
