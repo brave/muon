@@ -142,6 +142,10 @@ std::unique_ptr<content::ZoomLevelDelegate> BrowserContext::CreateZoomLevelDeleg
   return std::unique_ptr<content::ZoomLevelDelegate>();
 }
 
+bool BrowserContext::IsOffTheRecord() const {
+  return in_memory_;
+}
+
 content::ResourceContext* BrowserContext::GetResourceContext() {
   return resource_context_.get();
 }
