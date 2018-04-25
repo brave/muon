@@ -42,6 +42,6 @@ void BraveExternalProcessImporterBridge::SetCookies(
 BraveExternalProcessImporterBridge::BraveExternalProcessImporterBridge(
     base::Value localized_strings,
     scoped_refptr<chrome::mojom::ThreadSafeProfileImportObserverPtr> observer)
-  : ExternalProcessImporterBridge(localized_strings, observer) {}
+    : ExternalProcessImporterBridge(std::move(localized_strings), observer) {}
 
 BraveExternalProcessImporterBridge::~BraveExternalProcessImporterBridge() {}
