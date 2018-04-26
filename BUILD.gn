@@ -683,7 +683,6 @@ action("create_dist") {
       "$electron_dist_dir/libEGL.dll",
       "$electron_dist_dir/libGLESv2.dll",
       "$electron_dist_dir/d3dcompiler_47.dll",
-      "$electron_dist_dir/$widevine_cdm_path/widevinecdmadapter.dll",
     ]
   }
 
@@ -718,11 +717,6 @@ action("create_dist") {
       ":electron_dist_resources",
       ":electron_app_dist_resources",
       ":electron_locale_dist_resources",
-    ]
-  }
-  if (is_win) {
-    deps += [
-      "app/win:dist_widevine_resources",
     ]
   }
 
