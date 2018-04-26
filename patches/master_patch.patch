@@ -390,31 +390,6 @@ index 9f0003bc2d80d7c76ab9dd17393d0188fe1ac6fd..88d75d4091fb3dc282998a5d44e63cbf
  
    // content::NotificationObserver implementation.
    void Observe(int type,
-diff --git a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
-index a5ea92f2878459b49f88d4895c7d18f2e157dd6c..9cffca0352713bce12b4035c02612cd7e2976aad 100644
---- a/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
-+++ b/chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.cc
-@@ -57,13 +57,13 @@ ChromeBrowserPepperHostFactory::CreateResourceHost(
-         return std::unique_ptr<ResourceHost>(new MessageFilterHost(
-             host_->GetPpapiHost(), instance, resource, pv_filter));
-       }
--      case PpapiHostMsg_OutputProtection_Create::ID: {
--        scoped_refptr<ResourceMessageFilter> output_protection_filter(
--            new PepperOutputProtectionMessageFilter(host_, instance));
--        return std::unique_ptr<ResourceHost>(
--            new MessageFilterHost(host_->GetPpapiHost(), instance, resource,
--                                  output_protection_filter));
--      }
-+      // case PpapiHostMsg_OutputProtection_Create::ID: {
-+      //   scoped_refptr<ResourceMessageFilter> output_protection_filter(
-+      //       new PepperOutputProtectionMessageFilter(host_, instance));
-+      //   return std::unique_ptr<ResourceHost>(
-+      //       new MessageFilterHost(host_->GetPpapiHost(), instance, resource,
-+      //                             output_protection_filter));
-+      // }
-     }
-   }
- 
 diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
 index 1b5026face136534578062e4d3c9c0c955dadd20..a08512d67247feec1738bbc61a34665374384763 100644
 --- a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
@@ -1955,22 +1930,6 @@ index 715c533a2756506cc3151739fe458efd2dc5323d..30608c6852d0845566f2a05d620f6c86
          if (now - last_upload_attempt_time < kUploadAttemptIntervalSeconds) {
            database_->SkipReportUpload(
                report.uuid, Metrics::CrashSkippedReason::kUploadThrottled);
-diff --git a/third_party/widevine/cdm/stub/manifest.json b/third_party/widevine/cdm/stub/manifest.json
-index d466ccd1e02ed8c158fda545fe2175c135018da5..16ae2a357b21de66b1558939f9333b3c22e9cff2 100644
---- a/third_party/widevine/cdm/stub/manifest.json
-+++ b/third_party/widevine/cdm/stub/manifest.json
-@@ -24,6 +24,11 @@
-       "os": "mac",
-       "arch": "x64",
-       "sub_package_path": "_platform_specific/mac_x64/"
-+    },
-+    {
-+      "os": "linux",
-+      "arch": "x64",
-+      "sub_package_path": "_platform_specific/linux_x64/"
-     }
-   ]
- }
 diff --git a/ui/views/controls/menu/menu_controller.cc b/ui/views/controls/menu/menu_controller.cc
 index 46713d7170a66e38c2ecb21b7b7d914c9dcac872..758f3aa16efea24e9f00af8e1c4e3f34b60a776f 100644
 --- a/ui/views/controls/menu/menu_controller.cc
