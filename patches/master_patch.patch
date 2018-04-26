@@ -391,39 +391,53 @@ index 9f0003bc2d80d7c76ab9dd17393d0188fe1ac6fd..88d75d4091fb3dc282998a5d44e63cbf
    // content::NotificationObserver implementation.
    void Observe(int type,
 diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
-index 1b5026face136534578062e4d3c9c0c955dadd20..a08512d67247feec1738bbc61a34665374384763 100644
+index 1b5026face136534578062e4d3c9c0c955dadd20..27b2a5ce41ce523a67495f5b24d5a0be87fb501d 100644
 --- a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
 +++ b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
-@@ -211,6 +211,19 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::CanDiscard(
+@@ -211,6 +211,26 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::CanDiscard(
    return true;
  }
  
 +// MUON(bridiver): see tab_lifecycle_unit.h
-+WebContents* TabLifecycleUnitSource::TabLifecycleUnit::CreateNullContents(
-+    content::WebContents::CreateParams create_params,
-+    WebContents* old_contents) {
-+  return WebContents::Create(WebContents::CreateParams(create_params));
++content::WebContents*
++TabLifecycleUnitSource::TabLifecycleUnit::CreateNullContents(
++    TabStripModel* model,
++    content::WebContents* old_contents) {
++  content::WebContents::CreateParams create_params(model->profile());
++  // TODO(fdoray): Consider setting |initially_hidden| to true when the tab is
++  // OCCLUDED. Will require checking that the tab reload correctly when it
++  // becomes VISIBLE.
++  create_params.initially_hidden =
++      old_contents->GetVisibility() == content::Visibility::HIDDEN;
++  return content::WebContents::Create(create_params);
 +}
 +
 +// MUON(bridiver): see tab_lifecycle_unit.h
 +void TabLifecycleUnitSource::TabLifecycleUnit::DestroyOldContents(
-+    WebContents* old_contents) {
++    content::WebContents* old_contents) {
 +  delete old_contents;
 +}
 +
  bool TabLifecycleUnitSource::TabLifecycleUnit::Discard(
      DiscardReason discard_reason) {
    if (!tab_strip_model_ || IsDiscarded())
-@@ -228,7 +241,7 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::Discard(
-   create_params.initially_hidden =
-       old_contents->GetVisibility() == content::Visibility::HIDDEN;
+@@ -221,14 +241,8 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::Discard(
+       GetWebContents()->NeedToFireBeforeUnload());
+ 
+   content::WebContents* const old_contents = GetWebContents();
+-  content::WebContents::CreateParams create_params(tab_strip_model_->profile());
+-  // TODO(fdoray): Consider setting |initially_hidden| to true when the tab is
+-  // OCCLUDED. Will require checking that the tab reload correctly when it
+-  // becomes VISIBLE.
+-  create_params.initially_hidden =
+-      old_contents->GetVisibility() == content::Visibility::HIDDEN;
    content::WebContents* const null_contents =
 -      content::WebContents::Create(create_params);
-+      CreateNullContents(create_params, old_contents);
++      CreateNullContents(tab_strip_model_, old_contents);
    // Copy over the state from the navigation controller to preserve the
    // back/forward history and to continue to display the correct title/favicon.
    //
-@@ -279,7 +292,8 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::Discard(
+@@ -279,7 +293,8 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::Discard(
    // TODO(jamescook): This breaks script connections with other tabs. Find a
    // different approach that doesn't do that, perhaps based on
    // RenderFrameProxyHosts.
@@ -434,7 +448,7 @@ index 1b5026face136534578062e4d3c9c0c955dadd20..a08512d67247feec1738bbc61a346653
    SetState(State::DISCARDED);
    ++discard_count_;
 diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit.h b/chrome/browser/resource_coordinator/tab_lifecycle_unit.h
-index ae1fc02155c4c36f8f7015c052f58255933f88b5..d509c337c4df968df1bd9db0fdb56e30bcf9ef63 100644
+index ae1fc02155c4c36f8f7015c052f58255933f88b5..be2e125ba8f07049c26c035b42bee57d02376328 100644
 --- a/chrome/browser/resource_coordinator/tab_lifecycle_unit.h
 +++ b/chrome/browser/resource_coordinator/tab_lifecycle_unit.h
 @@ -89,6 +89,12 @@ class TabLifecycleUnitSource::TabLifecycleUnit
@@ -443,7 +457,7 @@ index ae1fc02155c4c36f8f7015c052f58255933f88b5..d509c337c4df968df1bd9db0fdb56e30
  
 +  // MUON(bridiver): override to create/destroy guests webcontents
 +  virtual content::WebContents* CreateNullContents(
-+      content::WebContents::CreateParams create_params,
++      TabStripModel* model,
 +      content::WebContents* old_contents);
 +  virtual void DestroyOldContents(content::WebContents* old_contents);
 +

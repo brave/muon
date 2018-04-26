@@ -19,6 +19,7 @@
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/resource_coordinator/discard_reason.h"
+#include "chrome/browser/resource_coordinator/tab_lifecycle_unit_external.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -491,7 +492,9 @@ bool TabHelper::IsDiscarded() {
   if (discarded_) {
     return true;
   }
-  // return GetTabManager()->IsTabDiscarded(web_contents());
+  return resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+             web_contents())
+      ->IsDiscarded();
 }
 
 void TabHelper::SetPinned(bool pinned) {
