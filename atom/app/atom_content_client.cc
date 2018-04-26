@@ -51,7 +51,6 @@
 #if defined(WIDEVINE_CDM_AVAILABLE) && BUILDFLAG(ENABLE_LIBRARY_CDMS) && \
     !defined(WIDEVINE_CDM_IS_COMPONENT)
 #define WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT
-#include "chrome/common/widevine_cdm_constants.h"
 #endif
 
 #if BUILDFLAG(ENABLE_CDM_HOST_VERIFICATION)

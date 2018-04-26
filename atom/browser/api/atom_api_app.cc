@@ -413,8 +413,8 @@ int GetPathConstant(const std::string& name) {
     return chrome::DIR_USER_VIDEOS;
   else if (name == "pepperFlashSystemPlugin")
     return chrome::FILE_PEPPER_FLASH_SYSTEM_PLUGIN;
-  else if (name == "widevineCDMAdapter")
-    return chrome::FILE_WIDEVINE_CDM_ADAPTER;
+  else if (name == "widevineCDM")
+    return chrome::FILE_WIDEVINE_CDM;
   else if (name == "extensionsDir")
     return component_updater::DIR_COMPONENT_USER;
   else if (name == "sourceDir")
