@@ -1044,6 +1044,28 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    // State needed to manage service lifecycle and lifecycle of bound clients.
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
+diff --git a/components/autofill/core/browser/credit_card_save_manager.cc b/components/autofill/core/browser/credit_card_save_manager.cc
+index e3935b3c4bef67e779d7463f7745100f3f341579..dcc57d6fe5f8447a7d755174945beea1f43acdb6 100644
+--- a/components/autofill/core/browser/credit_card_save_manager.cc
++++ b/components/autofill/core/browser/credit_card_save_manager.cc
+@@ -204,12 +204,17 @@ void CreditCardSaveManager::AttemptToOfferCardUploadSave(
+ }
+ 
+ bool CreditCardSaveManager::IsCreditCardUploadEnabled() {
++#if defined(MUON_CHROMIUM_BUILD)
+   // If observer_for_testing_ is set, assume we are in a browsertest and
+   // credit card upload should be enabled by default.
+   return observer_for_testing_ ||
+          ::autofill::IsCreditCardUploadEnabled(
+              client_->GetPrefs(), client_->GetSyncService(),
+              client_->GetIdentityManager()->GetPrimaryAccountInfo().email);
++#else
++  // MUON(darkdh): disable creait card upload by default
++  return false;
++#endif
+ }
+ 
+ void CreditCardSaveManager::OnDidUploadCard(
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
 index 460f7ac4defaca672afc97884c5f35e58f21836e..a440df43d423ca414053a7b2167258c93e89c223 100644
 --- a/components/crash/content/app/breakpad_linux.cc
@@ -1321,10 +1343,10 @@ index 36c25c462ad15a7c023f118879aaba556381da66..c0aff85c5d3daa62c3f3f8162d43d06d
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index 487198015037c38670805ff79dddb8161907dde5..05eebd4ee44ab32174fc80b88b9f1ee1ad9676b2 100644
+index 00bcfa03587014930c3974d8c42544b7cfe175a6..3a406ab6418ee3e2c8e05ff413a4cde652422717 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
-@@ -1669,8 +1669,23 @@ bool RenderWidgetHostViewAura::TransformPointToLocalCoordSpace(
+@@ -1670,8 +1670,23 @@ bool RenderWidgetHostViewAura::TransformPointToLocalCoordSpace(
        !delegated_frame_host_->TransformPointToLocalCoordSpace(
            point_in_pixels, original_surface, transformed_point))
      return false;
@@ -1351,7 +1373,7 @@ index 487198015037c38670805ff79dddb8161907dde5..05eebd4ee44ab32174fc80b88b9f1ee1
  }
  
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index ac90d44c48a0a9b81d23eb6b8e7aac96e26704d2..9b951c4522d0167e94b0109ffb10410fa0463cbf 100644
+index 6e947778990cd828f0124b0f70ba9fc77a687e62..04c6e680085162264c6b34a292ae8ebf0524b519 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -137,6 +137,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
@@ -1367,7 +1389,7 @@ index ac90d44c48a0a9b81d23eb6b8e7aac96e26704d2..9b951c4522d0167e94b0109ffb10410f
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1636,6 +1642,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1637,6 +1643,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
    if (render_widget_host_) {
      render_widget_host_->SetActive(active);
      if (active) {
@@ -1378,7 +1400,7 @@ index ac90d44c48a0a9b81d23eb6b8e7aac96e26704d2..9b951c4522d0167e94b0109ffb10410f
        if (HasFocus())
          render_widget_host_->Focus();
      } else {
-@@ -1908,7 +1918,14 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -1909,7 +1919,14 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1393,7 +1415,7 @@ index ac90d44c48a0a9b81d23eb6b8e7aac96e26704d2..9b951c4522d0167e94b0109ffb10410f
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2141,8 +2158,10 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -2142,8 +2159,10 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1404,7 +1426,7 @@ index ac90d44c48a0a9b81d23eb6b8e7aac96e26704d2..9b951c4522d0167e94b0109ffb10410f
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -3006,6 +3025,11 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -3007,6 +3026,11 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
