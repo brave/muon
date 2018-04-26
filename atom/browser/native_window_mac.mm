@@ -811,7 +811,7 @@ void NativeWindowMac::Hide() {
   [window_ orderOut:nil];
 }
 
-bool NativeWindowMac::IsVisible() {
+bool NativeWindowMac::IsVisible() const {
   return [window_ isVisible];
 }
 
