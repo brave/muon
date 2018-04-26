@@ -1661,6 +1661,21 @@ index a9a739e4f9a707faaf195f0747b560197b97a1be..2c34b71205886e239151ba56e5c8f7f8
  
  const char kLocationString[] = "location";
  const char kLatitudeString[] = "lat";
+diff --git a/extensions/browser/BUILD.gn b/extensions/browser/BUILD.gn
+index e1dcd075672fa1a92c88cf60cee70ef263da7be7..4c11e78cede0d3e688677087330ddcff2f7a183d 100644
+--- a/extensions/browser/BUILD.gn
++++ b/extensions/browser/BUILD.gn
+@@ -325,8 +325,8 @@ jumbo_source_set("browser_sources") {
+     "service_worker_task_queue.h",
+     "service_worker_task_queue_factory.cc",
+     "service_worker_task_queue_factory.h",
+-    "shared_user_script_master.cc",
+-    "shared_user_script_master.h",
++    #"shared_user_script_master.cc",
++    #"shared_user_script_master.h",
+     "state_store.cc",
+     "state_store.h",
+     "suggest_permission_util.cc",
 diff --git a/extensions/browser/api/messaging/message_service.cc b/extensions/browser/api/messaging/message_service.cc
 index 3d39acbf3ac8333ea9bdc750f163e147615f00b8..dea52ee7434646c9efafe5750b2ae425bf1c1119 100644
 --- a/extensions/browser/api/messaging/message_service.cc
