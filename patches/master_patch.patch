@@ -621,7 +621,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3ade1a5e1e 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -40,7 +40,9 @@ NSBundle* OuterAppBundleInternal() {
+@@ -40,7 +40,9 @@
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -1078,7 +1078,7 @@ diff --git a/components/crash/content/app/crashpad_mac.mm b/components/crash/con
 index eb82f44053cec67f7e98c798d8e1e58228aa7fe6..5ab4abe28b41f5af346e263f0a4573b79dd4c40c 100644
 --- a/components/crash/content/app/crashpad_mac.mm
 +++ b/components/crash/content/app/crashpad_mac.mm
-@@ -55,6 +55,8 @@ base::FilePath PlatformCrashpadInitialization(bool initial_client,
+@@ -55,6 +55,8 @@
        // Only allow the possibility of report upload in official builds. This
        // crash server won't have symbols for any other build types.
        std::string url = "https://clients2.google.com/cr/report";
@@ -1234,7 +1234,7 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
  #include "base/mac/mac_logging.h"
  #include "base/rand_util.h"
  #include "crypto/apple_keychain.h"
-@@ -61,6 +62,14 @@ const char KeychainPassword::account_name[] = "Chromium";
+@@ -61,6 +62,14 @@
  std::string KeychainPassword::GetPassword() const {
    UInt32 password_length = 0;
    void* password_data = NULL;
@@ -1343,7 +1343,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 71b3c5906b61728dfad31bd743fb9f9c6c214c68..66b6951c21a06c2313ac5e7080741b9782139262 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -23,7 +23,7 @@
+@@ -23,7 +23,7 @@ @interface SyntheticPinchEvent : NSObject
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1381,9 +1381,9 @@ index e106d42d4786d538fd61981cd409fa13ac7059d6..42d95872bbfa4b2763f079596bb8f441
 +  }
    return true;
  }
- 
+
 diff --git a/content/browser/renderer_host/render_widget_host_view_cocoa.mm b/content/browser/renderer_host/render_widget_host_view_cocoa.mm
-index ed578f8b5ecab3fa773638ef3a6634c3e5129652..ce9837402714cbee78f7f6610721389b1f222aff 100644
+index ed578f8b5ecab3fa773638ef3a6634c3e5129652..c244a3d5d19a5136a26c202910c372a98cc00846 100644
 --- a/content/browser/renderer_host/render_widget_host_view_cocoa.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_cocoa.mm
 @@ -178,6 +178,12 @@ void ExtractUnderlines(NSAttributedString* string,
@@ -1399,7 +1399,7 @@ index ed578f8b5ecab3fa773638ef3a6634c3e5129652..ce9837402714cbee78f7f6610721389b
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -359,7 +365,14 @@ void ExtractUnderlines(NSAttributedString* string,
+@@ -359,7 +365,14 @@ - (BOOL)acceptsMouseEventsWhenInactive {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1414,7 +1414,7 @@ index ed578f8b5ecab3fa773638ef3a6634c3e5129652..ce9837402714cbee78f7f6610721389b
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -613,8 +626,10 @@ void ExtractUnderlines(NSAttributedString* string,
+@@ -613,8 +626,10 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1425,31 +1425,30 @@ index ed578f8b5ecab3fa773638ef3a6634c3e5129652..ce9837402714cbee78f7f6610721389b
  
    if (eventType == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -653,11 +668,15 @@ void ExtractUnderlines(NSAttributedString* string,
-   // function call.
-   client_->OnNSViewBeginKeyboardEvent();
+@@ -655,9 +670,14 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
  
--  ui::TextInputType textInputType = ui::TEXT_INPUT_TYPE_NONE;
-+  ui::TextInputType textInputType = renderWidgetHostView_->GetTextInputType();
+   ui::TextInputType textInputType = ui::TEXT_INPUT_TYPE_NONE;
    client_->OnNSViewSyncGetTextInputType(&textInputType);
 -  bool shouldAutohideCursor = textInputType != ui::TEXT_INPUT_TYPE_NONE &&
 -                              eventType == NSKeyDown &&
 -                              !(modifierFlags & NSCommandKeyMask);
++
 +  bool shouldAutohideCursor =
 +#ifndef MUON_CHROMIUM_BUILD
-+      !([event.window respondsToSelector:@selector(disableAutoHideCursor)] &&
-+        [event.window disableAutoHideCursor]) &&
++      !([responderDelegate_  respondsToSelector:@selector(disableAutoHideCursor)] &&
++        [self.window disableAutoHideCursor]) &&
 +#endif  // MUON_CHROMIUM_BUILD
 +      textInputType != ui::TEXT_INPUT_TYPE_NONE && eventType == NSKeyDown &&
 +      !(modifierFlags & NSCommandKeyMask);
  
    // We only handle key down events and just simply forward other events.
    if (eventType != NSKeyDown) {
+
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
 index c30099340f5c62cdc82d70bf04a35348a7c85005..90bb99aa9d2645fd929d3cebaff96f3c9fe034e5 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -1078,6 +1078,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1078,6 +1078,10 @@ void CombineTextNodesAndMakeCallback(SpeechCallback callback,
    if (host()) {
      host()->SetActive(active);
      if (active) {
@@ -1527,7 +1526,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index 6a9ee15776b6b4ec988cb9717a3ce71ac8dd9057..89d5bc930f04fcc06239149679dc49d771724c4f 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -584,6 +584,7 @@ void WebContentsViewMac::CloseTab() {
+@@ -584,6 +584,7 @@ - (void)draggedImage:(NSImage*)anImage
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -1553,7 +1552,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index cec3bd8a97b8b9bcab176a9bd2c296ec12aba838..a00a391c96fc1f04be189c41cb285a66772260e8 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -347,6 +347,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
+@@ -347,6 +347,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  
@@ -1616,10 +1615,6 @@ index c5fe59a523776ab12f23a58350ab816c22bd3495..ec35d7bce6ae7717e62e7b7b35e57c1a
    guest_crashed_ = false;
 -  web_layer_ = nullptr;
 +  // web_layer_ = nullptr;
-+  compositing_helper_->SetPrimarySurfaceId(viz::SurfaceId(),
-+                                             frame_rect().size());
-+  compositing_helper_->SetFallbackSurfaceId(viz::SurfaceId(),
-+                                            frame_rect().size());
  
    BrowserPluginManager::Get()->Send(
        new BrowserPluginHostMsg_Detach(browser_plugin_instance_id_));
