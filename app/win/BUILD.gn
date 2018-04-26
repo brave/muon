@@ -99,7 +99,6 @@ executable("electron_exe") {
     "//content/public/app:both",
     "//crypto",
     "//sandbox",
-    ":widevine_cdm_adapter",
   ]
 
   # output filename must be node to generate the correct import library for
@@ -168,15 +167,6 @@ process_version_rc_template("electron_exe_version") {
   output = "$target_gen_dir/electron_exe_version.rc"
 }
 
-group("widevine_cdm_adapter") {
-  data_deps = [
-    "//third_party/widevine/cdm:widevinecdm",
-  ]
-  public_deps = [
-    "//third_party/widevine/cdm:widevinecdmadapter",
-  ]
-}
-
 copy("external_binaries") {
   sources = [
     rebase_path("//electron/external_binaries/xinput1_3.dll"),
@@ -210,18 +200,6 @@ action("generate_breakpad_symbols") {
 
 group("symbol_dist_resources") {
   public_deps = [ ":generate_breakpad_symbols" ]
-}
-
-copy("dist_widevine_resources") {
-  sources = [
-    "$root_out_dir/$widevine_cdm_path/widevinecdmadapter.dll",
-  ]
-  outputs = [
-    "$electron_dist_dir/$widevine_cdm_path/{{source_file_part}}"
-  ]
-  public_deps = [
-    ":widevine_cdm_adapter",
-  ]
 }
 
 copy("dist_resources") {
