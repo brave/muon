@@ -342,14 +342,22 @@ void TabViewGuest::SetAllowTransparency(bool allow) {
     return;
 
   allow_transparency_ = allow;
-  if (!web_contents()->GetRenderViewHost()->GetWidget()->GetView())
+  auto* rvh = web_contents()->GetRenderViewHost();
+  if (!rvh || !rvh->GetWidget()->GetView())
     return;
 
   SetTransparency();
 }
 
 void TabViewGuest::SetTransparency() {
-  auto* view = web_contents()->GetRenderViewHost()->GetWidget()->GetView();
+  auto* rvh = web_contents()->GetRenderViewHost();
+  if (!rvh)
+    return;
+  
+  auto* view = rvh->GetWidget()->GetView();
+  if (!view)
+    return;
+  
   if (allow_transparency_)
     view->SetBackgroundColor(SK_ColorTRANSPARENT);
   else
