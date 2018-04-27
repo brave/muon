@@ -3,7 +3,10 @@ source_set("safe_browsing") {
   configs += [ "//electron/chromium_src:chromium_src_config" ]
 
   sources = [
+    "chrome_password_protection_service.cc",
+    "//chrome/browser/safe_browsing/chrome_password_protection_service.h",
     "safe_browsing_service.cc",
+    "//chrome/browser/safe_browsing/safe_browsing_service.h",
   ]
 
   deps = [
