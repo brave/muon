@@ -391,6 +391,8 @@ source_set("browser") {
       "//chrome/browser/ui/views/harmony/harmony_layout_provider.h",
       "//chrome/browser/ui/views/harmony/harmony_typography_provider.cc",
       "//chrome/browser/ui/views/harmony/harmony_typography_provider.h",
+      "//chrome/browser/ui/views/harmony/material_refresh_layout_provider.cc",
+      "//chrome/browser/ui/views/harmony/material_refresh_layout_provider.h",
     ]
 
     deps += [
