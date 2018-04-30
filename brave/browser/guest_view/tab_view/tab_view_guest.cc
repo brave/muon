@@ -356,7 +356,6 @@ void TabViewGuest::DidAttachToEmbedder() {
   if (tab_helper)
     tab_helper->DidAttach();
 
-  LOG(ERROR) << "did attach " << web_contents()->GetURL();
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
 }
