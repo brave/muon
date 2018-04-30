@@ -557,43 +557,41 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   printing::InitializePrinting(web_contents);
 #endif
 
-  std::string name;
-  options.Get("name", &name);
-
   if (!IsBackgroundPage()) {
-    if (name == "browserAction") {
-      // hack for browserAction
-      // see TabHelper::SetBrowser
-      auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
-      tab_helper->SetTabIndex(-2);
-    }
     // Initialize zoom
     zoom::ZoomController::CreateForWebContents(web_contents);
     brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
 
     if (IsGuest()) {
-      // Initialize the tab helper
       extensions::TabHelper::CreateForWebContents(web_contents);
-      // Initialize autofill client
-      autofill::AtomAutofillClient::CreateForWebContents(web_contents);
-      std::string locale = static_cast<brave::BraveContentBrowserClient*>(
-          brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
-      autofill::AtomAutofillClient::FromWebContents(web_contents)->
-          Initialize(this);
-      autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
-          web_contents,
-          autofill::AtomAutofillClient::FromWebContents(web_contents),
-          locale,
-          autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
-      BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
-          web_contents,
-          autofill::AtomAutofillClient::FromWebContents(web_contents));
-      BravePasswordManagerClient::FromWebContents(web_contents)->
-          Initialize(this);
+      // Initialize the tab helper
+      // hack for browserAction
+      std::string name;
+      options.Get("name", &name);
+      if (name == "browserAction") {
+        auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
+        tab_helper->SetTabIndex(-2);
+      } else {
+        // favicon::CreateContentFaviconDriverForWebContents(web_contents);
+        HistoryTabHelper::CreateForWebContents(web_contents);
 
-      // favicon::CreateContentFaviconDriverForWebContents(web_contents);
-      HistoryTabHelper::CreateForWebContents(web_contents);
-
+        // Initialize autofill client
+        autofill::AtomAutofillClient::CreateForWebContents(web_contents);
+        std::string locale = static_cast<brave::BraveContentBrowserClient*>(
+            brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
+        autofill::AtomAutofillClient::FromWebContents(web_contents)->
+            Initialize(this);
+        autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
+            web_contents,
+            autofill::AtomAutofillClient::FromWebContents(web_contents),
+            locale,
+            autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+        BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
+            web_contents,
+            autofill::AtomAutofillClient::FromWebContents(web_contents));
+        BravePasswordManagerClient::FromWebContents(web_contents)->
+            Initialize(this);
+      }
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
       g_browser_process->safe_browsing_service()->ui_manager()->AddObserver(
@@ -1671,7 +1669,7 @@ int WebContents::GetID() const {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::TabHelper::IdForTab(web_contents());
 #else
-  return web_contents()->GetRenderViewHost()->GetProcess()->GetID();
+  return -1;
 #endif
 }
 
@@ -2607,6 +2605,16 @@ v8::Local<v8::Value> WebContents::TabValue() {
       value.get(), isolate()->GetCurrentContext());
 }
 
+bool WebContents::IsTab() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    return tab_helper->get_index() > TabStripModel::kNoTab;
+#endif
+
+  return false;
+}
+
 int32_t WebContents::ID() const {
   if (IsRemote() && !GetMainFrame().IsEmpty())
     return GetMainFrame()->weak_map_id();
@@ -2765,6 +2773,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("isBackgroundPage", &WebContents::IsBackgroundPage)
       .SetMethod("tabValue", &WebContents::TabValue)
 #endif
+      .SetMethod("isTab", &WebContents::IsTab)
       .SetMethod("close", &WebContents::CloseContents)
       .SetMethod("forceClose", &WebContents::DestroyWebContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
@@ -2850,22 +2859,22 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   // SetActive is called in AddNewContents
 
   int index = -1;
-  if (options.Get("index", &index)) {
+  if (tab_helper && options.Get("index", &index)) {
     tab_helper->SetTabIndex(index);
   }
 
   bool pinned = false;
-  if (options.Get("pinned", &pinned) && pinned) {
+  if (tab_helper && options.Get("pinned", &pinned) && pinned) {
     tab_helper->SetPinned(pinned);
   }
 
   bool autoDiscardable = true;
-  if (options.Get("autoDiscardable", &autoDiscardable)) {
+  if (tab_helper && options.Get("autoDiscardable", &autoDiscardable)) {
     tab_helper->SetAutoDiscardable(autoDiscardable);
   }
 
   bool discarded = false;
-  if (options.Get("discarded", &discarded) && discarded && !active) {
+  if (tab_helper && options.Get("discarded", &discarded) && discarded && !active) {
     std::string url;
     if (options.Get("url", &url)) {
       std::unique_ptr<content::NavigationEntryImpl> entry =
@@ -2897,13 +2906,15 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   }
 
   int window_id = -1;
-  if (options.Get("windowId", &window_id) && window_id != -1)
+  if (tab_helper && options.Get("windowId", &window_id) && window_id != -1)
     tab_helper->SetWindowId(window_id);
 
 
   int opener_tab_id = TabStripModel::kNoTab;
-  options.Get("openerTabId", &opener_tab_id);
-  tab_helper->SetOpener(opener_tab_id);
+  if (tab_helper) {
+    options.Get("openerTabId", &opener_tab_id);
+    tab_helper->SetOpener(opener_tab_id);
+  }
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != TabStripModel::kNoTab) {

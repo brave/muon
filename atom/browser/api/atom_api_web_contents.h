@@ -254,6 +254,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool ExecuteScriptInTab(mate::Arguments* args);
   void SetTabValues(const base::DictionaryValue& values);
 #endif
+  bool IsTab();
 
   // Send messages to browser.
   static bool SendIPCMessage(int render_process_id,

@@ -58,7 +58,7 @@ namespace {
 
 bool HasWindow(WebContents* web_contents) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
-  return (tab_helper->window_id() != -1);
+  return (tab_helper && tab_helper->window_id() != -1);
 
 }
 
@@ -161,7 +161,7 @@ void TabViewGuest::LoadURLWithParams(
 
 void TabViewGuest::Load() {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (!tab_helper->IsDiscarded()) {
+  if (!tab_helper || !tab_helper->IsDiscarded()) {
     api_web_contents_->ResumeLoadingCreatedWebContents();
 
     web_contents()->WasHidden();
@@ -174,7 +174,7 @@ void TabViewGuest::Load() {
 void TabViewGuest::NavigateGuest(const std::string& src,
                                  bool force_navigation) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (src.empty() || tab_helper->IsDiscarded())
+  if (src.empty() || (tab_helper && tab_helper->IsDiscarded()))
     return;
 
   LoadURLWithParams(GURL(src), content::Referrer(),
@@ -263,6 +263,10 @@ void TabViewGuest::CreateWebContents(
 
   mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
+  std::string src;
+  if (params.GetString("src", &src)) {
+    src_ = GURL(src);
+  }
   std::string name;
   if (params.GetString("name", &name))
     options.Set("name", name);
@@ -326,7 +330,6 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
       src_ = GURL(src);
     }
 
-    auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
     if (web_contents()->GetController().IsInitialNavigation()) {
       if (web_contents()->GetController().NeedsReload()) {
         web_contents()->GetController().LoadIfNecessary();
@@ -350,8 +353,10 @@ void TabViewGuest::DidAttachToEmbedder() {
   ApplyAttributes(*attach_params());
 
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  tab_helper->DidAttach();
+  if (tab_helper)
+    tab_helper->DidAttach();
 
+  LOG(ERROR) << "did attach " << web_contents()->GetURL();
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
 }
@@ -426,9 +431,11 @@ void TabViewGuest::WillAttachToEmbedder() {
     owner_window = relay->window.get();
 
   if (owner_window) {
-    TabIdChanged();
     auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-    tab_helper->SetBrowser(owner_window->browser());
+    if (tab_helper) {
+      TabIdChanged();
+      tab_helper->SetBrowser(owner_window->browser());
+    }
     api_web_contents_->SetOwnerWindow(owner_window);
   }
 }
