@@ -420,6 +420,11 @@ void TabHelper::SetBrowser(Browser* browser) {
   if (browser == browser_)
     return;
 
+  // hack for browserAction
+  if (get_index() == -2) {
+    return;
+  }
+
   if (browser_) {
     if (get_index() != TabStripModel::kNoTab)
       browser_->tab_strip_model()->DetachWebContentsAt(get_index());
