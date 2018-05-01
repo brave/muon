@@ -1316,6 +1316,29 @@ index 3e1786aa6901be8316e7db490e839a27fb138260..b2cdb1950d5328a82a8690b1f4d01d91
  }
  
  void BrowserPluginGuest::OnDragStatusUpdate(int browser_plugin_instance_id,
+diff --git a/content/browser/find_request_manager.cc b/content/browser/find_request_manager.cc
+index b1d214c35f075d16acfcd71576842e6b751d0697..8e9fb9fc6f5d27a106b13aad0412fc843df647ed 100644
+--- a/content/browser/find_request_manager.cc
++++ b/content/browser/find_request_manager.cc
+@@ -86,6 +86,8 @@ FrameTreeNode* GetParent(FrameTreeNode* node) {
+   // The parent frame may be in another WebContents.
+   if (node->IsMainFrame()) {
+     auto* contents = WebContentsImpl::FromFrameTreeNode(node);
++    if (static_cast<WebContentsImpl*>(contents)->GetBrowserPluginGuest())
++      return nullptr;
+     if (GuestMode::IsCrossProcessFrameGuest(contents)) {
+       int node_id = contents->GetOuterDelegateFrameTreeNodeId();
+       if (node_id != FrameTreeNode::kFrameTreeNodeInvalidId)
+@@ -625,6 +627,9 @@ RenderFrameHost* FindRequestManager::Traverse(RenderFrameHost* from_rfh,
+                                               bool forward,
+                                               bool matches_only,
+                                               bool wrap) const {
++  if (static_cast<WebContentsImpl*>(contents_)->GetBrowserPluginGuest() &&
++      WebContents::FromRenderFrameHost(from_rfh) != contents_)
++    from_rfh = GetInitialFrame(forward);
+   DCHECK(from_rfh);
+   FrameTreeNode* node =
+       static_cast<RenderFrameHostImpl*>(from_rfh)->frame_tree_node();
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index b3653373a51f62844978f96abc5d358cf32e35d9..f2ab809102b4805e0ed3257010e522882e5ba94b 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
