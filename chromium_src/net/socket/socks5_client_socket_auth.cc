@@ -69,7 +69,7 @@ int SOCKS5ClientSocketAuth::Authenticate(
       }
       case STATE_WRITE:
         DCHECK_EQ(OK, rv);
-        DCHECK_LT(0, buffer_left_);
+        DCHECK_LT(size_t(0), buffer_left_);
         iobuf_ = new IOBuffer(buffer_left_);
         memcpy(iobuf_->data(),
                &buffer_.data()[buffer_.size() - buffer_left_],

@@ -254,6 +254,42 @@ index cb8bd43871271083038b0555340d4c328f9b8bae..1b442fbf4dfebfc709e90021bb1600a9
  #endif
  
    return ps;
+diff --git a/chrome/browser/permissions/permission_decision_auto_blocker.cc b/chrome/browser/permissions/permission_decision_auto_blocker.cc
+index 282183d4f8a2287845b4bcd63a99e9294323e844..50a97a7c1f512ef25b682006e85ed5cb94c5aecd 100644
+--- a/chrome/browser/permissions/permission_decision_auto_blocker.cc
++++ b/chrome/browser/permissions/permission_decision_auto_blocker.cc
+@@ -280,31 +280,6 @@ void PermissionDecisionAutoBlocker::UpdateFromVariations() {
+                            &g_blacklist_embargo_days, kDefaultEmbargoDays);
+ }
+ 
+-void PermissionDecisionAutoBlocker::CheckSafeBrowsingBlacklist(
+-    content::WebContents* web_contents,
+-    const GURL& request_origin,
+-    ContentSettingsType permission,
+-    base::Callback<void(bool)> callback) {
+-  DCHECK_EQ(CONTENT_SETTING_ASK,
+-            GetEmbargoResult(request_origin, permission).content_setting);
+-
+-  if (base::FeatureList::IsEnabled(features::kPermissionsBlacklist) &&
+-      db_manager_) {
+-    // The CheckSafeBrowsingResult callback won't be called if the profile is
+-    // destroyed before a result is received. In that case this object will have
+-    // been destroyed by that point.
+-    PermissionBlacklistClient::CheckSafeBrowsingBlacklist(
+-        web_contents, db_manager_, request_origin, permission,
+-        safe_browsing_timeout_,
+-        base::Bind(&PermissionDecisionAutoBlocker::CheckSafeBrowsingResult,
+-                   base::Unretained(this), request_origin, permission,
+-                   callback));
+-    return;
+-  }
+-
+-  callback.Run(false /* permission blocked */);
+-}
+-
+ PermissionResult PermissionDecisionAutoBlocker::GetEmbargoResult(
+     const GURL& request_origin,
+     ContentSettingsType permission) {
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index ba01494ae09d034d139c6fdfa03e9468dfad6829..0ce699084f61594bba83eee9cf8f1b4517d281be 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc

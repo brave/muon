@@ -2,3 +2,10 @@
 
 PermissionReportInfo::PermissionReportInfo(
     const PermissionReportInfo& other) = default;
+
+void PermissionUmaUtil::PermissionRevoked(ContentSettingsType permission,
+                                          PermissionSourceUI source_ui,
+                                          const GURL& revoked_origin,
+                                          Profile* profile) {
+  return;
+}

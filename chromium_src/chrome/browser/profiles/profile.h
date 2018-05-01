@@ -172,6 +172,9 @@ class Profile : public atom::AtomBrowserContext {
 
   virtual bool IsGuestSession() const;
 
+  // Returns the profile type.
+  ProfileType GetProfileType() const;
+
   bool IsNewProfile();
   virtual void SetExitType(ExitType exit_type) = 0;
 

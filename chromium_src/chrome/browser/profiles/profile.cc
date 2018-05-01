@@ -85,6 +85,10 @@ bool Profile::IsGuestSession() const {
   return false;
 }
 
+Profile::ProfileType Profile::GetProfileType() const {
+  return REGULAR_PROFILE;
+}
+
 bool Profile::IsNewProfile() {
   // The profile has been shut down if the prefs were loaded from disk, unless
   // first-run autoimport wrote them and reloaded the pref service.
