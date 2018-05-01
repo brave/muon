@@ -29,7 +29,7 @@ int pipehack[2];
 static void SIGCHLDHandler(int signo) {
   int error = errno;
   char ch = 0;
-  write(pipehack[1], &ch, 1);
+  (void)write(pipehack[1], &ch, 1);
   errno = error;
 }
 
