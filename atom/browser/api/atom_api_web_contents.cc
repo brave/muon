@@ -2597,8 +2597,10 @@ v8::Local<v8::Value> WebContents::TabValue() {
 bool WebContents::IsTab() {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (tab_helper)
-    return tab_helper->get_index() > TabStripModel::kNoTab;
+  if (tab_helper) {
+    // browserAction haack
+    return tab_helper->get_index() != -2;
+  }
 #endif
 
   return false;
