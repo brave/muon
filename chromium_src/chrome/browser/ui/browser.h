@@ -32,6 +32,10 @@ class ScopedKeepAlive;
 class TabStripModel;
 class TabStripModelDelegate;
 
+namespace content {
+struct OpenURLParams;
+}
+
 class Browser : public content::WebContentsDelegate {
  public:
   // SessionService::WindowType mirrors these values.  If you add to this
@@ -186,6 +190,8 @@ class Browser : public content::WebContentsDelegate {
   // when it is removed from it.
   void RegisterKeepAlive();
   void UnregisterKeepAlive();
+
+  content::WebContents* OpenURL(const content::OpenURLParams& params);
 
   bool is_type_tabbed() const { return type_ == TYPE_TABBED; }
   // bool is_type_popup() const { return type_ == TYPE_POPUP; }
