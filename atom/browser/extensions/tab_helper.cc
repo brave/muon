@@ -303,7 +303,7 @@ void TabHelper::MaybeAttachOrCreatePinnedTab() {
   //                                                     pinned_web_contents);
   // } else {
     SetPlaceholder(false);
-    web_contents()->UserGestureDone();
+    web_contents()->NavigatedByUser();
     guest()->Load();
   // }
 }
