@@ -1670,7 +1670,7 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 }
 
 void WebContents::Reload(bool ignore_cache) {
-  web_contents()->UserGestureDone();
+  web_contents()->NavigatedByUser();
   if (ignore_cache)
     web_contents()->GetController().Reload(
       content::ReloadType::BYPASSING_CACHE,
@@ -1733,7 +1733,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
     params.should_replace_current_entry = should_replace_current_entry;
   }
 
-  web_contents()->UserGestureDone();
+  web_contents()->NavigatedByUser();
   params.transition_type = ui::PAGE_TRANSITION_AUTO_TOPLEVEL;
   params.is_renderer_initiated = false;
 
