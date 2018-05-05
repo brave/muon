@@ -189,6 +189,8 @@ class TabHelper : public content::WebContentsObserver,
 
   // content::WebContentsObserver overrides.
   void RenderViewCreated(content::RenderViewHost* render_view_host) override;
+  void RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) override;
   void RenderFrameCreated(content::RenderFrameHost* host) override;
   void WebContentsDestroyed() override;
   void DidCloneToNewWebContents(

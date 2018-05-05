@@ -455,7 +455,6 @@ WebContents::WebContents(v8::Isolate* isolate,
       guest_delegate_(nullptr),
       weak_ptr_factory_(this) {
   if (type == REMOTE) {
-    guest_delegate_ = brave::TabViewGuest::FromWebContents(web_contents);
     Init(isolate);
     RemoveFromWeakMap();
   } else {
@@ -498,16 +497,15 @@ WebContents::~WebContents() {
   if (guest_delegate_ && web_contents() != NULL) {
     guest_delegate_->Destroy(true);
   } else {
-    // The WebContentsDestroyed will not be called automatically because we
-    // unsubscribe from webContents before destroying it. So we have to manually
-    // call it here to make sure "destroyed" event is emitted.
     WebContentsDestroyed();
   }
 }
 
 brightray::InspectableWebContents* WebContents::managed_web_contents() const {
-  if (IsRemote() && !GetMainFrame().IsEmpty())
-    return GetMainFrame()->managed_web_contents();
+  if (IsRemote())
+    return GetMainFrame().IsEmpty()
+        ? nullptr
+        : GetMainFrame()->managed_web_contents();
 
   return CommonWebContentsDelegate::managed_web_contents();
 }
@@ -1199,8 +1197,11 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
                                    int index,
                                    int reason) {
   CreateFrom(isolate(), new_contents)->Emit("set-active", true);
-  if (old_contents)
-    CreateFrom(isolate(), old_contents)->Emit("set-active", false);
+
+  auto handle = GetFrom(isolate(), old_contents);
+  if (!handle.IsEmpty() && !handle->is_being_destroyed_) {
+    handle->Emit("set-active", false);
+  }
 }
 
 void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
@@ -1210,7 +1211,7 @@ void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
     window_id = owner_window()->browser()->session_id().id();
 
   CreateFrom(isolate(), contents)->Emit("tab-detached-at", index, window_id);
-  Emit("tab-detached-at", contents, index, window_id);
+  Emit("tab-detached-at", index, window_id);
 }
 
 void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
@@ -1231,18 +1232,6 @@ void WebContents::TabMoved(content::WebContents* contents,
                            int from_index,
                            int to_index) {
   CreateFrom(isolate(), contents)->Emit("tab-moved", from_index, to_index);
-}
-
-void WebContents::TabClosingAt(TabStripModel* tab_strip_model,
-                               content::WebContents* contents,
-                               int index) {
-  CreateFrom(isolate(), contents)->Emit("tab-closing-at", index);
-}
-
-void WebContents::TabChangedAt(content::WebContents* contents,
-                               int index,
-                               TabChangeType change_type) {
-  CreateFrom(isolate(), contents)->Emit("tab-changed-at", index);
 }
 
 void WebContents::TabStripEmpty() {
@@ -1566,8 +1555,9 @@ bool WebContents::OnMessageReceived(const IPC::Message& message,
 }
 
 void WebContents::DestroyWebContents() {
-  if (IsRemote() && !GetMainFrame().IsEmpty()) {
-    GetMainFrame()->DestroyWebContents();
+  if (IsRemote()) {
+    if (!GetMainFrame().IsEmpty())
+      GetMainFrame()->DestroyWebContents();
     return;
   }
 
@@ -1612,12 +1602,13 @@ void WebContents::WebContentsDestroyed() {
   if (is_being_destroyed_)
     return;
 
+  is_being_destroyed_ = true;
+
   if (IsRemote()) {
-    delete this;
+    MarkDestroyed();
+    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
     return;
   }
-
-  is_being_destroyed_ = true;
 
   if (type_ == BROWSER_WINDOW && owner_window() && owner_window()->browser())
     owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
@@ -2523,8 +2514,12 @@ v8::Local<v8::Value> WebContents::GetWebPreferences(v8::Isolate* isolate) {
 }
 
 v8::Local<v8::Value> WebContents::GetOwnerBrowserWindow() {
-  if (IsRemote() && !GetMainFrame().IsEmpty())
-    return GetMainFrame()->GetOwnerBrowserWindow();
+  if (IsRemote()) {
+    if (GetMainFrame().IsEmpty())
+      return v8::Null(isolate());
+    else
+      return GetMainFrame()->GetOwnerBrowserWindow();
+  }
 
   if (owner_window())
     return Window::From(isolate(), owner_window());
@@ -2624,6 +2619,12 @@ v8::Local<v8::Value> WebContents::Session(v8::Isolate* isolate) {
 }
 
 content::WebContents* WebContents::HostWebContents() {
+  if (IsRemote()) {
+    if (GetMainFrame().IsEmpty())
+      return nullptr;
+    return GetMainFrame()->HostWebContents();
+  }
+
   if (guest_delegate_)
     return guest_delegate_->embedder_web_contents();
 
@@ -2818,7 +2819,7 @@ void WebContents::OnRendererMessageShared(
 // static
 mate::Handle<WebContents> WebContents::FromTabID(v8::Isolate* isolate,
     int tab_id) {
-  return CreateFrom(isolate,
+  return GetFrom(isolate,
       extensions::TabHelper::GetTabById(tab_id));
 }
 
@@ -2985,6 +2986,21 @@ void WebContents::CreateTab(mate::Arguments* args) {
 }
 
 // static
+mate::Handle<WebContents> WebContents::GetFrom(
+    v8::Isolate* isolate, content::WebContents* web_contents) {
+  if (!web_contents) {
+    return mate::Handle<WebContents>();
+  }
+  // We have an existing WebContents object in JS.
+  auto existing = TrackableObject::FromWrappedClass(isolate, web_contents);
+  if (existing) {
+    return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
+  } else {
+    return mate::Handle<WebContents>();
+  }
+}
+
+// static
 mate::Handle<WebContents> WebContents::CreateFrom(
     v8::Isolate* isolate, content::WebContents* web_contents) {
   if (!web_contents) {
@@ -3013,9 +3029,16 @@ mate::Handle<WebContents> WebContents::CreateFrom(
       return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
   }
 
-  // Otherwise create a new WebContents wrapper object.
-  return mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
-        type));
+  auto handle = mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
+      type));
+
+  if (type == REMOTE) {
+    auto existing = GetFrom(isolate, web_contents);
+    if (existing.IsEmpty() || existing->is_being_destroyed_)
+      handle->WebContentsDestroyed();
+  }
+
+  return handle;
 }
 
 // static

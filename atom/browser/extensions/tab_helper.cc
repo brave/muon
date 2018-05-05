@@ -599,9 +599,24 @@ void TabHelper::SetOpener(int opener_tab_id) {
 }
 
 void TabHelper::RenderViewCreated(content::RenderViewHost* render_view_host) {
+  if (!render_view_host)
+    return;
+
+  // only allow one call to create
+  auto search = render_view_map_.find(session_id());
+  if (search != render_view_map_.end())
+    return;
+
   render_view_map_[session_id()] = std::make_pair(
       render_view_host->GetProcess()->GetID(),
       render_view_host->GetRoutingID());
+}
+
+void TabHelper::RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) {
+  render_view_map_[session_id()] = std::make_pair(
+      new_host->GetProcess()->GetID(),
+      new_host->GetRoutingID());
 }
 
 void TabHelper::RenderFrameCreated(content::RenderFrameHost* host) {
@@ -790,9 +805,14 @@ int TabHelper::get_index() const {
 
 // static
 content::WebContents* TabHelper::GetTabById(int32_t tab_id) {
+  auto search = render_view_map_.find(tab_id);
+  if (search == render_view_map_.end())
+    return NULL;
+
   content::RenderViewHost* rvh =
-      content::RenderViewHost::FromID(render_view_map_[tab_id].first,
-                                      render_view_map_[tab_id].second);
+      content::RenderViewHost::FromID(search->second.first,
+                                      search->second.second);
+
   if (rvh) {
     return content::WebContents::FromRenderViewHost(rvh);
   } else {

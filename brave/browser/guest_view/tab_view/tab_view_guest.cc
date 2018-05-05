@@ -389,8 +389,6 @@ void TabViewGuest::GuestReady() {
 }
 
 void TabViewGuest::WillDestroy() {
-  if (api_web_contents_)
-    api_web_contents_->WebContentsDestroyed();
   api_web_contents_ = nullptr;
 
   if (GetOpener())

@@ -43,6 +43,8 @@ template<typename T>
 struct Converter<mate::Handle<T> > {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
                                     const mate::Handle<T>& val) {
+    if (val.IsEmpty())
+      return v8::Null(isolate);
     return val.ToV8();
   }
   static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
