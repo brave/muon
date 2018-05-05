@@ -123,6 +123,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   static void CreateTab(mate::Arguments* args);
 
+  static mate::Handle<WebContents> GetFrom(
+      v8::Isolate* isolate, content::WebContents* web_contents);
+
   static mate::Handle<WebContents> CreateFrom(
       v8::Isolate* isolate, content::WebContents* web_contents);
 
@@ -357,12 +360,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void TabMoved(content::WebContents* contents,
                 int from_index,
                 int to_index) override;
-  void TabClosingAt(TabStripModel* tab_strip_model,
-                    content::WebContents* contents,
-                    int index) override;
-  void TabChangedAt(content::WebContents* contents,
-                    int index,
-                    TabChangeType change_type) override;
   void TabStripEmpty() override;
   void TabSelectionChanged(TabStripModel* tab_strip_model,
                            const ui::ListSelectionModel& old_model) override;
