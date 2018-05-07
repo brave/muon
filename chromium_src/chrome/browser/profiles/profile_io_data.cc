@@ -52,6 +52,12 @@
 #endif
 
 // static
+ProfileIOData* ProfileIOData::FromResourceContext(
+    content::ResourceContext* rc) {
+  return (static_cast<ResourceContext*>(rc))->io_data_;
+}
+
+// static
 bool ProfileIOData::IsHandledProtocol(const std::string& scheme) {
   DCHECK_EQ(scheme, base::ToLowerASCII(scheme));
   static const char* const kProtocolList[] = {
@@ -104,4 +110,18 @@ void ProfileIOData::InstallProtocolHandlers(
     DCHECK(set_protocol);
   }
   protocol_handlers->clear();
+}
+
+extensions::InfoMap* ProfileIOData::GetExtensionInfoMap() const {
+  DCHECK(initialized_) << "ExtensionSystem not initialized";
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return extension_info_map_.get();
+#else
+  return nullptr;
+#endif
+}
+
+bool ProfileIOData::IsOffTheRecord() const {
+  return profile_type() == Profile::INCOGNITO_PROFILE
+      || profile_type() == Profile::GUEST_PROFILE;
 }
