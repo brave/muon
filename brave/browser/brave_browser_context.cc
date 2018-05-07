@@ -360,6 +360,11 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
           protocol_handlers,
           std::move(request_interceptors));
     StoragePartitionDescriptor descriptor(partition_path, in_memory);
+    // Inherits web requests handlers from default parition
+    auto default_network_delegate = GetDefaultStoragePartition(this)->
+      GetURLRequestContext()->GetURLRequestContext()->network_delegate();
+    url_request_context_getter->GetURLRequestContext()
+      ->set_network_delegate(default_network_delegate);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
     if (tor_proxy_.size() && tor_path_.size()) {
       BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
