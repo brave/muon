@@ -15,6 +15,7 @@
 #include "atom/common/options_switches.h"
 #include "base/memory/memory_pressure_listener.h"
 #include "base/memory/weak_ptr.h"
+#include "chrome/browser/safe_browsing/ui_manager.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "content/common/cursors/webcursor.h"
 #include "content/common/view_messages.h"
@@ -102,7 +103,8 @@ namespace api {
 class WebContents : public mate::TrackableObject<WebContents>,
                     public CommonWebContentsDelegate,
                     public content::WebContentsObserver,
-                    public TabStripModelObserver {
+                    public TabStripModelObserver,
+                    public safe_browsing::SafeBrowsingUIManager::Observer {
  public:
   enum Type {
     BACKGROUND_PAGE,  // A DevTools extension background page.
@@ -336,6 +338,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   void AuthorizePlugin(mate::Arguments* args);
 
+  // SafeBrowsingUIManager::Observer
+  void OnSafeBrowsingHit(
+    const security_interstitials::UnsafeResource& resource) override;
+
   // TabStripModelObserver
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
@@ -532,7 +538,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
                                    base::SharedMemory* shared_memory);
   bool SendIPCMessageInternal(const base::string16& channel,
                               const base::ListValue& args);
-
   AtomBrowserContext* GetBrowserContext() const;
 
   uint32_t GetNextRequestId() {
