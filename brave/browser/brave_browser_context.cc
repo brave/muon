@@ -14,6 +14,7 @@
 #include "base/files/file_util.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
+#include "brave/browser/tor/tor_launcher_factory.h"
 #include "brave/browser/net/proxy_resolution/proxy_config_service_tor.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
@@ -202,8 +203,9 @@ BraveBrowserContext::BraveBrowserContext(
   }
 
   base::FilePath::StringType tor_path;
-  if (options.GetString("tor_path", &tor_path)) {
-    tor_path_ = tor_path;
+  if (options.GetString("tor_path", &tor_path) && tor_proxy_.length()) {
+    tor_launcher_factory_.reset(new TorLauncherFactory(tor_path, tor_proxy_));
+    tor_launcher_factory_->LaunchTorProcess();
   }
 
   if (in_memory) {
@@ -370,12 +372,11 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
     url_request_context_getter->GetURLRequestContext()
       ->set_network_delegate(default_network_delegate);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
-    if (tor_proxy_.size() && tor_path_.size()) {
+    if (tor_proxy_.size()) {
       BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
                             base::Bind(&net::ProxyConfigServiceTor::TorSetProxy,
                                             url_request_context_getter,
                                             tor_proxy_,
-                                            tor_path_,
                                             isolated_storage_,
                                             partition_path));
     }
