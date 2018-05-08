@@ -3,6 +3,7 @@
 import errno
 import sys
 import os
+import urllib2
 
 from lib.config import get_target_arch
 from lib.util import safe_mkdir, rm_rf, extract_zip, tempdir, download
@@ -10,7 +11,7 @@ from lib.util import safe_mkdir, rm_rf, extract_zip, tempdir, download
 
 VERSION = 'v1.1.0'
 SOURCE_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-FRAMEWORKS_URL = 'http://github.com/electron/electron-frameworks/releases' \
+FRAMEWORKS_URL = 'https://github.com/electron/electron-frameworks/releases' \
                  '/download/' + VERSION
 
 
@@ -57,8 +58,11 @@ def download_framework(framework):
   url = FRAMEWORKS_URL + '/' + filename
   download_dir = tempdir(prefix='electron-')
   path = os.path.join(download_dir, filename)
+  filedata = urllib2.urlopen(url)
+  datatowrite = filedata.read()
+  with open(path, 'wb') as f:
+    f.write(datatowrite)
 
-  download('Download ' + framework, url, path)
   return path
 
 
