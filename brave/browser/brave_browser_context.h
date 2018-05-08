@@ -40,6 +40,7 @@ class PrefRegistrySyncable;
 namespace brave {
 
 class BravePermissionManager;
+class TorLauncherFactory;
 
 class BraveBrowserContext : public Profile {
  public:
@@ -175,13 +176,13 @@ class BraveBrowserContext : public Profile {
   bool isolated_storage_;
   bool in_memory_;
   std::string tor_proxy_;
-  base::FilePath::StringType tor_path_;
 
   URLRequestContextGetterMap url_request_context_getter_map_;
 
   std::unique_ptr<WebDataServiceWrapper> web_database_wrapper_;
   std::unique_ptr<ProtocolHandlerRegistry::JobInterceptorFactory>
       protocol_handler_interceptor_;
+  std::unique_ptr<TorLauncherFactory> tor_launcher_factory_;
 
   // Task runner used for file access in the profile path
   scoped_refptr<base::SequencedTaskRunner> io_task_runner_;
