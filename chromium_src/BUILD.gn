@@ -229,10 +229,15 @@ source_set("browser") {
     "//chrome/browser/icon_manager.cc",
     "//chrome/browser/icon_manager.h",
 
+    "chrome/browser/interstitials/chrome_metrics_helper.cc",
+    "//chrome/browser/interstitials/chrome_metrics_helper.h",
+
     "//chrome/browser/net/chrome_extensions_network_delegate.cc",
     "//chrome/browser/net/chrome_extensions_network_delegate.h",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
+    "//chrome/browser/net/chrome_report_sender.cc",
+    "//chrome/browser/net/chrome_report_sender.h",
     "//chrome/browser/net/default_network_context_params.cc",
     "//chrome/browser/net/default_network_context_params.h",
     "//chrome/browser/net/proxy_config_monitor.cc",
@@ -246,6 +251,11 @@ source_set("browser") {
 
     "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.cc",
     "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.h",
+
+    "chrome/browser/permissions/attestation_permission_request.cc",
+    "//chrome/browser/permissions/attestation_permission_request.h",
+    "chrome/browser/permissions/permission_request_manager.cc",
+    "//chrome/browser/permissions/permission_request_manager.h",
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
@@ -264,6 +274,9 @@ source_set("browser") {
     "chrome/browser/ui/chrome_select_file_policy.cc",
     "//chrome/browser/ui/cocoa/ui_localizer.h",
     "//chrome/browser/ui/cocoa/ui_localizer.mm",
+
+    "chrome/browser/ui/page_info/page_info_ui.cc",
+    "//chrome/browser/ui/page_info/page_info_ui.h",
 
     "chrome/browser/ui/profile_error_dialog.cc",
 
@@ -356,12 +369,6 @@ source_set("browser") {
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
-      "//chrome/browser/permissions/attestation_permission_request.cc",
-      "//chrome/browser/permissions/attestation_permission_request.h",
-      "//chrome/browser/permissions/permission_request.cc",
-      "//chrome/browser/permissions/permission_request.h",
-      "chrome/browser/permissions/permission_request_manager.cc",
-      "//chrome/browser/permissions/permission_request_manager.h",
       "//chrome/browser/printing/pdf_to_emf_converter.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.h",
       "//chrome/browser/ui/views/certificate_viewer_win.cc",
