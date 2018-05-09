@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "base/files/file_util.h"
 #include "brave/common/tor/tor.mojom.h"
 
 namespace brave {
@@ -20,6 +21,7 @@ class TorLauncherFactory {
   void LaunchTorProcess();
  private:
   void LaunchInLauncherThread();
+  base::FilePath WriteTorConfig(base::FilePath);
 
   void OnTorLauncherCrashed();
   void OnTorCrashed(int64_t pid);
