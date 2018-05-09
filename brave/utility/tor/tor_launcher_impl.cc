@@ -129,6 +129,11 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
   if (!tor_data_dir.empty()) {
     args.AppendArg("--DataDirectory");
     args.AppendArgPath(tor_data_dir);
+    args.AppendArg("--Log");
+    base::CommandLine::StringType log_file;
+    log_file += FILE_PATH_LITERAL("notice file ");
+    args.AppendArgNative(log_file +
+                         tor_data_dir.AppendASCII("tor.log").value());
   }
 
   base::LaunchOptions launchopts;
