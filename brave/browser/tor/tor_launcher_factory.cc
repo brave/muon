@@ -6,8 +6,8 @@
 
 #include <algorithm>
 #include <limits>
+#include <fstream>
 
-#include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "chrome/common/chrome_paths.h"
 #include "content/public/browser/browser_thread.h"
@@ -59,16 +59,35 @@ void TorLauncherFactory::LaunchTorProcess() {
                base::Unretained(this)));
 }
 
+base::FilePath TorLauncherFactory::WriteTorConfig
+  (base::FilePath tor_data_path) {
+  base::FilePath config_path;
+  base::FilePath log_path;
+
+  std::ofstream config_file;
+  config_path = tor_data_path.Append(FILE_PATH_LITERAL("config"));
+  log_path = tor_data_path.Append(FILE_PATH_LITERAL("log"));
+
+  config_file.open(config_path.value().c_str());
+  config_file << "Log notice file " << log_path.value().c_str() << "\n";
+  config_file.close();
+  return config_path;
+}
+
 void TorLauncherFactory::LaunchInLauncherThread() {
   base::FilePath user_data_dir;
+  base::FilePath tor_base_path;
   base::FilePath tor_data_path;
+  base::FilePath tor_config_path;
   PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   if (!user_data_dir.empty()) {
-    tor_data_path = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
-      .Append(FILE_PATH_LITERAL("data"));
+    tor_base_path = user_data_dir.Append(FILE_PATH_LITERAL("tor"));
+    tor_data_path = tor_base_path.Append(FILE_PATH_LITERAL("data"));
     base::CreateDirectory(tor_data_path);
   }
+  tor_config_path = WriteTorConfig(tor_data_path);
   tor_launcher_->Launch(base::FilePath(path_), host_, port_, tor_data_path,
+                        tor_config_path,
                         base::Bind(&TorLauncherFactory::OnTorLaunched,
                                    base::Unretained(this)));
   tor_launcher_->SetCrashHandler(base::Bind(

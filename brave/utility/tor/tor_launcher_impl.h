@@ -27,6 +27,7 @@ class TorLauncherImpl : public tor::mojom::TorLauncher {
   void Launch(const base::FilePath& tor_bin,
               const std::string& tor_host, const std::string& tor_port,
               const base::FilePath& tor_data_dir,
+              const base::FilePath& tor_config_file,
               LaunchCallback callback) override;
   void SetCrashHandler(SetCrashHandlerCallback callback) override;
 
