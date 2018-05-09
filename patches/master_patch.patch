@@ -2196,6 +2196,20 @@ index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a9
    // Called to read raw (pre-filtered) data from this Job. Reads at most
    // |buf_size| bytes into |buf|.
    // Possible return values:
+diff --git a/services/service_manager/sandbox/win/sandbox_win.cc b/services/service_manager/sandbox/win/sandbox_win.cc
+index 6c7356eacc42f72156b65ed8ae6d2cfb8bcec3db..f2f5a25ba5c43ef1b6f7da0ff3e9f858de42ed51 100644
+--- a/services/service_manager/sandbox/win/sandbox_win.cc
++++ b/services/service_manager/sandbox/win/sandbox_win.cc
+@@ -831,6 +831,9 @@ sandbox::ResultCode SandboxWin::StartSandboxedProcess(
+           service_manager::switches::kNoSandbox)) {
+     base::LaunchOptions options;
+     options.handles_to_inherit = handles_to_inherit;
++#if !defined(MUON_CHROMIUM_BUILD)
++    options.start_hidden = true;
++#endif
+     *process = base::LaunchProcess(*cmd_line, options);
+     return sandbox::SBOX_ALL_OK;
+   }
 diff --git a/third_party/WebKit/Source/core/editing/EditingBehavior.h b/third_party/WebKit/Source/core/editing/EditingBehavior.h
 index 023555bcd3b56fd12c3319096deff07fa9854388..5b75bfaa858cead732a701029f45f5492a19549e 100644
 --- a/third_party/WebKit/Source/core/editing/EditingBehavior.h
