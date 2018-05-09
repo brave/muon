@@ -123,6 +123,8 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
   args.AppendArg("--ignore-missing-torrc");
   args.AppendArg("-f");
   args.AppendArgPath(tor_config_file);
+  args.AppendArg("--defaults-torrc");
+  args.AppendArg("/nonexistent");
   args.AppendArg("--SocksPort");
   args.AppendArg(tor_host + ":" + tor_port);
   if (!tor_data_dir.empty()) {
