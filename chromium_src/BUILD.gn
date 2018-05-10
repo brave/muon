@@ -899,6 +899,7 @@ source_set("downloads") {
     "//chrome/browser/background_fetch/background_fetch_delegate_impl.h",
     "//chrome/browser/background_fetch/background_fetch_download_client.cc",
     "//chrome/browser/background_fetch/background_fetch_download_client.h",
+    "//chrome/browser/download/download_commands.h",
     "chrome/browser/download/download_core_service.cc",
     "//chrome/browser/download/download_core_service.h",
     "//chrome/browser/download/download_path_reservation_tracker.cc",
