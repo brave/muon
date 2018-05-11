@@ -117,6 +117,7 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
                              const std::string& tor_host,
                              const std::string& tor_port,
                              const base::FilePath& tor_data_dir,
+                             const base::FilePath& tor_watch_dir,
                              LaunchCallback callback) {
   base::CommandLine args(tor_bin);
   args.AppendArg("--ignore-missing-torrc");
@@ -126,6 +127,8 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
   args.AppendArg("/nonexistent");
   args.AppendArg("--SocksPort");
   args.AppendArg(tor_host + ":" + tor_port);
+  args.AppendArg("--TruncateLogFile");
+  args.AppendArg("1");
   if (!tor_data_dir.empty()) {
     args.AppendArg("--DataDirectory");
     args.AppendArgPath(tor_data_dir);
@@ -134,6 +137,10 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
     log_file += FILE_PATH_LITERAL("notice file ");
     args.AppendArgNative(log_file +
                          tor_data_dir.AppendASCII("tor.log").value());
+  }
+  if (!tor_watch_dir.empty()) {
+    args.AppendArg("--pidfile");
+    args.AppendArgPath(tor_watch_dir.AppendASCII("tor.pid"));
   }
 
   base::LaunchOptions launchopts;
