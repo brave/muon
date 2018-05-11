@@ -62,13 +62,18 @@ void TorLauncherFactory::LaunchTorProcess() {
 void TorLauncherFactory::LaunchInLauncherThread() {
   base::FilePath user_data_dir;
   base::FilePath tor_data_path;
+  base::FilePath tor_watch_path;
   PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   if (!user_data_dir.empty()) {
     tor_data_path = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
       .Append(FILE_PATH_LITERAL("data"));
     base::CreateDirectory(tor_data_path);
+    tor_watch_path = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
+      .Append(FILE_PATH_LITERAL("watch"));
+    base::CreateDirectory(tor_watch_path);
   }
   tor_launcher_->Launch(base::FilePath(path_), host_, port_, tor_data_path,
+                        tor_watch_path,
                         base::Bind(&TorLauncherFactory::OnTorLaunched,
                                    base::Unretained(this)));
   tor_launcher_->SetCrashHandler(base::Bind(
