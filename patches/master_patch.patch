@@ -512,6 +512,20 @@ index 440fdf8df66efce1b68a0463189986a6a0b0353a..7cc8fb11ecb5e2caa67e4e92d6d4526e
    // Finds TabStripModel which has a WebContents whose id is the given
    // |tab_id|, and returns the WebContents index and the TabStripModel.
    int FindTabStripModelById(int32_t tab_id, TabStripModel** model) const;
+diff --git a/chrome/browser/safe_browsing/ui_manager.cc b/chrome/browser/safe_browsing/ui_manager.cc
+index 83f3da7fdd43a0534e49bc75b4744222e17f164d..65c416743295548667c1d2c33fe895231f8c3e0b 100644
+--- a/chrome/browser/safe_browsing/ui_manager.cc
++++ b/chrome/browser/safe_browsing/ui_manager.cc
+@@ -100,7 +100,9 @@ void SafeBrowsingUIManager::CreateAndSendHitReport(
+ 
+ void SafeBrowsingUIManager::ShowBlockingPageForResource(
+     const UnsafeResource& resource) {
++#if defined(MUON_CHROMIUM_BUILD)
+   SafeBrowsingBlockingPage::ShowBlockingPage(this, resource);
++#endif
+ }
+ 
+ // static
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 7ca361112ae6553b5d55c0118868b6592466e466..b3cbde0364a0de8e75fe06fdf86a72321078145a 100644
 --- a/chrome/common/BUILD.gn

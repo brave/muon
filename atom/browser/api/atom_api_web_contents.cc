@@ -62,6 +62,7 @@
 #include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
+#include "chrome/browser/safe_browsing/safe_browsing_service.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
@@ -595,6 +596,8 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
 
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
+      g_browser_process->safe_browsing_service()->ui_manager()->AddObserver(
+        this);
     }
 
     if (ResourceCoordinatorWebContentsObserver::IsEnabled())
@@ -1545,6 +1548,11 @@ void WebContents::DestroyWebContents() {
   }
 }
 
+void WebContents::OnSafeBrowsingHit(
+  const security_interstitials::UnsafeResource& resource) {
+  Emit("safebrowsing-hit");
+}
+
 void WebContents::SetOwnerWindow(NativeWindow* new_owner_window) {
   if (owner_window() == new_owner_window)
     return;
@@ -1586,6 +1594,9 @@ void WebContents::WebContentsDestroyed() {
 
   if (owner_window() && owner_window()->browser())
     owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+
+  g_browser_process->safe_browsing_service()->ui_manager()->RemoveObserver(
+    this);
 
   // clear out fullscreen state
   if (CommonWebContentsDelegate::IsFullscreenForTabOrPending(web_contents())) {
