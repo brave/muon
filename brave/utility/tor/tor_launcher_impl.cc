@@ -144,6 +144,9 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
 #if defined(OS_LINUX)
   launchopts.kill_on_parent_death = true;
 #endif
+#if defined(OS_WIN)
+  launchopts.start_hidden = true;
+#endif
   tor_process_ = base::LaunchProcess(args, launchopts);
 
   bool result;
