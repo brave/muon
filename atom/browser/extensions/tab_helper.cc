@@ -480,11 +480,10 @@ bool TabHelper::Discard() {
     return true;
   } else {
     if (guest()->attached()) {
-      // int64_t web_contents_id =
-      // TabManager::IdFromWebContents(web_contents());
-      // return !!GetTabManager()->DiscardTabById(
-      //     web_contents_id, resource_coordinator::DiscardReason::kProactive);
+      return resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+          web_contents())->DiscardTab();
     }
+    return false;
   }
 }
 
@@ -492,9 +491,11 @@ bool TabHelper::IsDiscarded() {
   if (discarded_) {
     return true;
   }
-  return resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
-             web_contents())
-      ->IsDiscarded();
+  auto* tab_lifecycle_unit_external =
+      resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+          web_contents());
+  return tab_lifecycle_unit_external &&
+         tab_lifecycle_unit_external->IsDiscarded();
 }
 
 void TabHelper::SetPinned(bool pinned) {
