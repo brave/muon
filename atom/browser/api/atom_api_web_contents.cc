@@ -760,41 +760,41 @@ void WebContents::AddNewContents(content::WebContents* source,
 
   bool active = disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB;
 
+  ::Browser* browser = nullptr;
   auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
-  if (tab_helper)
+  if (tab_helper) {
     tab_helper->SetActive(active);
 
-  ::Browser* browser = nullptr;
-  if (tab_helper->window_id() != -1) {
-    for (auto* b : *BrowserList::GetInstance()) {
-      if (b->session_id().id() == tab_helper->window_id()) {
-        browser = b;
-        break;
+    if (tab_helper->window_id() != -1) {
+      for (auto* b : *BrowserList::GetInstance()) {
+        if (b->session_id().id() == tab_helper->window_id()) {
+          browser = b;
+          break;
+        }
       }
     }
-  }
 
-  if (disposition != WindowOpenDisposition::NEW_WINDOW &&
-      disposition != WindowOpenDisposition::NEW_POPUP &&
-      tab_helper) {
-    if (!browser) {
-      // TODO(bridiver) - this should be the source owner_window
-      browser = owner_window()->browser();
-      tab_helper->SetWindowId(browser->session_id().id());
-    }
+    if (disposition != WindowOpenDisposition::NEW_WINDOW &&
+        disposition != WindowOpenDisposition::NEW_POPUP) {
+      if (!browser) {
+        // TODO(bridiver) - this should be the source owner_window
+        browser = owner_window()->browser();
+        tab_helper->SetWindowId(browser->session_id().id());
+      }
 
-    // insert non-opener links after the current tab
-    if (tab_helper->get_index() == TabStripModel::kNoTab &&
-        extensions::TabHelper::FromWebContents(source) &&
-        !new_contents->HasOpener()) {
-      // FIXME(svillar): The OrderController is exposed just for tests
-      int index =
-          browser->tab_strip_model()
-              ->order_controller()
-              ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                        active ? TabStripModel::ADD_ACTIVE
-                                               : TabStripModel::ADD_NONE);
-      tab_helper->SetTabIndex(index);
+      // insert non-opener links after the current tab
+      if (tab_helper->get_index() == TabStripModel::kNoTab &&
+          extensions::TabHelper::FromWebContents(source) &&
+          !new_contents->HasOpener()) {
+        // FIXME(svillar): The OrderController is exposed just for tests
+        int index =
+            browser->tab_strip_model()
+                ->order_controller()
+                ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                          active ? TabStripModel::ADD_ACTIVE
+                                                 : TabStripModel::ADD_NONE);
+        tab_helper->SetTabIndex(index);
+      }
     }
   }
 
