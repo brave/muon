@@ -1452,43 +1452,6 @@ index 6e947778990cd828f0124b0f70ba9fc77a687e62..04c6e680085162264c6b34a292ae8ebf
    return (renderWidgetHostView_->GetTextInputType() !=
                ui::TEXT_INPUT_TYPE_NONE &&
            [event type] == NSKeyDown &&
-diff --git a/content/browser/renderer_host/render_widget_targeter.cc b/content/browser/renderer_host/render_widget_targeter.cc
-index 2282465f5cc8271a2098bb88cf4de56955972f21..87621775f2c587b45adcb5ec20c2a02c6d82dce0 100644
---- a/content/browser/renderer_host/render_widget_targeter.cc
-+++ b/content/browser/renderer_host/render_widget_targeter.cc
-@@ -5,6 +5,7 @@
- #include "content/browser/renderer_host/render_widget_targeter.h"
- 
- #include "base/metrics/histogram_functions.h"
-+#include "content/browser/renderer_host/cursor_manager.h"
- #include "content/browser/renderer_host/input/one_shot_timeout_monitor.h"
- #include "content/browser/renderer_host/render_widget_host_impl.h"
- #include "content/browser/renderer_host/render_widget_host_view_base.h"
-@@ -149,7 +150,13 @@ void RenderWidgetTargeter::FindTargetAndDispatch(
-   // TODO(kenrb, wjmaclean): Asynchronous hit tests don't work properly with
-   // GuestViews, so rely on the synchronous result.
-   // See https://crbug.com/802378.
--  if (result.should_query_view && !target->IsRenderWidgetHostViewGuest()) {
-+  // TODO(darkdh): MUON - remove this hack when we fully migrate to OOPIF from
-+  // legacy guest webvie
-+  if (result.should_query_view &&
-+      (!target->IsRenderWidgetHostViewGuest() ||
-+       event.GetType() == blink::WebInputEvent::kMouseMove ||
-+       event.GetType() == blink::WebInputEvent::kMouseDown ||
-+       event.GetType() == blink::WebInputEvent::kMouseUp)) {
-     // TODO(kenrb, sadrul): When all event types support asynchronous hit
-     // testing, we should be able to have FindTargetSynchronously return the
-     // view and location to use for the renderer hit test query.
-@@ -161,6 +168,9 @@ void RenderWidgetTargeter::FindTargetAndDispatch(
-   } else {
-     FoundTarget(root_view, target, *event_ptr, latency, result.target_location);
-   }
-+  if (root_view->GetCursorManager() &&
-+      event.GetType() == blink::WebInputEvent::kMouseMove)
-+    root_view->GetCursorManager()->UpdateViewUnderCursor(target);
- }
- 
- void RenderWidgetTargeter::ViewWillBeDestroyed(RenderWidgetHostViewBase* view) {
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index c5f0ba58549cfe8e030d58d2e21e13151a7c5264..3d5dbce10e18ab39ffa988875e92cab9fbe5870f 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
