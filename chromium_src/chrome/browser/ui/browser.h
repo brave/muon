@@ -62,8 +62,8 @@ class Browser : public content::WebContentsDelegate {
   };
 
   struct CreateParams {
-    explicit CreateParams(Profile* profile);
-    CreateParams(Type type, Profile* profile);
+    explicit CreateParams(Profile* profile, bool user_gesture);
+    CreateParams(Type type, Profile* profile, bool user_gesture);
     CreateParams(const CreateParams& other);
 
     // The browser type.

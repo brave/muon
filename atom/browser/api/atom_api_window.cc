@@ -114,7 +114,7 @@ Window::Window(v8::Isolate* isolate, v8::Local<v8::Object> wrapper,
 
   ::Browser::CreateParams create_params(::Browser::Type::TYPE_TABBED,
       Profile::FromBrowserContext(inspectable_web_contents->
-          GetWebContents()->GetBrowserContext()));
+          GetWebContents()->GetBrowserContext()), true);
   create_params.window = window_.get();
   window_->SetBrowser(new ::Browser(create_params));
 

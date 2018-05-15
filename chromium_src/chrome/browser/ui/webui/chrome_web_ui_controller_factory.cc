@@ -11,6 +11,7 @@
 #include "components/favicon/core/favicon_service.h"
 #include "content/browser/webui/web_ui_impl.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/render_view_host.h"
 #include "content/public/browser/url_data_source.h"
 #include "content/public/browser/web_ui.h"
 #include "content/public/browser/web_ui_controller.h"
