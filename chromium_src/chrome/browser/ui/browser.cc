@@ -24,17 +24,7 @@
 #include "components/keep_alive_registry/scoped_keep_alive.h"
 #include "content/public/browser/notification_service.h"
 
-namespace {
-
-// Is the fast tab unload experiment enabled?
-bool IsFastTabUnloadEnabled() {
-  return base::CommandLine::ForCurrentProcess()->HasSwitch(
-      switches::kEnableFastUnload);
-}
-
-}  // namespace
-
-Browser::CreateParams::CreateParams(Profile* profile)
+Browser::CreateParams::CreateParams(Profile* profile, bool user_gesture)
     : type(TYPE_TABBED),
       profile(profile),
       trusted_source(false),
@@ -42,7 +32,7 @@ Browser::CreateParams::CreateParams(Profile* profile)
       is_session_restore(false),
       window(NULL) {}
 
-Browser::CreateParams::CreateParams(Type type, Profile* profile)
+Browser::CreateParams::CreateParams(Type type, Profile* profile, bool user_gesture)
     : type(type),
       profile(profile),
       trusted_source(false),

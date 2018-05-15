@@ -257,7 +257,7 @@ source_set("browser") {
     "//chrome/browser/ui/browser_list.cc",
     "//chrome/browser/ui/browser_list.h",
     "chrome/browser/ui/browser.cc",
-    "//chrome/browser/ui/browser.h",
+    "chrome/browser/ui/browser.h",
     "chrome/browser/ui/browser_otr_state.cc",
 
     "//chrome/browser/ui/chrome_select_file_policy.h",

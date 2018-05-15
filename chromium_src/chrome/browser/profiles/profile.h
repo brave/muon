@@ -15,7 +15,6 @@
 #include "build/build_config.h"
 #include "components/sync_preferences/pref_service_syncable.h"
 #include "content/public/browser/browser_context.h"
-#include "content/public/browser/content_browser_client.h"
 
 namespace autofill {
 class AutofillWebDataService;
