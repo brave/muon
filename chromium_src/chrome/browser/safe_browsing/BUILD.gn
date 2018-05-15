@@ -53,13 +53,13 @@ source_set("safe_browsing") {
 
   public_deps = [
     "//chrome/browser/safe_browsing",
-    "//content/public/browser",
   ]
 
   deps = [
     ":install_verification",
     ":net",
     ":ui_extensions",
+    "//electron/chromium_src:sessions",
     "//electron/chromium_src/chrome/browser/interstitials",
     "//electron/chromium_src/chrome/browser/prerender",
     "//electron/chromium_src/chrome/browser/signin",

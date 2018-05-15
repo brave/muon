@@ -18,6 +18,7 @@
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/resource_coordinator/discard_reason.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
@@ -28,6 +29,8 @@
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/navigation_entry.h"
+#include "content/public/browser/notification_service.h"
+#include "content/public/browser/notification_source.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
@@ -211,10 +214,6 @@ content::WebContents* TabHelper::DetachGuest() {
 void TabHelper::DidAttach() {
   MaybeRequestWindowClose();
 
-  if (active_) {
-    browser_->tab_strip_model()->ActivateTabAt(get_index(), true);
-    active_ = false;
-  }
   if (is_placeholder()) {
     guest()->SetCanRunInDetachedState(false);
     if (!pinned_ && !IsDiscarded()) {
@@ -336,9 +335,6 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
       old_guest->attach_params()->CreateDeepCopy().release();
   new_guest->SetAttachParams(*attach_params);
   new_guest->TabIdChanged();
-
-  old_guest->DetachGuest();
-  new_guest->AttachGuest(new_guest->guest_instance_id());
 }
 
 void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
@@ -355,6 +351,19 @@ void TabHelper::TabPinnedStateChanged(TabStripModel* tab_strip_model,
     return;
 
   MaybeAttachOrCreatePinnedTab();
+}
+
+void TabHelper::ActiveTabChanged(content::WebContents* old_contents,
+                                content::WebContents* new_contents,
+                                int index,
+                                int reason) {
+  if (old_contents == web_contents()) {
+    active_ = false;
+  }
+
+  if (new_contents == web_contents()) {
+    active_ = true;
+  }
 }
 
 void TabHelper::SetActive(bool active) {
@@ -398,12 +407,23 @@ void TabHelper::OnVisibilityChanged(content::Visibility visibility) {
 void TabHelper::UpdateBrowser(Browser* browser) {
   browser_ = browser;
   browser_->tab_strip_model()->AddObserver(this);
+  SetWindowId(browser_->session_id().id());
   static_cast<atom::NativeWindow*>(browser_->window())->AddObserver(this);
+
+  content::NotificationService::current()->Notify(
+      chrome::NOTIFICATION_TAB_PARENTED,
+      content::Source<content::WebContents>(web_contents()),
+      content::NotificationService::NoDetails());
 }
 
 void TabHelper::SetBrowser(Browser* browser) {
   if (browser == browser_)
     return;
+
+  // hack for browserAction
+  if (get_index() == -2) {
+    return;
+  }
 
   if (browser_) {
     if (get_index() != TabStripModel::kNoTab)
@@ -429,10 +449,10 @@ void TabHelper::SetBrowser(Browser* browser) {
     } else if (is_invalid_tab_index) {
       index_ =
         browser_->tab_strip_model()->order_controller()->
-        DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                active_ ?
-                                TabStripModel::ADD_ACTIVE :
-                                TabStripModel::ADD_NONE);
+            DetermineInsertionIndex(ui::PAGE_TRANSITION_TYPED,
+                                    active_ ?
+                                    TabStripModel::ADD_ACTIVE :
+                                    TabStripModel::ADD_NONE);
     } else if (index_ < TabStripModel::kNoTab) {
       // hack for browserAction
       // TODO(bridiver) - use extension view
@@ -449,6 +469,16 @@ void TabHelper::SetBrowser(Browser* browser) {
   } else {
     browser_ = nullptr;
   }
+}
+
+void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* contents,
+                     int index,
+                     bool active) {
+  if (contents != web_contents())
+    return;
+
+  guest()->Load();
 }
 
 void TabHelper::SetWindowId(const int32_t& id) {
@@ -469,7 +499,10 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
 }
 
 bool TabHelper::Discard() {
-  if (web_contents()->GetController().IsInitialNavigation()) {
+  if (IsDiscarded())
+    return false;
+
+  if (!browser_) {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
     auto helper = content::RestoreHelper::FromWebContents(web_contents());
@@ -479,11 +512,9 @@ bool TabHelper::Discard() {
     SetAutoDiscardable(false);
     return true;
   } else {
-    if (guest()->attached()) {
-      int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
-      return !!GetTabManager()->DiscardTabById(
-          web_contents_id, resource_coordinator::DiscardReason::kProactive);
-    }
+    int64_t web_contents_id = TabManager::IdFromWebContents(web_contents());
+    return !!GetTabManager()->DiscardTabById(
+        web_contents_id, resource_coordinator::DiscardReason::kProactive);
   }
 }
 
@@ -514,6 +545,28 @@ bool TabHelper::IsPinned() const {
   return pinned_;
 }
 
+bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
+  for (auto* b : *BrowserList::GetInstance()) {
+    if (b->session_id().id() == window_id) {
+      if (get_index() != TabStripModel::kNoTab)
+        browser()->tab_strip_model()->DetachWebContentsAt(get_index());
+
+      UpdateBrowser(b);
+
+      if (index != TabStripModel::kNoTab) {
+        int add_types = TabStripModel::ADD_NONE;
+        add_types |= foreground ? TabStripModel::ADD_ACTIVE : 0;
+        b->tab_strip_model()->InsertWebContentsAt(
+            index, web_contents(), add_types);
+      } else {
+        b->tab_strip_model()->AppendWebContents(web_contents(), foreground);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 void TabHelper::SetTabIndex(int index) {
   index_ = index;
   if (browser()) {
@@ -524,8 +577,8 @@ void TabHelper::SetTabIndex(int index) {
 
 bool TabHelper::is_active() const {
   if (browser()) {
-    return browser()->tab_strip_model()->GetActiveWebContents()==
-      web_contents();
+    return browser()->tab_strip_model()->GetActiveWebContents() ==
+        web_contents();
   } else {
     return active_;
   }
@@ -546,9 +599,24 @@ void TabHelper::SetOpener(int opener_tab_id) {
 }
 
 void TabHelper::RenderViewCreated(content::RenderViewHost* render_view_host) {
+  if (!render_view_host)
+    return;
+
+  // only allow one call to create
+  auto search = render_view_map_.find(session_id());
+  if (search != render_view_map_.end())
+    return;
+
   render_view_map_[session_id()] = std::make_pair(
       render_view_host->GetProcess()->GetID(),
       render_view_host->GetRoutingID());
+}
+
+void TabHelper::RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) {
+  render_view_map_[session_id()] = std::make_pair(
+      new_host->GetProcess()->GetID(),
+      new_host->GetRoutingID());
 }
 
 void TabHelper::RenderFrameCreated(content::RenderFrameHost* host) {
@@ -737,9 +805,14 @@ int TabHelper::get_index() const {
 
 // static
 content::WebContents* TabHelper::GetTabById(int32_t tab_id) {
+  auto search = render_view_map_.find(tab_id);
+  if (search == render_view_map_.end())
+    return NULL;
+
   content::RenderViewHost* rvh =
-      content::RenderViewHost::FromID(render_view_map_[tab_id].first,
-                                      render_view_map_[tab_id].second);
+      content::RenderViewHost::FromID(search->second.first,
+                                      search->second.second);
+
   if (rvh) {
     return content::WebContents::FromRenderViewHost(rvh);
   } else {

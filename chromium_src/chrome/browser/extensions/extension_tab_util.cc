@@ -126,13 +126,15 @@ std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
     const Extension* extension,
     TabStripModel* tab_strip,
     int tab_index) {
+  auto tab_object = std::make_unique<api::tabs::Tab>();
+  auto tab_helper = TabHelper::FromWebContents(contents);
+  if (!tab_helper)
+    return tab_object;
+
   if (!tab_strip)
     ExtensionTabUtil::GetTabStripModel(contents, &tab_strip, &tab_index);
 
-  auto tab_helper = TabHelper::FromWebContents(contents);
-
   bool is_loading = contents->IsLoading();
-  auto tab_object = std::make_unique<api::tabs::Tab>();
   tab_object->id = std::make_unique<int>(GetTabIdForExtensions(contents));
   tab_object->index = tab_helper->get_index();
   tab_object->window_id = GetWindowIdOfTab(contents);

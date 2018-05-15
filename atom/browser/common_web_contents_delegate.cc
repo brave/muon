@@ -48,15 +48,6 @@
 #include "storage/browser/fileapi/isolated_context.h"
 #include "ui/base/l10n/l10n_util.h"
 
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "atom/browser/api/atom_api_window.h"
-#include "atom/browser/extensions/tab_helper.h"
-#include "chrome/browser/chrome_notification_types.h"
-#include "content/public/browser/notification_service.h"
-#include "content/public/browser/notification_source.h"
-#include "extensions/browser/api/extensions_api_client.h"
-#endif
-
 using content::BrowserThread;
 
 namespace atom {
@@ -211,23 +202,6 @@ void CommonWebContentsDelegate::SetOwnerWindow(
   owner_window_ = owner_window->GetWeakPtr();
   NativeWindowRelay* relay = new NativeWindowRelay(owner_window_);
   web_contents->SetUserData(relay->key, base::WrapUnique(relay));
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
-  if (!tab_helper)
-    return;
-
-  int32_t id =
-      api::Window::TrackableObject::GetIDFromWrappedClass(owner_window);
-  if (id > 0) {
-    tab_helper->SetWindowId(id);
-    tab_helper->SetBrowser(owner_window->browser());
-
-    content::NotificationService::current()->Notify(
-      chrome::NOTIFICATION_TAB_PARENTED,
-      content::Source<content::WebContents>(web_contents),
-      content::NotificationService::NoDetails());
-  }
-#endif
 }
 
 void CommonWebContentsDelegate::DestroyWebContents() {

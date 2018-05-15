@@ -63,6 +63,7 @@
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
+#include "chrome/browser/resource_coordinator/tab_manager.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
@@ -455,7 +456,6 @@ WebContents::WebContents(v8::Isolate* isolate,
       guest_delegate_(nullptr),
       weak_ptr_factory_(this) {
   if (type == REMOTE) {
-    guest_delegate_ = brave::TabViewGuest::FromWebContents(web_contents);
     Init(isolate);
     RemoveFromWeakMap();
   } else {
@@ -498,16 +498,15 @@ WebContents::~WebContents() {
   if (guest_delegate_ && web_contents() != NULL) {
     guest_delegate_->Destroy(true);
   } else {
-    // The WebContentsDestroyed will not be called automatically because we
-    // unsubscribe from webContents before destroying it. So we have to manually
-    // call it here to make sure "destroyed" event is emitted.
     WebContentsDestroyed();
   }
 }
 
 brightray::InspectableWebContents* WebContents::managed_web_contents() const {
-  if (IsRemote() && !GetMainFrame().IsEmpty())
-    return GetMainFrame()->managed_web_contents();
+  if (IsRemote())
+    return GetMainFrame().IsEmpty()
+        ? nullptr
+        : GetMainFrame()->managed_web_contents();
 
   return CommonWebContentsDelegate::managed_web_contents();
 }
@@ -556,44 +555,41 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
   printing::InitializePrinting(web_contents);
 #endif
 
-  std::string name;
-  options.Get("name", &name);
-
   if (!IsBackgroundPage()) {
-    // Initialize the tab helper
-    extensions::TabHelper::CreateForWebContents(web_contents);
-
-    if (name == "browserAction") {
-      // hack for browserAction
-      // see TabHelper::SetBrowser
-      auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
-      tab_helper->SetTabIndex(-2);
-    }
     // Initialize zoom
     zoom::ZoomController::CreateForWebContents(web_contents);
     brave::RendererPreferencesHelper::CreateForWebContents(web_contents);
 
     if (IsGuest()) {
-      // Initialize autofill client
-      autofill::AtomAutofillClient::CreateForWebContents(web_contents);
-      std::string locale = static_cast<brave::BraveContentBrowserClient*>(
-          brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
-      autofill::AtomAutofillClient::FromWebContents(web_contents)->
-          Initialize(this);
-      autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
-          web_contents,
-          autofill::AtomAutofillClient::FromWebContents(web_contents),
-          locale,
-          autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
-      BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
-          web_contents,
-          autofill::AtomAutofillClient::FromWebContents(web_contents));
-      BravePasswordManagerClient::FromWebContents(web_contents)->
-          Initialize(this);
+      extensions::TabHelper::CreateForWebContents(web_contents);
+      // Initialize the tab helper
+      // hack for browserAction
+      std::string name;
+      options.Get("name", &name);
+      if (name == "browserAction") {
+        auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
+        tab_helper->SetTabIndex(-2);
+      } else {
+        // favicon::CreateContentFaviconDriverForWebContents(web_contents);
+        HistoryTabHelper::CreateForWebContents(web_contents);
 
-      // favicon::CreateContentFaviconDriverForWebContents(web_contents);
-      HistoryTabHelper::CreateForWebContents(web_contents);
-
+        // Initialize autofill client
+        autofill::AtomAutofillClient::CreateForWebContents(web_contents);
+        std::string locale = static_cast<brave::BraveContentBrowserClient*>(
+            brave::BraveContentBrowserClient::Get())->GetApplicationLocale();
+        autofill::AtomAutofillClient::FromWebContents(web_contents)->
+            Initialize(this);
+        autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
+            web_contents,
+            autofill::AtomAutofillClient::FromWebContents(web_contents),
+            locale,
+            autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+        BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
+            web_contents,
+            autofill::AtomAutofillClient::FromWebContents(web_contents));
+        BravePasswordManagerClient::FromWebContents(web_contents)->
+            Initialize(this);
+      }
       memory_pressure_listener_.reset(new base::MemoryPressureListener(
         base::Bind(&WebContents::OnMemoryPressure, base::Unretained(this))));
       g_browser_process->safe_browsing_service()->ui_manager()->AddObserver(
@@ -762,53 +758,70 @@ void WebContents::AddNewContents(content::WebContents* source,
     user_gesture = true;
   }
 
-  if (disposition != WindowOpenDisposition::NEW_WINDOW &&
-      disposition != WindowOpenDisposition::NEW_POPUP) {
-    auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
-    if (tab_helper &&
-        tab_helper->get_index() == TabStripModel::kNoTab) {
-      ::Browser* browser = nullptr;
-      bool active = disposition == WindowOpenDisposition::NEW_FOREGROUND_TAB;
-      if (tab_helper->window_id() != -1) {
-        browser = tab_helper->browser();
-      } else {
-        browser = owner_window()->browser();
+  bool active = disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB;
+
+  ::Browser* browser = nullptr;
+  auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
+  if (tab_helper) {
+    tab_helper->SetActive(active);
+
+    if (tab_helper->window_id() != -1) {
+      for (auto* b : *BrowserList::GetInstance()) {
+        if (b->session_id().id() == tab_helper->window_id()) {
+          browser = b;
+          break;
+        }
       }
-      if (browser) {
+    }
+
+    if (disposition != WindowOpenDisposition::NEW_WINDOW &&
+        disposition != WindowOpenDisposition::NEW_POPUP) {
+      if (!browser) {
+        // TODO(bridiver) - this should be the source owner_window
+        browser = owner_window()->browser();
+        tab_helper->SetWindowId(browser->session_id().id());
+      }
+
+      // insert non-opener links after the current tab
+      if (tab_helper->get_index() == TabStripModel::kNoTab &&
+          extensions::TabHelper::FromWebContents(source) &&
+          !new_contents->HasOpener()) {
+        // FIXME(svillar): The OrderController is exposed just for tests
         int index =
-          browser->tab_strip_model()->order_controller()->
-            DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                    active ?
-                                    TabStripModel::ADD_ACTIVE :
-                                    TabStripModel::ADD_NONE);
+            browser->tab_strip_model()
+                ->order_controller()
+                ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
+                                          active ? TabStripModel::ADD_ACTIVE
+                                                 : TabStripModel::ADD_NONE);
         tab_helper->SetTabIndex(index);
-        tab_helper->SetActive(active);
       }
     }
   }
 
   node::Environment* env = node::Environment::GetCurrent(isolate());
-  if (!env) {
-    return;
+  bool blocked = false;
+
+  if (env) {
+    auto event = v8::Local<v8::Object>::Cast(
+        mate::Event::Create(isolate()).ToV8());
+
+    mate::EmitEvent(isolate(),
+                    env->process_object(),
+                    "add-new-contents",
+                    event,
+                    source,
+                    new_contents,
+                    disposition,
+                    initial_rect,
+                    user_gesture);
+    blocked = event->Get(
+        mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
+
+    if (was_blocked)
+      *was_blocked = blocked;
+  } else {
+    blocked = true;
   }
-
-  auto event = v8::Local<v8::Object>::Cast(
-      mate::Event::Create(isolate()).ToV8());
-
-  mate::EmitEvent(isolate(),
-                  env->process_object(),
-                  "add-new-contents",
-                  event,
-                  source,
-                  new_contents,
-                  disposition,
-                  initial_rect,
-                  user_gesture);
-  bool blocked = event->Get(
-      mate::StringToV8(isolate(), "defaultPrevented"))->BooleanValue();
-
-  if (was_blocked)
-    *was_blocked = blocked;
 
   if (was_blocked && *was_blocked) {
     auto guest = brave::TabViewGuest::FromWebContents(new_contents);
@@ -817,12 +830,8 @@ void WebContents::AddNewContents(content::WebContents* source,
     } else {
       delete new_contents;
     }
-  } else {
-    if (disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB) {
-      auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
-      if (tab_helper)
-        tab_helper->SetActive(true);
-    }
+  } else if (browser) {
+    tab_helper->SetBrowser(browser);
   }
 }
 
@@ -1150,69 +1159,82 @@ void WebContents::AuthorizePlugin(mate::Arguments* args) {
       web_contents(), true, resource_id);
 }
 
-void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
-                             content::WebContents* contents,
-                             int index) {
-  if (contents != web_contents())
+void WebContents::MoveTo(mate::Arguments* args) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (!tab_helper) {
+    args->ThrowError("Only tabs can be moved");
+    return;
+  }
+
+  auto browser = tab_helper->browser();
+
+  int index = -1;
+  args->GetNext(&index);
+
+  int window_id = -1;
+  args->GetNext(&window_id);
+
+  if (index == -1 && window_id == -1)
     return;
 
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (tab_helper) {
-    Emit("pinned", tab_helper->is_pinned());
+  if (window_id == -1) {
+    tab_helper->SetTabIndex(index);
+  } else {
+    if (!tab_helper->MoveTo(index, window_id, true))
+      args->ThrowError("Could not find window");
   }
 }
 
-void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
-  if (contents != web_contents())
-    return;
-  if (owner_window() && owner_window()->browser())
-    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
-  Emit("tab-detached-at", index);
+void WebContents::TabPinnedStateChanged(TabStripModel* tab_strip_model,
+                             content::WebContents* contents,
+                             int index) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(contents);
+  if (tab_helper) {
+    auto api_web_contents = CreateFrom(isolate(), contents);
+    api_web_contents->Emit("pinned", tab_helper->is_pinned());
+  }
 }
 
 void WebContents::ActiveTabChanged(content::WebContents* old_contents,
                                    content::WebContents* new_contents,
                                    int index,
                                    int reason) {
-  auto new_api_web_contents = CreateFrom(isolate(), new_contents);
-  new_api_web_contents->Emit("set-active", true);
-  if (old_contents) {
-    auto old_api_web_contents = CreateFrom(isolate(), old_contents);
-    old_api_web_contents->Emit("set-active", false);
+  CreateFrom(isolate(), new_contents)->Emit("set-active", true);
+
+  auto handle = GetFrom(isolate(), old_contents);
+  if (!handle.IsEmpty() && !handle->is_being_destroyed_) {
+    handle->Emit("set-active", false);
   }
+}
+
+void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
+  int window_id = -1;
+
+  if (owner_window() && owner_window()->browser())
+    window_id = owner_window()->browser()->session_id().id();
+
+  CreateFrom(isolate(), contents)->Emit("tab-detached-at", index, window_id);
+  Emit("tab-detached-at", index, window_id);
 }
 
 void WebContents::TabInsertedAt(TabStripModel* tab_strip_model,
                                 content::WebContents* contents,
                                 int index,
                                 bool foreground) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-inserted-at", index, foreground);
+  int window_id = -1;
+
+  if (owner_window() && owner_window()->browser())
+    window_id = owner_window()->browser()->session_id().id();
+
+  CreateFrom(isolate(), contents)->Emit("tab-inserted-at",
+      index, foreground, window_id);
+  Emit("tab-inserted-at", contents, index, foreground, window_id);
 }
 
 void WebContents::TabMoved(content::WebContents* contents,
                            int from_index,
                            int to_index) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-moved", from_index, to_index);
-}
-
-void WebContents::TabClosingAt(TabStripModel* tab_strip_model,
-                               content::WebContents* contents,
-                               int index) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-closing-at", index);
-}
-
-void WebContents::TabChangedAt(content::WebContents* contents,
-                               int index,
-                               TabChangeType change_type) {
-  if (contents != web_contents())
-    return;
-  Emit("tab-changed-at", index);
+  CreateFrom(isolate(), contents)->Emit("tab-moved", from_index, to_index);
 }
 
 void WebContents::TabStripEmpty() {
@@ -1228,18 +1250,18 @@ void WebContents::TabReplacedAt(TabStripModel* tab_strip_model,
                                 content::WebContents* old_contents,
                                 content::WebContents* new_contents,
                                 int index) {
-  if (old_contents == web_contents()) {
-    ::Browser* browser = nullptr;
-    for (auto* b : *BrowserList::GetInstance()) {
-      if (b->tab_strip_model() == tab_strip_model) {
-        browser = b;
-        break;
-      }
+  ::Browser* browser = nullptr;
+  for (auto* b : *BrowserList::GetInstance()) {
+    if (b->tab_strip_model() == tab_strip_model) {
+      browser = b;
+      break;
     }
-
-    Emit("tab-replaced-at",
-        browser->session_id().id(), index, new_contents);
   }
+
+  CreateFrom(isolate(), old_contents)->Emit("tab-replaced-at",
+      browser->session_id().id(), index, new_contents);
+  Emit("tab-replaced-at",
+      browser->session_id().id(), index, new_contents);
 }
 
 bool WebContents::OnGoToEntryOffset(int offset) {
@@ -1536,8 +1558,9 @@ bool WebContents::OnMessageReceived(const IPC::Message& message,
 }
 
 void WebContents::DestroyWebContents() {
-  if (IsRemote() && !GetMainFrame().IsEmpty()) {
-    GetMainFrame()->DestroyWebContents();
+  if (IsRemote()) {
+    if (!GetMainFrame().IsEmpty())
+      GetMainFrame()->DestroyWebContents();
     return;
   }
 
@@ -1557,9 +1580,11 @@ void WebContents::SetOwnerWindow(NativeWindow* new_owner_window) {
   if (owner_window() == new_owner_window)
     return;
 
-  if (owner_window())
-    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
-  new_owner_window->browser()->tab_strip_model()->AddObserver(this);
+  if (type_ == BROWSER_WINDOW) {
+    if (owner_window())
+      owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
+    new_owner_window->browser()->tab_strip_model()->AddObserver(this);
+  }
 
   SetOwnerWindow(web_contents(), new_owner_window);
 }
@@ -1585,18 +1610,19 @@ void WebContents::WebContentsDestroyed() {
   if (is_being_destroyed_)
     return;
 
+  is_being_destroyed_ = true;
+
   if (IsRemote()) {
-    delete this;
+    MarkDestroyed();
+    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
     return;
   }
 
-  is_being_destroyed_ = true;
-
-  if (owner_window() && owner_window()->browser())
-    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
-
   g_browser_process->safe_browsing_service()->ui_manager()->RemoveObserver(
     this);
+
+  if (type_ == BROWSER_WINDOW && owner_window() && owner_window()->browser())
+    owner_window()->browser()->tab_strip_model()->RemoveObserver(this);
 
   // clear out fullscreen state
   if (CommonWebContentsDelegate::IsFullscreenForTabOrPending(web_contents())) {
@@ -1634,7 +1660,7 @@ int WebContents::GetID() const {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   return extensions::TabHelper::IdForTab(web_contents());
 #else
-  return web_contents()->GetRenderViewHost()->GetProcess()->GetID();
+  return -1;
 #endif
 }
 
@@ -2201,16 +2227,6 @@ bool WebContents::IsFocused() const {
 }
 #endif
 
-void WebContents::OnCloneCreated(const mate::Dictionary& options,
-    base::Callback<void(content::WebContents*)> callback,
-    content::WebContents* clone) {
-  brave::TabViewGuest* guest = brave::TabViewGuest::FromWebContents(clone);
-  if (guest_delegate_) {
-    guest->SetOpener(static_cast<brave::TabViewGuest*>(guest_delegate_));
-  }
-  callback.Run(clone);
-}
-
 void WebContents::Clone(mate::Arguments* args) {
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
@@ -2225,7 +2241,6 @@ void WebContents::Clone(mate::Arguments* args) {
   } else {
     options = mate::Dictionary::CreateEmpty(isolate());
   }
-  options.Set("userGesture", true);
 
   base::Callback<void(content::WebContents*)> callback;
   if (!args->GetNext(&callback)) {
@@ -2238,15 +2253,24 @@ void WebContents::Clone(mate::Arguments* args) {
     return;
   }
 
-  base::DictionaryValue create_params;
-  create_params.SetBoolean("clone", true);
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  int opener_tab_id = GetID();
+  options.Set("openerTabId", opener_tab_id);
+  options.Set("userGesture", true);
+  options.Set("windowId", tab_helper->window_id());
+  options.Set("clone", true);
 
-  extensions::TabHelper::CreateTab(HostWebContents(),
-      GetBrowserContext(),
+
+  auto owner = brave::TabViewGuest::FromWebContents(
+      web_contents())->owner_web_contents();
+
+  base::DictionaryValue create_params;
+
+  extensions::TabHelper::CreateTab(owner,
+      web_contents()->GetBrowserContext(),
       create_params,
-      base::Bind(&WebContents::OnCloneCreated, base::Unretained(this), options,
-        base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
-            options, callback)));
+      base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
+          options, callback));
 }
 
 void WebContents::SetActive(bool active) {
@@ -2501,8 +2525,12 @@ v8::Local<v8::Value> WebContents::GetWebPreferences(v8::Isolate* isolate) {
 }
 
 v8::Local<v8::Value> WebContents::GetOwnerBrowserWindow() {
-  if (IsRemote() && !GetMainFrame().IsEmpty())
-    return GetMainFrame()->GetOwnerBrowserWindow();
+  if (IsRemote()) {
+    if (GetMainFrame().IsEmpty())
+      return v8::Null(isolate());
+    else
+      return GetMainFrame()->GetOwnerBrowserWindow();
+  }
 
   if (owner_window())
     return Window::From(isolate(), owner_window());
@@ -2572,6 +2600,18 @@ v8::Local<v8::Value> WebContents::TabValue() {
       value.get(), isolate()->GetCurrentContext());
 }
 
+bool WebContents::IsTab() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper) {
+    // browserAction haack
+    return tab_helper->get_index() != -2;
+  }
+#endif
+
+  return false;
+}
+
 int32_t WebContents::ID() const {
   if (IsRemote() && !GetMainFrame().IsEmpty())
     return GetMainFrame()->weak_map_id();
@@ -2590,6 +2630,12 @@ v8::Local<v8::Value> WebContents::Session(v8::Isolate* isolate) {
 }
 
 content::WebContents* WebContents::HostWebContents() {
+  if (IsRemote()) {
+    if (GetMainFrame().IsEmpty())
+      return nullptr;
+    return GetMainFrame()->HostWebContents();
+  }
+
   if (guest_delegate_)
     return guest_delegate_->embedder_web_contents();
 
@@ -2730,6 +2776,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("isBackgroundPage", &WebContents::IsBackgroundPage)
       .SetMethod("tabValue", &WebContents::TabValue)
 #endif
+      .SetMethod("isTab", &WebContents::IsTab)
       .SetMethod("close", &WebContents::CloseContents)
       .SetMethod("forceClose", &WebContents::DestroyWebContents)
       .SetMethod("autofillSelect", &WebContents::AutofillSelect)
@@ -2737,6 +2784,7 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("_attachGuest", &WebContents::AttachGuest)
       .SetMethod("_detachGuest", &WebContents::DetachGuest)
       .SetMethod("isPlaceholder", &WebContents::IsPlaceholder)
+      .SetMethod("moveTo", &WebContents::MoveTo)
       .SetMethod("savePassword", &WebContents::SavePassword)
       .SetMethod("neverSavePassword", &WebContents::NeverSavePassword)
       .SetMethod("updatePassword", &WebContents::UpdatePassword)
@@ -2782,7 +2830,7 @@ void WebContents::OnRendererMessageShared(
 // static
 mate::Handle<WebContents> WebContents::FromTabID(v8::Isolate* isolate,
     int tab_id) {
-  return CreateFrom(isolate,
+  return GetFrom(isolate,
       extensions::TabHelper::GetTabById(tab_id));
 }
 
@@ -2811,28 +2859,25 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
   bool active = true;
   options.Get("active", &active);
-  tab_helper->SetActive(active);
+  // SetActive is called in AddNewContents
 
   int index = -1;
-  if (options.Get("index", &index)) {
+  if (tab_helper && options.Get("index", &index)) {
     tab_helper->SetTabIndex(index);
   }
 
   bool pinned = false;
-  if (options.Get("pinned", &pinned) && pinned) {
+  if (tab_helper && options.Get("pinned", &pinned) && pinned) {
     tab_helper->SetPinned(pinned);
   }
 
   bool autoDiscardable = true;
-  if (options.Get("autoDiscardable", &autoDiscardable)) {
+  if (tab_helper && options.Get("autoDiscardable", &autoDiscardable)) {
     tab_helper->SetAutoDiscardable(autoDiscardable);
   }
 
-  int opener_tab_id = TabStripModel::kNoTab;
-    options.Get("openerTabId", &opener_tab_id);
-
   bool discarded = false;
-  if (options.Get("discarded", &discarded) && discarded && !active) {
+  if (tab_helper && options.Get("discarded", &discarded) && discarded && !active) {
     std::string url;
     if (options.Get("url", &url)) {
       std::unique_ptr<content::NavigationEntryImpl> entry =
@@ -2864,21 +2909,15 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   }
 
   int window_id = -1;
-  ::Browser *browser = nullptr;
-  if (options.Get("windowId", &window_id) && window_id != -1) {
-    auto api_window =
-        mate::TrackableObject<Window>::FromWeakMapID(isolate(), window_id);
-    if (api_window) {
-      browser = api_window->window()->browser();
-      tab_helper->SetWindowId(window_id);
-    }
-  }
-  if (!browser) {
-    browser = owner_window()->browser();
-  }
+  if (tab_helper && options.Get("windowId", &window_id) && window_id != -1)
+    tab_helper->SetWindowId(window_id);
 
-  tab_helper->SetOpener(opener_tab_id);
-  tab_helper->SetBrowser(browser);
+
+  int opener_tab_id = TabStripModel::kNoTab;
+  if (tab_helper) {
+    options.Get("openerTabId", &opener_tab_id);
+    tab_helper->SetOpener(opener_tab_id);
+  }
 
   content::WebContents* source = nullptr;
   if (opener_tab_id != TabStripModel::kNoTab) {
@@ -2887,6 +2926,12 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
 
   if (!source)
     source = web_contents();
+
+  bool clone = false;
+  if (options.Get("clone", &clone) && clone) {
+    tab->GetController().CopyStateFrom(
+        source->GetController(), true);
+  }
 
   bool was_blocked = false;
   AddNewContents(source,
@@ -2952,6 +2997,21 @@ void WebContents::CreateTab(mate::Arguments* args) {
 }
 
 // static
+mate::Handle<WebContents> WebContents::GetFrom(
+    v8::Isolate* isolate, content::WebContents* web_contents) {
+  if (!web_contents) {
+    return mate::Handle<WebContents>();
+  }
+  // We have an existing WebContents object in JS.
+  auto existing = TrackableObject::FromWrappedClass(isolate, web_contents);
+  if (existing) {
+    return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
+  } else {
+    return mate::Handle<WebContents>();
+  }
+}
+
+// static
 mate::Handle<WebContents> WebContents::CreateFrom(
     v8::Isolate* isolate, content::WebContents* web_contents) {
   if (!web_contents) {
@@ -2980,9 +3040,16 @@ mate::Handle<WebContents> WebContents::CreateFrom(
       return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
   }
 
-  // Otherwise create a new WebContents wrapper object.
-  return mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
-        type));
+  auto handle = mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
+      type));
+
+  if (type == REMOTE) {
+    auto existing = GetFrom(isolate, web_contents);
+    if (existing.IsEmpty() || existing->is_being_destroyed_)
+      handle->WebContentsDestroyed();
+  }
+
+  return handle;
 }
 
 // static

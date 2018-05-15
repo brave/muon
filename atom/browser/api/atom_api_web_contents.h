@@ -123,6 +123,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
 
   static void CreateTab(mate::Arguments* args);
 
+  static mate::Handle<WebContents> GetFrom(
+      v8::Isolate* isolate, content::WebContents* web_contents);
+
   static mate::Handle<WebContents> CreateFrom(
       v8::Isolate* isolate, content::WebContents* web_contents);
 
@@ -254,6 +257,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool ExecuteScriptInTab(mate::Arguments* args);
   void SetTabValues(const base::DictionaryValue& values);
 #endif
+  bool IsTab();
 
   // Send messages to browser.
   static bool SendIPCMessage(int render_process_id,
@@ -332,15 +336,13 @@ class WebContents : public mate::TrackableObject<WebContents>,
       base::Callback<void(content::WebContents*)> callback,
       content::WebContents* tab);
 
-  void OnCloneCreated(const mate::Dictionary& options,
-      base::Callback<void(content::WebContents*)> callback,
-      content::WebContents* clone);
-
   void AuthorizePlugin(mate::Arguments* args);
 
   // SafeBrowsingUIManager::Observer
   void OnSafeBrowsingHit(
     const security_interstitials::UnsafeResource& resource) override;
+
+  void MoveTo(mate::Arguments* args);
 
   // TabStripModelObserver
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
@@ -358,12 +360,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void TabMoved(content::WebContents* contents,
                 int from_index,
                 int to_index) override;
-  void TabClosingAt(TabStripModel* tab_strip_model,
-                    content::WebContents* contents,
-                    int index) override;
-  void TabChangedAt(content::WebContents* contents,
-                    int index,
-                    TabChangeType change_type) override;
   void TabStripEmpty() override;
   void TabSelectionChanged(TabStripModel* tab_strip_model,
                            const ui::ListSelectionModel& old_model) override;

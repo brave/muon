@@ -94,6 +94,8 @@ class TabHelper : public content::WebContentsObserver,
   void SetPinned(bool pinned);
   bool IsPinned() const;
 
+  bool MoveTo(int index, int window_id, bool foreground);
+
   bool Discard();
 
   bool IsDiscarded();
@@ -148,6 +150,10 @@ class TabHelper : public content::WebContentsObserver,
   explicit TabHelper(content::WebContents* contents);
   friend class content::WebContentsUserData<TabHelper>;
 
+  void TabInsertedAt(TabStripModel* tab_strip_model,
+                     content::WebContents* contents,
+                     int index,
+                     bool active) override;
   void TabDetachedAt(content::WebContents* contents, int index) override;
   void TabReplacedAt(TabStripModel* tab_strip_model,
                      content::WebContents* old_contents,
@@ -156,6 +162,11 @@ class TabHelper : public content::WebContentsObserver,
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
                              int index) override;
+  void ActiveTabChanged(content::WebContents* old_contents,
+                        content::WebContents* new_contents,
+                        int index,
+                        int reason) override;
+
 
   void OnBrowserRemoved(Browser* browser) override;
   void OnBrowserSetLastActive(Browser* browser) override;
@@ -178,6 +189,8 @@ class TabHelper : public content::WebContentsObserver,
 
   // content::WebContentsObserver overrides.
   void RenderViewCreated(content::RenderViewHost* render_view_host) override;
+  void RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) override;
   void RenderFrameCreated(content::RenderFrameHost* host) override;
   void WebContentsDestroyed() override;
   void DidCloneToNewWebContents(
