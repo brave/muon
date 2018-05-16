@@ -33,25 +33,6 @@ void Hang() {
     base::PlatformThread::Sleep(base::TimeDelta::FromSeconds(1));
 }
 
-v8::Local<v8::Value> GetProcessMemoryInfo(v8::Isolate* isolate) {
-  std::unique_ptr<base::ProcessMetrics> metrics(
-      base::ProcessMetrics::CreateCurrentProcessMetrics());
-
-  mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
-  // dict.Set("workingSetSize",
-  //          static_cast<double>(metrics->GetWorkingSetSize() >> 10));
-  // dict.Set("peakWorkingSetSize",
-  //          static_cast<double>(metrics->GetPeakWorkingSetSize() >> 10));
-
-  // size_t private_bytes, shared_bytes;
-  // if (metrics->GetMemoryBytes(&private_bytes, &shared_bytes)) {
-  //   dict.Set("privateBytes", static_cast<double>(private_bytes >> 10));
-  //   dict.Set("sharedBytes", static_cast<double>(shared_bytes >> 10));
-  // }
-
-  return dict.GetHandle();
-}
-
 v8::Local<v8::Value> GetSystemMemoryInfo(v8::Isolate* isolate,
                                          mate::Arguments* args) {
   base::SystemMemoryInfoKB mem_info;
@@ -108,7 +89,6 @@ void AtomBindings::BindTo(v8::Isolate* isolate,
   dict.SetMethod("crash", &Crash);
   dict.SetMethod("hang", &Hang);
   dict.SetMethod("log", &Log);
-  dict.SetMethod("getProcessMemoryInfo", &GetProcessMemoryInfo);
   dict.SetMethod("getSystemMemoryInfo", &GetSystemMemoryInfo);
 #if defined(OS_POSIX)
   dict.SetMethod("setFdLimit", &base::SetFdLimit);
