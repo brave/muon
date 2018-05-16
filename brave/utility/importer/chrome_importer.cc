@@ -41,6 +41,7 @@
 #if defined(USE_LIBSECRET)
 #include "chrome/browser/password_manager/native_backend_libsecret.h"
 #endif
+#include "base/environment.h"
 #include "chrome/browser/password_manager/native_backend_kwallet_x.h"
 #include "chrome/browser/password_manager/password_store_x.h"
 #include "components/os_crypt/key_storage_util_linux.h"
