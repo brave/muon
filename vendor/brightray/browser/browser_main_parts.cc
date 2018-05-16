@@ -152,7 +152,12 @@ BrowserMainParts::~BrowserMainParts() {
 
 int BrowserMainParts::PreEarlyInitialization() {
   std::unique_ptr<base::FeatureList> feature_list(new base::FeatureList);
-  feature_list->InitializeFromCommandLine("", "");
+  std::string disable_features = "PreferHtmlOverPlugins,Ukm,"
+                  "GuestViewCrossProcessFrames,TouchpadAndWheelScrollLatching,"
+                  "UnifiedAutoplay";
+
+  std::string enable_features = "fill-on-account-select";
+  feature_list->InitializeFromCommandLine(enable_features, disable_features);
   base::FeatureList::SetInstance(std::move(feature_list));
 
 #if defined(USE_X11)

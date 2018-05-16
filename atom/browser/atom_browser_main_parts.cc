@@ -208,50 +208,6 @@ int AtomBrowserMainParts::PreCreateThreads() {
   // any callbacks, I just want to initialize the mechanism.)
   SecKeychainAddCallback(&KeychainCallback, 0, NULL);
 #endif  // defined(OS_MACOSX)
-  auto feature_list = base::FeatureList::GetInstance();
-
-  const base::CommandLine* command_line =
-      base::CommandLine::ForCurrentProcess();
-
-  // temporary workaround for flash
-  auto field_trial =
-      feature_list->GetFieldTrial(features::kPreferHtmlOverPlugins);
-  feature_list->RegisterFieldTrialOverride(
-                    features::kPreferHtmlOverPlugins.name,
-                    base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-  // disable ukm metrics
-  field_trial = feature_list->GetFieldTrial(ukm::kUkmFeature);
-  feature_list->RegisterFieldTrialOverride(ukm::kUkmFeature.name,
-                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
-  field_trial = feature_list->GetFieldTrial(
-      features::kGuestViewCrossProcessFrames);
-  feature_list->RegisterFieldTrialOverride(
-                      features::kGuestViewCrossProcessFrames.name,
-                      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
-  // enable fill-on-account-select
-  field_trial = feature_list->GetFieldTrial(
-      password_manager::features::kFillOnAccountSelect);
-  feature_list->RegisterFieldTrialOverride(
-      password_manager::features::kFillOnAccountSelect.name,
-      base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
-
-  // disable touchpad and wheel scroll latching.
-  field_trial = feature_list->GetFieldTrial(
-      features::kTouchpadAndWheelScrollLatching);
-  feature_list->RegisterFieldTrialOverride(
-      features::kTouchpadAndWheelScrollLatching.name,
-      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
-  // Disable Unified Autoplay to prevents it from overriding our default value
-  field_trial = feature_list->GetFieldTrial(
-      media::kUnifiedAutoplay);
-  feature_list->RegisterFieldTrialOverride(
-      media::kUnifiedAutoplay.name,
-      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
-
   fake_browser_process_->PreCreateThreads(
       *base::CommandLine::ForCurrentProcess());
 
