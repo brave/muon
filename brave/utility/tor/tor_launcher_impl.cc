@@ -141,6 +141,12 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
   if (!tor_watch_dir.empty()) {
     args.AppendArg("--pidfile");
     args.AppendArgPath(tor_watch_dir.AppendASCII("tor.pid"));
+    args.AppendArg("--controlport");
+    args.AppendArg("auto");
+    args.AppendArg("--controlportwritetofile");
+    args.AppendArgPath(tor_watch_dir.AppendASCII("controlport"));
+    args.AppendArg("--cookieauthentication");
+    args.AppendArg("1");
   }
 
   base::LaunchOptions launchopts;
