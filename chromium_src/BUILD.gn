@@ -332,11 +332,9 @@ source_set("browser") {
     "//chrome/browser/cache_stats_recorder.cc",
     "//chrome/browser/cache_stats_recorder.h",
 
-    "chrome/browser/google/google_brand.cc",
-    "//chrome/browser/google/google_brand.h",
     "//chrome/browser/upgrade_detector.cc",
     "//chrome/browser/upgrade_detector.h",
-    "//chrome/browser/upgrade_detector_impl.cc",
+    "chrome/browser/upgrade_detector_impl.cc",
     "//chrome/browser/upgrade_detector_impl.h",
     "chrome/app/vector_icons/vector_icons.cc",
     "chrome/app/vector_icons/vector_icons.h",
