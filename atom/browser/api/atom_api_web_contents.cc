@@ -1592,7 +1592,8 @@ void WebContents::WebContentsDestroyed() {
 
   if (IsRemote()) {
     MarkDestroyed();
-    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
+    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
+        GetDestroyClosure());
     return;
   }
 
@@ -3015,8 +3016,8 @@ mate::Handle<WebContents> WebContents::CreateFrom(
       return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
   }
 
-  auto handle = mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
-      type));
+  auto handle = mate::CreateHandle(isolate, new WebContents(isolate,
+      web_contents, type));
 
   if (type == REMOTE) {
     auto existing = GetFrom(isolate, web_contents);
