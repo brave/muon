@@ -7,9 +7,9 @@
 
 #include "base/strings/string16.h"
 #include "base/synchronization/lock.h"
+#include "content/public/browser/login_delegate.h"
 #include "content/public/browser/resource_request_info.h"
 #include "net/base/auth.h"
-#include "content/public/browser/login_delegate.h"
 
 namespace content {
 class WebContents;
