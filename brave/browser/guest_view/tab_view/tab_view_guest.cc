@@ -99,6 +99,16 @@ void TabViewGuest::WebContentsCreated(
   auto* guest = TabViewGuest::FromWebContents(new_contents);
   CHECK(guest);
 
+  auto opener_rfh = content::RenderFrameHost::FromID(
+      opener_render_process_id, opener_render_frame_id);
+  if (opener_rfh) {
+    auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
+    CHECK(tab_helper);
+    auto opener_contents =
+        content::WebContents::FromRenderFrameHost(opener_rfh);
+    tab_helper->SetOpener(extensions::TabHelper::IdForTab(opener_contents));
+  }
+
   guest->SetOpener(this);
   guest->name_ = frame_name;
 

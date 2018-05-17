@@ -778,20 +778,6 @@ void WebContents::AddNewContents(content::WebContents* source,
         browser = owner_window()->browser();
         tab_helper->SetWindowId(browser->session_id().id());
       }
-
-      // insert non-opener links after the current tab
-      if (tab_helper->get_index() == TabStripModel::kNoTab &&
-          extensions::TabHelper::FromWebContents(source) &&
-          !new_contents->HasOpener()) {
-        // FIXME(svillar): The OrderController is exposed just for tests
-        int index =
-            browser->tab_strip_model()
-                ->order_controller()
-                ->DetermineInsertionIndex(ui::PAGE_TRANSITION_LINK,
-                                          active ? TabStripModel::ADD_ACTIVE
-                                                 : TabStripModel::ADD_NONE);
-        tab_helper->SetTabIndex(index);
-      }
     }
   }
 
