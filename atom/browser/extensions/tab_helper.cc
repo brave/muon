@@ -434,38 +434,23 @@ void TabHelper::SetBrowser(Browser* browser) {
 
   if (browser) {
     UpdateBrowser(browser);
-    if (opener_tab_id_ != TabStripModel::kNoTab && browser->tab_strip_model()) {
-      auto tab_strip = browser->tab_strip_model();
-    }
-
-    // When there is an opener tab and the index is not currently valid,
-    // we don't want to overwrite the index with the last tab index because
-    // the index will be determined by the opener tab.
-    bool is_invalid_tab_index = index_ == TabStripModel::kNoTab ||
-      index_ > browser_->tab_strip_model()->count();
-    if (opener_tab_id_ == TabStripModel::kNoTab &&
-        is_invalid_tab_index) {
-      index_ = browser_->tab_strip_model()->count();
-    } else if (is_invalid_tab_index) {
-      index_ =
-        browser_->tab_strip_model()->order_controller()->
-            DetermineInsertionIndex(ui::PAGE_TRANSITION_TYPED,
-                                    active_ ?
-                                    TabStripModel::ADD_ACTIVE :
-                                    TabStripModel::ADD_NONE);
-    } else if (index_ < TabStripModel::kNoTab) {
+    if (index_ < TabStripModel::kNoTab) {
       // hack for browserAction
       // TODO(bridiver) - use extension view
       return;
     }
 
+    ui::PageTransition transition_type = ui::PAGE_TRANSITION_TYPED;
+
     int add_types = TabStripModel::ADD_NONE;
     add_types |= active_ ? TabStripModel::ADD_ACTIVE : 0;
-    add_types |= opener_tab_id_ != TabStripModel::kNoTab ?
-      TabStripModel::ADD_INHERIT_OPENER : 0;
+    if (opener_tab_id_ != TabStripModel::kNoTab) {
+      add_types |= TabStripModel::ADD_INHERIT_OPENER;
+      transition_type = ui::PAGE_TRANSITION_LINK;
+    }
 
-    browser_->tab_strip_model()->InsertWebContentsAt(
-        index_, web_contents(), add_types);
+    browser_->tab_strip_model()->AddWebContents(web_contents(), index_,
+        transition_type, add_types);
   } else {
     browser_ = nullptr;
   }
