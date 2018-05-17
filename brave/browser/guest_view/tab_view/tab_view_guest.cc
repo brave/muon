@@ -58,7 +58,6 @@ namespace {
 bool HasWindow(WebContents* web_contents) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
   return (tab_helper && tab_helper->window_id() != -1);
-
 }
 
 }

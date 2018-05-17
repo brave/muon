@@ -1606,7 +1606,8 @@ void WebContents::WebContentsDestroyed() {
 
   if (IsRemote()) {
     MarkDestroyed();
-    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
+    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
+        GetDestroyClosure());
     return;
   }
 
@@ -2885,7 +2886,8 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   }
 
   bool discarded = false;
-  if (tab_helper && options.Get("discarded", &discarded) && discarded && !active) {
+  if (tab_helper && options.Get("discarded", &discarded)
+      && discarded && !active) {
     std::string url;
     if (options.Get("url", &url)) {
       std::unique_ptr<content::NavigationEntryImpl> entry =
@@ -3043,8 +3045,8 @@ mate::Handle<WebContents> WebContents::CreateFrom(
       return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
   }
 
-  auto handle = mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
-      type));
+  auto handle = mate::CreateHandle(isolate, new WebContents(isolate,
+      web_contents, type));
 
   if (type == REMOTE) {
     auto existing = GetFrom(isolate, web_contents);
