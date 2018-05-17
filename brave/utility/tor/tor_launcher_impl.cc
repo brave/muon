@@ -147,6 +147,8 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
     args.AppendArgPath(tor_watch_dir.AppendASCII("controlport"));
     args.AppendArg("--cookieauthentication");
     args.AppendArg("1");
+    args.AppendArg("--cookieauthfile");
+    args.AppendArgPath(tor_watch_dir.AppendASCII("control_auth_cookie"));
   }
 
   base::LaunchOptions launchopts;
