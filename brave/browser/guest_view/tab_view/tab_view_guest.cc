@@ -162,7 +162,9 @@ void TabViewGuest::LoadURLWithParams(
 void TabViewGuest::Load() {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (!tab_helper || !tab_helper->IsDiscarded()) {
-    api_web_contents_->ResumeLoadingCreatedWebContents();
+
+    if (!web_contents()->HasOpener())
+      api_web_contents_->ResumeLoadingCreatedWebContents();
 
     web_contents()->WasHidden();
     web_contents()->WasShown();
@@ -358,6 +360,9 @@ void TabViewGuest::DidAttachToEmbedder() {
 
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
+
+  // this is safe to call more than once
+  web_contents()->ResumeLoadingCreatedWebContents();
 }
 
 void TabViewGuest::DidDetachFromEmbedder() {
