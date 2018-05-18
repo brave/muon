@@ -663,10 +663,14 @@ source_set("menu_bar") {
     "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.h"
   ]
 
+  deps = [
+    "//third_party/blink/public/mojom:mojom_platform",
+  ]
+
   if (use_gio) {
     configs += [ "//build/linux:gio_config" ]
 
-    deps = [
+    deps += [
       "//components/sync",
       "//ipc:mojom",
       "//third_party/protobuf:protobuf_lite",
