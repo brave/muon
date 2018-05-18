@@ -11,6 +11,7 @@ source_set("safe_browsing") {
 
   deps = [
     "//components/safe_browsing/common:interfaces",
+    "//third_party/blink/public/mojom:mojom_platform",
     "//third_party/protobuf:protobuf_lite",
   ]
 
