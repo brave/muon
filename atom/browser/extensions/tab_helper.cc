@@ -513,9 +513,9 @@ bool TabHelper::Discard() {
     SetAutoDiscardable(false);
     return true;
   } else {
-    return resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
-               web_contents())
-        ->DiscardTab();
+    //return resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+    //           web_contents())
+    //    ->DiscardTab();
   }
 }
 
