@@ -621,7 +621,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3ade1a5e1e 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -40,7 +40,9 @@
+@@ -40,7 +40,9 @@ NSBundle* OuterAppBundleInternal() {
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -1021,10 +1021,10 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
 diff --git a/components/autofill/core/browser/credit_card_save_manager.cc b/components/autofill/core/browser/credit_card_save_manager.cc
-index e3935b3c4bef67e779d7463f7745100f3f341579..dcc57d6fe5f8447a7d755174945beea1f43acdb6 100644
+index 140ca98f97b60dcc9d147458efdbc13ad53436d2..1cd74f11035327a376fa071b03007588ac35c99a 100644
 --- a/components/autofill/core/browser/credit_card_save_manager.cc
 +++ b/components/autofill/core/browser/credit_card_save_manager.cc
-@@ -204,12 +204,17 @@ void CreditCardSaveManager::AttemptToOfferCardUploadSave(
+@@ -210,12 +210,17 @@ void CreditCardSaveManager::AttemptToOfferCardUploadSave(
  }
  
  bool CreditCardSaveManager::IsCreditCardUploadEnabled() {
@@ -1078,7 +1078,7 @@ diff --git a/components/crash/content/app/crashpad_mac.mm b/components/crash/con
 index eb82f44053cec67f7e98c798d8e1e58228aa7fe6..5ab4abe28b41f5af346e263f0a4573b79dd4c40c 100644
 --- a/components/crash/content/app/crashpad_mac.mm
 +++ b/components/crash/content/app/crashpad_mac.mm
-@@ -55,6 +55,8 @@
+@@ -55,6 +55,8 @@ base::FilePath PlatformCrashpadInitialization(bool initial_client,
        // Only allow the possibility of report upload in official builds. This
        // crash server won't have symbols for any other build types.
        std::string url = "https://clients2.google.com/cr/report";
@@ -1117,10 +1117,10 @@ index dbd2ae8df59756c61d28091cff70098c897db8f4..84fbc695c817c87deb902d8b6f69d3f1
        link.href = href;
        link.target = '_blank';
 diff --git a/components/guest_view/browser/guest_view_base.cc b/components/guest_view/browser/guest_view_base.cc
-index 8f31866db03f908536dce6ca8e41b24ef40c21c7..47ae00b64ad9c8c122f34f27b2a561bbc4521524 100644
+index 8f31866db03f908536dce6ca8e41b24ef40c21c7..3df51bf2e70929f065bda77d5dcd84fa354092a8 100644
 --- a/components/guest_view/browser/guest_view_base.cc
 +++ b/components/guest_view/browser/guest_view_base.cc
-@@ -416,8 +416,10 @@ void GuestViewBase::DidAttach(int guest_proxy_routing_id) {
+@@ -419,8 +419,10 @@ void GuestViewBase::DidAttach(int guest_proxy_routing_id) {
  
    SetUpSizing(*attach_params());
  
@@ -1131,7 +1131,7 @@ index 8f31866db03f908536dce6ca8e41b24ef40c21c7..47ae00b64ad9c8c122f34f27b2a561bb
  
    // Give the derived class an opportunity to perform some actions.
    DidAttachToEmbedder();
-@@ -440,8 +440,12 @@ void GuestViewBase::DidDetach() {
+@@ -440,8 +442,12 @@ void GuestViewBase::DidDetach() {
    owner_web_contents()->GetRenderViewHost()->Send(
        new GuestViewMsg_GuestDetached(element_instance_id_));
    element_instance_id_ = kInstanceIDNone;
@@ -1234,7 +1234,7 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
  #include "base/mac/mac_logging.h"
  #include "base/rand_util.h"
  #include "crypto/apple_keychain.h"
-@@ -61,6 +62,14 @@
+@@ -61,6 +62,14 @@ const char KeychainPassword::account_name[] = "Chromium";
  std::string KeychainPassword::GetPassword() const {
    UInt32 password_length = 0;
    void* password_data = NULL;
@@ -1343,7 +1343,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 71b3c5906b61728dfad31bd743fb9f9c6c214c68..66b6951c21a06c2313ac5e7080741b9782139262 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -23,7 +23,7 @@ @interface SyntheticPinchEvent : NSObject
+@@ -23,7 +23,7 @@
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1353,10 +1353,10 @@ index 71b3c5906b61728dfad31bd743fb9f9c6c214c68..66b6951c21a06c2313ac5e7080741b97
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
-index e106d42d4786d538fd61981cd409fa13ac7059d6..42d95872bbfa4b2763f079596bb8f441da2774f6 100644
+index ebf2d257e64fe80e5f95dd236e8a848efe36e721..2c60d9a60f3dc6efb55bc215a722f5baad0f4ecd 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_aura.cc
-@@ -1603,8 +1603,23 @@ bool RenderWidgetHostViewAura::TransformPointToLocalCoordSpace(
+@@ -1610,8 +1610,23 @@ bool RenderWidgetHostViewAura::TransformPointToLocalCoordSpace(
        !delegated_frame_host_->TransformPointToLocalCoordSpace(
            point_in_pixels, original_surface, transformed_point))
      return false;
@@ -1381,9 +1381,9 @@ index e106d42d4786d538fd61981cd409fa13ac7059d6..42d95872bbfa4b2763f079596bb8f441
 +  }
    return true;
  }
-
+ 
 diff --git a/content/browser/renderer_host/render_widget_host_view_cocoa.mm b/content/browser/renderer_host/render_widget_host_view_cocoa.mm
-index ed578f8b5ecab3fa773638ef3a6634c3e5129652..c244a3d5d19a5136a26c202910c372a98cc00846 100644
+index 8ee84cdafbde9114cf6ef5036b214f81184fdc44..7a603e2571aae54594f227cc78852e3567df82b9 100644
 --- a/content/browser/renderer_host/render_widget_host_view_cocoa.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_cocoa.mm
 @@ -178,6 +178,12 @@ void ExtractUnderlines(NSAttributedString* string,
@@ -1399,7 +1399,7 @@ index ed578f8b5ecab3fa773638ef3a6634c3e5129652..c244a3d5d19a5136a26c202910c372a9
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -359,7 +365,14 @@ - (BOOL)acceptsMouseEventsWhenInactive {
+@@ -355,7 +361,14 @@ void ExtractUnderlines(NSAttributedString* string,
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1414,7 +1414,7 @@ index ed578f8b5ecab3fa773638ef3a6634c3e5129652..c244a3d5d19a5136a26c202910c372a9
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -613,8 +626,10 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+@@ -618,8 +631,10 @@ void ExtractUnderlines(NSAttributedString* string,
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1425,7 +1425,7 @@ index ed578f8b5ecab3fa773638ef3a6634c3e5129652..c244a3d5d19a5136a26c202910c372a9
  
    if (eventType == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -655,9 +670,14 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+@@ -660,9 +675,14 @@ void ExtractUnderlines(NSAttributedString* string,
  
    ui::TextInputType textInputType = ui::TEXT_INPUT_TYPE_NONE;
    client_->OnNSViewSyncGetTextInputType(&textInputType);
@@ -1443,12 +1443,11 @@ index ed578f8b5ecab3fa773638ef3a6634c3e5129652..c244a3d5d19a5136a26c202910c372a9
  
    // We only handle key down events and just simply forward other events.
    if (eventType != NSKeyDown) {
-
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index c30099340f5c62cdc82d70bf04a35348a7c85005..90bb99aa9d2645fd929d3cebaff96f3c9fe034e5 100644
+index 6a161f0f36c6ebb400a0785a303fd40f8c58e9e7..e89d8f82d28bfa7d395ef72182de234e9913e8a1 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -1078,6 +1078,10 @@ void CombineTextNodesAndMakeCallback(SpeechCallback callback,
+@@ -1085,6 +1085,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
    if (host()) {
      host()->SetActive(active);
      if (active) {
@@ -1460,7 +1459,7 @@ index c30099340f5c62cdc82d70bf04a35348a7c85005..90bb99aa9d2645fd929d3cebaff96f3c
          host()->Focus();
      } else {
 diff --git a/content/browser/renderer_host/render_widget_targeter.cc b/content/browser/renderer_host/render_widget_targeter.cc
-index 9e0e5b96b8e38a6c29e601d091941dad28eec900..fe160824c9d1ee3ac0cd4148abd0da0e302001f4 100644
+index 9e0e5b96b8e38a6c29e601d091941dad28eec900..1463daf2462cfb3d8208a91f3fb3b0f15e6710ff 100644
 --- a/content/browser/renderer_host/render_widget_targeter.cc
 +++ b/content/browser/renderer_host/render_widget_targeter.cc
 @@ -5,6 +5,7 @@
@@ -1497,10 +1496,10 @@ index 9e0e5b96b8e38a6c29e601d091941dad28eec900..fe160824c9d1ee3ac0cd4148abd0da0e
  
  void RenderWidgetTargeter::ViewWillBeDestroyed(RenderWidgetHostViewBase* view) {
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index fbd264add72e2d9e431ed054c3121b3ca05ab37d..22540ce485a1f9079346d90ee8357c693411865b 100644
+index 942a35d355acc1cff8762c1e5a4961c6f022f4b2..182887b23f1b8b969cf68302673a7f94139b7ba3 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1743,8 +1743,9 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
+@@ -1758,8 +1758,9 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
    // This is set before initializing the render manager since
    // RenderFrameHostManager::Init calls back into us via its delegate to ask if
    // it should be hidden.
@@ -1512,7 +1511,7 @@ index fbd264add72e2d9e431ed054c3121b3ca05ab37d..22540ce485a1f9079346d90ee8357c69
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2339,7 +2340,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2354,7 +2355,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
@@ -1526,7 +1525,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index 6a9ee15776b6b4ec988cb9717a3ce71ac8dd9057..89d5bc930f04fcc06239149679dc49d771724c4f 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -584,6 +584,7 @@ - (void)draggedImage:(NSImage*)anImage
+@@ -584,6 +584,7 @@ void WebContentsViewMac::CloseTab() {
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -1552,7 +1551,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index cec3bd8a97b8b9bcab176a9bd2c296ec12aba838..a00a391c96fc1f04be189c41cb285a66772260e8 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -347,6 +347,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
+@@ -347,6 +347,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  
@@ -1606,10 +1605,18 @@ index 9c5f03aad4269e814e11523c6a80f5d179c08e93..e56b9626d24ec403ae8f65b950d9f133
            "blink::mojom::EngagementClient",
            "blink::mojom::InstallationService",
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
-index c5fe59a523776ab12f23a58350ab816c22bd3495..ec35d7bce6ae7717e62e7b7b35e57c1a48ab2545 100644
+index c5fe59a523776ab12f23a58350ab816c22bd3495..d4484db046c00f73ff28d7fcea316ac74f9f6bc5 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
 +++ b/content/renderer/browser_plugin/browser_plugin.cc
-@@ -218,7 +218,7 @@ void BrowserPlugin::Detach() {
+@@ -104,6 +104,7 @@ BrowserPlugin::BrowserPlugin(
+     delegate_->SetElementInstanceID(browser_plugin_instance_id_);
+ 
+   enable_surface_synchronization_ = features::IsSurfaceSynchronizationEnabled();
++  enable_surface_synchronization_ = false;
+ }
+ 
+ BrowserPlugin::~BrowserPlugin() {
+@@ -218,7 +219,7 @@ void BrowserPlugin::Detach() {
  
    attached_ = false;
    guest_crashed_ = false;
@@ -1618,7 +1625,7 @@ index c5fe59a523776ab12f23a58350ab816c22bd3495..ec35d7bce6ae7717e62e7b7b35e57c1a
  
    BrowserPluginManager::Get()->Send(
        new BrowserPluginHostMsg_Detach(browser_plugin_instance_id_));
-@@ -625,8 +625,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
+@@ -625,8 +626,6 @@ blink::WebInputEventResult BrowserPlugin::HandleInputEvent(
  
    if (blink::WebInputEvent::IsGestureEventType(event.GetType())) {
      auto gesture_event = static_cast<const blink::WebGestureEvent&>(event);
@@ -1818,10 +1825,10 @@ index d985c0df7a9cb9543003ac32751f3fc80633248a..02bd6daf7e48de8345ce3be506e02110
  
    proto.attachedCallback = function() {
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index 89f885efd50f66ac37b160abb3a21e351a51eada..b23a8607d1c85a0bb5d73b36b70e89bbe5d02589 100644
+index 45334f8bb6b461b2d7c1ba7ff5bd73a6ea735420..28cb4a29b53fb1d4dcedcaca9e36798a69fad252 100644
 --- a/media/base/media_switches.cc
 +++ b/media/base/media_switches.cc
-@@ -360,7 +360,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
+@@ -353,7 +353,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
      return switches::autoplay::kDocumentUserActivationRequiredPolicy;
  
  // The default value is platform dependent.
@@ -1899,7 +1906,7 @@ index 90f13baf5daa216c0832b39137ba87f60aa2ccd2..643caf4e6825e3da6678af6a1a981c42
  
    bool ShouldSelectReplacement() const {
 diff --git a/third_party/blink/renderer/core/exported/web_view_impl.cc b/third_party/blink/renderer/core/exported/web_view_impl.cc
-index 6b34fb81e9a18c4d2fa42a12d6307e9d095435d8..669aff9fb12ca5eb6c4df2ac79af162dc0450d8e 100644
+index e46c83b1b6bbbcf960803e30089fcd8c7848ea89..df2a2215e8c25cdccb218e4217a8effebbd4789a 100644
 --- a/third_party/blink/renderer/core/exported/web_view_impl.cc
 +++ b/third_party/blink/renderer/core/exported/web_view_impl.cc
 @@ -3218,6 +3218,7 @@ void WebViewImpl::DidCloseContextMenu() {
