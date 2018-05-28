@@ -16,6 +16,8 @@
 #include "chrome/browser/background/background_mode_manager.h"
 #include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/component_updater/crl_set_component_installer.h"
+#include "chrome/browser/media/webrtc/webrtc_event_log_manager.h"
+#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
 #include "chrome/browser/notifications/notification_ui_manager_stub.h"
 #include "chrome/browser/policy/chrome_browser_policy_connector.h"
@@ -93,11 +95,6 @@
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "chrome/browser/plugins/plugin_finder.h"
 #include "content/public/browser/plugin_service.h"
-#endif
-
-#if BUILDFLAG(ENABLE_WEBRTC)
-#include "chrome/browser/media/webrtc/webrtc_event_log_manager.h"
-#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #endif
 
 #if defined(OS_WIN)
@@ -709,13 +706,11 @@ MediaFileSystemRegistry* BrowserProcessImpl::media_file_system_registry() {
   return nullptr;
 }
 
-#if BUILDFLAG(ENABLE_WEBRTC)
 WebRtcLogUploader* BrowserProcessImpl::webrtc_log_uploader() {
   NOTIMPLEMENTED();
   return nullptr;
 }
 
-#endif
 network_time::NetworkTimeTracker* BrowserProcessImpl::network_time_tracker() {
   NOTIMPLEMENTED();
   return nullptr;
