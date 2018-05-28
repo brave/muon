@@ -350,6 +350,18 @@ source_set("browser") {
     "//components/policy/core/common/policy_service_stub.h",
   ]
 
+  sources += [
+    "chrome/browser/media/webrtc/media_capture_devices_dispatcher.cc",
+    "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
+    "chrome/browser/media/webrtc/media_stream_capture_indicator.cc",
+    "chrome/browser/media/webrtc/media_stream_capture_indicator.h",
+  ]
+
+  public_deps += [
+    "//third_party/libyuv",
+    "//third_party/webrtc/modules/desktop_capture",
+  ]
+
   if (use_aura) {
     sources += [
       "//chrome/browser/platform_util_aura.cc",
@@ -487,20 +499,6 @@ source_set("browser") {
         "//chrome/browser/ui/webui/print_preview/print_preview_ui.h",
       ]
     }
-  }
-
-  if (enable_webrtc) {
-    sources += [
-      "chrome/browser/media/webrtc/media_capture_devices_dispatcher.cc",
-      "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h",
-      "chrome/browser/media/webrtc/media_stream_capture_indicator.cc",
-      "chrome/browser/media/webrtc/media_stream_capture_indicator.h",
-    ]
-
-    public_deps += [
-      "//third_party/libyuv",
-      "//third_party/webrtc/modules/desktop_capture",
-    ]
   }
 
   if (enable_plugins) {
