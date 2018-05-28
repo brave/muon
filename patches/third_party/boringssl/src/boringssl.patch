@@ -1,5 +1,5 @@
 diff --git a/crypto/cipher_extra/cipher_extra.c b/crypto/cipher_extra/cipher_extra.c
-index fc8e24b65c4c6f379072f3756703d318747e9526..106f3a9103333e1cc6a2eff6666e980e5607248c 100644
+index e770489e947ecbf3154bb680cf043c9b8dc6159d..04c2c57d412eda4cfa82db8323c188d364761528 100644
 --- a/crypto/cipher_extra/cipher_extra.c
 +++ b/crypto/cipher_extra/cipher_extra.c
 @@ -83,6 +83,8 @@ const EVP_CIPHER *EVP_get_cipherbynid(int nid) {
@@ -202,10 +202,10 @@ index 6e569ec82db970ba8f1004f811ff08cc59794005..905a293ad046e5653352ec59a278df3a
      name = "bssl",
      srcs = tool_sources + tool_headers,
 diff --git a/util/generate_build_files.py b/util/generate_build_files.py
-index f2b10dec0018b7e66ad4a5b9c77bd2510c6d6442..337540bd51b58f3edd931eae1eae13dfa24b1d8d 100644
+index 11b9a8a9928a813501f66f867277928515e9e2ed..f4e2d3686dcd1e894bca30d944bdd1bb52dd5218 100644
 --- a/util/generate_build_files.py
 +++ b/util/generate_build_files.py
-@@ -150,6 +150,14 @@ class Android(object):
+@@ -151,6 +151,14 @@ class Android(object):
        blueprint.write('    ],\n')
        blueprint.write('}\n\n')
  
@@ -220,7 +220,7 @@ index f2b10dec0018b7e66ad4a5b9c77bd2510c6d6442..337540bd51b58f3edd931eae1eae13df
      # Legacy Android.mk format, only used by Trusty in new branches
      with open('sources.mk', 'w+') as makefile:
        makefile.write(self.header)
-@@ -198,6 +206,7 @@ class Bazel(object):
+@@ -199,6 +207,7 @@ class Bazel(object):
        self.PrintVariableSection(out, 'crypto_sources', files['crypto'])
        self.PrintVariableSection(out, 'tool_sources', files['tool'])
        self.PrintVariableSection(out, 'tool_headers', files['tool_headers'])
@@ -228,16 +228,16 @@ index f2b10dec0018b7e66ad4a5b9c77bd2510c6d6442..337540bd51b58f3edd931eae1eae13df
  
        for ((osname, arch), asm_files) in asm_outputs:
          self.PrintVariableSection(
-@@ -299,6 +308,8 @@ class GN(object):
-       self.PrintVariableSection(out, 'ssl_sources',
-                                 files['ssl'] + files['ssl_headers'] +
-                                 files['ssl_internal_headers'])
+@@ -353,6 +362,8 @@ class GYP(object):
+       self.PrintVariableSection(gypi, 'boringssl_crypto_sources',
+                                 files['crypto'] + files['crypto_headers'] +
+                                 files['crypto_internal_headers'])
 +      self.PrintVariableSection(out, 'decrepit_sources',
 +                                files['decrepit'])
  
        for ((osname, arch), asm_files) in asm_outputs:
-         self.PrintVariableSection(
-@@ -587,6 +598,21 @@ def main(platforms):
+         self.PrintVariableSection(gypi, 'boringssl_%s_%s_sources' %
+@@ -592,6 +603,21 @@ def main(platforms):
    ssl_source_files = FindCFiles(os.path.join('src', 'ssl'), NoTests)
    tool_c_files = FindCFiles(os.path.join('src', 'tool'), NoTests)
    tool_h_files = FindHeaderFiles(os.path.join('src', 'tool'), AllFiles)
@@ -259,7 +259,7 @@ index f2b10dec0018b7e66ad4a5b9c77bd2510c6d6442..337540bd51b58f3edd931eae1eae13df
  
    # third_party/fiat/p256.c lives in third_party/fiat, but it is a FIPS
    # fragment, not a normal source file.
-@@ -656,6 +682,7 @@ def main(platforms):
+@@ -664,6 +690,7 @@ def main(platforms):
        'ssl_test': sorted(ssl_test_files),
        'tool': tool_c_files,
        'tool_headers': tool_h_files,
