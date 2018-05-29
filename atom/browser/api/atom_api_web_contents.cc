@@ -2853,7 +2853,8 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   }
 
   bool discarded = false;
-  if (tab_helper && options.Get("discarded", &discarded) && discarded && !active) {
+  if (tab_helper &&
+      options.Get("discarded", &discarded) && discarded && !active) {
     std::string url;
     if (options.Get("url", &url)) {
       std::unique_ptr<content::NavigationEntryImpl> entry =

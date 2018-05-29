@@ -482,7 +482,8 @@ void TabHelper::SetAutoDiscardable(bool auto_discardable) {
   auto_discardable_ = auto_discardable;
   if (resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
         web_contents())) {
-    GetTabManager()->SetTabAutoDiscardableState(web_contents(), auto_discardable);
+    GetTabManager()->SetTabAutoDiscardableState(
+        web_contents(), auto_discardable);
   }
 }
 
@@ -490,7 +491,8 @@ bool TabHelper::Discard() {
   if (IsDiscarded())
     return false;
 
-  if (!resource_coordinator::TabLifecycleUnitExternal::FromWebContents(web_contents())) {
+  if (!resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+      web_contents())) {
     discarded_ = true;
     content::RestoreHelper::CreateForWebContents(web_contents());
     auto helper = content::RestoreHelper::FromWebContents(web_contents());
