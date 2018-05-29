@@ -390,83 +390,95 @@ index 9f0003bc2d80d7c76ab9dd17393d0188fe1ac6fd..88d75d4091fb3dc282998a5d44e63cbf
  
    // content::NotificationObserver implementation.
    void Observe(int type,
+diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
+index 1b5026face136534578062e4d3c9c0c955dadd20..8dabdbd4f67a0af777f7136963ef18eaf5283584 100644
+--- a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
++++ b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
+@@ -7,10 +7,12 @@
+ #include "base/logging.h"
+ #include "base/metrics/histogram_macros.h"
+ #include "base/process/process_metrics.h"
++#include "chrome/browser/browser_process.h"
+ #include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
+ #include "chrome/browser/media/webrtc/media_stream_capture_indicator.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/resource_coordinator/tab_lifecycle_observer.h"
++#include "chrome/browser/resource_coordinator/tab_manager.h"
+ #include "chrome/browser/resource_coordinator/time.h"
+ #include "chrome/browser/ui/tabs/tab_strip_model.h"
+ #include "content/public/browser/favicon_status.h"
+@@ -228,7 +230,7 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::Discard(
+   create_params.initially_hidden =
+       old_contents->GetVisibility() == content::Visibility::HIDDEN;
+   content::WebContents* const null_contents =
+-      content::WebContents::Create(create_params);
++      g_browser_process->GetTabManager()->CreateNullContents(create_params, old_contents);
+   // Copy over the state from the navigation controller to preserve the
+   // back/forward history and to continue to display the correct title/favicon.
+   //
+@@ -279,7 +281,7 @@ bool TabLifecycleUnitSource::TabLifecycleUnit::Discard(
+   // TODO(jamescook): This breaks script connections with other tabs. Find a
+   // different approach that doesn't do that, perhaps based on
+   // RenderFrameProxyHosts.
+-  delete old_contents;
++  g_browser_process->GetTabManager()->DestroyOldContents(old_contents);
+ 
+   SetState(State::DISCARDED);
+   ++discard_count_;
 diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
-index 7bcce4951f872e0c68f39abbebab736ccc54509f..0b55725bef29558e8a9f98069f99983a091f2daa 100644
+index 20126aa6e705c72a857e7d52744a33e123bd611e..7c137c593caca72da37186edb0b9aeb4560f1d03 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.cc
 +++ b/chrome/browser/resource_coordinator/tab_manager.cc
-@@ -660,7 +660,8 @@ void TabManager::AddTabStats(const BrowserInfo& browser_info,
-   TabStripModel* tab_strip_model = browser_info.tab_strip_model;
-   for (int i = 0; i < tab_strip_model->count(); i++) {
-     WebContents* contents = tab_strip_model->GetWebContentsAt(i);
--    if (!contents->IsCrashed()) {
-+    // TODO(bridiver) - temporary workaround for pinned and unloaded tabs
-+    if (contents && !contents->IsCrashed()) {
-       TabStats stats;
-       stats.is_app = browser_info.browser_is_app;
-       stats.is_internal_page = IsInternalPage(contents->GetLastCommittedURL());
-@@ -765,6 +766,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
+@@ -516,6 +516,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
    }
  }
  
 +// MUON(bridiver): see tab_manager.h
-+WebContents* TabManager::CreateNullContents(
-+    TabStripModel* model, WebContents* old_contents) {
-+  return WebContents::Create(WebContents::CreateParams(model->profile()));
++content::WebContents* TabManager::CreateNullContents(
++    const content::WebContents::CreateParams& params, content::WebContents* old_contents) {
++  return content::WebContents::Create(params);
 +}
 +
 +// MUON(bridiver): see tab_manager.h
-+void TabManager::DestroyOldContents(WebContents* old_contents) {
++void TabManager::DestroyOldContents(content::WebContents* old_contents) {
 +  delete old_contents;
 +}
 +
- WebContents* TabManager::DiscardWebContentsAt(int index,
-                                               TabStripModel* model,
-                                               DiscardReason reason) {
-@@ -780,8 +792,7 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
-       "TabManager.Discarding.DiscardedTabHasBeforeUnloadHandler",
-       old_contents->NeedToFireBeforeUnload());
- 
--  WebContents* null_contents =
--      WebContents::Create(WebContents::CreateParams(model->profile()));
-+  WebContents* null_contents = CreateNullContents(model, old_contents);
-   // Copy over the state from the navigation controller to preserve the
-   // back/forward history and to continue to display the correct title/favicon.
-   //
-@@ -841,7 +852,8 @@ WebContents* TabManager::DiscardWebContentsAt(int index,
-   // TODO(jamescook): This breaks script connections with other tabs.
-   // Find a different approach that doesn't do that, perhaps based on
-   // RenderFrameProxyHosts.
--  delete old_contents;
-+  // MUON(bridiver): see tab_manager.h
-+  DestroyOldContents(old_contents);
- 
-   return null_contents;
- }
+ void TabManager::PauseBackgroundTabOpeningIfNeeded() {
+   TRACE_EVENT_INSTANT0("navigation",
+                        "TabManager::PauseBackgroundTabOpeningIfNeeded",
 diff --git a/chrome/browser/resource_coordinator/tab_manager.h b/chrome/browser/resource_coordinator/tab_manager.h
-index 440fdf8df66efce1b68a0463189986a6a0b0353a..7cc8fb11ecb5e2caa67e4e92d6d4526edb2d2001 100644
+index 462ea07d0073906b1068316163b48ea1636488e3..b66ba1e93f1c7fcc86bd50bae2f261a1368c5a62 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.h
 +++ b/chrome/browser/resource_coordinator/tab_manager.h
-@@ -93,6 +93,11 @@ class TabManager : public TabStripModelObserver, public BrowserListObserver {
+@@ -30,6 +30,7 @@
+ #include "chrome/browser/ui/browser_tab_strip_tracker.h"
+ #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
+ #include "content/public/browser/navigation_throttle.h"
++#include "content/public/browser/web_contents.h"
+ #include "ui/gfx/native_widget_types.h"
+ 
+ class GURL;
+@@ -89,6 +90,11 @@ class TabManager : public LifecycleUnitObserver,
    TabManager();
    ~TabManager() override;
  
 +  // MUON(bridiver): override to create/destroy guests webcontents
 +  virtual content::WebContents* CreateNullContents(
-+      TabStripModel* model, content::WebContents* old_contents);
++      const content::WebContents::CreateParams& params, content::WebContents* old_contents);
 +  virtual void DestroyOldContents(content::WebContents* old_contents);
 +
-   // Number of discard events since Chrome started.
-   int discard_count() const { return discard_count_; }
+   // Start/Stop the Tab Manager.
+   void Start();
+   void Stop();
+@@ -202,6 +208,7 @@ class TabManager : public LifecycleUnitObserver,
+   const TabLoadTracker& tab_load_tracker() const { return tab_load_tracker_; }
  
-@@ -300,6 +305,8 @@ class TabManager : public TabStripModelObserver, public BrowserListObserver {
-   // min time to purge times this value.
-   const int kDefaultMinMaxTimeToPurgeRatio = 4;
- 
+  private:
 +  friend class GuestTabManager;
-+
-   // Finds TabStripModel which has a WebContents whose id is the given
-   // |tab_id|, and returns the WebContents index and the TabStripModel.
-   int FindTabStripModelById(int32_t tab_id, TabStripModel** model) const;
+   friend class TabManagerStatsCollectorTest;
+ 
+   FRIEND_TEST_ALL_PREFIXES(TabManagerTest, PurgeBackgroundRenderer);
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index eb650f8aa7009371e31077e0f4a754807efd7613..a2f4a1345789a15ff70f34f7a405ed8310dc4685 100644
 --- a/chrome/common/BUILD.gn

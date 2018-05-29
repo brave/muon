@@ -169,7 +169,7 @@ void TabViewGuest::LoadURLWithParams(
 
 void TabViewGuest::Load() {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (!tab_helper || !tab_helper->IsDiscarded()) {
+  if (tab_helper && !tab_helper->IsDiscarded()) {
     if (!web_contents()->HasOpener())
       api_web_contents_->ResumeLoadingCreatedWebContents();
 

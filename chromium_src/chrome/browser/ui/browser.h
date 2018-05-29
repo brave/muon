@@ -133,6 +133,7 @@ class Browser : public content::WebContentsDelegate {
   BrowserWindow* window() const { return window_; }
   TabStripModel* tab_strip_model() const { return tab_strip_model_.get(); }
   SessionID& session_id() { return session_id_; }
+  void set_session_id(const SessionID& session_id) { session_id_ = session_id; }
 
   // OnBeforeUnload handling //////////////////////////////////////////////////
 
