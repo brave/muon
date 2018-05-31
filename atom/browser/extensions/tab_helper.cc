@@ -340,7 +340,9 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   new_guest->TabIdChanged();
 }
 
-void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
+void TabHelper::TabDetachedAt(content::WebContents* contents,
+                              int index,
+                              bool was_active) {
   if (contents != web_contents())
     return;
 
