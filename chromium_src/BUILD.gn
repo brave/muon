@@ -461,8 +461,6 @@ source_set("browser") {
       "//chrome/browser/printing/print_job_manager.h",
       "//chrome/browser/printing/print_job_worker.cc",
       "//chrome/browser/printing/print_job_worker.h",
-      "//chrome/browser/printing/print_job_worker_owner.cc",
-      "//chrome/browser/printing/print_job_worker_owner.h",
       "//chrome/browser/printing/print_view_manager_base.cc",
       "//chrome/browser/printing/print_view_manager_base.h",
       "//chrome/browser/printing/print_view_manager_basic.cc",
