@@ -246,8 +246,6 @@ source_set("browser") {
     "//chrome/browser/net/proxy_config_monitor.h",
     "//chrome/browser/net/proxy_service_factory.cc",
     "//chrome/browser/net/proxy_service_factory.h",
-    "//chrome/browser/net/sth_distributor_provider.cc",
-    "//chrome/browser/net/sth_distributor_provider.h",
     "//chrome/browser/net/system_network_context_manager.cc",
     "//chrome/browser/net/system_network_context_manager.h",
 
