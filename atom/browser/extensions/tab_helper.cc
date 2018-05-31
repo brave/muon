@@ -178,7 +178,8 @@ bool TabHelper::AttachGuest(int window_id, int index) {
     if (browser->session_id().id() == window_id) {
       index_ = index;
       browser->tab_strip_model()->ReplaceWebContentsAt(
-          GetTabStripIndex(window_id, index_), web_contents());
+          GetTabStripIndex(window_id, index_),
+          base::WrapUnique(web_contents()));
       return true;
     }
   }
@@ -196,7 +197,7 @@ content::WebContents* TabHelper::DetachGuest() {
     null_contents->GetController().CopyStateFrom(
         web_contents()->GetController(), false);
 
-    auto null_helper = FromWebContents(null_contents);
+    auto null_helper = FromWebContents(null_contents.get());
     null_helper->index_ = get_index();
     null_helper->pinned_ = pinned_;
     // transfer window closing state
@@ -207,9 +208,9 @@ content::WebContents* TabHelper::DetachGuest() {
 
     // Replace the detached tab with the null placeholder
     browser_->tab_strip_model()->ReplaceWebContentsAt(
-        get_index(), null_contents);
+        get_index(), std::move(null_contents));
 
-    return null_contents;
+    return null_contents.get();
   }
   return nullptr;
 }
@@ -425,7 +426,8 @@ void TabHelper::SetBrowser(Browser* browser) {
 
   if (browser_) {
     if (get_index() != TabStripModel::kNoTab)
-      browser_->tab_strip_model()->DetachWebContentsAt(get_index());
+      // TODO(hferreiro)
+      // browser_->tab_strip_model()->DetachWebContentsAt(get_index());
 
     OnBrowserRemoved(browser_);
   }
@@ -447,8 +449,8 @@ void TabHelper::SetBrowser(Browser* browser) {
       transition_type = ui::PAGE_TRANSITION_LINK;
     }
 
-    browser_->tab_strip_model()->AddWebContents(web_contents(), index_,
-        transition_type, add_types);
+    browser_->tab_strip_model()->AddWebContents(
+        base::WrapUnique(web_contents()), index_, transition_type, add_types);
   } else {
     browser_ = nullptr;
   }
@@ -549,9 +551,10 @@ bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
         int add_types = TabStripModel::ADD_NONE;
         add_types |= foreground ? TabStripModel::ADD_ACTIVE : 0;
         b->tab_strip_model()->InsertWebContentsAt(
-            index, web_contents(), add_types);
+            index, base::WrapUnique(web_contents()), add_types);
       } else {
-        b->tab_strip_model()->AppendWebContents(web_contents(), foreground);
+        b->tab_strip_model()->AppendWebContents(
+            base::WrapUnique(web_contents()), foreground);
       }
       return true;
     }

@@ -37,7 +37,7 @@ namespace resource_coordinator {
 
 GuestTabManager::GuestTabManager() : TabManager() {}
 
-WebContents* GuestTabManager::CreateNullContents(
+std::unique_ptr<WebContents> GuestTabManager::CreateNullContents(
     const content::WebContents::CreateParams& params,
     content::WebContents* old_contents) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
@@ -51,13 +51,14 @@ WebContents* GuestTabManager::CreateNullContents(
   create_params.initially_hidden = true;
   auto contents = extensions::TabHelper::CreateTab(owner, create_params);
   content::RestoreHelper::CreateForWebContents(contents);
-  return contents;
+  return base::WrapUnique(contents);
 }
 
-void GuestTabManager::DestroyOldContents(WebContents* old_contents) {
+void GuestTabManager::DestroyOldContents(
+    std::unique_ptr<WebContents> old_contents) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
-  auto tab_helper = extensions::TabHelper::FromWebContents(old_contents);
+  auto tab_helper = extensions::TabHelper::FromWebContents(old_contents.get());
   DCHECK(tab_helper && tab_helper->guest());
   // Let the guest destroy itself after the detach message has been received
   tab_helper->guest()->SetCanRunInDetachedState(false);

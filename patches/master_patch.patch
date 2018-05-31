@@ -446,34 +446,37 @@ index 01d3ee8917c2d05943e42556a4221161606c451d..f801248b1017abaf706533ff0889295c
    // RenderFrameProxyHosts.
 -  old_contents_deleter.reset();
 +  // MUON(bridiver): see tab_manager.h
-+  g_browser_process->GetTabManager()->DestroyOldContents(old_contents);
++  g_browser_process->GetTabManager()->DestroyOldContents(
++      std::move(old_contents_deleter));
  
    LifecycleState previous_state = GetState();
    SetState(LifecycleState::DISCARDED);
 diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
-index 7d5a446cf9fa1c63a71d2bc11c3a7684a3dd992c..ab18db7e11d0efe30b4c1379ce7b7f940c2c490f 100644
+index 7d5a446cf9fa1c63a71d2bc11c3a7684a3dd992c..8c02dd39d4d509849061a7ad09f6de3758d38f18 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.cc
 +++ b/chrome/browser/resource_coordinator/tab_manager.cc
-@@ -487,6 +487,17 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
+@@ -487,6 +487,19 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
    }
  }
  
 +// MUON(bridiver): see tab_manager.h
-+content::WebContents* TabManager::CreateNullContents(
-+    const content::WebContents::CreateParams& params, content::WebContents* old_contents) {
++std::unique_ptr<content::WebContents> TabManager::CreateNullContents(
++    const content::WebContents::CreateParams& params,
++    content::WebContents* old_contents) {
 +  return content::WebContents::Create(params);
 +}
 +
 +// MUON(bridiver): see tab_manager.h
-+void TabManager::DestroyOldContents(content::WebContents* old_contents) {
-+  delete old_contents;
++void TabManager::DestroyOldContents(
++    std::unique_ptr<content::WebContents> old_contents) {
++  old_contents.reset();
 +}
 +
  void TabManager::PauseBackgroundTabOpeningIfNeeded() {
    TRACE_EVENT_INSTANT0("navigation",
                         "TabManager::PauseBackgroundTabOpeningIfNeeded",
 diff --git a/chrome/browser/resource_coordinator/tab_manager.h b/chrome/browser/resource_coordinator/tab_manager.h
-index 926a13003dd9ff8578d188790c282e51168f7f3e..a373b0718d0fefd459e10330450e7f6c3d1104f3 100644
+index 926a13003dd9ff8578d188790c282e51168f7f3e..8f37a9e1d3cb2dd7941aeef526c77904bf4be348 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.h
 +++ b/chrome/browser/resource_coordinator/tab_manager.h
 @@ -32,6 +32,7 @@
@@ -484,19 +487,21 @@ index 926a13003dd9ff8578d188790c282e51168f7f3e..a373b0718d0fefd459e10330450e7f6c
  #include "ui/gfx/native_widget_types.h"
  
  class GURL;
-@@ -92,6 +93,11 @@ class TabManager : public LifecycleUnitObserver,
+@@ -92,6 +93,13 @@ class TabManager : public LifecycleUnitObserver,
    TabManager();
    ~TabManager() override;
  
 +  // MUON(bridiver): override to create/destroy guests webcontents
-+  virtual content::WebContents* CreateNullContents(
-+      const content::WebContents::CreateParams& params, content::WebContents* old_contents);
-+  virtual void DestroyOldContents(content::WebContents* old_contents);
++  virtual std::unique_ptr<content::WebContents> CreateNullContents(
++      const content::WebContents::CreateParams& params,
++      content::WebContents* old_contents);
++  virtual void DestroyOldContents(
++      std::unique_ptr<content::WebContents> old_contents);
 +
    // Start/Stop the Tab Manager.
    void Start();
    void Stop();
-@@ -181,6 +187,7 @@ class TabManager : public LifecycleUnitObserver,
+@@ -181,6 +189,7 @@ class TabManager : public LifecycleUnitObserver,
    int restored_tab_count() const;
  
   private:
