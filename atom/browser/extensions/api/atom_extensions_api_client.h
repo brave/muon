@@ -29,8 +29,8 @@ class AtomExtensionsAPIClient : public ExtensionsAPIClient {
   void AttachWebContentsHelpers(content::WebContents* web_contents) const
       override;
   std::unique_ptr<guest_view::GuestViewManagerDelegate>
-      CreateGuestViewManagerDelegate(
-          content::BrowserContext* context) const;
+  CreateGuestViewManagerDelegate(
+      content::BrowserContext* context) const override;
   std::unique_ptr<WebRequestEventRouterDelegate>
       CreateWebRequestEventRouterDelegate() const override;
   ManagementAPIDelegate* CreateManagementAPIDelegate() const override;

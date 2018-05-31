@@ -30,10 +30,9 @@ class AtomExtensionWebRequestEventRouterDelegate :
  public:
   AtomExtensionWebRequestEventRouterDelegate() {}
   ~AtomExtensionWebRequestEventRouterDelegate() override {}
-  void NotifyWebRequestWithheld(
-      int render_process_id,
-      int render_frame_id,
-      const std::string& extension_id) {
+  void NotifyWebRequestWithheld(int render_process_id,
+                                int render_frame_id,
+                                const std::string& extension_id) override {
     // TODO(bridiver) - will this ever be called?
   }
  private:
