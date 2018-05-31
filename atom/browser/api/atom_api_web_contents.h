@@ -429,8 +429,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void HandleKeyboardEvent(
       content::WebContents* source,
       const content::NativeWebKeyboardEvent& event) override;
-  void EnterFullscreenModeForTab(content::WebContents* source,
-                                 const GURL& origin) override;
+  void EnterFullscreenModeForTab(
+      content::WebContents* source,
+      const GURL& origin,
+      const blink::WebFullscreenOptions& options) override;
   void ExitFullscreenModeForTab(content::WebContents* source) override;
   void ContentsZoomChange(bool zoom_in) override;
   void RendererUnresponsive(
