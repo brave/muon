@@ -61,7 +61,7 @@
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
-#include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
+#include "chrome/browser/resource_coordinator/tab_helper.h"
 #include "chrome/browser/resource_coordinator/tab_manager.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
@@ -608,8 +608,8 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
         this);
     }
 
-    if (ResourceCoordinatorWebContentsObserver::IsEnabled())
-      ResourceCoordinatorWebContentsObserver::CreateForWebContents(
+    if (resource_coordinator::ResourceCoordinatorTabHelper::IsEnabled())
+      resource_coordinator::ResourceCoordinatorTabHelper::CreateForWebContents(
           web_contents);
   }
 
