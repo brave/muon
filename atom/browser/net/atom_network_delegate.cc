@@ -97,6 +97,18 @@ void RunResponseListener(
   return listener.Run(*(details.get()), callback);
 }
 
+bool IsChromiumRequest(net::URLRequest* request) {
+  // see chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc
+  static const char kHunspellDictionariesServer[] =
+   "https://redirector.gvt1.com/edgedl/chrome/dict/";
+  std::string url_spec = request->original_url().spec();
+  if (base::StartsWith(url_spec, kHunspellDictionariesServer,
+                       base::CompareCase::SENSITIVE)) {
+    return true;
+  }
+  return false;
+}
+
 // Test whether the URL of |request| matches |patterns|.
 bool MatchesFilterCondition(net::URLRequest* request,
                             const URLPatterns& patterns) {
@@ -441,6 +453,8 @@ int AtomNetworkDelegate::HandleResponseEvent(
     Args... args) {
   const auto& info = response_listeners_[type];
   if (!MatchesFilterCondition(request, info.url_patterns))
+    return net::OK;
+  if (IsChromiumRequest(request))
     return net::OK;
 
   std::unique_ptr<base::DictionaryValue> details(new base::DictionaryValue);
