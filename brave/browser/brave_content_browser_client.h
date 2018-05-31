@@ -171,10 +171,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       const content::MainFunctionParams&) override;
 
  protected:
-  bool IsValidStoragePartitionId(
-    content::BrowserContext* browser_context,
-    const std::string& partition_id);
-
+  bool IsValidStoragePartitionId(content::BrowserContext* browser_context,
+                                 const std::string& partition_id) override;
 
  private:
   // Populate |frame_interfaces_|.

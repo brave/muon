@@ -77,26 +77,26 @@ class NativeWindow : public base::SupportsUserData,
 
   ::Browser* browser() const { return browser_.get(); }
 
-  virtual void Close() = 0;
+  void Close() override = 0;
   virtual void CloseImmediately() = 0;
   virtual bool IsClosed() const { return is_closed_; }
   virtual void Focus(bool focus) = 0;
   virtual bool IsFocused() = 0;
-  virtual void Show() = 0;
-  virtual void ShowInactive() = 0;
-  virtual void Hide() = 0;
-  virtual bool IsVisible() const = 0;
+  void Show() override = 0;
+  void ShowInactive() override = 0;
+  void Hide() override = 0;
+  bool IsVisible() const override = 0;
   virtual bool IsEnabled() = 0;
-  virtual void Maximize() = 0;
+  void Maximize() override = 0;
   virtual void Unmaximize() = 0;
-  virtual bool IsMaximized() const = 0;
-  virtual void Minimize() = 0;
-  virtual void Restore() = 0;
-  virtual bool IsMinimized() const = 0;
+  bool IsMaximized() const override = 0;
+  void Minimize() override = 0;
+  void Restore() override = 0;
+  bool IsMinimized() const override = 0;
   virtual void SetFullScreen(bool fullscreen) = 0;
-  virtual bool IsFullscreen() const = 0;
+  bool IsFullscreen() const override = 0;
   virtual void SetBounds(const gfx::Rect& bounds, bool animate = false) = 0;
-  virtual gfx::Rect GetBounds() const = 0;
+  gfx::Rect GetBounds() const override = 0;
   virtual void SetSize(const gfx::Size& size, bool animate = false);
   virtual gfx::Size GetSize();
   virtual void SetPosition(const gfx::Point& position, bool animate = false);
@@ -130,12 +130,12 @@ class NativeWindow : public base::SupportsUserData,
   virtual bool IsFullScreenable() = 0;
   virtual void SetClosable(bool closable) = 0;
   virtual bool IsClosable() = 0;
-  virtual void SetAlwaysOnTop(bool top) = 0;
-  virtual bool IsAlwaysOnTop() const = 0;
+  void SetAlwaysOnTop(bool top) override = 0;
+  bool IsAlwaysOnTop() const override = 0;
   virtual void Center() = 0;
   virtual void SetTitle(const std::string& title) = 0;
   virtual std::string GetTitle() = 0;
-  virtual void FlashFrame(bool flash) = 0;
+  void FlashFrame(bool flash) override = 0;
   virtual void SetSkipTaskbar(bool skip) = 0;
   virtual void SetKiosk(bool kiosk) = 0;
   virtual bool IsKiosk() const = 0;
@@ -151,7 +151,7 @@ class NativeWindow : public base::SupportsUserData,
   virtual void SetFocusable(bool focusable);
   virtual void SetMenu(AtomMenuModel* menu);
   virtual void SetParentWindow(NativeWindow* parent);
-  virtual gfx::NativeWindow GetNativeWindow() const = 0;
+  gfx::NativeWindow GetNativeWindow() const override = 0;
   virtual gfx::AcceleratedWidget GetAcceleratedWidget() = 0;
 
   // Taskbar/Dock APIs.
@@ -170,7 +170,7 @@ class NativeWindow : public base::SupportsUserData,
 
   // Workspace APIs.
   virtual void SetVisibleOnAllWorkspaces(bool visible) = 0;
-  virtual bool IsVisibleOnAllWorkspaces() = 0;
+  bool IsVisibleOnAllWorkspaces() override = 0;
 
   // Webview APIs.
   virtual void FocusOnWebView();
