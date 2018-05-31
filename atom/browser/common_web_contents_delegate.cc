@@ -276,7 +276,9 @@ void CommonWebContentsDelegate::EnumerateDirectory(content::WebContents* guest,
 }
 
 void CommonWebContentsDelegate::EnterFullscreenModeForTab(
-    content::WebContents* source, const GURL& origin) {
+    content::WebContents* source,
+    const GURL& origin,
+    const blink::WebFullscreenOptions& options) {
   if (!owner_window_)
     return;
   SetHtmlApiFullscreen(true);
