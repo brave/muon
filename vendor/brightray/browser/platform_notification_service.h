@@ -45,7 +45,7 @@ class PlatformNotificationService
       const content::PlatformNotificationData& notification_data,
       const content::NotificationResources& notification_resources) override;
   void CloseNotification(content::BrowserContext* browser_context,
-                         const std::string& notification_id);
+                         const std::string& notification_id) override;
   void ClosePersistentNotification(
       content::BrowserContext* browser_context,
       const std::string& notification_id) override;
