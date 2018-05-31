@@ -1208,7 +1208,9 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
   }
 }
 
-void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
+void WebContents::TabDetachedAt(content::WebContents* contents,
+                                int index,
+                                bool was_active) {
   int window_id = -1;
 
   if (owner_window() && owner_window()->browser())

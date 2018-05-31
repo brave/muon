@@ -154,7 +154,9 @@ class TabHelper : public content::WebContentsObserver,
                      content::WebContents* contents,
                      int index,
                      bool active) override;
-  void TabDetachedAt(content::WebContents* contents, int index) override;
+  void TabDetachedAt(content::WebContents* contents,
+                     int index,
+                     bool was_active) override;
   void TabReplacedAt(TabStripModel* tab_strip_model,
                      content::WebContents* old_contents,
                      content::WebContents* new_contents,
