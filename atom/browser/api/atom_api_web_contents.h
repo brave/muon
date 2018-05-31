@@ -348,7 +348,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
                              int index) override;
-  void TabDetachedAt(content::WebContents* contents, int index) override;
+  void TabDetachedAt(content::WebContents* contents,
+                     int index,
+                     bool was_active) override;
   void ActiveTabChanged(content::WebContents* old_contents,
                         content::WebContents* new_contents,
                         int index,
