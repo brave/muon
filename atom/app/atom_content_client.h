@@ -30,7 +30,7 @@ class AtomContentClient : public brightray::ContentClient {
   void AddPepperPlugins(
       std::vector<content::PepperPluginInfo>* plugins) override;
   bool AllowScriptExtensionForServiceWorker(const GURL& script_url) override;
-  content::OriginTrialPolicy* GetOriginTrialPolicy() override;
+  blink::OriginTrialPolicy* GetOriginTrialPolicy() override;
 
   void AddContentDecryptionModules(
       std::vector<content::CdmInfo>* cdms,
