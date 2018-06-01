@@ -400,7 +400,8 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
 }
 
 void BraveContentBrowserClient::RegisterInProcessServices(
-    StaticServiceMap* services) {
+    StaticServiceMap* services,
+    content::ServiceManagerConnection* connection) {
   {
     service_manager::EmbeddedServiceInfo info;
     info.factory = ChromeService::GetInstance()->CreateChromeServiceFactory();
