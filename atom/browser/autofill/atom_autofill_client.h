@@ -48,7 +48,6 @@ class AtomAutofillClient
                            int index);
 
   // AutofillClient:
-  SaveCardBubbleController* GetSaveCardBubbleController() override;
   PersonalDataManager* GetPersonalDataManager() override;
   scoped_refptr<AutofillWebDataService> GetDatabase() override;
   PrefService* GetPrefs() override;
@@ -66,7 +65,6 @@ class AtomAutofillClient
   void ConfirmSaveCreditCardToCloud(
       const CreditCard& card,
       std::unique_ptr<base::DictionaryValue> legal_message,
-      bool should_cvc_be_requested,
       const base::Closure& callback) override;
   void LoadRiskData(
       const base::Callback<void(const std::string&)>& callback) override;
