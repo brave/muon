@@ -175,7 +175,7 @@ int AtomBrowserMainParts::PreEarlyInitialization() {
 #if defined(OS_POSIX)
   HandleSIGCHLD();
 #endif
-  return content::RESULT_CODE_NORMAL_EXIT;
+  return service_manager::RESULT_CODE_NORMAL_EXIT;
 }
 
 int AtomBrowserMainParts::PreCreateThreads() {
@@ -266,7 +266,7 @@ int AtomBrowserMainParts::PreCreateThreads() {
 #endif
 #endif
 
-  return content::RESULT_CODE_NORMAL_EXIT;;
+  return service_manager::RESULT_CODE_NORMAL_EXIT;;
 }
 
 void AtomBrowserMainParts::PostEarlyInitialization() {
