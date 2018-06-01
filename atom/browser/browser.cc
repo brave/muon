@@ -92,7 +92,7 @@ void Browser::Shutdown() {
 
   if (base::ThreadTaskRunnerHandle::Get()) {
     base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
-        base::MessageLoop::QuitWhenIdleClosure());
+        base::RunLoop::QuitCurrentWhenIdleClosureDeprecated());
   } else {
     // There is no message loop available so we are in early stage.
     exit(0);
