@@ -22,21 +22,22 @@ using content::BrowserThread;
 
 namespace atom {
 
-LoginHandler::LoginHandler(net::AuthChallengeInfo* auth_info,
-      content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
-      bool is_main_frame,
-      const GURL& url,
-      const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
-          auth_required_callback)
+LoginHandler::LoginHandler(
+    net::AuthChallengeInfo* auth_info,
+    content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+    bool is_request_for_main_frame,
+    const GURL& url,
+    LoginAuthRequiredCallback auth_required_callback)
     : handled_auth_(false),
       auth_info_(auth_info),
       web_contents_getter_(web_contents_getter),
-      auth_required_callback_(auth_required_callback) {
+      auth_required_callback_(std::move(auth_required_callback)) {
   // Fill request details on IO thread.
   std::unique_ptr<base::DictionaryValue> request_details(
       new base::DictionaryValue);
   request_details->SetKey("url", base::Value(url.spec()));
-  request_details->SetKey("isMainFrame", base::Value(is_main_frame));
+  request_details->SetKey("isMainFrame",
+                          base::Value(is_request_for_main_frame));
 
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,
