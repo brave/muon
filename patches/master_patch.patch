@@ -1330,6 +1330,25 @@ index 80fd7cf8957865e62186f394a318f912c6da4e20..a189c82b5a2d6ca6fdfb38c6eadffebd
    int routing_id = MSG_ROUTING_NONE;
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
    // the filter might mutate it.
+diff --git a/content/browser/frame_host/render_widget_host_view_guest.cc b/content/browser/frame_host/render_widget_host_view_guest.cc
+index 839017d8feedabd9b558f0d90bb5374ba0d50306..5c95d66f3f4c6715e220e3d8b93d2e8b0a5dbc6d 100644
+--- a/content/browser/frame_host/render_widget_host_view_guest.cc
++++ b/content/browser/frame_host/render_widget_host_view_guest.cc
+@@ -574,7 +574,14 @@ void RenderWidgetHostViewGuest::ShowDefinitionForSelection() {
+   // overlay (it will open Dictionary.app), so the target NSView need not be
+   // specified.
+   // https://crbug.com/152438
++#if defined(MUON_CHROMIUM_BUILD)
+   platform_view_->ShowDefinitionForSelection();
++#else
++  if (!guest_)
++    return;
++  RenderWidgetHostView* rwhv = guest_->GetOwnerRenderWidgetHostView();
++  platform_view_->ShowDefinitionForSelection(rwhv);
++#endif
+ }
+ 
+ void RenderWidgetHostViewGuest::SpeakSelection() {
 diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 71b3c5906b61728dfad31bd743fb9f9c6c214c68..66b6951c21a06c2313ac5e7080741b9782139262 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
@@ -1343,6 +1362,96 @@ index 71b3c5906b61728dfad31bd743fb9f9c6c214c68..66b6951c21a06c2313ac5e7080741b97
  @property(readonly) NSTimeInterval timestamp;
  
  @end
+diff --git a/content/browser/renderer_host/render_widget_host_ns_view_bridge.h b/content/browser/renderer_host/render_widget_host_ns_view_bridge.h
+index e0ffad96974e38133117f809f3f80b4d94f2e928..094491fc8132ceabefad99822337b0a0279bbc10 100644
+--- a/content/browser/renderer_host/render_widget_host_ns_view_bridge.h
++++ b/content/browser/renderer_host/render_widget_host_ns_view_bridge.h
+@@ -23,6 +23,7 @@ class Rect;
+ 
+ namespace content {
+ 
++class RenderWidgetHostView;
+ class RenderWidgetHostNSViewClient;
+ class WebCursor;
+ 
+@@ -92,6 +93,10 @@ class RenderWidgetHostNSViewBridge {
+       const mac::AttributedStringCoder::EncodedString& encoded_string,
+       gfx::Point baseline_point) = 0;
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++  virtual void SetTargetView(RenderWidgetHostView* target_view) = 0;
++#endif
++
+  private:
+   DISALLOW_COPY_AND_ASSIGN(RenderWidgetHostNSViewBridge);
+ };
+diff --git a/content/browser/renderer_host/render_widget_host_ns_view_bridge.mm b/content/browser/renderer_host/render_widget_host_ns_view_bridge.mm
+index ce3cc68af90d5b2d8be070e1a4eed3352ed50bb6..46461e13b8a26012da7a90289561ae31bfd32c55 100644
+--- a/content/browser/renderer_host/render_widget_host_ns_view_bridge.mm
++++ b/content/browser/renderer_host/render_widget_host_ns_view_bridge.mm
+@@ -11,6 +11,9 @@
+ #include "base/strings/sys_string_conversions.h"
+ #import "content/browser/renderer_host/popup_window_mac.h"
+ #import "content/browser/renderer_host/render_widget_host_view_cocoa.h"
++#if !defined(MUON_CHROMIUM_BUILD)
++#include "content/browser/renderer_host/render_widget_host_view_mac.h"
++#endif
+ #include "content/common/cursors/webcursor.h"
+ #import "skia/ext/skia_utils_mac.h"
+ #import "ui/base/cocoa/animation_utils.h"
+@@ -50,6 +53,11 @@ class RenderWidgetHostViewNSViewBridgeLocal
+   void DisplayCursor(const WebCursor& cursor) override;
+   void SetCursorLocked(bool locked) override;
+   void ShowDictionaryOverlayForSelection() override;
++#if !defined(MUON_CHROMIUM_BUILD)
++  void ShowDictionaryOverlayForSelection(RenderWidgetHostView* target_view);
++  void SetTargetView(RenderWidgetHostView* target_view) override {
++     target_view_ = static_cast<RenderWidgetHostViewMac*>(target_view); };
++#endif
+   void ShowDictionaryOverlay(
+       const mac::AttributedStringCoder::EncodedString& encoded_string,
+       gfx::Point baseline_point) override;
+@@ -78,6 +86,10 @@ class RenderWidgetHostViewNSViewBridgeLocal
+   // Cached copy of the tooltip text, to avoid redundant calls.
+   base::string16 tooltip_text_;
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++  RenderWidgetHostViewMac* target_view_;
++#endif
++
+   DISALLOW_COPY_AND_ASSIGN(RenderWidgetHostViewNSViewBridgeLocal);
+ };
+ 
+@@ -90,6 +102,9 @@ RenderWidgetHostViewNSViewBridgeLocal::RenderWidgetHostViewNSViewBridgeLocal(
+   background_layer_.reset([[CALayer alloc] init]);
+   [cocoa_view_ setLayer:background_layer_];
+   [cocoa_view_ setWantsLayer:YES];
++#if !defined(MUON_CHROMIUM_BUILD)
++  target_view_ = NULL;
++#endif
+ }
+ 
+ RenderWidgetHostViewNSViewBridgeLocal::
+@@ -268,10 +283,17 @@ void RenderWidgetHostViewNSViewBridgeLocal::ShowDictionaryOverlay(
+       mac::AttributedStringCoder::Decode(&encoded_string);
+   if ([string length] == 0)
+     return;
++  NSView* view = cocoa_view_;
++#if !defined(MUON_CHROMIUM_BUILD)
++  if (target_view_) {
++    view = target_view_->cocoa_view();
++  }
++#endif
++
+   NSPoint flipped_baseline_point = {
+-      baseline_point.x(), [cocoa_view_ frame].size.height - baseline_point.y(),
++      baseline_point.x(), [view frame].size.height - baseline_point.y(),
+   };
+-  [cocoa_view_ showDefinitionForAttributedString:string
++  [view showDefinitionForAttributedString:string
+                                          atPoint:flipped_baseline_point];
+ }
+ 
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
 index ebf2d257e64fe80e5f95dd236e8a848efe36e721..2c60d9a60f3dc6efb55bc215a722f5baad0f4ecd 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
@@ -1429,8 +1538,22 @@ index 8ee84cdafbde9114cf6ef5036b214f81184fdc44..1bd0b9bf90bee8ee0ca586a477985025
  
    // We only handle key down events and just simply forward other events.
    if (eventType != NSKeyDown) {
+diff --git a/content/browser/renderer_host/render_widget_host_view_mac.h b/content/browser/renderer_host/render_widget_host_view_mac.h
+index d4b8dadb129c8af19b306e591ae1913228d7f522..7ed24becd075a2754901d2188d55da28512ae516 100644
+--- a/content/browser/renderer_host/render_widget_host_view_mac.h
++++ b/content/browser/renderer_host/render_widget_host_view_mac.h
+@@ -103,6 +103,9 @@ class CONTENT_EXPORT RenderWidgetHostViewMac
+   gfx::Rect GetViewBounds() const override;
+   void SetActive(bool active) override;
+   void ShowDefinitionForSelection() override;
++#if !defined(MUON_CHROMIUM_BUILD)
++  void ShowDefinitionForSelection(RenderWidgetHostView* target_view) override;
++#endif
+   void SpeakSelection() override;
+   void SetBackgroundColor(SkColor color) override;
+   SkColor background_color() const override;
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 6a161f0f36c6ebb400a0785a303fd40f8c58e9e7..e89d8f82d28bfa7d395ef72182de234e9913e8a1 100644
+index 6a161f0f36c6ebb400a0785a303fd40f8c58e9e7..df8a49c604c26dded69de0e14cd424d69f8969ba 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -1085,6 +1085,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
@@ -1444,6 +1567,21 @@ index 6a161f0f36c6ebb400a0785a303fd40f8c58e9e7..e89d8f82d28bfa7d395ef72182de234e
        if (HasFocus())
          host()->Focus();
      } else {
+@@ -1102,6 +1106,14 @@ void RenderWidgetHostViewMac::ShowDefinitionForSelection() {
+   ns_view_bridge_->ShowDictionaryOverlayForSelection();
+ }
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++void RenderWidgetHostViewMac::ShowDefinitionForSelection(
++    RenderWidgetHostView* target_view) {
++  ns_view_bridge_->SetTargetView(target_view);
++  ShowDefinitionForSelection();
++}
++#endif
++
+ void RenderWidgetHostViewMac::SetBackgroundColor(SkColor color) {
+   // This is called by the embedding code prior to the first frame appearing,
+   // to set a reasonable color to show before the web content generates its
 diff --git a/content/browser/renderer_host/render_widget_targeter.cc b/content/browser/renderer_host/render_widget_targeter.cc
 index 9e0e5b96b8e38a6c29e601d091941dad28eec900..1463daf2462cfb3d8208a91f3fb3b0f15e6710ff 100644
 --- a/content/browser/renderer_host/render_widget_targeter.cc
@@ -1590,6 +1728,20 @@ index 9c5f03aad4269e814e11523c6a80f5d179c08e93..e56b9626d24ec403ae8f65b950d9f133
            "blink::mojom::AppBannerController",
            "blink::mojom::EngagementClient",
            "blink::mojom::InstallationService",
+diff --git a/content/public/browser/render_widget_host_view.h b/content/public/browser/render_widget_host_view.h
+index 1ced1c489b4d88d392038cc203d043c85203bb6d..b4d490f537e835d8dc6ed57824bee3a44b5230e4 100644
+--- a/content/public/browser/render_widget_host_view.h
++++ b/content/public/browser/render_widget_host_view.h
+@@ -248,6 +248,9 @@ class CONTENT_EXPORT RenderWidgetHostView {
+ 
+   // Brings up the dictionary showing a definition for the selected text.
+   virtual void ShowDefinitionForSelection() = 0;
++#if !defined(MUON_CHROMIUM_BUILD)
++  virtual void ShowDefinitionForSelection(RenderWidgetHostView* view) {};
++#endif
+ 
+   // Tells the view to speak the currently selected text.
+   virtual void SpeakSelection() = 0;
 diff --git a/content/renderer/browser_plugin/browser_plugin.cc b/content/renderer/browser_plugin/browser_plugin.cc
 index c5fe59a523776ab12f23a58350ab816c22bd3495..2ae931624a84d2bd20769759e952951a31ae1113 100644
 --- a/content/renderer/browser_plugin/browser_plugin.cc
