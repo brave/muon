@@ -56,7 +56,7 @@ void InitializeResourceBundle(const std::string& locale) {
   path = GetResourcesPakFilePath();
 #else
   base::FilePath pak_dir;
-  PathService::Get(base::DIR_MODULE, &pak_dir);
+  base::PathService::Get(base::DIR_MODULE, &pak_dir);
   path = pak_dir.Append(FILE_PATH_LITERAL("electron_resources.pak"));
 #endif
 

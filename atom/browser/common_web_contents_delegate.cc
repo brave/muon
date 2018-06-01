@@ -326,7 +326,7 @@ void CommonWebContentsDelegate::DevToolsSaveToFile(
                        base::Unretained(this), url));
   } else {
     base::FilePath default_path;
-    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path);
+    base::PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path);
     default_path = default_path.Append(base::FilePath::FromUTF8Unsafe(url));
     new extensions::FileEntryPicker(
       GetWebContents(), default_path,

@@ -181,10 +181,10 @@ void AtomContentClient::AddContentDecryptionModules(
   if (cdm_host_file_paths) {
 #if defined(OS_WIN)
   base::FilePath brave_exe_dir;
-  if (!PathService::Get(base::DIR_EXE, &brave_exe_dir))
+  if (!base::PathService::Get(base::DIR_EXE, &brave_exe_dir))
     NOTREACHED();
   base::FilePath file_path;
-  if (!PathService::Get(base::FILE_EXE, &file_path))
+  if (!base::PathService::Get(base::FILE_EXE, &file_path))
     NOTREACHED();
   cdm_host_file_paths->reserve(1);
 

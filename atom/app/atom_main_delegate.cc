@@ -171,7 +171,7 @@ base::FilePath InitializeUserDataDir() {
 
   // Warn and fail early if the process fails to get a user data directory.
   if (user_data_dir.empty() ||
-      !PathService::OverrideAndCreateIfNeeded(chrome::DIR_USER_DATA,
+      !base::PathService::OverrideAndCreateIfNeeded(chrome::DIR_USER_DATA,
           user_data_dir, false, true)) {
     std::string process_type =
       command_line.GetSwitchValueASCII(switches::kProcessType);
@@ -187,7 +187,7 @@ base::FilePath InitializeUserDataDir() {
   base::FilePath chrome_user_data_dir;
   base::FilePath native_messaging_dir;
 #if defined(OS_MACOSX)
-  PathService::Get(base::DIR_APP_DATA, &chrome_user_data_dir);
+  base::PathService::Get(base::DIR_APP_DATA, &chrome_user_data_dir);
   chrome_user_data_dir = chrome_user_data_dir.Append("Google/Chrome");
   native_messaging_dir = base::FilePath(FILE_PATH_LITERAL(
       "/Library/Google/Chrome/NativeMessagingHosts"));
@@ -196,11 +196,11 @@ base::FilePath InitializeUserDataDir() {
   native_messaging_dir = base::FilePath(FILE_PATH_LITERAL(
       "/etc/opt/chrome/native-messaging-hosts"));
 #endif  // defined(OS_MACOSX)
-  PathService::OverrideAndCreateIfNeeded(
+  base::PathService::OverrideAndCreateIfNeeded(
       chrome::DIR_USER_NATIVE_MESSAGING,
       chrome_user_data_dir.Append(FILE_PATH_LITERAL("NativeMessagingHosts")),
       false, true);
-  PathService::OverrideAndCreateIfNeeded(chrome::DIR_NATIVE_MESSAGING,
+  base::PathService::OverrideAndCreateIfNeeded(chrome::DIR_NATIVE_MESSAGING,
       native_messaging_dir, false, true);
 #endif  // OS_POSIX
   return user_data_dir;
@@ -296,7 +296,7 @@ void AtomMainDelegate::PreSandboxStartup() {
   if (path.empty()) {
     LOG(ERROR) << "Could not create user data dir";
   } else {
-    PathService::OverrideAndCreateIfNeeded(
+    base::PathService::OverrideAndCreateIfNeeded(
         component_updater::DIR_COMPONENT_USER,
         path.Append(FILE_PATH_LITERAL("Extensions")), false, true);
   }
