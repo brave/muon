@@ -22,6 +22,11 @@ bool BraveCredentialsFilter::ShouldSave(
   return true;
 }
 
+bool BraveCredentialsFilter::ShouldSavePasswordHash(
+    const autofill::PasswordForm& form) const {
+  return true;
+}
+
 void BraveCredentialsFilter::ReportFormLoginSuccess(
     const PasswordFormManager& form_manager) const {}
 
