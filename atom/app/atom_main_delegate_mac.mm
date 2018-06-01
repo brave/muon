@@ -59,7 +59,7 @@ void AtomMainDelegate::OverrideChildProcessPath() {
                                    brightray::GetApplicationName());
   if (!base::PathExists(helper_path))
     LOG(FATAL) << "Unable to find helper app";
-  PathService::Override(content::CHILD_PROCESS_EXE, helper_path);
+  base::PathService::Override(content::CHILD_PROCESS_EXE, helper_path);
 }
 
 void AtomMainDelegate::SetUpBundleOverrides() {

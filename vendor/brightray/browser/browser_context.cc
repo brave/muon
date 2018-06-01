@@ -76,7 +76,7 @@ BrowserContext::BrowserContext(const std::string& partition, bool in_memory)
       resource_context_(new ResourceContext),
       storage_policy_(new SpecialStoragePolicy),
       weak_factory_(this) {
-  PathService::Get(chrome::DIR_USER_DATA, &path_);
+  base::PathService::Get(chrome::DIR_USER_DATA, &path_);
 
   if (!in_memory_ && !partition.empty())
     path_ = path_.Append(FILE_PATH_LITERAL("Partitions"))

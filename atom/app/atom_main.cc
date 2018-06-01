@@ -133,7 +133,7 @@ int main(int argc, const char* argv[]) {
     user_data_dir = command_line->GetSwitchValuePath(switches::kUserDataDir);
   } else {
 #if defined(OS_WIN) || defined(OS_MACOSX)
-    PathService::Get(base::DIR_APP_DATA, &user_data_dir);
+    base::PathService::Get(base::DIR_APP_DATA, &user_data_dir);
 #else
     user_data_dir = base::nix::GetXDGDirectory(environment.get(),
                                   base::nix::kXdgConfigHomeEnvVar,
@@ -151,7 +151,7 @@ int main(int argc, const char* argv[]) {
 #endif
     }
   }
-  PathService::Override(chrome::DIR_CRASH_DUMPS,
+  base::PathService::Override(chrome::DIR_CRASH_DUMPS,
       user_data_dir.Append(FILE_PATH_LITERAL("CrashPad")));
   environment->SetVar("CHROME_USER_DATA_DIR", user_data_dir.AsUTF8Unsafe());
 

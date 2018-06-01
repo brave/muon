@@ -182,7 +182,7 @@ int AtomBrowserMainParts::PreCreateThreads() {
   TRACE_EVENT0("startup", "AtomBrowserMainParts::PreCreateThreads")
 
   base::FilePath user_data_dir;
-  if (!PathService::Get(chrome::DIR_USER_DATA, &user_data_dir))
+  if (!base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir))
     return chrome::RESULT_CODE_MISSING_DATA;
 
   // Force MediaCaptureDevicesDispatcher to be created on UI thread.
@@ -326,7 +326,7 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   // Make sure the userData directory is created.
   base::FilePath user_data;
-  if (PathService::Get(chrome::DIR_USER_DATA, &user_data))
+  if (base::PathService::Get(chrome::DIR_USER_DATA, &user_data))
     base::CreateDirectoryAndGetError(user_data, nullptr);
 
   // PreProfileInit
