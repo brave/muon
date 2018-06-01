@@ -11,6 +11,7 @@
 
 #include "base/command_line.h"
 #include "base/feature_list.h"
+#include "base/run_loop.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/utf_string_conversions.h"
 #include "content/browser/devtools/devtools_http_handler.h"
@@ -115,7 +116,7 @@ int BrowserX11IOErrorHandler(Display* d) {
   g_in_x11_io_error_handler = true;
   LOG(ERROR) << "X IO error received (X server probably went away)";
   base::ThreadTaskRunnerHandle::Get()->PostTask(
-      FROM_HERE, base::MessageLoop::QuitWhenIdleClosure());
+      FROM_HERE, base::RunLoop::QuitCurrentWhenIdleClosureDeprecated());
 
   return 0;
 }
