@@ -307,7 +307,8 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
 
     storage_->set_cert_transparency_verifier(
         std::make_unique<net::MultiLogCTVerifier>());
-    storage_->set_ct_policy_enforcer(std::make_unique<net::CTPolicyEnforcer>());
+    storage_->set_ct_policy_enforcer(
+        std::make_unique<net::DefaultCTPolicyEnforcer>());
 
     net::HttpNetworkSession::Params network_session_params;
     network_session_params.ignore_certificate_errors = false;
