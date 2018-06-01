@@ -21,6 +21,7 @@
 #include "components/metrics/metrics_pref_names.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/common/content_switches.h"
+#include "services/service_manager/embedder/switches.h"
 
 #if defined(OS_WIN)
 #include "base/format_macros.h"
@@ -199,7 +200,7 @@ void MuonCrashReporterClient::InitForProcess() {
   }
 
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
-  if (process_type == switches::kZygoteProcess)
+  if (process_type == service_manager::switches::kZygoteProcess)
     return;
 #endif
 
