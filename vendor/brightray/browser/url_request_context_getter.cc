@@ -22,7 +22,6 @@
 #include "content/public/common/content_switches.h"
 #include "net/base/host_mapping_rules.h"
 #include "net/cert/cert_verifier.h"
-#include "net/cert/ct_known_logs.h"
 #include "net/cert/ct_log_verifier.h"
 #include "net/cert/ct_policy_enforcer.h"
 #include "net/cert/multi_log_ct_verifier.h"
@@ -307,10 +306,8 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         new net::HttpServerPropertiesImpl);
     storage_->set_http_server_properties(std::move(server_properties));
 
-    std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
-        std::make_unique<net::MultiLogCTVerifier>();
-    ct_verifier->AddLogs(net::ct::CreateLogVerifiersForKnownLogs());
-    storage_->set_cert_transparency_verifier(std::move(ct_verifier));
+    storage_->set_cert_transparency_verifier(
+        std::make_unique<net::MultiLogCTVerifier>());
     storage_->set_ct_policy_enforcer(std::make_unique<net::CTPolicyEnforcer>());
 
     net::HttpNetworkSession::Params network_session_params;
