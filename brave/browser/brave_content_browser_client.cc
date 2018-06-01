@@ -893,13 +893,13 @@ scoped_refptr<content::LoginDelegate>
 BraveContentBrowserClient::CreateLoginDelegate(
     net::AuthChallengeInfo* auth_info,
     content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
-    bool is_main_frame,
+    bool is_request_for_main_frame,
     const GURL& url,
     bool first_auth_attempt,
-    const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
-        auth_required_callback) {
-  return base::MakeRefCounted<atom::LoginHandler>(auth_info,
-      web_contents_getter, is_main_frame, url, auth_required_callback);
+    LoginAuthRequiredCallback auth_required_callback) {
+  return base::MakeRefCounted<atom::LoginHandler>(
+      auth_info, web_contents_getter, is_request_for_main_frame, url,
+      std::move(auth_required_callback));
 }
 
 std::unique_ptr<base::Value>
