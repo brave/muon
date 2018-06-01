@@ -14,6 +14,7 @@
 #include "components/nacl/common/buildflags.h"
 #include "components/nacl/common/nacl_switches.h"
 #include "content/public/common/content_switches.h"
+#include "services/service_manager/embedder/switches.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_switches.h"
 
@@ -27,7 +28,7 @@ bool SubprocessNeedsResourceBundle(const std::string& process_type) {
   return
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
       // The zygote process opens the resources for the renderers.
-      process_type == switches::kZygoteProcess ||
+      process_type == service_manager::switches::kZygoteProcess ||
 #endif
 #if defined(OS_MACOSX)
       // Mac needs them too for scrollbar related images and for sandbox

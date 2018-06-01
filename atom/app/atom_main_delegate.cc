@@ -37,6 +37,7 @@
 #include "extensions/common/constants.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "printing/buildflags/buildflags.h"
+#include "services/service_manager/embedder/switches.h"
 #include "services/service_manager/sandbox/switches.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -306,7 +307,7 @@ void AtomMainDelegate::PreSandboxStartup() {
 
 #if !defined(CHROME_MULTIPLE_DLL_BROWSER)
   if (process_type == switches::kUtilityProcess ||
-      process_type == switches::kZygoteProcess) {
+      process_type == service_manager::switches::kZygoteProcess) {
     AtomContentUtilityClient::PreSandboxStartup();
   }
 #endif
