@@ -12,7 +12,6 @@
 #include "chrome/browser/net/chrome_mojo_proxy_resolver_factory.h"
 #include "chrome/browser/net/dns_probe_service.h"
 #include "chrome/browser/net/proxy_service_factory.h"
-#include "chrome/browser/net/sth_distributor_provider.h"
 #include "chrome/common/chrome_content_client.h"
 #include "chrome/common/chrome_features.h"
 #include "chrome/common/chrome_switches.h"
@@ -28,12 +27,7 @@
 #include "content/public/common/content_switches.h"
 #include "extensions/buildflags/buildflags.h"
 #include "net/cert/cert_verifier.h"
-#include "net/cert/ct_known_logs.h"
 #include "net/cert/ct_log_verifier.h"
-#include "net/cert/ct_verifier.h"
-#include "components/certificate_transparency/sth_distributor.h"
-#include "components/certificate_transparency/sth_observer.h"
-#include "net/cert/multi_log_ct_verifier.h"
 #include "net/dns/mapped_host_resolver.h"
 #include "net/http/http_auth_handler_factory.h"
 #include "net/http/http_auth_preferences.h"
@@ -104,10 +98,6 @@ IOThread::IOThread(
 #if defined(OS_POSIX)
   gssapi_library_name_ = local_state->GetString(prefs::kGSSAPILibraryName);
 #endif
-  ssl_config_service_manager_.reset(
-      ssl_config::SSLConfigServiceManager::CreateDefaultManager(
-          local_state,
-          BrowserThread::GetTaskRunnerForThread(BrowserThread::IO)));
 
   local_state->SetDefaultPrefValue(
       prefs::kBuiltInDnsClientEnabled,
@@ -118,17 +108,6 @@ IOThread::IOThread(
                            base::Bind(&IOThread::UpdateDnsClientEnabled,
                                       base::Unretained(this)));
   dns_client_enabled_.MoveToThread(io_thread_proxy);
-
-  quick_check_enabled_.Init(prefs::kQuickCheckEnabled,
-                            local_state);
-  quick_check_enabled_.MoveToThread(io_thread_proxy);
-
-  pac_https_url_stripping_enabled_.Init(prefs::kPacHttpsUrlStrippingEnabled,
-                                        local_state);
-  pac_https_url_stripping_enabled_.MoveToThread(io_thread_proxy);
-
-  chrome_browser_net::SetGlobalSTHDistributor(
-      std::make_unique<certificate_transparency::STHDistributor>());
 
   BrowserThread::SetIOThreadDelegate(this);
 
@@ -141,10 +120,6 @@ IOThread::~IOThread() {
   BrowserThread::SetIOThreadDelegate(nullptr);
 
   DCHECK(!globals_);
-
-  // Destroy the old distributor to check that the observers list it holds is
-  // empty.
-  chrome_browser_net::SetGlobalSTHDistributor(nullptr);
 }
 
 IOThread::Globals* IOThread::globals() {
@@ -222,32 +197,10 @@ void IOThread::Init() {
 
   UpdateDnsClientEnabled();
 
-  std::vector<scoped_refptr<const net::CTLogVerifier>> ct_logs(
-      net::ct::CreateLogVerifiersForKnownLogs());
-
-  globals_->ct_logs.assign(ct_logs.begin(), ct_logs.end());
-
-  ct_tree_tracker_ =
-      std::make_unique<certificate_transparency::TreeStateTracker>(
-          globals_->ct_logs, globals_->system_request_context->host_resolver(),
-          net_log_);
-  // Register the ct_tree_tracker_ as observer for new STHs.
-  RegisterSTHObserver(ct_tree_tracker_.get());
-  // Register the ct_tree_tracker_ as observer for verified SCTs.
-  globals_->system_request_context->cert_transparency_verifier()->SetObserver(
-      ct_tree_tracker_.get());
 }
 
 void IOThread::CleanUp() {
   system_url_request_context_getter_ = nullptr;
-
-  // Unlink the ct_tree_tracker_ from the global cert_transparency_verifier
-  // and unregister it from new STH notifications so it will take no actions
-  // on anything observed during CleanUp process.
-  globals()->system_request_context->cert_transparency_verifier()->SetObserver(
-      nullptr);
-  UnregisterSTHObserver(ct_tree_tracker_.get());
-  ct_tree_tracker_.reset();
 
   globals_->system_request_context->proxy_resolution_service()->OnShutdown();
 
@@ -298,10 +251,6 @@ void IOThread::DisableQuic() {
   globals_->quic_disabled = true;
 }
 
-net::SSLConfigService* IOThread::GetSSLConfigService() {
-  return ssl_config_service_manager_->Get();
-}
-
 void IOThread::ChangedToOnTheRecordOnIOThread() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
 
@@ -326,8 +275,6 @@ void IOThread::RegisterPrefs(PrefRegistrySimple* registry) {
                                std::string());
   registry->RegisterBooleanPref(prefs::kEnableReferrers, true);
   registry->RegisterBooleanPref(prefs::kBuiltInDnsClientEnabled, true);
-  registry->RegisterBooleanPref(prefs::kQuickCheckEnabled, true);
-  registry->RegisterBooleanPref(prefs::kPacHttpsUrlStrippingEnabled, true);
 }
 
 void IOThread::UpdateServerWhitelist() {
@@ -353,24 +300,6 @@ void IOThread::UpdateNegotiateEnablePort() {
 void IOThread::UpdateDnsClientEnabled() {
   globals()->system_request_context->host_resolver()->SetDnsClientEnabled(
       *dns_client_enabled_);
-}
-
-void IOThread::RegisterSTHObserver(
-    certificate_transparency::STHObserver* observer) {
-  chrome_browser_net::GetGlobalSTHDistributor()->RegisterObserver(observer);
-}
-
-void IOThread::UnregisterSTHObserver(
-    certificate_transparency::STHObserver* observer) {
-  chrome_browser_net::GetGlobalSTHDistributor()->UnregisterObserver(observer);
-}
-
-bool IOThread::WpadQuickCheckEnabled() const {
-  return quick_check_enabled_.GetValue();
-}
-
-bool IOThread::PacHttpsUrlStrippingEnabled() const {
-  return pac_https_url_stripping_enabled_.GetValue();
 }
 
 std::unique_ptr<net::HostResolver> CreateGlobalHostResolver(
@@ -417,13 +346,7 @@ IOThread::CreateDefaultAuthHandlerFactory(net::HostResolver* host_resolver) {
 }
 
 void IOThread::SetUpProxyService(
-    network::URLRequestContextBuilderMojo* builder) const {
-  builder->set_pac_quick_check_enabled(WpadQuickCheckEnabled());
-  builder->set_pac_sanitize_url_policy(
-      PacHttpsUrlStrippingEnabled()
-          ? net::ProxyResolutionService::SanitizeUrlPolicy::SAFE
-          : net::ProxyResolutionService::SanitizeUrlPolicy::UNSAFE);
-}
+    network::URLRequestContextBuilderMojo* builder) const {}
 
 void IOThread::ConstructSystemRequestContext() {
   std::unique_ptr<network::URLRequestContextBuilderMojo> builder =
@@ -437,7 +360,6 @@ void IOThread::ConstructSystemRequestContext() {
   std::unique_ptr<net::HostResolver> host_resolver(
       CreateGlobalHostResolver(net_log_));
 
-  builder->set_ssl_config_service(GetSSLConfigService());
   builder->SetHttpAuthHandlerFactory(
       CreateDefaultAuthHandlerFactory(host_resolver.get()));
 
@@ -451,13 +373,6 @@ void IOThread::ConstructSystemRequestContext() {
   builder->SetCertVerifier(
       network::IgnoreErrorsCertVerifier::MaybeWrapCertVerifier(
           command_line, switches::kUserDataDir, std::move(cert_verifier)));
-
-  std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
-      std::make_unique<net::MultiLogCTVerifier>();
-  // Add built-in logs
-  ct_verifier->AddLogs(globals_->ct_logs);
-
-  builder->set_ct_verifier(std::move(ct_verifier));
 
   SetUpProxyService(builder.get());
 
@@ -473,8 +388,7 @@ void IOThread::ConstructSystemRequestContext() {
         std::move(network_context_params_).get(), !is_quic_allowed_on_init_,
         net_log_, globals_->deprecated_network_quality_estimator.get());
     globals_->system_request_context =
-        globals_->system_request_context_owner.url_request_context_getter
-            ->GetURLRequestContext();
+        globals_->system_request_context_owner.url_request_context.get();
   } else {
     globals_->system_network_context =
         content::GetNetworkServiceImpl()->CreateNetworkContextWithBuilder(

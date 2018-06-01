@@ -163,7 +163,6 @@ source_set("browser") {
     "//components/optimization_guide/proto:optimization_guide_proto",
     "//components/policy/core/common",
     "//components/prefs",
-    "//components/ssl_config",
     "//components/spellcheck:buildflags",
     "//components/safe_browsing:csd_proto",
     "//components/safe_browsing:features",
