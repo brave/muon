@@ -22,7 +22,7 @@ bool IsComponentExtension(const base::FilePath& extension_path,
   base::FilePath resources_dir;
   base::FilePath relative_path;
 
-  if (!PathService::Get(chrome::DIR_RESOURCES, &resources_dir) ||
+  if (!base::PathService::Get(chrome::DIR_RESOURCES, &resources_dir) ||
       !resources_dir.AppendRelativePath(directory_path, &relative_path)) {
     return false;
   }

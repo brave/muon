@@ -199,7 +199,7 @@ void BrowserProcessImpl::CreateProfileManager() {
   created_profile_manager_ = true;
 
   base::FilePath user_data_dir;
-  PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
+  base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   profile_manager_.reset(new ProfileManager(user_data_dir));
 }
 
@@ -291,7 +291,7 @@ void BrowserProcessImpl::CreateLocalState() {
   DCHECK(!local_state_);
 
   base::FilePath local_state_path;
-  CHECK(PathService::Get(chrome::FILE_LOCAL_STATE, &local_state_path));
+  CHECK(base::PathService::Get(chrome::FILE_LOCAL_STATE, &local_state_path));
   scoped_refptr<PrefRegistrySimple> pref_registry = new PrefRegistrySimple;
 
 #if defined(OS_WIN)

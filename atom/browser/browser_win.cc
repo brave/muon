@@ -48,7 +48,7 @@ bool GetProtocolLaunchPath(mate::Arguments* args, base::string16* exe) {
   // Executable Path
   if (!args || !args->GetNext(exe)) {
     base::FilePath path;
-    if (!PathService::Get(base::FILE_EXE, &path)) {
+    if (!base::PathService::Get(base::FILE_EXE, &path)) {
       LOG(ERROR) << "Error getting app exe path";
       return false;
     }
@@ -353,7 +353,7 @@ void Browser::SetLoginItemSettings(LoginItemSettings settings) {
 
   if (settings.open_at_login) {
     base::FilePath path;
-    if (PathService::Get(base::FILE_EXE, &path)) {
+    if (base::PathService::Get(base::FILE_EXE, &path)) {
       base::string16 exePath(path.value());
       key.WriteValue(GetAppUserModelID(), exePath.c_str());
     }
@@ -370,7 +370,7 @@ Browser::LoginItemSettings Browser::GetLoginItemSettings() {
 
   if (!FAILED(key.ReadValue(GetAppUserModelID(), &keyVal))) {
     base::FilePath path;
-    if (PathService::Get(base::FILE_EXE, &path)) {
+    if (base::PathService::Get(base::FILE_EXE, &path)) {
       base::string16 exePath(path.value());
       settings.open_at_login = keyVal == exePath;
     }
@@ -391,7 +391,7 @@ PCWSTR Browser::GetAppUserModelID() {
 
 std::string Browser::GetExecutableFileVersion() const {
   base::FilePath path;
-  if (PathService::Get(base::FILE_EXE, &path)) {
+  if (base::PathService::Get(base::FILE_EXE, &path)) {
     std::unique_ptr<FileVersionInfo> version_info(
         FileVersionInfo::CreateFileVersionInfo(path));
     return base::UTF16ToUTF8(version_info->product_version());
@@ -402,7 +402,7 @@ std::string Browser::GetExecutableFileVersion() const {
 
 std::string Browser::GetExecutableFileProductName() const {
   base::FilePath path;
-  if (PathService::Get(base::FILE_EXE, &path)) {
+  if (base::PathService::Get(base::FILE_EXE, &path)) {
     std::unique_ptr<FileVersionInfo> version_info(
         FileVersionInfo::CreateFileVersionInfo(path));
     return base::UTF16ToUTF8(version_info->product_name());

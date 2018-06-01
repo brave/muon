@@ -821,7 +821,7 @@ AtomBrowserContext* AtomBrowserContext::From(
   // TODO(bridiver) - pass the path to initialize the browser context
   // TODO(bridiver) - create these with the profile manager
   base::FilePath path;
-  PathService::Get(chrome::DIR_USER_DATA, &path);
+  base::PathService::Get(chrome::DIR_USER_DATA, &path);
   if (!in_memory && !partition.empty())
     path = path.Append(FILE_PATH_LITERAL("Partitions"))
                  .Append(base::FilePath::FromUTF8Unsafe(
