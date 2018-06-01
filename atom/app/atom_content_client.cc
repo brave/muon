@@ -123,7 +123,7 @@ bool AtomContentClient::AllowScriptExtensionForServiceWorker(
 #endif
 }
 
-content::OriginTrialPolicy* AtomContentClient::GetOriginTrialPolicy() {
+blink::OriginTrialPolicy* AtomContentClient::GetOriginTrialPolicy() {
   if (!origin_trial_policy_) {
     origin_trial_policy_ = base::WrapUnique(new ChromeOriginTrialPolicy());
   }
