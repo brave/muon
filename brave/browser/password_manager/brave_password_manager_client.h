@@ -74,10 +74,10 @@ class BravePasswordManagerClient
                             const HSTSCallback& callback) const override;
   bool OnCredentialManagerUsed() override;
   bool PromptUserToSaveOrUpdatePassword(
-      std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+      std::unique_ptr<password_manager::PasswordFormManagerForUI> form_to_save,
       bool update_password) override;
   void ShowManualFallbackForSaving(
-      std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+      std::unique_ptr<password_manager::PasswordFormManagerForUI> form_to_save,
       bool has_generated_password,
       bool is_update) override;
   void HideManualFallbackForSaving() override;
@@ -96,8 +96,8 @@ class BravePasswordManagerClient
       const autofill::PasswordForm& form) override;
   void NotifyStorePasswordCalled() override;
   void AutomaticPasswordSave(
-      std::unique_ptr<password_manager::PasswordFormManager> saved_form_manager)
-      override;
+      std::unique_ptr<password_manager::PasswordFormManagerForUI>
+          saved_form_manager) override;
   void PasswordWasAutofilled(
       const std::map<base::string16, const autofill::PasswordForm*>&
           best_matches,
@@ -234,7 +234,7 @@ class BravePasswordManagerClient
   // form for potential use during 'NotifySuccessfulLoginWithExistingPassword'.
   std::unique_ptr<autofill::PasswordForm> possible_auto_sign_in_;
 
-  std::unique_ptr<password_manager::PasswordFormManager> form_to_save_;
+  std::unique_ptr<password_manager::PasswordFormManagerForUI> form_to_save_;
 
   atom::api::WebContents* api_web_contents_;
 

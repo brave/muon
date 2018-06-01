@@ -151,7 +151,7 @@ void BravePasswordManagerClient::DidClickNever() {
 
 void BravePasswordManagerClient::DidClickUpdate() {
   if (form_to_save_) {
-    form_to_save_->Update(form_to_save_->pending_credentials());
+    form_to_save_->Update(form_to_save_->GetPendingCredentials());
   }
 }
 
@@ -222,33 +222,34 @@ bool BravePasswordManagerClient::OnCredentialManagerUsed() {
 }
 
 bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
-    std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+    std::unique_ptr<password_manager::PasswordFormManagerForUI> form_to_save,
     bool update_password) {
   // Save password infobar and the password bubble prompts in case of
   // "webby" URLs and do not prompt in case of "non-webby" URLS (e.g. file://).
   if (!CanShowBubbleOnURL(web_contents()->GetLastCommittedURL()))
     return false;
-  const autofill::PasswordForm *form = form_to_save->submitted_form();
-  // Don't save password for confirmation page (ex. Trezor passphrase)
-  if (IsPossibleConfirmPasswordForm(*form))
-    return false;
+  // FIXME(hferreiro)
+  // const autofill::PasswordForm *form = form_to_save->submitted_form();
+  // // Don't save password for confirmation page (ex. Trezor passphrase)
+  // if (IsPossibleConfirmPasswordForm(*form))
+  //   return false;
   form_to_save_ = std::move(form_to_save);
-  if (update_password) {
-    api_web_contents_->Emit("update-password", form->username_value,
-                            form->signon_realm);
-  } else {
-    if (form_to_save_->IsBlacklisted())
-      return false;
-    if (api_web_contents_) {
-      api_web_contents_->Emit("save-password", form->username_value,
-                              form->signon_realm);
-    }
-  }
+  // if (update_password) {
+  //   api_web_contents_->Emit("update-password", form->username_value,
+  //                           form->signon_realm);
+  // } else {
+  //   if (form_to_save_->IsBlacklisted())
+  //     return false;
+  //   if (api_web_contents_) {
+  //     api_web_contents_->Emit("save-password", form->username_value,
+  //                             form->signon_realm);
+  //   }
+  // }
   return true;
 }
 
 void BravePasswordManagerClient::ShowManualFallbackForSaving(
-    std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
+    std::unique_ptr<password_manager::PasswordFormManagerForUI> form_to_save,
     bool has_generated_password,
     bool is_update) {}
 
@@ -325,7 +326,7 @@ void BravePasswordManagerClient::NotifyStorePasswordCalled() {
 }
 
 void BravePasswordManagerClient::AutomaticPasswordSave(
-    std::unique_ptr<password_manager::PasswordFormManager> saved_form) {
+    std::unique_ptr<password_manager::PasswordFormManagerForUI> saved_form) {
 }
 
 void BravePasswordManagerClient::PasswordWasAutofilled(
