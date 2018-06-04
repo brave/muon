@@ -5,6 +5,7 @@
 #ifndef BRAVE_UTILITY_IMPORTER_BRAVE_PROFILE_IMPORT_IMPL_H_
 #define BRAVE_UTILITY_IMPORTER_BRAVE_PROFILE_IMPORT_IMPL_H_
 
+#include <string>
 #include <memory>
 
 #include "chrome/utility/importer/profile_import_impl.h"
@@ -17,10 +18,11 @@ class BraveProfileImportImpl : public ProfileImportImpl {
 
  private:
   // chrome::mojom::ProfileImport:
-  void StartImport(const importer::SourceProfile& source_profile,
-                   uint16_t items,
-                   base::Value localized_strings,
-                   chrome::mojom::ProfileImportObserverPtr observer) override;
+  void StartImport(
+      const importer::SourceProfile& source_profile,
+      uint16_t items,
+      const base::flat_map<uint32_t, std::string>& localized_strings,
+      chrome::mojom::ProfileImportObserverPtr observer) override;
 
   DISALLOW_COPY_AND_ASSIGN(BraveProfileImportImpl);
 };
