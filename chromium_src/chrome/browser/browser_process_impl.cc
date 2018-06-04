@@ -18,6 +18,7 @@
 #include "chrome/browser/component_updater/crl_set_component_installer.h"
 #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
 #include "chrome/browser/notifications/notification_ui_manager_stub.h"
+#include "chrome/browser/policy/chrome_browser_policy_connector.h"
 #include "chrome/browser/prefs/chrome_command_line_pref_store.h"
 #include "chrome/browser/printing/background_printing_manager.h"
 #include "chrome/browser/printing/print_job_manager.h"
@@ -56,7 +57,6 @@
 #include "chrome/browser/chrome_device_client.h"
 #include "chrome/browser/devtools/remote_debugging_server.h"
 #include "chrome/browser/gpu/gpu_mode_manager.h"
-#include "chrome/browser/gpu/gpu_profile_cache.h"
 #include "chrome/browser/icon_manager.h"
 #include "chrome/browser/intranet_redirect_detector.h"
 #include "chrome/browser/io_thread.h"
@@ -70,7 +70,6 @@
 #include "components/network_time/network_time_tracker.h"
 #include "components/net_log/chrome_net_log.h"
 #include "components/physical_web/data_source/physical_web_data_source.h"
-#include "components/policy/core/browser/browser_policy_connector.h"
 #include "components/subresource_filter/content/browser/content_ruleset_service.h"
 #include "services/preferences/public/cpp/in_process_service_factory.h"
 #include "chrome/browser/component_updater/supervised_user_whitelist_installer.h"
@@ -83,7 +82,6 @@
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_extensions_browser_client.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
-#include "chrome/common/extensions/extension_process_policy.h"
 #include "chrome/common/extensions/chrome_extensions_client.h"
 #include "components/storage_monitor/storage_monitor.h"
 #include "extensions/common/constants.h"
@@ -219,11 +217,6 @@ BrowserProcessImpl::extension_event_router_forwarder() {
   return extension_event_router_forwarder_.get();
 }
 
-message_center::MessageCenter* BrowserProcessImpl::message_center() {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  return message_center::MessageCenter::Get();
-}
-
 void BrowserProcessImpl::StartTearDown() {
   TRACE_EVENT0("shutdown", "BrowserProcessImpl::StartTearDown");
   // TODO(crbug.com/560486): Fix the tests that make the check of
@@ -232,6 +225,9 @@ void BrowserProcessImpl::StartTearDown() {
   DCHECK(IsShuttingDown());
 
   browser_shutdown::SetTryingToQuit(true);
+ 
+  if (safe_browsing_service_.get())
+    safe_browsing_service()->ShutDown();
 
   for (content::RenderProcessHost::iterator i(
           content::RenderProcessHost::AllHostsIterator());
@@ -249,6 +245,31 @@ void BrowserProcessImpl::StartTearDown() {
     local_state()->CommitPendingWrite();
   }
 }
+
+safe_browsing::SafeBrowsingService* 
+    BrowserProcessImpl::safe_browsing_service() {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (!created_safe_browsing_service_)
+    CreateSafeBrowsingService();
+  return safe_browsing_service_.get();
+}
+
+safe_browsing::ClientSideDetectionService*
+    BrowserProcessImpl::safe_browsing_detection_service() {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (safe_browsing_service())
+    return safe_browsing_service()->safe_browsing_detection_service();
+  return NULL;
+}
+
+void BrowserProcessImpl::CreateSafeBrowsingService() {
+  DCHECK(!safe_browsing_service_);
+  created_safe_browsing_service_ = true;
+  safe_browsing_service_ =
+      safe_browsing::SafeBrowsingService::CreateSafeBrowsingService();
+  safe_browsing_service_->Initialize();
+}
+
 
 void BrowserProcessImpl::SetApplicationLocale(const std::string& locale) {
   locale_ = locale;
@@ -332,9 +353,6 @@ void BrowserProcessImpl::PreCreateThreads(
       local_state(), policy_service(), net_log_.get(),
       extension_event_router_forwarder(),
       system_network_context_manager_.get());
-
-  if (gpu_profile_cache())
-    gpu_profile_cache()->Initialize();
 
   // Create an instance of GpuModeManager to watch gpu mode pref change.
   gpu_mode_manager();
@@ -496,8 +514,8 @@ void BrowserProcessImpl::EndSession() {
 void BrowserProcessImpl::FlushLocalStateAndReply(base::OnceClosure reply) {
   if (local_state_)
     local_state_->CommitPendingWrite();
-  local_state_task_runner_->PostTaskAndReply(
-      FROM_HERE, base::Bind(&base::DoNothing), std::move(reply));
+  local_state_task_runner_->PostTaskAndReply(FROM_HERE, base::DoNothing(),
+                                             std::move(reply));
 }
 
 net_log::ChromeNetLog* BrowserProcessImpl::net_log() {
@@ -532,7 +550,7 @@ BrowserProcessPlatformPart* BrowserProcessImpl::platform_part() {
 void BrowserProcessImpl::CreateNotificationUIManager() {
   DCHECK(!notification_ui_manager_);
   notification_ui_manager_.reset(NotificationUIManagerStub::Create());
-  created_notification_ui_manager_ = true;
+  created_notification_ui_manager_ = !!notification_ui_manager_;
 }
 
 NotificationUIManager* BrowserProcessImpl::notification_ui_manager() {
@@ -570,7 +588,8 @@ WatchDogThread* BrowserProcessImpl::watchdog_thread() {
   return nullptr;
 }
 
-policy::BrowserPolicyConnector* BrowserProcessImpl::browser_policy_connector() {
+policy::ChromeBrowserPolicyConnector*
+BrowserProcessImpl::browser_policy_connector() {
   NOTIMPLEMENTED();
   return nullptr;
 }
@@ -591,15 +610,7 @@ GpuModeManager* BrowserProcessImpl::gpu_mode_manager() {
   return gpu_mode_manager_.get();
 }
 
-GpuProfileCache* BrowserProcessImpl::gpu_profile_cache() {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  if (!gpu_profile_cache_)
-    gpu_profile_cache_ = GpuProfileCache::Create();
-  return gpu_profile_cache_.get();
-}
-
-void BrowserProcessImpl::CreateDevToolsHttpProtocolHandler(
-    const std::string& ip, uint16_t port) {
+void BrowserProcessImpl::CreateDevToolsProtocolHandler() {
   NOTIMPLEMENTED();
 }
 
@@ -666,16 +677,6 @@ void BrowserProcessImpl::set_background_mode_manager_for_test(
   NOTIMPLEMENTED();
 }
 
-safe_browsing::SafeBrowsingService*
-BrowserProcessImpl::safe_browsing_service() {
-  return nullptr;
-}
-
-safe_browsing::ClientSideDetectionService*
-BrowserProcessImpl::safe_browsing_detection_service() {
-  return nullptr;
-}
-
 subresource_filter::ContentRulesetService*
 BrowserProcessImpl::subresource_filter_ruleset_service() {
   NOTIMPLEMENTED();
@@ -740,6 +741,10 @@ void BrowserProcessImpl::OnKeepAliveRestartStateChanged(bool can_restart) {}
 void BrowserProcessImpl::ResourceDispatcherHostCreated() {}
 
 void BrowserProcessImpl::ApplyMetricsReportingPolicy() {
+  // Prevents non GOOGLE_CHROME_BUILD unconditionally return false for
+  // MetricsServiceAccessor::IsMetricsReportingEnabled
+  ChromeMetricsServiceAccessor::SetForceIsMetricsReportingEnabledPrefLookup(
+    true);
 	GoogleUpdateSettings::CollectStatsConsentTaskRunner()->PostTask(
 		FROM_HERE,
 		base::BindOnce(

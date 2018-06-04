@@ -1,0 +1,13 @@
+source_set("interstitials") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ "//electron/chromium_src:chromium_src_config" ]
+
+  sources = [
+    "chrome_metrics_helper.cc",
+    "//chrome/browser/interstitials/chrome_metrics_helper.h",
+  ]
+
+  deps = [
+    "//content/public/browser"
+  ]
+}

@@ -22,11 +22,10 @@ class AtomContentClient : public brightray::ContentClient {
 
  protected:
   // content::ContentClient:
-  void SetActiveURL(const GURL& url) override;
+  void SetActiveURL(const GURL& url, std::string top_origin) override;
   std::string GetProduct() const override;
   std::string GetUserAgent() const override;
   void SetGpuInfo(const gpu::GPUInfo& gpu_info);
-  bool IsSupplementarySiteIsolationModeEnabled() override;
   void AddAdditionalSchemes(Schemes* schemes) override;
   void AddPepperPlugins(
       std::vector<content::PepperPluginInfo>* plugins) override;

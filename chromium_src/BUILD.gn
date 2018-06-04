@@ -56,7 +56,6 @@ source_set("app") {
   deps = [
     "//base",
     "//chrome/common",
-    "//components/metrics",
     "//components/crash/content/app",
     "//components/crash/content/browser",
     "//content/public/common",
@@ -90,6 +89,7 @@ source_set("common") {
     ]
 
     deps += [
+      "//electron:brave_resources",
       "//electron/brave/common/extensions/api:extensions_features"
     ]
   }
@@ -145,6 +145,7 @@ source_set("browser") {
     ":history",
     ":metrics",
     ":password_manager",
+    ":permissions",
     ":sessions",
     ":web_data",
     "chrome/browser/safe_browsing",
@@ -153,6 +154,7 @@ source_set("browser") {
     "//chrome/common",
     "//chrome/common:service_process_mojom",
     "//chrome/utility",
+    "//components/certificate_reporting:cert_logger_proto",
     "//components/certificate_transparency",
     "//components/crash/content/app",
     "//components/crash/core/browser",
@@ -165,12 +167,12 @@ source_set("browser") {
     "//components/prefs",
     "//components/ssl_config",
     "//components/spellcheck:build_features",
-    "//components/safe_browsing:csd_proto",
     "//components/storage_monitor",
     "//content/public/browser",
     "//electron/atom/browser",
     "//ui/message_center",
     "//net:features",
+    "//pdf",
   ]
 
   sources = [
@@ -183,7 +185,7 @@ source_set("browser") {
     "//chrome/browser/browser_shutdown.cc",
     "//chrome/browser/browser_shutdown.h",
     "//chrome/browser/chrome_notification_types.h",
-    "chrome/browser/chrome_service.cc",
+    "//chrome/browser/chrome_service.cc",
     "//chrome/browser/chrome_service.h",
     "chrome/browser/custom_handlers/protocol_handler_registry.cc",
     "//chrome/browser/custom_handlers/protocol_handler_registry.h",
@@ -196,6 +198,9 @@ source_set("browser") {
     "//chrome/browser/chrome_device_client.cc",
     "//chrome/browser/chrome_device_client.h",
 
+    "//chrome/browser/data_reduction_proxy_util.cc",
+    "//chrome/browser/data_reduction_proxy_util.h",
+
     # extensions
     "//chrome/browser/extensions/global_shortcut_listener.cc",
     "//chrome/browser/extensions/global_shortcut_listener.h",
@@ -203,6 +208,8 @@ source_set("browser") {
     "//chrome/browser/extensions/global_shortcut_listener_mac.mm",
     "//chrome/browser/extensions/global_shortcut_listener_win.cc",
     "//chrome/browser/extensions/global_shortcut_listener_win.h",
+    "//chrome/browser/extensions/install_signer.cc",
+    "//chrome/browser/extensions/install_signer.h",
 
     "//chrome/browser/file_select_helper.cc",
     "//chrome/browser/file_select_helper_mac.mm",
@@ -216,8 +223,6 @@ source_set("browser") {
     "//chrome/browser/gpu/gpu_mode_manager.cc",
     "//chrome/browser/gpu/gpu_mode_manager.h",
     "//chrome/browser/gpu/gpu_profile_cache.h",
-    "//chrome/browser/gpu/gl_string_manager.cc",
-    "//chrome/browser/gpu/gl_string_manager.h",
 
     "chrome/browser/io_thread.cc",
     "//chrome/browser/io_thread.h",
@@ -235,6 +240,8 @@ source_set("browser") {
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
     "//chrome/browser/net/default_network_context_params.cc",
     "//chrome/browser/net/default_network_context_params.h",
+    "//chrome/browser/net/proxy_config_monitor.cc",
+    "//chrome/browser/net/proxy_config_monitor.h",
     "//chrome/browser/net/proxy_service_factory.cc",
     "//chrome/browser/net/proxy_service_factory.h",
     "//chrome/browser/net/sth_distributor_provider.cc",
@@ -247,6 +254,8 @@ source_set("browser") {
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
+    "//chrome/browser/renderer_preferences_util.cc",
+    "//chrome/browser/renderer_preferences_util.h",
 
     "//chrome/browser/site_details.cc",
     "//chrome/browser/site_details.h",
@@ -255,14 +264,15 @@ source_set("browser") {
     "//chrome/browser/ui/browser_list.cc",
     "//chrome/browser/ui/browser_list.h",
     "chrome/browser/ui/browser.cc",
-    "//chrome/browser/ui/browser.h",
+    "chrome/browser/ui/browser.h",
     "chrome/browser/ui/browser_otr_state.cc",
 
     "//chrome/browser/ui/chrome_select_file_policy.h",
     "chrome/browser/ui/chrome_select_file_policy.cc",
     "//chrome/browser/ui/cocoa/ui_localizer.h",
     "//chrome/browser/ui/cocoa/ui_localizer.mm",
-
+    "//chrome/browser/ui/pdf/adobe_reader_info_win.cc",
+    "//chrome/browser/ui/pdf/adobe_reader_info_win.h",
     "chrome/browser/ui/profile_error_dialog.cc",
 
     "//chrome/browser/ui/web_contents_sizer.cc",
@@ -276,6 +286,7 @@ source_set("browser") {
     "//chrome/browser/platform_util_linux.cc",
     "//chrome/browser/platform_util_win.cc",
 
+    "//chrome/browser/process_singleton_mac.mm",
     "//chrome/browser/process_singleton_posix.cc",
     "//chrome/browser/process_singleton_win.cc",
     "//chrome/browser/process_singleton.h",
@@ -293,6 +304,7 @@ source_set("browser") {
     "//chrome/browser/speech/tts_platform.cc",
     "//chrome/browser/speech/tts_platform.h",
     "//chrome/browser/speech/tts_win.cc",
+    "chrome/browser/ui/browser_dialogs.cc",
     "//chrome/browser/ui/browser_dialogs.h",
     "chrome/browser/ui/simple_message_box.cc",
     "chrome/browser/ui/user_manager.cc",
@@ -342,6 +354,15 @@ source_set("browser") {
     ]
   }
 
+  if (is_linux) {
+    sources += [
+      "chrome/browser/themes/theme_service.cc",
+      "//chrome/browser/themes/theme_service.h",
+      "chrome/browser/themes/theme_service_factory.cc",
+      "//chrome/browser/themes/theme_service_factory.h",
+     ]
+  }
+
   if (is_win) {
     sources += [
       "//chrome/browser/win/browser_util.h",
@@ -349,6 +370,12 @@ source_set("browser") {
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
+      "//chrome/browser/permissions/attestation_permission_request.cc",
+      "//chrome/browser/permissions/attestation_permission_request.h",
+      "//chrome/browser/permissions/permission_request.cc",
+      "//chrome/browser/permissions/permission_request.h",
+      "chrome/browser/permissions/permission_request_manager.cc",
+      "//chrome/browser/permissions/permission_request_manager.h",
       "//chrome/browser/printing/pdf_to_emf_converter.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.h",
       "//chrome/browser/ui/views/certificate_viewer_win.cc",
@@ -578,8 +605,9 @@ source_set("browser") {
   }
   if (enable_spellcheck) {
     sources += [
-      "//chrome/browser/spellchecker/spell_check_host_impl.cc",
-      "//chrome/browser/spellchecker/spell_check_host_impl.h",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl.cc",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl.h",
+      "//chrome/browser/spellchecker/spell_check_host_chrome_impl_mac.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_custom_dictionary.h",
       "//chrome/browser/spellchecker/spellcheck_dictionary.h",
@@ -587,7 +615,6 @@ source_set("browser") {
       "//chrome/browser/spellchecker/spellcheck_factory.h",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.cc",
       "//chrome/browser/spellchecker/spellcheck_hunspell_dictionary.h",
-      "//chrome/browser/spellchecker/spellcheck_message_filter_platform_mac.cc",
       "//chrome/browser/spellchecker/spellcheck_service.cc",
       "//chrome/browser/spellchecker/spellcheck_service.h",
     ]
@@ -614,6 +641,16 @@ source_set("browser") {
       "//chrome/browser/media/cdm_storage_id.h",
     ]
   }
+}
+
+source_set("permissions") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ ":chromium_src_config" ]
+
+  sources = [
+    "chrome/browser/permissions/permission_uma_util.cc",
+    "//chrome/browser/permissions/permission_uma_util.h",
+  ]
 }
 
 source_set("crashes_ui") {
@@ -644,11 +681,12 @@ source_set("menu_bar") {
   ]
 
   if (use_gio) {
+    configs += [ "//build/linux:gio_config" ]
+
     deps = [
       "//components/sync",
       "//ipc:mojom",
       "//third_party/protobuf:protobuf_lite",
-      "//build/linux/libgio",
     ]
   }
 }
@@ -766,8 +804,10 @@ source_set("sync") {
   configs += [ ":chromium_src_config" ]
 
   sources = [
+    "//chrome/browser/sync/user_event_service_factory.h",
     "chrome/browser/sync/glue/sync_start_util.cc",
-    "chrome/browser/sync/profile_sync_service_factory.cc"
+    "chrome/browser/sync/profile_sync_service_factory.cc",
+    "chrome/browser/sync/user_event_service_factory.cc",
   ]
 
   deps = [
@@ -806,6 +846,8 @@ source_set("password_manager") {
   sources = [
     "//chrome/browser/browsing_data/browsing_data_helper.h",
     "//chrome/browser/browsing_data/browsing_data_helper.cc",
+    "//chrome/browser/password_manager/password_manager_util_linux.cc",
+    "//chrome/browser/password_manager/password_manager_util_linux.h",
     "//chrome/browser/password_manager/password_manager_util_win.h",
     "//chrome/browser/password_manager/password_manager_util_win.cc",
     "//chrome/browser/password_manager/password_store_factory.cc",
@@ -877,8 +919,16 @@ source_set("downloads") {
     "//chrome/browser/background_fetch/background_fetch_delegate_impl.h",
     "//chrome/browser/background_fetch/background_fetch_download_client.cc",
     "//chrome/browser/background_fetch/background_fetch_download_client.h",
+    "chrome/browser/download/chrome_download_manager_delegate.cc",
+    "//chrome/browser/download/chrome_download_manager_delegate.h",
+    "chrome/browser/download/download_commands.cc",
+    "//chrome/browser/download/download_commands.h",
     "chrome/browser/download/download_core_service.cc",
     "//chrome/browser/download/download_core_service.h",
+    "chrome/browser/download/download_core_service_factory.cc",
+    "//chrome/browser/download/download_core_service_factory.h",
+    "chrome/browser/download/download_history.cc",
+    "//chrome/browser/download/download_history.h",
     "//chrome/browser/download/download_path_reservation_tracker.cc",
     "//chrome/browser/download/download_path_reservation_tracker.h",
     "chrome/browser/download/download_request_limiter.cc",
@@ -887,13 +937,30 @@ source_set("downloads") {
     "//chrome/browser/download/download_service_factory.h",
     "//chrome/browser/download/download_task_scheduler_impl.cc",
     "//chrome/browser/download/download_task_scheduler_impl.h",
+    "//chrome/browser/download/download_completion_blocker.cc",
+    "//chrome/browser/download/download_completion_blocker.h",
+    "chrome/browser/download/download_crx_util.cc",
+    "//chrome/browser/download/download_crx_util.h",
+    "//chrome/browser/download/download_item_model.cc",
+    "//chrome/browser/download/download_item_model.h",
+    "//chrome/browser/download/download_prefs.cc",
+    "//chrome/browser/download/download_prefs.h",
+    "//chrome/browser/download/download_stats.cc",
+    "//chrome/browser/download/download_stats.h",
+    "//chrome/browser/download/download_target_determiner.cc",
+    "//chrome/browser/download/download_target_determiner.h",
+    "//chrome/browser/download/download_target_info.cc",
+    "//chrome/browser/download/download_target_info.h",
+    "//chrome/browser/download/trusted_sources_manager.cc",
+    "//chrome/browser/download/trusted_sources_manager.h",
+    "//chrome/browser/download/trusted_sources_manager_win.cc",
   ]
 
   deps = [
     "//base",
     "//chrome/common",
     "//components/download/content/factory",
-    "//components/download/public",
+    "//components/download/public/background_service:public",
     "//content/public/browser",
     "//net",
     "//url",
@@ -960,8 +1027,13 @@ source_set("metrics") {
     "//components/metrics_services_manager",
     "//components/version_info",
     "//content/public/browser",
-    "//third_party/crashpad/crashpad/client:client",
   ]
+
+  if (is_mac) {
+    deps += [
+      "//third_party/crashpad/crashpad/client:client",
+    ]
+  }
 }
 
 source_set("search") {
@@ -1089,12 +1161,12 @@ source_set("tab_manager") {
     "//chrome/browser/memory_details_win.cc",
     "//chrome/browser/ui/browser_tab_strip_tracker.cc",
     "//chrome/browser/ui/browser_tab_strip_tracker.h",
+    "chrome/browser/ui/page_info/page_info_ui.cc",
+    "//chrome/browser/ui/page_info/page_info_ui.h",
     "chrome/browser/ui/tab_contents/core_tab_helper.cc",
     "//chrome/browser/ui/tab_contents/core_tab_helper.h",
     "//chrome/browser/ui/tabs/tab_strip_model.cc",
     "//chrome/browser/ui/tabs/tab_strip_model.h",
-    "//chrome/browser/ui/tabs/tab_strip_model_impl.cc",
-    "//chrome/browser/ui/tabs/tab_strip_model_impl.h",
     "//chrome/browser/ui/tabs/tab_strip_model_delegate.h",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.h",
@@ -1112,7 +1184,7 @@ source_set("tab_manager") {
 
   deps = [
     ":lifetime",
-    "//components/feature_engagement:features",
+    "//components/feature_engagement:buildflags",
     "//services/metrics",
   ]
 

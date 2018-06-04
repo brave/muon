@@ -98,7 +98,6 @@ void DevToolsManagerDelegate::StartHttpHandler() {
   std::string frontend_url;
   content::DevToolsAgentHost::StartRemoteDebuggingServer(
       CreateSocketFactory(),
-      frontend_url,
       base::FilePath(),
       base::FilePath());
 }
@@ -121,7 +120,7 @@ void DevToolsManagerDelegate::DevToolsAgentHostDetached(
 
 bool DevToolsManagerDelegate::HandleCommand(
     content::DevToolsAgentHost* agent_host,
-    int session_id,
+    content::DevToolsAgentHostClient* client,
     base::DictionaryValue* command) {
   return false;
 }

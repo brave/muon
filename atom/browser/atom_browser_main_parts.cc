@@ -29,6 +29,7 @@
 #include "base/trace_event/trace_event.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
 #include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/chrome_browser_main_extra_parts.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
@@ -46,11 +47,11 @@
 #include "content/public/common/content_switches.h"
 #include "device/geolocation/geolocation_provider.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
+#include "media/base/media_switches.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "muon/browser/muon_browser_process_impl.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
 #include "v8/include/v8.h"
-#include "v8/include/v8-debug.h"
 
 #if defined(OS_MACOSX)
 #include <Security/Security.h>
@@ -131,6 +132,10 @@ AtomBrowserMainParts::AtomBrowserMainParts(
 }
 
 AtomBrowserMainParts::~AtomBrowserMainParts() {
+  for (int i = static_cast<int>(chrome_extra_parts_.size())-1; i >= 0; --i)
+    delete chrome_extra_parts_[i];
+  chrome_extra_parts_.clear();
+
   // Leak the JavascriptEnvironment on exit.
   // This is to work around the bug that V8 would be waiting for background
   // tasks to finish on exit, while somehow it waits forever in Electron, more
@@ -165,11 +170,12 @@ base::Closure AtomBrowserMainParts::RegisterDestructionCallback(
   return base::Bind(&Erase<std::list<base::Closure>>, &destructors_, iter);
 }
 
-void AtomBrowserMainParts::PreEarlyInitialization() {
+int AtomBrowserMainParts::PreEarlyInitialization() {
   brightray::BrowserMainParts::PreEarlyInitialization();
 #if defined(OS_POSIX)
   HandleSIGCHLD();
 #endif
+  return content::RESULT_CODE_NORMAL_EXIT;
 }
 
 int AtomBrowserMainParts::PreCreateThreads() {
@@ -230,6 +236,21 @@ int AtomBrowserMainParts::PreCreateThreads() {
   feature_list->RegisterFieldTrialOverride(
       password_manager::features::kFillOnAccountSelect.name,
       base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
+
+  // disable touchpad and wheel scroll latching.
+  field_trial = feature_list->GetFieldTrial(
+      features::kTouchpadAndWheelScrollLatching);
+  feature_list->RegisterFieldTrialOverride(
+      features::kTouchpadAndWheelScrollLatching.name,
+      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
+  // Disable Unified Autoplay to prevents it from overriding our default value
+  field_trial = feature_list->GetFieldTrial(
+      media::kUnifiedAutoplay);
+  feature_list->RegisterFieldTrialOverride(
+      media::kUnifiedAutoplay.name,
+      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
+
 
   fake_browser_process_->PreCreateThreads(
       *base::CommandLine::ForCurrentProcess());
@@ -385,6 +406,12 @@ void AtomBrowserMainParts::PostMainMessageLoopStart() {
 #endif
 }
 
+void AtomBrowserMainParts::ServiceManagerConnectionStarted(
+    content::ServiceManagerConnection* connection) {
+  for (size_t i = 0; i < chrome_extra_parts_.size(); ++i)
+    chrome_extra_parts_[i]->ServiceManagerConnectionStarted(connection);
+}
+
 void AtomBrowserMainParts::PostMainMessageLoopRun() {
   browser_context_ = nullptr;
   brightray::BrowserMainParts::PostMainMessageLoopRun();
@@ -423,6 +450,10 @@ void AtomBrowserMainParts::PostDestroyThreads() {
   ignore_result(fake_browser_process_.release());
 
   browser_shutdown::ShutdownPostThreadsStop(restart_flags);
+}
+
+void AtomBrowserMainParts::AddParts(ChromeBrowserMainExtraParts* parts) {
+  chrome_extra_parts_.push_back(parts);
 }
 
 }  // namespace atom

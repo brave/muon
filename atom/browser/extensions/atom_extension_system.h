@@ -60,6 +60,7 @@ class AtomExtensionSystem : public ExtensionSystem {
   void Shutdown() override;
 
   void InitForRegularProfile(bool extensions_enabled) override;
+  void InitForIncognitoProfile() override;
 
   // ExtensionSystem implementation;
   ExtensionService* extension_service() override;  // shared
@@ -84,7 +85,11 @@ class AtomExtensionSystem : public ExtensionSystem {
   std::unique_ptr<ExtensionSet> GetDependentExtensions(
       const Extension* extension) override;
   void InstallUpdate(const std::string& extension_id,
-                      const base::FilePath& temp_dir) override;
+                     const std::string& public_key,
+                     const base::FilePath& unpacked_dir,
+                     InstallUpdateCallback install_update_callback) override;
+  bool FinishDelayedInstallationIfReady(const std::string& extension_id,
+                                        bool install_immediately) override;
 
  private:
   friend class AtomExtensionSystemSharedFactory;

@@ -112,13 +112,16 @@ class BravePasswordManagerClient
   void CheckSafeBrowsingReputation(const GURL& form_action,
                                    const GURL& frame_url) override;
   void CheckProtectedPasswordEntry(
-      const std::string& password_saved_domain,
+      bool matches_sync_password,
+      const std::vector<std::string>& matching_domains,
       bool password_field_exists) override;
+
+  void LogPasswordReuseDetectedEvent() override;
 
 #endif
   password_manager::PasswordSyncState GetPasswordSyncState() const override;
   bool WasLastNavigationHTTPError() const override;
-  bool DidLastPageLoadEncounterSSLErrors() const override;
+  net::CertStatus GetMainFrameCertStatus() const override;
   bool IsIncognito() const override;
   const password_manager::PasswordManager* GetPasswordManager() const override;
   autofill::AutofillManager* GetAutofillManagerForMainFrame() override;
@@ -144,7 +147,6 @@ class BravePasswordManagerClient
   password_manager::PasswordManagerMetricsRecorder& GetMetricsRecorder()
       override;
 
-  ukm::UkmRecorder* GetUkmRecorder() override;
   ukm::SourceId GetUkmSourceId() override;
 
   static void CreateForWebContentsWithAutofillClient(
@@ -157,7 +159,7 @@ class BravePasswordManagerClient
   void SetTestObserver(autofill::PasswordGenerationPopupObserver* observer);
 
   static void BindCredentialManager(
-      password_manager::mojom::CredentialManagerAssociatedRequest request,
+      password_manager::mojom::CredentialManagerRequest request,
       content::RenderFrameHost* render_frame_host);
 
   // A helper method to determine whether a save/update bubble can be shown
@@ -236,11 +238,6 @@ class BravePasswordManagerClient
   std::unique_ptr<password_manager::PasswordFormManager> form_to_save_;
 
   atom::api::WebContents* api_web_contents_;
-
-
-  // If set, this stores a ukm::SourceId that is bound to the last committed
-  // navigation of the tab owning this BravePasswordManagerClient.
-  base::Optional<ukm::SourceId> ukm_source_id_;
 
   // Recorder of metrics that is associated with the last committed navigation
   // of the WebContents owning this BravePasswordManagerClient. May be unset at

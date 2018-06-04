@@ -78,3 +78,7 @@ void UIThreadSearchTermsData::SetGoogleBaseURL(const std::string& base_url) {
   delete google_base_url_;
   google_base_url_ = base_url.empty() ? NULL : new std::string(base_url);
 }
+
+size_t UIThreadSearchTermsData::EstimateMemoryUsage() const {
+  return 0;
+}

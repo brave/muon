@@ -15,9 +15,10 @@ import("//printing/features/features.gni")
 import("//tools/grit/grit_rule.gni")
 import("//tools/grit/repack.gni")
 import("//ui/base/ui_features.gni")
+import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
 import("//v8/gni/v8.gni")
 import("//third_party/icu/config.gni")
-import("//media/cdm/ppapi/cdm_paths.gni")
+import("//media/cdm/library_cdm/cdm_paths.gni")
 import("//electron/build/config.gni")
 
 group("electron") {
@@ -84,6 +85,7 @@ grit("brave_resources") {
 
   deps = [
     "app:brave_content_manifest_overlays",
+    "//chrome/browser/safe_browsing",
   ]
 
   resource_ids = "//electron/resource_ids"
@@ -374,8 +376,6 @@ source_set("native_mate") {
     "vendor/native_mate/native_mate/persistent_dictionary.h",
     "vendor/native_mate/native_mate/scoped_persistent.h",
     "vendor/native_mate/native_mate/template_util.h",
-    "vendor/native_mate/native_mate/try_catch.cc",
-    "vendor/native_mate/native_mate/try_catch.h",
     "vendor/native_mate/native_mate/wrappable.cc",
     "vendor/native_mate/native_mate/wrappable.h",
     "vendor/native_mate/native_mate/wrappable_base.h",
@@ -415,11 +415,14 @@ if (icu_use_data_file) {
 }
 
 if (v8_use_external_startup_data) {
-  electron_framework_sources += [
-    "$root_out_dir/natives_blob.bin",
-    "$root_out_dir/snapshot_blob.bin",
-  ]
+  electron_framework_sources += [ "$root_out_dir/natives_blob.bin" ]
   electron_framework_public_deps += [ "//v8:v8" ]
+  if (use_v8_context_snapshot) {
+    electron_framework_sources += [ "$root_out_dir/v8_context_snapshot.bin" ]
+    electron_framework_public_deps += [ "//tools/v8_context_snapshot" ]
+  } else {
+    electron_framework_sources += [ "$root_out_dir/snapshot_blob.bin" ]
+  }
 }
 
 electron_app_sources = [
@@ -542,7 +545,7 @@ if (is_win) {
   chromedriver = "$chromedriver.exe"
 }
 
-chromedriver_version = "2.33"
+chromedriver_version = "2.36"
 
 copy("electron_chromedriver_dist_resources") {
   sources = [

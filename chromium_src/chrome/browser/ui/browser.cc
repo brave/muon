@@ -17,24 +17,14 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/devtools/devtools_window.h"
 #include "chrome/browser/ui/browser_list.h"
-#include "chrome/browser/ui/tabs/tab_strip_model_impl.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/chrome_switches.h"
 #include "components/keep_alive_registry/keep_alive_registry.h"
 #include "components/keep_alive_registry/keep_alive_types.h"
 #include "components/keep_alive_registry/scoped_keep_alive.h"
 #include "content/public/browser/notification_service.h"
 
-namespace {
-
-// Is the fast tab unload experiment enabled?
-bool IsFastTabUnloadEnabled() {
-  return base::CommandLine::ForCurrentProcess()->HasSwitch(
-      switches::kEnableFastUnload);
-}
-
-}  // namespace
-
-Browser::CreateParams::CreateParams(Profile* profile)
+Browser::CreateParams::CreateParams(Profile* profile, bool user_gesture)
     : type(TYPE_TABBED),
       profile(profile),
       trusted_source(false),
@@ -42,7 +32,7 @@ Browser::CreateParams::CreateParams(Profile* profile)
       is_session_restore(false),
       window(NULL) {}
 
-Browser::CreateParams::CreateParams(Type type, Profile* profile)
+Browser::CreateParams::CreateParams(Type type, Profile* profile, bool user_gesture)
     : type(type),
       profile(profile),
       trusted_source(false),
@@ -58,7 +48,7 @@ Browser::Browser(const CreateParams& params)
       window_(params.window),
       tab_strip_model_delegate_(new brave::BraveTabStripModelDelegate()),
       tab_strip_model_(
-          new TabStripModelImpl(tab_strip_model_delegate_.get(),
+          new TabStripModel(tab_strip_model_delegate_.get(),
             params.profile)),
       app_name_(params.app_name),
       is_trusted_source_(params.trusted_source),

@@ -22,7 +22,6 @@
 #include "v8/include/v8.h"
 #include "net/base/escape.h"
 
-using extensions::v8_helpers::SetProperty;
 using extensions::v8_helpers::IsTrue;
 
 namespace brave {
@@ -102,10 +101,6 @@ class WrappableGURL : public GURL,
 
   bool SchemeIsBlob() const {
     return GURL::SchemeIsBlob();
-  }
-
-  bool SchemeIsSuborigin() const {
-    return GURL::SchemeIsSuborigin();
   }
 
   std::string GetContent() const {
@@ -233,7 +228,6 @@ class WrappableGURL : public GURL,
         .SetMethod("schemeIsCryptographic",
             &WrappableGURL::SchemeIsCryptographic)
         .SetMethod("schemeIsBlob", &WrappableGURL::SchemeIsBlob)
-        .SetMethod("schemeIsSuborigin", &WrappableGURL::SchemeIsSuborigin)
         .SetMethod("getContent", &WrappableGURL::GetContent)
         .SetMethod("hostIsIPAddress", &WrappableGURL::HostIsIPAddress)
         .SetMethod("hasScheme", &WrappableGURL::has_scheme)
@@ -269,16 +263,18 @@ gin::WrapperInfo WrappableGURL::kWrapperInfo = { gin::kEmbedderNativeGin };
 }  // namespace
 
 URLBindings::URLBindings(extensions::ScriptContext* context)
-    : extensions::ObjectBackedNativeHandler(context) {
-  RouteFunction("New",
-            base::Bind(&URLBindings::New, base::Unretained(this)));
-  RouteFunction("FormatForDisplay",
-            base::Bind(&URLBindings::FormatForDisplay, base::Unretained(this)));
-  RouteFunction("Parse",
-            base::Bind(&URLBindings::Parse, base::Unretained(this)));
-}
+    : extensions::ObjectBackedNativeHandler(context) {}
 
-URLBindings::~URLBindings() {
+URLBindings::~URLBindings() {}
+
+void URLBindings::AddRoutes() {
+  RouteHandlerFunction("New",
+                       base::Bind(&URLBindings::New, base::Unretained(this)));
+  RouteHandlerFunction(
+      "FormatForDisplay",
+      base::Bind(&URLBindings::FormatForDisplay, base::Unretained(this)));
+  RouteHandlerFunction("Parse",
+                       base::Bind(&URLBindings::Parse, base::Unretained(this)));
 }
 
 // static

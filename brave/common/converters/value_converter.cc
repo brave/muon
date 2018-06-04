@@ -26,7 +26,7 @@ bool Converter<base::DictionaryValue>::FromV8(Isolate* isolate,
       converter(content::V8ValueConverter::Create());
   std::unique_ptr<base::Value> value(converter->FromV8Value(
       val, isolate->GetCurrentContext()));
-  if (value && value->IsType(base::Value::Type::DICTIONARY)) {
+  if (value && value->is_dict()) {
     out->Swap(static_cast<base::DictionaryValue*>(value.get()));
     return true;
   } else {
@@ -49,7 +49,7 @@ bool Converter<base::ListValue>::FromV8(Isolate* isolate,
       converter(content::V8ValueConverter::Create());
   std::unique_ptr<base::Value> value(converter->FromV8Value(
       val, isolate->GetCurrentContext()));
-  if (value->IsType(base::Value::Type::LIST)) {
+  if (value->is_list()) {
     out->Swap(static_cast<base::ListValue*>(value.get()));
     return true;
   } else {

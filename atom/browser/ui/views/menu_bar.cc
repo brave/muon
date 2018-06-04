@@ -2,6 +2,8 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include <memory>
+
 #include "atom/browser/ui/views/menu_bar.h"
 
 #if defined(USE_X11)
@@ -52,8 +54,8 @@ MenuBar::MenuBar()
     : background_color_(kDefaultColor),
       menu_model_(NULL) {
   UpdateMenuBarColor();
-  SetLayoutManager(new views::BoxLayout(
-      views::BoxLayout::kHorizontal));
+  SetLayoutManager(
+      std::make_unique<views::BoxLayout>(views::BoxLayout::kHorizontal));
   menu_delegate_ = new MenuDelegate(this);
 }
 

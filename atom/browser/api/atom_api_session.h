@@ -70,6 +70,7 @@ class Session: public mate::TrackableObject<Session>,
   template<CacheAction action>
   void DoCacheAction(const net::CompletionCallback& callback);
   void ClearStorageData(mate::Arguments* args);
+  void ClearHSTSData(mate::Arguments* args);
   void ClearHistory(mate::Arguments* args);
   void FlushStorageData();
   void SetProxy(const net::ProxyConfig& config, const base::Closure& callback);
@@ -99,7 +100,7 @@ class Session: public mate::TrackableObject<Session>,
 
   // content::DownloadManager::Observer:
   void OnDownloadCreated(content::DownloadManager* manager,
-                         content::DownloadItem* item) override;
+                         download::DownloadItem* item) override;
 
  private:
   void DefaultDownloadDirectoryChanged();

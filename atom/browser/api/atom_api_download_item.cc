@@ -20,21 +20,21 @@
 namespace mate {
 
 template<>
-struct Converter<content::DownloadItem::DownloadState> {
+struct Converter<download::DownloadItem::DownloadState> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
-                                   content::DownloadItem::DownloadState state) {
+                 download::DownloadItem::DownloadState state) {
     std::string download_state;
     switch (state) {
-      case content::DownloadItem::IN_PROGRESS:
+      case download::DownloadItem::IN_PROGRESS:
         download_state = "progressing";
         break;
-      case content::DownloadItem::COMPLETE:
+      case download::DownloadItem::COMPLETE:
         download_state = "completed";
         break;
-      case content::DownloadItem::CANCELLED:
+      case download::DownloadItem::CANCELLED:
         download_state = "cancelled";
         break;
-      case content::DownloadItem::INTERRUPTED:
+      case download::DownloadItem::INTERRUPTED:
         download_state = "interrupted";
         break;
       default:
@@ -57,10 +57,10 @@ std::map<uint32_t, v8::Global<v8::Object>> g_download_item_objects;
 }  // namespace
 
 DownloadItem::DownloadItem(v8::Isolate* isolate,
-                           content::DownloadItem* download_item)
+                           download::DownloadItem* download_item)
     : download_item_(download_item),
       prompt_(download_item->GetTargetDisposition() ==
-          content::DownloadItem::TARGET_DISPOSITION_PROMPT) {
+          download::DownloadItem::TARGET_DISPOSITION_PROMPT) {
   download_item_->AddObserver(this);
   Init(isolate);
   AttachAsUserData(download_item);
@@ -77,10 +77,11 @@ DownloadItem::~DownloadItem() {
   g_download_item_objects.erase(weak_map_id());
 }
 
-void DownloadItem::OnDownloadUpdated(content::DownloadItem* item) {
-  if (download_item_->IsDone()) {
+void DownloadItem::OnDownloadUpdated(download::DownloadItem* item) {
+  if (download_item_->IsDangerous()) {
+    Emit("dangerous");
+  } else if (download_item_->IsDone()) {
     Emit("done", item->GetState());
-
     // Destroy the item once item is downloaded.
     base::ThreadTaskRunnerHandle::Get()->PostTask(
         FROM_HERE, GetDestroyClosure());
@@ -89,11 +90,15 @@ void DownloadItem::OnDownloadUpdated(content::DownloadItem* item) {
   }
 }
 
-void DownloadItem::OnDownloadRemoved(content::DownloadItem* download) {
+DownloadDangerType DownloadItem::GetDangerType() const {
+  return download_item_->GetDangerType();
+}
+
+void DownloadItem::OnDownloadRemoved(download::DownloadItem* download) {
   Emit("removed");
 }
 
-void DownloadItem::OnDownloadDestroyed(content::DownloadItem* download_item) {
+void DownloadItem::OnDownloadDestroyed(download::DownloadItem* download_item) {
   download_item_ = nullptr;
   // Destroy the native class immediately when downloadItem is destroyed.
   delete this;
@@ -156,12 +161,16 @@ const GURL& DownloadItem::GetURL() const {
   return download_item_->GetURL();
 }
 
-content::DownloadItem::DownloadState DownloadItem::GetState() const {
+download::DownloadItem::DownloadState DownloadItem::GetState() const {
   return download_item_->GetState();
 }
 
 bool DownloadItem::IsDone() const {
   return download_item_->IsDone();
+}
+
+bool DownloadItem::IsDangerous() const {
+  return download_item_->IsDangerous();
 }
 
 void DownloadItem::SetSavePath(const base::FilePath& path) {
@@ -213,7 +222,7 @@ void DownloadItem::BuildPrototype(v8::Isolate* isolate,
 
 // static
 mate::Handle<DownloadItem> DownloadItem::Create(
-    v8::Isolate* isolate, content::DownloadItem* item) {
+    v8::Isolate* isolate, download::DownloadItem* item) {
   auto existing = TrackableObject::FromWrappedClass(isolate, item);
   if (existing)
     return mate::CreateHandle(isolate, static_cast<DownloadItem*>(existing));

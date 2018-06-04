@@ -21,31 +21,21 @@ using content::BrowserThread;
 
 namespace atom {
 
-namespace {
-
-// Helper to remove the ref from an net::URLRequest to the LoginHandler.
-// Should only be called from the IO thread, since it accesses an
-// net::URLRequest.
-void ResetLoginHandlerForRequest(net::URLRequest* request) {
-  content::ResourceDispatcherHost::Get()->ClearLoginDelegateForRequest(request);
-}
-
-}  // namespace
-
 LoginHandler::LoginHandler(net::AuthChallengeInfo* auth_info,
-                           net::URLRequest* request)
+      content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+      bool is_main_frame,
+      const GURL& url,
+      const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
+          auth_required_callback)
     : handled_auth_(false),
       auth_info_(auth_info),
-      request_(request),
-      render_process_host_id_(0),
-      render_frame_id_(0) {
-  content::ResourceRequestInfo::ForRequest(request_)->GetAssociatedRenderFrame(
-      &render_process_host_id_,  &render_frame_id_);
-
+      web_contents_getter_(web_contents_getter),
+      auth_required_callback_(auth_required_callback) {
   // Fill request details on IO thread.
   std::unique_ptr<base::DictionaryValue> request_details(
       new base::DictionaryValue);
-  FillRequestDetails(request_details.get(), request_);
+  request_details->SetKey("url", base::Value(url.spec()));
+  request_details->SetKey("isMainFrame", base::Value(is_main_frame));
 
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,
@@ -59,24 +49,7 @@ LoginHandler::~LoginHandler() {
 
 content::WebContents* LoginHandler::GetWebContents() const {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
-
-  int frame_tree_node_id = -1;
-  auto* request_info = content::ResourceRequestInfo::ForRequest(request_);
-  if (request_info) {
-    frame_tree_node_id = request_info->GetFrameTreeNodeId();
-  }
-
-  content::WebContents* web_contents =
-    content::WebContents::FromFrameTreeNodeId(frame_tree_node_id);
-
-  if (!web_contents) {
-    content::RenderFrameHost* rfh =
-      content::RenderFrameHost::FromID(render_process_host_id_,
-                                       render_frame_id_);
-    web_contents = content::WebContents::FromRenderFrameHost(rfh);
-  }
-
-  return web_contents;
+  return web_contents_getter_.Run();
 }
 
 void LoginHandler::Login(const base::string16& username,
@@ -98,8 +71,9 @@ void LoginHandler::CancelAuth() {
 }
 
 void LoginHandler::OnRequestCancelled() {
+  auth_required_callback_.Reset();
+
   TestAndSetAuthHandled();
-  request_ = nullptr;
 }
 
 // Marks authentication as handled and returns the previous handled state.
@@ -112,22 +86,16 @@ bool LoginHandler::TestAndSetAuthHandled() {
 
 void LoginHandler::DoCancelAuth() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
-
-  if (request_) {
-    request_->CancelAuth();
-    // Verify that CancelAuth doesn't destroy the request via our delegate.
-    DCHECK(request_ != nullptr);
-    ResetLoginHandlerForRequest(request_);
-  }
+  if (!auth_required_callback_.is_null())
+    std::move(auth_required_callback_).Run(base::nullopt);
 }
 
 void LoginHandler::DoLogin(const base::string16& username,
                            const base::string16& password) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
-
-  if (request_) {
-    request_->SetAuth(net::AuthCredentials(username, password));
-    ResetLoginHandlerForRequest(request_);
+  if (!auth_required_callback_.is_null()) {
+    std::move(auth_required_callback_)
+        .Run(net::AuthCredentials(username, password));
   }
 }
 

@@ -29,6 +29,7 @@ if (use_aura) {
   group("service_manifests") {
     data_deps = [
       "//chrome/app:service_manifests",
+      "//chrome/app:chrome_renderer_manifest",
       ":brave_content_packaged_services_manifest_overlay",
     ]
   }

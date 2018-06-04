@@ -13,7 +13,6 @@
 #include "base/sequenced_task_runner.h"
 #include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_task_runner_handle.h"
-#include "base/threading/sequenced_worker_pool.h"
 #include "brave/common/converters/string16_converter.h"
 #include "content/public/browser/browser_thread.h"
 #include "extensions/renderer/script_context.h"
@@ -42,12 +41,14 @@ FileBindings::FileBindings(extensions::ScriptContext* context)
     : extensions::ObjectBackedNativeHandler(context),
       file_task_runner_(base::CreateSequencedTaskRunnerWithTraits(
           {base::MayBlock(), base::TaskPriority::BACKGROUND,
-            base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {
-  RouteFunction("WriteImportantFile",
-      base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
-}
+           base::TaskShutdownBehavior::BLOCK_SHUTDOWN})) {}
 
-FileBindings::~FileBindings() {
+FileBindings::~FileBindings() {}
+
+void FileBindings::AddRoutes() {
+  RouteHandlerFunction(
+      "WriteImportantFile",
+      base::Bind(&FileBindings::WriteImportantFile, base::Unretained(this)));
 }
 
 // static

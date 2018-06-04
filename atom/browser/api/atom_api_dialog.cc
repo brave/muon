@@ -13,6 +13,7 @@
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/image_converter.h"
 #include "base/bind.h"
+#include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "chrome/browser/extensions/api/file_system/file_entry_picker.h"
 #include "chrome/common/chrome_paths.h"
@@ -151,7 +152,14 @@ void ShowDialog(const file_dialog::DialogSettings& settings,
 
   base::FilePath default_path = settings.default_path;
   if (default_path.empty()) {
-    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path);
+    if (!PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path)) {
+      NOTREACHED();
+    }
+  }
+  // This is only useful on platforms that support
+  // DIR_DEFAULT_DOWNLOADS_SAFE.
+  if (!PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS_SAFE, &default_path)) {
+    NOTREACHED();
   }
   file_type_info.include_all_files = settings.include_all_files;
   file_type_info.extension_description_overrides =

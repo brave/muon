@@ -54,6 +54,15 @@ using guest_view::GuestViewManager;
 
 namespace brave {
 
+namespace {
+
+bool HasWindow(WebContents* web_contents) {
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
+  return (tab_helper && tab_helper->window_id() != -1);
+
+}
+
+}
 // static
 GuestViewBase* TabViewGuest::Create(WebContents* owner_web_contents) {
   return new TabViewGuest(owner_web_contents);
@@ -108,7 +117,7 @@ void TabViewGuest::WebContentsCreated(
 WebContents* TabViewGuest::OpenURLFromTab(
     WebContents* source,
     const content::OpenURLParams& params) {
-  if (!attached()) {
+  if (!HasWindow(web_contents())) {
     TabViewGuest* opener = GetOpener();
     // If the guest wishes to navigate away prior to attachment then we save the
     // navigation to perform upon attachment. Navigation initializes a lot of
@@ -151,14 +160,21 @@ void TabViewGuest::LoadURLWithParams(
 }
 
 void TabViewGuest::Load() {
-  if (web_contents()->GetController().IsInitialNavigation())
-    NavigateGuest(src_.spec(), true);
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (!tab_helper || !tab_helper->IsDiscarded()) {
+    api_web_contents_->ResumeLoadingCreatedWebContents();
+
+    web_contents()->WasHidden();
+    web_contents()->WasShown();
+  }
+
+  ApplyAttributes(*attach_params());
 }
 
 void TabViewGuest::NavigateGuest(const std::string& src,
                                  bool force_navigation) {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-  if (src.empty() || tab_helper->IsDiscarded())
+  if (src.empty() || (tab_helper && tab_helper->IsDiscarded()))
     return;
 
   LoadURLWithParams(GURL(src), content::Referrer(),
@@ -201,9 +217,9 @@ void TabViewGuest::DidStartNavigation(
                                                        std::move(args)));
 }
 
-void TabViewGuest::AttachGuest(int guestInstanceId) {
+void TabViewGuest::AttachGuest(int guest_instance_id) {
   std::unique_ptr<base::DictionaryValue> args(new base::DictionaryValue());
-  args->SetInteger("guestInstanceId", guestInstanceId);
+  args->SetInteger("guestInstanceId", guest_instance_id);
   DispatchEventToView(base::MakeUnique<GuestViewEvent>(
       "webViewInternal.onAttachGuest", std::move(args)));
 }
@@ -233,7 +249,9 @@ void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
   api_web_contents_->guest_delegate_ = this;
   web_contents()->SetDelegate(api_web_contents_);
 
-  ApplyAttributes(create_params);
+  if (!attach_params()) {
+    SetAttachParams(create_params);
+  }
 }
 
 void TabViewGuest::CreateWebContents(
@@ -245,6 +263,10 @@ void TabViewGuest::CreateWebContents(
 
   mate::Dictionary options = mate::Dictionary::CreateEmpty(isolate);
 
+  std::string src;
+  if (params.GetString("src", &src)) {
+    src_ = GURL(src);
+  }
   std::string name;
   if (params.GetString("name", &name))
     options.Set("name", name);
@@ -287,7 +309,7 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
     auto it = GetOpener()->pending_new_windows_.find(this);
     if (it != GetOpener()->pending_new_windows_.end()) {
       const NewWindowInfo& new_window_info = it->second;
-      if (attached()) {
+      if (HasWindow(web_contents())) {
         if (new_window_info.changed || !web_contents()->HasOpener()) {
           NavigateGuest(
               new_window_info.url.spec(), false /* force_navigation */);
@@ -298,33 +320,29 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         GetOpener()->pending_new_windows_.erase(this);
       }
       is_pending_new_window = true;
-    } else if (attached() && clone_) {
-      clone_ = false;
-      web_contents()->GetController().CopyStateFrom(
-          GetOpener()->web_contents()->GetController(), true);
     }
   }
 
   // handle navigation for src attribute changes
   if (!is_pending_new_window) {
-    bool clone = false;
-    if (params.GetBoolean("clone", &clone) && clone) {
-      clone_ = true;
-    } else {
-      std::string src;
-      if (params.GetString("src", &src)) {
-        src_ = GURL(src);
+    std::string src;
+    if (params.GetString("src", &src)) {
+      src_ = GURL(src);
+    }
+
+    if (web_contents()->GetController().IsInitialNavigation()) {
+      if (web_contents()->GetController().NeedsReload()) {
+        web_contents()->GetController().LoadIfNecessary();
+        return;
       }
 
-      if (attached() &&
-          web_contents()->GetController().IsInitialNavigation()) {
-        // don't reload if we're already loading
-        if (web_contents()->GetController().GetPendingEntry() &&
-            web_contents()->GetController().GetPendingEntry()->GetURL() == src_) {
-          return;
-        }
-        NavigateGuest(src_.spec(), true);
+      // don't reload if we're already loading
+      if (web_contents()->GetController().GetPendingEntry() &&
+          web_contents()->GetController().GetPendingEntry()->GetURL() ==
+          src_) {
+        return;
       }
+      NavigateGuest(src_.spec(), true);
     }
   }
 
@@ -367,31 +385,17 @@ void TabViewGuest::SetTransparency() {
 void TabViewGuest::DidAttachToEmbedder() {
   DCHECK(api_web_contents_);
 
-  web_contents()->GetMainFrame()->ResumeBlockedRequestsForFrame();
-  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
-
-  if (!tab_helper->IsDiscarded()) {
-    api_web_contents_->ResumeLoadingCreatedWebContents();
-
-    web_contents()->WasHidden();
-    web_contents()->WasShown();
-  }
-
   ApplyAttributes(*attach_params());
 
-  if (web_contents()->GetController().IsInitialNavigation()) {
-    web_contents()->GetController().LoadIfNecessary();
-  }
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+  if (tab_helper)
+    tab_helper->DidAttach();
 
   api_web_contents_->Emit("did-attach",
       extensions::TabHelper::IdForTab(web_contents()));
-
-  tab_helper->DidAttach();
 }
 
 void TabViewGuest::DidDetachFromEmbedder() {
-  web_contents()->GetMainFrame()->BlockRequestsForFrame();
-
   if (api_web_contents_) {
     api_web_contents_->Emit("did-detach",
         extensions::TabHelper::IdForTab(web_contents()));
@@ -426,11 +430,9 @@ void TabViewGuest::GuestReady() {
 }
 
 void TabViewGuest::WillDestroy() {
-  if (api_web_contents_)
-    api_web_contents_->WebContentsDestroyed();
   api_web_contents_ = nullptr;
 
-  if (!attached() && GetOpener())
+  if (GetOpener())
     GetOpener()->pending_new_windows_.erase(this);
 }
 
@@ -449,7 +451,6 @@ bool TabViewGuest::IsAutoSizeSupported() const {
 TabViewGuest::TabViewGuest(WebContents* owner_web_contents)
     : GuestView<TabViewGuest>(owner_web_contents),
       api_web_contents_(nullptr),
-      clone_(false),
       can_run_detached_(true),
       allow_transparency_(false) {
 }
@@ -469,7 +470,11 @@ void TabViewGuest::WillAttachToEmbedder() {
     owner_window = relay->window.get();
 
   if (owner_window) {
-    TabIdChanged();
+    auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
+    if (tab_helper) {
+      TabIdChanged();
+      tab_helper->SetBrowser(owner_window->browser());
+    }
     api_web_contents_->SetOwnerWindow(owner_window);
   }
 }

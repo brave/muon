@@ -1,0 +1,14 @@
+source_set("signin") {
+  configs += [ "//electron/build:electron_config" ]
+  configs += [ "//electron/chromium_src:chromium_src_config" ]
+
+  sources = [
+    "//chrome/browser/signin/signin_manager_factory.h",
+    "signin_manager_factory.cc",
+  ]
+
+  deps = [
+    "//electron/chromium_src:sessions",
+  ]
+}
+

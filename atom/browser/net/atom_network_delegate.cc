@@ -12,12 +12,12 @@
 #include "base/stl_util.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
-#include "content/network/throttling/throttling_network_transaction.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/websocket_handshake_request_info.h"
 #include "extensions/features/features.h"
 #include "net/url_request/url_request.h"
+#include "services/network/throttling/throttling_network_transaction.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "extensions/browser/extension_api_frame_id_map.h"
@@ -327,7 +327,7 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
   }
 
   if (!client_id.empty())
-    headers->SetHeader(content::ThrottlingNetworkTransaction::
+    headers->SetHeader(network::ThrottlingNetworkTransaction::
                            kDevToolsEmulateNetworkConditionsClientId,
                        client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))
@@ -395,7 +395,7 @@ void AtomNetworkDelegate::OnCompleted(net::URLRequest* request,
                                       bool started,
                                       int net_error) {
   // OnCompleted may happen before other events.
-  OnURLRequestDestroyed(request);
+  callbacks_.erase(request->identifier());
 
   if (net_error != net::OK) {
     OnErrorOccurred(request, started, net_error);

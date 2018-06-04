@@ -28,7 +28,7 @@ bool SpecialStoragePolicy::IsStorageSessionOnly(const GURL& origin) {
   return false;
 }
 
-bool SpecialStoragePolicy::IsStorageSessionOnlyOrBlocked(const GURL& origin) {
+bool SpecialStoragePolicy::ShouldDeleteCookieOnExit(const GURL& origin) {
   return false;
 }
 

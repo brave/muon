@@ -12,9 +12,9 @@
 #include "base/time/time.h"
 #include "brave/utility/importer/brave_profile_import_service.h"
 #include "chrome/common/importer/profile_import.mojom.h"
-#include "chrome/common/resource_usage_reporter.mojom.h"
 #include "chrome/utility/extensions/extensions_handler.h"
-#include "chrome/utility/utility_message_handler.h"
+#include "components/unzip_service/public/interfaces/constants.mojom.h"
+#include "components/unzip_service/unzip_service.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/service_manager_connection.h"
 #include "content/public/common/simple_connection_filter.h"
@@ -23,10 +23,8 @@
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "net/proxy/proxy_resolver_v8.h"
-#include "printing/features/features.h"
 #include "services/proxy_resolver/proxy_resolver_service.h"
-#include "services/proxy_resolver/public/interfaces/proxy_resolver.mojom.h"
+#include "services/proxy_resolver/public/mojom/proxy_resolver.mojom.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "services/service_manager/sandbox/switches.h"
 
@@ -35,47 +33,25 @@
 #include "extensions/utility/utility_handler.h"
 #endif
 
-#if BUILDFLAG(ENABLE_PRINT_PREVIEW) || \
-    (BUILDFLAG(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "chrome/services/printing/printing_service.h"
+#include "chrome/services/printing/public/mojom/constants.mojom.h"
+#endif
+
+#if defined(OS_WIN) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "chrome/utility/printing_handler.h"
+#endif
+
+#if defined(OS_WIN)
+#include "chrome/services/printing/pdf_to_emf_converter_factory.h"
 #endif
 
 namespace atom {
 
-namespace {
-
-class ResourceUsageReporterImpl : public chrome::mojom::ResourceUsageReporter {
- public:
-  ResourceUsageReporterImpl() {}
-  ~ResourceUsageReporterImpl() override {}
-
- private:
-  void GetUsageData(const GetUsageDataCallback& callback) override {
-    chrome::mojom::ResourceUsageDataPtr data =
-      chrome::mojom::ResourceUsageData::New();
-    size_t total_heap_size = net::ProxyResolverV8::GetTotalHeapSize();
-    if (total_heap_size) {
-      data->reports_v8_stats = true;
-      data->v8_bytes_allocated = total_heap_size;
-      data->v8_bytes_used = net::ProxyResolverV8::GetUsedHeapSize();
-    }
-    callback.Run(std::move(data));
-  }
-};
-
-void CreateResourceUsageReporter(
-    mojo::InterfaceRequest<chrome::mojom::ResourceUsageReporter> request) {
-  mojo::MakeStrongBinding(base::MakeUnique<ResourceUsageReporterImpl>(),
-                          std::move(request));
-}
-
-}  // namespace
-
 AtomContentUtilityClient::AtomContentUtilityClient()
     : utility_process_running_elevated_(false) {
-#if BUILDFLAG(ENABLE_PRINT_PREVIEW) || \
-    (BUILDFLAG(ENABLE_BASIC_PRINTING) && defined(OS_WIN))
-  handlers_.push_back(base::MakeUnique<printing::PrintingHandler>());
+#if defined(OS_WIN) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
+  printing_handler_ = std::make_unique<printing::PrintingHandler>();
 #endif
 }
 
@@ -104,8 +80,13 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   // If our process runs with elevated privileges, only add elevated Mojo
   // interfaces to the interface registry.
   if (!utility_process_running_elevated_) {
-    registry->AddInterface(base::Bind(CreateResourceUsageReporter),
-                           base::ThreadTaskRunnerHandle::Get());
+#if defined(OS_WIN)
+        // TODO(crbug.com/798782): remove when the Cloud print chrome/service is
+        // removed.
+    registry->AddInterface(
+        base::Bind(printing::PdfToEmfConverterFactory::Create),
+        base::ThreadTaskRunnerHandle::Get());
+#endif
   }
 
   connection->AddConnectionFilter(
@@ -117,11 +98,10 @@ bool AtomContentUtilityClient::OnMessageReceived(
   if (utility_process_running_elevated_)
     return false;
 
-  for (const auto& handler : handlers_) {
-    if (handler->OnMessageReceived(message))
+#if defined(OS_WIN) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
+  if (printing_handler_->OnMessageReceived(message))
       return true;
-  }
-
+#endif
   return false;
 }
 
@@ -140,6 +120,21 @@ void AtomContentUtilityClient::RegisterServices(
     base::Bind(&BraveProfileImportService::CreateService);
   services->emplace(chrome::mojom::kProfileImportServiceName,
                     profile_import_info);
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+  {
+    service_manager::EmbeddedServiceInfo printing_info;
+    printing_info.factory =
+      base::Bind(&printing::PrintingService::CreateService);
+    services->emplace(printing::mojom::kChromePrintingServiceName,
+                      printing_info);
+  }
+#endif
+  {
+    service_manager::EmbeddedServiceInfo service_info;
+    service_info.factory =
+        base::BindRepeating(&unzip::UnzipService::CreateService);
+    services->emplace(unzip::mojom::kServiceName, service_info);
+  }
 }
 
 // static

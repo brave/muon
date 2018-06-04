@@ -95,14 +95,13 @@ void URLRequestFetchJob::BeforeStartInUI(
     // We have to create the URLRequestContextGetter on UI thread.
     url_request_context_getter_ = new brightray::URLRequestContextGetter(
         this, nullptr, base::FilePath(), true,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::FILE), nullptr,
+        BrowserThread::GetTaskRunnerForThread(BrowserThread::IO), nullptr,
         content::URLRequestInterceptorScopedVector());
   }
 }
 
 void URLRequestFetchJob::StartAsync(std::unique_ptr<base::Value> options) {
-  if (!options->IsType(base::Value::Type::DICTIONARY)) {
+  if (!options->is_dict()) {
     NotifyStartError(net::URLRequestStatus(
           net::URLRequestStatus::FAILED, net::ERR_NOT_IMPLEMENTED));
     return;

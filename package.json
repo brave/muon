@@ -1,11 +1,10 @@
 {
   "name": "electron",
-  "version": "5.0.0+64.0.3282.119",
+  "version": "6.0.11+66.0.3359.170",
   "devDependencies": {
     "asar": "^0.11.0",
     "electabul": "~0.0.4",
     "pre-push": "^0.1.1",
-    "request": "*",
     "standard": "^7.1.2",
     "standard-markdown": "^1.2.1"
   },

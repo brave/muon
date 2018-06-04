@@ -122,13 +122,53 @@ int ExtensionTabUtil::GetWindowIdOfTab(const WebContents* web_contents) {
 // static
 std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
     WebContents* contents,
+    ScrubTabBehavior scrub_tab_behavior,
+    const Extension* extension,
     TabStripModel* tab_strip,
-    int tab_index,
-    const Extension* extension) {
-  std::unique_ptr<api::tabs::Tab> result =
-      CreateTabObject(contents, tab_strip, tab_index);
-  ScrubTabForExtension(extension, contents, result.get());
-  return result;
+    int tab_index) {
+  auto tab_object = std::make_unique<api::tabs::Tab>();
+  auto tab_helper = TabHelper::FromWebContents(contents);
+  if (!tab_helper)
+    return tab_object;
+
+  if (!tab_strip)
+    ExtensionTabUtil::GetTabStripModel(contents, &tab_strip, &tab_index);
+
+  bool is_loading = contents->IsLoading();
+  tab_object->id = std::make_unique<int>(GetTabIdForExtensions(contents));
+  tab_object->index = tab_helper->get_index();
+  tab_object->window_id = GetWindowIdOfTab(contents);
+  tab_object->status =
+      std::make_unique<std::string>(GetTabStatusText(is_loading));
+  tab_object->active = tab_helper->is_active();
+  tab_object->selected = tab_object->active;
+  tab_object->highlighted = tab_strip && tab_strip->IsTabSelected(tab_index);
+  tab_object->pinned = tab_helper->is_pinned();
+  tab_object->audible = std::make_unique<bool>(contents->WasRecentlyAudible());
+  tab_object->discarded = tab_helper->IsDiscarded();
+  tab_object->auto_discardable =
+      g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
+  tab_object->muted_info = CreateMutedInfo(contents);
+  tab_object->incognito = contents->GetBrowserContext()->IsOffTheRecord();
+  gfx::Size contents_size = contents->GetContainerBounds().size();
+  tab_object->width = std::make_unique<int>(contents_size.width());
+  tab_object->height = std::make_unique<int>(contents_size.height());
+
+  tab_object->url = std::make_unique<std::string>(contents->GetURL().spec());
+  tab_object->title =
+      std::make_unique<std::string>(base::UTF16ToUTF8(contents->GetTitle()));
+  NavigationEntry* entry = contents->GetController().GetVisibleEntry();
+  if (entry && entry->GetFavicon().valid) {
+    tab_object->fav_icon_url =
+        std::make_unique<std::string>(entry->GetFavicon().url.spec());
+  }
+
+  tab_object->opener_tab_id =
+      std::make_unique<int>(tab_helper->opener_tab_id());
+
+  if (scrub_tab_behavior == kScrubTab)
+    ScrubTabForExtension(extension, contents, tab_object.get());
+  return tab_object;
 }
 
 std::unique_ptr<base::ListValue> ExtensionTabUtil::CreateTabList(
@@ -137,56 +177,12 @@ std::unique_ptr<base::ListValue> ExtensionTabUtil::CreateTabList(
   std::unique_ptr<base::ListValue> tab_list(new base::ListValue());
   TabStripModel* tab_strip = browser->tab_strip_model();
   for (int i = 0; i < tab_strip->count(); ++i) {
-    tab_list->Append(
-        CreateTabObject(tab_strip->GetWebContentsAt(i), tab_strip, i, extension)
-            ->ToValue());
+    tab_list->Append(CreateTabObject(tab_strip->GetWebContentsAt(i), kScrubTab,
+                                     extension, tab_strip, i)
+                         ->ToValue());
   }
 
   return tab_list;
-}
-
-// static
-std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
-    content::WebContents* contents,
-    TabStripModel* tab_strip,
-    int tab_index) {
-  if (!tab_strip)
-    ExtensionTabUtil::GetTabStripModel(contents, &tab_strip, &tab_index);
-
-  auto tab_helper = TabHelper::FromWebContents(contents);
-
-  bool is_loading = contents->IsLoading();
-  std::unique_ptr<api::tabs::Tab> tab_object(new api::tabs::Tab);
-  tab_object->id.reset(new int(GetTabIdForExtensions(contents)));
-  tab_object->index = tab_helper->get_index();
-  tab_object->window_id = GetWindowIdOfTab(contents);
-  tab_object->status.reset(new std::string(GetTabStatusText(is_loading)));
-  tab_object->active = tab_helper->is_active();
-  tab_object->selected = tab_object->active;
-  tab_object->highlighted = tab_strip && tab_strip->IsTabSelected(tab_index);
-  tab_object->pinned = tab_helper->is_pinned();
-  tab_object->audible.reset(new bool(contents->WasRecentlyAudible()));
-  tab_object->discarded = tab_helper->IsDiscarded();
-  tab_object->auto_discardable =
-      g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
-  tab_object->muted_info = CreateMutedInfo(contents);
-  tab_object->incognito = contents->GetBrowserContext()->IsOffTheRecord();
-  tab_object->width.reset(
-      new int(contents->GetContainerBounds().size().width()));
-  tab_object->height.reset(
-      new int(contents->GetContainerBounds().size().height()));
-
-  tab_object->url.reset(new std::string(contents->GetURL().spec()));
-  tab_object->title.reset(
-      new std::string(base::UTF16ToUTF8(contents->GetTitle())));
-  NavigationEntry* entry = contents->GetController().GetVisibleEntry();
-  if (entry && entry->GetFavicon().valid)
-    tab_object->fav_icon_url.reset(
-        new std::string(entry->GetFavicon().url.spec()));
-
-  tab_object->opener_tab_id.reset(new int(tab_helper->opener_tab_id()));
-
-  return tab_object;
 }
 
 // static
@@ -339,8 +335,9 @@ bool ExtensionTabUtil::IsKillURL(const GURL& url) {
 // static
 void ExtensionTabUtil::ForEachTab(
     const base::Callback<void(WebContents*)>& callback) {
-  for (TabContentsIterator iterator; !iterator.done(); iterator.Next())
-    callback.Run(*iterator);
+  for (auto* web_contents : AllTabContentses())
+    callback.Run(web_contents);
+
 }
 
 // static

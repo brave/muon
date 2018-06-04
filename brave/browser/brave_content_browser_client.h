@@ -58,17 +58,15 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       content::RenderFrameHost* render_frame_host,
       const std::string& interface_name,
       mojo::ScopedMessagePipeHandle interface_pipe) override;
-  bool BindAssociatedInterfaceRequestFromFrame(
-      content::RenderFrameHost* render_frame_host,
-      const std::string& interface_name,
-      mojo::ScopedInterfaceEndpointHandle* handle) override;
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
   void GetAdditionalMappedFilesForChildProcess(
       const base::CommandLine& command_line,
       int child_process_id,
       content::PosixFileDescriptorInfo* mappings) override;
 #endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
-  void RenderProcessWillLaunch(content::RenderProcessHost* host) override;
+  void RenderProcessWillLaunch(
+      content::RenderProcessHost* host,
+      service_manager::mojom::ServiceRequest* service_request) override;
   void AppendExtraCommandLineSwitches(base::CommandLine* command_line,
                                       int child_process_id) override;
   content::PlatformNotificationService*
@@ -108,6 +106,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       std::vector<std::string>* additional_schemes) override;
   bool ShouldAllowOpenURL(content::SiteInstance* site_instance,
                                       const GURL& url) override;
+  bool IsURLAcceptableForWebUI(content::BrowserContext* browser_context,
+                                const GURL& url) override;
   void BrowserURLHandlerCreated(
       content::BrowserURLHandler* handler) override;
   void SiteInstanceGotProcess(
@@ -133,12 +133,30 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::unique_ptr<base::Value> GetServiceManifestOverlay(
       base::StringPiece name) override;
 
+  content::ResourceDispatcherHostLoginDelegate* CreateLoginDelegate(
+      net::AuthChallengeInfo* auth_info,
+      content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+      bool is_main_frame,
+      const GURL& url,
+      bool first_auth_attempt,
+      const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
+          auth_required_callback) override;
 
   std::vector<std::unique_ptr<content::NavigationThrottle>>
     CreateThrottlesForNavigation(
       content::NavigationHandle* handle) override;
   std::unique_ptr<content::NavigationUIData> GetNavigationUIData(
     content::NavigationHandle* navigation_handle) override;
+
+  std::unique_ptr<net::ClientCertStore> CreateClientCertStore(
+      content::ResourceContext* resource_context) override;
+
+  std::vector<content::ContentBrowserClient::ServiceManifestInfo>
+     GetExtraServiceManifests() override;
+
+  // brightray::BrowserClient:
+  brightray::BrowserMainParts* OverrideCreateBrowserMainParts(
+      const content::MainFunctionParams&) override;
 
  protected:
   bool IsValidStoragePartitionId(

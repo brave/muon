@@ -829,13 +829,6 @@ Kiosk(키오스크) 모드를 설정합니다.
 
 현재 윈도우가 kiosk 모드인지 여부를 반환합니다.
 
-### `win.getNativeWindowHandle()`
-
-`Buffer` 상의 플랫폼에 따른 윈도우 핸들을 반환합니다.
-
-핸들의 타입에 따라 적절히 캐스팅됩니다. Windows의 `HWND`, macOS의 `NSView*`, Linux의
-`Window` (`unsigned long`)를 예로 들 수 있습니다.
-
 ### `win.hookWindowMessage(message, callback)` _Windows_
 
 * `message` Integer

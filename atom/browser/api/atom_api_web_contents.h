@@ -15,6 +15,7 @@
 #include "atom/common/options_switches.h"
 #include "base/memory/memory_pressure_listener.h"
 #include "base/memory/weak_ptr.h"
+#include "chrome/browser/safe_browsing/ui_manager.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "content/common/cursors/webcursor.h"
 #include "content/common/view_messages.h"
@@ -102,7 +103,8 @@ namespace api {
 class WebContents : public mate::TrackableObject<WebContents>,
                     public CommonWebContentsDelegate,
                     public content::WebContentsObserver,
-                    public TabStripModelObserver {
+                    public TabStripModelObserver,
+                    public safe_browsing::SafeBrowsingUIManager::Observer {
  public:
   enum Type {
     BACKGROUND_PAGE,  // A DevTools extension background page.
@@ -120,6 +122,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
     v8::Isolate* isolate, int tab_id);
 
   static void CreateTab(mate::Arguments* args);
+
+  static mate::Handle<WebContents> GetFrom(
+      v8::Isolate* isolate, content::WebContents* web_contents);
 
   static mate::Handle<WebContents> CreateFrom(
       v8::Isolate* isolate, content::WebContents* web_contents);
@@ -252,6 +257,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   bool ExecuteScriptInTab(mate::Arguments* args);
   void SetTabValues(const base::DictionaryValue& values);
 #endif
+  bool IsTab();
 
   // Send messages to browser.
   static bool SendIPCMessage(int render_process_id,
@@ -330,11 +336,13 @@ class WebContents : public mate::TrackableObject<WebContents>,
       base::Callback<void(content::WebContents*)> callback,
       content::WebContents* tab);
 
-  void OnCloneCreated(const mate::Dictionary& options,
-      base::Callback<void(content::WebContents*)> callback,
-      content::WebContents* clone);
-
   void AuthorizePlugin(mate::Arguments* args);
+
+  // SafeBrowsingUIManager::Observer
+  void OnSafeBrowsingHit(
+    const security_interstitials::UnsafeResource& resource) override;
+
+  void MoveTo(mate::Arguments* args);
 
   // TabStripModelObserver
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
@@ -352,12 +360,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void TabMoved(content::WebContents* contents,
                 int from_index,
                 int to_index) override;
-  void TabClosingAt(TabStripModel* tab_strip_model,
-                    content::WebContents* contents,
-                    int index) override;
-  void TabChangedAt(content::WebContents* contents,
-                    int index,
-                    TabChangeType change_type) override;
   void TabStripEmpty() override;
   void TabSelectionChanged(TabStripModel* tab_strip_model,
                            const ui::ListSelectionModel& old_model) override;
@@ -433,8 +435,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void ContentsZoomChange(bool zoom_in) override;
   void RendererUnresponsive(
       content::WebContents* source,
-      const content::WebContentsUnresponsiveState& unresponsive_state) override;
-  void RendererResponsive(content::WebContents* source) override;
+      content::RenderWidgetHost* render_widget_host) override;
+  void RendererResponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
   bool OnContextMenuShow();
   void OnContextMenuClose();
   bool HandleContextMenu(const content::ContextMenuParams& params) override;
@@ -478,8 +482,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
                    const GURL& validated_url,
                    int error_code,
                    const base::string16& error_description) override;
-  void DidGetResourceResponseStart(
-      const content::ResourceRequestDetails& details) override;
   void DidStartLoading() override;
   void DidStopLoading() override;
   void DidStartNavigation(
@@ -532,7 +534,6 @@ class WebContents : public mate::TrackableObject<WebContents>,
                                    base::SharedMemory* shared_memory);
   bool SendIPCMessageInternal(const base::string16& channel,
                               const base::ListValue& args);
-
   AtomBrowserContext* GetBrowserContext() const;
 
   uint32_t GetNextRequestId() {

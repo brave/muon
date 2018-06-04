@@ -9,7 +9,7 @@ import("//ui/base/ui_features.gni")
 import("//v8/gni/v8.gni")
 import("//build/compiled_action.gni")
 import("//build/util/branding.gni")
-import("//media/cdm/ppapi/cdm_paths.gni")
+import("//media/cdm/library_cdm/cdm_paths.gni")
 import("//electron/build/config.gni")
 
 executable("electron_app") {

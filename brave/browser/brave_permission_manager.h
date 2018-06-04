@@ -10,6 +10,7 @@
 
 #include "base/callback.h"
 #include "content/public/browser/permission_manager.h"
+#include "services/device/public/mojom/geolocation_control.mojom.h"
 
 namespace content {
 class WebContents;
@@ -57,7 +58,6 @@ class BravePermissionManager : public content::PermissionManager {
       const std::vector<blink::mojom::PermissionStatus>& status);
 
   // content::PermissionManager:
-  void CancelPermissionRequest(int request_id) override;
   void ResetPermission(content::PermissionType permission,
                        const GURL& requesting_origin,
                        const GURL& embedding_origin) override;
@@ -74,6 +74,10 @@ class BravePermissionManager : public content::PermissionManager {
   void UnsubscribePermissionStatusChange(int subscription_id) override;
 
  private:
+  void CancelPermissionRequest(int request_id);
+
+  device::mojom::GeolocationControl* GetGeolocationControl();
+
   struct RequestInfo {
     int render_process_id;
     int render_frame_id;
@@ -86,6 +90,8 @@ class BravePermissionManager : public content::PermissionManager {
   std::map<int, RequestInfo> pending_requests_;
 
   int request_id_;
+
+  device::mojom::GeolocationControlPtr geolocation_control_;
 
   DISALLOW_COPY_AND_ASSIGN(BravePermissionManager);
 };

@@ -12,7 +12,6 @@
 #include "atom/common/pepper_flash_util.h"
 #include "base/base_paths.h"
 #include "base/command_line.h"
-#include "base/debug/crash_logging.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/mac/bundle_locations.h"
@@ -27,7 +26,6 @@
 #include "chrome/common/chrome_constants.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/crash_keys.h"
-#include "chrome/common/extensions/extension_process_policy.h"
 #include "chrome/common/secure_origin_whitelist.h"
 #include "content/public/common/cdm_info.h"
 #include "content/public/common/content_constants.h"
@@ -36,6 +34,8 @@
 #include "extensions/features/features.h"
 #include "gpu/config/gpu_crash_keys.h"
 #include "gpu/config/gpu_info.h"
+#include "gpu/config/gpu_util.h"
+#include "media/base/video_codecs.h"
 #include "media/media_features.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -61,7 +61,8 @@
 #if defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
 bool IsWidevineAvailable(base::FilePath* adapter_path,
                          base::FilePath* cdm_path,
-                         std::vector<std::string>* codecs_supported) {
+                         std::vector<media::VideoCodec>* codecs_supported,
+                         bool* supports_persistent_license) {
   static enum {
     NOT_CHECKED,
     FOUND,
@@ -81,11 +82,14 @@ bool IsWidevineAvailable(base::FilePath* adapter_path,
     if (widevine_cdm_file_check == FOUND) {
       // Add the supported codecs as if they came from the component manifest.
       // This list must match the CDM that is being bundled with Chrome.
-      codecs_supported->push_back(kCdmSupportedCodecVp8);
-      codecs_supported->push_back(kCdmSupportedCodecVp9);
+      codecs_supported->push_back(media::VideoCodec::kCodecVP8);
+      codecs_supported->push_back(media::VideoCodec::kCodecVP9);
 #if BUILDFLAG(USE_PROPRIETARY_CODECS)
-      codecs_supported->push_back(kCdmSupportedCodecAvc1);
+      codecs_supported->push_back(media::VideoCodec::kCodecH264);
 #endif  // BUILDFLAG(USE_PROPRIETARY_CODECS)
+
+      *supports_persistent_license = false;
+
       return true;
     }
   }
@@ -117,31 +121,16 @@ AtomContentClient::AtomContentClient() {
 AtomContentClient::~AtomContentClient() {
 }
 
-void AtomContentClient::SetActiveURL(const GURL& url) {
-  base::debug::SetCrashKeyValue(crash_keys::kActiveURL,
-                                url.possibly_invalid_spec());
+void AtomContentClient::SetActiveURL(const GURL& url, std::string top_origin) {
+  static crash_reporter::CrashKeyString<1024> active_url("url-chunk");
+  active_url.Set(url.possibly_invalid_spec());
+
+  static crash_reporter::CrashKeyString<64> top_origin_key("top-origin");
+  top_origin_key.Set(top_origin);
 }
 
 void AtomContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendorID,
-      base::StringPrintf("0x%04x", gpu_info.gpu.vendor_id));
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDeviceID,
-      base::StringPrintf("0x%04x", gpu_info.gpu.device_id));
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUDriverVersion,
-      gpu_info.driver_version);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUPixelShaderVersion,
-      gpu_info.pixel_shader_version);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVertexShaderVersion,
-      gpu_info.vertex_shader_version);
-#if defined(OS_MACOSX)
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUGLVersion,
-      gpu_info.gl_version);
-#elif defined(OS_POSIX)
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPUVendor,
-      gpu_info.gl_vendor);
-  base::debug::SetCrashKeyValue(gpu::crash_keys::kGPURenderer,
-      gpu_info.gl_renderer);
-#endif
+  gpu::SetKeysForCrashLogging(gpu_info);
 }
 
 std::string AtomContentClient::GetProduct() const {
@@ -151,14 +140,6 @@ std::string AtomContentClient::GetProduct() const {
 std::string AtomContentClient::GetUserAgent() const {
   return content::BuildUserAgentFromProduct(
       "Chrome/" CHROME_VERSION_STRING);
-}
-
-bool AtomContentClient::IsSupplementarySiteIsolationModeEnabled() {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  return true;
-#else
-  return false;
-#endif
 }
 
 void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
@@ -221,16 +202,20 @@ void AtomContentClient::AddContentDecryptionModules(
 #if defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
     base::FilePath adapter_path;
     base::FilePath cdm_path;
-    std::vector<std::string> codecs_supported;
-    if (IsWidevineAvailable(&adapter_path, &cdm_path, &codecs_supported)) {
+    std::vector<media::VideoCodec> video_codecs_supported;
+    bool supports_persistent_license;
+    if (IsWidevineAvailable(&adapter_path, &cdm_path, &video_codecs_supported,
+                            &supports_persistent_license)) {
       // CdmInfo needs |path| to be the actual Widevine library,
       // not the adapter, so adjust as necessary. It will be in the
       // same directory as the installed adapter.
       const base::Version version(WIDEVINE_CDM_VERSION_STRING);
       DCHECK(version.IsValid());
+
       cdms->push_back(content::CdmInfo(
           kWidevineCdmDisplayName, kWidevineCdmGuid, version, cdm_path,
-          codecs_supported, kWidevineKeySystem, false));
+          kWidevineCdmFileSystemId, video_codecs_supported,
+          supports_persistent_license, kWidevineKeySystem, false));
     }
 #endif  // defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
 

@@ -25,6 +25,7 @@
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/render_process_host.h"
+#include "extensions/browser/disable_reason.h"
 #include "extensions/browser/extension_prefs.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extensions_browser_client.h"
@@ -37,7 +38,6 @@
 #include "extensions/browser/runtime_data.h"
 #include "extensions/browser/service_worker_manager.h"
 #include "extensions/browser/value_store/value_store_factory_impl.h"
-#include "extensions/common/disable_reason.h"
 #include "extensions/common/extension_messages.h"
 #include "extensions/common/file_util.h"
 #include "extensions/common/manifest_handlers/shared_module_info.h"
@@ -311,7 +311,7 @@ const Extension* AtomExtensionSystem::Shared::AddExtension(
     is_extension_loaded = true;
     old_name = old->name();
     int version_compare_result =
-        extension->version()->CompareTo(*(old->version()));
+        extension->version().CompareTo(old->version());
     is_extension_upgrade = version_compare_result > 0;
     // Other than for unpacked extensions, CrxInstaller should have guaranteed
     // that we aren't downgrading.
@@ -507,6 +507,10 @@ void AtomExtensionSystem::InitForRegularProfile(bool extensions_enabled) {
   shared_->Init(extensions_enabled);
 }
 
+void AtomExtensionSystem::InitForIncognitoProfile() {
+  NOTREACHED();
+}
+
 ExtensionService* AtomExtensionSystem::extension_service() {
   return shared_->extension_service();
 }
@@ -562,9 +566,19 @@ std::unique_ptr<ExtensionSet> AtomExtensionSystem::GetDependentExtensions(
   return base::WrapUnique(new ExtensionSet());
 }
 
-void AtomExtensionSystem::InstallUpdate(const std::string& extension_id,
-                                         const base::FilePath& temp_dir) {
+void AtomExtensionSystem::InstallUpdate(
+    const std::string& extension_id,
+    const std::string& public_key,
+    const base::FilePath& unpacked_dir,
+    InstallUpdateCallback install_update_callback) {
   NOTREACHED();
+}
+
+bool AtomExtensionSystem::FinishDelayedInstallationIfReady(
+    const std::string& extension_id,
+    bool install_immediately) {
+  NOTREACHED();
+  return false;
 }
 
 void AtomExtensionSystem::RegisterExtensionWithRequestContexts(

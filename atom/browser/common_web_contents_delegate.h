@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "base/sequenced_task_runner.h"
 #include "brightray/browser/inspectable_web_contents_delegate.h"
 #include "brightray/browser/inspectable_web_contents_impl.h"
 #include "brightray/browser/inspectable_web_contents_view_delegate.h"
@@ -67,7 +68,8 @@ class CommonWebContentsDelegate
   content::ColorChooser* OpenColorChooser(
       content::WebContents* web_contents,
       SkColor color,
-      const std::vector<content::ColorSuggestion>& suggestions) override;
+      const std::vector<blink::mojom::ColorSuggestionPtr>& suggestions)
+      override;
   void RunFileChooser(content::RenderFrameHost* render_frame_host,
                       const content::FileChooserParams& params) override;
   void EnumerateDirectory(content::WebContents* web_contents,
@@ -92,7 +94,8 @@ class CommonWebContentsDelegate
   void DevToolsAppendToFile(const std::string& url,
                             const std::string& content) override;
   void DevToolsRequestFileSystems() override;
-  void DevToolsAddFileSystem(const base::FilePath& path) override;
+  void DevToolsAddFileSystem(const base::FilePath& path,
+                             const std::string& type) override;
   void DevToolsRemoveFileSystem(
       const base::FilePath& file_system_path) override;
   void DevToolsIndexPath(int request_id,
@@ -117,10 +120,12 @@ class CommonWebContentsDelegate
                           const std::vector<base::FilePath>& paths);
   void OnSaveFileSelectionCancelled(const std::string url);
 
-  void OnAddFileSelected(const std::vector<base::FilePath>& paths);
+  void OnAddFileSelected(const std::string& path,
+                         const std::vector<base::FilePath>& paths);
   void OnAddFileSelectionCancelled();
 
-  void DevToolsAddFileSystemInteral(const base::FilePath& path);
+  void DevToolsAddFileSystemInteral(const base::FilePath& path,
+                                    const std::string& type);
 
   // Callback for when DevToolsSaveToFile has completed.
   void OnDevToolsSaveToFile(const std::string& url);
@@ -176,6 +181,8 @@ class CommonWebContentsDelegate
   DevToolsIndexingJobsMap devtools_indexing_jobs_;
 
   base::WeakPtrFactory<CommonWebContentsDelegate> weak_ptr_factory_;
+
+  scoped_refptr<base::SequencedTaskRunner> file_task_runner_;
 
   DISALLOW_COPY_AND_ASSIGN(CommonWebContentsDelegate);
 };

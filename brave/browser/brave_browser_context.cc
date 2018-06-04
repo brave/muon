@@ -18,6 +18,7 @@
 #include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+#include "chrome/browser/download/download_prefs.h"
 #include "chrome/browser/io_thread.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/common/chrome_paths.h"
@@ -36,10 +37,12 @@
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_filter.h"
 #include "components/pref_registry/pref_registry_syncable.h"
+#include "components/safe_browsing/common/safe_browsing_prefs.h"
 #include "components/sync_preferences/pref_service_syncable.h"
 #include "components/sync_preferences/pref_service_syncable_factory.h"
 #include "components/user_prefs/user_prefs.h"
 #include "components/zoom/zoom_event_manager.h"
+#include "components/webdata_services/web_data_service_wrapper.h"
 #include "components/webdata/common/webdata_constants.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
@@ -72,6 +75,10 @@
 #include "chrome/browser/plugins/plugin_info_host_impl.h"
 #endif
 
+#if defined(OS_WIN)
+#include "components/password_manager/core/browser/webdata/password_web_data_service_win.h"
+#endif
+
 using content::BrowserThread;
 using content::HostZoomMap;
 
@@ -98,6 +105,15 @@ void NotifyOTRProfileDestroyedOnIOThread(void* original_profile,
       ->OnOTRBrowserContextDestroyed(original_profile, otr_profile);
 }
 #endif
+
+void DummyFlare(syncer::ModelType type) {}
+
+void ProfileErrorCallback(WebDataServiceWrapper::ErrorType error_type,
+                          sql::InitStatus status,
+                          const std::string& diagnostics) {
+  // TODO(bridiver) - this should be reported back to JS
+  LOG(ERROR) << "Error initializing web data service " << diagnostics;
+}
 
 // WATCH(bridiver) - chrome/browser/profiles/profile_impl.cc
 // Converts the kSessionExitedCleanly pref to the corresponding EXIT_TYPE.
@@ -210,11 +226,7 @@ BraveBrowserContext::~BraveBrowserContext() {
   }
 
   if (!IsOffTheRecord() && !HasParentContext()) {
-    autofill_data_->ShutdownOnUISequence();
-#if defined(OS_WIN)
-    password_data_->ShutdownOnUISequence();
-#endif
-    web_database_->ShutdownDatabase();
+    web_database_wrapper_->Shutdown();
 
     bool prefs_loaded = user_prefs_->GetInitializationStatus() !=
         PrefService::INITIALIZATION_STATUS_WAITING;
@@ -425,23 +437,19 @@ void BraveBrowserContext::CreateProfilePrefs(
     overlay_pref_names_.push_back(extensions::pref_names::kPrefContentSettings);
     overlay_pref_names_.push_back(prefs::kPartitionPerHostZoomLevels);
     std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
-    user_prefs_.reset(
+    user_prefs_ =
         original_context()->user_prefs()->CreateIncognitoPrefService(
-          extension_prefs, overlay_pref_names_, std::move(delegate)));
+            extension_prefs, overlay_pref_names_, std::move(delegate));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else if (HasParentContext()) {
     // overlay pref names only apply to incognito
     std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
     std::vector<const char*> overlay_pref_names;
-    user_prefs_.reset(
-            original_context()->user_prefs()->CreateIncognitoPrefService(
-              extension_prefs, overlay_pref_names, std::move(delegate)));
+    user_prefs_ =
+        original_context()->user_prefs()->CreateIncognitoPrefService(
+            extension_prefs, overlay_pref_names, std::move(delegate));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
-    base::FilePath download_dir;
-    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &download_dir);
-    pref_registry_->RegisterFilePathPref(prefs::kDownloadDefaultDirectory,
-                                        download_dir);
     pref_registry_->RegisterDictionaryPref("app_state");
     pref_registry_->RegisterDictionaryPref(
         extensions::pref_names::kPrefContentSettings);
@@ -453,6 +461,8 @@ void BraveBrowserContext::CreateProfilePrefs(
     pref_registry_->RegisterDictionaryPref(prefs::kPartitionPerHostZoomLevels);
     pref_registry_->RegisterBooleanPref(prefs::kPrintingEnabled, true);
     pref_registry_->RegisterBooleanPref(prefs::kPrintPreviewDisabled, false);
+    safe_browsing::RegisterProfilePrefs(pref_registry_.get());
+    DownloadPrefs::RegisterProfilePrefs(pref_registry_.get());
 #if BUILDFLAG(ENABLE_PLUGINS)
     PluginInfoHostImpl::RegisterUserPrefs(pref_registry_.get());
     PepperFlashSettingsManager::RegisterProfilePrefs(pref_registry_.get());
@@ -524,31 +534,12 @@ void BraveBrowserContext::OnPrefsLoaded(bool success) {
           base::FilePath());
     }
 
-    // Initialize autofill db
-    base::FilePath webDataPath = GetPath().Append(kWebDataFilename);
-
-    CHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
-    web_database_ = new WebDatabaseService(webDataPath,
+    const base::FilePath& profile_path = GetPath();
+    web_database_wrapper_.reset(new WebDataServiceWrapper(
+        profile_path, g_browser_process->GetApplicationLocale(),
         BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::DB));
-    web_database_->AddTable(base::WrapUnique(new autofill::AutofillTable));
-    web_database_->AddTable(base::WrapUnique(new LoginsTable));
-    web_database_->LoadDatabase();
-
-    autofill_data_ = new autofill::AutofillWebDataService(
-        web_database_,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::DB),
-        base::Bind(&DatabaseErrorCallback));
-    autofill_data_->Init();
-
-#if defined(OS_WIN)
-    password_data_ = new PasswordWebDataService(
-        web_database_,
-        BrowserThread::GetTaskRunnerForThread(BrowserThread::UI),
-        base::Bind(&PasswordErrorCallback));
-    password_data_->Init();
-#endif
+        base::Bind(&DummyFlare),
+        base::BindRepeating(&ProfileErrorCallback)));
   }
 
   user_prefs_registrar_->Init(user_prefs_.get());
@@ -586,13 +577,13 @@ BraveBrowserContext::CreateZoomLevelDelegate(
 
 scoped_refptr<autofill::AutofillWebDataService>
 BraveBrowserContext::GetAutofillWebdataService() {
-  return original_context()->autofill_data_;
+  return original_context()->web_database_wrapper_->GetAutofillWebData();
 }
 
 #if defined(OS_WIN)
 scoped_refptr<PasswordWebDataService>
 BraveBrowserContext::GetPasswordWebdataService() {
-  return original_context()->password_data_;
+  return original_context()->web_database_wrapper_->GetPasswordWebData();
 }
 #endif
 
@@ -661,37 +652,22 @@ void BraveBrowserContext::set_last_selected_directory(
 
 namespace atom {
 
-void CreateDirectoryAndSignal(const base::FilePath& path,
-                              base::WaitableEvent* done_creating) {
+// Creates the profile directory synchronously if it doesn't exist. If
+// |create_readme| is true, the profile README will be created asynchronously i
+// the profile directory.
+void CreateProfileDirectory(const base::FilePath& path) {
+  // Create the profile directory synchronously otherwise we would need to
+  // sequence every otherwise independent I/O operation inside the profile
+  // directory with this operation. base::PathExists() and
+  // base::CreateDirectory() should be lightweight I/O operations and avoiding
+  // the headache of sequencing all otherwise unrelated I/O after these
+  // justifies running them on the main thread.
+  base::ThreadRestrictions::ScopedAllowIO allow_io_to_create_directory;
+
   if (!base::PathExists(path)) {
     DVLOG(1) << "Creating directory " << path.value();
     base::CreateDirectory(path);
   }
-  done_creating->Signal();
-}
-
-// Task that blocks the FILE thread until CreateDirectoryAndSignal() finishes on
-// the IO task runner
-void BlockFileThreadOnDirectoryCreate(base::WaitableEvent* done_creating) {
-  done_creating->Wait();
-}
-
-// Initiates creation of profile directory on |io_task_runner| and ensures that
-// FILE thread is blocked until that operation finishes. If |create_readme| is
-// true, the profile README will be created in the profile directory.
-void CreateProfileDirectory(base::SequencedTaskRunner* io_task_runner,
-                            const base::FilePath& path) {
-  base::WaitableEvent* done_creating =
-      new base::WaitableEvent(base::WaitableEvent::ResetPolicy::AUTOMATIC,
-                              base::WaitableEvent::InitialState::NOT_SIGNALED);
-  io_task_runner->PostTask(
-      FROM_HERE, base::Bind(&CreateDirectoryAndSignal, path, done_creating));
-  // Block the FILE thread until directory is created on I/O task runner to make
-  // sure that we don't attempt any operation until that part completes.
-  BrowserThread::PostTask(
-      BrowserThread::FILE, FROM_HERE,
-      base::Bind(&BlockFileThreadOnDirectoryCreate,
-                 base::Owned(done_creating)));
 }
 
 // TODO(bridiver) find a better way to do this
@@ -719,7 +695,7 @@ AtomBrowserContext* AtomBrowserContext::From(
       base::CreateSequencedTaskRunnerWithTraits(
           {base::TaskShutdownBehavior::BLOCK_SHUTDOWN, base::MayBlock()});
 
-  CreateProfileDirectory(io_task_runner.get(), path);
+  CreateProfileDirectory(path);
 
   auto profile = new brave::BraveBrowserContext(partition, in_memory, options,
                                                 io_task_runner);
@@ -728,4 +704,3 @@ AtomBrowserContext* AtomBrowserContext::From(
 }
 
 }  // namespace atom
-

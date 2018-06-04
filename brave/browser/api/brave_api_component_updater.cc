@@ -72,6 +72,7 @@ void ComponentUpdater::OnEvent(Events event, const std::string& component_id) {
           item.component.version.GetString());
       break;
     case Events::COMPONENT_NOT_UPDATED:
+    case Events::COMPONENT_UPDATE_ERROR:
       Emit("component-not-updated", component_id);
       break;
     case Events::COMPONENT_UPDATE_DOWNLOADING:

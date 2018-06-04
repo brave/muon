@@ -91,6 +91,8 @@ class InspectableWebContentsImpl :
                                  int boundary_value) override {};
   void Reattach(const DispatchCallback& callback) override {};
   void ReadyForTest() override {};
+  void ConnectionReady() override {};
+  void SetOpenNewWindowForPopups(bool value) override {};
   void RegisterExtensionsAPI(const std::string& origin,
                              const std::string& script) override;
 
@@ -106,13 +108,14 @@ class InspectableWebContentsImpl :
                            int stream_id) override;
   void SetIsDocked(const DispatchCallback& callback, bool is_docked) override;
   void OpenInNewTab(const std::string& url) override;
+  void ShowItemInFolder(const std::string& file_system_path) override;
   void SaveToFile(const std::string& url,
                   const std::string& content,
                   bool save_as) override;
   void AppendToFile(const std::string& url,
                     const std::string& content) override;
   void RequestFileSystems() override;
-  void AddFileSystem(const std::string& file_system_path) override;
+  void AddFileSystem(const std::string& type) override;
   void RemoveFileSystem(const std::string& file_system_path) override;
   void UpgradeDraggedFileSystemPermissions(
       const std::string& file_system_url) override;
@@ -177,7 +180,7 @@ class InspectableWebContentsImpl :
   content::ColorChooser* OpenColorChooser(
       content::WebContents* source,
       SkColor color,
-      const std::vector<content::ColorSuggestion>& suggestions) override;
+      const std::vector<blink::mojom::ColorSuggestionPtr>& suggestions) override;
   void RunFileChooser(content::RenderFrameHost* render_frame_host,
                       const content::FileChooserParams& params) override;
   void EnumerateDirectory(content::WebContents* source,

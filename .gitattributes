@@ -1,0 +1,2 @@
+*.patch -crlf
+atom/browser/resources/transport_security_state_static.pins -crlf

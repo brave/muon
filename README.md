@@ -48,8 +48,5 @@ Patch version changes are for everything else
 
 ## Community
 
-You can ask questions and interact with the community in the following
-locations:
-- [The Brave Community](https://community.brave.com/)
-- [`community`](https://bravesoftware.slack.com) channel on Brave Software's Slack
-- [`developers-muon`](https://discord.gg/k57tYrS) channel in our Brave Discord server
+You can ask questions and interact with the community in the muon community chat room:
+- [The Muon Community](https://discord.gg/TcT5tX2)

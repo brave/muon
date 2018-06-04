@@ -24,7 +24,6 @@
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/task_scheduler/post_task.h"
-#include "base/threading/sequenced_worker_pool.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_version.h"
 #include "chrome/common/pref_names.h"
@@ -69,6 +68,9 @@ AtomBrowserContext::AtomBrowserContext(
 }
 
 AtomBrowserContext::~AtomBrowserContext() {
+  BrowserThread::DeleteSoon(BrowserThread::UI,
+                              FROM_HERE,
+                              download_manager_delegate_.release());
 }
 
 std::unique_ptr<net::URLRequestJobFactory>

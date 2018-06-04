@@ -91,8 +91,6 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   // Stores the window name of the main frame of the guest.
   std::string name_;
 
-  bool clone_;
-
   bool can_run_detached_;
 
   // Stores whether the contents of the guest can be transparent.

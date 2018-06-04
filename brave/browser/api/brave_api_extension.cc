@@ -18,6 +18,7 @@
 #include "base/files/file_path.h"
 #include "base/json/json_string_value_serializer.h"
 #include "base/strings/string_util.h"
+#include "base/task_scheduler/post_task.h"
 #include "brave/common/converters/callback_converter.h"
 #include "brave/common/converters/file_path_converter.h"
 #include "brave/common/converters/gurl_converter.h"
@@ -26,6 +27,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/browser_url_handler.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/render_process_host.h"
@@ -33,6 +35,7 @@
 #include "content/public/common/url_constants.h"
 #include "content/public/renderer/v8_value_converter.h"
 #include "extensions/browser/component_extension_resource_manager.h"
+#include "extensions/browser/disable_reason.h"
 #include "extensions/browser/extension_host.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
@@ -40,7 +43,6 @@
 #include "extensions/browser/notification_types.h"
 #include "extensions/browser/process_manager.h"
 #include "extensions/common/extension.h"
-#include "extensions/common/disable_reason.h"
 #include "extensions/common/file_util.h"
 #include "extensions/common/manifest_constants.h"
 #include "extensions/common/manifest_handlers/background_info.h"
@@ -100,7 +102,7 @@ scoped_refptr<extensions::Extension> LoadExtension(const base::FilePath& path,
     const extensions::Manifest::Location& manifest_location,
     int flags,
     std::string* error) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::FILE);
+  base::AssertBlockingAllowed();
 
   scoped_refptr<extensions::Extension> extension(extensions::Extension::Create(
       path, manifest_location, manifest, flags, error));
@@ -158,10 +160,12 @@ gin::ObjectTemplateBuilder Extension::GetObjectTemplateBuilder(
       .SetMethod("setReverseURLHandler", &Extension::SetReverseURLHandler);
 }
 
-Extension::Extension(v8::Isolate* isolate,
-                 BraveBrowserContext* browser_context)
+Extension::Extension(v8::Isolate* isolate, BraveBrowserContext* browser_context)
     : isolate_(isolate),
-      browser_context_(browser_context) {
+      browser_context_(browser_context),
+      // TODO(hferreiro): review this
+      file_task_runner_(
+          base::CreateSequencedTaskRunnerWithTraits({base::MayBlock()})) {
   extensions::ExtensionRegistry::Get(browser_context_)->AddObserver(this);
 }
 
@@ -197,7 +201,7 @@ std::unique_ptr<base::DictionaryValue> Extension::LoadManifest(
       return NULL;
     }
 
-    if (!root->IsType(base::Value::Type::DICTIONARY)) {
+    if (!root->is_dict()) {
       *error = l10n_util::GetStringUTF8(IDS_EXTENSION_MANIFEST_INVALID);
       return NULL;
     }
@@ -212,7 +216,7 @@ void Extension::LoadOnFILEThread(const base::FilePath path,
     std::unique_ptr<base::DictionaryValue> manifest,
     extensions::Manifest::Location manifest_location,
     int flags) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::FILE);
+  base::AssertBlockingAllowed();
 
   std::string error;
   if (manifest->empty()) {
@@ -283,11 +287,10 @@ void Extension::Load(gin::Arguments* args) {
   std::unique_ptr<base::DictionaryValue> manifest_copy =
       manifest.CreateDeepCopy();
 
-  content::BrowserThread::PostTask(
-        content::BrowserThread::FILE, FROM_HERE,
-        base::Bind(&Extension::LoadOnFILEThread,
-            base::Unretained(this),
-            path, Passed(&manifest_copy), manifest_location, flags));
+  file_task_runner_->PostTask(
+      FROM_HERE,
+      base::Bind(&Extension::LoadOnFILEThread, base::Unretained(this), path,
+                 Passed(&manifest_copy), manifest_location, flags));
 }
 
 void Extension::AddExtension(scoped_refptr<extensions::Extension> extension) {

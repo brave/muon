@@ -26,7 +26,7 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
   // DevToolsManagerDelegate implementation.
   void Inspect(content::DevToolsAgentHost* agent_host) override {}
   bool HandleCommand(content::DevToolsAgentHost* agent_host,
-                     int session_id,
+                     content::DevToolsAgentHostClient* client,
                      base::DictionaryValue* command) override;
   std::string GetTargetType(content::WebContents* web_contents) override {
     return std::string();
@@ -38,8 +38,7 @@ class DevToolsManagerDelegate : public content::DevToolsManagerDelegate,
     const GURL& url) override {return nullptr;}
   std::string GetDiscoveryPageHTML() override
     {return std::string();}
-  std::string GetFrontendResource(const std::string& path) override
-    {return std::string();}
+  bool HasBundledFrontendResources() override {return true;};
 
   // content::DevToolsAgentHostObserver overrides.
   void DevToolsAgentHostAttached(
