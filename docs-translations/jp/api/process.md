@@ -72,11 +72,13 @@ Windows Store App (appx)として動作中の場合は、値は`true`になり�
 
 このプロセスのメインスレッドをハングさせます。
 
-### `process.setFdLimit(maxDescriptors)` _macOS_ _Linux_
+### `process.increaseFdLimitTo(maxDescriptors)` _macOS_ _Linux_
 
 * `maxDescriptors` Integer
 
-ファイルデスクリプタの最大数のソフトリミットを、`maxDescriptors`かOSのハードリミットの、どちらか低い方に設定します。
+Increases the file descriptor soft limit to `maxDescriptors` or the OS hard
+limit, whichever is lower. If the limit is already higher than
+`maxDescriptors`, then nothing happens.
 
 ### `process.getSystemMemoryInfo()`
 

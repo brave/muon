@@ -40,9 +40,9 @@ O objeto `process` tem os seguintes métodos:
 
 Faz com que o *thread* principal do processo congele.
 
-### `process.setFdLimit(maxDescriptors)` _macOS_ _Linux_
+### `process.increaseFdLimitTo(maxDescriptors)` _macOS_ _Linux_
 
 * `maxDescriptors` Integer
 
-Define o limite do arquivo descritor para `maxDescriptors` ou para o limite do OS, 
-o que for menor para o processo atual.
+Acrecenta o limite do arquivo descritor para `maxDescriptors` ou para o limite do OS, 
+o que for menor. Se o limite ja é maior que `maxDescriptors`, não faz nada.
