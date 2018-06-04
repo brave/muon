@@ -261,6 +261,8 @@ source_set("browser") {
     "//chrome/browser/renderer_preferences_util.cc",
     "//chrome/browser/renderer_preferences_util.h",
 
+    "//chrome/browser/ssl/ssl_config_service_manager.h",
+    "//chrome/browser/ssl/ssl_config_service_manager_pref.cc",
     "//chrome/browser/site_details.cc",
     "//chrome/browser/site_details.h",
     "//chrome/browser/ui/browser_finder.cc",
