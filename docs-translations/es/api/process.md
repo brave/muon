@@ -38,10 +38,14 @@ El objeto `process` tiene los siguientes métodos:
 Interrumpe el hilo principal del proceso actual.
 
 
-### process.setFdLimit(maxDescriptors) _macOS_ _Linux_
+### `process.increaseFdLimitTo(maxDescriptors)` _macOS_ _Linux_
 
 * `maxDescriptors` Integer
 
+Increases the file descriptor soft limit to `maxDescriptors` or the OS hard
+limit, whichever is lower. If the limit is already higher than
+`maxDescriptors`, then nothing happens.
+
 Establece el límite dinámico del descriptor del archivo en `maxDescriptors`
-o en el límite estricto del Sistema Operativo, el que sea menor para el
-proceso actual.
+o en el límite estricto del Sistema Operativo, el que sea menor. Si el límite
+ya es mayor que `maxDescriptor`, entonces no ocurre nada.

@@ -15,9 +15,10 @@
 
 會導致目前行程的主執行緒停住
 
-## process.setFdLimit(maxDescriptors) _macOS_ _Linux_
+### `process.increaseFdLimitTo(maxDescriptors)` _macOS_ _Linux_
 
 * `maxDescriptors` Integer
 
-設置文件描述符 (file descriptor) soft limit `maxDescriptors` 或 OS hard
-limit ，以較低者為準當目前的行程。
+Increases the file descriptor soft limit to `maxDescriptors` or the OS hard
+limit, whichever is lower. If the limit is already higher than
+`maxDescriptors`, then nothing happens.
