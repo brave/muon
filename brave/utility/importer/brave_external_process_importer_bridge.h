@@ -5,6 +5,7 @@
 #ifndef BRAVE_UTILITY_IMPORTER_BRAVE_EXTERNAL_PROCESS_IMPORTER_BRIDGE_H_
 #define BRAVE_UTILITY_IMPORTER_BRAVE_EXTERNAL_PROCESS_IMPORTER_BRIDGE_H_
 
+#include <string>
 #include <vector>
 
 #include "chrome/utility/importer/external_process_importer_bridge.h"
@@ -16,7 +17,7 @@ class BraveExternalProcessImporterBridge :
  public:
   // |observer| must outlive this object.
   BraveExternalProcessImporterBridge(
-      base::Value localized_strings,
+      const base::flat_map<uint32_t, std::string>& localized_strings,
       scoped_refptr<chrome::mojom::ThreadSafeProfileImportObserverPtr>
           observer);
 
