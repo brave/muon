@@ -23,7 +23,7 @@ class BraveTabStripModelDelegate : public TabStripModelDelegate {
   // Overridden from TabStripModelDelegate:
   void AddTabAt(const GURL& url, int index, bool foreground) override;
   Browser* CreateNewStripWithContents(
-      const std::vector<NewStripContents>& contentses,
+      std::vector<NewStripContents> contentses,
       const gfx::Rect& window_bounds,
       bool maximize) override;
   void WillAddWebContents(content::WebContents* contents) override;

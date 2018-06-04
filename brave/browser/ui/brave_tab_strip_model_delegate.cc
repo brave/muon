@@ -25,7 +25,7 @@ void BraveTabStripModelDelegate::AddTabAt(const GURL& url,
 }
 
 Browser* BraveTabStripModelDelegate::CreateNewStripWithContents(
-    const std::vector<NewStripContents>& contentses,
+    std::vector<NewStripContents> contentses,
     const gfx::Rect& window_bounds,
     bool maximize) {
   // TODO(bbondy)
