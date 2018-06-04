@@ -283,7 +283,7 @@ void CommonWebContentsDelegate::EnterFullscreenModeForTab(
     return;
   SetHtmlApiFullscreen(true);
   owner_window_->NotifyWindowEnterHtmlFullScreen();
-  source->GetRenderViewHost()->GetWidget()->WasResized();
+  source->GetRenderViewHost()->GetWidget()->SynchronizeVisualProperties();
 }
 
 void CommonWebContentsDelegate::ExitFullscreenModeForTab(
@@ -293,7 +293,7 @@ void CommonWebContentsDelegate::ExitFullscreenModeForTab(
   SetHtmlApiFullscreen(false);
   owner_window_->NotifyWindowLeaveHtmlFullScreen();
   if (source)
-    source->GetRenderViewHost()->GetWidget()->WasResized();
+    source->GetRenderViewHost()->GetWidget()->SynchronizeVisualProperties();
 }
 
 bool CommonWebContentsDelegate::IsFullscreenForTabOrPending(
