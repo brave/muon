@@ -991,6 +991,21 @@ index d63e90b6c5079ab3237c4bad3d5e63ce2f99c657..a11bccc62f9ed847013903a48c826bd8
  
    return nullptr;
  }
+diff --git a/chrome/renderer/worker_content_settings_client.cc b/chrome/renderer/worker_content_settings_client.cc
+index 29993973814ea5ffd6bc2d6767a0dc74d79ded58..4a76ff3ad63cfa2489fbcd49dc6e9531f454a807 100644
+--- a/chrome/renderer/worker_content_settings_client.cc
++++ b/chrome/renderer/worker_content_settings_client.cc
+@@ -29,8 +29,8 @@ WorkerContentSettingsClient::WorkerContentSettingsClient(
+       url::Origin(frame->Top()->GetSecurityOrigin()).GetURL();
+   allow_running_insecure_content_ = ContentSettingsObserver::Get(render_frame)
+                                         ->allow_running_insecure_content();
+-  content_setting_rules_ =
+-      ContentSettingsObserver::Get(render_frame)->GetContentSettingRules();
++  //content_setting_rules_ =
++  //    ContentSettingsObserver::Get(render_frame)->GetContentSettingRules();
+ }
+ 
+ WorkerContentSettingsClient::WorkerContentSettingsClient(
 diff --git a/chrome/utility/importer/external_process_importer_bridge.h b/chrome/utility/importer/external_process_importer_bridge.h
 index 47109f604cf982e74511749890c6fb1ec9ca98f2..4d25f3ae2ca8704046a787e0fb35cdf83c1f9e8f 100644
 --- a/chrome/utility/importer/external_process_importer_bridge.h
