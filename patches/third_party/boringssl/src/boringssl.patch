@@ -173,6 +173,77 @@ index afeb2dea4e0464082fa72fd1404f9321eb656dec..2c3c842cb4a21e937993132f7a7cfbae
  #define SN_ripemd160WithRSA "RSA-RIPEMD160"
  #define LN_ripemd160WithRSA "ripemd160WithRSA"
  #define NID_ripemd160WithRSA 119
+diff --git a/include/openssl/ssl.h b/include/openssl/ssl.h
+index 9544bbebe846abb1efe9bea4aaabd4d301b38bea..e3d9133f6dfb5ad3236284f7edfcefafde1a7ee8 100644
+--- a/include/openssl/ssl.h
++++ b/include/openssl/ssl.h
+@@ -4266,6 +4266,15 @@ OPENSSL_EXPORT int SSL_CTX_set_tlsext_status_cb(SSL_CTX *ctx,
+ // |SSL_CTX_set_tlsext_status_cb|'s callback and returns one.
+ OPENSSL_EXPORT int SSL_CTX_set_tlsext_status_arg(SSL_CTX *ctx, void *arg);
+ 
++#if !defined(BORINGSSL_NO_CXX)
++// SSL_CTX_sess_set_get_cb is a legacy C++ overload of |SSL_CTX_sess_set_get_cb|
++// which supports the old callback signature.
++//
++// TODO(davidben): Remove this once Node is compatible with OpenSSL 1.1.0.
++extern "C++" OPENSSL_EXPORT void SSL_CTX_sess_set_get_cb(
++    SSL_CTX *ctx, SSL_SESSION *(*get_session_cb)(SSL *ssl, uint8_t *id,
++                                                 int id_len, int *out_copy));
++#endif
+ 
+ // Private structures.
+ //
+diff --git a/ssl/internal.h b/ssl/internal.h
+index 28ea87b7261ce8d679b84520678d39f7b47c29b4..a84926a7f62e2e22cc76f18c83ddccaa9840c5eb 100644
+--- a/ssl/internal.h
++++ b/ssl/internal.h
+@@ -2049,6 +2049,8 @@ struct SSLContext {
+   void (*remove_session_cb)(SSL_CTX *ctx, SSL_SESSION *sess);
+   SSL_SESSION *(*get_session_cb)(SSL *ssl, const uint8_t *data, int len,
+                                  int *copy);
++  SSL_SESSION *(*get_session_cb_legacy)(SSL *ssl, uint8_t *data, int len,
++                                        int *copy);
+ 
+   CRYPTO_refcount_t references;
+ 
+diff --git a/ssl/ssl_session.cc b/ssl/ssl_session.cc
+index e31df68869c313770fb56a5e15fafd4b5839117d..332107d2b878d3df04350699383a7493baba3f36 100644
+--- a/ssl/ssl_session.cc
++++ b/ssl/ssl_session.cc
+@@ -686,10 +686,17 @@ static enum ssl_hs_wait_t ssl_lookup_session(
+   }
+ 
+   // Fall back to the external cache, if it exists.
+-  if (!session && ssl->session_ctx->get_session_cb != nullptr) {
++  if (!session && (ssl->session_ctx->get_session_cb != nullptr ||
++                   ssl->session_ctx->get_session_cb_legacy != nullptr)) {
+     int copy = 1;
+-    session.reset(ssl->session_ctx->get_session_cb(ssl, session_id,
+-                                                   session_id_len, &copy));
++    if (ssl->session_ctx->get_session_cb != nullptr) {
++      session.reset(ssl->session_ctx->get_session_cb(ssl, session_id,
++                                                     session_id_len, &copy));
++    } else {
++      session.reset(ssl->session_ctx->get_session_cb_legacy(
++          ssl, const_cast<uint8_t *>(session_id), session_id_len, &copy));
++    }
++
+     if (!session) {
+       return ssl_hs_ok;
+     }
+@@ -1244,6 +1251,12 @@ void SSL_CTX_sess_set_get_cb(SSL_CTX *ctx,
+   ctx->get_session_cb = cb;
+ }
+ 
++void SSL_CTX_sess_set_get_cb(SSL_CTX *ctx,
++                             SSL_SESSION *(*cb)(SSL *ssl, uint8_t *id,
++                                                int id_len, int *out_copy)) {
++  ctx->get_session_cb_legacy = cb;
++}
++
+ SSL_SESSION *(*SSL_CTX_sess_get_get_cb(SSL_CTX *ctx))(SSL *ssl,
+                                                       const uint8_t *id,
+                                                       int id_len,
 diff --git a/util/BUILD.toplevel b/util/BUILD.toplevel
 index 6e569ec82db970ba8f1004f811ff08cc59794005..905a293ad046e5653352ec59a278df3aa1cf2355 100644
 --- a/util/BUILD.toplevel
