@@ -105,8 +105,10 @@ void BraveContentRendererClient::RenderThreadStarted() {
   prescient_networking_dispatcher_.reset(
       new network_hints::PrescientNetworkingDispatcher());
 
-  for (auto& origin : secure_origin_whitelist::GetWhitelist()) {
-    WebSecurityPolicy::AddOriginTrustworthyWhiteList(WebSecurityOrigin(origin));
+  for (auto& origin_or_hostname_pattern :
+       secure_origin_whitelist::GetWhitelist()) {
+    WebSecurityPolicy::AddOriginTrustworthyWhiteList(
+        WebString::FromUTF8(origin_or_hostname_pattern));
   }
 
   for (auto& scheme :
