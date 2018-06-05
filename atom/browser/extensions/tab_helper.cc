@@ -464,7 +464,9 @@ void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
     return;
 
   if (discarded_) {
-    GetTabManager()->SetTabAutoDiscardableState(web_contents(), false);
+    resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+        web_contents())
+        ->SetAutoDiscardable(false);
   }
 
   guest()->Load();
@@ -484,10 +486,11 @@ int32_t TabHelper::window_id() const {
 
 void TabHelper::SetAutoDiscardable(bool auto_discardable) {
   auto_discardable_ = auto_discardable;
-  if (resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
-        web_contents())) {
-    GetTabManager()->SetTabAutoDiscardableState(
-        web_contents(), auto_discardable);
+  auto* tab_lifecycle_unit_external =
+      resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+          web_contents());
+  if (tab_lifecycle_unit_external) {
+    tab_lifecycle_unit_external->SetAutoDiscardable(auto_discardable);
   }
 }
 
