@@ -81,6 +81,7 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
   // Disables the extension identified by |extension_id|.
   void DisableExtension(
       content::BrowserContext* context,
+      const Extension* source_extension,
       const std::string& extension_id,
       disable_reason::DisableReason disable_reason) const override {
     NOTIMPLEMENTED();
