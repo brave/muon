@@ -2076,6 +2076,18 @@ index 8fda8274d5dfe61e8d7e6bec9eb24719adb69e3a..a17609ac5f5dcc175d0abb758ac9729a
    return switches::autoplay::kUserGestureRequiredPolicy;
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
+diff --git a/mojo/public/cpp/platform/named_platform_channel_win.cc b/mojo/public/cpp/platform/named_platform_channel_win.cc
+index 0507efe5abb5193f653a7631b5025cb9358c23f0..9c329bd6d81baa962f16f32e226f0221f712e7c1 100644
+--- a/mojo/public/cpp/platform/named_platform_channel_win.cc
++++ b/mojo/public/cpp/platform/named_platform_channel_win.cc
+@@ -5,6 +5,7 @@
+ #include "mojo/public/cpp/platform/named_platform_channel.h"
+ 
+ #include <windows.h>
++#include <memory>
+ 
+ // NOTE: This needs to be included *after* windows.h.
+ #include <sddl.h>
 diff --git a/net/BUILD.gn b/net/BUILD.gn
 index 9d59189d80aea8f99b73020f36a578a96667af37..30b01577e5f01ba1d6f33a14c811363d3b0eea2c 100644
 --- a/net/BUILD.gn
