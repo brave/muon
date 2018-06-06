@@ -120,6 +120,7 @@ source_set("renderer") {
     "//chrome/renderer",
     "//components/content_settings/core/common",
     "//components/spellcheck:buildflags",
+    "//electron:brave_resources",
     "//third_party/blink/public:blink_headers",
   ]
 
@@ -446,6 +447,8 @@ source_set("browser") {
       "//chrome/browser/ui/certificate_viewer_mac.h",
       "//chrome/browser/ui/certificate_viewer_mac.mm",
       "chrome/browser/ui/certificate_viewer_mac_views.mm",
+      "//chrome/browser/ui/views_mode_controller.cc",
+      "//chrome/browser/ui/views_mode_controller.h",
     ]
     libs = [
       "SecurityInterface.framework",
@@ -958,6 +961,12 @@ source_set("downloads") {
     "//net",
     "//url",
   ]
+
+  if (is_posix) {
+    sources += [
+      "//chrome/browser/download/trusted_sources_manager_posix.cc",
+    ]
+  }
 }
 
 source_set("favicon") {
@@ -1139,6 +1148,8 @@ source_set("tab_manager") {
     "//chrome/browser/resource_coordinator/lifecycle_unit_source_base.h",
     "//chrome/browser/resource_coordinator/page_signal_receiver.cc",
     "//chrome/browser/resource_coordinator/page_signal_receiver.h",
+    "//chrome/browser/resource_coordinator/tab_activity_watcher.cc",
+    "//chrome/browser/resource_coordinator/tab_activity_watcher.h",
     "//chrome/browser/resource_coordinator/tab_helper.cc",
     "//chrome/browser/resource_coordinator/tab_helper.h",
     "//chrome/browser/resource_coordinator/tab_lifecycle_observer.h",
@@ -1160,6 +1171,8 @@ source_set("tab_manager") {
     "//chrome/browser/resource_coordinator/tab_manager_stats_collector.h",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.cc",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.h",
+    "//chrome/browser/resource_coordinator/tab_metrics_logger.cc",
+    "//chrome/browser/resource_coordinator/tab_metrics_logger.h",
     "//chrome/browser/resource_coordinator/time.cc",
     "//chrome/browser/resource_coordinator/time.h",
     "//chrome/browser/memory_details.cc",
@@ -1175,6 +1188,7 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tab_contents/core_tab_helper.h",
     "//chrome/browser/ui/tabs/tab_strip_model.cc",
     "//chrome/browser/ui/tabs/tab_strip_model.h",
+    "//chrome/browser/ui/tabs/tab_strip_model_delegate.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_delegate.h",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.cc",
     "//chrome/browser/ui/tabs/tab_strip_model_observer.h",
@@ -1182,6 +1196,8 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tabs/tab_strip_model_order_controller.h",
     "chrome/browser/ui/tabs/tab_utils.cc",
     "//chrome/browser/ui/tabs/tab_utils.h",
+    "//chrome/browser/ui/tabs/window_activity_watcher.cc",
+    "//chrome/browser/ui/tabs/window_activity_watcher.h",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.cc",
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.h",
     "//chrome/browser/ui/tab_ui_helper.cc",
@@ -1190,6 +1206,8 @@ source_set("tab_manager") {
 
   deps = [
     ":lifetime",
+    "//chrome/browser/resource_coordinator:tab_metrics_event_proto",
+    "//chrome/browser/resource_coordinator/tab_ranker",
     "//components/feature_engagement:buildflags",
     "//services/metrics",
   ]
