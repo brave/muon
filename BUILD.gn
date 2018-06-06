@@ -261,6 +261,7 @@ mojom("mojo_bindings") {
 
   public_deps = [
     "//mojo/public/mojom/base",
+    "//services/service_manager/public/mojom",
   ]
 }
 

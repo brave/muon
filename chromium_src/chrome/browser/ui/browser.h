@@ -19,6 +19,7 @@
 #include "base/scoped_observer.h"
 #include "base/strings/string16.h"
 #include "build/build_config.h"
+#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
@@ -29,7 +30,6 @@
 class BrowserWindow;
 class Profile;
 class ScopedKeepAlive;
-class TabStripModel;
 class TabStripModelDelegate;
 
 namespace content {
@@ -126,14 +126,14 @@ class Browser : public content::WebContentsDelegate {
 
   // Accessors ////////////////////////////////////////////////////////////////
 
-  // Type type() const { return type_; }
+  Type type() const { return type_; }
   // const std::string& app_name() const { return app_name_; }
   // bool is_trusted_source() const { return is_trusted_source_; }
   Profile* profile() const { return profile_; }
 
   BrowserWindow* window() const { return window_; }
   TabStripModel* tab_strip_model() const { return tab_strip_model_.get(); }
-  SessionID& session_id() { return session_id_; }
+  const SessionID& session_id() const { return session_id_; }
   void set_session_id(const SessionID& session_id) { session_id_ = session_id; }
 
   // OnBeforeUnload handling //////////////////////////////////////////////////
