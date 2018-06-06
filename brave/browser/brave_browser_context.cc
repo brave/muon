@@ -529,7 +529,7 @@ void BraveBrowserContext::CreateProfilePrefs(
 
   bool async = false;
 
-  if (IsOffTheRecord() && !isolated_storage_) {
+  if (IsOffTheRecord()) {
     overlay_pref_names_.push_back("app_state");
     overlay_pref_names_.push_back(extensions::pref_names::kPrefContentSettings);
     overlay_pref_names_.push_back(prefs::kPartitionPerHostZoomLevels);
