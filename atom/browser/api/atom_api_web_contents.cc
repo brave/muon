@@ -326,6 +326,9 @@ struct Converter<security_state::SecurityInfo> {
       case security_state::DANGEROUS:
         dict.Set("securityLevel", "dangerous");
         break;
+      case security_state::SECURITY_LEVEL_COUNT:
+        NOTREACHED();
+        break;
     }
 
     if (val.certificate)

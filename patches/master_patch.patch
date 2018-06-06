@@ -191,6 +191,33 @@ index 08c6f28746cc5f345114a942834db18f5c7a1d41..3a43ae76f054ba449e3b892ea752c62f
  
    // Launches the utility process that starts the import task, unless bookmark
    // or template model are not yet loaded. If load is not detected, this method
+diff --git a/chrome/browser/importer/importer_uma.cc b/chrome/browser/importer/importer_uma.cc
+index da87e84ffe7c2193ea16d24f1ee1174c51c9503f..b297c97bfde88f7610ec19b007eaa231b64cf1c2 100644
+--- a/chrome/browser/importer/importer_uma.cc
++++ b/chrome/browser/importer/importer_uma.cc
+@@ -59,6 +59,9 @@ void LogImporterUseToMetrics(const std::string& metric_postfix,
+     case TYPE_BOOKMARKS_FILE:
+       metrics_type = IMPORTER_METRICS_BOOKMARKS_FILE;
+       break;
++    case TYPE_CHROME:
++      NOTREACHED();
++      break;
+   }
+ 
+   // Note: This leaks memory, which is the expected behavior as the factory
+diff --git a/chrome/browser/importer/in_process_importer_bridge.cc b/chrome/browser/importer/in_process_importer_bridge.cc
+index 5832fa66c715fe82a3e865c7bde490ef6f6b14b6..2ff87fd3fd81f803c327aba2160f2d6851f612e5 100644
+--- a/chrome/browser/importer/in_process_importer_bridge.cc
++++ b/chrome/browser/importer/in_process_importer_bridge.cc
+@@ -59,6 +59,8 @@ history::VisitSource ConvertImporterVisitSourceToHistoryVisitSource(
+       return history::SOURCE_IE_IMPORTED;
+     case importer::VISIT_SOURCE_SAFARI_IMPORTED:
+       return history::SOURCE_SAFARI_IMPORTED;
++    case importer::VISIT_SOURCE_CHROME_IMPORTED:
++      break;
+   }
+   NOTREACHED();
+   return history::SOURCE_SYNCED;
 diff --git a/chrome/browser/importer/in_process_importer_bridge.h b/chrome/browser/importer/in_process_importer_bridge.h
 index 247d24220beb7d176b890d7c2d45bdd2dfd8db99..c270bba0fabb557e8d3d1df8ac166bbb00ed6e8b 100644
 --- a/chrome/browser/importer/in_process_importer_bridge.h
