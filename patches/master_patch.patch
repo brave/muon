@@ -555,6 +555,20 @@ index de9e4280f1984afd3198b5c8132774cc26ff7e95..54be9a23739ddb16322c0067c7e4da51
    config->rev_checking_required_local_anchors =
        rev_checking_required_local_anchors_.GetValue();
    config->sha1_local_anchors_enabled = sha1_local_anchors_enabled_.GetValue();
+diff --git a/chrome/browser/ui/libgtkui/BUILD.gn b/chrome/browser/ui/libgtkui/BUILD.gn
+index ccbed52a0a3fca220eab8becadd3b68163418694..0b70ef9b3dd00ad99cb88e2e7ed00c2d9bf8d3e8 100644
+--- a/chrome/browser/ui/libgtkui/BUILD.gn
++++ b/chrome/browser/ui/libgtkui/BUILD.gn
+@@ -65,6 +65,9 @@ template("libgtkui") {
+                 "x11_input_method_context_impl_gtk.h",
+               ]
+ 
++    configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
++    configs += [ "//build/config/gcc:symbol_visibility_default" ]
++
+     configs += [
+       "//build/config/linux/pangocairo",
+       "//build/config/linux:x11",
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index b45794f858d4f8eabceab39166f2103dbdf87361..69d2674f11800d3b906b60f840c9b4e5351d8ab6 100644
 --- a/chrome/common/BUILD.gn

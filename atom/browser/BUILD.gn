@@ -294,6 +294,7 @@ source_set("browser") {
       "//electron/chromium_src:menu_bar",
       "//chrome/browser/ui/libgtkui:libgtkui",
       "//electron/build:gtk3",
+      "//ui/events/platform/x11",
     ]
   }
 

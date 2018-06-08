@@ -158,16 +158,19 @@ source_set("browser") {
     "//components/crash/content/app",
     "//components/crash/core/browser",
     "//components/data_usage/core",
+    "//components/filename_generation",
     "//components/keep_alive_registry",
     "//components/net_log",
     "//components/offline_items_collection/core",
     "//components/optimization_guide/proto:optimization_guide_proto",
     "//components/policy/core/common",
     "//components/prefs",
+    "//components/proxy_config",
     "//components/spellcheck:buildflags",
     "//components/safe_browsing:csd_proto",
     "//components/safe_browsing:features",
     "//components/storage_monitor",
+    "//components/tracing:startup_tracing",
     "//content/public/browser",
     "//electron/atom/browser",
     "//ui/message_center",
@@ -295,7 +298,6 @@ source_set("browser") {
     "//chrome/browser/platform_util_win.cc",
 
     "//chrome/browser/process_singleton_mac.mm",
-    "//chrome/browser/process_singleton_posix.cc",
     "//chrome/browser/process_singleton_win.cc",
     "//chrome/browser/process_singleton.h",
     "//chrome/browser/renderer_host/chrome_extension_message_filter.cc",
@@ -407,10 +409,20 @@ source_set("browser") {
   }
 
   if (is_linux) {
+    deps += [
+      "//services/service_manager/zygote",
+    ]
+
     sources += [
       "//chrome/browser/extensions/global_shortcut_listener_x11.cc",
       "//chrome/browser/extensions/global_shortcut_listener_x11.h",
       "chrome/browser/ui/process_singleton_dialog_linux.cc",
+    ]
+  }
+
+  if (is_posix) {
+    sources += [
+      "//chrome/browser/process_singleton_posix.cc",
     ]
   }
 
@@ -573,7 +585,6 @@ source_set("browser") {
         "//chrome/browser/extensions/api/messaging/native_message_process_host.h",
         "//chrome/browser/extensions/api/messaging/native_process_launcher.cc",
         "//chrome/browser/extensions/api/messaging/native_process_launcher.h",
-        "//chrome/browser/extensions/api/messaging/native_process_launcher_posix.cc",
         "//chrome/browser/extensions/api/messaging/native_process_launcher_win.cc",
         "//chrome/browser/extensions/api/proxy/proxy_api.cc",
         "//chrome/browser/extensions/api/proxy/proxy_api.h",
@@ -597,6 +608,12 @@ source_set("browser") {
         "//extensions/browser",
         "//rlz/buildflags",
       ]
+
+      if (is_posix) {
+        sources += [
+          "//chrome/browser/extensions/api/messaging/native_process_launcher_posix.cc"
+        ]
+      }
     }
     if (use_aura) {
       sources += [
@@ -733,7 +750,6 @@ source_set("importer") {
     "//chrome/browser/importer/external_process_importer_host.h",
     "//chrome/browser/importer/firefox_profile_lock.cc",
     "//chrome/browser/importer/firefox_profile_lock.h",
-    "//chrome/browser/importer/firefox_profile_lock_posix.cc",
     "//chrome/browser/importer/firefox_profile_lock_win.cc",
     "chrome/browser/importer/importer_list.cc",
     "//chrome/browser/importer/importer_list.h",
@@ -752,6 +768,12 @@ source_set("importer") {
     "//chrome/utility",
     ":search_engines",
   ]
+
+  if (is_posix) {
+    sources += [
+      "//chrome/browser/importer/firefox_profile_lock_posix.cc",
+    ]
+  }
 }
 
 source_set("bookmarks") {
@@ -1011,8 +1033,11 @@ source_set("metrics") {
     "//chrome/browser/metrics/thread_watcher_report_hang.h",
 
     "//chrome/installer/util/google_update_settings.h",
-    "//chrome/browser/google/google_update_settings_posix.cc",
   ]
+
+  if (is_posix) {
+    sources += [ "//chrome/browser/google/google_update_settings_posix.cc", ]
+  }
 
   if (is_win) {
     sources += [
