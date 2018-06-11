@@ -776,6 +776,21 @@ bool BraveContentBrowserClient::DoesSiteRequireDedicatedProcess(
   return false;
 }
 
+bool BraveContentBrowserClient::ShouldUseSpareRenderProcessHost(
+    content::BrowserContext* browser_context,
+    const GURL& site_url) {
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  if (!profile)
+    return false;
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return AtomBrowserClientExtensionsPart::
+      ShouldUseSpareRenderProcessHost(profile, site_url);
+#else
+  return true;
+#endif
+}
+
 void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
         std::vector<std::string>* additional_allowed_schemes) {
   AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(

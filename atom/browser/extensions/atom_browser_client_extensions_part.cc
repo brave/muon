@@ -41,6 +41,7 @@
 #include "extensions/common/constants.h"
 #include "extensions/common/extension_l10n_util.h"
 #include "extensions/common/extensions_client.h"
+#include "extensions/common/manifest_handlers/app_isolation_info.h"
 #include "extensions/common/manifest_handlers/background_info.h"
 #include "extensions/common/manifest_handlers/web_accessible_resources_info.h"
 #include "extensions/common/switches.h"
@@ -56,6 +57,8 @@ namespace {
 
 enum RenderProcessHostPrivilege {
   PRIV_NORMAL,
+  PRIV_HOSTED,
+  PRIV_ISOLATED,
   PRIV_EXTENSION,
 };
 
@@ -74,6 +77,12 @@ RenderProcessHostPrivilege GetPrivilegeRequiredByUrl(
   if (!url.SchemeIs(kExtensionScheme))
     return PRIV_NORMAL;
 
+  const Extension* extension =
+      registry->enabled_extensions().GetByID(url.host());
+  if (extension && AppIsolationInfo::HasIsolatedStorage(extension))
+    return PRIV_ISOLATED;
+  if (extension && extension->is_hosted_app())
+    return PRIV_HOSTED;
   return PRIV_EXTENSION;
 }
 
@@ -85,6 +94,15 @@ RenderProcessHostPrivilege GetProcessPrivilege(
       process_map->GetExtensionsInProcess(process_host->GetID());
   if (extension_ids.empty())
     return PRIV_NORMAL;
+
+  for (const std::string& extension_id : extension_ids) {
+    const Extension* extension =
+        registry->enabled_extensions().GetByID(extension_id);
+    if (extension && AppIsolationInfo::HasIsolatedStorage(extension))
+      return PRIV_ISOLATED;
+    if (extension && extension->is_hosted_app())
+      return PRIV_HOSTED;
+  }
 
   return PRIV_EXTENSION;
 }
@@ -165,6 +183,17 @@ bool AtomBrowserClientExtensionsPart::IsSuitableHost(
       GetPrivilegeRequiredByUrl(site_url, registry);
   return GetProcessPrivilege(process_host, process_map, registry) ==
          privilege_required;
+}
+
+// static
+bool AtomBrowserClientExtensionsPart::ShouldUseSpareRenderProcessHost(
+    Profile* profile,
+    const GURL& site_url) {
+  // Extensions should not use a spare process, because they require passing a
+  // command-line flag (switches::kExtensionProcess) to the renderer process
+  // when it launches. A spare process is launched earlier, before it is known
+  // which navigation will use it, so it lacks this flag.
+  return !site_url.SchemeIs(kExtensionScheme);
 }
 
 // static
