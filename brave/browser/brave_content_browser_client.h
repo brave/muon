@@ -101,6 +101,9 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
                                const GURL& effective_url) override;
   bool DoesSiteRequireDedicatedProcess(content::BrowserContext* browser_context,
                                        const GURL& effective_site_url) override;
+  bool ShouldUseSpareRenderProcessHost(
+                                      content::BrowserContext* browser_context,
+                                      const GURL& site_url) override;
   bool ShouldLockToOrigin(content::BrowserContext* browser_context,
                           const GURL& effective_site_url) override;
   bool IsSuitableHost(content::RenderProcessHost* process_host,
