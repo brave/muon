@@ -22,6 +22,8 @@
 #include "base/version.h"
 #include "brave/browser/brave_browser_context.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
+#include "chrome/browser/extensions/api/i18n/i18n_api.h"
 #include "chrome/browser/extensions/chrome_component_extension_resource_manager.h"
 #include "chrome/browser/extensions/chrome_extension_api_frame_id_map_helper.h"
 #include "chrome/browser/extensions/chrome_url_request_util.h"
@@ -67,10 +69,8 @@
 #include "base/sha1.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
-#include "chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h"
 #include "extensions/common/file_util.h"
 #include "net/url_request/url_request_simple_job.h"
-
 
 #include "electron/brave/common/extensions/api/generated_api_registration.h"
 #include "extensions/browser/api/generated_api_registration.h"
@@ -444,6 +444,11 @@ void AtomExtensionsBrowserClient::RegisterExtensionFunctions(
           api::CryptotokenPrivateCanOriginAssertAppIdFunction::function_name(),
           api::CryptotokenPrivateCanOriginAssertAppIdFunction::
               histogram_value(),
+      },
+      {
+          NewExtensionFunction<I18nGetAcceptLanguagesFunction>,
+          I18nGetAcceptLanguagesFunction::function_name(),
+          I18nGetAcceptLanguagesFunction::histogram_value(),
       },
   };
 
