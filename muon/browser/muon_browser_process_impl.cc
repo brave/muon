@@ -5,7 +5,6 @@
 #include "muon/browser/muon_browser_process_impl.h"
 
 #include "atom/browser/api/atom_api_app.h"
-#include "atom/browser/atom_resource_dispatcher_host_delegate.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
 #include "chrome/browser/chrome_device_client.h"
 #include "chrome/browser/io_thread.h"
@@ -14,6 +13,7 @@
 #include "components/component_updater/component_updater_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/resource_dispatcher_host.h"
+#include "content/public/browser/resource_dispatcher_host_delegate.h"
 
 MuonBrowserProcessImpl::MuonBrowserProcessImpl(
       base::SequencedTaskRunner* local_state_task_runner) :
@@ -59,7 +59,7 @@ MuonBrowserProcessImpl::component_updater() {
 
 void MuonBrowserProcessImpl::ResourceDispatcherHostCreated() {
   resource_dispatcher_host_delegate_.reset(
-      new atom::AtomResourceDispatcherHostDelegate);
+      new content::ResourceDispatcherHostDelegate);
   content::ResourceDispatcherHost::Get()->SetDelegate(
       resource_dispatcher_host_delegate_.get());
 }

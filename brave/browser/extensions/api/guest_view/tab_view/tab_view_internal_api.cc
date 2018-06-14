@@ -4,6 +4,7 @@
 
 #include "brave/browser/extensions/api/guest_view/tab_view/tab_view_internal_api.h"
 
+#include <memory>
 #include <string>
 
 #include "atom/browser/extensions/tab_helper.h"
@@ -36,5 +37,5 @@ TabViewInternalGetTabIDFunction::~TabViewInternalGetTabIDFunction() {
 ExtensionFunction::ResponseAction TabViewInternalGetTabIDFunction::Run() {
   int tab_id = extensions::TabHelper::IdForTab(guest_->web_contents());
   return RespondNow(
-      OneArgument(base::MakeUnique<base::Value>(tab_id)));
+      OneArgument(std::make_unique<base::Value>(tab_id)));
 }

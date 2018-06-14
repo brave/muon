@@ -17,15 +17,15 @@
 #include "content/public/renderer/document_state.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_view.h"
-#include "extensions/features/features.h"
-#include "third_party/WebKit/public/platform/URLConversion.h"
-#include "third_party/WebKit/public/platform/WebContentSettingCallbacks.h"
-#include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
-#include "third_party/WebKit/public/platform/WebURL.h"
-#include "third_party/WebKit/public/web/WebDocument.h"
-#include "third_party/WebKit/public/web/WebFrameClient.h"
-#include "third_party/WebKit/public/web/WebLocalFrame.h"
-#include "third_party/WebKit/public/web/WebView.h"
+#include "extensions/buildflags/buildflags.h"
+#include "third_party/blink/public/platform/url_conversion.h"
+#include "third_party/blink/public/platform/web_content_setting_callbacks.h"
+#include "third_party/blink/public/platform/web_security_origin.h"
+#include "third_party/blink/public/platform/web_url.h"
+#include "third_party/blink/public/web/web_document.h"
+#include "third_party/blink/public/web/web_frame_client.h"
+#include "third_party/blink/public/web/web_local_frame.h"
+#include "third_party/blink/public/web/web_view.h"
 #include "url/url_constants.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -334,29 +334,74 @@ bool ContentSettingsObserver::AllowIndexedDB(const WebString& name,
   return allow;
 }
 
+GURL GetOriginOrURL(const WebFrame* frame) {
+  url::Origin top_origin = url::Origin(frame->Top()->GetSecurityOrigin());
+  // The |top_origin| is unique ("null") e.g., for file:// URLs. Use the
+  // document URL as the primary URL in those cases.
+  // TODO(alexmos): This is broken for --site-per-process, since top() can be a
+  // WebRemoteFrame which does not have a document(), and the WebRemoteFrame's
+  // URL is not replicated.  See https://crbug.com/628759.
+  if (top_origin.unique() && frame->Top()->IsWebLocalFrame())
+    return frame->Top()->ToWebLocalFrame()->GetDocument().Url();
+  return top_origin.GetURL();
+}
+
+// Allow passing both WebURL and GURL here, so that we can early return without
+// allocating a new backing string if only the default rule matches.
+template <typename URL>
+ContentSetting GetContentSettingFromRules(
+    const ContentSettingsForOneType& rules,
+    const WebFrame* frame,
+    const URL& secondary_url) {
+  // If there is only one rule, it's the default rule and we don't need to match
+  // the patterns.
+  if (rules.size() == 1) {
+    DCHECK(rules[0].primary_pattern == ContentSettingsPattern::Wildcard());
+    DCHECK(rules[0].secondary_pattern == ContentSettingsPattern::Wildcard());
+    return rules[0].GetContentSetting();
+  }
+  const GURL& primary_url = GetOriginOrURL(frame);
+  const GURL& secondary_gurl = secondary_url;
+  for (const auto& rule : rules) {
+    if (rule.primary_pattern.Matches(primary_url) &&
+        rule.secondary_pattern.Matches(secondary_gurl)) {
+      return rule.GetContentSetting();
+    }
+  }
+  NOTREACHED();
+  return CONTENT_SETTING_DEFAULT;
+}
+
+bool IsScriptDisabledForPreview(const content::RenderFrame* render_frame) {
+  return render_frame->GetPreviewsState() & content::NOSCRIPT_ON;
+}
+
 bool ContentSettingsObserver::AllowScript(bool enabled_per_settings) {
-  if (IsWhitelistedForContentSettings())
+  if (!enabled_per_settings)
+    return false;
+  if (IsScriptDisabledForPreview(render_frame()))
+    return false;
+  if (is_interstitial_page_)
     return true;
 
-  WebFrame* frame = render_frame()->GetWebFrame();
-  std::map<WebFrame*, bool>::const_iterator it =
-      cached_script_permissions_.find(frame);
+  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
+  const auto it = cached_script_permissions_.find(frame);
   if (it != cached_script_permissions_.end())
     return it->second;
 
-  bool allow = enabled_per_settings;
-  if (content_settings_manager_->content_settings()) {
-    allow =
-        content_settings_manager_->GetSetting(
-          ContentSettingsManager::GetOriginOrURL(frame),
-          GURL(),
-          "javascript",
-          allow) != CONTENT_SETTING_BLOCK;
+  // Evaluate the content setting rules before
+  // IsWhitelistedForContentSettings(); if there is only the default rule
+  // allowing all scripts, it's quicker this way.
+  bool allow = true;
+  if (content_setting_rules_) {
+    ContentSetting setting = GetContentSettingFromRules(
+        content_setting_rules_->script_rules, frame,
+        url::Origin(frame->GetDocument().GetSecurityOrigin()).GetURL());
+    allow = setting != CONTENT_SETTING_BLOCK;
   }
+  allow = allow || IsWhitelistedForContentSettings();
 
   cached_script_permissions_[frame] = allow;
-  if (!allow)
-    DidBlockContentType("javascript");
   return allow;
 }
 

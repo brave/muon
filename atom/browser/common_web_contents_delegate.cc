@@ -42,7 +42,7 @@
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/security_style_explanation.h"
 #include "content/public/browser/security_style_explanations.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "net/ssl/ssl_cipher_suite_names.h"
 #include "net/ssl/ssl_connection_status_flags.h"
 #include "storage/browser/fileapi/isolated_context.h"
@@ -417,7 +417,8 @@ void CommonWebContentsDelegate::DevToolsRemoveFileSystem(
 
 void CommonWebContentsDelegate::DevToolsIndexPath(
     int request_id,
-    const std::string& file_system_path) {
+    const std::string& file_system_path,
+    const std::vector<std::string>& excluded_folders) {
   if (!IsDevToolsFileSystemAdded(GetDevToolsWebContents(), file_system_path)) {
     OnDevToolsIndexingDone(request_id, file_system_path);
     return;
@@ -428,6 +429,7 @@ void CommonWebContentsDelegate::DevToolsIndexPath(
       scoped_refptr<DevToolsFileSystemIndexer::FileSystemIndexingJob>(
           devtools_file_system_indexer_->IndexPath(
               file_system_path,
+              excluded_folders,
               base::Bind(
                   &CommonWebContentsDelegate::OnDevToolsIndexingWorkCalculated,
                   base::Unretained(this),
@@ -513,7 +515,7 @@ void CommonWebContentsDelegate::DevToolsAddFileSystemInteral(
   auto pref_service = GetPrefService(GetDevToolsWebContents());
   DictionaryPrefUpdate update(pref_service, prefs::kDevToolsFileSystemPaths);
   update.Get()->SetWithoutPathExpansion(
-      path.AsUTF8Unsafe(), base::MakeUnique<base::Value>(type));
+      path.AsUTF8Unsafe(), std::make_unique<base::Value>(type));
 
   web_contents_->CallClientFunction("DevToolsAPI.fileSystemAdded",
                                     file_system_value.get(),

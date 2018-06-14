@@ -173,7 +173,7 @@ void AtomExtensionsAPIClient::AddAdditionalValueStoreCaches(
 std::unique_ptr<guest_view::GuestViewManagerDelegate>
 AtomExtensionsAPIClient::CreateGuestViewManagerDelegate(
     content::BrowserContext* context) const {
-  return base::MakeUnique<brave::BraveGuestViewManagerDelegate>(context);
+  return std::make_unique<brave::BraveGuestViewManagerDelegate>(context);
 }
 
 void AtomExtensionsAPIClient::AttachWebContentsHelpers(
@@ -183,7 +183,7 @@ void AtomExtensionsAPIClient::AttachWebContentsHelpers(
 
 MessagingDelegate* AtomExtensionsAPIClient::GetMessagingDelegate() {
   if (!messaging_delegate_)
-    messaging_delegate_ = base::MakeUnique<ChromeMessagingDelegate>();
+    messaging_delegate_ = std::make_unique<ChromeMessagingDelegate>();
   return messaging_delegate_.get();
 }
 

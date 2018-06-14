@@ -113,7 +113,7 @@ void ProfileWriter::AddBookmarks(
       imported_bookmark->SetString("title", bookmark.title);
       imported_bookmark->SetInteger("creation_time",
                                     bookmark.creation_time.ToDoubleT());
-      auto paths = base::MakeUnique<base::ListValue>();
+      auto paths = std::make_unique<base::ListValue>();
       for (const base::string16& path : bookmark.path) {
         paths->AppendString(path);
       }
@@ -140,7 +140,7 @@ void ProfileWriter::AddFavicons(
       data_url.insert(0, "data:image/png;base64,");
       imported_favicon->SetString("png_data", data_url);
       std::set<GURL>::iterator it;
-      auto urls = base::MakeUnique<base::ListValue>();
+      auto urls = std::make_unique<base::ListValue>();
       for (it = favicon.urls.begin(); it != favicon.urls.end(); ++it) {
         urls->AppendString(it->possibly_invalid_spec());
       }

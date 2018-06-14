@@ -61,7 +61,7 @@
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/origin_util.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "google_apis/gaia/gaia_urls.h"
 #include "net/base/url_util.h"
 #include "net/cert/cert_status_flags.h"
@@ -92,7 +92,7 @@ void BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
 
   contents->SetUserData(
       UserDataKey(),
-      base::MakeUnique<BravePasswordManagerClient>(contents, autofill_client));
+      std::make_unique<BravePasswordManagerClient>(contents, autofill_client));
 }
 
 // static
@@ -380,7 +380,7 @@ void BravePasswordManagerClient::OnInputEvent(
   password_reuse_detection_manager_.OnKeyPressed(key_event.text);
 }
 
-PrefService* BravePasswordManagerClient::GetPrefs() {
+PrefService* BravePasswordManagerClient::GetPrefs() const {
   return profile_->GetPrefs();
 }
 
@@ -410,6 +410,8 @@ void BravePasswordManagerClient::CheckProtectedPasswordEntry(
     bool matches_sync_password,
     const std::vector<std::string>& matching_domains,
     bool password_field_exists) {}
+
+void BravePasswordManagerClient::LogPasswordReuseDetectedEvent() {}
 #endif
 
 ukm::SourceId BravePasswordManagerClient::GetUkmSourceId() {
