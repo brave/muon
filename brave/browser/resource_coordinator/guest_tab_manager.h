@@ -43,7 +43,8 @@ class GuestTabManager : public TabManager {
                        int index) override;
 
   content::WebContents* CreateNullContents(
-      TabStripModel* model, content::WebContents* old_contents) override;
+      const content::WebContents::CreateParams& params,
+      content::WebContents* old_contents) override;
   void DestroyOldContents(content::WebContents* old_contents) override;
 
   DISALLOW_COPY_AND_ASSIGN(GuestTabManager);

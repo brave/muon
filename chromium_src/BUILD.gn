@@ -3,11 +3,11 @@ import("//build/config/ui.gni")
 import("//build/config/crypto.gni")
 import("//components/os_crypt/features.gni")
 import("//components/spellcheck/spellcheck_build_features.gni")
-import("//extensions/features/features.gni")
+import("//extensions/buildflags/buildflags.gni")
 import("//media/media_options.gni")
-import("//ppapi/features/features.gni")
-import("//printing/features/features.gni")
-import("//rlz/features/features.gni")
+import("//ppapi/buildflags/buildflags.gni")
+import("//printing/buildflags/buildflags.gni")
+import("//rlz/buildflags/buildflags.gni")
 
 config("chromium_src_config") {
   if (is_clang) {
@@ -119,8 +119,8 @@ source_set("renderer") {
     "//content/public/common",
     "//chrome/renderer",
     "//components/content_settings/core/common",
-    "//components/spellcheck:build_features",
-    "//third_party/WebKit/public:blink_headers",
+    "//components/spellcheck:buildflags",
+    "//third_party/blink/public:blink_headers",
   ]
 
   if (enable_spellcheck) {
@@ -166,12 +166,14 @@ source_set("browser") {
     "//components/policy/core/common",
     "//components/prefs",
     "//components/ssl_config",
-    "//components/spellcheck:build_features",
+    "//components/spellcheck:buildflags",
+    "//components/safe_browsing:csd_proto",
+    "//components/safe_browsing:features",
     "//components/storage_monitor",
     "//content/public/browser",
     "//electron/atom/browser",
     "//ui/message_center",
-    "//net:features",
+    "//net:buildflags",
     "//pdf",
   ]
 
@@ -234,10 +236,15 @@ source_set("browser") {
     "//chrome/browser/icon_manager.cc",
     "//chrome/browser/icon_manager.h",
 
+    "chrome/browser/interstitials/chrome_metrics_helper.cc",
+    "//chrome/browser/interstitials/chrome_metrics_helper.h",
+
     "//chrome/browser/net/chrome_extensions_network_delegate.cc",
     "//chrome/browser/net/chrome_extensions_network_delegate.h",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.cc",
     "//chrome/browser/net/chrome_mojo_proxy_resolver_factory.h",
+    "//chrome/browser/net/chrome_report_sender.cc",
+    "//chrome/browser/net/chrome_report_sender.h",
     "//chrome/browser/net/default_network_context_params.cc",
     "//chrome/browser/net/default_network_context_params.h",
     "//chrome/browser/net/proxy_config_monitor.cc",
@@ -251,6 +258,11 @@ source_set("browser") {
 
     "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.cc",
     "//chrome/browser/offline_items_collection/offline_content_aggregator_factory.h",
+
+    "chrome/browser/permissions/attestation_permission_request.cc",
+    "//chrome/browser/permissions/attestation_permission_request.h",
+    "chrome/browser/permissions/permission_request_manager.cc",
+    "//chrome/browser/permissions/permission_request_manager.h",
 
     "//chrome/browser/prefs/chrome_command_line_pref_store.cc",
     "//chrome/browser/prefs/chrome_command_line_pref_store.h",
@@ -271,8 +283,10 @@ source_set("browser") {
     "chrome/browser/ui/chrome_select_file_policy.cc",
     "//chrome/browser/ui/cocoa/ui_localizer.h",
     "//chrome/browser/ui/cocoa/ui_localizer.mm",
-    "//chrome/browser/ui/pdf/adobe_reader_info_win.cc",
-    "//chrome/browser/ui/pdf/adobe_reader_info_win.h",
+
+    "chrome/browser/ui/page_info/page_info_ui.cc",
+    "//chrome/browser/ui/page_info/page_info_ui.h",
+
     "chrome/browser/ui/profile_error_dialog.cc",
 
     "//chrome/browser/ui/web_contents_sizer.cc",
@@ -330,6 +344,7 @@ source_set("browser") {
     "//chrome/browser/upgrade_detector.cc",
     "//chrome/browser/upgrade_detector.h",
     "chrome/browser/upgrade_detector_impl.cc",
+    "//chrome/browser/upgrade_detector_impl.h",
     "chrome/app/vector_icons/vector_icons.cc",
     "chrome/app/vector_icons/vector_icons.h",
     "//chrome/browser/service_process/service_process_control.cc",
@@ -407,6 +422,10 @@ source_set("browser") {
       "//chrome/browser/ui/views/harmony/harmony_layout_provider.h",
       "//chrome/browser/ui/views/harmony/harmony_typography_provider.cc",
       "//chrome/browser/ui/views/harmony/harmony_typography_provider.h",
+      "//chrome/browser/ui/views/harmony/material_refresh_layout_provider.cc",
+      "//chrome/browser/ui/views/harmony/material_refresh_layout_provider.h",
+      "chrome/browser/ui/views/location_bar/location_bar_view.cc",
+      "//chrome/browser/ui/views/location_bar/location_bar_view.h",
     ]
 
     deps += [
@@ -514,8 +533,6 @@ source_set("browser") {
       "//chrome/browser/renderer_host/pepper/pepper_flash_drm_host.h",
       "//chrome/browser/renderer_host/pepper/pepper_isolated_file_system_message_filter.cc",
       "//chrome/browser/renderer_host/pepper/pepper_isolated_file_system_message_filter.h",
-      "//chrome/browser/renderer_host/pepper/pepper_platform_verification_message_filter.cc",
-      "//chrome/browser/renderer_host/pepper/pepper_platform_verification_message_filter.h",
       "//chrome/browser/pepper_flash_settings_manager.cc",
       "//chrome/browser/pepper_flash_settings_manager.h",
       "//chrome/browser/plugins/chrome_plugin_service_filter.cc",
@@ -552,6 +569,8 @@ source_set("browser") {
         "//chrome/browser/extensions/extension_tab_util.h",
         "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.cc",
         "//chrome/browser/extensions/api/cryptotoken_private/cryptotoken_private_api.h",
+        "//chrome/browser/extensions/api/i18n/i18n_api.cc",
+        "//chrome/browser/extensions/api/i18n/i18n_api.h",
         "chrome/browser/extensions/api/messaging/incognito_connectability.cc",
         "//chrome/browser/extensions/api/messaging/incognito_connectability.h",
         "//chrome/browser/extensions/api/messaging/chrome_messaging_delegate.cc",
@@ -588,7 +607,7 @@ source_set("browser") {
       deps += [
         "//components/spellcheck/browser",
         "//extensions/browser",
-        "//rlz/features",
+        "//rlz/buildflags",
       ]
     }
     if (use_aura) {
@@ -680,10 +699,14 @@ source_set("menu_bar") {
     "//chrome/browser/ui/views/frame/global_menu_bar_registrar_x11.h"
   ]
 
+  deps = [
+    "//third_party/blink/public/mojom:mojom_platform",
+  ]
+
   if (use_gio) {
     configs += [ "//build/linux:gio_config" ]
 
-    deps = [
+    deps += [
       "//components/sync",
       "//ipc:mojom",
       "//third_party/protobuf:protobuf_lite",
@@ -702,12 +725,8 @@ source_set("devtools") {
     "//chrome/browser/devtools/devtools_embedder_message_dispatcher.h",
     "//chrome/browser/devtools/devtools_file_system_indexer.cc",
     "//chrome/browser/devtools/devtools_file_system_indexer.h",
-    "//chrome/browser/devtools/devtools_protocol.cc",
-    "//chrome/browser/devtools/devtools_protocol.h",
     "//chrome/browser/devtools/url_constants.cc",
     "//chrome/browser/devtools/url_constants.h",
-    "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.cc",
-    "$root_gen_dir/chrome/browser/devtools/devtools_protocol_constants.h",
   ]
 
   configs += [
@@ -720,9 +739,8 @@ source_set("devtools") {
     "//base",
     "//content/public/browser",
     "//net",
-    "//third_party/WebKit/public:features",
+    "//third_party/blink/public:buildflags",
     "//ui/events:dom_keycode_converter",
-    "//chrome/browser/devtools:devtools_protocol_constants",
   ]
 }
 
@@ -1134,12 +1152,29 @@ source_set("tab_manager") {
     "chrome/browser/engagement/site_engagement_service.cc",
     "//chrome/browser/memory/oom_memory_details.cc",
     "//chrome/browser/memory/oom_memory_details.h",
-    "//chrome/browser/resource_coordinator/discard_metrics_util.cc",
-    "//chrome/browser/resource_coordinator/discard_metrics_util.h",
+    "//chrome/browser/resource_coordinator/discard_metrics_lifecycle_unit_observer.cc",
+    "//chrome/browser/resource_coordinator/discard_metrics_lifecycle_unit_observer.h",
+    "//chrome/browser/resource_coordinator/lifecycle_unit.cc",
+    "//chrome/browser/resource_coordinator/lifecycle_unit.h",
+    "//chrome/browser/resource_coordinator/lifecycle_unit_base.cc",
+    "//chrome/browser/resource_coordinator/lifecycle_unit_base.h",
+    "//chrome/browser/resource_coordinator/lifecycle_unit_observer.cc",
+    "//chrome/browser/resource_coordinator/lifecycle_unit_observer.h",
+    "//chrome/browser/resource_coordinator/lifecycle_unit_source_base.cc",
+    "//chrome/browser/resource_coordinator/lifecycle_unit_source_base.h",
     "//chrome/browser/resource_coordinator/page_signal_receiver.cc",
     "//chrome/browser/resource_coordinator/page_signal_receiver.h",
     "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.cc",
     "//chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h",
+    "//chrome/browser/resource_coordinator/tab_lifecycle_observer.h",
+    "//chrome/browser/resource_coordinator/tab_lifecycle_unit.cc",
+    "//chrome/browser/resource_coordinator/tab_lifecycle_unit.h",
+    "//chrome/browser/resource_coordinator/tab_lifecycle_unit_external.cc",
+    "//chrome/browser/resource_coordinator/tab_lifecycle_unit_external.h",
+    "//chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc",
+    "//chrome/browser/resource_coordinator/tab_lifecycle_unit_source.h",
+    "//chrome/browser/resource_coordinator/tab_load_tracker.cc",
+    "//chrome/browser/resource_coordinator/tab_load_tracker.h",
     "//chrome/browser/resource_coordinator/tab_manager.cc",
     "//chrome/browser/resource_coordinator/tab_manager.h",
     "//chrome/browser/resource_coordinator/tab_manager_features.cc",
@@ -1150,8 +1185,6 @@ source_set("tab_manager") {
     "//chrome/browser/resource_coordinator/tab_manager_stats_collector.h",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.cc",
     "//chrome/browser/resource_coordinator/tab_manager_web_contents_data.h",
-    "//chrome/browser/resource_coordinator/tab_stats.cc",
-    "//chrome/browser/resource_coordinator/tab_stats.h",
     "//chrome/browser/resource_coordinator/time.cc",
     "//chrome/browser/resource_coordinator/time.h",
     "//chrome/browser/memory_details.cc",
@@ -1217,7 +1250,7 @@ source_set("tab_manager") {
   public_deps = [
     "//chrome/browser/engagement:mojo_bindings",
     "//chrome/common",
-    "//third_party/WebKit/public:blink_headers",
+    "//third_party/blink/public:blink_headers",
   ]
 }
 

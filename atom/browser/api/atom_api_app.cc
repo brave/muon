@@ -51,7 +51,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/common/content_switches.h"
 #include "content/renderer/worker_thread_registry.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "muon/browser/muon_browser_process_impl.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
@@ -413,8 +413,8 @@ int GetPathConstant(const std::string& name) {
     return chrome::DIR_USER_VIDEOS;
   else if (name == "pepperFlashSystemPlugin")
     return chrome::FILE_PEPPER_FLASH_SYSTEM_PLUGIN;
-  else if (name == "widevineCDMAdapter")
-    return chrome::FILE_WIDEVINE_CDM_ADAPTER;
+  else if (name == "widevineCDM")
+    return chrome::FILE_WIDEVINE_CDM;
   else if (name == "extensionsDir")
     return component_updater::DIR_COMPONENT_USER;
   else if (name == "sourceDir")

@@ -12,14 +12,13 @@
 #include "base/time/time.h"
 #include "brave/utility/importer/brave_profile_import_service.h"
 #include "chrome/common/importer/profile_import.mojom.h"
-#include "chrome/utility/extensions/extensions_handler.h"
-#include "components/unzip_service/public/interfaces/constants.mojom.h"
-#include "components/unzip_service/unzip_service.h"
+#include "components/services/unzip/public/interfaces/constants.mojom.h"
+#include "components/services/unzip/unzip_service.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/service_manager_connection.h"
 #include "content/public/common/simple_connection_filter.h"
 #include "content/public/utility/utility_thread.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message_macros.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
@@ -30,7 +29,6 @@
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "chrome/common/extensions/chrome_extensions_client.h"
-#include "extensions/utility/utility_handler.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
@@ -58,10 +56,6 @@ AtomContentUtilityClient::AtomContentUtilityClient()
 AtomContentUtilityClient::~AtomContentUtilityClient() = default;
 
 void AtomContentUtilityClient::UtilityThreadStarted() {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  extensions::utility_handler::UtilityThreadStarted();
-#endif
-
 #if defined(OS_WIN)
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
   utility_process_running_elevated_ = command_line->HasSwitch(
@@ -76,7 +70,7 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   if (!connection)
     return;
 
-  auto registry = base::MakeUnique<service_manager::BinderRegistry>();
+  auto registry = std::make_unique<service_manager::BinderRegistry>();
   // If our process runs with elevated privileges, only add elevated Mojo
   // interfaces to the interface registry.
   if (!utility_process_running_elevated_) {
@@ -90,7 +84,7 @@ void AtomContentUtilityClient::UtilityThreadStarted() {
   }
 
   connection->AddConnectionFilter(
-      base::MakeUnique<content::SimpleConnectionFilter>(std::move(registry)));
+      std::make_unique<content::SimpleConnectionFilter>(std::move(registry)));
 }
 
 bool AtomContentUtilityClient::OnMessageReceived(

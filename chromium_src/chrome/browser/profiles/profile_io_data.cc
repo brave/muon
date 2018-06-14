@@ -30,8 +30,8 @@
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/resource_context.h"
 #include "content/public/common/url_constants.h"
-#include "extensions/features/features.h"
-#include "net/net_features.h"
+#include "extensions/buildflags/buildflags.h"
+#include "net/net_buildflags.h"
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/file_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
@@ -50,6 +50,12 @@
 #include "extensions/browser/info_map.h"
 #include "extensions/common/constants.h"
 #endif
+
+// static
+ProfileIOData* ProfileIOData::FromResourceContext(
+    content::ResourceContext* rc) {
+  return (static_cast<ResourceContext*>(rc))->io_data_;
+}
 
 // static
 bool ProfileIOData::IsHandledProtocol(const std::string& scheme) {
@@ -104,4 +110,18 @@ void ProfileIOData::InstallProtocolHandlers(
     DCHECK(set_protocol);
   }
   protocol_handlers->clear();
+}
+
+extensions::InfoMap* ProfileIOData::GetExtensionInfoMap() const {
+  DCHECK(initialized_) << "ExtensionSystem not initialized";
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return extension_info_map_.get();
+#else
+  return nullptr;
+#endif
+}
+
+bool ProfileIOData::IsOffTheRecord() const {
+  return profile_type() == Profile::INCOGNITO_PROFILE
+      || profile_type() == Profile::GUEST_PROFILE;
 }

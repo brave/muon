@@ -97,6 +97,7 @@ class AtomAutofillClient
       const base::Closure& callback) override {};
   bool ShouldShowSigninPromo() override { return false; };
   bool IsAutofillSupported() override { return true; }
+  bool AreServerCardsSupported() override { return false; }
   void ExecuteCommand(int id) override {}
 
   // content::WebContentsObserver implementation.

@@ -13,7 +13,7 @@
 #include "content/public/renderer/render_frame_observer.h"
 #include "content/public/renderer/render_frame_observer_tracker.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
-#include "third_party/WebKit/public/platform/WebContentSettingsClient.h"
+#include "third_party/blink/public/platform/web_content_settings_client.h"
 
 class GURL;
 

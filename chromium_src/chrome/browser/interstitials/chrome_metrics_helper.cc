@@ -4,8 +4,9 @@
 
 #include "chrome/browser/interstitials/chrome_metrics_helper.h"
 
+#if BUILDFLAG(ENABLE_CAPTIVE_PORTAL_DETECTION)
 #include "chrome/browser/ssl/captive_portal_metrics_recorder.h"
-#include "content/public/browser/web_contents.h"
+#endif
 
 ChromeMetricsHelper::ChromeMetricsHelper(
     content::WebContents* web_contents,
@@ -14,7 +15,12 @@ ChromeMetricsHelper::ChromeMetricsHelper(
     : security_interstitials::MetricsHelper(
           request_url,
           settings,
-          nullptr) {}
+          nullptr),
+#if BUILDFLAG(ENABLE_CAPTIVE_PORTAL_DETECTION)
+      web_contents_(web_contents),
+#endif
+      request_url_(request_url) {
+}
 
 ChromeMetricsHelper::~ChromeMetricsHelper() {}
 

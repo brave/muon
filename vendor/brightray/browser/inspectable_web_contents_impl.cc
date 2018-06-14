@@ -10,7 +10,6 @@
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/json/string_escape.h"
-#include "base/memory/ptr_util.h"
 #include "base/metrics/histogram.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/strings/pattern.h"
@@ -697,9 +696,25 @@ void InspectableWebContentsImpl::UpgradeDraggedFileSystemPermissions(
 }
 
 void InspectableWebContentsImpl::IndexPath(
-    int request_id, const std::string& file_system_path) {
-  if (delegate_)
-    delegate_->DevToolsIndexPath(request_id, file_system_path);
+    int request_id,
+    const std::string& file_system_path,
+    const std::string& excluded_folders_message) {
+  if (delegate_) {
+    std::vector<std::string> excluded_folders;
+    std::unique_ptr<base::Value> parsed_excluded_folders =
+        base::JSONReader::Read(excluded_folders_message);
+    if (parsed_excluded_folders && parsed_excluded_folders->is_list()) {
+      const std::vector<base::Value>& folder_paths =
+          parsed_excluded_folders->GetList();
+      for (const base::Value& folder_path : folder_paths) {
+        if (folder_path.is_string())
+          excluded_folders.push_back(folder_path.GetString());
+      }
+    }
+
+    delegate_->DevToolsIndexPath(request_id, file_system_path,
+                                 excluded_folders);
+  }
 }
 
 void InspectableWebContentsImpl::StopIndexing(int request_id) {
@@ -948,7 +963,7 @@ void InspectableWebContentsImpl::OnURLFetchComplete(const net::URLFetcher* sourc
   DCHECK(it != pending_requests_.end());
 
   base::DictionaryValue response;
-  auto headers = base::MakeUnique<base::DictionaryValue>();
+  auto headers = std::make_unique<base::DictionaryValue>();
   net::HttpResponseHeaders* rh = source->GetResponseHeaders();
   response.SetInteger("statusCode", rh ? rh->response_code() : 200);
 

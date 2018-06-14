@@ -23,6 +23,7 @@
 #include "chrome/browser/printing/background_printing_manager.h"
 #include "chrome/browser/printing/print_job_manager.h"
 #include "chrome/browser/profiles/profile_manager.h"
+#include "chrome/browser/resource_coordinator/tab_lifecycle_unit_source.h"
 #include "chrome/browser/shell_integration.h"
 #include "chrome/browser/status_icons/status_tray.h"
 #include "chrome/browser/ui/user_manager.h"
@@ -45,7 +46,7 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/network_connection_tracker.h"
-#include "ppapi/features/features.h"
+#include "ppapi/buildflags/buildflags.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/message_center/message_center.h"
@@ -60,7 +61,6 @@
 #include "chrome/browser/icon_manager.h"
 #include "chrome/browser/intranet_redirect_detector.h"
 #include "chrome/browser/io_thread.h"
-#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #include "chrome/browser/media_galleries/media_file_system_registry.h"
 #include "chrome/browser/metrics/thread_watcher.h"
 #include "chrome/browser/notifications/notification_platform_bridge.h"
@@ -93,6 +93,11 @@
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "chrome/browser/plugins/plugin_finder.h"
 #include "content/public/browser/plugin_service.h"
+#endif
+
+#if BUILDFLAG(ENABLE_WEBRTC)
+#include "chrome/browser/media/webrtc/webrtc_event_log_manager.h"
+#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #endif
 
 #if defined(OS_WIN)
@@ -158,7 +163,7 @@ BrowserProcessImpl::BrowserProcessImpl(
 
   message_center::MessageCenter::Initialize();
 
-  net_log_ = base::MakeUnique<net_log::ChromeNetLog>();
+  net_log_ = std::make_unique<net_log::ChromeNetLog>();
 
   // TODO(darkdh): support this later
   // if (command_line.HasSwitch(switches::kLogNetLog)) {
@@ -348,8 +353,8 @@ void BrowserProcessImpl::PreCreateThreads(
   // TODO(mmenke): Once IOThread class is no longer needed (not the thread
   // itself), this can be created on first use.
   system_network_context_manager_ =
-      base::MakeUnique<SystemNetworkContextManager>();
-  io_thread_ = base::MakeUnique<IOThread>(
+      std::make_unique<SystemNetworkContextManager>();
+  io_thread_ = std::make_unique<IOThread>(
       local_state(), policy_service(), net_log_.get(),
       extension_event_router_forwarder(),
       system_network_context_manager_.get());
@@ -385,8 +390,12 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
 resource_coordinator::TabManager* BrowserProcessImpl::GetTabManager() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 #if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_LINUX)
-  if (!tab_manager_.get())
-    tab_manager_.reset(new resource_coordinator::GuestTabManager());
+  if (!tab_manager_) {
+    tab_manager_ = std::make_unique<resource_coordinator::GuestTabManager>();
+    tab_lifecycle_unit_source_ =
+        std::make_unique<resource_coordinator::TabLifecycleUnitSource>();
+    tab_lifecycle_unit_source_->AddObserver(tab_manager_.get());
+  }
   return tab_manager_.get();
 #else
   return nullptr;
@@ -606,7 +615,7 @@ IconManager* BrowserProcessImpl::icon_manager() {
 GpuModeManager* BrowserProcessImpl::gpu_mode_manager() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (!gpu_mode_manager_)
-    gpu_mode_manager_ = base::MakeUnique<GpuModeManager>();
+    gpu_mode_manager_ = std::make_unique<GpuModeManager>();
   return gpu_mode_manager_.get();
 }
 
@@ -628,7 +637,7 @@ void BrowserProcessImpl::CreateBackgroundPrintingManager() {
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
   DCHECK(!background_printing_manager_);
   background_printing_manager_ =
-      base::MakeUnique<printing::BackgroundPrintingManager>();
+      std::make_unique<printing::BackgroundPrintingManager>();
 #else
   NOTIMPLEMENTED();
 #endif

@@ -32,6 +32,10 @@ class ScopedKeepAlive;
 class TabStripModel;
 class TabStripModelDelegate;
 
+namespace content {
+struct OpenURLParams;
+}
+
 class Browser : public content::WebContentsDelegate {
  public:
   // SessionService::WindowType mirrors these values.  If you add to this
@@ -130,6 +134,7 @@ class Browser : public content::WebContentsDelegate {
   BrowserWindow* window() const { return window_; }
   TabStripModel* tab_strip_model() const { return tab_strip_model_.get(); }
   SessionID& session_id() { return session_id_; }
+  void set_session_id(const SessionID& session_id) { session_id_ = session_id; }
 
   // OnBeforeUnload handling //////////////////////////////////////////////////
 
@@ -187,6 +192,8 @@ class Browser : public content::WebContentsDelegate {
   // when it is removed from it.
   void RegisterKeepAlive();
   void UnregisterKeepAlive();
+
+  content::WebContents* OpenURL(const content::OpenURLParams& params);
 
   bool is_type_tabbed() const { return type_ == TYPE_TABBED; }
   // bool is_type_popup() const { return type_ == TYPE_POPUP; }
