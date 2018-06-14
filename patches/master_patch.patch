@@ -2202,21 +2202,6 @@ index e23f2e6e9d9deb5fcd93f39c0e88c63ead47ac87..5c3e259474eec476038ee70bc90d6f0d
  // The time spent sending the CONNECT request to the SOCKS server.
  EVENT_TYPE(SOCKS5_HANDSHAKE_WRITE)
  
-diff --git a/net/proxy_resolution/proxy_service.cc b/net/proxy_resolution/proxy_service.cc
-index 6b633063ec2f279e24052a9a7af43921f4ebd8d1..adad0cd58889611318b6a4d7f42c203a95cd2a59 100644
---- a/net/proxy_resolution/proxy_service.cc
-+++ b/net/proxy_resolution/proxy_service.cc
-@@ -1440,7 +1440,9 @@ void ProxyResolutionService::ResetConfigService(
- 
- void ProxyResolutionService::ForceReloadProxyConfig() {
-   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
--  ResetProxyConfig(false);
-+  // MUON(darkdh): It should be force fetching config according to the API
-+  // description
-+  ResetProxyConfig(true);
-   ApplyProxyConfigIfAvailable();
- }
- 
 diff --git a/net/socket/socks5_client_socket.cc b/net/socket/socks5_client_socket.cc
 index 6b436878f780c0307f3a5508aa5909ad4ce7a23f..8f05c300becbe477c224d803934d60d46f158685 100644
 --- a/net/socket/socks5_client_socket.cc
