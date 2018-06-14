@@ -125,7 +125,7 @@ net::URLRequestContextGetter* BrowserContext::CreateRequestContext(
       this,
       static_cast<NetLog*>(BrowserClient::Get()->GetNetLog()),
       GetPath(),
-      in_memory_,
+      IsOffTheRecord(),
       BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
       protocol_handlers,
       std::move(protocol_interceptors));
