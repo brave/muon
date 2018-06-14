@@ -167,6 +167,8 @@ source_set("proxy") {
   sources = [
     "net/proxy_resolution/proxy_config_service_tor.cc",
     "net/proxy_resolution/proxy_config_service_tor.h",
+    "net/tor_proxy_network_delegate.cc",
+    "net/tor_proxy_network_delegate.h",
   ]
 
   deps = [

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "atom/browser/atom_browser_context.h"
+#include "brave/browser/net/proxy_resolution/proxy_config_service_tor.h"
 #include "content/public/browser/host_zoom_map.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
 #include "chrome/browser/profiles/storage_partition_descriptor.h"
@@ -146,6 +147,11 @@ class BraveBrowserContext : public Profile {
 
   void SetTorNewIdentity(const GURL& url, const base::Closure& callback);
 
+  const std::string& tor_proxy() { return tor_proxy_; }
+
+  net::ProxyConfigServiceTor::TorProxyMap* tor_proxy_map() {
+    return &tor_proxy_map_; }
+
  private:
     typedef std::map<StoragePartitionDescriptor,
                      scoped_refptr<brightray::URLRequestContextGetter>,
@@ -176,6 +182,8 @@ class BraveBrowserContext : public Profile {
   bool isolated_storage_;
   bool in_memory_;
   std::string tor_proxy_;
+
+  net::ProxyConfigServiceTor::TorProxyMap tor_proxy_map_;
 
   URLRequestContextGetterMap url_request_context_getter_map_;
 
