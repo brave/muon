@@ -15,7 +15,7 @@
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
 #include "brave/browser/tor/tor_launcher_factory.h"
-#include "brave/browser/net/proxy_resolution/proxy_config_service_tor.h"
+#include "brave/browser/net/tor_proxy_network_delegate.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
 #include "chrome/browser/browser_process.h"
@@ -372,14 +372,6 @@ BraveBrowserContext::CreateRequestContextForStoragePartition(
     url_request_context_getter->GetURLRequestContext()
       ->set_network_delegate(default_network_delegate);
     url_request_context_getter_map_[descriptor] = url_request_context_getter;
-    if (tor_proxy_.size()) {
-      BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-                            base::Bind(&net::ProxyConfigServiceTor::TorSetProxy,
-                                            url_request_context_getter,
-                                            tor_proxy_,
-                                            isolated_storage_,
-                                            partition_path));
-    }
     return url_request_context_getter.get();
   } else {
     return nullptr;
@@ -484,9 +476,14 @@ net::URLRequestContextGetter* BraveBrowserContext::GetRequestContext() {
 
 net::NetworkDelegate* BraveBrowserContext::CreateNetworkDelegate() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
-  return new extensions::AtomExtensionsNetworkDelegate(this,
-      info_map_,
-      g_browser_process->extension_event_router_forwarder());
+  if (isolated_storage_)
+    return new brave::TorProxyNetworkDelegate(this,
+        info_map_,
+        g_browser_process->extension_event_router_forwarder());
+  else
+    return new extensions::AtomExtensionsNetworkDelegate(this,
+        info_map_,
+        g_browser_process->extension_event_router_forwarder());
 }
 
 std::unique_ptr<net::URLRequestJobFactory>
@@ -748,9 +745,15 @@ void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
   auto proxy_resolution_service =
     url_request_context_getter->GetURLRequestContext()->
     proxy_resolution_service();
-  proxy_resolution_service->ForceReloadProxyConfig();
-  if (callback)
-    callback.Run();
+  BrowserThread::PostTaskAndReply(
+    BrowserThread::IO, FROM_HERE,
+    base::Bind(&net::ProxyConfigServiceTor::TorSetProxy,
+               proxy_resolution_service,
+               tor_proxy_,
+               host,
+               &tor_proxy_map_,
+               true),
+    callback);
 }
 
 scoped_refptr<base::SequencedTaskRunner>

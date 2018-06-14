@@ -27,7 +27,8 @@ using content::BrowserThread;
 const int kTorPasswordLength = 16;
 
 ProxyConfigServiceTor::ProxyConfigServiceTor(
-  const std::string& tor_proxy) {
+  const std::string& tor_proxy, const std::string& username,
+  TorProxyMap* tor_proxy_map) {
     if (tor_proxy.length()) {
       url::Parsed url;
       url::ParseStandardURL(
@@ -50,52 +51,50 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(
           std::string(tor_proxy.begin() + url.port.begin,
                       tor_proxy.begin() + url.port.begin + url.port.len);
       }
+      std::string proxy_url;
+      if (tor_proxy_map || username.empty()) {
+        auto found = tor_proxy_map->find(username);
+        std::string password;
+        if (found == tor_proxy_map->end()) {
+          password = GenerateNewPassword();
+          tor_proxy_map->insert(std::pair<std::string, std::string>(username,
+                                                                    password));
+        } else {
+          password = found->second;
+        }
+        proxy_url = std::string(scheme_ + "://" + username + ":" + password +
+                                "@" + host_ + ":" + port_);
+      } else {
+        proxy_url = std::string(scheme_ + "://" + host_ + ":" + port_);
+      }
+      config_.proxy_rules().ParseFromString(proxy_url);
     }
-    config_.proxy_rules().ParseFromString(std::string(scheme_ + "://" + host_
-      + ":" + port_));
 }
 
 ProxyConfigServiceTor::~ProxyConfigServiceTor() {}
 
 void ProxyConfigServiceTor::TorSetProxy(
-    scoped_refptr<brightray::URLRequestContextGetter>
-      url_request_context_getter,
-    const std::string tor_proxy,
-    const bool isolated_storage,
-    const base::FilePath partition_path) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  if (!url_request_context_getter || !isolated_storage)
+    net::ProxyResolutionService* service,
+    const std::string& tor_proxy,
+    const std::string& site_url,
+    TorProxyMap* tor_proxy_map,
+    bool new_password) {
+  if (!service)
     return;
-  auto proxy_service = url_request_context_getter->GetURLRequestContext()->
-    proxy_resolution_service();
-  // Notice CreateRequestContextForStoragePartition will only be called once
-  // per partition_path so there is no need to cache password per origin
-  std::string origin = partition_path.DirName().BaseName().AsUTF8Unsafe();
+  if (new_password && tor_proxy_map)
+    tor_proxy_map->erase(site_url);
   std::unique_ptr<net::ProxyConfigServiceTor>
-    config(new ProxyConfigServiceTor(tor_proxy));
-  config->SetUsername(origin);
-  proxy_service->ResetConfigService(std::move(config));
+    config(new ProxyConfigServiceTor(tor_proxy, site_url, tor_proxy_map));
+  service->ResetConfigService(std::move(config));
 }
 
 ProxyConfigServiceTor::ConfigAvailability
     ProxyConfigServiceTor::GetLatestProxyConfig(ProxyConfig* config) {
   if (scheme_ != kSocksProxy || host_.empty() || port_.empty())
     return CONFIG_UNSET;
-  std::string password = GenerateNewPassword();
-  std::string url = std::string(scheme_ + "://" + username_ + ":" + password +
-    "@" + host_ + ":" + port_);
-  config_.proxy_rules().ParseFromString(url);
   *config = config_;
   return CONFIG_VALID;
 }
-
-bool ProxyConfigServiceTor::SetUsername(const std::string& username) {
-  if (username.empty())
-    return false;
-  username_ = username;
-  return true;
-}
-
 
 std::string ProxyConfigServiceTor::GenerateNewPassword() {
   std::vector<uint8_t> password(kTorPasswordLength);
