@@ -30,20 +30,24 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
 
   static void SetAcceptAllCookies(bool accept);
 
+ protected:
+  int OnBeforeURLRequest(net::URLRequest* request,
+                         const net::CompletionCallback& callback,
+                         GURL* new_url) override;
+  int OnBeforeStartTransaction(net::URLRequest* request,
+                               const net::CompletionCallback& callback,
+                               net::HttpRequestHeaders* headers) override;
+  void OnBeforeRedirect(net::URLRequest* request,
+                        const GURL& new_location) override;
+
  private:
   // NetworkDelegate implementation.
   int OnBeforeURLRequestInternal(
     net::URLRequest* request,
     GURL* new_url);
-  int OnBeforeURLRequest(net::URLRequest* request,
-                         const net::CompletionCallback& callback,
-                         GURL* new_url) override;
   int OnBeforeStartTransactionInternal(
     net::URLRequest* request,
     net::HttpRequestHeaders* headers);
-  int OnBeforeStartTransaction(net::URLRequest* request,
-                               const net::CompletionCallback& callback,
-                               net::HttpRequestHeaders* headers) override;
   void OnStartTransaction(net::URLRequest* request,
                           const net::HttpRequestHeaders& headers) override;
   int OnHeadersReceivedInternal(
@@ -57,8 +61,6 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
       const net::HttpResponseHeaders* original_response_headers,
       scoped_refptr<net::HttpResponseHeaders>* override_response_headers,
       GURL* allowed_unsafe_redirect_url) override;
-  void OnBeforeRedirect(net::URLRequest* request,
-                        const GURL& new_location) override;
   void OnResponseStarted(net::URLRequest* request, int net_error) override;
   void OnCompleted(net::URLRequest* request,
                    bool started,

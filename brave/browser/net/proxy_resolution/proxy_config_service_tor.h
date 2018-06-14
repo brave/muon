@@ -6,6 +6,7 @@
 #define BRAVE_BROWSER_NET_PROXY_RESOLUTION_PROXY_CONFIG_SERVICE_TOR_H_
 
 #include <string>
+#include <map>
 
 #include "base/compiler_specific.h"
 #include "net/base/net_errors.h"
@@ -21,23 +22,25 @@ const char kSocksProxy[] = "socks5";
 // Implementation of ProxyConfigService that returns a tor specific result.
 class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
  public:
-  explicit ProxyConfigServiceTor(const std::string& tor_proxy);
+  // Used to cache <username, password> of proxies
+  typedef std::map<std::string, std::string> TorProxyMap;
+
+  explicit ProxyConfigServiceTor(const std::string& tor_proxy,
+                                 const std::string& username,
+                                 TorProxyMap* map);
   ~ProxyConfigServiceTor() override;
 
   static void TorSetProxy(
-    scoped_refptr<brightray::URLRequestContextGetter>
-      url_request_context_getter,
-    const std::string tor_proxy,
-    const bool isolated_storage,
-    const base::FilePath partition_path);
+    net::ProxyResolutionService* service,
+    const std::string& tor_proxy,
+    const std::string& site_url,
+    TorProxyMap* tor_proxy_map,
+    bool new_password);
 
   // ProxyConfigService methods:
   void AddObserver(Observer* observer) override {}
   void RemoveObserver(Observer* observer) override {}
   ConfigAvailability GetLatestProxyConfig(ProxyConfig* config) override;
-
-  // Set origin as username
-  bool SetUsername(const std::string& username);
 
  private:
   // Generate a new 128 bit random tag
@@ -48,7 +51,6 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
   std::string scheme_;
   std::string host_;
   std::string port_;
-  std::string username_;
 };
 
 }  // namespace net
