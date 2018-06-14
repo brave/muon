@@ -62,13 +62,11 @@ Browser::Browser(const CreateParams& params)
             params.profile)),
       app_name_(params.app_name),
       is_trusted_source_(params.trusted_source),
+      session_id_(SessionID::FromSerializedValue(-1)),
       initial_show_state_(params.initial_show_state),
       is_session_restore_(params.is_session_restore),
       weak_factory_(this) {
   BrowserList::AddBrowser(this);
-  content::NotificationService::current()->Notify(
-      chrome::NOTIFICATION_BROWSER_WINDOW_READY, content::Source<Browser>(this),
-      content::NotificationService::NoDetails());
 }
 
 Browser::~Browser() {
@@ -95,6 +93,10 @@ void Browser::RegisterKeepAlive() {
 }
 void Browser::UnregisterKeepAlive() {
   keep_alive_.reset();
+}
+
+content::WebContents* Browser::OpenURL(const content::OpenURLParams& params) {
+  return nullptr;
 }
 
 bool Browser::SupportsWindowFeature(WindowFeature feature) const {

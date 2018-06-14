@@ -199,6 +199,15 @@ blink::mojom::PermissionStatus BravePermissionManager::GetPermissionStatus(
   return blink::mojom::PermissionStatus::GRANTED;
 }
 
+blink::mojom::PermissionStatus
+BravePermissionManager::GetPermissionStatusForFrame(
+    content::PermissionType permission,
+    content::RenderFrameHost* render_frame_host,
+    const GURL& requesting_origin) {
+  LOG(INFO) << __FUNCTION__ << ": " << static_cast<int>(permission);
+  return blink::mojom::PermissionStatus::GRANTED;
+}
+
 int BravePermissionManager::SubscribePermissionStatusChange(
     content::PermissionType permission,
     const GURL& requesting_origin,

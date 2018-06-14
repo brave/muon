@@ -103,8 +103,8 @@
 #include "net/http/http_response_headers.h"
 #include "net/url_request/url_request_context.h"
 #include "printing/print_settings.h"
-#include "third_party/WebKit/public/platform/WebInputEvent.h"
-#include "third_party/WebKit/public/web/WebFindOptions.h"
+#include "third_party/blink/public/platform/web_input_event.h"
+#include "third_party/blink/public/web/web_find_options.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/display/screen.h"
 
@@ -806,7 +806,7 @@ void WebContents::AddNewContents(content::WebContents* source,
     blocked = true;
   }
 
-  if (was_blocked && *was_blocked) {
+  if (blocked) {
     auto guest = brave::TabViewGuest::FromWebContents(new_contents);
     if (guest) {
       guest->Destroy(true);
@@ -1273,7 +1273,7 @@ void WebContents::FindReply(content::WebContents* web_contents,
 }
 
 bool WebContents::CheckMediaAccessPermission(
-    content::WebContents* web_contents,
+    content::RenderFrameHost* render_frame_host,
     const GURL& security_origin,
     content::MediaStreamType type) {
   return true;
@@ -1592,7 +1592,8 @@ void WebContents::WebContentsDestroyed() {
 
   if (IsRemote()) {
     MarkDestroyed();
-    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
+    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
+        GetDestroyClosure());
     return;
   }
 
@@ -1670,7 +1671,7 @@ bool WebContents::Equal(const WebContents* web_contents) const {
 }
 
 void WebContents::Reload(bool ignore_cache) {
-  web_contents()->UserGestureDone();
+  web_contents()->NavigatedByUser();
   if (ignore_cache)
     web_contents()->GetController().Reload(
       content::ReloadType::BYPASSING_CACHE,
@@ -1719,7 +1720,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
 
   std::string user_agent;
   if (options.Get("userAgent", &user_agent)) {
-    web_contents()->SetUserAgentOverride(user_agent);
+    web_contents()->SetUserAgentOverride(user_agent, true);
     params.override_user_agent =
         content::NavigationController::UA_OVERRIDE_TRUE;
   }
@@ -1733,7 +1734,7 @@ void WebContents::LoadURL(const GURL& url, const mate::Dictionary& options) {
     params.should_replace_current_entry = should_replace_current_entry;
   }
 
-  web_contents()->UserGestureDone();
+  web_contents()->NavigatedByUser();
   params.transition_type = ui::PAGE_TRANSITION_AUTO_TOPLEVEL;
   params.is_renderer_initiated = false;
 
@@ -1908,7 +1909,7 @@ bool WebContents::IsCrashed() const {
 
 void WebContents::SetUserAgent(const std::string& user_agent,
                                mate::Arguments* args) {
-  web_contents()->SetUserAgentOverride(user_agent);
+  web_contents()->SetUserAgentOverride(user_agent, true);
 }
 
 std::string WebContents::GetUserAgent() {
@@ -2852,7 +2853,8 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   }
 
   bool discarded = false;
-  if (tab_helper && options.Get("discarded", &discarded) && discarded && !active) {
+  if (tab_helper &&
+      options.Get("discarded", &discarded) && discarded && !active) {
     std::string url;
     if (options.Get("url", &url)) {
       std::unique_ptr<content::NavigationEntryImpl> entry =
@@ -3015,8 +3017,8 @@ mate::Handle<WebContents> WebContents::CreateFrom(
       return mate::CreateHandle(isolate, static_cast<WebContents*>(existing));
   }
 
-  auto handle = mate::CreateHandle(isolate, new WebContents(isolate, web_contents,
-      type));
+  auto handle = mate::CreateHandle(isolate, new WebContents(isolate,
+      web_contents, type));
 
   if (type == REMOTE) {
     auto existing = GetFrom(isolate, web_contents);

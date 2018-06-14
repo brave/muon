@@ -31,12 +31,12 @@
 #include "content/public/common/content_constants.h"
 #include "content/public/common/pepper_plugin_info.h"
 #include "content/public/common/user_agent.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "gpu/config/gpu_crash_keys.h"
 #include "gpu/config/gpu_info.h"
 #include "gpu/config/gpu_util.h"
 #include "media/base/video_codecs.h"
-#include "media/media_features.h"
+#include "media/media_buildflags.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "url/url_constants.h"
@@ -48,55 +48,9 @@
 #include "extensions/common/features/feature_util.h"
 #endif
 
-#if defined(WIDEVINE_CDM_AVAILABLE) && BUILDFLAG(ENABLE_LIBRARY_CDMS) && \
-    !defined(WIDEVINE_CDM_IS_COMPONENT)
-#define WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT
-#include "chrome/common/widevine_cdm_constants.h"
-#endif
-
 #if BUILDFLAG(ENABLE_CDM_HOST_VERIFICATION)
 #include "chrome/common/media/cdm_host_file_path.h"
 #endif
-
-#if defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
-bool IsWidevineAvailable(base::FilePath* adapter_path,
-                         base::FilePath* cdm_path,
-                         std::vector<media::VideoCodec>* codecs_supported,
-                         bool* supports_persistent_license) {
-  static enum {
-    NOT_CHECKED,
-    FOUND,
-    NOT_FOUND,
-  } widevine_cdm_file_check = NOT_CHECKED;
-  // TODO(jrummell): We should add a new path for DIR_WIDEVINE_CDM and use that
-  // to locate the CDM and the CDM adapter.
-  if (PathService::Get(chrome::FILE_WIDEVINE_CDM_ADAPTER, adapter_path)) {
-    *cdm_path = adapter_path->DirName().AppendASCII(
-        base::GetNativeLibraryName(kWidevineCdmLibraryName));
-    if (widevine_cdm_file_check == NOT_CHECKED) {
-      widevine_cdm_file_check =
-          (base::PathExists(*adapter_path) && base::PathExists(*cdm_path))
-              ? FOUND
-              : NOT_FOUND;
-    }
-    if (widevine_cdm_file_check == FOUND) {
-      // Add the supported codecs as if they came from the component manifest.
-      // This list must match the CDM that is being bundled with Chrome.
-      codecs_supported->push_back(media::VideoCodec::kCodecVP8);
-      codecs_supported->push_back(media::VideoCodec::kCodecVP9);
-#if BUILDFLAG(USE_PROPRIETARY_CODECS)
-      codecs_supported->push_back(media::VideoCodec::kCodecH264);
-#endif  // BUILDFLAG(USE_PROPRIETARY_CODECS)
-
-      *supports_persistent_license = false;
-
-      return true;
-    }
-  }
-
-  return false;
-}
-#endif  // defined(WIDEVINE_CDM_AVAILABLE_NOT_COMPONENT)
 
 namespace atom {
 

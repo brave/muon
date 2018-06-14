@@ -1,6 +1,6 @@
 import("//build/config/ui.gni")
 import("//build/config/features.gni")
-import("//extensions/features/features.gni")
+import("//extensions/buildflags/buildflags.gni")
 import("//media/media_options.gni")
 
 source_set("browser") {
@@ -18,7 +18,7 @@ source_set("browser") {
     "//components/autofill/content/browser:browser",
     "//components/password_manager/core/common",
     "//third_party/protobuf:protobuf_lite",
-    "//third_party/WebKit/public:blink_headers",
+    "//third_party/blink/public:blink_headers",
   ]
 
   deps = [
@@ -90,6 +90,7 @@ source_set("browser") {
     "api/save_page_handler.cc",
     "api/save_page_handler.h",
     "browser/resources/transport_security_state_static.json",
+    "browser/resources/transport_security_state_static.pins",
     "auto_updater.cc",
     "auto_updater.h",
     "atom_browser_client.cc",
@@ -102,8 +103,6 @@ source_set("browser") {
     "atom_browser_main_parts.h",
     "atom_quota_permission_context.cc",
     "atom_quota_permission_context.h",
-    "atom_resource_dispatcher_host_delegate.cc",
-    "atom_resource_dispatcher_host_delegate.h",
     "atom_speech_recognition_manager_delegate.cc",
     "atom_speech_recognition_manager_delegate.h",
     "autofill/atom_autofill_client.cc",

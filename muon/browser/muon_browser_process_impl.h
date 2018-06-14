@@ -16,8 +16,8 @@ class App;
 }
 }  // namespace atom
 
-namespace atom {
-class AtomResourceDispatcherHostDelegate;
+namespace content {
+class ResourceDispatcherHostDelegate;
 }
 
 // Real implementation of BrowserProcess that creates and returns the services.
@@ -36,7 +36,7 @@ class MuonBrowserProcessImpl : public BrowserProcessImpl {
  private:
   atom::api::App* app_;  // not owned
 
-  std::unique_ptr<atom::AtomResourceDispatcherHostDelegate>
+  std::unique_ptr<content::ResourceDispatcherHostDelegate>
       resource_dispatcher_host_delegate_;
 
   std::unique_ptr<component_updater::ComponentUpdateService>

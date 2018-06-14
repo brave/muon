@@ -29,18 +29,18 @@
 #include "components/network_hints/renderer/prescient_networking_dispatcher.h"
 #include "components/plugins/renderer/plugin_placeholder.h"
 #include "components/printing/renderer/print_render_frame_helper.h"
-#include "components/spellcheck/spellcheck_build_features.h"
+#include "components/spellcheck/spellcheck_buildflags.h"
 #include "components/visitedlink/renderer/visitedlink_slave.h"
 #include "components/web_cache/renderer/web_cache_impl.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "services/service_manager/public/cpp/service_context.h"
-#include "third_party/WebKit/public/platform/URLConversion.h"
-#include "third_party/WebKit/public/platform/WebSecurityOrigin.h"
-#include "third_party/WebKit/public/platform/WebSocketHandshakeThrottle.h"
-#include "third_party/WebKit/public/web/WebLocalFrame.h"
-#include "third_party/WebKit/public/web/WebPlugin.h"
-#include "third_party/WebKit/public/web/WebPluginParams.h"
-#include "third_party/WebKit/public/web/WebSecurityPolicy.h"
+#include "third_party/blink/public/platform/url_conversion.h"
+#include "third_party/blink/public/platform/web_security_origin.h"
+#include "third_party/blink/public/platform/web_socket_handshake_throttle.h"
+#include "third_party/blink/public/web/web_local_frame.h"
+#include "third_party/blink/public/web/web_plugin.h"
+#include "third_party/blink/public/web/web_plugin_params.h"
+#include "third_party/blink/public/web/web_security_policy.h"
 #if defined(OS_WIN)
 #include <shlobj.h>
 #include "base/command_line.h"
@@ -180,7 +180,7 @@ void BraveContentRendererClient::RenderFrameCreated(
                     password_generation_agent, registry);
 #if BUILDFLAG(ENABLE_PRINTING)
   new printing::PrintRenderFrameHelper(
-      render_frame, base::MakeUnique<BravePrintRenderFrameHelperDelegate>());
+      render_frame, std::make_unique<BravePrintRenderFrameHelperDelegate>());
 #endif
 
 #if BUILDFLAG(ENABLE_SPELLCHECK)
@@ -221,19 +221,18 @@ bool BraveContentRendererClient::OverrideCreatePlugin(
   return true;
 }
 
-bool BraveContentRendererClient::WillSendRequest(
+void BraveContentRendererClient::WillSendRequest(
     blink::WebLocalFrame* frame,
     ui::PageTransition transition_type,
     const blink::WebURL& url,
-    GURL* new_url) {
+    const url::Origin* initiator_origin,
+    GURL* new_url,
+    bool* attach_same_site_cookies) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  if (ChromeExtensionsRendererClient::GetInstance()->WillSendRequest(
-          frame, transition_type, url, new_url)) {
-    return true;
-  }
+  ChromeExtensionsRendererClient::GetInstance()->WillSendRequest(
+      frame, transition_type, url, initiator_origin, new_url,
+      attach_same_site_cookies);
 #endif
-
-  return false;
 }
 
 void BraveContentRendererClient::CreateRendererService(

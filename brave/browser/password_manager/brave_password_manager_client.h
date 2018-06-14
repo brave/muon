@@ -104,7 +104,7 @@ class BravePasswordManagerClient
       const GURL& origin,
       const std::vector<const autofill::PasswordForm*>* federated_matches)
       const override;
-  PrefService* GetPrefs() override;
+  PrefService* GetPrefs() const override;
   password_manager::PasswordStore* GetPasswordStore() const override;
 #if defined(SAFE_BROWSING_DB_LOCAL)
   safe_browsing::PasswordProtectionService* GetPasswordProtectionService()
@@ -112,8 +112,10 @@ class BravePasswordManagerClient
   void CheckSafeBrowsingReputation(const GURL& form_action,
                                    const GURL& frame_url) override;
   void CheckProtectedPasswordEntry(
-      const std::string& password_saved_domain,
+      bool matches_sync_password,
+      const std::vector<std::string>& matching_domains,
       bool password_field_exists) override;
+  void LogPasswordReuseDetectedEvent() override;
 
 #endif
   password_manager::PasswordSyncState GetPasswordSyncState() const override;

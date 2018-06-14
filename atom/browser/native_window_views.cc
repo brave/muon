@@ -438,7 +438,7 @@ void NativeWindowViews::Hide() {
 #endif
 }
 
-bool NativeWindowViews::IsVisible() {
+bool NativeWindowViews::IsVisible() const {
   return window_->IsVisible();
 }
 
