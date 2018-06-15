@@ -9,7 +9,6 @@
 
 #include "base/files/file_util.h"
 #include "base/files/important_file_writer.h"
-#include "base/memory/ptr_util.h"
 #include "base/sequenced_task_runner.h"
 #include "base/task_scheduler/post_task.h"
 #include "base/threading/sequenced_task_runner_handle.h"
@@ -113,7 +112,7 @@ void FileBindings::WriteImportantFile(
             base::Passed(&callback)),
         base::SequencedTaskRunnerHandle::Get()));
 
-  writer.WriteNow(base::MakeUnique<std::string>(data));
+  writer.WriteNow(std::make_unique<std::string>(data));
 }
 
 void FileBindings::RunCallback(

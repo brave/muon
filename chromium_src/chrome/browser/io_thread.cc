@@ -26,17 +26,18 @@
 #include "content/public/browser/network_service_instance.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "net/cert/cert_verifier.h"
 #include "net/cert/ct_known_logs.h"
 #include "net/cert/ct_log_verifier.h"
 #include "net/cert/ct_verifier.h"
-#include "net/cert/sth_distributor.h"
-#include "net/cert/sth_observer.h"
+#include "components/certificate_transparency/sth_distributor.h"
+#include "components/certificate_transparency/sth_observer.h"
 #include "net/cert/multi_log_ct_verifier.h"
 #include "net/dns/mapped_host_resolver.h"
 #include "net/http/http_auth_handler_factory.h"
 #include "net/http/http_auth_preferences.h"
+#include "net/nqe/network_quality_estimator.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "services/network/ignore_errors_cert_verifier.h"
@@ -127,7 +128,7 @@ IOThread::IOThread(
   pac_https_url_stripping_enabled_.MoveToThread(io_thread_proxy);
 
   chrome_browser_net::SetGlobalSTHDistributor(
-      std::make_unique<net::ct::STHDistributor>());
+      std::make_unique<certificate_transparency::STHDistributor>());
 
   BrowserThread::SetIOThreadDelegate(this);
 
@@ -198,10 +199,6 @@ void IOThread::Init() {
   TRACE_EVENT0("startup", "IOThread::InitAsync");
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
 
-#if defined(USE_NSS_CERTS)
-  net::SetMessageLoopForNSSHttpIO();
-#endif
-
   DCHECK(!globals_);
   globals_ = new Globals;
 
@@ -242,10 +239,6 @@ void IOThread::Init() {
 }
 
 void IOThread::CleanUp() {
-#if defined(USE_NSS_CERTS)
-  net::ShutdownNSSHttpIO();
-#endif
-
   system_url_request_context_getter_ = nullptr;
 
   // Unlink the ct_tree_tracker_ from the global cert_transparency_verifier
@@ -362,11 +355,13 @@ void IOThread::UpdateDnsClientEnabled() {
       *dns_client_enabled_);
 }
 
-void IOThread::RegisterSTHObserver(net::ct::STHObserver* observer) {
+void IOThread::RegisterSTHObserver(
+    certificate_transparency::STHObserver* observer) {
   chrome_browser_net::GetGlobalSTHDistributor()->RegisterObserver(observer);
 }
 
-void IOThread::UnregisterSTHObserver(net::ct::STHObserver* observer) {
+void IOThread::UnregisterSTHObserver(
+    certificate_transparency::STHObserver* observer) {
   chrome_browser_net::GetGlobalSTHDistributor()->UnregisterObserver(observer);
 }
 
@@ -432,7 +427,7 @@ void IOThread::SetUpProxyService(
 
 void IOThread::ConstructSystemRequestContext() {
   std::unique_ptr<network::URLRequestContextBuilderMojo> builder =
-      base::MakeUnique<network::URLRequestContextBuilderMojo>();
+      std::make_unique<network::URLRequestContextBuilderMojo>();
 
   builder->set_user_agent(GetUserAgent());
   std::unique_ptr<atom::AtomNetworkDelegate>
@@ -458,7 +453,7 @@ void IOThread::ConstructSystemRequestContext() {
           command_line, switches::kUserDataDir, std::move(cert_verifier)));
 
   std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
-      base::MakeUnique<net::MultiLogCTVerifier>();
+      std::make_unique<net::MultiLogCTVerifier>();
   // Add built-in logs
   ct_verifier->AddLogs(globals_->ct_logs);
 
@@ -469,9 +464,14 @@ void IOThread::ConstructSystemRequestContext() {
   globals_->quic_disabled = true;
 
   if (base::FeatureList::IsEnabled(network::features::kNetworkService)) {
-    globals_->system_request_context_owner =
-        std::move(builder)->Create(std::move(network_context_params_).get(),
-                                   !is_quic_allowed_on_init_, net_log_);
+    globals_->deprecated_network_quality_estimator =
+        std::make_unique<net::NetworkQualityEstimator>(
+            std::make_unique<net::NetworkQualityEstimatorParams>(
+                std::map<std::string, std::string>()),
+            net_log_);
+    globals_->system_request_context_owner = std::move(builder)->Create(
+        std::move(network_context_params_).get(), !is_quic_allowed_on_init_,
+        net_log_, globals_->deprecated_network_quality_estimator.get());
     globals_->system_request_context =
         globals_->system_request_context_owner.url_request_context_getter
             ->GetURLRequestContext();

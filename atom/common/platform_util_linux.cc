@@ -33,7 +33,7 @@ bool XDGUtil(const std::string& util,
     return false;
 
   if (!wait_for_exit) {
-    base::EnsureProcessGetsReaped(process.Pid());
+    base::EnsureProcessGetsReaped(std::move(process));
     return true;
   }
 

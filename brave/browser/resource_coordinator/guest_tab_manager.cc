@@ -38,7 +38,8 @@ namespace resource_coordinator {
 GuestTabManager::GuestTabManager() : TabManager() {}
 
 WebContents* GuestTabManager::CreateNullContents(
-    TabStripModel* model, WebContents* old_contents) {
+    const content::WebContents::CreateParams& params,
+    content::WebContents* old_contents) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
   auto guest = brave::TabViewGuest::FromWebContents(old_contents);
@@ -46,9 +47,9 @@ WebContents* GuestTabManager::CreateNullContents(
   auto owner = guest->owner_web_contents();
   DCHECK(owner);
 
-  WebContents::CreateParams params(old_contents->GetBrowserContext());
-  params.initially_hidden = true;
-  auto contents = extensions::TabHelper::CreateTab(owner, params);
+  WebContents::CreateParams create_params(params);
+  create_params.initially_hidden = true;
+  auto contents = extensions::TabHelper::CreateTab(owner, create_params);
   content::RestoreHelper::CreateForWebContents(contents);
   return contents;
 }
@@ -66,13 +67,13 @@ void GuestTabManager::TabReplacedAt(TabStripModel* tab_strip_model,
                                content::WebContents* old_contents,
                                content::WebContents* new_contents,
                                int index) {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-
   auto helper = content::RestoreHelper::FromWebContents(new_contents);
   // prevent the navigation controller from trying to autoload on
   // controller->SetActive(true)
   if (helper)
     helper->ClearNeedsReload();
+
+  TabManager::TabReplacedAt(tab_strip_model, old_contents, new_contents, index);
 }
 
 void GuestTabManager::ActiveTabChanged(content::WebContents* old_contents,

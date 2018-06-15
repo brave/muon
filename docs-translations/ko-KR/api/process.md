@@ -81,20 +81,6 @@ Causes the main thread of the current process hang.
 Sets the file descriptor soft limit to `maxDescriptors` or the OS hard
 limit, whichever is lower for the current process.
 
-### `process.getProcessMemoryInfo()`
-
-Returns an object giving memory usage statistics about the current process. Note
-that all statistics are reported in Kilobytes.
-
-* `workingSetSize` - The amount of memory currently pinned to actual physical
-  RAM.
-* `peakWorkingSetSize` - The maximum amount of memory that has ever been pinned
-  to actual physical RAM.
-* `privateBytes` - The amount of memory not shared by other processes, such as
-  JS heap or HTML content.
-* `sharedBytes` - The amount of memory shared between processes, typically
-  memory consumed by the Electron code itself
-
 ### `process.getSystemMemoryInfo()`
 
 Returns an object giving memory usage statistics about the entire system. Note

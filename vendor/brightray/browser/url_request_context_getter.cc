@@ -37,10 +37,11 @@
 #include "net/proxy_resolution/proxy_config.h"
 #include "net/proxy_resolution/proxy_config_service.h"
 #include "net/proxy_resolution/pac_file_fetcher_impl.h"
-#include "net/proxy_resolution/proxy_service.h"
+#include "net/proxy_resolution/proxy_resolution_service.h"
 #include "net/ssl/channel_id_service.h"
 #include "net/ssl/default_channel_id_store.h"
 #include "net/ssl/ssl_config_service_defaults.h"
+#include "net/traffic_annotation/network_traffic_annotation.h"
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/file_protocol_handler.h"
 #include "net/url_request/static_http_user_agent_settings.h"
@@ -227,28 +228,33 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
           command_line.GetSwitchValueASCII(switches::kProxyServer));
       proxy_config.proxy_rules().bypass_rules.ParseFromString(
           command_line.GetSwitchValueASCII(switches::kProxyBypassList));
-      storage_->set_proxy_resolution_service(net::ProxyResolutionService::CreateFixed(proxy_config));
+      storage_->set_proxy_resolution_service(
+          net::ProxyResolutionService::CreateFixed(
+              net::ProxyConfigWithAnnotation(proxy_config,
+                                             NO_TRAFFIC_ANNOTATION_YET)));
     } else if (command_line.HasSwitch(switches::kProxyPacUrl)) {
       auto proxy_config = net::ProxyConfig::CreateFromCustomPacURL(
           GURL(command_line.GetSwitchValueASCII(switches::kProxyPacUrl)));
       proxy_config.set_pac_mandatory(true);
-      storage_->set_proxy_resolution_service(net::ProxyResolutionService::CreateFixed(
-          proxy_config));
+      storage_->set_proxy_resolution_service(
+          net::ProxyResolutionService::CreateFixed(
+              net::ProxyConfigWithAnnotation(proxy_config,
+                                             NO_TRAFFIC_ANNOTATION_YET)));
     } else {
       bool use_v8 = !command_line.HasSwitch(::switches::kWinHttpProxyResolver);
 
       std::unique_ptr<net::ProxyResolutionService> proxy_service;
       if (use_v8) {
-        std::unique_ptr<net::DhcpProxyScriptFetcher> dhcp_proxy_script_fetcher;
-        net::DhcpProxyScriptFetcherFactory dhcp_factory;
-        dhcp_proxy_script_fetcher = dhcp_factory.Create(url_request_context_.get());
+        std::unique_ptr<net::DhcpPacFileFetcher> dhcp_pac_file_fetcher;
+        net::DhcpPacFileFetcherFactory dhcp_factory;
+        dhcp_pac_file_fetcher = dhcp_factory.Create(url_request_context_.get());
 
-        proxy_service = network::CreateProxyServiceUsingMojoFactory(
+        proxy_service = network::CreateProxyResolutionServiceUsingMojoFactory(
             ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
-            std::make_unique<net::ProxyScriptFetcherImpl>(
+            std::make_unique<net::PacFileFetcherImpl>(
                 url_request_context_.get()),
-            std::move(dhcp_proxy_script_fetcher), host_resolver.get(), net_log_,
+            std::move(dhcp_pac_file_fetcher), host_resolver.get(), net_log_,
             url_request_context_->network_delegate());
       } else {
         proxy_service = net::ProxyResolutionService::CreateUsingSystemProxyResolver(
@@ -302,10 +308,10 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
     storage_->set_http_server_properties(std::move(server_properties));
 
     std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
-        base::MakeUnique<net::MultiLogCTVerifier>();
+        std::make_unique<net::MultiLogCTVerifier>();
     ct_verifier->AddLogs(net::ct::CreateLogVerifiersForKnownLogs());
     storage_->set_cert_transparency_verifier(std::move(ct_verifier));
-    storage_->set_ct_policy_enforcer(base::MakeUnique<net::CTPolicyEnforcer>());
+    storage_->set_ct_policy_enforcer(std::make_unique<net::CTPolicyEnforcer>());
 
     net::HttpNetworkSession::Params network_session_params;
     network_session_params.ignore_certificate_errors = false;
