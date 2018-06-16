@@ -145,7 +145,6 @@ source_set("browser") {
     ":history",
     ":metrics",
     ":password_manager",
-    ":permissions",
     ":sessions",
     ":web_data",
     "chrome/browser/safe_browsing",
@@ -154,7 +153,6 @@ source_set("browser") {
     "//chrome/common",
     "//chrome/common:service_process_mojom",
     "//chrome/utility",
-    "//components/certificate_reporting:cert_logger_proto",
     "//components/certificate_transparency",
     "//components/crash/content/app",
     "//components/crash/core/browser",
@@ -235,9 +233,6 @@ source_set("browser") {
     "//chrome/browser/icon_loader_win.cc",
     "//chrome/browser/icon_manager.cc",
     "//chrome/browser/icon_manager.h",
-
-    "chrome/browser/interstitials/chrome_metrics_helper.cc",
-    "//chrome/browser/interstitials/chrome_metrics_helper.h",
 
     "//chrome/browser/net/chrome_extensions_network_delegate.cc",
     "//chrome/browser/net/chrome_extensions_network_delegate.h",
@@ -660,16 +655,6 @@ source_set("browser") {
       "//chrome/browser/media/cdm_storage_id.h",
     ]
   }
-}
-
-source_set("permissions") {
-  configs += [ "//electron/build:electron_config" ]
-  configs += [ ":chromium_src_config" ]
-
-  sources = [
-    "chrome/browser/permissions/permission_uma_util.cc",
-    "//chrome/browser/permissions/permission_uma_util.h",
-  ]
 }
 
 source_set("crashes_ui") {

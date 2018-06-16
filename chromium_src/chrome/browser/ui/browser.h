@@ -193,8 +193,6 @@ class Browser : public content::WebContentsDelegate {
   void RegisterKeepAlive();
   void UnregisterKeepAlive();
 
-  content::WebContents* OpenURL(const content::OpenURLParams& params);
-
   bool is_type_tabbed() const { return type_ == TYPE_TABBED; }
   // bool is_type_popup() const { return type_ == TYPE_POPUP; }
 

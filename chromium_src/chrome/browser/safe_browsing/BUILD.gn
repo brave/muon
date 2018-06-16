@@ -29,7 +29,6 @@ source_set("ui_extensions") {
 
   deps = [
     "//chrome/common:mojo_bindings",
-    "//printing/features",
   ]
 }
 

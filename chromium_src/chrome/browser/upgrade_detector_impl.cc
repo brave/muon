@@ -34,21 +34,6 @@ UpgradeDetectorImpl* UpgradeDetectorImpl::GetInstance() {
   return instance.get();
 }
 
-namespace {
-class UpgradeDetectorImpl : public UpgradeDetector {
- private:
-  // UpgradeDetector overrides:
-  // Not used in Brave.
-  base::TimeDelta GetHighAnnoyanceLevelDelta() override {
-    return base::TimeDelta();
-  }
-
-  base::TimeTicks GetHighAnnoyanceDeadline() override {
-    return base::TimeTicks();
-  }
-};
-}
-
 // static
 UpgradeDetector* UpgradeDetector::GetInstance() {
   return UpgradeDetectorImpl::GetInstance();

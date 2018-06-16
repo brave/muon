@@ -117,8 +117,6 @@ class BravePasswordManagerClient
       bool password_field_exists) override;
   void LogPasswordReuseDetectedEvent() override;
 
-  void LogPasswordReuseDetectedEvent() override;
-
 #endif
   password_manager::PasswordSyncState GetPasswordSyncState() const override;
   bool WasLastNavigationHTTPError() const override;
