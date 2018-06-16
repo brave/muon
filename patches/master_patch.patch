@@ -254,6 +254,26 @@ index cb8bd43871271083038b0555340d4c328f9b8bae..1b442fbf4dfebfc709e90021bb1600a9
  #endif
  
    return ps;
+diff --git a/chrome/browser/permissions/permission_decision_auto_blocker.cc b/chrome/browser/permissions/permission_decision_auto_blocker.cc
+index 282183d4f8a2287845b4bcd63a99e9294323e844..6979d180d78b5f91fe6037f2775ed90cec7414e5 100644
+--- a/chrome/browser/permissions/permission_decision_auto_blocker.cc
++++ b/chrome/browser/permissions/permission_decision_auto_blocker.cc
+@@ -285,6 +285,7 @@ void PermissionDecisionAutoBlocker::CheckSafeBrowsingBlacklist(
+     const GURL& request_origin,
+     ContentSettingsType permission,
+     base::Callback<void(bool)> callback) {
++#if defined(MUON_CHROMIUM_BUILD)
+   DCHECK_EQ(CONTENT_SETTING_ASK,
+             GetEmbargoResult(request_origin, permission).content_setting);
+ 
+@@ -303,6 +304,7 @@ void PermissionDecisionAutoBlocker::CheckSafeBrowsingBlacklist(
+   }
+ 
+   callback.Run(false /* permission blocked */);
++#endif
+ }
+ 
+ PermissionResult PermissionDecisionAutoBlocker::GetEmbargoResult(
 diff --git a/chrome/browser/printing/print_view_manager_base.cc b/chrome/browser/printing/print_view_manager_base.cc
 index ba01494ae09d034d139c6fdfa03e9468dfad6829..0ce699084f61594bba83eee9cf8f1b4517d281be 100644
 --- a/chrome/browser/printing/print_view_manager_base.cc
@@ -659,7 +679,7 @@ diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.
 index cca3bbb41ae25484c3e87c9aba09a8b07741e2b2..57abbcfd90dab7bbf1b5dffc35b17d3ade1a5e1e 100644
 --- a/chrome/common/chrome_paths_mac.mm
 +++ b/chrome/common/chrome_paths_mac.mm
-@@ -40,7 +40,9 @@ NSBundle* OuterAppBundleInternal() {
+@@ -40,7 +40,9 @@
  
    // From C.app/Contents/Versions/1.2.3.4, go up three steps to get to C.app.
    base::FilePath versioned_dir = chrome::GetVersionedDirectory();
@@ -1116,7 +1136,7 @@ diff --git a/components/crash/content/app/crashpad_mac.mm b/components/crash/con
 index 6508c2a067609897ea14b96b3852fa3bcf31cc65..27c0545722cf50d2a0a46f36d5e2b9f35d52406f 100644
 --- a/components/crash/content/app/crashpad_mac.mm
 +++ b/components/crash/content/app/crashpad_mac.mm
-@@ -54,6 +54,8 @@ base::FilePath PlatformCrashpadInitialization(
+@@ -54,6 +54,8 @@
        // Only allow the possibility of report upload in official builds. This
        // crash server won't have symbols for any other build types.
        std::string url = "https://clients2.google.com/cr/report";
@@ -1272,7 +1292,7 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
  #include "base/mac/mac_logging.h"
  #include "base/rand_util.h"
  #include "crypto/apple_keychain.h"
-@@ -61,6 +62,14 @@ const char KeychainPassword::account_name[] = "Chromium";
+@@ -61,6 +62,14 @@
  std::string KeychainPassword::GetPassword() const {
    UInt32 password_length = 0;
    void* password_data = NULL;
@@ -1381,7 +1401,7 @@ diff --git a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 index 36c25c462ad15a7c023f118879aaba556381da66..c0aff85c5d3daa62c3f3f8162d43d06d6fe6dbf2 100644
 --- a/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
 +++ b/content/browser/renderer_host/input/synthetic_gesture_target_mac.mm
-@@ -22,7 +22,7 @@
+@@ -22,7 +22,7 @@ @interface SyntheticPinchEvent : NSObject
  // Filled with default values.
  @property(readonly) CGFloat deltaX;
  @property(readonly) CGFloat deltaY;
@@ -1424,7 +1444,7 @@ diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/cont
 index 6e947778990cd828f0124b0f70ba9fc77a687e62..04c6e680085162264c6b34a292ae8ebf0524b519 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -137,6 +137,12 @@ RenderWidgetHostView* GetRenderWidgetHostViewToUse(
+@@ -137,6 +137,12 @@ BOOL EventIsReservedBySystem(NSEvent* event) {
  
  }  // namespace
  
@@ -1437,7 +1457,7 @@ index 6e947778990cd828f0124b0f70ba9fc77a687e62..04c6e680085162264c6b34a292ae8ebf
  // These are not documented, so use only after checking -respondsToSelector:.
  @interface NSApplication (UndocumentedSpeechMethods)
  - (void)speakString:(NSString*)string;
-@@ -1637,6 +1643,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1637,6 +1643,10 @@ new BrowserCompositorMac(this, this, render_widget_host_->is_hidden(),
    if (render_widget_host_) {
      render_widget_host_->SetActive(active);
      if (active) {
@@ -1448,7 +1468,7 @@ index 6e947778990cd828f0124b0f70ba9fc77a687e62..04c6e680085162264c6b34a292ae8ebf
        if (HasFocus())
          render_widget_host_->Focus();
      } else {
-@@ -1909,7 +1919,14 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -1909,7 +1919,14 @@ - (BOOL)acceptsMouseEventsWhenInactive {
  }
  
  - (BOOL)acceptsFirstMouse:(NSEvent*)theEvent {
@@ -1463,7 +1483,7 @@ index 6e947778990cd828f0124b0f70ba9fc77a687e62..04c6e680085162264c6b34a292ae8ebf
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -2142,8 +2159,10 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -2142,8 +2159,10 @@ - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
    if (EventIsReservedBySystem(theEvent))
      return;
  
@@ -1474,7 +1494,7 @@ index 6e947778990cd828f0124b0f70ba9fc77a687e62..04c6e680085162264c6b34a292ae8ebf
  
    if ([theEvent type] == NSFlagsChanged) {
      // Ignore NSFlagsChanged events from the NumLock and Fn keys as
-@@ -3007,6 +3026,11 @@ Class GetRenderWidgetHostViewCocoaClassForTesting() {
+@@ -3007,6 +3026,11 @@ - (RenderWidgetHostViewMac*)renderWidgetHostViewMac {
  // move) for the given event. Customize here to be more selective about which
  // key presses to autohide on.
  - (BOOL)shouldAutohideCursorForEvent:(NSEvent*)event {
@@ -1551,7 +1571,7 @@ diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/bro
 index d3533591027d3e51955f495805c7ebb6e93c7972..0ccf890bfabe6d0df11ce362104446cebc06c39c 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -586,6 +586,7 @@ void WebContentsViewMac::CloseTab() {
+@@ -586,6 +586,7 @@ - (void)draggedImage:(NSImage*)anImage
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -1577,7 +1597,7 @@ diff --git a/content/browser/web_contents/web_drag_dest_mac.mm b/content/browser
 index 35c4ee35242ac1e21beb94ae6b844dff14e04580..fdfc3b0ac56774fc5fd6a591ccad052c8cbec0cb 100644
 --- a/content/browser/web_contents/web_drag_dest_mac.mm
 +++ b/content/browser/web_contents/web_drag_dest_mac.mm
-@@ -347,6 +347,12 @@ GetRenderWidgetHostAtPoint:(const NSPoint&)viewPoint
+@@ -347,6 +347,12 @@ - (void)setDragStartTrackersForProcess:(int)processID {
    dragStartViewID_ = GetRenderViewHostID(webContents_->GetRenderViewHost());
  }
  
