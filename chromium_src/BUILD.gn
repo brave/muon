@@ -278,6 +278,8 @@ source_set("browser") {
     "chrome/browser/ui/chrome_select_file_policy.cc",
     "//chrome/browser/ui/cocoa/ui_localizer.h",
     "//chrome/browser/ui/cocoa/ui_localizer.mm",
+    "//chrome/browser/ui/pdf/adobe_reader_info_win.cc",
+    "//chrome/browser/ui/pdf/adobe_reader_info_win.h",
 
     "chrome/browser/ui/page_info/page_info_ui.cc",
     "//chrome/browser/ui/page_info/page_info_ui.h",

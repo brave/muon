@@ -62,8 +62,8 @@
 #include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
-#include "chrome/browser/safe_browsing/safe_browsing_service.h"
 #include "chrome/browser/resource_coordinator/tab_manager.h"
+#include "chrome/browser/safe_browsing/safe_browsing_service.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "chrome/browser/ssl/security_state_tab_helper.h"
@@ -1600,7 +1600,8 @@ void WebContents::WebContentsDestroyed() {
 
   if (IsRemote()) {
     MarkDestroyed();
-    base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE, GetDestroyClosure());
+    base::ThreadTaskRunnerHandle::Get()->PostTask(
+        FROM_HERE, GetDestroyClosure());
     return;
   }
 
