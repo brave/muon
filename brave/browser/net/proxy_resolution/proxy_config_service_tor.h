@@ -40,7 +40,8 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
   // ProxyConfigService methods:
   void AddObserver(Observer* observer) override {}
   void RemoveObserver(Observer* observer) override {}
-  ConfigAvailability GetLatestProxyConfig(ProxyConfig* config) override;
+  ConfigAvailability GetLatestProxyConfig(
+    ProxyConfigWithAnnotation* config) override;
 
  private:
   // Generate a new 128 bit random tag

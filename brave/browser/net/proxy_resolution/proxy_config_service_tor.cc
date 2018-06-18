@@ -15,7 +15,7 @@
 #include "base/strings/string_util.h"
 #include "content/public/browser/browser_thread.h"
 #include "crypto/random.h"
-#include "net/proxy_resolution/proxy_service.h"
+#include "net/proxy_resolution/proxy_resolution_service.h"
 #include "net/url_request/url_request_context.h"
 #include "vendor/brightray/browser/browser_client.h"
 #include "vendor/brightray/browser/net_log.h"
@@ -89,10 +89,11 @@ void ProxyConfigServiceTor::TorSetProxy(
 }
 
 ProxyConfigServiceTor::ConfigAvailability
-    ProxyConfigServiceTor::GetLatestProxyConfig(ProxyConfig* config) {
+    ProxyConfigServiceTor::GetLatestProxyConfig(
+      ProxyConfigWithAnnotation* config) {
   if (scheme_ != kSocksProxy || host_.empty() || port_.empty())
     return CONFIG_UNSET;
-  *config = config_;
+  *config = net:: ProxyConfigWithAnnotation(config_, NO_TRAFFIC_ANNOTATION_YET);
   return CONFIG_VALID;
 }
 

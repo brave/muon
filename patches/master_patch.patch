@@ -115,10 +115,10 @@ index 4304cc82494f57b7bbc4d1f3dff0fab96e30aef3..77130b344ba1e03e34e5faa752cd2590
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
 diff --git a/chrome/app/BUILD.gn b/chrome/app/BUILD.gn
-index b431e6968c2193c01fdfdfd8014ef54a1fc40872..59abf80d52435f9ae050fcd789cf5b7f720957ef 100644
+index e5744a9d05d3099a61815954b08c7c030d081071..33a65d47c94a101ca62bb89cc0b43fbd0769c4ac 100644
 --- a/chrome/app/BUILD.gn
 +++ b/chrome/app/BUILD.gn
-@@ -429,6 +429,8 @@ if (!is_android) {
+@@ -425,6 +425,8 @@ if (!is_android) {
    chrome_packaged_services += [ "//chrome/utility:profile_import_manifest" ]
  }
  
@@ -128,7 +128,7 @@ index b431e6968c2193c01fdfdfd8014ef54a1fc40872..59abf80d52435f9ae050fcd789cf5b7f
    source = "chrome_manifest.json"
  }
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
-index cd82cd63bfff860abdd765ad6e35355caffc3a43..9d24c0c3a7b315c10b519e0ae5b0eea04a880ddc 100644
+index cd82cd63bfff860abdd765ad6e35355caffc3a43..eb8966b82071f04263e00c897a8708eb9ff6ec91 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
 +++ b/chrome/browser/chrome_content_browser_manifest_overlay.json
 @@ -12,7 +12,7 @@
@@ -140,7 +140,7 @@ index cd82cd63bfff860abdd765ad6e35355caffc3a43..9d24c0c3a7b315c10b519e0ae5b0eea0
            "safe_browsing::mojom::SafeBrowsing",
            "translate::mojom::ContentTranslateDriver"
          ],
-@@ -54,6 +54,7 @@
+@@ -55,6 +55,7 @@
          "proxy_resolver": [ "factory" ],
          "preferences": [ "pref_client", "pref_control" ],
          "removable_storage_writer": [ "removable_storage_writer" ],
@@ -2186,10 +2186,10 @@ index 3802937bc0c472cb72d38958ccbe9d5b25da6cbb..79f05f7f57f2547b50c9755dd363ab47
  }
  
 diff --git a/net/log/net_log_event_type_list.h b/net/log/net_log_event_type_list.h
-index e23f2e6e9d9deb5fcd93f39c0e88c63ead47ac87..5c3e259474eec476038ee70bc90d6f0d188d84bd 100644
+index 596c35c5be6a443a33d1b36587a34ef58debad68..583ff6dd9abeb39dd7e6bed43caf323ba299d838 100644
 --- a/net/log/net_log_event_type_list.h
 +++ b/net/log/net_log_event_type_list.h
-@@ -2118,6 +2118,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
+@@ -2115,6 +2115,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
  // The time spent waiting for the "greeting" response from the SOCKS server.
  EVENT_TYPE(SOCKS5_GREET_READ)
  
@@ -2358,10 +2358,10 @@ index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a9
    // |buf_size| bytes into |buf|.
    // Possible return values:
 diff --git a/services/service_manager/sandbox/win/sandbox_win.cc b/services/service_manager/sandbox/win/sandbox_win.cc
-index 6c7356eacc42f72156b65ed8ae6d2cfb8bcec3db..f2f5a25ba5c43ef1b6f7da0ff3e9f858de42ed51 100644
+index 50430a8e2f8fc30e08412e75299be7d4ca275252..b65147fc394d96a0557f1987a4f4e8dc14328b44 100644
 --- a/services/service_manager/sandbox/win/sandbox_win.cc
 +++ b/services/service_manager/sandbox/win/sandbox_win.cc
-@@ -831,6 +831,9 @@ sandbox::ResultCode SandboxWin::StartSandboxedProcess(
+@@ -827,6 +827,9 @@ sandbox::ResultCode SandboxWin::StartSandboxedProcess(
            service_manager::switches::kNoSandbox)) {
      base::LaunchOptions options;
      options.handles_to_inherit = handles_to_inherit;
