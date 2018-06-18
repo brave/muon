@@ -456,7 +456,8 @@ void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
   auto proxy_resolution_service =
     getter->GetURLRequestContext()->proxy_resolution_service();
   proxy_resolution_service->ResetConfigService(base::WrapUnique(
-      new net::ProxyConfigServiceFixed(config)));
+      new net::ProxyConfigServiceFixed(
+      net::ProxyConfigWithAnnotation(config, NO_TRAFFIC_ANNOTATION_YET))));
   // Refetches and applies the new pac script if provided.
   proxy_resolution_service->ForceReloadProxyConfig();
   BrowserThread::PostTask(
