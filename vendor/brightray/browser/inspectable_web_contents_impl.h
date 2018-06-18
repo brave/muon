@@ -120,7 +120,8 @@ class InspectableWebContentsImpl :
   void UpgradeDraggedFileSystemPermissions(
       const std::string& file_system_url) override;
   void IndexPath(int index_request_id,
-                 const std::string& file_system_path) override;
+                 const std::string& file_system_path,
+                 const std::string& excluded_folders) override;
   void StopIndexing(int index_request_id) override;
   void SearchInPath(int search_request_id,
                     const std::string& file_system_path,

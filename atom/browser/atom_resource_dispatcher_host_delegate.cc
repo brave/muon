@@ -35,57 +35,6 @@ using content::ResourceType;
 
 namespace atom {
 
-namespace {
-
-void OnOpenExternal(const GURL& escaped_url,
-                    bool allowed) {
-  if (allowed)
-    platform_util::OpenExternal(
-#if defined(OS_WIN)
-        base::UTF8ToUTF16(escaped_url.spec()),
-#else
-        escaped_url,
-#endif
-        true);
-}
-
-void HandleExternalProtocolInUI(
-    const GURL& url,
-    int render_process_id,
-    int render_frame_id,
-    int frame_tree_node_id,
-    bool has_user_gesture) {
-  content::RenderFrameHost* rfh = NULL;
-  content::WebContents* web_contents =
-    content::WebContents::FromFrameTreeNodeId(frame_tree_node_id);
-
-  if (!web_contents) {
-    rfh = content::RenderFrameHost::FromID(render_process_id,
-        render_frame_id);
-    if (rfh) {
-      web_contents = content::WebContents::FromRenderFrameHost(rfh);
-    }
-  }
-
-  if (!web_contents)
-    return;
-
-  if (!rfh)
-    rfh = web_contents->GetMainFrame();
-
-  auto permission_helper =
-      WebContentsPermissionHelper::FromWebContents(web_contents);
-  if (!permission_helper)
-    return;
-
-  GURL escaped_url(net::EscapeExternalHandlerValue(url.spec()));
-  auto callback = base::Bind(&OnOpenExternal, escaped_url);
-  permission_helper->RequestOpenExternalPermission(callback, rfh,
-    url, has_user_gesture);
-}
-
-}  // namespace
-
 AtomResourceDispatcherHostDelegate::AtomResourceDispatcherHostDelegate() :
   safe_browsing_(g_browser_process->safe_browsing_service()) {
 }
@@ -137,19 +86,6 @@ void AtomResourceDispatcherHostDelegate::AppendStandardResourceThrottles(
 
   if (first_throttle)
     throttles->push_back(base::WrapUnique(first_throttle));
-}
-
-bool AtomResourceDispatcherHostDelegate::HandleExternalProtocol(
-    const GURL& url,
-    ResourceRequestInfo* info) {
-  BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
-                          base::Bind(&HandleExternalProtocolInUI,
-                                     url,
-                                     info->GetChildID(),
-                                     info->GetRenderFrameID(),
-                                     info->GetFrameTreeNodeId(),
-                                     info->HasUserGesture()));
-  return true;
 }
 
 }  // namespace atom

@@ -175,7 +175,7 @@ void BrowserMainParts::ToolkitInitialized() {
 #endif
 
 #if defined(TOOLKIT_VIEWS)
-  views_delegate_ = base::MakeUnique<ViewsDelegate>();
+  views_delegate_ = std::make_unique<ViewsDelegate>();
  if (!views::LayoutProvider::Get())
     layout_provider_ = ChromeLayoutProvider::CreateLayoutProvider();
 #endif

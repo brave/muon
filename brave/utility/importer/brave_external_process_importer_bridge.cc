@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <algorithm>
+#include <utility>
 
 #include "brave/utility/importer/brave_external_process_importer_bridge.h"
 
@@ -40,8 +41,8 @@ void BraveExternalProcessImporterBridge::SetCookies(
 }
 
 BraveExternalProcessImporterBridge::BraveExternalProcessImporterBridge(
-    const base::DictionaryValue& localized_strings,
+    base::Value localized_strings,
     scoped_refptr<chrome::mojom::ThreadSafeProfileImportObserverPtr> observer)
-  : ExternalProcessImporterBridge(localized_strings, observer) {}
+    : ExternalProcessImporterBridge(std::move(localized_strings), observer) {}
 
 BraveExternalProcessImporterBridge::~BraveExternalProcessImporterBridge() {}

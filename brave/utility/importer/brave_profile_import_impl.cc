@@ -10,7 +10,6 @@
 #include "base/bind.h"
 #include "base/command_line.h"
 #include "base/location.h"
-#include "base/memory/ptr_util.h"
 #include "base/memory/ref_counted.h"
 #include "base/single_thread_task_runner.h"
 #include "base/strings/string_util.h"
@@ -35,7 +34,7 @@ BraveProfileImportImpl::~BraveProfileImportImpl() {}
 void BraveProfileImportImpl::StartImport(
     const importer::SourceProfile& source_profile,
     uint16_t items,
-    std::unique_ptr<base::DictionaryValue> localized_strings,
+    base::Value localized_strings,
     chrome::mojom::ProfileImportObserverPtr observer) {
   content::UtilityThread::Get()->EnsureBlinkInitialized();
   importer_ =
@@ -63,7 +62,7 @@ void BraveProfileImportImpl::StartImport(
     ImporterCleanup();
   }
   bridge_ = new BraveExternalProcessImporterBridge(
-      *localized_strings,
+      std::move(localized_strings),
       ThreadSafeProfileImportObserverPtr::Create(std::move(observer)));
   import_thread_->task_runner()->PostTask(
       FROM_HERE, base::BindOnce(&Importer::StartImport, importer_,

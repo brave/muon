@@ -30,13 +30,6 @@ class AtomResourceDispatcherHostDelegate
                         std::vector<std::unique_ptr<content::ResourceThrottle>>*
                             throttles) override;
 
-
-
-  // content::ResourceDispatcherHostDelegate:
-  bool HandleExternalProtocol(
-      const GURL& url,
-      content::ResourceRequestInfo* info) override;
-
  protected:
     virtual void AppendStandardResourceThrottles(
       net::URLRequest* request,

@@ -4,6 +4,8 @@
 
 #include "browser/special_storage_policy.h"
 
+#include "base/callback.h"
+
 namespace brightray {
 
 SpecialStoragePolicy::SpecialStoragePolicy() {
@@ -28,16 +30,17 @@ bool SpecialStoragePolicy::IsStorageSessionOnly(const GURL& origin) {
   return false;
 }
 
-bool SpecialStoragePolicy::ShouldDeleteCookieOnExit(const GURL& origin) {
-  return false;
-}
-
 bool SpecialStoragePolicy::HasSessionOnlyOrigins() {
   return false;
 }
 
 bool SpecialStoragePolicy::HasIsolatedStorage(const GURL& origin) {
   return false;
+}
+
+storage::SpecialStoragePolicy::DeleteCookiePredicate
+SpecialStoragePolicy::CreateDeleteCookieOnExitPredicate() {
+  return DeleteCookiePredicate();
 }
 
 }  // namespace brightray

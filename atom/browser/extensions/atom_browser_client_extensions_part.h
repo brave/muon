@@ -55,6 +55,8 @@ class AtomBrowserClientExtensionsPart {
                              const GURL& site_url);
   static bool ShouldTryToUseExistingProcessHost(Profile* profile,
                                                 const GURL& url);
+  static bool ShouldUseSpareRenderProcessHost(Profile* profile,
+                                                const GURL& site_url);
   static bool ShouldSwapBrowsingInstancesForNavigation(
       content::SiteInstance* site_instance,
       const GURL& current_url,

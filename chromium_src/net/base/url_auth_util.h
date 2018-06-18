@@ -10,8 +10,7 @@
 namespace net {
 
 NET_EXPORT bool ParseAuthHostAndPort(
-    std::string::const_iterator host_and_port_begin,
-    std::string::const_iterator host_and_port_end,
+    base::StringPiece input,
     std::string* up_host_ret,
     int* port);
 

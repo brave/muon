@@ -63,7 +63,7 @@ void RegisterStandardSchemes(const std::vector<std::string>& schemes) {
 
   auto* policy = content::ChildProcessSecurityPolicy::GetInstance();
   for (const std::string& scheme : schemes) {
-    url::AddStandardScheme(scheme.c_str(), url::SCHEME_WITHOUT_PORT);
+    url::AddStandardScheme(scheme.c_str(), url::SCHEME_WITH_HOST);
     policy->RegisterWebSafeScheme(scheme);
   }
 

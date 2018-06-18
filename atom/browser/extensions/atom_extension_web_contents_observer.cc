@@ -29,6 +29,15 @@ AtomExtensionWebContentsObserver::AtomExtensionWebContentsObserver(
 
 AtomExtensionWebContentsObserver::~AtomExtensionWebContentsObserver() {}
 
+void AtomExtensionWebContentsObserver::CreateForWebContents(
+    content::WebContents* web_contents) {
+  content::WebContentsUserData<
+    AtomExtensionWebContentsObserver>::CreateForWebContents(web_contents);
+
+  // Initialize this instance if necessary.
+  FromWebContents(web_contents)->Initialize();
+}
+
 void AtomExtensionWebContentsObserver::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
   ExtensionWebContentsObserver::RenderFrameCreated(render_frame_host);

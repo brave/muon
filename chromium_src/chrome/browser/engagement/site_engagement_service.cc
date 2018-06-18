@@ -4,7 +4,6 @@
 
 #include "chrome/browser/engagement/site_engagement_service.h"
 
-#include "base/memory/ptr_util.h"
 #include "base/time/clock.h"
 #include "base/time/default_clock.h"
 #include "chrome/browser/engagement/site_engagement_score.h"
@@ -23,6 +22,6 @@ SiteEngagementService* SiteEngagementService::Get(Profile* profile) {
 double SiteEngagementService::GetScoreFromSettings(
     HostContentSettingsMap* settings,
     const GURL& origin) {
-  auto clock = base::MakeUnique<base::DefaultClock>();
+  auto clock = std::make_unique<base::DefaultClock>();
   return SiteEngagementScore(clock.get(), origin, settings).GetTotalScore();
 }

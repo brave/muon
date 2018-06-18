@@ -15,6 +15,7 @@
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/browser/resource_coordinator/tab_manager.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/resource_coordinator/tab_lifecycle_unit_external.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_finder.h"
@@ -82,7 +83,7 @@ int GetTabIdForExtensions(const WebContents* web_contents) {
   Browser* browser = chrome::FindBrowserWithWebContents(web_contents);
   if (browser && !ExtensionTabUtil::BrowserSupportsTabs(browser))
     return -1;
-  return SessionTabHelper::IdForTab(web_contents);
+  return SessionTabHelper::IdForTab(web_contents).id();
 }
 
 }  // namespace
@@ -108,7 +109,7 @@ int ExtensionTabUtil::GetWindowIdOfTabStripModel(
 }
 
 int ExtensionTabUtil::GetTabId(const WebContents* web_contents) {
-  return SessionTabHelper::IdForTab(web_contents);
+  return SessionTabHelper::IdForTab(web_contents).id();
 }
 
 std::string ExtensionTabUtil::GetTabStatusText(bool is_loading) {
@@ -116,7 +117,7 @@ std::string ExtensionTabUtil::GetTabStatusText(bool is_loading) {
 }
 
 int ExtensionTabUtil::GetWindowIdOfTab(const WebContents* web_contents) {
-  return SessionTabHelper::IdForWindowContainingTab(web_contents);
+  return SessionTabHelper::IdForWindowContainingTab(web_contents).id();
 }
 
 // static
@@ -145,9 +146,12 @@ std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
   tab_object->highlighted = tab_strip && tab_strip->IsTabSelected(tab_index);
   tab_object->pinned = tab_helper->is_pinned();
   tab_object->audible = std::make_unique<bool>(contents->WasRecentlyAudible());
+  auto* tab_lifeycle_unit_external =
+      resource_coordinator::TabLifecycleUnitExternal::FromWebContents(contents);
   tab_object->discarded = tab_helper->IsDiscarded();
   tab_object->auto_discardable =
-      g_browser_process->GetTabManager()->IsTabAutoDiscardable(contents);
+      !tab_lifeycle_unit_external ||
+      tab_lifeycle_unit_external->IsAutoDiscardable();
   tab_object->muted_info = CreateMutedInfo(contents);
   tab_object->incognito = contents->GetBrowserContext()->IsOffTheRecord();
   gfx::Size contents_size = contents->GetContainerBounds().size();
@@ -279,7 +283,7 @@ bool ExtensionTabUtil::GetTabById(int tab_id,
       TabStripModel* target_tab_strip = target_browser->tab_strip_model();
       for (int i = 0; i < target_tab_strip->count(); ++i) {
         WebContents* target_contents = target_tab_strip->GetWebContentsAt(i);
-        if (SessionTabHelper::IdForTab(target_contents) == tab_id) {
+        if (SessionTabHelper::IdForTab(target_contents).id() == tab_id) {
           if (browser)
             *browser = target_browser;
           if (tab_strip)

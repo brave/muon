@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "atom/browser/atom_browser_client.h"
-#include "extensions/features/features.h"
+#include "extensions/buildflags/buildflags.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 
 namespace content {
@@ -39,6 +39,15 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::string GetAcceptLangs(content::BrowserContext* browser_context) override;
   std::string GetApplicationLocale() override;
   static void SetApplicationLocale(std::string locale);
+
+  bool HandleExternalProtocol(
+      const GURL& url,
+      content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+      int child_id,
+      content::NavigationUIData* navigation_data,
+      bool is_main_frame,
+      ui::PageTransition page_transition,
+      bool has_user_gesture) override;
 
  protected:
   // content::ContentBrowserClient:
@@ -92,6 +101,9 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
                                const GURL& effective_url) override;
   bool DoesSiteRequireDedicatedProcess(content::BrowserContext* browser_context,
                                        const GURL& effective_site_url) override;
+  bool ShouldUseSpareRenderProcessHost(
+                                      content::BrowserContext* browser_context,
+                                      const GURL& site_url) override;
   bool ShouldLockToOrigin(content::BrowserContext* browser_context,
                           const GURL& effective_site_url) override;
   bool IsSuitableHost(content::RenderProcessHost* process_host,
@@ -133,7 +145,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   std::unique_ptr<base::Value> GetServiceManifestOverlay(
       base::StringPiece name) override;
 
-  content::ResourceDispatcherHostLoginDelegate* CreateLoginDelegate(
+  scoped_refptr<content::LoginDelegate> CreateLoginDelegate(
       net::AuthChallengeInfo* auth_info,
       content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
       bool is_main_frame,

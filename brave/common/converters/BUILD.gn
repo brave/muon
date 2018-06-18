@@ -15,6 +15,6 @@ source_set("converters") {
   ]
 
   deps = [
-    "//third_party/WebKit/public:blink_headers",
+    "//third_party/blink/public:blink_headers",
   ]
 }

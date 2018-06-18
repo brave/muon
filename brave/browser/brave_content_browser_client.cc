@@ -11,6 +11,7 @@
 #include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_contents_preferences.h"
 #include "atom/common/options_switches.h"
+#include "atom/common/platform_util.h"
 #include "base/base_switches.h"
 #include "base/json/json_reader.h"
 #include "base/lazy_instance.h"
@@ -48,7 +49,7 @@
 #include "components/content_settings/core/common/content_settings.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
-#include "components/unzip_service/public/interfaces/constants.mojom.h"
+#include "components/services/unzip/public/interfaces/constants.mojom.h"
 #include "components/variations/variations_switches.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
@@ -62,6 +63,7 @@
 #include "gpu/config/gpu_switches.h"
 #include "mojo/public/cpp/bindings/scoped_interface_endpoint_handle.h"
 #include "muon/app/muon_crash_reporter_client.h"
+#include "net/base/escape.h"
 #include "net/base/filename_util.h"
 #include "net/ssl/client_cert_store.h"
 #include "services/data_decoder/public/mojom/constants.mojom.h"
@@ -71,7 +73,7 @@
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "services/service_manager/public/cpp/connector.h"
 #include "services/service_manager/public/mojom/connector.mojom.h"
-#include "third_party/WebKit/public/web/WebWindowFeatures.h"
+#include "third_party/blink/public/web/web_window_features.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 
@@ -217,6 +219,40 @@ base::LazyInstance<std::string>::DestructorAtExit io_thread_application_locale;
 void SetApplicationLocaleOnIOThread(const std::string& locale) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
   io_thread_application_locale.Get() = locale;
+}
+
+void OnOpenExternal(const GURL& escaped_url, bool allowed) {
+  if (allowed)
+    platform_util::OpenExternal(
+#if defined(OS_WIN)
+        base::UTF8ToUTF16(escaped_url.spec()),
+#else
+        escaped_url,
+#endif
+        true);
+}
+
+void LaunchURL(
+    const GURL& url,
+    const content::ResourceRequestInfo::WebContentsGetter& web_contents_getter,
+    bool has_user_gesture) {
+  // If there is no longer a WebContents, the request may have raced with tab
+  // closing. Don't fire the external request. (It may have been a prerender.)
+  content::WebContents* web_contents = web_contents_getter.Run();
+  if (!web_contents)
+    return;
+
+  content::RenderFrameHost* rfh = web_contents->GetMainFrame();
+
+  auto permission_helper =
+      atom::WebContentsPermissionHelper::FromWebContents(web_contents);
+  if (!permission_helper)
+    return;
+
+  GURL escaped_url(net::EscapeExternalHandlerValue(url.spec()));
+  auto callback = base::Bind(&OnOpenExternal, escaped_url);
+  permission_helper->RequestOpenExternalPermission(callback, rfh, url,
+                                                   has_user_gesture);
 }
 
 }  // namespace
@@ -742,6 +778,21 @@ bool BraveContentBrowserClient::DoesSiteRequireDedicatedProcess(
   return false;
 }
 
+bool BraveContentBrowserClient::ShouldUseSpareRenderProcessHost(
+    content::BrowserContext* browser_context,
+    const GURL& site_url) {
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  if (!profile)
+    return false;
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return AtomBrowserClientExtensionsPart::
+      ShouldUseSpareRenderProcessHost(profile, site_url);
+#else
+  return true;
+#endif
+}
+
 void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
         std::vector<std::string>* additional_allowed_schemes) {
   AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
@@ -806,7 +857,7 @@ bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(
 #endif
 }
 
-content::ResourceDispatcherHostLoginDelegate*
+scoped_refptr<content::LoginDelegate>
 BraveContentBrowserClient::CreateLoginDelegate(
     net::AuthChallengeInfo* auth_info,
     content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
@@ -815,8 +866,8 @@ BraveContentBrowserClient::CreateLoginDelegate(
     bool first_auth_attempt,
     const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
         auth_required_callback) {
-  return new atom::LoginHandler(auth_info, web_contents_getter, is_main_frame,
-                          url, auth_required_callback);
+  return base::MakeRefCounted<atom::LoginHandler>(auth_info,
+      web_contents_getter, is_main_frame, url, auth_required_callback);
 }
 
 std::unique_ptr<base::Value>
@@ -850,7 +901,7 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   if (!handle->IsInMainFrame())
     throttles.push_back(
-        base::MakeUnique<extensions::ExtensionNavigationThrottle>(handle));
+        std::make_unique<extensions::ExtensionNavigationThrottle>(handle));
 #endif
   return throttles;
 }
@@ -858,7 +909,7 @@ BraveContentBrowserClient::CreateThrottlesForNavigation(
 std::unique_ptr<content::NavigationUIData>
 BraveContentBrowserClient::GetNavigationUIData(
     content::NavigationHandle* navigation_handle) {
-  return base::MakeUnique<ChromeNavigationUIData>(navigation_handle);
+  return std::make_unique<ChromeNavigationUIData>(navigation_handle);
 }
 
 std::unique_ptr<net::ClientCertStore>
@@ -885,8 +936,8 @@ BraveContentBrowserClient::GetExtraServiceManifests() {
 }
 
 void BraveContentBrowserClient::InitFrameInterfaces() {
-  frame_interfaces_ = base::MakeUnique<service_manager::BinderRegistry>();
-  frame_interfaces_parameterized_ = base::MakeUnique<
+  frame_interfaces_ = std::make_unique<service_manager::BinderRegistry>();
+  frame_interfaces_parameterized_ = std::make_unique<
       service_manager::BinderRegistryWithArgs<content::RenderFrameHost*>>();
 
   frame_interfaces_parameterized_->AddInterface(
@@ -896,6 +947,20 @@ void BraveContentBrowserClient::InitFrameInterfaces() {
                      BindPasswordManagerDriver));
   frame_interfaces_parameterized_->AddInterface(
       base::BindRepeating(&BravePasswordManagerClient::BindCredentialManager));
+}
+
+bool BraveContentBrowserClient::HandleExternalProtocol(
+    const GURL& url,
+    content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+    int child_id,
+    content::NavigationUIData* navigation_data,
+    bool is_main_frame,
+    ui::PageTransition page_transition,
+    bool has_user_gesture) {
+  BrowserThread::PostTask(
+      BrowserThread::UI, FROM_HERE,
+      base::Bind(&LaunchURL, url, web_contents_getter, has_user_gesture));
+  return true;
 }
 
 }  // namespace brave
