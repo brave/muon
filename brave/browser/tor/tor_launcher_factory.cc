@@ -11,6 +11,7 @@
 #include "base/path_service.h"
 #include "chrome/common/chrome_paths.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/child_process_launcher_utils.h"
 #include "content/public/common/service_manager_connection.h"
 #include "services/service_manager/public/cpp/connector.h"
 #include "url/third_party/mozilla/url_parse.h"
@@ -53,10 +54,9 @@ TorLauncherFactory::TorLauncherFactory(
 TorLauncherFactory::~TorLauncherFactory() {}
 
 void TorLauncherFactory::LaunchTorProcess() {
-  BrowserThread::PostTask(
-    BrowserThread::PROCESS_LAUNCHER, FROM_HERE,
-    base::Bind(&TorLauncherFactory::LaunchInLauncherThread,
-               base::Unretained(this)));
+  content::GetProcessLauncherTaskRunner()->PostTask(
+    FROM_HERE, base::Bind(&TorLauncherFactory::LaunchInLauncherThread,
+                          base::Unretained(this)));
 }
 
 void TorLauncherFactory::LaunchInLauncherThread() {
