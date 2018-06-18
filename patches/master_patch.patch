@@ -1981,7 +1981,7 @@ index 45334f8bb6b461b2d7c1ba7ff5bd73a6ea735420..28cb4a29b53fb1d4dcedcaca9e36798a
  #else
    return switches::autoplay::kNoUserGestureRequiredPolicy;
 diff --git a/net/BUILD.gn b/net/BUILD.gn
-index 081e063416980b17f5afb378b7a7923c78f4d7d6..df966270e03d368a59f1d08e49c5e2d8a3a953f6 100644
+index a2d700e2ae97176d60ca0367f01677e44c7e609c..54c8b9db9673abddaa47d0799f3672cda0783be3 100644
 --- a/net/BUILD.gn
 +++ b/net/BUILD.gn
 @@ -356,6 +356,10 @@ component("net") {
@@ -2074,6 +2074,27 @@ index a5ee6bda3ff542624b484b7a11811b708fec3e11..0d635e6dd1242382bd5845f6cb7674dc
    // If |host_| represents an IPv6 address, this string will not contain
    // brackets around the address.
    std::string host_;
+diff --git a/net/base/proxy_server.cc b/net/base/proxy_server.cc
+index da31a40fbe8dc454dd24cb368c3af7d0b8c3506d..624d663b070e0eaf96a420c52a529525d7b7fed3 100644
+--- a/net/base/proxy_server.cc
++++ b/net/base/proxy_server.cc
+@@ -8,6 +8,7 @@
+ 
+ #include "base/strings/string_util.h"
+ #include "base/trace_event/memory_usage_estimator.h"
++#include "net/base/url_auth_util.h"
+ #include "net/base/url_util.h"
+ #include "net/http/http_util.h"
+ 
+@@ -226,7 +227,7 @@ ProxyServer ProxyServer::FromSchemeHostAndPort(
+     std::string host;
+     int port = -1;
+     // If the scheme has a host/port, parse it.
+-    bool ok = ParseHostAndPort(host_and_port, &host, &port);
++    bool ok = ParseAuthHostAndPort(host_and_port, &host, &port);
+     if (!ok)
+       return ProxyServer();  // Invalid -- failed parsing <host>[":"<port>]
+ 
 diff --git a/net/http/BUILD.gn b/net/http/BUILD.gn
 index d00da41da1d8bbc40d8a85d582c1966ed22eaaf1..c308acaeabef9e90161aeef293fc1a2f743dbe07 100644
 --- a/net/http/BUILD.gn

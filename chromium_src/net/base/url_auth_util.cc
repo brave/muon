@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include "base/strings/string_piece.h"
 #include "net/base/url_auth_util.h"
 #include "url/third_party/mozilla/url_parse.h"
 #include "url/url_canon_ip.h"
@@ -13,32 +14,28 @@ namespace net {
 
 // Copypasta of ParseHostAndPort that extracts the username and
 // password instead of rejecting them.
-bool ParseAuthHostAndPort(std::string::const_iterator host_and_port_begin,
-                          std::string::const_iterator host_and_port_end,
+bool ParseAuthHostAndPort(base::StringPiece input,
                           std::string* up_host_ret,
                           int* port) {
-  if (host_and_port_begin >= host_and_port_end)
+  if (input.empty())
     return false;
 
-  // When using url, we use char*.
-  const char* auth_begin = &(*host_and_port_begin);
-  int auth_len = host_and_port_end - host_and_port_begin;
-
-  url::Component auth_component(0, auth_len);
+  url::Component auth_component(0, input.size());
   url::Component username_component;
   url::Component password_component;
   url::Component hostname_component;
   url::Component port_component;
 
-  url::ParseAuthority(auth_begin, auth_component, &username_component,
-      &password_component, &hostname_component, &port_component);
+  url::ParseAuthority(input.data(), auth_component, &username_component,
+                      &password_component, &hostname_component,
+                      &port_component);
 
   if (!hostname_component.is_nonempty())
     return false;  // Failed parsing.
 
   int parsed_port_number = -1;
   if (port_component.is_nonempty()) {
-    parsed_port_number = url::ParsePort(auth_begin, port_component);
+    parsed_port_number = url::ParsePort(input.data(), port_component);
 
     // If parsing failed, port_number will be either PORT_INVALID or
     // PORT_UNSPECIFIED, both of which are negative.
@@ -53,11 +50,10 @@ bool ParseAuthHostAndPort(std::string::const_iterator host_and_port_begin,
 
   // If the hostname starts with a bracket, it is either an IPv6 literal or
   // invalid. If it is an IPv6 literal then strip the brackets.
-  if (hostname_component.len > 0 &&
-      auth_begin[hostname_component.begin] == '[') {
-    if (auth_begin[hostname_component.end() - 1] == ']' &&
-        url::IPv6AddressToNumber(
-            auth_begin, hostname_component, tmp_ipv6_addr)) {
+  if (hostname_component.len > 0 && input[hostname_component.begin] == '[') {
+    if (input[hostname_component.end() - 1] == ']' &&
+        url::IPv6AddressToNumber(input.data(), hostname_component,
+                                 tmp_ipv6_addr)) {
       // Strip the brackets.
       hostname_component.begin++;
       hostname_component.len -= 2;
@@ -70,19 +66,19 @@ bool ParseAuthHostAndPort(std::string::const_iterator host_and_port_begin,
   std::string up_host;
   if (username_component.is_valid() || password_component.is_valid()) {
     if (username_component.is_valid()) {
-      std::string username(auth_begin + username_component.begin,
+      std::string username(input.data() + username_component.begin,
                            username_component.len);
       up_host += username;
     }
     if (password_component.is_valid()) {
-      std::string password(auth_begin + password_component.begin,
+      std::string password(input.data() + password_component.begin,
                            password_component.len);
       up_host += ":";
       up_host += password;
     }
     up_host += "@";
   }
-  std::string hostname(auth_begin + hostname_component.begin,
+  std::string hostname(input.data() + hostname_component.begin,
                        hostname_component.len);
   up_host += hostname;
 
