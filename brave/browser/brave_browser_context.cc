@@ -61,7 +61,7 @@
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
-#include "net/proxy_resolution/proxy_service.h"
+#include "net/proxy_resolution/proxy_resolution_service.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "net/url_request/url_request_job_factory_impl.h"

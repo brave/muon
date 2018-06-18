@@ -4,14 +4,14 @@
 
 module tor.mojom;
 
-import "mojo/common/file_path.mojom";
+import "mojo/public/mojom/base/file_path.mojom";
 
 const string kTorServiceName = "tor_launcher";
 
 interface TorLauncher {
-  Launch(mojo.common.mojom.FilePath tor_bin, string tor_host, string tor_port,
-         mojo.common.mojom.FilePath tor_data_dir,
-         mojo.common.mojom.FilePath tor_watch_dir)
+  Launch(mojo_base.mojom.FilePath tor_bin, string tor_host, string tor_port,
+         mojo_base.mojom.FilePath tor_data_dir,
+         mojo_base.mojom.FilePath tor_watch_dir)
     => (bool result);
 
   // TODO(darkdh): info of callback can be more granular

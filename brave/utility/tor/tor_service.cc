@@ -16,7 +16,7 @@ void OnTorLauncherRequest(
     service_manager::ServiceContextRefFactory* ref_factory,
     tor::mojom::TorLauncherRequest request) {
   mojo::MakeStrongBinding(
-      base::MakeUnique<brave::TorLauncherImpl>(ref_factory->CreateRef()),
+      std::make_unique<brave::TorLauncherImpl>(ref_factory->CreateRef()),
       std::move(request));
 }
 
@@ -28,7 +28,7 @@ TorService::~TorService() {}
 
 std::unique_ptr<service_manager::Service>
 TorService::CreateService() {
-  return base::MakeUnique<TorService>();
+  return std::make_unique<TorService>();
 }
 
 void TorService::OnStart() {
