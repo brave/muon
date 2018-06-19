@@ -281,9 +281,6 @@ source_set("browser") {
     "//chrome/browser/ui/pdf/adobe_reader_info_win.cc",
     "//chrome/browser/ui/pdf/adobe_reader_info_win.h",
 
-    "chrome/browser/ui/page_info/page_info_ui.cc",
-    "//chrome/browser/ui/page_info/page_info_ui.h",
-
     "chrome/browser/ui/profile_error_dialog.cc",
 
     "//chrome/browser/ui/web_contents_sizer.cc",
@@ -382,12 +379,8 @@ source_set("browser") {
       "//chrome/browser/ui/views/color_chooser_dialog.cc",
       "//chrome/browser/ui/views/color_chooser_dialog.h",
       "//chrome/browser/ui/views/color_chooser_win.cc",
-      "//chrome/browser/permissions/attestation_permission_request.cc",
-      "//chrome/browser/permissions/attestation_permission_request.h",
       "//chrome/browser/permissions/permission_request.cc",
       "//chrome/browser/permissions/permission_request.h",
-      "chrome/browser/permissions/permission_request_manager.cc",
-      "//chrome/browser/permissions/permission_request_manager.h",
       "//chrome/browser/printing/pdf_to_emf_converter.cc",
       "//chrome/browser/printing/pdf_to_emf_converter.h",
       "//chrome/browser/ui/views/certificate_viewer_win.cc",
@@ -924,6 +917,9 @@ source_set("downloads") {
     "//chrome/browser/background_fetch/background_fetch_delegate_impl.h",
     "//chrome/browser/background_fetch/background_fetch_download_client.cc",
     "//chrome/browser/background_fetch/background_fetch_download_client.h",
+    "chrome/browser/download/chrome_download_manager_delegate.cc",
+    "//chrome/browser/download/chrome_download_manager_delegate.h",
+    "chrome/browser/download/download_commands.cc",
     "//chrome/browser/download/download_commands.h",
     "chrome/browser/download/download_core_service.cc",
     "//chrome/browser/download/download_core_service.h",

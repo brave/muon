@@ -73,6 +73,8 @@ SkColor ThemeService::GetDefaultColor(int id, bool incognito) const {
 
 void ThemeService::ClearAllThemeData() {}
 
+void ThemeService::FixInconsistentPreferencesIfNeeded() {}
+
 void ThemeService::LoadThemePrefs() {}
 
 void ThemeService::NotifyThemeChanged() {}
