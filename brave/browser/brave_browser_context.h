@@ -152,6 +152,8 @@ class BraveBrowserContext : public Profile {
   net::ProxyConfigServiceTor::TorProxyMap* tor_proxy_map() {
     return &tor_proxy_map_; }
 
+  void RelaunchTor() const;
+
  private:
     typedef std::map<StoragePartitionDescriptor,
                      scoped_refptr<brightray::URLRequestContextGetter>,
