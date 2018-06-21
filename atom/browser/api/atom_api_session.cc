@@ -620,6 +620,12 @@ void Session::SetTorNewIdentity(const GURL& url,
   brave_browser_context->SetTorNewIdentity(url, callback);
 }
 
+void Session::RelaunchTor() const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  brave_browser_context->RelaunchTor();
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, content::BrowserContext* browser_context) {
@@ -680,6 +686,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("equal", &Session::Equal)
       .SetMethod("isOffTheRecord", &Session::IsOffTheRecord)
       .SetMethod("setTorNewIdentity", &Session::SetTorNewIdentity)
+      .SetMethod("relaunchTor", &Session::RelaunchTor)
       .SetProperty("partition", &Session::Partition)
       .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)

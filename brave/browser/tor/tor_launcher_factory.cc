@@ -55,30 +55,41 @@ TorLauncherFactory::~TorLauncherFactory() {}
 
 void TorLauncherFactory::LaunchTorProcess() {
   content::GetProcessLauncherTaskRunner()->PostTask(
-    FROM_HERE, base::Bind(&TorLauncherFactory::LaunchInLauncherThread,
+    FROM_HERE, base::Bind(&TorLauncherFactory::LaunchOnLauncherThread,
                           base::Unretained(this)));
 }
 
-void TorLauncherFactory::LaunchInLauncherThread() {
+void TorLauncherFactory::RelaunchTorProcess() {
+  content::GetProcessLauncherTaskRunner()->PostTask(
+    FROM_HERE, base::Bind(&TorLauncherFactory::RelaunchOnLauncherThread,
+                          base::Unretained(this)));
+}
+
+void TorLauncherFactory::LaunchOnLauncherThread() {
   base::FilePath user_data_dir;
-  base::FilePath tor_data_path;
-  base::FilePath tor_watch_path;
   PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   if (!user_data_dir.empty()) {
-    tor_data_path = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
+    tor_data_path_ = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
       .Append(FILE_PATH_LITERAL("data"));
-    base::CreateDirectory(tor_data_path);
-    tor_watch_path = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
+    base::CreateDirectory(tor_data_path_);
+    tor_watch_path_ = user_data_dir.Append(FILE_PATH_LITERAL("tor"))
       .Append(FILE_PATH_LITERAL("watch"));
-    base::CreateDirectory(tor_watch_path);
+    base::CreateDirectory(tor_watch_path_);
   }
-  tor_launcher_->Launch(base::FilePath(path_), host_, port_, tor_data_path,
-                        tor_watch_path,
+  tor_launcher_->Launch(base::FilePath(path_), host_, port_, tor_data_path_,
+                        tor_watch_path_,
                         base::Bind(&TorLauncherFactory::OnTorLaunched,
                                    base::Unretained(this)));
   tor_launcher_->SetCrashHandler(base::Bind(
                         &TorLauncherFactory::OnTorCrashed,
                         base::Unretained(this)));
+}
+
+void TorLauncherFactory::RelaunchOnLauncherThread() {
+  tor_launcher_->Relaunch(base::FilePath(path_), host_, port_, tor_data_path_,
+                        tor_watch_path_,
+                        base::Bind(&TorLauncherFactory::OnTorLaunched,
+                                   base::Unretained(this)));
 }
 
 void TorLauncherFactory::OnTorLauncherCrashed() {
