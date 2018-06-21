@@ -756,6 +756,10 @@ void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
     callback);
 }
 
+void BraveBrowserContext::RelaunchTor() const {
+  tor_launcher_factory_->RelaunchTorProcess();
+}
+
 scoped_refptr<base::SequencedTaskRunner>
 BraveBrowserContext::GetIOTaskRunner() {
   return io_task_runner_;

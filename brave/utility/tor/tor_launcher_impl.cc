@@ -99,7 +99,7 @@ TorLauncherImpl::TorLauncherImpl(
 
 TorLauncherImpl::~TorLauncherImpl() {
   if (tor_process_.IsValid()) {
-    tor_process_.Terminate(0, false);
+    tor_process_.Terminate(0, true);
 #if defined(OS_POSIX)
     TearDownPipeHack();
 #endif
@@ -188,6 +188,20 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
 
 void TorLauncherImpl::SetCrashHandler(SetCrashHandlerCallback callback) {
   crash_handler_callback_ = std::move(callback);
+}
+
+void TorLauncherImpl::Relaunch(const base::FilePath& tor_bin,
+                             const std::string& tor_host,
+                             const std::string& tor_port,
+                             const base::FilePath& tor_data_dir,
+                             const base::FilePath& tor_watch_dir,
+                             RelaunchCallback callback) {
+  if (tor_process_.IsValid())
+    tor_process_.Terminate(0, true);
+
+  tor_process_.WaitForExit(nullptr);
+  Launch(tor_bin, tor_host, tor_port, tor_data_dir, tor_watch_dir,
+         std::move(callback));
 }
 
 void TorLauncherImpl::MonitorChild() {

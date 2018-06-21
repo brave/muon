@@ -18,18 +18,25 @@ class TorLauncherFactory {
   ~TorLauncherFactory();
 
   void LaunchTorProcess();
+  void RelaunchTorProcess();
+
  private:
-  void LaunchInLauncherThread();
+  void LaunchOnLauncherThread();
+  void RelaunchOnLauncherThread();
 
   void OnTorLauncherCrashed();
   void OnTorCrashed(int64_t pid);
   void OnTorLaunched(bool result);
+
+
 
   tor::mojom::TorLauncherPtr tor_launcher_;
 
   base::FilePath::StringType path_;
   std::string host_;
   std::string port_;
+  base::FilePath tor_data_path_;
+  base::FilePath tor_watch_path_;
 };
 
 }  // namespace brave
