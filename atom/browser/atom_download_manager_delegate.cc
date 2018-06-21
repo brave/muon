@@ -217,6 +217,8 @@ void AtomDownloadManagerDelegate::CheckClientDownloadDone(
         }
         break;
       case safe_browsing::DownloadCheckResult::SAFE:
+        FALLTHROUGH;
+      case safe_browsing::DownloadCheckResult::WHITELISTED_BY_POLICY:
         if (DownloadItemModel(item).GetDangerLevel() ==
             DownloadFileType::DANGEROUS) {
           danger_type = download::DOWNLOAD_DANGER_TYPE_DANGEROUS_FILE;
