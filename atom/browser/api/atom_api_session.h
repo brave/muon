@@ -97,6 +97,8 @@ class Session: public mate::TrackableObject<Session>,
   void SetTorNewIdentity(const GURL& url,
                          const base::Closure& callback) const;
   void RelaunchTor() const;
+  void SetTorLauncherCallback(mate::Arguments* args);
+  int64_t GetTorPid() const;
 
  protected:
   Session(v8::Isolate* isolate, Profile* browser_context);

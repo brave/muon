@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "atom/browser/atom_browser_context.h"
+#include "brave/browser/tor/tor_launcher_factory.h"
 #include "brave/browser/net/proxy_resolution/proxy_config_service_tor.h"
 #include "content/public/browser/host_zoom_map.h"
 #include "chrome/browser/custom_handlers/protocol_handler_registry.h"
@@ -41,7 +42,6 @@ class PrefRegistrySyncable;
 namespace brave {
 
 class BravePermissionManager;
-class TorLauncherFactory;
 
 class BraveBrowserContext : public Profile {
  public:
@@ -145,6 +145,10 @@ class BraveBrowserContext : public Profile {
 
   bool IsIsolatedStorage() const { return isolated_storage_; }
 
+  bool IsTorBrowserContext() const {
+    return tor_launcher_factory_.get();
+  }
+
   void SetTorNewIdentity(const GURL& url, const base::Closure& callback);
 
   const std::string& tor_proxy() { return tor_proxy_; }
@@ -153,6 +157,11 @@ class BraveBrowserContext : public Profile {
     return &tor_proxy_map_; }
 
   void RelaunchTor() const;
+
+  void SetTorLauncherCallback(
+      const TorLauncherFactory::TorLauncherCallback& callback);
+
+  int64_t GetTorPid() const;
 
  private:
     typedef std::map<StoragePartitionDescriptor,
