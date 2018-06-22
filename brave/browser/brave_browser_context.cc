@@ -14,7 +14,6 @@
 #include "base/files/file_util.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
-#include "brave/browser/tor/tor_launcher_factory.h"
 #include "brave/browser/net/tor_proxy_network_delegate.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
@@ -757,7 +756,21 @@ void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
 }
 
 void BraveBrowserContext::RelaunchTor() const {
-  tor_launcher_factory_->RelaunchTorProcess();
+  if (tor_launcher_factory_.get())
+    tor_launcher_factory_->RelaunchTorProcess();
+}
+
+void BraveBrowserContext::SetTorLauncherCallback(
+    const TorLauncherFactory::TorLauncherCallback& callback) {
+  if (tor_launcher_factory_.get())
+    tor_launcher_factory_->SetLauncherCallback(callback);
+}
+
+int64_t BraveBrowserContext::GetTorPid() const {
+  if (tor_launcher_factory_.get())
+    return tor_launcher_factory_->GetTorPid();
+  else
+    return -1;
 }
 
 scoped_refptr<base::SequencedTaskRunner>

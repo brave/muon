@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "base/callback.h"
 #include "brave/common/tor/tor.mojom.h"
 
 namespace brave {
@@ -17,8 +18,18 @@ class TorLauncherFactory {
                       const std::string& proxy);
   ~TorLauncherFactory();
 
+  enum class TorProcessState {
+    LAUNCH_SUCCEEDED,
+    LAUNCH_FAILED,
+    CRASHED
+  };
+
+  using TorLauncherCallback = base::Callback<void(TorProcessState, int64_t)>;
+
   void LaunchTorProcess();
   void RelaunchTorProcess();
+  void SetLauncherCallback(const TorLauncherCallback& callback);
+  int64_t GetTorPid() const { return tor_pid_; }
 
  private:
   void LaunchOnLauncherThread();
@@ -26,11 +37,14 @@ class TorLauncherFactory {
 
   void OnTorLauncherCrashed();
   void OnTorCrashed(int64_t pid);
-  void OnTorLaunched(bool result);
+  void OnTorLaunched(bool result, int64_t pid);
 
 
 
   tor::mojom::TorLauncherPtr tor_launcher_;
+
+  TorLauncherCallback callback_;
+  int64_t tor_pid_;
 
   base::FilePath::StringType path_;
   std::string host_;
