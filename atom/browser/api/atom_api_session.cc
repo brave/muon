@@ -40,6 +40,7 @@
 #include "base/time/time.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
+#include "brave/browser/tor/tor_launcher_factory.h"
 #include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
@@ -174,6 +175,19 @@ struct Converter<net::ProxyConfig> {
       out->proxy_rules().bypass_rules.ParseFromString(proxy_bypass_rules);
     }
     return true;
+  }
+};
+
+template<>
+struct Converter<brave::TorLauncherFactory::TorProcessState> {
+  static v8::Local<v8::Value> ToV8(
+    v8::Isolate* isolate, brave::TorLauncherFactory::TorProcessState val) {
+  if (val == brave::TorLauncherFactory::TorProcessState::LAUNCH_SUCCEEDED)
+    return mate::StringToV8(isolate, "launch-succeeded");
+  else if (val == brave::TorLauncherFactory::TorProcessState::LAUNCH_FAILED)
+    return mate::StringToV8(isolate, "launch-failed");
+  else if (val == brave::TorLauncherFactory::TorProcessState::CRASHED)
+    return mate::StringToV8(isolate, "crashed");
   }
 };
 
@@ -615,15 +629,46 @@ void Session::SetTorNewIdentity(const GURL& url,
                                 const base::Closure& callback) const {
   brave::BraveBrowserContext* brave_browser_context =
    brave::BraveBrowserContext::FromBrowserContext(profile_);
-  if (!brave_browser_context->IsIsolatedStorage())
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
     return;
+  }
   brave_browser_context->SetTorNewIdentity(url, callback);
 }
 
 void Session::RelaunchTor() const {
   brave::BraveBrowserContext* brave_browser_context =
    brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
+    return;
+  }
   brave_browser_context->RelaunchTor();
+}
+
+int64_t Session::GetTorPid() const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
+    return -1;
+  }
+  return brave_browser_context->GetTorPid();
+}
+
+void Session::SetTorLauncherCallback(mate::Arguments* args) {
+  brave::TorLauncherFactory::TorLauncherCallback callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback(result, pid)` is a required field");
+    return;
+  }
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
+    return;
+  }
+  brave_browser_context->SetTorLauncherCallback(callback);
 }
 
 // static
@@ -687,6 +732,8 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("isOffTheRecord", &Session::IsOffTheRecord)
       .SetMethod("setTorNewIdentity", &Session::SetTorNewIdentity)
       .SetMethod("relaunchTor", &Session::RelaunchTor)
+      .SetMethod("setTorLauncherCallback", &Session::SetTorLauncherCallback)
+      .SetMethod("getTorPid", &Session::GetTorPid)
       .SetProperty("partition", &Session::Partition)
       .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)

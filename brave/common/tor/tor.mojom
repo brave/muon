@@ -12,7 +12,7 @@ interface TorLauncher {
   Launch(mojo_base.mojom.FilePath tor_bin, string tor_host, string tor_port,
          mojo_base.mojom.FilePath tor_data_dir,
          mojo_base.mojom.FilePath tor_watch_dir)
-    => (bool result);
+    => (bool result, int64 pid);
 
   // TODO(darkdh): info of callback can be more granular
   SetCrashHandler() => (int64 pid);
@@ -20,5 +20,5 @@ interface TorLauncher {
   Relaunch(mojo_base.mojom.FilePath tor_bin, string tor_host, string tor_port,
          mojo_base.mojom.FilePath tor_data_dir,
          mojo_base.mojom.FilePath tor_watch_dir)
-    => (bool result);
+    => (bool result, int64 pid);
 };

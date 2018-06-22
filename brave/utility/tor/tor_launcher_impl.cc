@@ -172,7 +172,7 @@ void TorLauncherImpl::Launch(const base::FilePath& tor_bin,
     result = false;
 
   if (callback)
-    std::move(callback).Run(result);
+    std::move(callback).Run(result, tor_process_.Pid());
 
   if (!child_monitor_thread_.get()) {
     child_monitor_thread_.reset(new base::Thread("child_monitor_thread"));

@@ -65,6 +65,11 @@ void TorLauncherFactory::RelaunchTorProcess() {
                           base::Unretained(this)));
 }
 
+void TorLauncherFactory::SetLauncherCallback(
+    const TorLauncherCallback& callback) {
+  callback_ = callback;
+}
+
 void TorLauncherFactory::LaunchOnLauncherThread() {
   base::FilePath user_data_dir;
   PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
@@ -98,11 +103,21 @@ void TorLauncherFactory::OnTorLauncherCrashed() {
 
 void TorLauncherFactory::OnTorCrashed(int64_t pid) {
   LOG(ERROR) << "Tor Process(" << pid << ") Crashed";
+  if (callback_)
+    callback_.Run(TorProcessState::CRASHED, pid);
 }
 
-void TorLauncherFactory::OnTorLaunched(bool result) {
-  if (!result)
-    LOG(ERROR) << "Tor Launching Failed";
+void TorLauncherFactory::OnTorLaunched(bool result, int64_t pid) {
+  tor_pid_ = pid;
+  if (!result) {
+    LOG(ERROR) << "Tor Launching Failed(" << pid <<")";
+  }
+  if (callback_) {
+    if (result)
+      callback_.Run(TorProcessState::LAUNCH_SUCCEEDED, pid);
+    else
+      callback_.Run(TorProcessState::LAUNCH_FAILED, pid);
+  }
 }
 
 }  // namespace brave
