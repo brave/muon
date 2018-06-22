@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/time/time.h"
 #include "base/values.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
@@ -25,6 +26,8 @@ namespace net {
 
 using content::BrowserThread;
 const int kTorPasswordLength = 16;
+// Default tor circuit life time is 10 minutes
+constexpr base::TimeDelta kTenMins = base::TimeDelta::FromMinutes(10);
 
 ProxyConfigServiceTor::ProxyConfigServiceTor(
   const std::string& tor_proxy, const std::string& username,
@@ -57,10 +60,21 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(
         std::string password;
         if (found == tor_proxy_map->end()) {
           password = GenerateNewPassword();
-          tor_proxy_map->insert(std::pair<std::string, std::string>(username,
-                                                                    password));
+          tor_proxy_map->emplace(
+            username,
+            std::pair<std::string, base::Time>(password, base::Time::Now()));
         } else {
-          password = found->second;
+          base::Time entry_ts = found->second.second;
+          base::TimeDelta duration = base::Time::Now() - entry_ts;
+          if (duration > kTenMins) {
+            tor_proxy_map->erase(username);
+            password = GenerateNewPassword();
+            tor_proxy_map->emplace(
+              username,
+              std::pair<std::string, base::Time>(password, base::Time::Now()));
+          } else {
+            password = found->second.first;
+          }
         }
         proxy_url = std::string(scheme_ + "://" + username + ":" + password +
                                 "@" + host_ + ":" + port_);

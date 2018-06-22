@@ -61,7 +61,8 @@ void TorProxyNetworkDelegate::ConfigTorProxyInteral(net::URLRequest* request) {
   auto proxy_service = request->context()->proxy_resolution_service();
   GURL url(content::SiteInstance::GetSiteForURL(browser_context_,
                                                      request->url()));
-  if (!url.SchemeIs(extensions::kExtensionScheme) && !net::IsLocalhost(url))
+  if (!url.SchemeIs(extensions::kExtensionScheme) && !net::IsLocalhost(url) &&
+      !url.host().empty())
     BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
                             base::Bind(&net::ProxyConfigServiceTor::TorSetProxy,
                                        proxy_service,
