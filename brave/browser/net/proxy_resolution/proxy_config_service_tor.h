@@ -7,6 +7,7 @@
 
 #include <string>
 #include <map>
+#include <utility>
 
 #include "base/compiler_specific.h"
 #include "net/base/net_errors.h"
@@ -15,6 +16,10 @@
 #include "net/proxy_resolution/proxy_config_service.h"
 #include "vendor/brightray/browser/url_request_context_getter.h"
 
+namespace base {
+class Time;
+}
+
 namespace net {
 
 const char kSocksProxy[] = "socks5";
@@ -22,8 +27,8 @@ const char kSocksProxy[] = "socks5";
 // Implementation of ProxyConfigService that returns a tor specific result.
 class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
  public:
-  // Used to cache <username, password> of proxies
-  typedef std::map<std::string, std::string> TorProxyMap;
+  // Used to cache <username, <password, timestamp>> of proxies
+  typedef std::map<std::string, std::pair<std::string, base::Time>> TorProxyMap;
 
   explicit ProxyConfigServiceTor(const std::string& tor_proxy,
                                  const std::string& username,
