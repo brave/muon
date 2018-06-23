@@ -56,25 +56,24 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(
       }
       std::string proxy_url;
       if (tor_proxy_map || username.empty()) {
-        auto found = tor_proxy_map->find(username);
+        // Clear expired entries.
+        const base::Time now = base::Time::Now();
+        const base::Time deadline = now - kTenMins;
+        const std::pair<base::Time, std::string>* entry;
+        while (!tor_proxy_map->queue.empty() &&
+               (entry = &tor_proxy_map->queue.top(), entry->first < deadline)) {
+          tor_proxy_map->map.erase(entry->second);
+          tor_proxy_map->queue.pop();
+        }
+        // Look up an entry here.
+        auto found = tor_proxy_map->map.find(username);
         std::string password;
-        if (found == tor_proxy_map->end()) {
+        if (found == tor_proxy_map->map.end()) {
           password = GenerateNewPassword();
-          tor_proxy_map->emplace(
-            username,
-            std::pair<std::string, base::Time>(password, base::Time::Now()));
+          tor_proxy_map->map.emplace(username, password);
+          tor_proxy_map->queue.emplace(now, username);
         } else {
-          base::Time entry_ts = found->second.second;
-          base::TimeDelta duration = base::Time::Now() - entry_ts;
-          if (duration > kTenMins) {
-            tor_proxy_map->erase(username);
-            password = GenerateNewPassword();
-            tor_proxy_map->emplace(
-              username,
-              std::pair<std::string, base::Time>(password, base::Time::Now()));
-          } else {
-            password = found->second.first;
-          }
+          password = found->second;
         }
         proxy_url = std::string(scheme_ + "://" + username + ":" + password +
                                 "@" + host_ + ":" + port_);
@@ -96,7 +95,7 @@ void ProxyConfigServiceTor::TorSetProxy(
   if (!service)
     return;
   if (new_password && tor_proxy_map)
-    tor_proxy_map->erase(site_url);
+    tor_proxy_map->map.erase(site_url);
   std::unique_ptr<net::ProxyConfigServiceTor>
     config(new ProxyConfigServiceTor(tor_proxy, site_url, tor_proxy_map));
   service->ResetConfigService(std::move(config));
