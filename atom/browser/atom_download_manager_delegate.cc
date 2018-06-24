@@ -315,9 +315,15 @@ void AtomDownloadManagerDelegate:: OnDownloadItemSelected(
   if (download_item)
     download_item->SetSavePath(paths[0]);
 
+  // TODO(darkdh): remove this hack when we get DownloadTargetDeterminer right
+  // when Safe Browsing is disabled.
+  download::DownloadDangerType danger_type = target_info->danger_type;
+  if (!profile->GetPrefs()->GetBoolean(prefs::kSafeBrowsingEnabled)) {
+    danger_type = download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS;
+  }
   callback.Run(paths[0],
                target_info->target_disposition,
-               target_info->danger_type, paths[0],
+               danger_type, paths[0],
                target_info->result);
 }
 
