@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "base/compiler_specific.h"
+#include "base/timer/timer.h"
 #include "net/base/net_errors.h"
 #include "net/base/net_export.h"
 #include "net/proxy_resolution/proxy_config.h"
@@ -55,11 +56,16 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
   // Generate a new 128 bit random tag
   std::string GenerateNewPassword();
 
+  void ClearExpiredEntries();
+
   ProxyConfig config_;
 
   std::string scheme_;
   std::string host_;
   std::string port_;
+
+  TorProxyMap* tor_proxy_map_;
+  base::OneShotTimer timer_;
 };
 
 }  // namespace net

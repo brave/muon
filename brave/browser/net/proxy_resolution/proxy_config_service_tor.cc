@@ -31,7 +31,8 @@ constexpr base::TimeDelta kTenMins = base::TimeDelta::FromMinutes(10);
 
 ProxyConfigServiceTor::ProxyConfigServiceTor(
   const std::string& tor_proxy, const std::string& username,
-  TorProxyMap* tor_proxy_map) {
+  TorProxyMap* tor_proxy_map)
+  : tor_proxy_map_(tor_proxy_map) {
     if (tor_proxy.length()) {
       url::Parsed url;
       url::ParseStandardURL(
@@ -56,22 +57,20 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(
       }
       std::string proxy_url;
       if (tor_proxy_map || username.empty()) {
-        // Clear expired entries.
-        const base::Time now = base::Time::Now();
-        const base::Time deadline = now - kTenMins;
-        const std::pair<base::Time, std::string>* entry;
-        while (!tor_proxy_map->queue.empty() &&
-               (entry = &tor_proxy_map->queue.top(), entry->first < deadline)) {
-          tor_proxy_map->map.erase(entry->second);
-          tor_proxy_map->queue.pop();
-        }
         // Look up an entry here.
         auto found = tor_proxy_map->map.find(username);
         std::string password;
         if (found == tor_proxy_map->map.end()) {
           password = GenerateNewPassword();
           tor_proxy_map->map.emplace(username, password);
-          tor_proxy_map->queue.emplace(now, username);
+          tor_proxy_map->queue.emplace(base::Time::Now(), username);
+          // Start the timer if it hasn't started already.
+          timer_.Start(FROM_HERE, kTenMins,
+                       base::Bind(&ProxyConfigServiceTor::ClearExpiredEntries,
+                                  base::Unretained(this)));
+          // Reset the timer to wait the full ten minutes if it was
+          // already running.
+          timer_.Reset();
         } else {
           password = found->second;
         }
@@ -114,6 +113,16 @@ std::string ProxyConfigServiceTor::GenerateNewPassword() {
   std::vector<uint8_t> password(kTorPasswordLength);
   crypto::RandBytes(password.data(), password.size());
   return base::HexEncode(password.data(), password.size());
+}
+
+void ProxyConfigServiceTor::ClearExpiredEntries() {
+  const base::Time deadline = base::Time::Now() - kTenMins;
+  const std::pair<base::Time, std::string>* entry;
+  while (!tor_proxy_map_->queue.empty() &&
+         (entry = &tor_proxy_map_->queue.top(), entry->first < deadline)) {
+    tor_proxy_map_->map.erase(entry->second);
+    tor_proxy_map_->queue.pop();
+  }
 }
 
 }  // namespace net
