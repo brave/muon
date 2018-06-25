@@ -57,22 +57,25 @@ ProxyConfigServiceTor::ProxyConfigServiceTor(
       }
       std::string proxy_url;
       if (tor_proxy_map || username.empty()) {
+        // Clear any expired entries in case one is expired.
+        ClearExpiredEntries();
         // Look up an entry here.
         auto found = tor_proxy_map->map.find(username);
         std::string password;
         if (found == tor_proxy_map->map.end()) {
+          const base::Time now = base::Time::Now();
           password = GenerateNewPassword();
-          tor_proxy_map->map.emplace(username, password);
-          tor_proxy_map->queue.emplace(base::Time::Now(), username);
-          // Start the timer if it hasn't started already.
-          timer_.Start(FROM_HERE, kTenMins,
-                       base::Bind(&ProxyConfigServiceTor::ClearExpiredEntries,
-                                  base::Unretained(this)));
-          // Reset the timer to wait the full ten minutes if it was
-          // already running.
-          timer_.Reset();
+          tor_proxy_map->map.emplace(username, std::make_pair(password, now));
+          tor_proxy_map->queue.emplace(now, username);
+          // Stop the timer if it was already running -- no need to
+          // run it at all for the next ten minutes.
+          timer_.Stop();
+          // Restart the timer.
+          timer_.Start(FROM_HERE, kTenMins, this,
+                       &ProxyConfigServiceTor::ClearExpiredEntries);
+          std::cerr << "schedule timer at " << base::Time::Now() << std::endl;
         } else {
-          password = found->second;
+          password = found->second.first;
         }
         proxy_url = std::string(scheme_ + "://" + username + ":" + password +
                                 "@" + host_ + ":" + port_);
@@ -116,11 +119,22 @@ std::string ProxyConfigServiceTor::GenerateNewPassword() {
 }
 
 void ProxyConfigServiceTor::ClearExpiredEntries() {
+  std::cerr << "clear expired entries at " << base::Time::Now() << std::endl;
   const base::Time deadline = base::Time::Now() - kTenMins;
   const std::pair<base::Time, std::string>* entry;
   while (!tor_proxy_map_->queue.empty() &&
          (entry = &tor_proxy_map_->queue.top(), entry->first < deadline)) {
-    tor_proxy_map_->map.erase(entry->second);
+    const std::string& username = entry->second;
+    auto found = tor_proxy_map_->map.find(username);
+    if (found != tor_proxy_map_->map.end()) {
+      // If the expiration date is the same as we had queued, then
+      // delete it.  Otherwise, we assume there is a new identity that
+      // should last the full ten minutes.
+      const base::Time expiration_date = found->second.second;
+      if (expiration_date == entry->first) {
+        tor_proxy_map_->map.erase(username);
+      }
+    }
     tor_proxy_map_->queue.pop();
   }
 }

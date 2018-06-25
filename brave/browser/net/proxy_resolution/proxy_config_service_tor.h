@@ -30,7 +30,7 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
  public:
   // Used to cache <username, password> of proxies
   struct TorProxyMap {
-    std::map<std::string, std::string> map;
+    std::map<std::string, std::pair<std::string, base::Time> > map;
     std::priority_queue<std::pair<base::Time, std::string> > queue;
   };
 
