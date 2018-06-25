@@ -28,6 +28,8 @@
 #include "components/guest_view/browser/guest_view_event.h"
 #include "components/guest_view/browser/guest_view_manager.h"
 #include "components/guest_view/common/guest_view_constants.h"
+#include "content/browser/web_contents/web_contents_impl.h"
+#include "content/browser/web_contents/web_contents_view_guest.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/guest_host.h"
 #include "content/public/browser/navigation_entry.h"
@@ -171,7 +173,7 @@ void TabViewGuest::Load() {
   auto tab_helper = extensions::TabHelper::FromWebContents(web_contents());
   if (tab_helper && !tab_helper->IsDiscarded()) {
     if (!web_contents()->HasOpener())
-      api_web_contents_->ResumeLoadingCreatedWebContents();
+      web_contents()->ResumeLoadingCreatedWebContents();
 
     web_contents()->WasHidden();
     web_contents()->WasShown();
@@ -322,6 +324,24 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
         if (new_window_info.changed || !web_contents()->HasOpener()) {
           NavigateGuest(
               new_window_info.url.spec(), false /* force_navigation */);
+        } else if (web_contents()->HasOpener()) {
+          // if the renderer process creates the RenderView, ensure that
+          // a view exists for the widget before the provisional load commit
+          // or the RenderWidgetHost won't get the new content_source_id
+          // see RenderFrameHostImpl::DidCommitProvisionalLoad
+          if (web_contents()->GetMainFrame()->IsRenderFrameLive()) {
+            auto* web_contents_impl =
+                static_cast<content::WebContentsImpl*>(web_contents());
+            content::WebContentsViewGuest* web_contents_view =
+                static_cast<content::WebContentsViewGuest*>(
+                    web_contents_impl->GetView());
+            if (!web_contents()->GetRenderViewHost()->GetWidget()->GetView()) {
+              web_contents_view->CreateViewForWidget(
+                  web_contents()->GetRenderViewHost()->GetWidget(), true);
+            }
+          }
+          // now it's safe to resume loading
+          web_contents()->ResumeLoadingCreatedWebContents();
         }
 
         // Once a new guest is attached to the DOM of the embedder page the
