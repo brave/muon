@@ -7,9 +7,11 @@
 
 #include <string>
 #include <map>
+#include <queue>
 #include <utility>
 
 #include "base/compiler_specific.h"
+#include "base/timer/timer.h"
 #include "net/base/net_errors.h"
 #include "net/base/net_export.h"
 #include "net/proxy_resolution/proxy_config.h"
@@ -28,9 +30,21 @@ const char kSocksProxy[] = "socks5";
 class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
  public:
   // Used to cache <username, password> of proxies
-  struct TorProxyMap {
-    std::map<std::string, std::string> map;
-    std::priority_queue<std::pair<base::Time, std::string> > queue;
+  class TorProxyMap {
+   public:
+    TorProxyMap();
+    ~TorProxyMap();
+    std::string Get(const std::string&);
+    void Erase(const std::string&);
+   private:
+    // Generate a new 128 bit random tag
+    static std::string GenerateNewPassword();
+    // Clear expired entries in the queue from the map.
+    void ClearExpiredEntries();
+    std::map<std::string, std::pair<std::string, base::Time> > map_;
+    std::priority_queue<std::pair<base::Time, std::string> > queue_;
+    base::OneShotTimer timer_;
+    DISALLOW_COPY_AND_ASSIGN(TorProxyMap);
   };
 
   explicit ProxyConfigServiceTor(const std::string& tor_proxy,
@@ -52,9 +66,6 @@ class NET_EXPORT ProxyConfigServiceTor : public ProxyConfigService {
     ProxyConfigWithAnnotation* config) override;
 
  private:
-  // Generate a new 128 bit random tag
-  std::string GenerateNewPassword();
-
   ProxyConfig config_;
 
   std::string scheme_;
