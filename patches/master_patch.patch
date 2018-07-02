@@ -2426,6 +2426,51 @@ index b46d047161d41aae70b8485a2b95a38bbb8c3e4d..3366a0caf800f86898e8a444fad314a5
  
    return true;
  }
+diff --git a/third_party/blink/renderer/core/loader/frame_fetch_context.cc b/third_party/blink/renderer/core/loader/frame_fetch_context.cc
+index b1025b2413b06a65dc2b2c42e7af1a40b0da8434..c5dc54cb48284a17880a6c13bec7ed18f0c36bc0 100644
+--- a/third_party/blink/renderer/core/loader/frame_fetch_context.cc
++++ b/third_party/blink/renderer/core/loader/frame_fetch_context.cc
+@@ -887,7 +887,8 @@ void FrameFetchContext::ModifyRequestForCSP(ResourceRequest& resource_request) {
+ void FrameFetchContext::AddClientHintsIfNecessary(
+     const ClientHintsPreferences& hints_preferences,
+     const FetchParameters::ResourceWidth& resource_width,
+-    ResourceRequest& request) {
++    ResourceRequest& request,
++    Resource::Type type) {
+   WebEnabledClientHints enabled_hints;
+ 
+   bool is_1p_origin = false;
+@@ -900,6 +901,7 @@ void FrameFetchContext::AddClientHintsIfNecessary(
+ 
+     // Check if |url| is allowed to run JavaScript. If not, client hints are not
+     // attached to the requests that initiate on the render side.
++    if (type == Resource::kScript)
+     if (!AllowScriptFromSourceWithoutNotifying(request.Url())) {
+       return;
+     }
+@@ -1002,7 +1004,7 @@ void FrameFetchContext::PopulateResourceRequest(
+     const FetchParameters::ResourceWidth& resource_width,
+     ResourceRequest& request) {
+   ModifyRequestForCSP(request);
+-  AddClientHintsIfNecessary(hints_preferences, resource_width, request);
++  AddClientHintsIfNecessary(hints_preferences, resource_width, request, type);
+   AddCSPHeaderIfNecessary(type, request);
+ }
+ 
+diff --git a/third_party/blink/renderer/core/loader/frame_fetch_context.h b/third_party/blink/renderer/core/loader/frame_fetch_context.h
+index 5d115f0cc12f124d57df088b6b1add05e47e7b68..af49abf95e2268fdcc49cc60d988772b0922ea82 100644
+--- a/third_party/blink/renderer/core/loader/frame_fetch_context.h
++++ b/third_party/blink/renderer/core/loader/frame_fetch_context.h
+@@ -150,7 +150,8 @@ class CORE_EXPORT FrameFetchContext final : public BaseFetchContext {
+   void ModifyRequestForCSP(ResourceRequest&);
+   void AddClientHintsIfNecessary(const ClientHintsPreferences&,
+                                  const FetchParameters::ResourceWidth&,
+-                                 ResourceRequest&);
++                                 ResourceRequest&,
++                                 Resource::Type);
+ 
+   MHTMLArchive* Archive() const override;
+ 
 diff --git a/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.cc b/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.cc
 index a05468a6fd0cefa3f9ad6ab478427db7a64fe06d..0d057af72cc40aba676e97921d71cd57396f7a85 100644
 --- a/third_party/blink/renderer/platform/bindings/v8_per_isolate_data.cc
