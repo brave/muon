@@ -1,5 +1,5 @@
 diff --git a/crypto/cipher_extra/cipher_extra.c b/crypto/cipher_extra/cipher_extra.c
-index 2b88fb6c10644b6932b8ebb76a4e53132d49fad6..0ceb2c5aecc48d293f0203bf72fc99ce7ae5d2f2 100644
+index 1b23ad32f8cff2a00512ba58d24b47b628e7920c..0e9e4edc4490838c2722eb91b608704240d31289 100644
 --- a/crypto/cipher_extra/cipher_extra.c
 +++ b/crypto/cipher_extra/cipher_extra.c
 @@ -83,6 +83,8 @@ const EVP_CIPHER *EVP_get_cipherbynid(int nid) {
@@ -165,10 +165,10 @@ index afeb2dea4e0464082fa72fd1404f9321eb656dec..2c3c842cb4a21e937993132f7a7cfbae
  #define LN_ripemd160WithRSA "ripemd160WithRSA"
  #define NID_ripemd160WithRSA 119
 diff --git a/include/openssl/ssl.h b/include/openssl/ssl.h
-index 2558732c5d8ec7b873dd2a82ca869bcfad1a4f8c..2fe9b19e5c4738ac0c00d3c651d65ede78b9f717 100644
+index f693030a8a7c4bf79dd791e1abd0e94f8e97a292..721a00de9aebddc8b9b90665300fae2e60428fa9 100644
 --- a/include/openssl/ssl.h
 +++ b/include/openssl/ssl.h
-@@ -4290,6 +4290,15 @@ OPENSSL_EXPORT int SSL_CTX_set_tlsext_status_cb(SSL_CTX *ctx,
+@@ -4338,6 +4338,15 @@ OPENSSL_EXPORT int SSL_CTX_set_tlsext_status_cb(SSL_CTX *ctx,
  // |SSL_CTX_set_tlsext_status_cb|'s callback and returns one.
  OPENSSL_EXPORT int SSL_CTX_set_tlsext_status_arg(SSL_CTX *ctx, void *arg);
  
@@ -185,10 +185,10 @@ index 2558732c5d8ec7b873dd2a82ca869bcfad1a4f8c..2fe9b19e5c4738ac0c00d3c651d65ede
  // Nodejs compatibility section (hidden).
  //
 diff --git a/ssl/internal.h b/ssl/internal.h
-index 412c1fe71286b7df0ec66912f7dfd0945c623f09..e860499831ba91ae80ea6ea308fde12eb2eb1562 100644
+index e3f0984cd09aa7aed5025db5a6eddc2de8a41b28..a7b7f8dc0eb4b3e223ad1d58f08d4653eeb17c13 100644
 --- a/ssl/internal.h
 +++ b/ssl/internal.h
-@@ -2080,6 +2080,8 @@ struct SSLContext {
+@@ -2122,6 +2122,8 @@ struct SSLContext {
    void (*remove_session_cb)(SSL_CTX *ctx, SSL_SESSION *sess);
    SSL_SESSION *(*get_session_cb)(SSL *ssl, const uint8_t *data, int len,
                                   int *copy);
@@ -198,10 +198,10 @@ index 412c1fe71286b7df0ec66912f7dfd0945c623f09..e860499831ba91ae80ea6ea308fde12e
    CRYPTO_refcount_t references;
  
 diff --git a/ssl/ssl_session.cc b/ssl/ssl_session.cc
-index 5e8ffe0b5608c94b0cf09c441b2392c3334619d6..ddc176b703b51df3c3795c4c6c3d3b239c22778c 100644
+index 379cea793502d8b33544b7c7fe02bc4b9b32cc51..4d0913a247740587ebc450949320faffd5699b0c 100644
 --- a/ssl/ssl_session.cc
 +++ b/ssl/ssl_session.cc
-@@ -686,10 +686,17 @@ static enum ssl_hs_wait_t ssl_lookup_session(
+@@ -672,10 +672,18 @@ static enum ssl_hs_wait_t ssl_lookup_session(
    }
  
    // Fall back to the external cache, if it exists.
@@ -209,20 +209,21 @@ index 5e8ffe0b5608c94b0cf09c441b2392c3334619d6..ddc176b703b51df3c3795c4c6c3d3b23
 +  if (!session && (ssl->session_ctx->get_session_cb != nullptr ||
 +                   ssl->session_ctx->get_session_cb_legacy != nullptr)) {
      int copy = 1;
--    session.reset(ssl->session_ctx->get_session_cb(ssl, session_id,
--                                                   session_id_len, &copy));
+-    session.reset(ssl->session_ctx->get_session_cb(ssl, session_id.data(),
+-                                                   session_id.size(), &copy));
 +    if (ssl->session_ctx->get_session_cb != nullptr) {
-+      session.reset(ssl->session_ctx->get_session_cb(ssl, session_id,
-+                                                     session_id_len, &copy));
++      session.reset(ssl->session_ctx->get_session_cb(ssl, session_id.data(),
++                                                     session_id.size(), &copy));
 +    } else {
 +      session.reset(ssl->session_ctx->get_session_cb_legacy(
-+          ssl, const_cast<uint8_t *>(session_id), session_id_len, &copy));
++          ssl, const_cast<uint8_t *>(session_id.data()), session_id.size(),
++          &copy));
 +    }
 +
      if (!session) {
        return ssl_hs_ok;
      }
-@@ -1265,6 +1272,12 @@ void SSL_CTX_sess_set_get_cb(SSL_CTX *ctx,
+@@ -1249,6 +1257,12 @@ void SSL_CTX_sess_set_get_cb(SSL_CTX *ctx,
    ctx->get_session_cb = cb;
  }
  
