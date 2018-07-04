@@ -445,7 +445,7 @@ source_set("browser") {
     deps += [
       "//base",
       "//net:extras",
-      "//net:net_browser_services",
+      "//net/dns:mojo_service",
       "//skia",
       "//ui/base",
       "//ui/events",
