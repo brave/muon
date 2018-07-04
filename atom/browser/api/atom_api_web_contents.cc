@@ -1041,6 +1041,8 @@ void WebContents::OnEnterFullscreenModeForTab(content::WebContents* source,
                                               bool allowed) {
   if (!allowed)
     return;
+  bool prevent_default = Emit("will-enter-html-full-screen");
+  CommonWebContentsDelegate::SetHtmlApiFullscreenable(!prevent_default);
   CommonWebContentsDelegate::EnterFullscreenModeForTab(source, origin);
   Emit("enter-html-full-screen");
 }
