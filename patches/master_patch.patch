@@ -1403,19 +1403,6 @@ index 34c5307b0fa70deea728cf36c4dfbf93dc32fc66..8b0ab6f2632e6ef8e8cca6d4eaa8f95d
    DCHECK(from_rfh);
    FrameTreeNode* node =
        static_cast<RenderFrameHostImpl*>(from_rfh)->frame_tree_node();
-diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
-index 91bf248a67a5a82eab9c5942be54465599bf397a..b2dbd9a97dce6c402f0d3f87b452613d74d2135c 100644
---- a/content/browser/frame_host/render_frame_message_filter.cc
-+++ b/content/browser/frame_host/render_frame_message_filter.cc
-@@ -620,7 +620,7 @@ void RenderFrameMessageFilter::GetPluginsCallback(
-   PluginServiceFilter* filter = PluginServiceImpl::GetInstance()->GetFilter();
-   std::vector<WebPluginInfo> plugins;
- 
--  int child_process_id = -1;
-+  int child_process_id = render_process_id_;
-   int routing_id = MSG_ROUTING_NONE;
-   // In this loop, copy the WebPluginInfo (and do not use a reference) because
-   // the filter might mutate it.
 diff --git a/content/browser/frame_host/render_widget_host_view_guest.cc b/content/browser/frame_host/render_widget_host_view_guest.cc
 index a0bc38e7f059d5066ef0147ac9b83cbc958d7209..de59d17171b79266bc25c47ea581989a625ae3c1 100644
 --- a/content/browser/frame_host/render_widget_host_view_guest.cc
