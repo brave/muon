@@ -17,6 +17,7 @@
 #include "brightray/browser/network_delegate.h"
 #include "content/public/browser/resource_request_info.h"
 #include "extensions/common/url_pattern.h"
+#include "net/base/completion_once_callback.h"
 #include "net/base/net_errors.h"
 #include "net/http/http_request_headers.h"
 #include "net/http/http_response_headers.h"
@@ -73,16 +74,16 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
  protected:
   // net::NetworkDelegate:
   int OnBeforeURLRequest(net::URLRequest* request,
-                         const net::CompletionCallback& callback,
+                         const net::CompletionOnceCallback callback,
                          GURL* new_url) override;
   int OnBeforeStartTransaction(net::URLRequest* request,
-                               const net::CompletionCallback& callback,
+                               net::CompletionOnceCallback callback,
                                net::HttpRequestHeaders* headers) override;
   void OnStartTransaction(net::URLRequest* request,
                           const net::HttpRequestHeaders& headers) override;
   int OnHeadersReceived(
       net::URLRequest* request,
-      const net::CompletionCallback& callback,
+      net::CompletionOnceCallback callback,
       const net::HttpResponseHeaders* original_response_headers,
       scoped_refptr<net::HttpResponseHeaders>* override_response_headers,
       GURL* allowed_unsafe_redirect_url) override;
@@ -104,7 +105,7 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
   template<typename Out, typename... Args>
   int HandleResponseEvent(ResponseEvent type,
                           net::URLRequest* request,
-                          const net::CompletionCallback& callback,
+                          net::CompletionOnceCallback callback,
                           Out out,
                           Args... args);
 
@@ -119,7 +120,7 @@ class AtomNetworkDelegate : public brightray::NetworkDelegate {
 
   std::map<SimpleEvent, SimpleListenerInfo> simple_listeners_;
   std::map<ResponseEvent, ResponseListenerInfo> response_listeners_;
-  std::map<uint64_t, net::CompletionCallback> callbacks_;
+  std::map<uint64_t, net::CompletionOnceCallback> callbacks_;
 
   base::Lock lock_;
 

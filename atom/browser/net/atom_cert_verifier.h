@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "net/base/completion_once_callback.h"
 #include "net/cert/cert_verifier.h"
 
 namespace atom {
@@ -18,18 +19,18 @@ class AtomCertVerifier : public net::CertVerifier {
   virtual ~AtomCertVerifier();
 
   using VerifyProc =
-      base::Callback<void(const std::string& hostname,
-                          scoped_refptr<net::X509Certificate>,
-                          const base::Callback<void(bool)>&)>;
+      base::OnceCallback<void(const std::string& hostname,
+                              scoped_refptr<net::X509Certificate>,
+                              const base::OnceCallback<void(bool)>&)>;
 
-  void SetVerifyProc(const VerifyProc& proc);
+  void SetVerifyProc(VerifyProc proc);
 
  protected:
   // net::CertVerifier:
   int Verify(const RequestParams& params,
              net::CRLSet* crl_set,
              net::CertVerifyResult* verify_result,
-             const net::CompletionCallback& callback,
+             net::CompletionOnceCallback callback,
              std::unique_ptr<Request>* out_req,
              const net::NetLogWithSource& net_log) override;
   bool SupportsOCSPStapling() override;

@@ -36,7 +36,7 @@ NetworkDelegate::~NetworkDelegate() {
 
 int NetworkDelegate::OnBeforeURLRequest(
     net::URLRequest* request,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     GURL* new_url) {
   for (const auto& domain : ignore_connections_limit_domains_) {
     if (request->url().DomainIs(domain)) {
@@ -52,7 +52,7 @@ int NetworkDelegate::OnBeforeURLRequest(
 
 int NetworkDelegate::OnBeforeStartTransaction(
     net::URLRequest* request,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     net::HttpRequestHeaders* headers) {
   return net::OK;
 }
@@ -71,7 +71,7 @@ void NetworkDelegate::OnBeforeSendHeaders(
 
 int NetworkDelegate::OnHeadersReceived(
     net::URLRequest* request,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     const net::HttpResponseHeaders* original_response_headers,
     scoped_refptr<net::HttpResponseHeaders>* override_response_headers,
     GURL* allowed_unsafe_redirect_url) {
@@ -106,7 +106,7 @@ void NetworkDelegate::OnPACScriptError(int line_number,
 NetworkDelegate::AuthRequiredResponse NetworkDelegate::OnAuthRequired(
     net::URLRequest* request,
     const net::AuthChallengeInfo& auth_info,
-    const AuthCallback& callback,
+    AuthCallback callback,
     net::AuthCredentials* credentials) {
   return AUTH_REQUIRED_RESPONSE_NO_ACTION;
 }
