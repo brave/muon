@@ -32,6 +32,7 @@
 #include "content/public/common/url_constants.h"
 #include "net/ftp/ftp_network_layer.h"
 #include "net/url_request/data_protocol_handler.h"
+#include "net/url_request/file_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_intercepting_job_factory.h"
@@ -89,9 +90,15 @@ AtomBrowserContext::CreateURLRequestJobFactory(
       url::kDataScheme, base::WrapUnique(new net::DataProtocolHandler));
   job_factory->SetProtocolHandler(
       url::kFileScheme,
+      std::make_unique<net::FileProtocolHandler>(
+          base::CreateTaskRunnerWithTraits(
+              {base::MayBlock(), base::TaskPriority::USER_VISIBLE,
+               base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN})));
+  job_factory->SetProtocolHandler(
+      "brave",
       base::WrapUnique(
           new asar::AsarProtocolHandler(base::CreateTaskRunnerWithTraits(
-              {base::MayBlock(), base::TaskPriority::USER_BLOCKING,
+              {base::MayBlock(), base::TaskPriority::USER_VISIBLE,
                base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}))));
   job_factory->SetProtocolHandler(
       url::kHttpScheme,
