@@ -11,6 +11,7 @@
 #include "atom/browser/extensions/atom_extension_system.h"
 #include "atom/browser/extensions/atom_extension_system_factory.h"
 #include "atom/browser/net/atom_network_delegate.h"
+#include "net/base/completion_once_callback.h"
 
 class ChromeExtensionsNetworkDelegate;
 class Profile;
@@ -32,10 +33,10 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
 
  protected:
   int OnBeforeURLRequest(net::URLRequest* request,
-                         const net::CompletionCallback& callback,
+                         net::CompletionOnceCallback callback,
                          GURL* new_url) override;
   int OnBeforeStartTransaction(net::URLRequest* request,
-                               const net::CompletionCallback& callback,
+                               net::CompletionOnceCallback callback,
                                net::HttpRequestHeaders* headers) override;
   void OnBeforeRedirect(net::URLRequest* request,
                         const GURL& new_location) override;
@@ -57,7 +58,7 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
     GURL* allowed_unsafe_redirect_url);
   int OnHeadersReceived(
       net::URLRequest* request,
-      const net::CompletionCallback& callback,
+      net::CompletionOnceCallback callback,
       const net::HttpResponseHeaders* original_response_headers,
       scoped_refptr<net::HttpResponseHeaders>* override_response_headers,
       GURL* allowed_unsafe_redirect_url) override;
@@ -70,14 +71,14 @@ class AtomExtensionsNetworkDelegate : public atom::AtomNetworkDelegate {
   net::NetworkDelegate::AuthRequiredResponse OnAuthRequired(
       net::URLRequest* request,
       const net::AuthChallengeInfo& auth_info,
-      const AuthCallback& callback,
+      AuthCallback callback,
       net::AuthCredentials* credentials) override;
   void RunCallback(base::Callback<int(void)> internal_callback,
                     const uint64_t request_id,
                     int previous_result);
 
   Profile* profile_;
-  std::map<uint64_t, net::CompletionCallback> callbacks_;
+  std::map<uint64_t, net::CompletionOnceCallback> callbacks_;
   std::unique_ptr<ChromeExtensionsNetworkDelegate> extensions_delegate_;
   extensions::EventRouterForwarder* extension_event_router_forwarder_;
 

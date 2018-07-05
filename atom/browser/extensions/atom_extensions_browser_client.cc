@@ -178,7 +178,7 @@ class URLRequestResourceBundleJob : public net::URLRequestSimpleJob {
                       std::string* charset,
                       scoped_refptr<base::RefCountedMemory> data,
                       std::string* read_mime_type,
-                      const net::CompletionCallback& callback,
+                      net::CompletionOnceCallback callback,
                       bool read_result) {
     *out_mime_type = *read_mime_type;
     if (base::StartsWith(*read_mime_type, "text/",
@@ -190,7 +190,7 @@ class URLRequestResourceBundleJob : public net::URLRequestSimpleJob {
       *charset = "utf-8";
     }
     int result = read_result ? net::OK : net::ERR_INVALID_URL;
-    callback.Run(result);
+    std::move(callback).Run(result);
   }
 
   // We need the filename of the resource to determine the mime type.

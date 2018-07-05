@@ -7,6 +7,7 @@
 
 #include "atom/browser/extensions/atom_extensions_network_delegate.h"
 #include "brave/browser/brave_browser_context.h"
+#include "net/base/completion_once_callback.h"
 
 namespace extensions {
 class EventRouterForwarder;
@@ -27,10 +28,10 @@ class TorProxyNetworkDelegate :
  private:
   // NetworkDelegate implementation.
   int OnBeforeURLRequest(net::URLRequest* request,
-                         const net::CompletionCallback& callback,
+                         net::CompletionOnceCallback callback,
                          GURL* new_url) override;
   int OnBeforeStartTransaction(net::URLRequest* request,
-                               const net::CompletionCallback& callback,
+                               net::CompletionOnceCallback callback,
                                net::HttpRequestHeaders* headers) override;
   void OnBeforeRedirect(net::URLRequest* request,
                         const GURL& new_location) override;
