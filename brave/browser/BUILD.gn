@@ -121,6 +121,7 @@ source_set("tab_manager") {
   ]
 
   deps = [
+    "//chrome/browser/resource_coordinator:mojo_bindings",
     "//content/public/common",
     "//electron/chromium_src:tab_manager"
   ]
