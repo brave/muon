@@ -18,7 +18,7 @@ void NotificationDelegate::NotificationDestroyed() {
 
 void NotificationDelegate::NotificationClick() {
   content::NotificationEventDispatcher::GetInstance()
-      ->DispatchNonPersistentClickEvent(notification_id_);
+      ->DispatchNonPersistentClickEvent(notification_id_, base::DoNothing());
 }
 
 void NotificationDelegate::NotificationClosed() {
