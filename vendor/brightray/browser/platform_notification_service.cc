@@ -45,21 +45,6 @@ PlatformNotificationService::PlatformNotificationService(
 
 PlatformNotificationService::~PlatformNotificationService() {}
 
-blink::mojom::PermissionStatus PlatformNotificationService::CheckPermissionOnUIThread(
-    content::BrowserContext* browser_context,
-    const GURL& origin,
-    int render_process_id) {
-  render_process_id_ = render_process_id;
-  return blink::mojom::PermissionStatus::GRANTED;
-}
-
-blink::mojom::PermissionStatus PlatformNotificationService::CheckPermissionOnIOThread(
-    content::ResourceContext* resource_context,
-    const GURL& origin,
-    int render_process_id) {
-  return blink::mojom::PermissionStatus::GRANTED;
-}
-
 void PlatformNotificationService::DisplayNotification(
     content::BrowserContext* browser_context,
     const std::string& notification_id,
