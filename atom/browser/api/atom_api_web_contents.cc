@@ -1559,7 +1559,7 @@ void WebContents::DestroyWebContents() {
 
 void WebContents::OnSafeBrowsingHit(
   const security_interstitials::UnsafeResource& resource) {
-  Emit("safebrowsing-hit");
+  Emit("safebrowsing-hit", resource.original_url.spec());
 }
 
 void WebContents::SetOwnerWindow(NativeWindow* new_owner_window) {
