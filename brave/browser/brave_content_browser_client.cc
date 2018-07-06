@@ -19,6 +19,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
+#include "brave/browser/renderer_host/brave_render_message_filter.h"
 #include "brave/grit/brave_resources.h"
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/cache_stats_recorder.h"
@@ -449,6 +450,7 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   int id = host->GetID();
   Profile* profile = Profile::FromBrowserContext(host->GetBrowserContext());
 
+  host->AddFilter(new BraveRenderMessageFilter(id, profile));
   host->AddFilter(new printing::PrintingMessageFilter(id, profile));
   host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
 

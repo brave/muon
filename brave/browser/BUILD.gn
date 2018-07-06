@@ -35,6 +35,8 @@ source_set("browser") {
     "password_manager/brave_password_manager_client.cc",
     "renderer_preferences_helper.h",
     "renderer_preferences_helper.cc",
+    "renderer_host/brave_render_message_filter.h",
+    "renderer_host/brave_render_message_filter.cc",
   ]
 
   public_deps = [
