@@ -1240,6 +1240,35 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
    OSStatus error = keychain_.FindGenericPassword(
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
+diff --git a/components/safe_browsing/db/BUILD.gn b/components/safe_browsing/db/BUILD.gn
+index 487b155c53532d5afde195be53c8cd3a34ad6c33..3dc0c461c0a4cda2230917d25b1db0f81d6d1a98 100644
+--- a/components/safe_browsing/db/BUILD.gn
++++ b/components/safe_browsing/db/BUILD.gn
+@@ -203,6 +203,7 @@ static_library("v4_local_database_manager") {
+ }
+ 
+ source_set("v4_protocol_manager_util") {
++  configs += [ "//electron/build/safebrowsing" ]
+   sources = [
+     "v4_protocol_manager_util.cc",
+     "v4_protocol_manager_util.h",
+diff --git a/components/safe_browsing/db/v4_protocol_manager_util.cc b/components/safe_browsing/db/v4_protocol_manager_util.cc
+index 453b54a32ca042727f8129a50ba2cbf9b37b7e1a..5511537f38cbfc80eece762ef18ee854061617fe 100644
+--- a/components/safe_browsing/db/v4_protocol_manager_util.cc
++++ b/components/safe_browsing/db/v4_protocol_manager_util.cc
+@@ -25,7 +25,11 @@ namespace safe_browsing {
+ // Can be overriden by tests.
+ const char* g_sbv4_url_prefix_for_testing = nullptr;
+ 
+-const char kSbV4UrlPrefix[] = "https://safebrowsing.googleapis.com/v4";
++#if defined(SAFEBROWSING_ENDPOINT)
++  const char kSbV4UrlPrefix[] = SAFEBROWSING_ENDPOINT;
++#else
++  const char kSbV4UrlPrefix[] = "https://safebrowsing.googleapis.com/v4";
++#endif
+ 
+ const base::FilePath::CharType kStoreSuffix[] = FILE_PATH_LITERAL(".store");
+ 
 diff --git a/components/ssl_config/ssl_config_service_manager_pref.cc b/components/ssl_config/ssl_config_service_manager_pref.cc
 index bd0ba311df28f87bf464175e5b2eb3e926c3fa83..e6c06ede9c5e77eb0769fc308388a1175de406f4 100644
 --- a/components/ssl_config/ssl_config_service_manager_pref.cc
@@ -1924,6 +1953,30 @@ index 5c57352617aaaf5b79195fe5e499d35636f98ba9..6ed27bb45ceb781d6a217d54244e417f
        "chrome://chrome-signin/*",
        "chrome://media-router/*",
        "chrome://mobilesetup/*",
+diff --git a/extensions/common/extension_urls.cc b/extensions/common/extension_urls.cc
+index 769fbc01794c2719d8a0d529d308274ecf15fd5b..c6ced6e9f4e5496276fb69b1d6af91a633b4ed77 100644
+--- a/extensions/common/extension_urls.cc
++++ b/extensions/common/extension_urls.cc
+@@ -103,11 +103,19 @@ bool IsBlacklistUpdateUrl(const GURL& url) {
+ }
+ 
+ bool IsSafeBrowsingUrl(const url::Origin& origin, base::StringPiece path) {
++#if defined(SAFEBROWSING_ENDPOINT)
++  return origin.DomainIs("sb-ssl.google.com") ||
++         origin.DomainIs(SAFEBROWSING_ENDPOINT) ||
++         (origin.DomainIs("safebrowsing.google.com") &&
++          base::StartsWith(path, "/safebrowsing",
++                           base::CompareCase::SENSITIVE));
++#else
+   return origin.DomainIs("sb-ssl.google.com") ||
+          origin.DomainIs("safebrowsing.googleapis.com") ||
+          (origin.DomainIs("safebrowsing.google.com") &&
+           base::StartsWith(path, "/safebrowsing",
+                            base::CompareCase::SENSITIVE));
++#endif
+ }
+ 
+ }  // namespace extension_urls
 diff --git a/extensions/renderer/module_system.cc b/extensions/renderer/module_system.cc
 index a83c07e09f7217bf0a02a13edba1cdc1cf6bd973..9df5031df2f275fd3e898f1a3a6a41ce7fb7cc3e 100644
 --- a/extensions/renderer/module_system.cc
