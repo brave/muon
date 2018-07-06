@@ -20,6 +20,7 @@
 #include "brave/browser/brave_browser_context.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
+#include "brave/browser/renderer_host/brave_render_message_filter.h"
 #include "brave/common/tor/tor.mojom.h"
 #include "brave/grit/brave_resources.h"
 #include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
@@ -472,6 +473,7 @@ void BraveContentBrowserClient::RenderProcessWillLaunch(
   int id = host->GetID();
   Profile* profile = Profile::FromBrowserContext(host->GetBrowserContext());
 
+  host->AddFilter(new BraveRenderMessageFilter(id, profile));
   host->AddFilter(new printing::PrintingMessageFilter(id, profile));
   host->AddFilter(new TtsMessageFilter(host->GetBrowserContext()));
 
