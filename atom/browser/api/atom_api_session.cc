@@ -70,6 +70,8 @@
 #include "extensions/browser/extensions_browser_client.h"
 #endif
 
+#include "atom/browser/api/event.h"
+
 using content::BrowserThread;
 using content::StoragePartition;
 
@@ -175,6 +177,49 @@ struct Converter<net::ProxyConfig> {
     }
     return true;
   }
+};
+
+template<>
+struct Converter<history::QueryResults*> {
+
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   history::QueryResults *val) {
+
+    v8::Local<v8::Array> entries(MATE_ARRAY_NEW(isolate, static_cast<int>(val->size())));
+
+    size_t i = 0;
+
+    double updated_time = 0;
+
+    for(auto x = val->begin(); x != val->end(); x++, i++)
+    {
+      mate::Dictionary map = mate::Dictionary::CreateEmpty(isolate);
+      map.SetHidden("simple", true);
+
+      double js_time = x->last_visit().ToJsTime();
+
+      map.Set("location", x->url().spec());
+      map.Set("lastAccessedTime", js_time);
+      map.Set("title", x->title());
+      map.Set("count", x->visit_count());
+
+      map.Set("key", x->url().spec() + "|0");
+      map.Set("themeColor", "rgb(250, 250, 250)");
+      map.Set("partitionNumber", 0);
+      map.Set("favicon", "");
+
+      entries->Set(static_cast<int>(i), Converter<mate::Dictionary>::ToV8(isolate, map));
+
+      updated_time = MAX(updated_time, js_time);
+    }
+
+    mate::Dictionary payload = mate::Dictionary::CreateEmpty(isolate);
+    payload.Set("entries", entries);
+    payload.Set("updatedStamp", updated_time);
+
+    return payload.GetHandle();
+  }
+
 };
 
 }  // namespace mate
@@ -348,6 +393,32 @@ void OnClearStorageDataDone(const base::Closure& callback) {
 
 void OnClearHistory() {}
 
+void OnGetHistory() {}
+
+void OnGetHistoryB(history::QueryResults* qr) {
+
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+
+  if (!isolate) {
+    LOG(ERROR) << "null isolate";
+    return;
+  }
+
+  node::Environment* env = node::Environment::GetCurrent(isolate);
+  if (!env) {
+    LOG(ERROR) << "null env";
+    return;
+  }
+
+  auto event = v8::Local<v8::Object>::Cast(mate::Event::Create(isolate).ToV8());
+
+  mate::EmitEvent(isolate,
+                  env->process_object(),
+                  "arrived-history-results",
+                  event,
+                  qr);
+}
+
 }  // namespace
 
 Session::Session(v8::Isolate* isolate, Profile* profile)
@@ -456,6 +527,36 @@ void Session::ClearHistory(mate::Arguments* args) {
                                         base::Time::Max(),
                                         callback,
                                         &task_tracker_);
+}
+
+void Session::GetHistory(mate::Arguments* args) {
+
+  base::Closure callback;
+  if (!args->GetNext(&callback))
+    callback = base::Bind(&OnGetHistory);
+
+  history::HistoryService* history_service =
+      HistoryServiceFactory::GetForProfile(
+          profile_,
+          ServiceAccessType::EXPLICIT_ACCESS);
+
+  base::string16 search_text;
+
+  // 2017.10.30 klawler
+  // We want to turn this from 500 to 0 (hence infinite)
+  // but in order to do that we may need to upgrade the JS
+  // for about:history to handle the load
+  // (typical result size >> 10,000)
+  history::QueryOptions options;
+  options.SetRecentDayRange(90);
+  options.max_count = 500; // 0 -> everything
+
+  const history::HistoryService::QueryHistoryCallback& hcallback = base::Bind(&OnGetHistoryB);
+
+  base::CancelableTaskTracker::TaskId task_id = history_service->QueryHistory(search_text,
+                                                                              options,
+                                                                              hcallback,
+                                                                              &task_tracker_);
 }
 
 void Session::FlushStorageData() {
@@ -648,6 +749,7 @@ void Session::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("clearStorageData", &Session::ClearStorageData)
       .SetMethod("clearHSTSData", &Session::ClearHSTSData)
       .SetMethod("clearHistory", &Session::ClearHistory)
+      .SetMethod("getHistory", &Session::GetHistory)
       .SetMethod("flushStorageData", &Session::FlushStorageData)
       .SetMethod("setProxy", &Session::SetProxy)
       .SetMethod("setDownloadPath", &Session::SetDownloadPath)
