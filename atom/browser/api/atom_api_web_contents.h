@@ -5,6 +5,7 @@
 #ifndef ATOM_BROWSER_API_ATOM_API_WEB_CONTENTS_H_
 #define ATOM_BROWSER_API_ATOM_API_WEB_CONTENTS_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -438,7 +439,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void ContentsZoomChange(bool zoom_in) override;
   void RendererUnresponsive(
       content::WebContents* source,
-      content::RenderWidgetHost* render_widget_host) override;
+      content::RenderWidgetHost* render_widget_host,
+      base::RepeatingClosure hang_monitor_restarter) override;
   void RendererResponsive(
       content::WebContents* source,
       content::RenderWidgetHost* render_widget_host) override;
