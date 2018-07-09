@@ -26,9 +26,9 @@ bool HasAnyAvailableDevice() {
 
 MediaStreamDevicesController::MediaStreamDevicesController(
     const content::MediaStreamRequest& request,
-    const content::MediaResponseCallback& callback)
+    content::MediaResponseCallback callback)
     : request_(request),
-      callback_(callback),
+      callback_(std::move(callback)),
       // For MEDIA_OPEN_DEVICE requests (Pepper) we always request both webcam
       // and microphone to avoid popping two infobars.
       microphone_requested_(
@@ -41,9 +41,9 @@ MediaStreamDevicesController::MediaStreamDevicesController(
 
 MediaStreamDevicesController::~MediaStreamDevicesController() {
   if (!callback_.is_null()) {
-    callback_.Run(content::MediaStreamDevices(),
-                  content::MEDIA_DEVICE_INVALID_STATE,
-                  std::unique_ptr<content::MediaStreamUI>());
+    std::move(callback_).Run(content::MediaStreamDevices(),
+                             content::MEDIA_DEVICE_INVALID_STATE,
+                             std::unique_ptr<content::MediaStreamUI>());
   }
 }
 
@@ -140,17 +140,13 @@ void MediaStreamDevicesController::Accept() {
     }
   }
 
-  content::MediaResponseCallback cb = callback_;
-  callback_.Reset();
-  cb.Run(devices, content::MEDIA_DEVICE_OK, std::unique_ptr<content::MediaStreamUI>());
+  std::move(callback_).Run(devices, content::MEDIA_DEVICE_OK,
+                           std::unique_ptr<content::MediaStreamUI>());
 }
 
 void MediaStreamDevicesController::Deny(content::MediaStreamRequestResult result) {
-  content::MediaResponseCallback cb = callback_;
-  callback_.Reset();
-  cb.Run(content::MediaStreamDevices(),
-         result,
-         std::unique_ptr<content::MediaStreamUI>());
+  std::move(callback_).Run(content::MediaStreamDevices(), result,
+                           std::unique_ptr<content::MediaStreamUI>());
 }
 
 void MediaStreamDevicesController::HandleUserMediaRequest() {
@@ -185,12 +181,10 @@ void MediaStreamDevicesController::HandleUserMediaRequest() {
                                    screen_id.ToString(), "Screen"));
   }
 
-  content::MediaResponseCallback cb = callback_;
-  callback_.Reset();
-  cb.Run(devices,
-         devices.empty() ? content::MEDIA_DEVICE_INVALID_STATE :
-                           content::MEDIA_DEVICE_OK,
-         std::unique_ptr<content::MediaStreamUI>());
+  std::move(callback_).Run(devices,
+                           devices.empty() ? content::MEDIA_DEVICE_INVALID_STATE
+                                           : content::MEDIA_DEVICE_OK,
+                           std::unique_ptr<content::MediaStreamUI>());
 }
 
 }  // namespace brightray
