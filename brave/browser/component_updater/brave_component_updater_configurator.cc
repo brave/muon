@@ -15,6 +15,7 @@
 #include "base/version.h"
 #if defined(OS_WIN)
 #include "base/win/win_util.h"
+#include "chrome/install_static/install_util.h"
 #endif
 #include "chrome/browser/browser_process.h"
 #include "components/component_updater/component_updater_command_line_config_policy.h"
@@ -62,6 +63,7 @@ class BraveConfigurator : public update_client::Configurator {
   update_client::ActivityDataService* GetActivityDataService() const override;
   bool IsPerUserInstall() const override;
   std::vector<uint8_t> GetRunActionKeyHash() const override;
+  std::string GetAppGuid() const override;
 
  private:
   friend class base::RefCountedThreadSafe<BraveConfigurator>;
@@ -197,6 +199,15 @@ bool BraveConfigurator::IsPerUserInstall() const {
 std::vector<uint8_t> BraveConfigurator::GetRunActionKeyHash() const {
   return configurator_impl_.GetRunActionKeyHash();
 }
+
+std::string BraveConfigurator::GetAppGuid() const {
+#if defined(OS_WIN)
+  return install_static::UTF16ToUTF8(install_static::GetAppGuid());
+#else
+  return configurator_impl_.GetAppGuid();
+#endif
+}
+
 
 }  // namespace
 
