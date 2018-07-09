@@ -63,7 +63,7 @@ void AtomExtensionHostDelegate::CreateTab(
 void AtomExtensionHostDelegate::ProcessMediaAccessRequest(
     content::WebContents* web_contents,
     const content::MediaStreamRequest& request,
-    const content::MediaResponseCallback& callback,
+    content::MediaResponseCallback callback,
     const Extension* extension) {
 }
 

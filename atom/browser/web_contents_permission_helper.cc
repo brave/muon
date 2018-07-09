@@ -5,6 +5,7 @@
 #include "atom/browser/web_contents_permission_helper.h"
 
 #include <string>
+#include <utility>
 
 #include "brave/browser/brave_permission_manager.h"
 #include "brightray/browser/media/media_stream_devices_controller.h"
@@ -20,10 +21,11 @@ namespace {
 
 void MediaAccessAllowed(
     const content::MediaStreamRequest& request,
-    const content::MediaResponseCallback& callback,
+    content::MediaResponseCallback callback,
     bool allowed) {
   // TODO(bridiver) - IOThread >>
-  brightray::MediaStreamDevicesController controller(request, callback);
+  brightray::MediaStreamDevicesController controller(request,
+                                                     std::move(callback));
   if (allowed)
     controller.TakeAction();
   else
@@ -81,23 +83,25 @@ void WebContentsPermissionHelper::RequestFullscreenPermission(
 
 void WebContentsPermissionHelper::RequestMediaAccessPermission(
     const content::MediaStreamRequest& request,
-    const content::MediaResponseCallback& response_callback) {
-  auto callback = base::Bind(&MediaAccessAllowed, request, response_callback);
+    content::MediaResponseCallback response_callback) {
+  auto callback = base::BindOnce(&MediaAccessAllowed, request,
+                                 std::move(response_callback));
   // The permission type doesn't matter here, AUDIO_CAPTURE/VIDEO_CAPTURE
   // are presented as same type in content_converter.h.
   auto rfh = content::RenderFrameHost::FromID(request.render_process_id,
       request.render_frame_id);
   if (!rfh)
-    callback.Run(false);
+    std::move(callback).Run(false);
 
-  RequestPermission(content::PermissionType::AUDIO_CAPTURE, callback, rfh,
-                    request.security_origin);
+  // TODO(hferreiro)
+  // RequestPermission(content::PermissionType::AUDIO_CAPTURE,
+  //                   std::move(callback), rfh, request.security_origin);
 }
 
 void WebContentsPermissionHelper::RequestWebNotificationPermission(
     const base::Callback<void(bool)>& callback) {
   RequestPermission(content::PermissionType::NOTIFICATIONS, callback,
-    web_contents_->GetMainFrame());
+                    web_contents_->GetMainFrame());
 }
 
 void WebContentsPermissionHelper::RequestPointerLockPermission(

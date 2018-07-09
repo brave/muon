@@ -334,8 +334,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
       const mate::Dictionary& options);
 
   void OnTabCreated(const mate::Dictionary& options,
-      base::Callback<void(content::WebContents*)> callback,
-      content::WebContents* tab);
+                    base::OnceCallback<void(content::WebContents*)> callback,
+                    content::WebContents* tab);
 
   void AuthorizePlugin(mate::Arguments* args);
 
@@ -461,7 +461,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void RequestMediaAccessPermission(
       content::WebContents* web_contents,
       const content::MediaStreamRequest& request,
-      const content::MediaResponseCallback& callback) override;
+      content::MediaResponseCallback callback) override;
   void RequestToLockMouse(
       content::WebContents* web_contents,
       bool user_gesture,

@@ -67,7 +67,7 @@ class TabHelper : public content::WebContentsObserver,
   static void CreateTab(content::WebContents* owner,
                 content::BrowserContext* browser_context,
                 const base::DictionaryValue& create_params,
-                const GuestViewManager::WebContentsCreatedCallback& callback);
+                GuestViewManager::WebContentsCreatedCallback callback);
   static content::WebContents* CreateTab(content::WebContents* owner,
                             content::WebContents::CreateParams create_params);
   static void DestroyTab(content::WebContents* tab);

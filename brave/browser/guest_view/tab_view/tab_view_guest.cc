@@ -267,7 +267,7 @@ void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
 
 void TabViewGuest::CreateWebContents(
     const base::DictionaryValue& params,
-    const WebContentsCreatedCallback& callback) {
+    WebContentsCreatedCallback callback) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
@@ -311,7 +311,7 @@ void TabViewGuest::CreateWebContents(
       atom::api::WebContents::CreateWithParams(isolate, options, create_params);
 
   content::WebContents* web_contents = new_api_web_contents->web_contents();
-  callback.Run(web_contents);
+  std::move(callback).Run(web_contents);
 }
 
 void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
