@@ -997,8 +997,8 @@ void WebContents::BeforeUnloadFired(content::WebContents* tab,
     *proceed_to_fire_unload = true;
 }
 
-void WebContents::MoveContents(content::WebContents* source,
-                               const gfx::Rect& pos) {
+void WebContents::SetContentsBounds(content::WebContents* source,
+                                    const gfx::Rect& pos) {
   Emit("move", pos);
 }
 
@@ -1026,10 +1026,6 @@ void WebContents::UpdateTargetURL(content::WebContents* source,
 void WebContents::LoadProgressChanged(content::WebContents* source,
                                    double progress) {
   Emit("load-progress-changed", progress);
-}
-
-bool WebContents::IsPopupOrPanel(const content::WebContents* source) const {
-  return type_ == BROWSER_WINDOW;
 }
 
 void WebContents::HandleKeyboardEvent(
