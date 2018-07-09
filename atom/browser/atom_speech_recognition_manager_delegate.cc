@@ -4,7 +4,6 @@
 
 #include "atom/browser/atom_speech_recognition_manager_delegate.h"
 
-#include <string>
 #include <utility>
 
 #include "base/callback.h"
@@ -40,11 +39,11 @@ void AtomSpeechRecognitionManagerDelegate::OnRecognitionEnd(int session_id) {
 }
 
 void AtomSpeechRecognitionManagerDelegate::OnRecognitionResults(
-    int session_id, const content::SpeechRecognitionResults& result) {
-}
+    int session_id,
+    const std::vector<blink::mojom::SpeechRecognitionResultPtr>& result) {}
 
 void AtomSpeechRecognitionManagerDelegate::OnRecognitionError(
-    int session_id, const content::SpeechRecognitionError& error) {
+    int session_id, const blink::mojom::SpeechRecognitionError& error) {
 }
 
 void AtomSpeechRecognitionManagerDelegate::OnAudioLevelsChange(
