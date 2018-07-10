@@ -342,7 +342,7 @@ class NativeWindowRelay :
   explicit NativeWindowRelay(base::WeakPtr<NativeWindow> window)
     : key(UserDataKey()), window(window) {}
 
-  void* key;
+  const void* key;
   base::WeakPtr<NativeWindow> window;
 
  private:
