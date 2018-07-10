@@ -17,6 +17,8 @@
 
 class HostContentSettingsMap;
 
+namespace extensions {
+
 class ExtensionService {
  public:
   virtual bool IsExtensionEnabled(const std::string& extension_id) const = 0;
@@ -41,8 +43,6 @@ class ExtensionService {
 
   virtual bool is_ready() = 0;
 };
-
-namespace extensions {
 
 class AtomExtensionSystemSharedFactory;
 class AppSorting;
