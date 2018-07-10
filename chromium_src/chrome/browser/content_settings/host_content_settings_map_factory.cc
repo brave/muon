@@ -63,7 +63,7 @@ scoped_refptr<RefcountedKeyedService>
       profile->GetPrefs(), profile->IsOffTheRecord(), false, false));
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  ExtensionService *ext_service =
+  extensions::ExtensionService *ext_service =
       extensions::ExtensionSystem::Get(profile)->extension_service();
   // This may be null in testing or when the extenion_service hasn't been
   // initialized, in which case it will be registered then.
