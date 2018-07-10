@@ -55,7 +55,6 @@
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/common/service_manager_connection.h"
-#include "services/service_manager/public/cpp/connector.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/escape.h"
@@ -64,6 +63,8 @@
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "net/url_request/url_request_job_factory_impl.h"
+#include "services/network/public/mojom/network_context.mojom.h"
+#include "services/service_manager/public/cpp/connector.h"
 #include "vendor/brightray/browser/browser_client.h"
 #include "vendor/brightray/browser/net_log.h"
 
@@ -265,6 +266,12 @@ BraveBrowserContext::~BraveBrowserContext() {
     }
   }
 
+  // Clears any data the network stack contains that may be related to the
+  // OTR session. Must be done before DestroyBrowserContextServices, since
+  // the NetworkContext is managed by one such service.
+  GetDefaultStoragePartition(this)->GetNetworkContext()->ClearHostCache(
+      nullptr, network::mojom::NetworkContext::ClearHostCacheCallback());
+
   BrowserContextDependencyManager::GetInstance()->
       DestroyBrowserContextServices(this);
 
@@ -276,8 +283,6 @@ BraveBrowserContext::~BraveBrowserContext() {
             base::Unretained(original_context_), base::Unretained(this)));
 #endif
   }
-
-  g_browser_process->io_thread()->ChangedToOnTheRecord();
 
   ShutdownStoragePartitions();
 }

@@ -220,14 +220,6 @@ void IOThread::CleanUp() {
     net_log_->ShutDownBeforeTaskScheduler();
 }
 
-void IOThread::ChangedToOnTheRecord() {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  BrowserThread::PostTask(
-      BrowserThread::IO, FROM_HERE,
-      base::BindOnce(&IOThread::ChangedToOnTheRecordOnIOThread,
-                     base::Unretained(this)));
-}
-
 net::URLRequestContextGetter* IOThread::system_url_request_context_getter() {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
   if (!system_url_request_context_getter_.get()) {
@@ -237,26 +229,9 @@ net::URLRequestContextGetter* IOThread::system_url_request_context_getter() {
   return system_url_request_context_getter_.get();
 }
 
-void IOThread::ClearHostCache(
-    const base::Callback<bool(const std::string&)>& host_filter) {
-  DCHECK_CURRENTLY_ON(BrowserThread::IO);
-
-  globals_->system_request_context->host_resolver()
-      ->GetHostCache()
-      ->ClearForHosts(host_filter);
-}
-
 void IOThread::DisableQuic() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
   globals_->quic_disabled = true;
-}
-
-void IOThread::ChangedToOnTheRecordOnIOThread() {
-  DCHECK_CURRENTLY_ON(BrowserThread::IO);
-
-  // Clear the host cache to avoid showing entries from the OTR session
-  // in about:net-internals.
-  ClearHostCache(base::Callback<bool(const std::string&)>());
 }
 
 // static
@@ -363,8 +338,6 @@ void IOThread::ConstructSystemRequestContext() {
   builder->SetHttpAuthHandlerFactory(
       CreateDefaultAuthHandlerFactory(host_resolver.get()));
 
-  builder->set_host_resolver(std::move(host_resolver));
-
   std::unique_ptr<net::CertVerifier> cert_verifier;
   cert_verifier = net::CertVerifier::CreateDefault();
 
@@ -384,12 +357,15 @@ void IOThread::ConstructSystemRequestContext() {
             std::make_unique<net::NetworkQualityEstimatorParams>(
                 std::map<std::string, std::string>()),
             net_log_);
+    globals_->deprecated_host_resolver = std::move(host_resolver);
     globals_->system_request_context_owner = std::move(builder)->Create(
         std::move(network_context_params_).get(), !is_quic_allowed_on_init_,
-        net_log_, globals_->deprecated_network_quality_estimator.get());
+        net_log_, globals_->deprecated_host_resolver.get(),
+        globals_->deprecated_network_quality_estimator.get());
     globals_->system_request_context =
         globals_->system_request_context_owner.url_request_context.get();
   } else {
+    content::GetNetworkServiceImpl()->SetHostResolver(std::move(host_resolver));
     globals_->system_network_context =
         content::GetNetworkServiceImpl()->CreateNetworkContextWithBuilder(
             std::move(network_context_request_),
