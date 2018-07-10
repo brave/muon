@@ -1234,6 +1234,7 @@ source_set("tab_manager") {
 
   deps = [
     ":lifetime",
+    "//chrome/browser/resource_coordinator:site_characteristics_proto",
     "//chrome/browser/resource_coordinator:tab_metrics_event_proto",
     "//chrome/browser/resource_coordinator/tab_ranker",
     "//components/feature_engagement:buildflags",
