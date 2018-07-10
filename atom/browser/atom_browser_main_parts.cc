@@ -373,7 +373,6 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
       base::Bind(&AtomBrowserMainParts::IdleHandler,
                  base::Unretained(this)));
 
-  js_env_->OnMessageLoopCreated();
   node_bindings_->PrepareMessageLoop();
   node_bindings_->RunMessageLoop();
 
@@ -415,8 +414,6 @@ void AtomBrowserMainParts::ServiceManagerConnectionStarted(
 void AtomBrowserMainParts::PostMainMessageLoopRun() {
   browser_context_ = nullptr;
   brightray::BrowserMainParts::PostMainMessageLoopRun();
-
-  js_env_->OnMessageLoopDestroying();
 
   js_env_->isolate()->Exit();
 #if defined(OS_MACOSX)

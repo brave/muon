@@ -92,7 +92,6 @@ void V8WorkerThread::Init() {
 void V8WorkerThread::Run(base::RunLoop* run_loop) {
   base::ThreadRestrictions::SetIOAllowed(true);
   content::WorkerThreadRegistry::Instance()->DidStartCurrentWorkerThread();
-  env()->OnMessageLoopCreated();
   LoadModule();
   BrowserThread::PostTask(BrowserThread::UI, FROM_HERE,
       base::Bind(&NotifyStart,
@@ -105,7 +104,6 @@ void V8WorkerThread::Run(base::RunLoop* run_loop) {
 void V8WorkerThread::CleanUp() {
   content::WorkerThreadRegistry::Instance()->WillStopCurrentWorkerThread();
   memory_pressure_listener_.reset();
-  env()->OnMessageLoopDestroying();
   js_env_.reset();
   V8WorkerThread::Shutdown();
 }
