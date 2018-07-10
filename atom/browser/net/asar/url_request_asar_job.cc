@@ -165,7 +165,8 @@ int URLRequestAsarJob::ReadRawData(net::IOBuffer* dest, int dest_size) {
 }
 
 bool URLRequestAsarJob::IsRedirectResponse(GURL* location,
-                                           int* http_status_code) {
+                                           int* http_status_code,
+                                           bool* insecure_scheme_was_upgraded) {
   if (type_ != TYPE_FILE)
     return false;
 #if defined(OS_WIN)
