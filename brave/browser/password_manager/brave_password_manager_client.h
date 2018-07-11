@@ -118,7 +118,8 @@ class BravePasswordManagerClient
   void LogPasswordReuseDetectedEvent() override;
 
 #endif
-  password_manager::PasswordSyncState GetPasswordSyncState() const override;
+  password_manager::SyncState GetPasswordSyncState()
+      const override;
   bool WasLastNavigationHTTPError() const override;
   net::CertStatus GetMainFrameCertStatus() const override;
   bool IsIncognito() const override;
