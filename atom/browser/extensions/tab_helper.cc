@@ -179,7 +179,7 @@ bool TabHelper::AttachGuest(int window_id, int index) {
       index_ = index;
       browser->tab_strip_model()->ReplaceWebContentsAt(
           GetTabStripIndex(window_id, index_),
-          base::WrapUnique(web_contents()));
+          base::WrapUnique(web_contents())).release();
       return true;
     }
   }
@@ -208,7 +208,7 @@ content::WebContents* TabHelper::DetachGuest() {
 
     // Replace the detached tab with the null placeholder
     browser_->tab_strip_model()->ReplaceWebContentsAt(
-        get_index(), std::move(null_contents));
+        get_index(), std::move(null_contents)).release();
 
     return null_contents.get();
   }
@@ -427,7 +427,7 @@ void TabHelper::SetBrowser(Browser* browser) {
   if (browser_) {
     if (get_index() != TabStripModel::kNoTab)
       // TODO(hferreiro)
-      // browser_->tab_strip_model()->DetachWebContentsAt(get_index());
+      browser_->tab_strip_model()->DetachWebContentsAt(get_index()).release();
 
     OnBrowserRemoved(browser_);
   }
@@ -546,7 +546,7 @@ bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
   for (auto* b : *BrowserList::GetInstance()) {
     if (b->session_id().id() == window_id) {
       if (get_index() != TabStripModel::kNoTab)
-        browser()->tab_strip_model()->DetachWebContentsAt(get_index());
+        browser()->tab_strip_model()->DetachWebContentsAt(get_index()).release();
 
       UpdateBrowser(b);
 
