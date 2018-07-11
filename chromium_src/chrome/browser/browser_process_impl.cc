@@ -316,6 +316,7 @@ void BrowserProcessImpl::CreateLocalState() {
   SSLConfigServiceManager::RegisterPrefs(pref_registry.get());
   GpuModeManager::RegisterPrefs(pref_registry.get());
   safe_browsing::RegisterLocalStatePrefs(pref_registry.get());
+  SystemNetworkContextManager::RegisterPrefs(pref_registry.get());
 
   pref_change_registrar_.Init(local_state_.get());
   pref_change_registrar_.Add(
