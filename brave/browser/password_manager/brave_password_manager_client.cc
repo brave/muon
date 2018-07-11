@@ -417,7 +417,7 @@ ukm::SourceId BravePasswordManagerClient::GetUkmSourceId() {
   return ukm::GetSourceIdForWebContentsDocument(web_contents());
 }
 
-password_manager::PasswordSyncState
+password_manager::SyncState
 BravePasswordManagerClient::GetPasswordSyncState() const {
   return password_manager_util::GetPasswordSyncState(nullptr);
 }
