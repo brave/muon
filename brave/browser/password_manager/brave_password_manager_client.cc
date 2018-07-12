@@ -340,6 +340,16 @@ void BravePasswordManagerClient::PasswordGenerationRejectedByTyping() {
 
 void BravePasswordManagerClient::HidePasswordGenerationPopup() {}
 
+void BravePasswordManagerClient::PresaveGeneratedPassword(
+    const autofill::PasswordForm& password_form) {
+  password_manager_.OnPresaveGeneratedPassword(password_form);
+}
+
+void BravePasswordManagerClient::PasswordNoLongerGenerated(
+    const autofill::PasswordForm& password_form) {
+  password_manager_.OnPasswordNoLongerGenerated(password_form);
+}
+
 PasswordManagerMetricsRecorder&
 BravePasswordManagerClient::GetMetricsRecorder() {
   if (!metrics_recorder_) {
