@@ -15,6 +15,7 @@
 #include "base/optional.h"
 #include "brave/browser/password_manager/brave_credentials_filter.h"
 #include "components/autofill/content/common/autofill_driver.mojom.h"
+#include "components/autofill/core/common/password_generation_util.h"
 #include "components/password_manager/content/browser/content_credential_manager.h"
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #include "components/password_manager/core/browser/password_manager.h"
@@ -134,15 +135,20 @@ class BravePasswordManagerClient
   const password_manager::LogManager* GetLogManager() const override;
 
   // autofill::mojom::PasswordManagerClient overrides.
-  void ShowPasswordGenerationPopup(const gfx::RectF& bounds,
-                                   int max_length,
-                                   const base::string16& generation_element,
-                                   bool is_manually_triggered,
-                                   const autofill::PasswordForm& form) override;
+  void AutomaticGenerationStatusChanged(
+      bool available,
+      const base::Optional<
+          autofill::password_generation::PasswordGenerationUIData>& ui_data)
+      override;
+  void ShowManualPasswordGenerationPopup(
+      const autofill::password_generation::PasswordGenerationUIData& ui_data)
+      override;
   void ShowPasswordEditingPopup(const gfx::RectF& bounds,
                                 const autofill::PasswordForm& form) override;
   void GenerationAvailableForForm(const autofill::PasswordForm& form) override;
-  void HidePasswordGenerationPopup() override;
+  void PasswordGenerationRejectedByTyping() override;
+
+  void HidePasswordGenerationPopup();
 
   password_manager::PasswordManagerMetricsRecorder& GetMetricsRecorder()
       override;
@@ -202,6 +208,10 @@ class BravePasswordManagerClient
   // Returns true if this profile has metrics reporting and active sync
   // without custom sync passphrase.
   static bool ShouldAnnotateNavigationEntries(Profile* profile);
+
+  void ShowPasswordGenerationPopup(
+      const autofill::password_generation::PasswordGenerationUIData& ui_data,
+      bool is_manually_triggered);
 
   Profile* const profile_;
 

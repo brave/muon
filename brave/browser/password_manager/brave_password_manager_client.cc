@@ -23,7 +23,6 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/signin/signin_manager_factory.h"
 #include "chrome/browser/sync/profile_sync_service_factory.h"
-#include "chrome/browser/ui/autofill/password_generation_popup_controller_impl.h"
 #include "chrome/browser/ui/passwords/passwords_client_ui_delegate.h"
 #include "chrome/common/channel_info.h"
 #include "chrome/common/chrome_switches.h"
@@ -335,8 +334,11 @@ void BravePasswordManagerClient::PasswordWasAutofilled(
     const std::vector<const autofill::PasswordForm*>* federated_matches) const {
 }
 
-void BravePasswordManagerClient::HidePasswordGenerationPopup() {
+void BravePasswordManagerClient::PasswordGenerationRejectedByTyping() {
+  HidePasswordGenerationPopup();
 }
+
+void BravePasswordManagerClient::HidePasswordGenerationPopup() {}
 
 PasswordManagerMetricsRecorder&
 BravePasswordManagerClient::GetMetricsRecorder() {
@@ -491,23 +493,35 @@ gfx::RectF BravePasswordManagerClient::GetBoundsInScreenSpace(
   return bounds + client_area.OffsetFromOrigin();
 }
 
-void BravePasswordManagerClient::ShowPasswordGenerationPopup(
-    const gfx::RectF& bounds,
-    int max_length,
-    const base::string16& generation_element,
-    bool is_manually_triggered,
-    const autofill::PasswordForm& form) {
-  // TODO(gcasto): Validate data in PasswordForm.
+void BravePasswordManagerClient::AutomaticGenerationStatusChanged(
+    bool available,
+    const base::Optional<
+        autofill::password_generation::PasswordGenerationUIData>& ui_data) {
+  if (available) {
+    ShowPasswordGenerationPopup(ui_data.value(),
+                                false /* is_manually_triggered */);
+  }
+}
 
-  auto* driver = driver_factory_->GetDriverForFrame(
-      password_manager_client_bindings_.GetCurrentTargetFrame());
-  password_manager_.SetGenerationElementAndReasonForForm(
-      driver, form, generation_element, is_manually_triggered);
+void BravePasswordManagerClient::ShowManualPasswordGenerationPopup(
+    const autofill::password_generation::PasswordGenerationUIData& ui_data) {
+  ShowPasswordGenerationPopup(ui_data, true /* is_manually_triggered */);
 }
 
 void BravePasswordManagerClient::ShowPasswordEditingPopup(
     const gfx::RectF& bounds,
     const autofill::PasswordForm& form) {
+}
+
+void BravePasswordManagerClient::ShowPasswordGenerationPopup(
+    const autofill::password_generation::PasswordGenerationUIData& ui_data,
+    bool is_manually_triggered) {
+  auto* driver = driver_factory_->GetDriverForFrame(
+      password_manager_client_bindings_.GetCurrentTargetFrame());
+  DCHECK(driver);
+  password_manager_.SetGenerationElementAndReasonForForm(
+      driver, ui_data.password_form, ui_data.generation_element,
+      is_manually_triggered);
 }
 
 void BravePasswordManagerClient::PromptUserToEnableAutosigninIfNecessary() {
