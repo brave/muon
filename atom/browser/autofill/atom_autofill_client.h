@@ -65,7 +65,8 @@ class AtomAutofillClient
   void ConfirmSaveCreditCardToCloud(
       const CreditCard& card,
       std::unique_ptr<base::DictionaryValue> legal_message,
-      const base::Closure& callback) override;
+      bool should_request_name_from_user,
+      base::OnceCallback<void(const base::string16&)> callback) override;
   void LoadRiskData(
       const base::Callback<void(const std::string&)>& callback) override;
   bool HasCreditCardScanFeature() override;

@@ -121,7 +121,8 @@ void AtomAutofillClient::ConfirmSaveCreditCardLocally(
 void AtomAutofillClient::ConfirmSaveCreditCardToCloud(
     const CreditCard& card,
     std::unique_ptr<base::DictionaryValue> legal_message,
-    const base::Closure& callback) {
+    bool should_request_name_from_user,
+    base::OnceCallback<void(const base::string16&)> callback) {
 }
 
 void AtomAutofillClient::LoadRiskData(
