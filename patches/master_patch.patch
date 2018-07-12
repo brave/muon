@@ -115,18 +115,17 @@ index 4304cc82494f57b7bbc4d1f3dff0fab96e30aef3..77130b344ba1e03e34e5faa752cd2590
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
 diff --git a/chrome/app/BUILD.gn b/chrome/app/BUILD.gn
-index e5744a9d05d3099a61815954b08c7c030d081071..33a65d47c94a101ca62bb89cc0b43fbd0769c4ac 100644
+index e5744a9d05d3099a61815954b08c7c030d081071..1dfade8ab95643acb19ebf39ae9b69506fbeb5e6 100644
 --- a/chrome/app/BUILD.gn
 +++ b/chrome/app/BUILD.gn
-@@ -425,6 +425,8 @@ if (!is_android) {
+@@ -424,6 +424,7 @@ if (is_win) {
+ if (!is_android) {
    chrome_packaged_services += [ "//chrome/utility:profile_import_manifest" ]
  }
- 
 +chrome_packaged_services += [ "//electron/app:tor_launcher_manifest" ]
-+
+ 
  service_manifest("chrome_manifest") {
    source = "chrome_manifest.json"
- }
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
 index cd82cd63bfff860abdd765ad6e35355caffc3a43..eb8966b82071f04263e00c897a8708eb9ff6ec91 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
@@ -1641,21 +1640,18 @@ index 9e0e5b96b8e38a6c29e601d091941dad28eec900..1463daf2462cfb3d8208a91f3fb3b0f1
  
  void RenderWidgetTargeter::ViewWillBeDestroyed(RenderWidgetHostViewBase* view) {
 diff --git a/content/browser/storage_partition_impl_map.h b/content/browser/storage_partition_impl_map.h
-index ce0951bacd4dab08db92f6a87087279fcc7e4f09..10c7976815635c945079344e63ecf7f9f9932eaf 100644
+index ce0951bacd4dab08db92f6a87087279fcc7e4f09..d0195f20c4f05b406521bbe6e29a792454246713 100644
 --- a/content/browser/storage_partition_impl_map.h
 +++ b/content/browser/storage_partition_impl_map.h
-@@ -22,6 +22,10 @@ class FilePath;
+@@ -21,6 +21,7 @@ namespace base {
+ class FilePath;
  class SequencedTaskRunner;
  }  // namespace base
++namespace brave {class BraveBrowserContext;} // namespace brave
  
-+namespace brave {
-+class BraveBrowserContext;
-+} // namespace brave
-+
  namespace content {
  
- class BrowserContext;
-@@ -64,6 +68,8 @@ class CONTENT_EXPORT StoragePartitionImplMap
+@@ -64,6 +65,8 @@ class CONTENT_EXPORT StoragePartitionImplMap
    FRIEND_TEST_ALL_PREFIXES(StoragePartitionConfigTest, OperatorLess);
    FRIEND_TEST_ALL_PREFIXES(StoragePartitionImplMapTest, GarbageCollect);
  
