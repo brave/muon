@@ -147,6 +147,10 @@ class BravePasswordManagerClient
                                 const autofill::PasswordForm& form) override;
   void GenerationAvailableForForm(const autofill::PasswordForm& form) override;
   void PasswordGenerationRejectedByTyping() override;
+  void PresaveGeneratedPassword(
+      const autofill::PasswordForm& password_form) override;
+  void PasswordNoLongerGenerated(
+      const autofill::PasswordForm& password_form) override;
 
   void HidePasswordGenerationPopup();
 
