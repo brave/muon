@@ -102,6 +102,11 @@ AddressNormalizer* AtomAutofillClient::GetAddressNormalizer() {
   return nullptr;
 }
 
+security_state::SecurityLevel
+AtomAutofillClient::GetSecurityLevelForUmaHistograms() {
+  return security_state::SecurityLevel::SECURITY_LEVEL_COUNT;
+}
+
 void AtomAutofillClient::ShowAutofillSettings() {
   if (api_web_contents_) {
     api_web_contents_->Emit("show-autofill-settings");
