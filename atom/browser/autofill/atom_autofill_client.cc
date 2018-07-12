@@ -17,6 +17,7 @@
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
 #include "components/autofill/core/common/autofill_pref_names.h"
 #include "components/password_manager/content/browser/content_password_manager_driver.h"
+#include "components/ukm/content/source_url_recorder.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/render_frame_host.h"
@@ -91,6 +92,10 @@ identity::IdentityManager* AtomAutofillClient::GetIdentityManager() {
 
 ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
   return ukm::UkmRecorder::Get();
+}
+
+ukm::SourceId AtomAutofillClient::GetUkmSourceId() {
+  return ukm::GetSourceIdForWebContentsDocument(web_contents());
 }
 
 AddressNormalizer* AtomAutofillClient::GetAddressNormalizer() {
