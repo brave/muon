@@ -414,21 +414,23 @@ void BraveContentBrowserClient::RegisterInProcessServices(
 
 void BraveContentBrowserClient::RegisterOutOfProcessServices(
     OutOfProcessServiceMap* services) {
-  (*services)[chrome::mojom::kProfileImportServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME);
+  (*services)[chrome::mojom::kProfileImportServiceName] = base::BindRepeating(
+      &l10n_util::GetStringUTF16, IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME);
 
   (*services)[proxy_resolver::mojom::kProxyResolverServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROXY_RESOLVER_NAME);
+      base::BindRepeating(&l10n_util::GetStringUTF16,
+                          IDS_UTILITY_PROCESS_PROXY_RESOLVER_NAME);
 
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
   (*services)[printing::mojom::kChromePrintingServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PRINTING_SERVICE_NAME);
+      base::BindRepeating(&l10n_util::GetStringUTF16,
+                          IDS_UTILITY_PROCESS_PRINTING_SERVICE_NAME);
 #endif
-  (*services)[unzip::mojom::kServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_UNZIP_NAME);
+  (*services)[unzip::mojom::kServiceName] = base::BindRepeating(
+      &l10n_util::GetStringUTF16, IDS_UTILITY_PROCESS_UNZIP_NAME);
 
-  (*services)[tor::mojom::kTorServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_TOR_LAUNCHER_NAME);
+  (*services)[tor::mojom::kTorServiceName] = base::BindRepeating(
+      &l10n_util::GetStringUTF16, IDS_UTILITY_PROCESS_TOR_LAUNCHER_NAME);
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
