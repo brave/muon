@@ -479,10 +479,10 @@ index 01d3ee8917c2d05943e42556a4221161606c451d..f801248b1017abaf706533ff0889295c
    LifecycleState previous_state = GetState();
    SetState(LifecycleState::DISCARDED);
 diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
-index 7d5a446cf9fa1c63a71d2bc11c3a7684a3dd992c..8c02dd39d4d509849061a7ad09f6de3758d38f18 100644
+index e111e54ebef9951556284671ca43b468e8c767d6..7525ca235ec9a3f2209be4d2aff5bd80206c4d22 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.cc
 +++ b/chrome/browser/resource_coordinator/tab_manager.cc
-@@ -487,6 +487,19 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
+@@ -488,6 +488,19 @@ void TabManager::PurgeBackgroundedTabsIfNeeded() {
    }
  }
  
@@ -503,10 +503,10 @@ index 7d5a446cf9fa1c63a71d2bc11c3a7684a3dd992c..8c02dd39d4d509849061a7ad09f6de37
    TRACE_EVENT_INSTANT0("navigation",
                         "TabManager::PauseBackgroundTabOpeningIfNeeded",
 diff --git a/chrome/browser/resource_coordinator/tab_manager.h b/chrome/browser/resource_coordinator/tab_manager.h
-index 926a13003dd9ff8578d188790c282e51168f7f3e..8f37a9e1d3cb2dd7941aeef526c77904bf4be348 100644
+index 3aacb7cde1e7b1bf5d97ccbab5d94f5bb25f1ec2..8d2e998578735187290f708e3d6dc60f34a396ce 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.h
 +++ b/chrome/browser/resource_coordinator/tab_manager.h
-@@ -32,6 +32,7 @@
+@@ -31,6 +31,7 @@
  #include "chrome/browser/ui/browser_tab_strip_tracker.h"
  #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
  #include "content/public/browser/navigation_throttle.h"
@@ -514,7 +514,7 @@ index 926a13003dd9ff8578d188790c282e51168f7f3e..8f37a9e1d3cb2dd7941aeef526c77904
  #include "ui/gfx/native_widget_types.h"
  
  class GURL;
-@@ -92,6 +93,13 @@ class TabManager : public LifecycleUnitObserver,
+@@ -91,6 +92,13 @@ class TabManager : public LifecycleUnitObserver,
    TabManager();
    ~TabManager() override;
  
@@ -528,7 +528,7 @@ index 926a13003dd9ff8578d188790c282e51168f7f3e..8f37a9e1d3cb2dd7941aeef526c77904
    // Start/Stop the Tab Manager.
    void Start();
    void Stop();
-@@ -181,6 +189,7 @@ class TabManager : public LifecycleUnitObserver,
+@@ -180,6 +188,7 @@ class TabManager : public LifecycleUnitObserver,
    int restored_tab_count() const;
  
   private:
@@ -1762,10 +1762,10 @@ index 39b89cd36c327f27da7f687c3179ace964fc6d63..9140ff961245e4e4e222986e48297906
  
      process_->Launch(std::make_unique<UtilitySandboxedProcessLauncherDelegate>(
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 093e585d7e9812fca1b5266d809e6a5ff4379de3..a797e6694e204af68f66f17815aa83321ee0a87f 100644
+index ec663126dca2247cd9c04a13b06ba530febe52d2..6da03ddce2930dc0a06bbd310b01dc79ab80e147 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1774,8 +1774,9 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
+@@ -1780,8 +1780,9 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
    // This is set before initializing the render manager since
    // RenderFrameHostManager::Init calls back into us via its delegate to ask if
    // it should be hidden.
@@ -1777,7 +1777,7 @@ index 093e585d7e9812fca1b5266d809e6a5ff4379de3..a797e6694e204af68f66f17815aa8332
  
    // The routing ids must either all be set or all be unset.
    DCHECK((params.routing_id == MSG_ROUTING_NONE &&
-@@ -2381,7 +2382,8 @@ void WebContentsImpl::CreateNewWindow(
+@@ -2387,7 +2388,8 @@ void WebContentsImpl::CreateNewWindow(
    DCHECK(!params.opener_suppressed || render_view_route_id == MSG_ROUTING_NONE);
  
    scoped_refptr<SiteInstance> site_instance =
