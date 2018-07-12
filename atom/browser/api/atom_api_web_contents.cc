@@ -613,9 +613,8 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
         this);
     }
 
-    if (resource_coordinator::ResourceCoordinatorTabHelper::IsEnabled())
-      resource_coordinator::ResourceCoordinatorTabHelper::CreateForWebContents(
-          web_contents);
+    resource_coordinator::ResourceCoordinatorTabHelper::CreateForWebContents(
+        web_contents);
   }
 
   Init(isolate);
