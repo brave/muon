@@ -327,10 +327,6 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
     client_id = client_id_;
   }
 
-  if (!client_id.empty())
-    headers->SetHeader(network::ThrottlingNetworkTransaction::
-                           kDevToolsEmulateNetworkConditionsClientId,
-                       client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))
     return brightray::NetworkDelegate::OnBeforeStartTransaction(
         request, std::move(callback), headers);
