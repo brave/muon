@@ -290,6 +290,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // Callback triggered on permission response.
   void OnEnterFullscreenModeForTab(content::WebContents* source,
                                    const GURL& origin,
+                                   const blink::WebFullscreenOptions& options,
                                    bool allowed);
 
   void AutofillSelect(const std::string& value, int frontend_id, int index);
