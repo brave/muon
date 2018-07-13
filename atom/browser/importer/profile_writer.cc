@@ -27,6 +27,9 @@
 #include "components/password_manager/core/browser/password_manager.h"
 #include "content/public/browser/browser_thread.h"
 #include "muon/browser/muon_browser_process_impl.h"
+#include "net/cookies/cookie_store.h"
+#include "net/url_request/url_request_context.h"
+#include "net/url_request/url_request_context_getter.h"
 
 #if defined(OS_WIN)
 #include "components/password_manager/core/browser/webdata/password_web_data_service_win.h"
@@ -170,31 +173,62 @@ void ProfileWriter::AddAutofillFormDataEntries(
   }
 }
 
+// Called when SetCookieWithDetailsAsync completes
+static void OnSetCookie(const ImportedCookieEntry& cookie, bool success) {
+  if (!success) {
+    LOG(ERROR) << "importing cookie for "
+               << cookie.host << "|" << cookie.domain << "|" << cookie.name
+               << " failed";
+  }
+}
+
+// Bypassing cookie mismatch error in
+// https://github.com/brave/browser-laptop/issues/11401
+static bool ShouldSkipCookie(const ImportedCookieEntry &cookie) {
+  static const auto myaccount = base::ASCIIToUTF16("myaccount.google.com");
+  static const auto accounts = base::ASCIIToUTF16("accounts.google.com");
+  static const auto notifications = base::ASCIIToUTF16("notifications.google.com");
+
+  return cookie.host == myaccount || cookie.host == accounts || cookie.host == notifications;
+}
+
+// Helper to returns the CookieStore.
+inline net::CookieStore* GetCookieStore(
+    scoped_refptr<net::URLRequestContextGetter> getter) {
+  return getter->GetURLRequestContext()->cookie_store();
+}
+
 void ProfileWriter::AddCookies(
     const std::vector<ImportedCookieEntry>& cookies) {
+  Profile* active_profile = ProfileManager::GetActiveUserProfile();
   if (importer_) {
-    base::ListValue imported_cookies;
-    for (const ImportedCookieEntry& cookie_entry : cookies) {
-      base::DictionaryValue* cookie = new base::DictionaryValue();
+    for (const ImportedCookieEntry& cookie : cookies) {
+      if (ShouldSkipCookie(cookie))
+        continue;
+
       base::string16 url;
-      if (cookie_entry.secure) {
+      if (cookie.secure) {
         url.append(base::UTF8ToUTF16("https://"));
-        url.append(cookie_entry.host);
       } else {
         url.append(base::UTF8ToUTF16("http://"));
-        url.append(cookie_entry.host);
       }
-      cookie->SetString("url", url);
-      cookie->SetString("domain", cookie_entry.domain);
-      cookie->SetString("name", cookie_entry.name);
-      cookie->SetString("value", cookie_entry.value);
-      cookie->SetString("path", cookie_entry.path);
-      cookie->SetInteger("expiry_date", cookie_entry.expiry_date.ToDoubleT());
-      cookie->SetBoolean("secure", cookie_entry.secure);
-      cookie->SetBoolean("httponly", cookie_entry.httponly);
-      imported_cookies.Append(std::unique_ptr<base::DictionaryValue>(cookie));
+      url.append(cookie.host);
+
+      std::string name = base::UTF16ToUTF8(cookie.name);
+      std::string value = base::UTF16ToUTF8(cookie.value);
+      std::string domain = base::UTF16ToUTF8(cookie.domain);
+      std::string path = base::UTF16ToUTF8(cookie.path);
+      base::Time last_access_time = base::Time::Now();
+      base::Time creation_time = base::Time::Now();
+
+      scoped_refptr<net::URLRequestContextGetter> getter = active_profile->url_request_context_getter();
+      GetCookieStore(getter)->SetCookieWithDetailsAsync(
+        GURL(url), name, value, domain, path, creation_time,
+        cookie.expiry_date, last_access_time, cookie.secure, cookie.httponly,
+        net::CookieSameSite::DEFAULT_MODE,
+        net::COOKIE_PRIORITY_DEFAULT,
+	base::BindOnce(OnSetCookie, cookie));
     }
-    importer_->Emit("add-cookies", imported_cookies);
   }
 }
 
