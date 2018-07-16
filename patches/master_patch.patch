@@ -1458,6 +1458,74 @@ index 3761be5f730dd73662acdd016ee098d64556b09c..e3066953627059ec96ebd6b159db7251
   private:
    DISALLOW_COPY_AND_ASSIGN(RenderWidgetHostNSViewBridge);
  };
+diff --git a/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.mm b/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.mm
+index 47338f71c3aa8a4a433ac530517258da2a0ce6a8..fe0f2454e07777d345f2eb36ab9bb6ba94a76448 100644
+--- a/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.mm
++++ b/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.mm
+@@ -11,6 +11,9 @@
+ #include "base/strings/sys_string_conversions.h"
+ #import "content/browser/renderer_host/popup_window_mac.h"
+ #import "content/browser/renderer_host/render_widget_host_view_cocoa.h"
++#if !defined(MUON_CHROMIUM_BUILD)
++#include "content/browser/renderer_host/render_widget_host_view_mac.h"
++#endif
+ #include "content/common/cursors/webcursor.h"
+ #import "skia/ext/skia_utils_mac.h"
+ #include "ui/accelerated_widget_mac/display_ca_layer_tree.h"
+@@ -54,6 +57,11 @@ class RenderWidgetHostNSViewBridgeLocal : public RenderWidgetHostNSViewBridge,
+   void DisplayCursor(const WebCursor& cursor) override;
+   void SetCursorLocked(bool locked) override;
+   void ShowDictionaryOverlayForSelection() override;
++#if !defined(MUON_CHROMIUM_BUILD)
++  void ShowDictionaryOverlayForSelection(RenderWidgetHostView* target_view);
++  void SetTargetView(RenderWidgetHostView* target_view) override {
++     target_view_ = static_cast<RenderWidgetHostViewMac*>(target_view); };
++#endif
+   void ShowDictionaryOverlay(
+       const mac::AttributedStringCoder::EncodedString& encoded_string,
+       gfx::Point baseline_point) override;
+@@ -90,6 +98,10 @@ class RenderWidgetHostNSViewBridgeLocal : public RenderWidgetHostNSViewBridge,
+   // Cached copy of the tooltip text, to avoid redundant calls.
+   base::string16 tooltip_text_;
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++  RenderWidgetHostViewMac* target_view_;
++#endif
++
+   DISALLOW_COPY_AND_ASSIGN(RenderWidgetHostNSViewBridgeLocal);
+ };
+ 
+@@ -104,6 +116,10 @@ RenderWidgetHostNSViewBridgeLocal::RenderWidgetHostNSViewBridgeLocal(
+       std::make_unique<ui::DisplayCALayerTree>(background_layer_.get());
+   [cocoa_view_ setLayer:background_layer_];
+   [cocoa_view_ setWantsLayer:YES];
++#if !defined(MUON_CHROMIUM_BUILD)
++  target_view_ = NULL;
++#endif
++
+ }
+ 
+ RenderWidgetHostNSViewBridgeLocal::~RenderWidgetHostNSViewBridgeLocal() {
+@@ -300,10 +316,17 @@ void RenderWidgetHostNSViewBridgeLocal::ShowDictionaryOverlay(
+       mac::AttributedStringCoder::Decode(&encoded_string);
+   if ([string length] == 0)
+     return;
++  NSView* view = cocoa_view_;
++#if !defined(MUON_CHROMIUM_BUILD)
++  if (target_view_) {
++    view = target_view_->cocoa_view();
++  }
++#endif
++
+   NSPoint flipped_baseline_point = {
+-      baseline_point.x(), [cocoa_view_ frame].size.height - baseline_point.y(),
++      baseline_point.x(), [view frame].size.height - baseline_point.y(),
+   };
+-  [cocoa_view_ showDefinitionForAttributedString:string
++  [view showDefinitionForAttributedString:string
+                                          atPoint:flipped_baseline_point];
+ }
+ 
 diff --git a/content/browser/renderer_host/render_widget_host_view_aura.cc b/content/browser/renderer_host/render_widget_host_view_aura.cc
 index 50fb4ac83df4440dec8ec85413e40b2c163fc34f..6d7c275596d540fd59cc8bac1e7b4dff337020e7 100644
 --- a/content/browser/renderer_host/render_widget_host_view_aura.cc
