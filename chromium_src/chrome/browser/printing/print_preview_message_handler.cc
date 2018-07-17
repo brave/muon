@@ -18,7 +18,6 @@
 #include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/printing/printer_query.h"
-#include "components/printing/common/print_messages.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
@@ -92,8 +91,8 @@ PrintPreviewMessageHandler::PrintPreviewMessageHandler(
 PrintPreviewMessageHandler::~PrintPreviewMessageHandler() {}
 
 void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
-    content::RenderFrameHost* rfh,
-    const PrintHostMsg_DidPreviewDocument_Params& params) {
+    const PrintHostMsg_DidPreviewDocument_Params& params,
+    const PrintHostMsg_PreviewIds& ids) {
   // Always try to stop the worker.
   StopWorker(params.document_cookie);
 
@@ -102,9 +101,9 @@ void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
     return;
   }
 
-  auto key = GetKey(rfh);
-  if (base::ContainsKey(print_to_pdf_options_map_, key))
-    print_to_pdf_options_map_.erase(key);
+  // auto key = GetKey(rfh);
+  // if (base::ContainsKey(print_to_pdf_options_map_, key))
+  //   print_to_pdf_options_map_.erase(key);
 
   const PrintHostMsg_DidPrintContent_Params& content = params.content;
   BrowserThread::PostTaskAndReplyWithResult(
@@ -113,7 +112,7 @@ void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
       base::Bind(&CopyPDFDataOnIOThread, content),
       base::Bind(&PrintPreviewMessageHandler::RunPrintToPDFCallback,
                  weak_ptr_factory_.GetWeakPtr(),
-                 params.preview_request_id,
+                 ids.ui_id,
                  content.data_size));
 }
 
@@ -132,27 +131,27 @@ void PrintPreviewMessageHandler::OnError(content::RenderFrameHost* rfh,
 }
 
 void PrintPreviewMessageHandler::OnPrintPreviewFailed(
-    content::RenderFrameHost* rfh,
-    int document_cookie) {
+    int document_cookie,
+    const PrintHostMsg_PreviewIds& ids) {
   StopWorker(document_cookie);
 
-  OnError(rfh, document_cookie, "Failed");
+  // OnError(rfh, document_cookie, "Failed");
 }
 
 void PrintPreviewMessageHandler::OnPrintPreviewCancelled(
-    content::RenderFrameHost* rfh,
-    int document_cookie) {
+    int document_cookie,
+    const PrintHostMsg_PreviewIds& ids) {
   StopWorker(document_cookie);
 
-  OnError(rfh, document_cookie, "Cancelled");
+  // OnError(rfh, document_cookie, "Cancelled");
 }
 
 void PrintPreviewMessageHandler::OnPrintPreviewInvalidPrinterSettings(
-    content::RenderFrameHost* rfh,
-    int document_cookie) {
+    int document_cookie,
+    const PrintHostMsg_PreviewIds& ids) {
   StopWorker(document_cookie);
 
-  OnError(rfh, document_cookie, "Invalid Settings");
+  // OnError(rfh, document_cookie, "Invalid Settings");
 }
 
 bool PrintPreviewMessageHandler::OnMessageReceived(

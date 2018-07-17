@@ -9,6 +9,7 @@
 
 #include "atom/browser/api/atom_api_web_contents.h"
 #include "base/compiler_specific.h"
+#include "components/printing/common/print_messages.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 
@@ -51,17 +52,16 @@ class PrintPreviewMessageHandler
       content::RenderFrameHost* render_frame_host,
       const PrintHostMsg_RequestPrintPreview_Params& params);
   void OnMetafileReadyForPrinting(
-      content::RenderFrameHost* render_frame_host,
-      const PrintHostMsg_DidPreviewDocument_Params& params);
-  void OnPrintPreviewFailed(
-      content::RenderFrameHost* render_frame_host,
-      int document_cookie);
+      const PrintHostMsg_DidPreviewDocument_Params& params,
+      const PrintHostMsg_PreviewIds& ids);
+  void OnPrintPreviewFailed(int document_cookie,
+                            const PrintHostMsg_PreviewIds& ids);
   void OnPrintPreviewCancelled(
-      content::RenderFrameHost* render_frame_host,
-      int document_cookie);
+      int document_cookie,
+      const PrintHostMsg_PreviewIds& ids);
   void OnPrintPreviewInvalidPrinterSettings(
-      content::RenderFrameHost* render_frame_host,
-      int document_cookie);
+      int document_cookie,
+      const PrintHostMsg_PreviewIds& ids);
 
   void RunPrintToPDFCallbackWithMessage(int request_id,
                                         const std::string& message,
