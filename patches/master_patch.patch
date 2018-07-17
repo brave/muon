@@ -1664,6 +1664,19 @@ index ce0951bacd4dab08db92f6a87087279fcc7e4f09..10c7976815635c945079344e63ecf7f9
    // Each StoragePartition is uniquely identified by which partition domain
    // it belongs to (such as an app or the browser itself), the user supplied
    // partition name and the bit indicating whether it should be persisted on
+diff --git a/content/browser/utility_process_host.cc b/content/browser/utility_process_host.cc
+index 39b89cd36c327f27da7f687c3179ace964fc6d63..9140ff961245e4e4e222986e4829790663fad920 100644
+--- a/content/browser/utility_process_host.cc
++++ b/content/browser/utility_process_host.cc
+@@ -300,6 +300,8 @@ bool UtilityProcessHost::StartProcess() {
+     if (is_service) {
+       GetContentClient()->browser()->AdjustUtilityServiceProcessCommandLine(
+           *service_identity_, cmd_line.get());
++      if (service_identity_->name() == "tor_launcher")
++        cmd_line->AppendSwitch("tor-launcher");
+     }
+ 
+     process_->Launch(std::make_unique<UtilitySandboxedProcessLauncherDelegate>(
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index 942a35d355acc1cff8762c1e5a4961c6f022f4b2..182887b23f1b8b969cf68302673a7f94139b7ba3 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
@@ -1733,6 +1746,18 @@ index cec3bd8a97b8b9bcab176a9bd2c296ec12aba838..a00a391c96fc1f04be189c41cb285a66
  - (bool)isValidDragTarget:(content::RenderWidgetHostImpl*)targetRWH {
    return targetRWH->GetProcess()->GetID() == dragStartProcessID_ ||
           GetRenderViewHostID(webContents_->GetRenderViewHost()) !=
+diff --git a/content/child/child_thread_impl.cc b/content/child/child_thread_impl.cc
+index 2663268bce314609bb8ec66830a873579ec139fe..b956eaed8938a063279a8d384d605437b5a7372c 100644
+--- a/content/child/child_thread_impl.cc
++++ b/content/child/child_thread_impl.cc
+@@ -535,6 +535,7 @@ void ChildThreadImpl::Init(const Options& options) {
+   // Check that --process-type is specified so we don't do this in unit tests
+   // and single-process mode.
+   if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kProcessType))
++    if (!base::CommandLine::ForCurrentProcess()->HasSwitch("tor-launcher"))
+     channel_->AddFilter(new SuicideOnChannelErrorFilter());
+ #endif
+ 
 diff --git a/content/common/content_switches_internal.cc b/content/common/content_switches_internal.cc
 index 27c25d3d25e18d9591b6ffd770fcd11875b231f7..01d2b4c88bf1c6f25441f7cd219e56df401f18f6 100644
 --- a/content/common/content_switches_internal.cc
