@@ -1357,6 +1357,98 @@ index 2b38db266f9aa1f4141c8649c021042ede4e5589..ea0387b11f4b00f87596d738c152aa4c
    OSStatus error = keychain_.FindGenericPassword(
        nullptr, strlen(service_name), service_name, strlen(account_name),
        account_name, &password_length, &password_data, NULL);
+diff --git a/components/password_manager/core/browser/new_password_form_manager.cc b/components/password_manager/core/browser/new_password_form_manager.cc
+index 150b7ab410b698c1622383842bb6f529ad83e1fd..264f5f6671b59875118a06010f11ebecac245ca7 100644
+--- a/components/password_manager/core/browser/new_password_form_manager.cc
++++ b/components/password_manager/core/browser/new_password_form_manager.cc
+@@ -167,6 +167,12 @@ void NewPasswordFormManager::OnNeverClicked() {}
+ void NewPasswordFormManager::OnNoInteraction(bool is_update) {}
+ void NewPasswordFormManager::PermanentlyBlacklist() {}
+ void NewPasswordFormManager::OnPasswordsRevealed() {}
++#if !defined(MUON_CHROMIUM_BUILD)
++bool NewPasswordFormManager::IsPossibleConfirmPasswordForm() {
++  NOTREACHED();
++  return false;
++}
++#endif
+ 
+ void NewPasswordFormManager::ProcessMatches(
+     const std::vector<const autofill::PasswordForm*>& non_federated,
+diff --git a/components/password_manager/core/browser/new_password_form_manager.h b/components/password_manager/core/browser/new_password_form_manager.h
+index 1b935cc28ad260f3aec4ff0aa8e73b14b75703a5..b07fcb67b311dfb42ff6971ef8e2c6cb0f59ba5d 100644
+--- a/components/password_manager/core/browser/new_password_form_manager.h
++++ b/components/password_manager/core/browser/new_password_form_manager.h
+@@ -75,6 +75,10 @@ class NewPasswordFormManager : public PasswordFormManagerForUI,
+   void PermanentlyBlacklist() override;
+   void OnPasswordsRevealed() override;
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++  bool IsPossibleConfirmPasswordForm() override;
++#endif
++
+  protected:
+   // FormFetcher::Consumer:
+   void ProcessMatches(
+diff --git a/components/password_manager/core/browser/password_form_manager.cc b/components/password_manager/core/browser/password_form_manager.cc
+index 663cba455fc7c0187798eb7a0912fe43d2118efb..88a7bbc1c93e4f25325360ebe90f5cb29012df91 100644
+--- a/components/password_manager/core/browser/password_form_manager.cc
++++ b/components/password_manager/core/browser/password_form_manager.cc
+@@ -19,6 +19,7 @@
+ #include "base/rand_util.h"
+ #include "base/stl_util.h"
+ #include "base/strings/string16.h"
++#include "base/strings/utf_string_conversions.h"
+ #include "base/strings/string_split.h"
+ #include "base/strings/string_util.h"
+ #include "base/time/time.h"
+@@ -1270,6 +1271,17 @@ void PasswordFormManager::OnPasswordsRevealed() {
+   has_passwords_revealed_vote_ = true;
+ }
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++bool PasswordFormManager::IsPossibleConfirmPasswordForm() {
++  return submitted_form_->new_password_element.empty() &&
++         submitted_form_->layout !=
++             autofill::PasswordForm::Layout::LAYOUT_LOGIN_AND_SIGNUP &&
++         // https://chromium.googlesource.com/chromium/src/+/fdef64500de7e7cdfcc1a77ae7e82ad4a39d264f
++         submitted_form_->username_element ==
++             base::UTF8ToUTF16("anonymous_username");
++}
++#endif
++
+ void PasswordFormManager::SetHasGeneratedPassword(bool generated_password) {
+   has_generated_password_ = generated_password;
+   metrics_recorder_->SetHasGeneratedPassword(generated_password);
+diff --git a/components/password_manager/core/browser/password_form_manager.h b/components/password_manager/core/browser/password_form_manager.h
+index e5076b9c1a35248ffa4088cfd0653275e4be34f4..61912419e3fc67be5af3781747b284de9885914f 100644
+--- a/components/password_manager/core/browser/password_form_manager.h
++++ b/components/password_manager/core/browser/password_form_manager.h
+@@ -261,6 +261,10 @@ class PasswordFormManager : public PasswordFormManagerForUI,
+   void PermanentlyBlacklist() override;
+   void OnPasswordsRevealed() override;
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++  bool IsPossibleConfirmPasswordForm() override;
++#endif
++
+  protected:
+   // FormFetcher::Consumer:
+   void ProcessMatches(
+diff --git a/components/password_manager/core/browser/password_form_manager_for_ui.h b/components/password_manager/core/browser/password_form_manager_for_ui.h
+index ac7a6eb8c3298bbf6a25bf3eb623a8875383bc1e..e5383acaae9965d602ce3a46671026eae5904f8b 100644
+--- a/components/password_manager/core/browser/password_form_manager_for_ui.h
++++ b/components/password_manager/core/browser/password_form_manager_for_ui.h
+@@ -99,6 +99,10 @@ class PasswordFormManagerForUI {
+ 
+   // Called when the passwords were shown on on the bubble without obfuscation.
+   virtual void OnPasswordsRevealed() = 0;
++
++#if !defined(MUON_CHROMIUM_BUILD)
++  virtual bool IsPossibleConfirmPasswordForm() = 0;
++#endif
+ };
+ 
+ }  // namespace  password_manager
 diff --git a/content/app/content_main_runner_impl.cc b/content/app/content_main_runner_impl.cc
 index 83e8990edf17e2cd26687eeec13ef99e25dd4f44..5b3d06b71bab28c001e82828c91ab8ae16909cf0 100644
 --- a/content/app/content_main_runner_impl.cc
