@@ -404,6 +404,15 @@ void AtomDownloadManagerDelegate::OnDownloadTargetDetermined(
     CloseWebContentsIfNeeded(web_contents);
   }
 
+  if (!download_item->ShouldPrompt()) {
+    download_item->SetSavePath(path);
+    callback.Run(path,
+                 target_info->target_disposition,
+                 download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, path,
+                 target_info->result);
+    return;
+  }
+
   // If we can't find proper |window| for showing save dialog, cancel
   // and cleanup current download.
   // TODO(ltilve): If we want to use WebContents internaly for download, we
