@@ -228,23 +228,24 @@ bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
   // "webby" URLs and do not prompt in case of "non-webby" URLS (e.g. file://).
   if (!CanShowBubbleOnURL(web_contents()->GetLastCommittedURL()))
     return false;
-  // FIXME(hferreiro)
-  // const autofill::PasswordForm *form = form_to_save->submitted_form();
-  // // Don't save password for confirmation page (ex. Trezor passphrase)
-  // if (IsPossibleConfirmPasswordForm(*form))
-  //   return false;
+  const autofill::PasswordForm* form =
+      static_cast<password_manager::PasswordFormManager*>(form_to_save.get())
+          ->submitted_form();
+  // Don't save password for confirmation page (ex. Trezor passphrase)
+  if (IsPossibleConfirmPasswordForm(*form))
+    return false;
   form_to_save_ = std::move(form_to_save);
-  // if (update_password) {
-  //   api_web_contents_->Emit("update-password", form->username_value,
-  //                           form->signon_realm);
-  // } else {
-  //   if (form_to_save_->IsBlacklisted())
-  //     return false;
-  //   if (api_web_contents_) {
-  //     api_web_contents_->Emit("save-password", form->username_value,
-  //                             form->signon_realm);
-  //   }
-  // }
+  if (update_password) {
+    api_web_contents_->Emit("update-password", form->username_value,
+                            form->signon_realm);
+  } else {
+    if (form_to_save_->IsBlacklisted())
+      return false;
+    if (api_web_contents_) {
+      api_web_contents_->Emit("save-password", form->username_value,
+                              form->signon_realm);
+    }
+  }
   return true;
 }
 
