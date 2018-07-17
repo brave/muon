@@ -95,15 +95,6 @@ void BravePasswordManagerClient::CreateForWebContentsWithAutofillClient(
       std::make_unique<BravePasswordManagerClient>(contents, autofill_client));
 }
 
-// static
-bool BravePasswordManagerClient::IsPossibleConfirmPasswordForm(
-    const autofill::PasswordForm& form) {
-  return form.new_password_element.empty() &&
-    form.layout != autofill::PasswordForm::Layout::LAYOUT_LOGIN_AND_SIGNUP &&
-    // https://chromium.googlesource.com/chromium/src/+/fdef64500de7e7cdfcc1a77ae7e82ad4a39d264f
-    form.username_element == base::UTF8ToUTF16("anonymous_username");
-}
-
 BravePasswordManagerClient::BravePasswordManagerClient(
     content::WebContents* web_contents,
     autofill::AutofillClient* autofill_client)
@@ -228,22 +219,21 @@ bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
   // "webby" URLs and do not prompt in case of "non-webby" URLS (e.g. file://).
   if (!CanShowBubbleOnURL(web_contents()->GetLastCommittedURL()))
     return false;
-  const autofill::PasswordForm* form =
-      static_cast<password_manager::PasswordFormManager*>(form_to_save.get())
-          ->submitted_form();
   // Don't save password for confirmation page (ex. Trezor passphrase)
-  if (IsPossibleConfirmPasswordForm(*form))
+  if (form_to_save->IsPossibleConfirmPasswordForm())
     return false;
   form_to_save_ = std::move(form_to_save);
+  const autofill::PasswordForm& credentials =
+      form_to_save_->GetPendingCredentials();
   if (update_password) {
-    api_web_contents_->Emit("update-password", form->username_value,
-                            form->signon_realm);
+    api_web_contents_->Emit("update-password", credentials.username_value,
+                            credentials.signon_realm);
   } else {
     if (form_to_save_->IsBlacklisted())
       return false;
     if (api_web_contents_) {
-      api_web_contents_->Emit("save-password", form->username_value,
-                              form->signon_realm);
+      api_web_contents_->Emit("save-password", credentials.username_value,
+                              credentials.signon_realm);
     }
   }
   return true;
