@@ -14,4 +14,5 @@
   const gfx::VectorIcon icon_name;
 
 VECTOR_ICON_TEMPLATE(kBrowserToolsUpdateIcon)
+VECTOR_ICON_TEMPLATE(kSecurityIcon)
 VECTOR_ICON_TEMPLATE(kUsbSecurityKeyIcon)
