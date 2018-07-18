@@ -23,6 +23,7 @@
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/trace_event/trace_event.h"
+#include "brave/browser/brave_browser_context.h"
 #include "build/build_config.h"
 #include "atom/browser/atom_browser_context.h"
 #include "chrome/browser/browser_process.h"
@@ -82,7 +83,10 @@ void ProfileManager::OnProfileCreated(Profile* profile,
                                       bool success,
                                       bool is_new_profile) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  if (!profile->IsOffTheRecord() &&
+  auto brave_browser_context =
+    brave::BraveBrowserContext::FromBrowserContext(profile);
+  if ((!profile->IsOffTheRecord() ||
+       brave_browser_context->IsIsolatedStorage()) &&
       !GetProfileByPath(profile->GetPath())) {
     AddProfile(profile);
   }

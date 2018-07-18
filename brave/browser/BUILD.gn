@@ -45,6 +45,8 @@ source_set("browser") {
 
   deps = [
     ":apis",
+    ":proxy",
+    ":tor",
     "//electron/atom/browser",
     "//electron:common",
     "//electron/muon/app",
@@ -154,5 +156,38 @@ source_set("apis") {
 
   public_deps = [
     "component_updater",
+  ]
+}
+
+source_set("proxy") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "net/proxy_resolution/proxy_config_service_tor.cc",
+    "net/proxy_resolution/proxy_config_service_tor.h",
+    "net/tor_proxy_network_delegate.cc",
+    "net/tor_proxy_network_delegate.h",
+  ]
+
+  deps = [
+    "//net",
+    "//third_party/blink/public:blink_headers",
+  ]
+}
+
+source_set("tor") {
+  configs += [
+    "//electron/build:electron_config",
+  ]
+
+  sources = [
+    "tor/tor_launcher_factory.cc",
+    "tor/tor_launcher_factory.h",
+  ]
+
+  deps = [
+   "//third_party/blink/public:blink_headers",
   ]
 }

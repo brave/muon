@@ -114,8 +114,20 @@ index 4304cc82494f57b7bbc4d1f3dff0fab96e30aef3..77130b344ba1e03e34e5faa752cd2590
  }
  
  assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+diff --git a/chrome/app/BUILD.gn b/chrome/app/BUILD.gn
+index e5744a9d05d3099a61815954b08c7c030d081071..1dfade8ab95643acb19ebf39ae9b69506fbeb5e6 100644
+--- a/chrome/app/BUILD.gn
++++ b/chrome/app/BUILD.gn
+@@ -424,6 +424,7 @@ if (is_win) {
+ if (!is_android) {
+   chrome_packaged_services += [ "//chrome/utility:profile_import_manifest" ]
+ }
++chrome_packaged_services += [ "//electron/app:tor_launcher_manifest" ]
+ 
+ service_manifest("chrome_manifest") {
+   source = "chrome_manifest.json"
 diff --git a/chrome/browser/chrome_content_browser_manifest_overlay.json b/chrome/browser/chrome_content_browser_manifest_overlay.json
-index cd82cd63bfff860abdd765ad6e35355caffc3a43..9d24c0c3a7b315c10b519e0ae5b0eea04a880ddc 100644
+index cd82cd63bfff860abdd765ad6e35355caffc3a43..eb8966b82071f04263e00c897a8708eb9ff6ec91 100644
 --- a/chrome/browser/chrome_content_browser_manifest_overlay.json
 +++ b/chrome/browser/chrome_content_browser_manifest_overlay.json
 @@ -12,7 +12,7 @@
@@ -127,6 +139,14 @@ index cd82cd63bfff860abdd765ad6e35355caffc3a43..9d24c0c3a7b315c10b519e0ae5b0eea0
            "safe_browsing::mojom::SafeBrowsing",
            "translate::mojom::ContentTranslateDriver"
          ],
+@@ -55,6 +55,7 @@
+         "proxy_resolver": [ "factory" ],
+         "preferences": [ "pref_client", "pref_control" ],
+         "removable_storage_writer": [ "removable_storage_writer" ],
++        "tor_launcher": [ "tor_launcher" ],
+         "ui": [
+           "display_dev",
+           "ime_registrar",
 diff --git a/chrome/browser/chrome_service.cc b/chrome/browser/chrome_service.cc
 index a6e8369996c9538a1969a8eef3091c00eecb5ec1..eff895a8593ad0edaaa6e38e1c6f013af5fb3c46 100644
 --- a/chrome/browser/chrome_service.cc
@@ -1317,6 +1337,25 @@ index b1d214c35f075d16acfcd71576842e6b751d0697..8e9fb9fc6f5d27a106b13aad0412fc84
    DCHECK(from_rfh);
    FrameTreeNode* node =
        static_cast<RenderFrameHostImpl*>(from_rfh)->frame_tree_node();
+diff --git a/content/browser/frame_host/render_frame_host_impl.cc b/content/browser/frame_host/render_frame_host_impl.cc
+index d938013c90b630b94c2f4ee2daed542dbe437da0..05fbfe707db8afb0dcf4d3fa1a841c506e8c470c 100644
+--- a/content/browser/frame_host/render_frame_host_impl.cc
++++ b/content/browser/frame_host/render_frame_host_impl.cc
+@@ -2952,9 +2952,13 @@ void RenderFrameHostImpl::CreateNewWindow(
+     return;
+   }
+ 
++  scoped_refptr<SiteInstance> site_instance =
++    params->opener_suppressed
++      ? SiteInstance::CreateForURL(GetProcess()->GetBrowserContext(), params->target_url)
++      : GetSiteInstance();
+   // This will clone the sessionStorage for namespace_id_to_clone.
+   StoragePartition* storage_partition = BrowserContext::GetStoragePartition(
+-      GetSiteInstance()->GetBrowserContext(), GetSiteInstance());
++      site_instance->GetBrowserContext(), site_instance.get());
+   DOMStorageContextWrapper* dom_storage_context =
+       static_cast<DOMStorageContextWrapper*>(
+           storage_partition->GetDOMStorageContext());
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index 80fd7cf8957865e62186f394a318f912c6da4e20..a189c82b5a2d6ca6fdfb38c6eadffebd518999ea 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
@@ -1619,6 +1658,40 @@ index 9e0e5b96b8e38a6c29e601d091941dad28eec900..1463daf2462cfb3d8208a91f3fb3b0f1
  }
  
  void RenderWidgetTargeter::ViewWillBeDestroyed(RenderWidgetHostViewBase* view) {
+diff --git a/content/browser/storage_partition_impl_map.h b/content/browser/storage_partition_impl_map.h
+index ce0951bacd4dab08db92f6a87087279fcc7e4f09..d0195f20c4f05b406521bbe6e29a792454246713 100644
+--- a/content/browser/storage_partition_impl_map.h
++++ b/content/browser/storage_partition_impl_map.h
+@@ -21,6 +21,7 @@ namespace base {
+ class FilePath;
+ class SequencedTaskRunner;
+ }  // namespace base
++namespace brave {class BraveBrowserContext;} // namespace brave
+ 
+ namespace content {
+ 
+@@ -64,6 +65,8 @@ class CONTENT_EXPORT StoragePartitionImplMap
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionConfigTest, OperatorLess);
+   FRIEND_TEST_ALL_PREFIXES(StoragePartitionImplMapTest, GarbageCollect);
+ 
++  friend class brave::BraveBrowserContext;
++
+   // Each StoragePartition is uniquely identified by which partition domain
+   // it belongs to (such as an app or the browser itself), the user supplied
+   // partition name and the bit indicating whether it should be persisted on
+diff --git a/content/browser/utility_process_host.cc b/content/browser/utility_process_host.cc
+index 39b89cd36c327f27da7f687c3179ace964fc6d63..9140ff961245e4e4e222986e4829790663fad920 100644
+--- a/content/browser/utility_process_host.cc
++++ b/content/browser/utility_process_host.cc
+@@ -300,6 +300,8 @@ bool UtilityProcessHost::StartProcess() {
+     if (is_service) {
+       GetContentClient()->browser()->AdjustUtilityServiceProcessCommandLine(
+           *service_identity_, cmd_line.get());
++      if (service_identity_->name() == "tor_launcher")
++        cmd_line->AppendSwitch("tor-launcher");
+     }
+ 
+     process_->Launch(std::make_unique<UtilitySandboxedProcessLauncherDelegate>(
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
 index 942a35d355acc1cff8762c1e5a4961c6f022f4b2..182887b23f1b8b969cf68302673a7f94139b7ba3 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
@@ -1688,6 +1761,18 @@ index cec3bd8a97b8b9bcab176a9bd2c296ec12aba838..a00a391c96fc1f04be189c41cb285a66
  - (bool)isValidDragTarget:(content::RenderWidgetHostImpl*)targetRWH {
    return targetRWH->GetProcess()->GetID() == dragStartProcessID_ ||
           GetRenderViewHostID(webContents_->GetRenderViewHost()) !=
+diff --git a/content/child/child_thread_impl.cc b/content/child/child_thread_impl.cc
+index 2663268bce314609bb8ec66830a873579ec139fe..b956eaed8938a063279a8d384d605437b5a7372c 100644
+--- a/content/child/child_thread_impl.cc
++++ b/content/child/child_thread_impl.cc
+@@ -535,6 +535,7 @@ void ChildThreadImpl::Init(const Options& options) {
+   // Check that --process-type is specified so we don't do this in unit tests
+   // and single-process mode.
+   if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kProcessType))
++    if (!base::CommandLine::ForCurrentProcess()->HasSwitch("tor-launcher"))
+     channel_->AddFilter(new SuicideOnChannelErrorFilter());
+ #endif
+ 
 diff --git a/content/common/content_switches_internal.cc b/content/common/content_switches_internal.cc
 index 27c25d3d25e18d9591b6ffd770fcd11875b231f7..01d2b4c88bf1c6f25441f7cd219e56df401f18f6 100644
 --- a/content/common/content_switches_internal.cc
@@ -2141,10 +2226,10 @@ index 3802937bc0c472cb72d38958ccbe9d5b25da6cbb..79f05f7f57f2547b50c9755dd363ab47
  }
  
 diff --git a/net/log/net_log_event_type_list.h b/net/log/net_log_event_type_list.h
-index e23f2e6e9d9deb5fcd93f39c0e88c63ead47ac87..5c3e259474eec476038ee70bc90d6f0d188d84bd 100644
+index 596c35c5be6a443a33d1b36587a34ef58debad68..583ff6dd9abeb39dd7e6bed43caf323ba299d838 100644
 --- a/net/log/net_log_event_type_list.h
 +++ b/net/log/net_log_event_type_list.h
-@@ -2118,6 +2118,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
+@@ -2115,6 +2115,12 @@ EVENT_TYPE(SOCKS5_GREET_WRITE)
  // The time spent waiting for the "greeting" response from the SOCKS server.
  EVENT_TYPE(SOCKS5_GREET_READ)
  
@@ -2312,6 +2397,20 @@ index 389315a25d7da30d71b59e3803ab795bc4c18e1c..79797fe7e674f9f6d2a65de542f262a9
    // Called to read raw (pre-filtered) data from this Job. Reads at most
    // |buf_size| bytes into |buf|.
    // Possible return values:
+diff --git a/services/service_manager/sandbox/win/sandbox_win.cc b/services/service_manager/sandbox/win/sandbox_win.cc
+index 50430a8e2f8fc30e08412e75299be7d4ca275252..b65147fc394d96a0557f1987a4f4e8dc14328b44 100644
+--- a/services/service_manager/sandbox/win/sandbox_win.cc
++++ b/services/service_manager/sandbox/win/sandbox_win.cc
+@@ -827,6 +827,9 @@ sandbox::ResultCode SandboxWin::StartSandboxedProcess(
+           service_manager::switches::kNoSandbox)) {
+     base::LaunchOptions options;
+     options.handles_to_inherit = handles_to_inherit;
++#if !defined(MUON_CHROMIUM_BUILD)
++    options.start_hidden = true;
++#endif
+     *process = base::LaunchProcess(*cmd_line, options);
+     return sandbox::SBOX_ALL_OK;
+   }
 diff --git a/third_party/blink/renderer/core/editing/editing_behavior.h b/third_party/blink/renderer/core/editing/editing_behavior.h
 index 90f13baf5daa216c0832b39137ba87f60aa2ccd2..643caf4e6825e3da6678af6a1a981c42d2bb782b 100644
 --- a/third_party/blink/renderer/core/editing/editing_behavior.h

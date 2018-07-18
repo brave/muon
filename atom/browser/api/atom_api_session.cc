@@ -40,6 +40,7 @@
 #include "base/time/time.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/brave_permission_manager.h"
+#include "brave/browser/tor/tor_launcher_factory.h"
 #include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/pref_names.h"
@@ -177,6 +178,19 @@ struct Converter<net::ProxyConfig> {
   }
 };
 
+template<>
+struct Converter<brave::TorLauncherFactory::TorProcessState> {
+  static v8::Local<v8::Value> ToV8(
+    v8::Isolate* isolate, brave::TorLauncherFactory::TorProcessState val) {
+  if (val == brave::TorLauncherFactory::TorProcessState::LAUNCH_SUCCEEDED)
+    return mate::StringToV8(isolate, "launch-succeeded");
+  else if (val == brave::TorLauncherFactory::TorProcessState::LAUNCH_FAILED)
+    return mate::StringToV8(isolate, "launch-failed");
+  else if (val == brave::TorLauncherFactory::TorProcessState::CRASHED)
+    return mate::StringToV8(isolate, "crashed");
+  }
+};
+
 }  // namespace mate
 
 namespace atom {
@@ -215,14 +229,14 @@ class ResolveProxyHelper {
                     const GURL& url) {
     DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
-    net::ProxyResolutionService* proxy_service =
+    net::ProxyResolutionService* proxy_resolution_service =
         context_getter->GetURLRequestContext()->proxy_resolution_service();
     net::CompletionCallback completion_callback =
         base::Bind(&ResolveProxyHelper::OnResolveProxyCompleted,
                    base::Unretained(this));
 
     // Start the request.
-    int result = proxy_service->ResolveProxy(
+    int result = proxy_resolution_service->ResolveProxy(
         url, "GET", &proxy_info_, completion_callback,
         &pac_req_, nullptr, net::NetLogWithSource());
 
@@ -291,20 +305,6 @@ void DoCacheActionInIO(
   int rv = http_cache->GetBackend(backend_ptr, on_get_backend);
   if (rv != net::ERR_IO_PENDING)
     on_get_backend.Run(net::OK);
-}
-
-void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
-                  const net::ProxyConfig& config,
-                  const base::Closure& callback) {
-  auto proxy_service =
-      getter->GetURLRequestContext()->proxy_resolution_service();
-  proxy_service->ResetConfigService(
-      base::WrapUnique(new net::ProxyConfigServiceFixed(
-          net::ProxyConfigWithAnnotation(config, NO_TRAFFIC_ANNOTATION_YET))));
-  // Refetches and applies the new pac script if provided.
-  proxy_service->ForceReloadProxyConfig();
-  BrowserThread::PostTask(
-      BrowserThread::UI, FROM_HERE, callback);
 }
 
 void SetCertVerifyProcInIO(
@@ -464,10 +464,24 @@ void Session::FlushStorageData() {
   storage_partition->Flush();
 }
 
+void SetProxyInIO(scoped_refptr<net::URLRequestContextGetter> getter,
+                  const net::ProxyConfig& config,
+                  const base::Closure& callback) {
+  auto proxy_resolution_service =
+    getter->GetURLRequestContext()->proxy_resolution_service();
+  proxy_resolution_service->ResetConfigService(base::WrapUnique(
+      new net::ProxyConfigServiceFixed(
+      net::ProxyConfigWithAnnotation(config, NO_TRAFFIC_ANNOTATION_YET))));
+  // Refetches and applies the new pac script if provided.
+  proxy_resolution_service->ForceReloadProxyConfig();
+  BrowserThread::PostTask(
+    BrowserThread::UI, FROM_HERE, callback);
+}
+
 void Session::SetProxy(const net::ProxyConfig& config,
                        const base::Closure& callback) {
   BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-      base::Bind(&SetProxyInIO, request_context_getter_, config, callback));
+    base::Bind(&SetProxyInIO, request_context_getter_, config, callback));
 }
 
 void Session::SetDownloadPath(const base::FilePath& path) {
@@ -601,6 +615,62 @@ bool Session::Equal(Session* session) const {
 #endif
 }
 
+bool Session::IsOffTheRecord() const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (brave_browser_context->IsOffTheRecord())
+    return true;
+  if (brave_browser_context->IsIsolatedStorage())
+    return true;
+  return false;
+}
+
+void Session::SetTorNewIdentity(const GURL& url,
+                                const base::Closure& callback) const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
+    return;
+  }
+  brave_browser_context->SetTorNewIdentity(url, callback);
+}
+
+void Session::RelaunchTor() const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
+    return;
+  }
+  brave_browser_context->RelaunchTor();
+}
+
+int64_t Session::GetTorPid() const {
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
+    return -1;
+  }
+  return brave_browser_context->GetTorPid();
+}
+
+void Session::SetTorLauncherCallback(mate::Arguments* args) {
+  brave::TorLauncherFactory::TorLauncherCallback callback;
+  if (!args->GetNext(&callback)) {
+    args->ThrowError("`callback(result, pid)` is a required field");
+    return;
+  }
+  brave::BraveBrowserContext* brave_browser_context =
+   brave::BraveBrowserContext::FromBrowserContext(profile_);
+  if (!brave_browser_context->IsTorBrowserContext()) {
+    LOG(ERROR) << __func__ << " only available for tor browser context";
+    return;
+  }
+  brave_browser_context->SetTorLauncherCallback(callback);
+}
+
 // static
 mate::Handle<Session> Session::CreateFrom(
     v8::Isolate* isolate, content::BrowserContext* browser_context) {
@@ -659,6 +729,11 @@ void Session::BuildPrototype(v8::Isolate* isolate,
                  &Session::AllowNTLMCredentialsForDomains)
       .SetMethod("setEnableBrotli", &Session::SetEnableBrotli)
       .SetMethod("equal", &Session::Equal)
+      .SetMethod("isOffTheRecord", &Session::IsOffTheRecord)
+      .SetMethod("setTorNewIdentity", &Session::SetTorNewIdentity)
+      .SetMethod("relaunchTor", &Session::RelaunchTor)
+      .SetMethod("setTorLauncherCallback", &Session::SetTorLauncherCallback)
+      .SetMethod("getTorPid", &Session::GetTorPid)
       .SetProperty("partition", &Session::Partition)
       .SetProperty("contentSettings", &Session::ContentSettings)
       .SetProperty("userPrefs", &Session::UserPrefs)

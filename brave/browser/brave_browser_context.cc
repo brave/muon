@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <algorithm>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -12,6 +14,7 @@
 #include "base/files/file_util.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/browser/brave_permission_manager.h"
+#include "brave/browser/net/tor_proxy_network_delegate.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_factory.h"
 #include "chrome/browser/background_fetch/background_fetch_delegate_impl.h"
 #include "chrome/browser/browser_process.h"
@@ -44,17 +47,25 @@
 #include "components/zoom/zoom_event_manager.h"
 #include "components/webdata_services/web_data_service_wrapper.h"
 #include "components/webdata/common/webdata_constants.h"
+#include "content/browser/storage_partition_impl_map.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/dom_storage_context.h"
+#include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
+#include "content/public/common/service_manager_connection.h"
+#include "services/service_manager/public/cpp/connector.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/escape.h"
 #include "net/cookies/cookie_store.h"
+#include "net/proxy_resolution/proxy_resolution_service.h"
 #include "net/url_request/url_request_context.h"
+#include "net/url_request/url_request_context_getter.h"
 #include "net/url_request/url_request_job_factory_impl.h"
+#include "vendor/brightray/browser/browser_client.h"
+#include "vendor/brightray/browser/net_log.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "atom/browser/extensions/atom_browser_client_extensions_part.h"
@@ -169,6 +180,8 @@ BraveBrowserContext::BraveBrowserContext(
       ready_(new base::WaitableEvent(
           base::WaitableEvent::ResetPolicy::MANUAL,
           base::WaitableEvent::InitialState::NOT_SIGNALED)),
+      isolated_storage_(false),
+      in_memory_(in_memory),
       io_task_runner_(std::move(io_task_runner)),
       delegate_(g_browser_process->profile_manager()) {
   std::string parent_partition;
@@ -176,6 +189,22 @@ BraveBrowserContext::BraveBrowserContext(
     has_parent_ = true;
     original_context_ = static_cast<BraveBrowserContext*>(
         atom::AtomBrowserContext::From(parent_partition, false));
+  }
+
+  bool isolated_storage;
+  if (options.GetBoolean("isolated_storage", &isolated_storage)) {
+    isolated_storage_ = isolated_storage;
+  }
+
+  std::string tor_proxy;
+  if (options.GetString("tor_proxy", &tor_proxy)) {
+    tor_proxy_ = tor_proxy;
+  }
+
+  base::FilePath::StringType tor_path;
+  if (options.GetString("tor_path", &tor_path) && tor_proxy_.length()) {
+    tor_launcher_factory_.reset(new TorLauncherFactory(tor_path, tor_proxy_));
+    tor_launcher_factory_->LaunchTorProcess();
   }
 
   if (in_memory) {
@@ -317,6 +346,60 @@ content::BrowserPluginGuestManager* BraveBrowserContext::GetGuestManager() {
   return guest_view::GuestViewManager::FromBrowserContext(this);
 }
 
+net::URLRequestContextGetter*
+BraveBrowserContext::CreateRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory,
+    content::ProtocolHandlerMap* protocol_handlers,
+    content::URLRequestInterceptorScopedVector request_interceptors) {
+  if (isolated_storage_) {
+     scoped_refptr<brightray::URLRequestContextGetter>
+      url_request_context_getter =
+        new brightray::URLRequestContextGetter(
+          this,
+          static_cast<brightray::NetLog*>(brightray::BrowserClient::Get()->
+                                          GetNetLog()),
+          partition_path,
+          in_memory,
+          BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
+          protocol_handlers,
+          std::move(request_interceptors));
+    StoragePartitionDescriptor descriptor(partition_path, in_memory);
+    // Inherits web requests handlers from default parition
+    auto default_network_delegate = GetDefaultStoragePartition(this)->
+      GetURLRequestContext()->GetURLRequestContext()->network_delegate();
+    url_request_context_getter->GetURLRequestContext()
+      ->set_network_delegate(default_network_delegate);
+    url_request_context_getter_map_[descriptor] = url_request_context_getter;
+    return url_request_context_getter.get();
+  } else {
+    return nullptr;
+  }
+}
+
+net::URLRequestContextGetter*
+BraveBrowserContext::CreateMediaRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory) {
+  if (isolated_storage_) {
+    StoragePartitionDescriptor descriptor(partition_path, in_memory);
+    URLRequestContextGetterMap::iterator iter =
+      url_request_context_getter_map_.find(descriptor);
+    if (iter != url_request_context_getter_map_.end())
+      return (iter->second).get();
+    else
+      return nullptr;
+  } else {
+    return nullptr;
+  }
+}
+
+bool BraveBrowserContext::IsOffTheRecord() const {
+  if (isolated_storage_)
+    return true;
+  return in_memory_;
+}
+
 void BraveBrowserContext::TrackZoomLevelsFromParent() {
   // Here we only want to use zoom levels stored in the main-context's default
   // storage partition. We're not interested in zoom levels in special
@@ -392,9 +475,14 @@ net::URLRequestContextGetter* BraveBrowserContext::GetRequestContext() {
 
 net::NetworkDelegate* BraveBrowserContext::CreateNetworkDelegate() {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
-  return new extensions::AtomExtensionsNetworkDelegate(this,
-      info_map_,
-      g_browser_process->extension_event_router_forwarder());
+  if (isolated_storage_)
+    return new brave::TorProxyNetworkDelegate(this,
+        info_map_,
+        g_browser_process->extension_event_router_forwarder());
+  else
+    return new extensions::AtomExtensionsNetworkDelegate(this,
+        info_map_,
+        g_browser_process->extension_event_router_forwarder());
 }
 
 std::unique_ptr<net::URLRequestJobFactory>
@@ -414,6 +502,11 @@ BraveBrowserContext::CreateURLRequestJobFactory(
           extensions::CreateExtensionProtocolHandler(IsOffTheRecord(),
                                                      info_map_));
 #endif
+  if (!protocol_handler_interceptor_.get()) {
+    protocol_handler_interceptor_ =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(this)
+      ->CreateJobInterceptorFactory();
+  }
   protocol_handler_interceptor_->Chain(std::move(job_factory));
   return std::move(protocol_handler_interceptor_);
 }
@@ -596,7 +689,7 @@ std::string BraveBrowserContext::partition_with_prefix() {
   if (canonical_partition.empty())
     canonical_partition = "default";
 
-  if (IsOffTheRecord())
+  if (IsOffTheRecord() && !isolated_storage_)
     return canonical_partition;
 
   return kPersistPrefix + canonical_partition;
@@ -632,6 +725,52 @@ void BraveBrowserContext::SetExitType(ExitType exit_type) {
     user_prefs_->SetString(prefs::kSessionExitType,
                       ExitTypeToSessionTypePrefValue(exit_type));
   }
+}
+
+void BraveBrowserContext::SetTorNewIdentity(const GURL& url,
+                                            const base::Closure& callback) {
+  GURL site_url(content::SiteInstance::GetSiteForURL(this, url));
+  const std::string host = site_url.host();
+  base::FilePath partition_path = this->GetPath().Append(
+    content::StoragePartitionImplMap::GetStoragePartitionPath(host, host));
+  scoped_refptr<brightray::URLRequestContextGetter> url_request_context_getter;
+  StoragePartitionDescriptor descriptor(partition_path, true);
+    URLRequestContextGetterMap::iterator iter =
+      url_request_context_getter_map_.find(descriptor);
+  if (iter != url_request_context_getter_map_.end())
+    url_request_context_getter = (iter->second);
+  else
+    return;
+  auto proxy_resolution_service =
+    url_request_context_getter->GetURLRequestContext()->
+    proxy_resolution_service();
+  BrowserThread::PostTaskAndReply(
+    BrowserThread::IO, FROM_HERE,
+    base::Bind(&net::ProxyConfigServiceTor::TorSetProxy,
+               proxy_resolution_service,
+               tor_proxy_,
+               host,
+               &tor_proxy_map_,
+               true),
+    callback);
+}
+
+void BraveBrowserContext::RelaunchTor() const {
+  if (tor_launcher_factory_.get())
+    tor_launcher_factory_->RelaunchTorProcess();
+}
+
+void BraveBrowserContext::SetTorLauncherCallback(
+    const TorLauncherFactory::TorLauncherCallback& callback) {
+  if (tor_launcher_factory_.get())
+    tor_launcher_factory_->SetLauncherCallback(callback);
+}
+
+int64_t BraveBrowserContext::GetTorPid() const {
+  if (tor_launcher_factory_.get())
+    return tor_launcher_factory_->GetTorPid();
+  else
+    return -1;
 }
 
 scoped_refptr<base::SequencedTaskRunner>

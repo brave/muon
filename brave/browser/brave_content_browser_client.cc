@@ -17,10 +17,13 @@
 #include "base/lazy_instance.h"
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_browser_context.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
 #include "brave/browser/renderer_host/brave_render_message_filter.h"
+#include "brave/common/tor/tor.mojom.h"
 #include "brave/grit/brave_resources.h"
+#include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/cache_stats_recorder.h"
 #include "chrome/browser/chrome_service.h"
@@ -278,6 +281,12 @@ std::string BraveContentBrowserClient::GetStoragePartitionIdForSite(
     partition_id = site.spec();
 #endif
 
+  auto brave_browser_context =
+    BraveBrowserContext::FromBrowserContext(browser_context);
+  if (brave_browser_context && brave_browser_context->IsIsolatedStorage()) {
+    partition_id = site.spec();
+  }
+
   DCHECK(IsValidStoragePartitionId(browser_context, partition_id));
   return partition_id;
 }
@@ -347,6 +356,17 @@ void BraveContentBrowserClient::GetStoragePartitionConfigForSite(
   // error about which StoragePartition they expect to be in and it is not
   // safe to continue.
   CHECK(can_be_default || !partition_domain->empty());
+
+  auto brave_browser_context =
+    BraveBrowserContext::FromBrowserContext(browser_context);
+  if (brave_browser_context && brave_browser_context->IsIsolatedStorage() &&
+      !site.SchemeIs(extensions::kExtensionScheme)) {
+    if (!site.is_empty()) {
+      *partition_domain = site.host();
+      *partition_name = site.host();
+    }
+    *in_memory = brave_browser_context->IsOffTheRecord();
+  }
 }
 
 content::WebContentsViewDelegate*
@@ -400,11 +420,14 @@ void BraveContentBrowserClient::RegisterOutOfProcessServices(
       l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROXY_RESOLVER_NAME);
 
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
-    (*services)[printing::mojom::kChromePrintingServiceName] =
+  (*services)[printing::mojom::kChromePrintingServiceName] =
       l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PRINTING_SERVICE_NAME);
 #endif
-    (*services)[unzip::mojom::kServiceName] =
+  (*services)[unzip::mojom::kServiceName] =
       l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_UNZIP_NAME);
+
+  (*services)[tor::mojom::kTorServiceName] =
+      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_TOR_LAUNCHER_NAME);
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
@@ -756,6 +779,11 @@ void BraveContentBrowserClient::SiteInstanceDeleting(
 
 bool BraveContentBrowserClient::ShouldUseProcessPerSite(
     content::BrowserContext* browser_context, const GURL& effective_url) {
+  auto brave_browser_context =
+    BraveBrowserContext::FromBrowserContext(browser_context);
+  if (brave_browser_context && brave_browser_context->IsIsolatedStorage())
+    return true;
+
   Profile* profile = Profile::FromBrowserContext(browser_context);
   if (!profile)
     return false;

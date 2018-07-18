@@ -125,7 +125,7 @@ net::URLRequestContextGetter* BrowserContext::CreateRequestContext(
       this,
       static_cast<NetLog*>(BrowserClient::Get()->GetNetLog()),
       GetPath(),
-      in_memory_,
+      IsOffTheRecord(),
       BrowserThread::GetTaskRunnerForThread(BrowserThread::IO),
       protocol_handlers,
       std::move(protocol_interceptors));
@@ -175,24 +175,8 @@ content::BackgroundSyncController* BrowserContext::GetBackgroundSyncController()
 }
 
 net::URLRequestContextGetter*
-BrowserContext::CreateRequestContextForStoragePartition(
-    const base::FilePath& partition_path,
-    bool in_memory,
-    content::ProtocolHandlerMap* protocol_handlers,
-    content::URLRequestInterceptorScopedVector request_interceptors) {
-  return nullptr;
-}
-
-net::URLRequestContextGetter*
 BrowserContext::CreateMediaRequestContext() {
   return url_request_getter_.get();
-}
-
-net::URLRequestContextGetter*
-BrowserContext::CreateMediaRequestContextForStoragePartition(
-    const base::FilePath& partition_path,
-    bool in_memory) {
-  return nullptr;
 }
 
 }  // namespace brightray
