@@ -1337,6 +1337,25 @@ index b1d214c35f075d16acfcd71576842e6b751d0697..8e9fb9fc6f5d27a106b13aad0412fc84
    DCHECK(from_rfh);
    FrameTreeNode* node =
        static_cast<RenderFrameHostImpl*>(from_rfh)->frame_tree_node();
+diff --git a/content/browser/frame_host/render_frame_host_impl.cc b/content/browser/frame_host/render_frame_host_impl.cc
+index d938013c90b630b94c2f4ee2daed542dbe437da0..05fbfe707db8afb0dcf4d3fa1a841c506e8c470c 100644
+--- a/content/browser/frame_host/render_frame_host_impl.cc
++++ b/content/browser/frame_host/render_frame_host_impl.cc
+@@ -2952,9 +2952,13 @@ void RenderFrameHostImpl::CreateNewWindow(
+     return;
+   }
+ 
++  scoped_refptr<SiteInstance> site_instance =
++    params->opener_suppressed
++      ? SiteInstance::CreateForURL(GetProcess()->GetBrowserContext(), params->target_url)
++      : GetSiteInstance();
+   // This will clone the sessionStorage for namespace_id_to_clone.
+   StoragePartition* storage_partition = BrowserContext::GetStoragePartition(
+-      GetSiteInstance()->GetBrowserContext(), GetSiteInstance());
++      site_instance->GetBrowserContext(), site_instance.get());
+   DOMStorageContextWrapper* dom_storage_context =
+       static_cast<DOMStorageContextWrapper*>(
+           storage_partition->GetDOMStorageContext());
 diff --git a/content/browser/frame_host/render_frame_message_filter.cc b/content/browser/frame_host/render_frame_message_filter.cc
 index 80fd7cf8957865e62186f394a318f912c6da4e20..a189c82b5a2d6ca6fdfb38c6eadffebd518999ea 100644
 --- a/content/browser/frame_host/render_frame_message_filter.cc
