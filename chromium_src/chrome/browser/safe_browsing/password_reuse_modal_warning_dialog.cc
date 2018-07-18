@@ -5,11 +5,14 @@
 
 namespace safe_browsing {
 
+#if !defined(OS_MACOSX) || BUILDFLAG(MAC_VIEWS_BROWSER)
 void ShowPasswordReuseModalWarningDialog(
     content::WebContents* web_contents,
     ChromePasswordProtectionService* service,
+    ReusedPasswordType password_type,
     OnWarningDone done_callback) {
   std::move(done_callback).Run(PasswordProtectionService::IGNORE_WARNING);
 }
+#endif  // !OS_MACOSX || MAC_VIEWS_BROWSER
 
 }  // namespace safe_browsing

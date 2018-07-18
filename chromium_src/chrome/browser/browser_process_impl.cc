@@ -50,6 +50,7 @@
 #include "content/public/common/network_connection_tracker.h"
 #include "content/public/common/service_manager_connection.h"
 #include "ppapi/buildflags/buildflags.h"
+#include "services/network/public/cpp/network_quality_tracker.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/message_center/message_center.h"
@@ -589,8 +590,18 @@ BrowserProcessImpl::system_network_context_manager() {
   return system_network_context_manager_.get();
 }
 
+scoped_refptr<network::SharedURLLoaderFactory>
+BrowserProcessImpl::shared_url_loader_factory() {
+  return system_network_context_manager()->GetSharedURLLoaderFactory();
+}
+
 content::NetworkConnectionTracker*
 BrowserProcessImpl::network_connection_tracker() {
+  NOTIMPLEMENTED();
+  return nullptr;
+}
+
+network::NetworkQualityTracker* BrowserProcessImpl::network_quality_tracker() {
   NOTIMPLEMENTED();
   return nullptr;
 }

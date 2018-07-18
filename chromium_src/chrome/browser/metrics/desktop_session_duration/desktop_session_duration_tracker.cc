@@ -2,6 +2,10 @@
 
 namespace metrics {
 
+bool DesktopSessionDurationTracker::IsInitialized() {
+  return false;
+}
+
 DesktopSessionDurationTracker* DesktopSessionDurationTracker::Get() {
   return NULL;
 }
