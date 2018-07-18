@@ -1,7 +1,7 @@
 use_relative_paths = True
 
 deps = {
-  "vendor/node": "https://github.com/brave/node.git@18f874a7222698fee07c977b84dc6082e114e185",
+  "vendor/node": "https://github.com/brave/node.git@86deba03b1b5a9c391dd8dfaec9f02cdf59b59f1",
   "vendor/ad-block": "https://github.com/brave/ad-block.git@5377ddea390a0641d99556e0cf9d9c15b8ef275c",
   "vendor/tracking-protection": "https://github.com/brave/tracking-protection.git@bad1cf834508eab25ba6051d04edfb4d68e45401",
   "vendor/hashset-cpp": "https://github.com/brave/hashset-cpp.git@edd90e8215ea34582811446a143a7c8063f535f0",
