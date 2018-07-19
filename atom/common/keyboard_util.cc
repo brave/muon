@@ -67,7 +67,8 @@ ui::KeyboardCode KeyboardCodeFromCharCode(base::char16 c, bool* shifted) {
     case '+': *shifted = true; FALLTHROUGH; case '=': return ui::VKEY_OEM_PLUS;
     case '<': *shifted = true; FALLTHROUGH; case ',': return ui::VKEY_OEM_COMMA;
     case '_': *shifted = true; FALLTHROUGH; case '-': return ui::VKEY_OEM_MINUS;
-    case '>': *shifted = true; FALLTHROUGH; case '.': return ui::VKEY_OEM_PERIOD;
+    case '>': *shifted = true; FALLTHROUGH;
+      case '.': return ui::VKEY_OEM_PERIOD;
     case '?': *shifted = true; FALLTHROUGH; case '/': return ui::VKEY_OEM_2;
     case '~': *shifted = true; FALLTHROUGH; case '`': return ui::VKEY_OEM_3;
     case '{': *shifted = true; FALLTHROUGH; case '[': return ui::VKEY_OEM_4;
