@@ -18,6 +18,7 @@
 #include "chrome/install_static/install_util.h"
 #endif
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/net/system_network_context_manager.h"
 #include "components/component_updater/component_updater_command_line_config_policy.h"
 #include "components/component_updater/configurator_impl.h"
 #include "components/prefs/pref_service.h"
@@ -53,6 +54,8 @@ class BraveConfigurator : public update_client::Configurator {
   std::string ExtraRequestParams() const override;
   std::string GetDownloadPreference() const override;
   scoped_refptr<net::URLRequestContextGetter> RequestContext() const override;
+  scoped_refptr<network::SharedURLLoaderFactory> URLLoaderFactory()
+      const override;
   std::unique_ptr<service_manager::Connector> CreateServiceManagerConnector()
       const override;
   bool EnabledDeltas() const override;
@@ -152,6 +155,16 @@ std::string BraveConfigurator::GetDownloadPreference() const {
 scoped_refptr<net::URLRequestContextGetter>
   BraveConfigurator::RequestContext() const {
     return g_browser_process->system_request_context();
+}
+
+scoped_refptr<network::SharedURLLoaderFactory>
+BraveConfigurator::URLLoaderFactory() const {
+  SystemNetworkContextManager* system_network_context_manager =
+      g_browser_process->system_network_context_manager();
+  // Manager will be null if called from InitializeForTesting.
+  if (!system_network_context_manager)
+    return nullptr;
+  return system_network_context_manager->GetSharedURLLoaderFactory();
 }
 
 std::unique_ptr<service_manager::Connector>
