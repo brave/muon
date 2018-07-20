@@ -16,7 +16,6 @@
 #include "brave/grit/brave_strings.h"  // NOLINT: This file is generated
 #include "brave/common/extensions/api/generated_schemas.h"  // NOLINT: This file is generated
 #include "brave/common/extensions/api/api_features.h"
-#include "brave/common/extensions/api/behavior_features.h"
 #include "brave/common/extensions/api/manifest_features.h"
 #include "brave/common/extensions/api/permission_features.h"
 #include "chrome/common/chrome_content_client.h"
@@ -26,7 +25,11 @@
 #include "chrome/common/extensions/chrome_manifest_handlers.h"
 #include "chrome/common/url_constants.h"
 #include "chrome/grit/common_resources.h"  // NOLINT: This file is generated
+#include "extensions/common/api/api_features.h"
+#include "extensions/common/api/behavior_features.h"
 #include "extensions/common/api/generated_schemas.h"  // NOLINT: This file is generated
+#include "extensions/common/api/manifest_features.h"
+#include "extensions/common/api/permission_features.h"
 #include "extensions/common/common_manifest_handlers.h"
 #include "extensions/common/extension_api.h"
 #include "extensions/common/extension_urls.h"
@@ -95,15 +98,19 @@ const std::string ChromeExtensionsClient::GetProductName() {
 
 std::unique_ptr<FeatureProvider> ChromeExtensionsClient::CreateFeatureProvider(
     const std::string& name) const {
-  std::unique_ptr<FeatureProvider> provider;
+  auto provider = std::make_unique<FeatureProvider>();
   if (name == "api") {
-    provider.reset(new BraveAPIFeatureProvider());
+    AddCoreAPIFeatures(provider.get());
+    AddBraveAPIFeatures(provider.get());
   } else if (name == "manifest") {
-    provider.reset(new BraveManifestFeatureProvider());
+    AddCoreManifestFeatures(provider.get());
+    AddBraveManifestFeatures(provider.get());
   } else if (name == "permission") {
-    provider.reset(new BravePermissionFeatureProvider());
+    AddCorePermissionFeatures(provider.get());
+    AddBravePermissionFeatures(provider.get());
   } else if (name == "behavior") {
-    provider.reset(new BraveBehaviorFeatureProvider());
+    // Note: There are no chrome-specific behavior features.
+    AddCoreBehaviorFeatures(provider.get());
   } else {
     NOTREACHED();
   }
