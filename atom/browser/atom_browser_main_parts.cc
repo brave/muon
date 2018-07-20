@@ -45,11 +45,11 @@
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
-#include "device/geolocation/geolocation_provider.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
 #include "media/base/media_switches.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "muon/browser/muon_browser_process_impl.h"
+#include "services/device/geolocation/geolocation_provider.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
 #include "v8/include/v8.h"
 
