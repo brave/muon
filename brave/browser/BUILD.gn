@@ -69,7 +69,7 @@ source_set("browser") {
     "//device/usb/mojo",
     "//device/usb/public/mojom",
     "//gpu/config",
-    "//mojo/edk",
+    "//mojo/core/embedder",
     "//mojo/public/cpp/bindings",
     "//services/device/public/mojom",
     "//services/identity:lib",
