@@ -576,7 +576,7 @@ if (is_win) {
   chromedriver = "$chromedriver.exe"
 }
 
-chromedriver_version = "2.37"
+chromedriver_version = "2.38"
 
 copy("electron_chromedriver_dist_resources") {
   sources = [
