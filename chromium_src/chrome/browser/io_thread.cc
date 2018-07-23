@@ -75,11 +75,6 @@ class WrappedCertVerifierForIOThreadTesting : public net::CertVerifier {
     return g_cert_verifier_for_io_thread_testing->Verify(
         params, crl_set, verify_result, std::move(callback), out_req, net_log);
   }
-  bool SupportsOCSPStapling() override {
-    if (!g_cert_verifier_for_io_thread_testing)
-      return false;
-    return g_cert_verifier_for_io_thread_testing->SupportsOCSPStapling();
-  }
 };
 
 #if defined(OS_MACOSX)
