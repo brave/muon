@@ -62,8 +62,4 @@ int AtomCertVerifier::Verify(
   return net::ERR_IO_PENDING;
 }
 
-bool AtomCertVerifier::SupportsOCSPStapling() {
-  return true;
-}
-
 }  // namespace atom
