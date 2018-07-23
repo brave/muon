@@ -75,12 +75,14 @@ class CallbackHolderBase {
   DISALLOW_COPY_AND_ASSIGN(CallbackHolderBase);
 };
 
-template <template <typename> class Callback, typename Sig>
+template<typename Sig>
 class CallbackHolder : public CallbackHolderBase {
  public:
-  CallbackHolder(v8::Isolate* isolate, const Callback<Sig>& callback, int flags)
+  CallbackHolder(v8::Isolate* isolate,
+                 const base::Callback<Sig>& callback,
+                 int flags)
       : CallbackHolderBase(isolate), callback(callback), flags(flags) {}
-  Callback<Sig> callback;
+  base::Callback<Sig> callback;
   int flags;
  private:
   virtual ~CallbackHolder() {}
@@ -163,15 +165,11 @@ struct ArgumentHolder {
 
 // Class template for converting arguments from JavaScript to C++ and running
 // the callback with them.
-template <template <typename> class Callback,
-          typename IndicesType,
-          typename... ArgTypes>
+template <typename IndicesType, typename... ArgTypes>
 class Invoker {};
 
-template <template <typename> class Callback,
-          size_t... indices,
-          typename... ArgTypes>
-class Invoker<Callback, IndicesHolder<indices...>, ArgTypes...>
+template <size_t... indices, typename... ArgTypes>
+class Invoker<IndicesHolder<indices...>, ArgTypes...>
     : public ArgumentHolder<indices, ArgTypes>... {
  public:
   // Invoker<> inherits from ArgumentHolder<> for each argument.
@@ -192,7 +190,7 @@ class Invoker<Callback, IndicesHolder<indices...>, ArgTypes...>
   }
 
   template <typename ReturnType>
-  void DispatchToCallback(Callback<ReturnType(ArgTypes...)> callback) {
+  void DispatchToCallback(base::Callback<ReturnType(ArgTypes...)> callback) {
     v8::MicrotasksScope script_scope(
         args_->isolate(), v8::MicrotasksScope::kRunMicrotasks);
     args_->Return(callback.Run(ArgumentHolder<indices, ArgTypes>::value...));
@@ -201,7 +199,7 @@ class Invoker<Callback, IndicesHolder<indices...>, ArgTypes...>
   // In C++, you can declare the function foo(void), but you can't pass a void
   // expression to foo. As a result, we must specialize the case of Callbacks
   // that have the void return type.
-  void DispatchToCallback(Callback<void(ArgTypes...)> callback) {
+  void DispatchToCallback(base::Callback<void(ArgTypes...)> callback) {
     v8::MicrotasksScope script_scope(
         args_->isolate(), v8::MicrotasksScope::kRunMicrotasks);
     callback.Run(ArgumentHolder<indices, ArgTypes>::value...);
@@ -219,13 +217,11 @@ class Invoker<Callback, IndicesHolder<indices...>, ArgTypes...>
 
 // DispatchToCallback converts all the JavaScript arguments to C++ types and
 // invokes the base::Callback.
-template <template <typename> class Callback, typename Sig>
+template <typename Sig>
 struct Dispatcher {};
 
-template <template <typename> class Callback,
-          typename ReturnType,
-          typename... ArgTypes>
-struct Dispatcher<Callback, ReturnType(ArgTypes...)> {
+template <typename ReturnType, typename... ArgTypes>
+struct Dispatcher<ReturnType(ArgTypes...)> {
   static void DispatchToCallback(
       const v8::FunctionCallbackInfo<v8::Value>& info) {
     Arguments args(info);
@@ -234,11 +230,11 @@ struct Dispatcher<Callback, ReturnType(ArgTypes...)> {
     CallbackHolderBase* holder_base = reinterpret_cast<CallbackHolderBase*>(
         v8_holder->Value());
 
-    typedef CallbackHolder<Callback, ReturnType(ArgTypes...)> HolderT;
+    typedef CallbackHolder<ReturnType(ArgTypes...)> HolderT;
     HolderT* holder = static_cast<HolderT*>(holder_base);
 
     using Indices = typename IndicesGenerator<sizeof...(ArgTypes)>::type;
-    Invoker<Callback, Indices, ArgTypes...> invoker(&args, holder->flags);
+    Invoker<Indices, ArgTypes...> invoker(&args, holder->flags);
     if (invoker.IsOK())
       invoker.DispatchToCallback(holder->callback);
   }
@@ -256,33 +252,32 @@ struct Dispatcher<Callback, ReturnType(ArgTypes...)> {
 // internal reasons, thus it is generally a good idea to cache the template
 // returned by this function.  Otherwise, repeated method invocations from JS
 // will create substantial memory leaks. See http://crbug.com/463487.
-template <template <typename> class Callback, typename Sig>
+template<typename Sig>
 v8::Local<v8::FunctionTemplate> CreateFunctionTemplate(
-    v8::Isolate* isolate,
-    const Callback<Sig> callback,
+    v8::Isolate* isolate, const base::Callback<Sig> callback,
     int callback_flags = 0) {
-  typedef internal::CallbackHolder<Callback, Sig> HolderT;
+  typedef internal::CallbackHolder<Sig> HolderT;
   HolderT* holder = new HolderT(isolate, callback, callback_flags);
 
   return v8::FunctionTemplate::New(
-      isolate, &internal::Dispatcher<Callback, Sig>::DispatchToCallback,
-      ConvertToV8<v8::Local<v8::External>>(isolate,
-                                           holder->GetHandle(isolate)));
+      isolate,
+      &internal::Dispatcher<Sig>::DispatchToCallback,
+      ConvertToV8<v8::Local<v8::External> >(isolate,
+                                             holder->GetHandle(isolate)));
 }
 
 // CreateFunctionHandler installs a CallAsFunction handler on the given
 // object template that forwards to a provided C++ function or base::Callback.
-template <template <typename> class Callback, typename Sig>
+template<typename Sig>
 void CreateFunctionHandler(v8::Isolate* isolate,
                            v8::Local<v8::ObjectTemplate> tmpl,
-                           const Callback<Sig> callback,
+                           const base::Callback<Sig> callback,
                            int callback_flags = 0) {
-  typedef internal::CallbackHolder<Callback, Sig> HolderT;
+  typedef internal::CallbackHolder<Sig> HolderT;
   HolderT* holder = new HolderT(isolate, callback, callback_flags);
-  tmpl->SetCallAsFunctionHandler(
-      &internal::Dispatcher<Callback, Sig>::DispatchToCallback,
-      ConvertToV8<v8::Local<v8::External>>(isolate,
-                                           holder->GetHandle(isolate)));
+  tmpl->SetCallAsFunctionHandler(&internal::Dispatcher<Sig>::DispatchToCallback,
+                                 ConvertToV8<v8::Local<v8::External> >(
+                                     isolate, holder->GetHandle(isolate)));
 }
 
 }  // namespace mate
