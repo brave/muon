@@ -20,6 +20,8 @@ class MediaStreamCaptureIndicator
 
   bool IsCapturingUserMedia(content::WebContents* web_contents) const;
   bool IsBeingMirrored(content::WebContents* web_contents) const;
+  bool IsCapturingDesktop(content::WebContents* web_contents) const;
+
  private:
   friend class base::RefCountedThreadSafe<MediaStreamCaptureIndicator>;
   ~MediaStreamCaptureIndicator();
