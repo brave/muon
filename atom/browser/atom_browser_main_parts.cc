@@ -237,13 +237,6 @@ int AtomBrowserMainParts::PreCreateThreads() {
       password_manager::features::kFillOnAccountSelect.name,
       base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
 
-  // disable touchpad and wheel scroll latching.
-  field_trial = feature_list->GetFieldTrial(
-      features::kTouchpadAndWheelScrollLatching);
-  feature_list->RegisterFieldTrialOverride(
-      features::kTouchpadAndWheelScrollLatching.name,
-      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
   // Disable Unified Autoplay to prevents it from overriding our default value
   field_trial = feature_list->GetFieldTrial(
       media::kUnifiedAutoplay);
