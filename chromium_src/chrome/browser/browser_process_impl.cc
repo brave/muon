@@ -47,7 +47,7 @@
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/common/content_switches.h"
-#include "content/public/common/network_connection_tracker.h"
+#include "content/public/browser/network_connection_tracker.h"
 #include "content/public/common/service_manager_connection.h"
 #include "ppapi/buildflags/buildflags.h"
 #include "services/network/public/cpp/network_quality_tracker.h"
