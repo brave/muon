@@ -8,6 +8,7 @@
 
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
+#include "content/public/browser/permission_controller.h"
 #include "content/public/browser/permission_type.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
@@ -126,7 +127,7 @@ int BravePermissionManager::RequestPermissions(
   }
 
   response_callback.Run(permissionStatuses);
-  return kNoPendingOperation;
+  return content::PermissionController::kNoPendingOperation;
 }
 
 device::mojom::GeolocationControl*
