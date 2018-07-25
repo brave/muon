@@ -102,8 +102,9 @@ URLRequestContextGetter::Delegate::CreateCertVerifier() {
   return net::CertVerifier::CreateDefault();
 }
 
-net::SSLConfigService* URLRequestContextGetter::Delegate::CreateSSLConfigService() {
-  return new net::SSLConfigServiceDefaults;
+std::unique_ptr<net::SSLConfigService>
+URLRequestContextGetter::Delegate::CreateSSLConfigService() {
+  return std::make_unique<net::SSLConfigServiceDefaults>();
 }
 
 std::vector<std::string> URLRequestContextGetter::Delegate::GetCookieableSchemes() {
