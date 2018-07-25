@@ -408,6 +408,10 @@ bool AtomExtensionsBrowserClient::DidVersionUpdate(
   return false;
 }
 
+bool AtomExtensionsBrowserClient::IsInDemoMode() {
+  return false;
+}
+
 void AtomExtensionsBrowserClient::PermitExternalProtocolHandler() {
 }
 
