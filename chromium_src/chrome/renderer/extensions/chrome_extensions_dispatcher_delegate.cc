@@ -132,8 +132,8 @@ ChromeExtensionsDispatcherDelegate::ChromeExtensionsDispatcherDelegate() {
 ChromeExtensionsDispatcherDelegate::~ChromeExtensionsDispatcherDelegate() {
 }
 
-void ChromeExtensionsDispatcherDelegate::InitOriginPermissions(
-    const extensions::Extension* extension,
+void ChromeExtensionsDispatcherDelegate::AddOriginAccessPermissions(
+    const extensions::Extension& extension,
     bool is_extension_active) {
 }
 
