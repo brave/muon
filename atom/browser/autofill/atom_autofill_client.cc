@@ -123,6 +123,9 @@ void AtomAutofillClient::OnUnmaskVerificationResult(
     PaymentsRpcResult result) {
 }
 
+void AtomAutofillClient::ShowLocalCardMigrationPrompt(
+    base::OnceClosure closure) {}
+
 void AtomAutofillClient::ConfirmSaveCreditCardLocally(
     const CreditCard& card,
     const base::Closure& callback) {
