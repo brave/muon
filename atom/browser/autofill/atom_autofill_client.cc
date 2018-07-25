@@ -113,6 +113,10 @@ void AtomAutofillClient::ShowAutofillSettings() {
   }
 }
 
+void AtomAutofillClient::ConfirmSaveAutofillProfile(
+    const AutofillProfile& profile,
+    base::OnceClosure callback) {}
+
 void AtomAutofillClient::ShowUnmaskPrompt(
     const CreditCard& card,
     UnmaskCardReason reason,
