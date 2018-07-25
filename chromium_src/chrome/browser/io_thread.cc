@@ -204,9 +204,6 @@ void IOThread::Init() {
   DCHECK(!globals_);
   globals_ = new Globals;
 
-  // Setup the HistogramWatcher to run on the IO thread.
-  net::NetworkChangeNotifier::InitHistogramWatcher();
-
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   globals_->extension_event_router_forwarder =
       extension_event_router_forwarder_;
@@ -231,9 +228,6 @@ void IOThread::CleanUp() {
 #if defined(USE_NSS_CERTS)
   net::SetURLRequestContextForNSSHttpIO(nullptr);
 #endif
-
-  // Shutdown the HistogramWatcher on the IO thread.
-  net::NetworkChangeNotifier::ShutdownHistogramWatcher();
 
   delete globals_;
   globals_ = nullptr;
