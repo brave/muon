@@ -675,7 +675,7 @@ BraveBrowserContext::CreateZoomLevelDelegate(
 
 scoped_refptr<autofill::AutofillWebDataService>
 BraveBrowserContext::GetAutofillWebdataService() {
-  return original_context()->web_database_wrapper_->GetAutofillWebData();
+  return original_context()->web_database_wrapper_->GetProfileAutofillWebData();
 }
 
 #if defined(OS_WIN)
