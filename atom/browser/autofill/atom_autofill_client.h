@@ -58,6 +58,8 @@ class AtomAutofillClient
   autofill::AddressNormalizer* GetAddressNormalizer() override;
   security_state::SecurityLevel GetSecurityLevelForUmaHistograms() override;
   void ShowAutofillSettings() override;
+  void ConfirmSaveAutofillProfile(const AutofillProfile& profile,
+                                  base::OnceClosure callback) override;
   void ShowUnmaskPrompt(const CreditCard& card,
                         UnmaskCardReason reason,
                         base::WeakPtr<CardUnmaskDelegate> delegate) override;
