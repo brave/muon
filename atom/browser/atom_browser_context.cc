@@ -32,6 +32,7 @@
 #include "content/public/common/url_constants.h"
 #include "net/base/completion_once_callback.h"
 #include "net/ftp/ftp_network_layer.h"
+#include "net/ssl/ssl_config_service_defaults.h"
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
 #include "net/url_request/url_request_context.h"
@@ -140,8 +141,9 @@ std::unique_ptr<net::CertVerifier> AtomBrowserContext::CreateCertVerifier() {
   return base::WrapUnique(new AtomCertVerifier);
 }
 
-net::SSLConfigService* AtomBrowserContext::CreateSSLConfigService() {
-  return new AtomSSLConfigService;
+std::unique_ptr<net::SSLConfigService>
+AtomBrowserContext::CreateSSLConfigService() {
+  return std::make_unique<net::SSLConfigServiceDefaults>();
 }
 
 std::vector<std::string> AtomBrowserContext::GetCookieableSchemes() {

@@ -31,7 +31,7 @@ class AtomBrowserContext : public brightray::BrowserContext {
   net::HttpCache::BackendFactory* CreateHttpCacheBackendFactory(
       const base::FilePath& base_path) override;
   std::unique_ptr<net::CertVerifier> CreateCertVerifier() override;
-  net::SSLConfigService* CreateSSLConfigService() override;
+  std::unique_ptr<net::SSLConfigService> CreateSSLConfigService() override;
   std::vector<std::string> GetCookieableSchemes() override;
 
   // content::BrowserContext:
