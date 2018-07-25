@@ -5,6 +5,7 @@
 #ifndef ATOM_BROWSER_LOGIN_HANDLER_H_
 #define ATOM_BROWSER_LOGIN_HANDLER_H_
 
+#include "base/callback.h"
 #include "base/strings/string16.h"
 #include "base/synchronization/lock.h"
 #include "content/public/browser/login_delegate.h"
