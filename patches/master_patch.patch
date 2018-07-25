@@ -1571,6 +1571,33 @@ index 08d8639f6fd230eaf5fae1e0a94de504b5c76f2f..c1986c9647249d97f3c5dccf48fe90f6
  @property(readonly) NSTimeInterval timestamp;
  
  @end
+diff --git a/content/browser/renderer_host/render_process_host_impl.cc b/content/browser/renderer_host/render_process_host_impl.cc
+index 5ccfa4398c7180ff9268d6a909668a2d54f8a89c..35f0bff7bd52db74cb421abd4edbec6035fae63f 100644
+--- a/content/browser/renderer_host/render_process_host_impl.cc
++++ b/content/browser/renderer_host/render_process_host_impl.cc
+@@ -269,6 +269,9 @@
+ #include "content/browser/net/reporting_service_proxy.h"
+ #endif  // BUILDFLAG(ENABLE_REPORTING)
+ 
++#if !defined(MUON_CHROMIUM_BUILD)
++#include "brave/browser/brave_browser_context.h"
++#endif
+ namespace content {
+ 
+ using CheckOriginLockResult =
+@@ -1357,7 +1360,12 @@ RenderProcessHost* RenderProcessHostImpl::CreateRenderProcessHost(
+   // "https://example.com/sw.js" but need to use the site URL
+   // "chrome-guest://blahblah" to get a process in the guest's
+   // StoragePartition.)
++#if !defined(MUON_CHROMIUM_BUILD)
++  auto brave_browser_context = brave::BraveBrowserContext::FromBrowserContext(browser_context);
++  if ((brave_browser_context->IsIsolatedStorage() || is_for_guests_only) && site_instance &&
++#else
+   if (is_for_guests_only && site_instance &&
++#endif
+       storage_partition_impl->site_for_service_worker().is_empty()) {
+     storage_partition_impl->set_site_for_service_worker(
+         site_instance->GetSiteURL());
 diff --git a/content/browser/renderer_host/render_widget_host_ns_view_bridge.h b/content/browser/renderer_host/render_widget_host_ns_view_bridge.h
 index 3761be5f730dd73662acdd016ee098d64556b09c..e3066953627059ec96ebd6b159db7251c4bd38cf 100644
 --- a/content/browser/renderer_host/render_widget_host_ns_view_bridge.h
