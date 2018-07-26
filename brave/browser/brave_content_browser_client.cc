@@ -824,6 +824,21 @@ bool BraveContentBrowserClient::ShouldUseSpareRenderProcessHost(
 #endif
 }
 
+const char*
+BraveContentBrowserClient::GetInitatorSchemeBypassingDocumentBlocking() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // Don't block responses for extension processes or for content scripts.
+  // TODO(creis): When every extension fetch (including content scripts) has
+  // been made to go through an extension-specific URLLoaderFactory, this
+  // mechanism ought to work by enumerating the host permissions from the
+  // extension manifest, and forwarding them on to the network service while
+  // brokering the URLLoaderFactory.
+  return extensions::kExtensionScheme;
+#else
+  return nullptr;
+#endif
+}
+
 void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
         std::vector<std::string>* additional_allowed_schemes) {
   AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
