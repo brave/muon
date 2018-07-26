@@ -325,7 +325,7 @@ bool AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
     return true;
   }
 
-  // Navigations from chrome://, chrome-search:// and chrome-devtools:// pages
+  // Navigations from chrome:// and chrome-devtools:// pages
   // need to be allowed, even if |to_url| is not web-accessible. See
   // https://crbug.com/662602.
   //
@@ -333,20 +333,8 @@ bool AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
   // filesystem: URLs above, for consistency with the renderer-side checks
   // which already disallow navigations from chrome URLs to blob/filesystem
   // URLs.
-  // TODO(yan): is this actually necessary for muon?
   if (from_url.SchemeIs(content::kChromeUIScheme) ||
-      from_url.SchemeIs(content::kChromeDevToolsScheme) ||
-      from_url.SchemeIs(chrome::kChromeSearchScheme)) {
-    *result = true;
-    return true;
-  }
-
-  // <webview> guests should be allowed to load only webview-accessible
-  // resources, but that check is done later in
-  // AllowCrossRendererResourceLoadHelper, so allow <webview> guests to proceed
-  // here and rely on that check instead.  See https://crbug.com/691941.
-  // TODO(yan): is this actually necessary for muon?
-  if (from_url.SchemeIs(content::kGuestScheme)) {
+      from_url.SchemeIs(content::kChromeDevToolsScheme)) {
     *result = true;
     return true;
   }
