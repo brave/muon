@@ -396,7 +396,9 @@ resource_coordinator::TabManager* BrowserProcessImpl::GetTabManager() {
   if (!tab_manager_) {
     tab_manager_ = std::make_unique<resource_coordinator::GuestTabManager>();
     tab_lifecycle_unit_source_ =
-        std::make_unique<resource_coordinator::TabLifecycleUnitSource>();
+        std::make_unique<resource_coordinator::TabLifecycleUnitSource>(
+            tab_manager_->intervention_policy_database(),
+            tab_manager_->usage_clock());
     tab_lifecycle_unit_source_->AddObserver(tab_manager_.get());
   }
   return tab_manager_.get();
