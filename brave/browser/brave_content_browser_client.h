@@ -114,6 +114,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       content::BrowserContext* browser_context,
       const GURL& url) override;
 
+  const char* GetInitatorSchemeBypassingDocumentBlocking() override;
   void GetAdditionalAllowedSchemesForFileSystem(
       std::vector<std::string>* additional_allowed_schemes) override;
   void GetAdditionalWebUISchemes(
