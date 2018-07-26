@@ -241,9 +241,9 @@ bool GetSessionTypes(const base::DictionaryValue& manifest,
   }
 
   // Temporary session is always supported.
-  session_types->insert(media::CdmSessionType::TEMPORARY_SESSION);
+  session_types->insert(media::CdmSessionType::kTemporary);
   if (is_persistent_license_supported)
-    session_types->insert(media::CdmSessionType::PERSISTENT_LICENSE_SESSION);
+    session_types->insert(media::CdmSessionType::kPersistentLicense);
 
   return true;
 }
