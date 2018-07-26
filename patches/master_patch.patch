@@ -1436,7 +1436,7 @@ index 08d8639f6fd230eaf5fae1e0a94de504b5c76f2f..c1986c9647249d97f3c5dccf48fe90f6
  
  @end
 diff --git a/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h b/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h
-index a7678f05d794a4ea0498fa698d3b051b8e7e908b..b8434a3832c8c86a21ad9363a380ccae58fd0302 100644
+index a7678f05d794a4ea0498fa698d3b051b8e7e908b..7d4352d4f77c032263f4390d5492f718ee420e77 100644
 --- a/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h
 +++ b/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h
 @@ -10,6 +10,9 @@
@@ -1455,9 +1455,9 @@ index a7678f05d794a4ea0498fa698d3b051b8e7e908b..b8434a3832c8c86a21ad9363a380ccae
    void ShowDictionaryOverlayForSelection() override;
 +#if !defined(MUON_CHROMIUM_BUILD)
 +  void ShowDictionaryOverlayForSelection(RenderWidgetHostView* target_view);
-+  void SetTargetView(RenderWidgetHostView* target_view) override {
++/*  void SetTargetView(RenderWidgetHostView* target_view) override {
 +    target_view_ = static_cast<RenderWidgetHostViewMac*>(target_view);
-+  };
++  }; */
 +#endif
    void ShowDictionaryOverlay(
        const mac::AttributedStringCoder::EncodedString& encoded_string,
@@ -1598,7 +1598,7 @@ index 1a60e3cddb6d96b8c0aca2e588de9c7a3392c296..0ee7b2c018427e5bde4c04aeed170426
    void SetNeedsBeginFrames(bool needs_begin_frames) override;
    void GetScreenInfo(ScreenInfo* screen_info) const override;
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index d34b8d22269b17404b1c57c9bcf606acc11c9c0e..2d1dbf21131b8ee58214da9df87798b8683d8fe9 100644
+index d34b8d22269b17404b1c57c9bcf606acc11c9c0e..5c0fd75c2d044e87da4c3f185433bb62e2ecbbaf 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -1230,6 +1230,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
@@ -1619,7 +1619,7 @@ index d34b8d22269b17404b1c57c9bcf606acc11c9c0e..2d1dbf21131b8ee58214da9df87798b8
 +#if !defined(MUON_CHROMIUM_BUILD)
 +void RenderWidgetHostViewMac::ShowDefinitionForSelection(
 +    RenderWidgetHostView* target_view) {
-+  ns_view_bridge_->SetTargetView(target_view);
++/*  ns_view_bridge_->SetTargetView(target_view); */
 +  ShowDefinitionForSelection();
 +}
 +#endif
