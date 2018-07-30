@@ -212,12 +212,14 @@ void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
                                schemes_list.end());
 }
 
-void AtomBrowserClient::GetGeolocationRequestContext(
-      base::OnceCallback<void(scoped_refptr<net::URLRequestContextGetter>)>
-          callback) {
-  content::BrowserThread::PostTaskAndReplyWithResult(
-      content::BrowserThread::UI, FROM_HERE,
-      base::BindOnce(&GetSystemRequestContextOnUIThread), std::move(callback));
+scoped_refptr<network::SharedURLLoaderFactory>
+AtomBrowserClient::GetSystemSharedURLLoaderFactory() {
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
+  if (!g_browser_process->system_network_context_manager())
+    return nullptr;
+
+  return g_browser_process->system_network_context_manager()
+      ->GetSharedURLLoaderFactory();
 }
 
 std::string AtomBrowserClient::GetGeolocationApiKey() {
