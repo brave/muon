@@ -17,7 +17,7 @@ class WebContents;
 }
 
 namespace brave {
-class BravePermissionManager : public content::PermissionManager {
+class BravePermissionManager : public content::PermissionControllerDelegate {
  public:
   BravePermissionManager();
   ~BravePermissionManager() override;
@@ -34,7 +34,7 @@ class BravePermissionManager : public content::PermissionManager {
   // Handler to dispatch permission requests in JS.
   void SetPermissionRequestHandler(const RequestHandler& handler);
 
-  // content::PermissionManager:
+  // content::PermissionControllerDelegate:
   int RequestPermission(
       content::PermissionType permission,
       content::RenderFrameHost* render_frame_host,
@@ -57,7 +57,7 @@ class BravePermissionManager : public content::PermissionManager {
       const std::vector<content::PermissionType>& permissions,
       const std::vector<blink::mojom::PermissionStatus>& status);
 
-  // content::PermissionManager:
+  // content::PermissionControllerDelegate:
   void ResetPermission(content::PermissionType permission,
                        const GURL& requesting_origin,
                        const GURL& embedding_origin) override;
