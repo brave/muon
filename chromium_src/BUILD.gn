@@ -157,7 +157,6 @@ source_set("browser") {
     "//components/certificate_transparency",
     "//components/crash/content/app",
     "//components/crash/core/browser",
-    "//components/data_usage/core",
     "//components/filename_generation",
     "//components/keep_alive_registry",
     "//components/language/core/browser",
