@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "atom/browser/extensions/tab_helper.h"
 #include "atom/browser/native_window.h"
 #include "base/bind.h"
 #include "base/files/file_util.h"
@@ -19,6 +20,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/safe_browsing/download_protection/download_protection_util.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
+#include "chrome/browser/ui/browser.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/common/safe_browsing/file_type_policies.h"
 #include "components/prefs/pref_service.h"
@@ -63,7 +65,19 @@ NativeWindow* GetNativeWindowFromWebContents(
     content::WebContents* web_contents) {
   DCHECK(web_contents);
   auto relay = NativeWindowRelay::FromWebContents(web_contents);
-  return relay ? relay->window.get() : nullptr;
+  if (relay)
+    return relay->window.get();
+
+  auto helper =
+      extensions::TabHelper::FromWebContents(web_contents);
+  if (!helper)
+    return nullptr;
+
+  auto browser = helper->browser();
+  if (!browser)
+    return nullptr;
+
+  return static_cast<NativeWindow*>(browser->window());
 }
 
 // Blank newtab on download should be closed after starting download.
