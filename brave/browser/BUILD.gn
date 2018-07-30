@@ -105,7 +105,6 @@ source_set("browser") {
 
     deps += [
       "//chrome/common/extensions/api",
-      "//chrome/common/extensions/api:api_registration",
       "//chrome/common/extensions/api:extensions_features",
       "//extensions/browser",
     ]
