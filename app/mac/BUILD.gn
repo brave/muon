@@ -60,7 +60,6 @@ mac_app_bundle("electron_app") {
   deps = [
     ":electron_versioned_bundle_data",
     "//electron:electron_app_resources",
-    "//build/config:exe_and_shlib_deps",
     "//chrome/common:version_header",
   ]
 
