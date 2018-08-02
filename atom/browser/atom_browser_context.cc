@@ -31,6 +31,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/url_constants.h"
 #include "net/ftp/ftp_network_layer.h"
+#include "net/net_buildflags.h"
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/file_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
@@ -113,11 +114,13 @@ AtomBrowserContext::CreateURLRequestJobFactory(
       url::kWssScheme,
       base::WrapUnique(new HttpProtocolHandler(url::kWssScheme)));
 
+#if !BUILDFLAG(DISABLE_FTP_SUPPORT)
   auto host_resolver =
       url_request_context_getter()->GetURLRequestContext()->host_resolver();
   job_factory->SetProtocolHandler(
       url::kFtpScheme,
       net::FtpProtocolHandler::Create(host_resolver));
+#endif  // !BUILDFLAG(DISABLE_FTP_SUPPORT)
 
   return std::move(job_factory);
 }
