@@ -115,6 +115,7 @@ void TabHelper::CreateTab(content::WebContents* owner,
                 content::BrowserContext* browser_context,
                 const base::DictionaryValue& create_params,
                 const GuestViewManager::WebContentsCreatedCallback& callback) {
+  std::string newTabURL = "";
   BraveBrowserContext* profile =
       BraveBrowserContext::FromBrowserContext(browser_context);
   auto guest_view_manager = static_cast<GuestViewManager*>(
@@ -130,6 +131,15 @@ void TabHelper::CreateTab(content::WebContents* owner,
   if (profile->HasParentContext()) {
     params->SetString("parent_partition",
         profile->original_context()->partition_with_prefix());
+  }
+
+  params->GetString("src", &newTabURL);
+  auto ownerURL = owner->GetLastCommittedURL();
+
+  if (GURL(newTabURL).SchemeIs(url::kFileScheme) &&
+    !(ownerURL.SchemeIs(url::kFileScheme) ||
+      ownerURL.SchemeIs(url::kAboutScheme))) {
+      params->SetString("src", url::kAboutBlankURL);
   }
 
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
