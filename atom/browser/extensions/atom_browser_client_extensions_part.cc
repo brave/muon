@@ -284,38 +284,69 @@ bool AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
     bool* result) {
   DCHECK(result);
 
+  // Using url::Origin is important to properly handle blob: and filesystem:
+  // URLs.
+  url::Origin to_origin = url::Origin::Create(to_url);
+  if (to_origin.scheme() != kExtensionScheme) {
+    // We're not responsible for protecting this resource.
+    return false;
+  }
+
   // Do not allow pages from the web or other extensions navigate to
   // non-web-accessible extension resources.
-  if (to_url.SchemeIs(kExtensionScheme) &&
-      (from_url.SchemeIsHTTPOrHTTPS() || from_url.SchemeIs(kExtensionScheme))) {
-    content::BrowserContext* browser_context =
-        site_instance->GetProcess()->GetBrowserContext();
-    ExtensionRegistry* registry = ExtensionRegistry::Get(browser_context);
-    if (!registry) {
-      *result = true;
-      return true;
-    }
-    const Extension* extension =
-        registry->enabled_extensions().GetExtensionOrAppByURL(to_url);
-    if (!extension) {
-      *result = true;
-      return true;
-    }
-    const Extension* from_extension =
-        registry->enabled_extensions().GetExtensionOrAppByURL(
-            site_instance->GetSiteURL());
-    if (from_extension && from_extension->id() == extension->id()) {
-      *result = true;
-      return true;
-    }
 
-    if (!WebAccessibleResourcesInfo::IsResourceWebAccessible(
-            extension, to_url.path())) {
-      *result = false;
-      return true;
-    }
+  content::BrowserContext* browser_context =
+      site_instance->GetProcess()->GetBrowserContext();
+  ExtensionRegistry* registry = ExtensionRegistry::Get(browser_context);
+  if (!registry) {
+    *result = false;
+    return true;
   }
-  return false;
+  const Extension* to_extension =
+      registry->enabled_extensions().GetExtensionOrAppByURL(to_url);
+  if (!to_extension) {
+    // Treat non-existent extensions the same as an extension without accessible
+    // resources.
+    *result = false;
+    return true;
+  }
+
+  const Extension* from_extension =
+      registry->enabled_extensions().GetExtensionOrAppByURL(from_url);
+  if (from_extension && from_extension == to_extension) {
+    *result = true;
+    return true;
+  }
+
+  // Blob and filesystem URLs are never considered web-accessible.  See
+  // https://crbug.com/656752.
+  if (to_url.SchemeIsFileSystem() || to_url.SchemeIsBlob()) {
+    *result = false;
+    return true;
+  }
+
+  // Navigations from chrome:// and chrome-devtools:// pages
+  // need to be allowed, even if |to_url| is not web-accessible. See
+  // https://crbug.com/662602.
+  //
+  // Note that this is intentionally done after the check for blob: and
+  // filesystem: URLs above, for consistency with the renderer-side checks
+  // which already disallow navigations from chrome URLs to blob/filesystem
+  // URLs.
+  if (from_url.SchemeIs(content::kChromeUIScheme) ||
+      from_url.SchemeIs(content::kChromeDevToolsScheme)) {
+    *result = true;
+    return true;
+  }
+
+  if (WebAccessibleResourcesInfo::IsResourceWebAccessible(to_extension,
+                                                          to_url.path())) {
+    *result = true;
+    return true;
+  }
+
+  *result = false;
+  return true;
 }
 
 std::string AtomBrowserClientExtensionsPart::GetApplicationLocale() {
