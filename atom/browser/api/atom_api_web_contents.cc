@@ -767,11 +767,13 @@ void WebContents::WebContentsCreated(
 
 void WebContents::AddNewContents(
     content::WebContents* source,
-    std::unique_ptr<content::WebContents> new_contents,
+    std::unique_ptr<content::WebContents> new_contents_unique,
     WindowOpenDisposition disposition,
     const gfx::Rect& initial_rect,
     bool user_gesture,
     bool* was_blocked) {
+  // continue to manage the lifetime of the webcontents without uniqueptr for now
+  auto new_contents = new_contents_unique.release();
   if (brave::api::Extension::IsBackgroundPageWebContents(source)) {
     user_gesture = true;
   }
@@ -779,7 +781,7 @@ void WebContents::AddNewContents(
   bool active = disposition != WindowOpenDisposition::NEW_BACKGROUND_TAB;
 
   ::Browser* browser = nullptr;
-  auto tab_helper = extensions::TabHelper::FromWebContents(new_contents.get());
+  auto tab_helper = extensions::TabHelper::FromWebContents(new_contents);
   if (tab_helper) {
     tab_helper->SetActive(active);
 
@@ -814,7 +816,7 @@ void WebContents::AddNewContents(
                     "add-new-contents",
                     event,
                     source,
-                    new_contents.get(),
+                    new_contents,
                     disposition,
                     initial_rect,
                     user_gesture);
@@ -828,14 +830,13 @@ void WebContents::AddNewContents(
   }
 
   if (blocked) {
-    auto guest = brave::TabViewGuest::FromWebContents(new_contents.get());
+    auto guest = brave::TabViewGuest::FromWebContents(new_contents);
     if (guest) {
       guest->Destroy(true);
     } else {
-      new_contents.reset();
+      delete new_contents;
     }
   } else {
-    new_contents.release();
     if (browser) {
       tab_helper->SetBrowser(browser);
     }
