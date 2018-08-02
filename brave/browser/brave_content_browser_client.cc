@@ -584,7 +584,7 @@ std::string BraveContentBrowserClient::GetApplicationLocale() {
   if (BrowserThread::CurrentlyOn(BrowserThread::IO)) {
     return io_thread_application_locale.Get();
   } else {
-    return extensions_part_->GetApplicationLocale();
+    return g_browser_process->GetApplicationLocale();
   }
 }
 
