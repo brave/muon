@@ -860,9 +860,18 @@ void BraveContentBrowserClient::GetAdditionalWebUISchemes(
   additional_schemes->push_back(content::kChromeDevToolsScheme);
 }
 
+bool BraveContentBrowserClient::CanCommitURL(
+      content::RenderProcessHost* process_host, const GURL& url) {
+  if (url.SchemeIs("brave"))
+    return false;
+  return true;
+}
+
 bool BraveContentBrowserClient::ShouldAllowOpenURL(
     content::SiteInstance* site_instance, const GURL& url) {
   GURL from_url = site_instance->GetSiteURL();
+  if (url.SchemeIs("brave"))
+    return false;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   bool result;
   if (AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
