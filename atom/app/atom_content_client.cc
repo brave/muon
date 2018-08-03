@@ -112,6 +112,7 @@ void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
   // TODO(kalman): See what happens with a service worker.
   schemes->cors_enabled_schemes.push_back(extensions::kExtensionScheme);
 #endif
+  schemes->local_schemes.push_back("brave");
 }
 
 bool AtomContentClient::AllowScriptExtensionForServiceWorker(
