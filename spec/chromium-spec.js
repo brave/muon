@@ -93,30 +93,6 @@ describe('chromium feature', function () {
     })
   })
 
-  describe('navigator.mediaDevices', function () {
-    if (process.env.TRAVIS === 'true') {
-      return
-    }
-    if (isCI && process.platform === 'linux') {
-      return
-    }
-    if (isCI && process.platform === 'win32') {
-      return
-    }
-
-    it('can return labels of enumerated devices', function (done) {
-      navigator.mediaDevices.enumerateDevices().then((devices) => {
-        const labels = devices.map((device) => device.label)
-        const labelFound = labels.some((label) => !!label)
-        if (labelFound) {
-          done()
-        } else {
-          done('No device labels found: ' + JSON.stringify(labels))
-        }
-      }).catch(done)
-    })
-  })
-
   describe('navigator.language', function () {
     it('should not be empty', function () {
       assert.notEqual(navigator.language, '')

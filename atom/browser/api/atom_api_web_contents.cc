@@ -1287,13 +1287,6 @@ void WebContents::FindReply(content::WebContents* web_contents,
   Emit("found-in-page", result);
 }
 
-bool WebContents::CheckMediaAccessPermission(
-    content::RenderFrameHost* render_frame_host,
-    const GURL& security_origin,
-    content::MediaStreamType type) {
-  return true;
-}
-
 void WebContents::RequestMediaAccessPermission(
     content::WebContents* web_contents,
     const content::MediaStreamRequest& request,
