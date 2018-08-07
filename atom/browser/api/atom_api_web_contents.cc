@@ -789,8 +789,14 @@ void WebContents::AddNewContents(content::WebContents* source,
     if (disposition != WindowOpenDisposition::NEW_WINDOW &&
         disposition != WindowOpenDisposition::NEW_POPUP) {
       if (!browser) {
-        // TODO(bridiver) - this should be the source owner_window
-        browser = owner_window()->browser();
+        extensions::TabHelper* source_tab_helper =
+              extensions::TabHelper::FromWebContents(source);
+        if (source_tab_helper) {
+          browser = source_tab_helper->browser();
+        } else {
+          browser = owner_window()->browser();
+        }
+        CHECK(browser);
         tab_helper->SetWindowId(browser->session_id().id());
       }
     }
