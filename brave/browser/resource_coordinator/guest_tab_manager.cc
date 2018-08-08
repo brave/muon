@@ -55,10 +55,11 @@ std::unique_ptr<WebContents> GuestTabManager::CreateNullContents(
 }
 
 void GuestTabManager::DestroyOldContents(
-    std::unique_ptr<WebContents> old_contents) {
+    std::unique_ptr<WebContents> old_contents_deleter) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
 
-  auto tab_helper = extensions::TabHelper::FromWebContents(old_contents.get());
+  auto old_contents = old_contents_deleter.release();
+  auto tab_helper = extensions::TabHelper::FromWebContents(old_contents);
   DCHECK(tab_helper && tab_helper->guest());
   // Let the guest destroy itself after the detach message has been received
   tab_helper->guest()->SetCanRunInDetachedState(false);
