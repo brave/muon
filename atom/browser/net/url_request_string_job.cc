@@ -34,8 +34,6 @@ void URLRequestStringJob::GetResponseInfo(net::HttpResponseInfo* info) {
   std::string status("HTTP/1.1 200 OK");
   auto* headers = new net::HttpResponseHeaders(status);
 
-  headers->AddHeader(kCORSHeader);
-
   if (!mime_type_.empty()) {
     std::string content_type_header(net::HttpRequestHeaders::kContentType);
     content_type_header.append(": ");
