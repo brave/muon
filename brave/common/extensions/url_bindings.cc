@@ -329,12 +329,6 @@ v8::Local<v8::Object> URLBindings::API(extensions::ScriptContext* context) {
           net::UnescapeRule::URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS));
 
   SetReadOnlyProperty(v8_context, unescape_rules,
-      v8::String::NewFromUtf8(isolate, "SPOOFING_AND_CONTROL_CHARS",
-          v8::NewStringType::kNormal).ToLocalChecked(),
-      gin::Converter<net::UnescapeRule::Type>::ToV8(
-          isolate, net::UnescapeRule::SPOOFING_AND_CONTROL_CHARS));
-
-  SetReadOnlyProperty(v8_context, unescape_rules,
       v8::String::NewFromUtf8(isolate, "REPLACE_PLUS_WITH_SPACE",
           v8::NewStringType::kNormal).ToLocalChecked(),
       gin::Converter<net::UnescapeRule::Type>::ToV8(

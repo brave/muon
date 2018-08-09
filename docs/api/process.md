@@ -74,12 +74,13 @@ Causes the main thread of the current process crash.
 
 Causes the main thread of the current process hang.
 
-### `process.setFdLimit(maxDescriptors)` _macOS_ _Linux_
+### `process.increaseFdLimitTo(maxDescriptors)` _macOS_ _Linux_
 
 * `maxDescriptors` Integer
 
-Sets the file descriptor soft limit to `maxDescriptors` or the OS hard
-limit, whichever is lower for the current process.
+Increases the file descriptor soft limit to `maxDescriptors` or the OS hard
+limit, whichever is lower. If the limit is already higher than
+`maxDescriptors`, then nothing happens.
 
 ### `process.getSystemMemoryInfo()`
 

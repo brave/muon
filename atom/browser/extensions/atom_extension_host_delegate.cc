@@ -2,8 +2,6 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
-#include <memory>
-
 #include "atom/browser/extensions/atom_extension_host_delegate.h"
 
 #include "atom/browser/extensions/atom_extension_web_contents_observer.h"
@@ -53,11 +51,12 @@ AtomExtensionHostDelegate::GetJavaScriptDialogManager() {
   return brave::BraveJavaScriptDialogManager::GetInstance();
 }
 
-void AtomExtensionHostDelegate::CreateTab(content::WebContents* web_contents,
-                                            const std::string& extension_id,
-                                            WindowOpenDisposition disposition,
-                                            const gfx::Rect& initial_rect,
-                                            bool user_gesture) {
+void AtomExtensionHostDelegate::CreateTab(
+    std::unique_ptr<content::WebContents> web_contents,
+    const std::string& extension_id,
+    WindowOpenDisposition disposition,
+    const gfx::Rect& initial_rect,
+    bool user_gesture) {
   NOTIMPLEMENTED();
 }
 

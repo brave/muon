@@ -5,6 +5,8 @@ source_set("interstitials") {
   sources = [
     "chrome_metrics_helper.cc",
     "//chrome/browser/interstitials/chrome_metrics_helper.h",
+    "//chrome/browser/interstitials/enterprise_util.cc",
+    "//chrome/browser/interstitials/enterprise_util.h",
   ]
 
   deps = [

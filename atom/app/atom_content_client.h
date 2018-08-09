@@ -25,12 +25,12 @@ class AtomContentClient : public brightray::ContentClient {
   void SetActiveURL(const GURL& url, std::string top_origin) override;
   std::string GetProduct() const override;
   std::string GetUserAgent() const override;
-  void SetGpuInfo(const gpu::GPUInfo& gpu_info);
+  void SetGpuInfo(const gpu::GPUInfo& gpu_info) override;
   void AddAdditionalSchemes(Schemes* schemes) override;
   void AddPepperPlugins(
       std::vector<content::PepperPluginInfo>* plugins) override;
   bool AllowScriptExtensionForServiceWorker(const GURL& script_url) override;
-  content::OriginTrialPolicy* GetOriginTrialPolicy() override;
+  blink::OriginTrialPolicy* GetOriginTrialPolicy() override;
 
   void AddContentDecryptionModules(
       std::vector<content::CdmInfo>* cdms,

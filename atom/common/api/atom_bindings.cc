@@ -91,7 +91,7 @@ void AtomBindings::BindTo(v8::Isolate* isolate,
   dict.SetMethod("log", &Log);
   dict.SetMethod("getSystemMemoryInfo", &GetSystemMemoryInfo);
 #if defined(OS_POSIX)
-  dict.SetMethod("setFdLimit", &base::SetFdLimit);
+  dict.SetMethod("increaseFdLimitTo", &base::IncreaseFdLimitTo);
 #endif
   dict.SetMethod("activateUvLoop",
       base::Bind(&AtomBindings::ActivateUVLoop, base::Unretained(this)));

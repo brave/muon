@@ -61,7 +61,7 @@
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
-#include "chrome/browser/resource_coordinator/resource_coordinator_web_contents_observer.h"
+#include "chrome/browser/resource_coordinator/tab_helper.h"
 #include "chrome/browser/resource_coordinator/tab_manager.h"
 #include "chrome/browser/safe_browsing/safe_browsing_service.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
@@ -326,6 +326,9 @@ struct Converter<security_state::SecurityInfo> {
       case security_state::DANGEROUS:
         dict.Set("securityLevel", "dangerous");
         break;
+      case security_state::SECURITY_LEVEL_COUNT:
+        NOTREACHED();
+        break;
     }
 
     if (val.certificate)
@@ -538,8 +541,10 @@ void WebContents::CreateWebContents(v8::Isolate* isolate,
     type_ = WEB_VIEW;
   }
 
-  content::WebContents* web_contents = content::WebContents::Create(params);
-  CompleteInit(isolate, web_contents, options);
+  std::unique_ptr<content::WebContents> web_contents =
+      content::WebContents::Create(params);
+  CompleteInit(isolate, web_contents.get(), options);
+  web_contents.release();
 }
 
 void WebContents::CompleteInit(v8::Isolate* isolate,
@@ -608,8 +613,8 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
         this);
     }
 
-    if (ResourceCoordinatorWebContentsObserver::IsEnabled())
-      ResourceCoordinatorWebContentsObserver::CreateForWebContents(
+    if (resource_coordinator::ResourceCoordinatorTabHelper::IsEnabled())
+      resource_coordinator::ResourceCoordinatorTabHelper::CreateForWebContents(
           web_contents);
   }
 
@@ -760,12 +765,15 @@ void WebContents::WebContentsCreated(
   }
 }
 
-void WebContents::AddNewContents(content::WebContents* source,
-                    content::WebContents* new_contents,
-                    WindowOpenDisposition disposition,
-                    const gfx::Rect& initial_rect,
-                    bool user_gesture,
-                    bool* was_blocked) {
+void WebContents::AddNewContents(
+    content::WebContents* source,
+    std::unique_ptr<content::WebContents> new_contents_unique,
+    WindowOpenDisposition disposition,
+    const gfx::Rect& initial_rect,
+    bool user_gesture,
+    bool* was_blocked) {
+  // continue to manage the lifetime of the webcontents without uniqueptr for now
+  auto new_contents = new_contents_unique.release();
   if (brave::api::Extension::IsBackgroundPageWebContents(source)) {
     user_gesture = true;
   }
@@ -828,8 +836,10 @@ void WebContents::AddNewContents(content::WebContents* source,
     } else {
       delete new_contents;
     }
-  } else if (browser) {
-    tab_helper->SetBrowser(browser);
+  } else {
+    if (browser) {
+      tab_helper->SetBrowser(browser);
+    }
   }
 }
 
@@ -944,12 +954,9 @@ content::WebContents* WebContents::OpenURLFromTab(
 
     if (background_contents) {
       bool was_blocked = false;
-      AddNewContents(source,
-                      background_contents,
-                      params.disposition,
-                      gfx::Rect(),
-                      params.user_gesture,
-                      &was_blocked);
+      AddNewContents(source, base::WrapUnique(background_contents),
+                     params.disposition, gfx::Rect(), params.user_gesture,
+                     &was_blocked);
       if (!was_blocked)
         return background_contents;
     }
@@ -1039,21 +1046,25 @@ void WebContents::HandleKeyboardEvent(
   }
 }
 
-void WebContents::EnterFullscreenModeForTab(content::WebContents* source,
-                                            const GURL& origin) {
+void WebContents::EnterFullscreenModeForTab(
+    content::WebContents* source,
+    const GURL& origin,
+    const blink::WebFullscreenOptions& options) {
   auto permission_helper =
       WebContentsPermissionHelper::FromWebContents(source);
   auto callback = base::Bind(&WebContents::OnEnterFullscreenModeForTab,
-                             base::Unretained(this), source, origin);
+                             base::Unretained(this), source, origin, options);
   permission_helper->RequestFullscreenPermission(callback);
 }
 
-void WebContents::OnEnterFullscreenModeForTab(content::WebContents* source,
-                                              const GURL& origin,
-                                              bool allowed) {
+void WebContents::OnEnterFullscreenModeForTab(
+    content::WebContents* source,
+    const GURL& origin,
+    const blink::WebFullscreenOptions& options,
+    bool allowed) {
   if (!allowed)
     return;
-  CommonWebContentsDelegate::EnterFullscreenModeForTab(source, origin);
+  CommonWebContentsDelegate::EnterFullscreenModeForTab(source, origin, options);
   Emit("enter-html-full-screen");
 }
 
@@ -1205,7 +1216,9 @@ void WebContents::ActiveTabChanged(content::WebContents* old_contents,
   }
 }
 
-void WebContents::TabDetachedAt(content::WebContents* contents, int index) {
+void WebContents::TabDetachedAt(content::WebContents* contents,
+                                int index,
+                                bool was_active) {
   int window_id = -1;
 
   if (owner_window() && owner_window()->browser())
@@ -2341,7 +2354,7 @@ bool WebContents::SendIPCSharedMemory(int render_process_id,
   if (!memory_handle.IsValid() || !rfh)
     return false;
 
-  base::ProcessHandle handle = rfh->GetProcess()->GetHandle();
+  base::ProcessHandle handle = rfh->GetProcess()->GetProcess().Handle();
   if (!handle) {
     return false;
   }
@@ -2430,8 +2443,7 @@ void WebContents::StartDrag(const mate::Dictionary& item,
 
   // Start dragging.
   if (!files.empty()) {
-    base::MessageLoop::ScopedNestableTaskAllower allow(
-        base::MessageLoop::current());
+    base::MessageLoopCurrent::ScopedNestableTaskAllower allow;
     DragFileItems(files, icon->image(), web_contents()->GetNativeView());
   } else {
     args->ThrowError("There is nothing to drag");
@@ -2934,14 +2946,10 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
   }
 
   bool was_blocked = false;
-  AddNewContents(source,
-                    tab,
-                    active ?
-                      WindowOpenDisposition::NEW_FOREGROUND_TAB :
-                      WindowOpenDisposition::NEW_BACKGROUND_TAB,
-                    gfx::Rect(),
-                    user_gesture,
-                    &was_blocked);
+  AddNewContents(source, base::WrapUnique(tab),
+                 active ? WindowOpenDisposition::NEW_FOREGROUND_TAB
+                        : WindowOpenDisposition::NEW_BACKGROUND_TAB,
+                 gfx::Rect(), user_gesture, &was_blocked);
 
   if (was_blocked)
     callback.Run(nullptr);

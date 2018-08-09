@@ -36,7 +36,7 @@
 #include "services/service_manager/public/cpp/service_context.h"
 #include "third_party/blink/public/platform/url_conversion.h"
 #include "third_party/blink/public/platform/web_security_origin.h"
-#include "third_party/blink/public/platform/web_socket_handshake_throttle.h"
+#include "third_party/blink/public/platform/websocket_handshake_throttle.h"
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_plugin.h"
 #include "third_party/blink/public/web/web_plugin_params.h"
@@ -105,8 +105,10 @@ void BraveContentRendererClient::RenderThreadStarted() {
   prescient_networking_dispatcher_.reset(
       new network_hints::PrescientNetworkingDispatcher());
 
-  for (auto& origin : secure_origin_whitelist::GetWhitelist()) {
-    WebSecurityPolicy::AddOriginTrustworthyWhiteList(WebSecurityOrigin(origin));
+  for (auto& origin_or_hostname_pattern :
+       secure_origin_whitelist::GetWhitelist()) {
+    WebSecurityPolicy::AddOriginTrustworthyWhiteList(
+        WebString::FromUTF8(origin_or_hostname_pattern));
   }
 
   for (auto& scheme :

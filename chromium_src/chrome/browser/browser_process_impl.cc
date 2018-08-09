@@ -14,8 +14,10 @@
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/background/background_mode_manager.h"
-#include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/component_updater/crl_set_component_installer.h"
+#include "chrome/browser/lifetime/browser_shutdown.h"
+#include "chrome/browser/media/webrtc/webrtc_event_log_manager.h"
+#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
 #include "chrome/browser/notifications/notification_ui_manager_stub.h"
 #include "chrome/browser/policy/chrome_browser_policy_connector.h"
@@ -25,6 +27,7 @@
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/resource_coordinator/tab_lifecycle_unit_source.h"
 #include "chrome/browser/shell_integration.h"
+#include "chrome/browser/ssl/ssl_config_service_manager.h"
 #include "chrome/browser/status_icons/status_tray.h"
 #include "chrome/browser/ui/user_manager.h"
 #include "chrome/common/chrome_features.h"
@@ -39,13 +42,13 @@
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_filter.h"
 #include "components/proxy_config/pref_proxy_config_tracker_impl.h"
-#include "components/ssl_config/ssl_config_service_manager.h"
 #include "components/sync_preferences/pref_service_syncable_factory.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/network_connection_tracker.h"
+#include "content/public/common/service_manager_connection.h"
 #include "ppapi/buildflags/buildflags.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -69,7 +72,6 @@
 #include "components/gcm_driver/gcm_driver.h"
 #include "components/network_time/network_time_tracker.h"
 #include "components/net_log/chrome_net_log.h"
-#include "components/physical_web/data_source/physical_web_data_source.h"
 #include "components/subresource_filter/content/browser/content_ruleset_service.h"
 #include "services/preferences/public/cpp/in_process_service_factory.h"
 #include "chrome/browser/component_updater/supervised_user_whitelist_installer.h"
@@ -93,11 +95,6 @@
 #include "brave/browser/plugins/brave_plugin_service_filter.h"
 #include "chrome/browser/plugins/plugin_finder.h"
 #include "content/public/browser/plugin_service.h"
-#endif
-
-#if BUILDFLAG(ENABLE_WEBRTC)
-#include "chrome/browser/media/webrtc/webrtc_event_log_manager.h"
-#include "chrome/browser/media/webrtc/webrtc_log_uploader.h"
 #endif
 
 #if defined(OS_WIN)
@@ -184,9 +181,6 @@ BrowserProcessImpl::~BrowserProcessImpl() {
 
 void BrowserProcessImpl::PostDestroyThreads() {
 
-  // This observes |local_state_|, so should be destroyed before it.
-  system_network_context_manager_.reset();
-
   // Reset associated state right after actual thread is stopped,
   // as io_thread_.global_ cleanup happens in CleanUp on the IO
   // thread, i.e. as the thread exits its message loop.
@@ -202,7 +196,7 @@ void BrowserProcessImpl::CreateProfileManager() {
   created_profile_manager_ = true;
 
   base::FilePath user_data_dir;
-  PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
+  base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   profile_manager_.reset(new ProfileManager(user_data_dir));
 }
 
@@ -249,6 +243,9 @@ void BrowserProcessImpl::StartTearDown() {
   if (local_state()) {
     local_state()->CommitPendingWrite();
   }
+
+  // This expects to be destroyed before the task scheduler is torn down.
+  system_network_context_manager_.reset();
 }
 
 safe_browsing::SafeBrowsingService* 
@@ -294,7 +291,7 @@ void BrowserProcessImpl::CreateLocalState() {
   DCHECK(!local_state_);
 
   base::FilePath local_state_path;
-  CHECK(PathService::Get(chrome::FILE_LOCAL_STATE, &local_state_path));
+  CHECK(base::PathService::Get(chrome::FILE_LOCAL_STATE, &local_state_path));
   scoped_refptr<PrefRegistrySimple> pref_registry = new PrefRegistrySimple;
 
 #if defined(OS_WIN)
@@ -316,8 +313,9 @@ void BrowserProcessImpl::CreateLocalState() {
   // but that pulls in way too many unneeded stuff.
   IOThread::RegisterPrefs(pref_registry.get());
   PrefProxyConfigTrackerImpl::RegisterPrefs(pref_registry.get());
-  ssl_config::SSLConfigServiceManager::RegisterPrefs(pref_registry.get());
+  SSLConfigServiceManager::RegisterPrefs(pref_registry.get());
   GpuModeManager::RegisterPrefs(pref_registry.get());
+  safe_browsing::RegisterLocalStatePrefs(pref_registry.get());
 
   pref_change_registrar_.Init(local_state_.get());
   pref_change_registrar_.Add(
@@ -377,7 +375,10 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
 #endif  // BUILDFLAG(ENABLE_PLUGINS)
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  storage_monitor::StorageMonitor::Create();
+  storage_monitor::StorageMonitor::Create(
+      content::ServiceManagerConnection::GetForProcess()
+          ->GetConnector()
+          ->Clone());
 #endif
 
 // Start the tab manager here so that we give the most amount of time for the
@@ -582,8 +583,9 @@ IOThread* BrowserProcessImpl::io_thread() {
 
 SystemNetworkContextManager*
 BrowserProcessImpl::system_network_context_manager() {
-  NOTIMPLEMENTED();
-  return nullptr;
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  DCHECK(system_network_context_manager_.get());
+  return system_network_context_manager_.get();
 }
 
 content::NetworkConnectionTracker*
@@ -709,13 +711,11 @@ MediaFileSystemRegistry* BrowserProcessImpl::media_file_system_registry() {
   return nullptr;
 }
 
-#if BUILDFLAG(ENABLE_WEBRTC)
 WebRtcLogUploader* BrowserProcessImpl::webrtc_log_uploader() {
   NOTIMPLEMENTED();
   return nullptr;
 }
 
-#endif
 network_time::NetworkTimeTracker* BrowserProcessImpl::network_time_tracker() {
   NOTIMPLEMENTED();
   return nullptr;
@@ -735,12 +735,6 @@ shell_integration::DefaultWebClientState
 BrowserProcessImpl::CachedDefaultWebClientState() {
   NOTIMPLEMENTED();
   return shell_integration::UNKNOWN_DEFAULT;
-}
-
-physical_web::PhysicalWebDataSource*
-BrowserProcessImpl::GetPhysicalWebDataSource() {
-  NOTIMPLEMENTED();
-  return nullptr;
 }
 
 component_updater::ComponentUpdateService*

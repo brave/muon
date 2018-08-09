@@ -15,7 +15,7 @@
 #include "base/path_service.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "base/trace_event/trace_event_impl.h"
-#include "chrome/browser/browser_shutdown.h"
+#include "chrome/browser/lifetime/browser_shutdown.h"
 
 namespace atom {
 
@@ -92,7 +92,7 @@ void Browser::Shutdown() {
 
   if (base::ThreadTaskRunnerHandle::Get()) {
     base::ThreadTaskRunnerHandle::Get()->PostTask(FROM_HERE,
-        base::MessageLoop::QuitWhenIdleClosure());
+        base::RunLoop::QuitCurrentWhenIdleClosureDeprecated());
   } else {
     // There is no message loop available so we are in early stage.
     exit(0);

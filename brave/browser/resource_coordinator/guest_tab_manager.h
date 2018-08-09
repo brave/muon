@@ -5,6 +5,8 @@
 #ifndef BRAVE_BROWSER_RESOURCE_COORDINATOR_GUEST_TAB_MANAGER_H_
 #define BRAVE_BROWSER_RESOURCE_COORDINATOR_GUEST_TAB_MANAGER_H_
 
+#include <memory>
+
 #include "chrome/browser/resource_coordinator/tab_manager.h"
 
 #include "content/public/browser/web_contents_observer.h"
@@ -42,10 +44,11 @@ class GuestTabManager : public TabManager {
                        content::WebContents* new_contents,
                        int index) override;
 
-  content::WebContents* CreateNullContents(
+  std::unique_ptr<content::WebContents> CreateNullContents(
       const content::WebContents::CreateParams& params,
       content::WebContents* old_contents) override;
-  void DestroyOldContents(content::WebContents* old_contents) override;
+  void DestroyOldContents(
+      std::unique_ptr<content::WebContents> old_contents) override;
 
   DISALLOW_COPY_AND_ASSIGN(GuestTabManager);
 };

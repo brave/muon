@@ -34,7 +34,7 @@ BraveProfileImportImpl::~BraveProfileImportImpl() {}
 void BraveProfileImportImpl::StartImport(
     const importer::SourceProfile& source_profile,
     uint16_t items,
-    base::Value localized_strings,
+    const base::flat_map<uint32_t, std::string>& localized_strings,
     chrome::mojom::ProfileImportObserverPtr observer) {
   content::UtilityThread::Get()->EnsureBlinkInitialized();
   importer_ =
@@ -62,7 +62,7 @@ void BraveProfileImportImpl::StartImport(
     ImporterCleanup();
   }
   bridge_ = new BraveExternalProcessImporterBridge(
-      std::move(localized_strings),
+      localized_strings,
       ThreadSafeProfileImportObserverPtr::Create(std::move(observer)));
   import_thread_->task_runner()->PostTask(
       FROM_HERE, base::BindOnce(&Importer::StartImport, importer_,

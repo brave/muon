@@ -276,12 +276,14 @@ void CommonWebContentsDelegate::EnumerateDirectory(content::WebContents* guest,
 }
 
 void CommonWebContentsDelegate::EnterFullscreenModeForTab(
-    content::WebContents* source, const GURL& origin) {
+    content::WebContents* source,
+    const GURL& origin,
+    const blink::WebFullscreenOptions& options) {
   if (!owner_window_)
     return;
   SetHtmlApiFullscreen(true);
   owner_window_->NotifyWindowEnterHtmlFullScreen();
-  source->GetRenderViewHost()->GetWidget()->WasResized();
+  source->GetRenderViewHost()->GetWidget()->SynchronizeVisualProperties();
 }
 
 void CommonWebContentsDelegate::ExitFullscreenModeForTab(
@@ -291,7 +293,7 @@ void CommonWebContentsDelegate::ExitFullscreenModeForTab(
   SetHtmlApiFullscreen(false);
   owner_window_->NotifyWindowLeaveHtmlFullScreen();
   if (source)
-    source->GetRenderViewHost()->GetWidget()->WasResized();
+    source->GetRenderViewHost()->GetWidget()->SynchronizeVisualProperties();
 }
 
 bool CommonWebContentsDelegate::IsFullscreenForTabOrPending(
@@ -324,7 +326,7 @@ void CommonWebContentsDelegate::DevToolsSaveToFile(
                        base::Unretained(this), url));
   } else {
     base::FilePath default_path;
-    PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path);
+    base::PathService::Get(chrome::DIR_DEFAULT_DOWNLOADS, &default_path);
     default_path = default_path.Append(base::FilePath::FromUTF8Unsafe(url));
     new extensions::FileEntryPicker(
       GetWebContents(), default_path,

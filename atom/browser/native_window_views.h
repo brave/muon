@@ -189,7 +189,7 @@ class NativeWindowViews : public NativeWindow,
 
   gfx::Rect GetRestoredBounds() const override;
   // Returns the restore state for the window.
-  ui::WindowShowState GetRestoredState() const;
+  ui::WindowShowState GetRestoredState() const override;
 
   std::unique_ptr<views::Widget> window_;
   views::View* web_view_;  // Managed by inspectable_web_contents_.

@@ -71,11 +71,6 @@ PersonalDataManager* AtomAutofillClient::GetPersonalDataManager() {
   return PersonalDataManagerFactory::GetForBrowserContext(context);
 }
 
-autofill::SaveCardBubbleController*
-AtomAutofillClient::GetSaveCardBubbleController() {
-  return nullptr;
-}
-
 scoped_refptr<AutofillWebDataService> AtomAutofillClient::GetDatabase() {
   content::BrowserContext* context = web_contents()->GetBrowserContext();
   return static_cast<brave::BraveBrowserContext*>(context)
@@ -126,7 +121,6 @@ void AtomAutofillClient::ConfirmSaveCreditCardLocally(
 void AtomAutofillClient::ConfirmSaveCreditCardToCloud(
     const CreditCard& card,
     std::unique_ptr<base::DictionaryValue> legal_message,
-    bool should_cvc_be_requested,
     const base::Closure& callback) {
 }
 

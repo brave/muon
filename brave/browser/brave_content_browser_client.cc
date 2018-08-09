@@ -74,6 +74,7 @@
 #include "services/metrics/metrics_mojo_service.h"
 #include "services/metrics/public/mojom/constants.mojom.h"
 #include "services/proxy_resolver/public/mojom/proxy_resolver.mojom.h"
+#include "services/service_manager/embedder/switches.h"
 #include "services/service_manager/public/cpp/binder_registry.h"
 #include "services/service_manager/public/cpp/connector.h"
 #include "services/service_manager/public/mojom/connector.mojom.h"
@@ -129,7 +130,7 @@ namespace {
 breakpad::CrashHandlerHostLinux* CreateCrashHandlerHost(
     const std::string& process_type) {
   base::FilePath dumps_path;
-  PathService::Get(chrome::DIR_CRASH_DUMPS, &dumps_path);
+  base::PathService::Get(chrome::DIR_CRASH_DUMPS, &dumps_path);
   {
     ANNOTATE_SCOPED_MEMORY_LEAK;
     bool upload = (getenv(env_vars::kHeadless) == NULL);
@@ -400,7 +401,8 @@ void BraveContentBrowserClient::ExposeInterfacesToRenderer(
 }
 
 void BraveContentBrowserClient::RegisterInProcessServices(
-    StaticServiceMap* services) {
+    StaticServiceMap* services,
+    content::ServiceManagerConnection* connection) {
   {
     service_manager::EmbeddedServiceInfo info;
     info.factory = ChromeService::GetInstance()->CreateChromeServiceFactory();
@@ -461,7 +463,7 @@ void BraveContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
     content::PosixFileDescriptorInfo* mappings) {
   int crash_signal_fd = GetCrashSignalFD(command_line);
   if (crash_signal_fd >= 0) {
-    mappings->Share(kCrashDumpSignal, crash_signal_fd);
+    mappings->Share(service_manager::kCrashDumpSignal, crash_signal_fd);
   }
 }
 #endif  // defined(OS_POSIX) && !defined(OS_MACOSX)
@@ -582,7 +584,7 @@ std::string BraveContentBrowserClient::GetApplicationLocale() {
   if (BrowserThread::CurrentlyOn(BrowserThread::IO)) {
     return io_thread_application_locale.Get();
   } else {
-    return extensions_part_->GetApplicationLocale();
+    return g_browser_process->GetApplicationLocale();
   }
 }
 
@@ -652,7 +654,6 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
     static const char* const kSwitchNames[] = {
       autofill::switches::kDisablePasswordGeneration,
       autofill::switches::kEnablePasswordGeneration,
-      autofill::switches::kEnableSingleClickAutofill,
       autofill::switches::kEnableSuggestionsWithSubstringMatch,
       autofill::switches::kIgnoreAutocompleteOffForAutofill,
       autofill::switches::kLocalHeuristicsOnlyForPasswordGeneration,
@@ -694,7 +695,7 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
     command_line->CopySwitchesFrom(browser_command_line, kSwitchNames,
                                    arraysize(kSwitchNames));
 #endif
-  } else if (process_type == switches::kZygoteProcess) {
+  } else if (process_type == service_manager::switches::kZygoteProcess) {
     static const char* const kSwitchNames[] = {
       // Load (in-process) Pepper plugins in-process in the zygote pre-sandbox.
       switches::kDisableBundledPpapiFlash,
@@ -823,6 +824,21 @@ bool BraveContentBrowserClient::ShouldUseSpareRenderProcessHost(
 #endif
 }
 
+const char*
+BraveContentBrowserClient::GetInitatorSchemeBypassingDocumentBlocking() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // Don't block responses for extension processes or for content scripts.
+  // TODO(creis): When every extension fetch (including content scripts) has
+  // been made to go through an extension-specific URLLoaderFactory, this
+  // mechanism ought to work by enumerating the host permissions from the
+  // extension manifest, and forwarding them on to the network service while
+  // brokering the URLLoaderFactory.
+  return extensions::kExtensionScheme;
+#else
+  return nullptr;
+#endif
+}
+
 void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
         std::vector<std::string>* additional_allowed_schemes) {
   AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
@@ -844,9 +860,18 @@ void BraveContentBrowserClient::GetAdditionalWebUISchemes(
   additional_schemes->push_back(content::kChromeDevToolsScheme);
 }
 
+bool BraveContentBrowserClient::CanCommitURL(
+      content::RenderProcessHost* process_host, const GURL& url) {
+  if (url.SchemeIs("brave"))
+    return false;
+  return true;
+}
+
 bool BraveContentBrowserClient::ShouldAllowOpenURL(
     content::SiteInstance* site_instance, const GURL& url) {
   GURL from_url = site_instance->GetSiteURL();
+  if (url.SchemeIs("brave"))
+    return false;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   bool result;
   if (AtomBrowserClientExtensionsPart::ShouldAllowOpenURL(
@@ -869,7 +894,7 @@ bool BraveContentBrowserClient::IsURLAcceptableForWebUI(
 
 base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
   base::FilePath user_data_dir;
-  PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
+  base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   DCHECK(!user_data_dir.empty());
   return user_data_dir.Append(FILE_PATH_LITERAL("ShaderCache"));
 }
@@ -891,13 +916,13 @@ scoped_refptr<content::LoginDelegate>
 BraveContentBrowserClient::CreateLoginDelegate(
     net::AuthChallengeInfo* auth_info,
     content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
-    bool is_main_frame,
+    bool is_request_for_main_frame,
     const GURL& url,
     bool first_auth_attempt,
-    const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
-        auth_required_callback) {
-  return base::MakeRefCounted<atom::LoginHandler>(auth_info,
-      web_contents_getter, is_main_frame, url, auth_required_callback);
+    LoginAuthRequiredCallback auth_required_callback) {
+  return base::MakeRefCounted<atom::LoginHandler>(
+      auth_info, web_contents_getter, is_request_for_main_frame, url,
+      std::move(auth_required_callback));
 }
 
 std::unique_ptr<base::Value>

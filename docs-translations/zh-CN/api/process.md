@@ -41,8 +41,10 @@ process.once('loaded', function() {
 
 使当前进程的主线程挂起.
 
-### `process.setFdLimit(maxDescriptors)` _macOS_ _Linux_
+### `process.increaseFdLimitTo(maxDescriptors)` _macOS_ _Linux_
 
 * `maxDescriptors` Integer
 
-设置文件描述符软限制于 `maxDescriptors` 或硬限制与os, 无论它是否低于当前进程.
+Increases the file descriptor soft limit to `maxDescriptors` or the OS hard
+limit, whichever is lower. If the limit is already higher than
+`maxDescriptors`, then nothing happens.

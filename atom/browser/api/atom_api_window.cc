@@ -157,7 +157,8 @@ void Window::SuspendRenderFrameHost(content::RenderFrameHost* rfh) {
   if (is_window_ready_)
     return;
   is_blocking_requests_ = true;
-  rfh->BlockRequestsForFrame();
+  // FIXME(hferreiro)
+  // rfh->BlockRequestsForFrame();
 }
 
 void Window::WillCloseWindow(bool* prevent_default) {
@@ -235,8 +236,9 @@ void Window::OnWindowReady() {
   is_window_ready_ = true;
   if (is_blocking_requests_) {
     is_blocking_requests_ = false;
-    api_web_contents_->GetWebContents()->GetMainFrame()->
-        ResumeBlockedRequestsForFrame();
+    // FIXME(hferreiro)
+    // api_web_contents_->GetWebContents()->GetMainFrame()->
+    //    ResumeBlockedRequestsForFrame();
   }
 }
 
