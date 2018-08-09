@@ -7,9 +7,6 @@
 
 namespace atom {
 
-// Header to ignore CORS.
-extern const char kCORSHeader[];
-
 // Strings describing Chrome security policy for DevTools security panel.
 extern const char kSHA1Certificate[];
 extern const char kSHA1MajorDescription[];
