@@ -57,6 +57,10 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
       bool force_navigation);
   void NavigateGuest(const std::string& src, bool force_navigation);
   void ApplyAttributes(const base::DictionaryValue& params);
+  void SetTransparency();
+
+  // Sets the transparency of the guest.
+  void SetAllowTransparency(bool allow);
 
   // GuestViewBase implementation.
   void GuestDestroyed() final;
@@ -88,6 +92,10 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   std::string name_;
 
   bool can_run_detached_;
+
+  // Stores whether the contents of the guest can be transparent.
+  bool allow_transparency_;
+
   // Stores the src URL of the WebView.
   GURL src_;
 

@@ -378,6 +378,41 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
       NavigateGuest(src_.spec(), true);
     }
   }
+
+  bool allow_transparency = false;
+  if (params.GetBoolean(webview::kAttributeAllowTransparency,
+      &allow_transparency)) {
+    // We need to set the background opaque flag after navigation to ensure that
+    // there is a RenderWidgetHostView available.
+    SetAllowTransparency(allow_transparency);
+  }
+}
+
+void TabViewGuest::SetAllowTransparency(bool allow) {
+  if (allow_transparency_ == allow)
+    return;
+
+  allow_transparency_ = allow;
+  auto* rvh = web_contents()->GetRenderViewHost();
+  if (!rvh || !rvh->GetWidget()->GetView())
+    return;
+
+  SetTransparency();
+}
+
+void TabViewGuest::SetTransparency() {
+  auto* rvh = web_contents()->GetRenderViewHost();
+  if (!rvh)
+    return;
+  
+  auto* view = rvh->GetWidget()->GetView();
+  if (!view)
+    return;
+  
+  if (allow_transparency_)
+    view->SetBackgroundColor(SK_ColorTRANSPARENT);
+  else
+    view->SetBackgroundColorToDefault();
 }
 
 void TabViewGuest::DidAttachToEmbedder() {
@@ -422,6 +457,12 @@ void TabViewGuest::GuestReady() {
 
   api_web_contents_->Emit("guest-ready",
       extensions::TabHelper::IdForTab(web_contents()), guest_instance_id());
+
+  // We don't want to accidentally set the opacity of an interstitial page.
+  // WebContents::GetRenderWidgetHostView will return the RWHV of an
+  // interstitial page if one is showing at this time. We only want opacity
+  // to apply to web pages.
+  SetTransparency();
 }
 
 void TabViewGuest::WillDestroy() {
@@ -446,7 +487,8 @@ bool TabViewGuest::IsAutoSizeSupported() const {
 TabViewGuest::TabViewGuest(WebContents* owner_web_contents)
     : GuestView<TabViewGuest>(owner_web_contents),
       api_web_contents_(nullptr),
-      can_run_detached_(true) {
+      can_run_detached_(true),
+      allow_transparency_(false) {
 }
 
 TabViewGuest::~TabViewGuest() {
