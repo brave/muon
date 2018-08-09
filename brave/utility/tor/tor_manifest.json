@@ -5,7 +5,7 @@
   "interface_provider_specs": {
     "service_manager:connector": {
       "provides": {
-        "tor_launcher": [ "tor::mojom::TorLauncher" ]
+        "tor_launcher": [ "tor.mojom.TorLauncher" ]
        },
        "requires": {
          "service_manager": [ "service_manager:all_users" ]

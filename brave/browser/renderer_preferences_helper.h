@@ -26,8 +26,8 @@ class RendererPreferencesHelper :
   friend class content::WebContentsUserData<RendererPreferencesHelper>;
 
   // WebContentsObserver implementation
-  virtual void RenderViewHostChanged(content::RenderViewHost* old_host,
-                                     content::RenderViewHost* new_host);
+  void RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) override;
 
   // Update the WebContents's RendererPreferences.
   void UpdateRendererPreferences();

@@ -28,8 +28,8 @@
 #include "base/time/default_tick_clock.h"
 #include "base/trace_event/trace_event.h"
 #include "browser/media/media_capture_devices_dispatcher.h"
-#include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/chrome_browser_main_extra_parts.h"
+#include "chrome/browser/lifetime/browser_shutdown.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 #include "chrome/common/chrome_constants.h"
@@ -175,14 +175,14 @@ int AtomBrowserMainParts::PreEarlyInitialization() {
 #if defined(OS_POSIX)
   HandleSIGCHLD();
 #endif
-  return content::RESULT_CODE_NORMAL_EXIT;
+  return service_manager::RESULT_CODE_NORMAL_EXIT;
 }
 
 int AtomBrowserMainParts::PreCreateThreads() {
   TRACE_EVENT0("startup", "AtomBrowserMainParts::PreCreateThreads")
 
   base::FilePath user_data_dir;
-  if (!PathService::Get(chrome::DIR_USER_DATA, &user_data_dir))
+  if (!base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir))
     return chrome::RESULT_CODE_MISSING_DATA;
 
   // Force MediaCaptureDevicesDispatcher to be created on UI thread.
@@ -266,7 +266,7 @@ int AtomBrowserMainParts::PreCreateThreads() {
 #endif
 #endif
 
-  return content::RESULT_CODE_NORMAL_EXIT;;
+  return service_manager::RESULT_CODE_NORMAL_EXIT;;
 }
 
 void AtomBrowserMainParts::PostEarlyInitialization() {
@@ -326,7 +326,7 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 
   // Make sure the userData directory is created.
   base::FilePath user_data;
-  if (PathService::Get(chrome::DIR_USER_DATA, &user_data))
+  if (base::PathService::Get(chrome::DIR_USER_DATA, &user_data))
     base::CreateDirectoryAndGetError(user_data, nullptr);
 
   // PreProfileInit

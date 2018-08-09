@@ -61,7 +61,7 @@ class BraveDataSource : public content::URLDataSource,
     fetcher->Start();
   }
 
-  void OnURLFetchComplete(const net::URLFetcher* source) {
+  void OnURLFetchComplete(const net::URLFetcher* source) override {
     DCHECK(source);
     PendingRequestsMap::iterator it = pending_.find(source);
     DCHECK(it != pending_.end());

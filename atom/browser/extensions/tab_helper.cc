@@ -17,8 +17,8 @@
 #include "brave/browser/guest_view/tab_view/tab_view_guest.h"
 #include "brave/browser/resource_coordinator/guest_tab_manager.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/browser/browser_shutdown.h"
 #include "chrome/browser/chrome_notification_types.h"
+#include "chrome/browser/lifetime/browser_shutdown.h"
 #include "chrome/browser/resource_coordinator/tab_lifecycle_unit_external.h"
 #include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/ui/browser.h"
@@ -178,7 +178,8 @@ bool TabHelper::AttachGuest(int window_id, int index) {
     if (browser->session_id().id() == window_id) {
       index_ = index;
       browser->tab_strip_model()->ReplaceWebContentsAt(
-          GetTabStripIndex(window_id, index_), web_contents());
+          GetTabStripIndex(window_id, index_),
+          base::WrapUnique(web_contents())).release();
       return true;
     }
   }
@@ -196,7 +197,7 @@ content::WebContents* TabHelper::DetachGuest() {
     null_contents->GetController().CopyStateFrom(
         web_contents()->GetController(), false);
 
-    auto null_helper = FromWebContents(null_contents);
+    auto null_helper = FromWebContents(null_contents.get());
     null_helper->index_ = get_index();
     null_helper->pinned_ = pinned_;
     // transfer window closing state
@@ -207,9 +208,9 @@ content::WebContents* TabHelper::DetachGuest() {
 
     // Replace the detached tab with the null placeholder
     browser_->tab_strip_model()->ReplaceWebContentsAt(
-        get_index(), null_contents);
+        get_index(), std::move(null_contents)).release();
 
-    return null_contents;
+    return null_contents.get();
   }
   return nullptr;
 }
@@ -340,7 +341,9 @@ void TabHelper::TabReplacedAt(TabStripModel* tab_strip_model,
   new_guest->TabIdChanged();
 }
 
-void TabHelper::TabDetachedAt(content::WebContents* contents, int index) {
+void TabHelper::TabDetachedAt(content::WebContents* contents,
+                              int index,
+                              bool was_active) {
   if (contents != web_contents())
     return;
 
@@ -423,7 +426,8 @@ void TabHelper::SetBrowser(Browser* browser) {
 
   if (browser_) {
     if (get_index() != TabStripModel::kNoTab)
-      browser_->tab_strip_model()->DetachWebContentsAt(get_index());
+      // TODO(hferreiro)
+      browser_->tab_strip_model()->DetachWebContentsAt(get_index()).release();
 
     OnBrowserRemoved(browser_);
   }
@@ -445,8 +449,8 @@ void TabHelper::SetBrowser(Browser* browser) {
       transition_type = ui::PAGE_TRANSITION_LINK;
     }
 
-    browser_->tab_strip_model()->AddWebContents(web_contents(), index_,
-        transition_type, add_types);
+    browser_->tab_strip_model()->AddWebContents(
+        base::WrapUnique(web_contents()), index_, transition_type, add_types);
   } else {
     browser_ = nullptr;
   }
@@ -460,7 +464,9 @@ void TabHelper::TabInsertedAt(TabStripModel* tab_strip_model,
     return;
 
   if (discarded_) {
-    GetTabManager()->SetTabAutoDiscardableState(web_contents(), false);
+    resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+        web_contents())
+        ->SetAutoDiscardable(false);
   }
 
   guest()->Load();
@@ -480,10 +486,11 @@ int32_t TabHelper::window_id() const {
 
 void TabHelper::SetAutoDiscardable(bool auto_discardable) {
   auto_discardable_ = auto_discardable;
-  if (resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
-        web_contents())) {
-    GetTabManager()->SetTabAutoDiscardableState(
-        web_contents(), auto_discardable);
+  auto* tab_lifecycle_unit_external =
+      resource_coordinator::TabLifecycleUnitExternal::FromWebContents(
+          web_contents());
+  if (tab_lifecycle_unit_external) {
+    tab_lifecycle_unit_external->SetAutoDiscardable(auto_discardable);
   }
 }
 
@@ -539,7 +546,7 @@ bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
   for (auto* b : *BrowserList::GetInstance()) {
     if (b->session_id().id() == window_id) {
       if (get_index() != TabStripModel::kNoTab)
-        browser()->tab_strip_model()->DetachWebContentsAt(get_index());
+        browser()->tab_strip_model()->DetachWebContentsAt(get_index()).release();
 
       UpdateBrowser(b);
 
@@ -547,9 +554,10 @@ bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
         int add_types = TabStripModel::ADD_NONE;
         add_types |= foreground ? TabStripModel::ADD_ACTIVE : 0;
         b->tab_strip_model()->InsertWebContentsAt(
-            index, web_contents(), add_types);
+            index, base::WrapUnique(web_contents()), add_types);
       } else {
-        b->tab_strip_model()->AppendWebContents(web_contents(), foreground);
+        b->tab_strip_model()->AppendWebContents(
+            base::WrapUnique(web_contents()), foreground);
       }
       return true;
     }

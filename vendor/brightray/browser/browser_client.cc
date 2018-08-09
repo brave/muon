@@ -85,7 +85,7 @@ net::NetLog* BrowserClient::GetNetLog() {
 base::FilePath BrowserClient::GetDefaultDownloadDirectory() {
   // ~/Downloads
   base::FilePath path;
-  if (PathService::Get(base::DIR_HOME, &path))
+  if (base::PathService::Get(base::DIR_HOME, &path))
     path = path.Append(FILE_PATH_LITERAL("Downloads"));
 
   return path;

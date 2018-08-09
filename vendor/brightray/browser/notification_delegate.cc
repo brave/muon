@@ -2,6 +2,7 @@
 // Use of this source code is governed by the MIT license that can be
 // found in the LICENSE file.
 
+#include "base/bind_helpers.h"
 #include "brightray/browser/notification_delegate.h"
 #include "content/public/browser/notification_event_dispatcher.h"
 
@@ -22,7 +23,7 @@ void NotificationDelegate::NotificationClick() {
 
 void NotificationDelegate::NotificationClosed() {
   content::NotificationEventDispatcher::GetInstance()
-      ->DispatchNonPersistentCloseEvent(notification_id_);
+      ->DispatchNonPersistentCloseEvent(notification_id_, base::DoNothing());
 }
 
 void NotificationDelegate::NotificationDisplayed() {

@@ -141,7 +141,7 @@ class InspectableWebContentsImpl :
                      const std::string& value) override;
   void RemovePreference(const std::string& name) override;
   void ClearPreferences() override;
-  void ShowCertificateViewer(const std::string& cert_chain);
+  void ShowCertificateViewer(const std::string& cert_chain) override;
 
   // content::DevToolsFrontendHostDelegate:
   void HandleMessageFromDevToolsFrontend(const std::string& message);

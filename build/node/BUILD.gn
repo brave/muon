@@ -49,18 +49,6 @@ source_set("node") {
     ]
   }
 
-  # hack for unresolved symbols - not sure why this is needed
-  if (is_linux) {
-    lib_dirs += [
-      "$root_out_dir/obj/third_party/boringssl",
-      "$root_out_dir/obj/third_party/icu",
-    ]
-    libs += [
-      "boringssl",
-      "icui18n",
-    ]
-  }
-
   public_configs = [
     ":build_config",
   ]

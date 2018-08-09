@@ -61,7 +61,9 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       service_manager::BinderRegistry* registry,
       blink::AssociatedInterfaceRegistry* associated_registry,
       content::RenderProcessHost* render_process_host) override;
-  void RegisterInProcessServices(StaticServiceMap* services) override;
+  void RegisterInProcessServices(
+      StaticServiceMap* services,
+      content::ServiceManagerConnection* connection) override;
   void RegisterOutOfProcessServices(OutOfProcessServiceMap* services) override;
   void BindInterfaceRequestFromFrame(
       content::RenderFrameHost* render_frame_host,
@@ -116,6 +118,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       std::vector<std::string>* additional_allowed_schemes) override;
   void GetAdditionalWebUISchemes(
       std::vector<std::string>* additional_schemes) override;
+  bool CanCommitURL(
+      content::RenderProcessHost* process_host, const GURL& url) override;
   bool ShouldAllowOpenURL(content::SiteInstance* site_instance,
                                       const GURL& url) override;
   bool IsURLAcceptableForWebUI(content::BrowserContext* browser_context,
@@ -148,11 +152,10 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
   scoped_refptr<content::LoginDelegate> CreateLoginDelegate(
       net::AuthChallengeInfo* auth_info,
       content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
-      bool is_main_frame,
+      bool is_request_for_main_frame,
       const GURL& url,
       bool first_auth_attempt,
-      const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
-          auth_required_callback) override;
+      LoginAuthRequiredCallback auth_required_callback) override;
 
   std::vector<std::unique_ptr<content::NavigationThrottle>>
     CreateThrottlesForNavigation(
@@ -171,10 +174,8 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       const content::MainFunctionParams&) override;
 
  protected:
-  bool IsValidStoragePartitionId(
-    content::BrowserContext* browser_context,
-    const std::string& partition_id);
-
+  bool IsValidStoragePartitionId(content::BrowserContext* browser_context,
+                                 const std::string& partition_id) override;
 
  private:
   // Populate |frame_interfaces_|.

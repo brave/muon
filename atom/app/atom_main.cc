@@ -22,6 +22,7 @@
 #include "chrome/common/chrome_switches.h"
 #include "content/public/app/content_main.h"
 #include "content/public/common/content_switches.h"
+#include "services/service_manager/sandbox/switches.h"
 
 #if defined(OS_MACOSX)
 #include "chrome/common/chrome_paths_internal.h"
@@ -133,7 +134,7 @@ int main(int argc, const char* argv[]) {
     user_data_dir = command_line->GetSwitchValuePath(switches::kUserDataDir);
   } else {
 #if defined(OS_WIN) || defined(OS_MACOSX)
-    PathService::Get(base::DIR_APP_DATA, &user_data_dir);
+    base::PathService::Get(base::DIR_APP_DATA, &user_data_dir);
 #else
     user_data_dir = base::nix::GetXDGDirectory(environment.get(),
                                   base::nix::kXdgConfigHomeEnvVar,
@@ -151,7 +152,7 @@ int main(int argc, const char* argv[]) {
 #endif
     }
   }
-  PathService::Override(chrome::DIR_CRASH_DUMPS,
+  base::PathService::Override(chrome::DIR_CRASH_DUMPS,
       user_data_dir.Append(FILE_PATH_LITERAL("CrashPad")));
   environment->SetVar("CHROME_USER_DATA_DIR", user_data_dir.AsUTF8Unsafe());
 
@@ -183,7 +184,8 @@ int main(int argc, const char* argv[]) {
   // Initialize the sandbox services.
   sandbox::SandboxInterfaceInfo sandbox_info = {0};
   const bool is_browser = process_type.empty();
-  const bool is_sandboxed = !command_line->HasSwitch(switches::kNoSandbox);
+  const bool is_sandboxed =
+      !command_line->HasSwitch(service_manager::switches::kNoSandbox);
   if (is_browser || is_sandboxed) {
     // For child processes that are running as --no-sandbox, don't initialize
     // the sandbox info, otherwise they'll be treated as brokers (as if they

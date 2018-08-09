@@ -290,6 +290,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   // Callback triggered on permission response.
   void OnEnterFullscreenModeForTab(content::WebContents* source,
                                    const GURL& origin,
+                                   const blink::WebFullscreenOptions& options,
                                    bool allowed);
 
   void AutofillSelect(const std::string& value, int frontend_id, int index);
@@ -348,7 +349,9 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void TabPinnedStateChanged(TabStripModel* tab_strip_model,
                              content::WebContents* contents,
                              int index) override;
-  void TabDetachedAt(content::WebContents* contents, int index) override;
+  void TabDetachedAt(content::WebContents* contents,
+                     int index,
+                     bool was_active) override;
   void ActiveTabChanged(content::WebContents* old_contents,
                         content::WebContents* new_contents,
                         int index,
@@ -404,7 +407,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
       content::WebContents* new_contents)
       override;
   void AddNewContents(content::WebContents* source,
-                      content::WebContents* new_contents,
+                      std::unique_ptr<content::WebContents> new_contents,
                       WindowOpenDisposition disposition,
                       const gfx::Rect& initial_rect,
                       bool user_gesture,
@@ -429,8 +432,10 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void HandleKeyboardEvent(
       content::WebContents* source,
       const content::NativeWebKeyboardEvent& event) override;
-  void EnterFullscreenModeForTab(content::WebContents* source,
-                                 const GURL& origin) override;
+  void EnterFullscreenModeForTab(
+      content::WebContents* source,
+      const GURL& origin,
+      const blink::WebFullscreenOptions& options) override;
   void ExitFullscreenModeForTab(content::WebContents* source) override;
   void ContentsZoomChange(bool zoom_in) override;
   void RendererUnresponsive(

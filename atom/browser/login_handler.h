@@ -11,6 +11,9 @@
 #include "content/public/browser/resource_request_info.h"
 #include "net/base/auth.h"
 
+using LoginAuthRequiredCallback =
+    base::OnceCallback<void(const base::Optional<net::AuthCredentials>&)>;
+
 namespace content {
 class WebContents;
 }
@@ -26,10 +29,9 @@ class LoginHandler : public content::LoginDelegate {
  public:
   LoginHandler(net::AuthChallengeInfo* auth_info,
       content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
-      bool is_main_frame,
+      bool is_request_for_main_frame,
       const GURL& url,
-      const base::Callback<void(const base::Optional<net::AuthCredentials>&)>&
-          auth_required_callback);
+      LoginAuthRequiredCallback auth_required_callback);
 
   // Returns the WebContents associated with the request, must be called on UI
   // thread.
@@ -67,8 +69,7 @@ class LoginHandler : public content::LoginDelegate {
 
   content::ResourceRequestInfo::WebContentsGetter web_contents_getter_;
 
-  base::Callback<void(const base::Optional<net::AuthCredentials>&)>
-      auth_required_callback_;
+  LoginAuthRequiredCallback auth_required_callback_;
 
   DISALLOW_COPY_AND_ASSIGN(LoginHandler);
 };

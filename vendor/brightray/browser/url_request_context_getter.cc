@@ -22,7 +22,6 @@
 #include "content/public/common/content_switches.h"
 #include "net/base/host_mapping_rules.h"
 #include "net/cert/cert_verifier.h"
-#include "net/cert/ct_known_logs.h"
 #include "net/cert/ct_log_verifier.h"
 #include "net/cert/ct_policy_enforcer.h"
 #include "net/cert/multi_log_ct_verifier.h"
@@ -252,8 +251,7 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         proxy_service = network::CreateProxyResolutionServiceUsingMojoFactory(
             ChromeMojoProxyResolverFactory::CreateWithStrongBinding(),
             std::move(proxy_config_service_),
-            std::make_unique<net::PacFileFetcherImpl>(
-                url_request_context_.get()),
+            net::PacFileFetcherImpl::Create(url_request_context_.get()),
             std::move(dhcp_pac_file_fetcher), host_resolver.get(), net_log_,
             url_request_context_->network_delegate());
       } else {
@@ -307,11 +305,10 @@ net::URLRequestContext* URLRequestContextGetter::GetURLRequestContext() {
         new net::HttpServerPropertiesImpl);
     storage_->set_http_server_properties(std::move(server_properties));
 
-    std::unique_ptr<net::MultiLogCTVerifier> ct_verifier =
-        std::make_unique<net::MultiLogCTVerifier>();
-    ct_verifier->AddLogs(net::ct::CreateLogVerifiersForKnownLogs());
-    storage_->set_cert_transparency_verifier(std::move(ct_verifier));
-    storage_->set_ct_policy_enforcer(std::make_unique<net::CTPolicyEnforcer>());
+    storage_->set_cert_transparency_verifier(
+        std::make_unique<net::MultiLogCTVerifier>());
+    storage_->set_ct_policy_enforcer(
+        std::make_unique<net::DefaultCTPolicyEnforcer>());
 
     net::HttpNetworkSession::Params network_session_params;
     network_session_params.ignore_certificate_errors = false;

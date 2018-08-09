@@ -261,6 +261,7 @@ mojom("mojo_bindings") {
 
   public_deps = [
     "//mojo/public/mojom/base",
+    "//services/service_manager/public/mojom",
   ]
 }
 
@@ -575,7 +576,7 @@ if (is_win) {
   chromedriver = "$chromedriver.exe"
 }
 
-chromedriver_version = "2.37"
+chromedriver_version = "2.38"
 
 copy("electron_chromedriver_dist_resources") {
   sources = [

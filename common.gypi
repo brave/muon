@@ -574,9 +574,6 @@
       # Use Minikin hyphenation engine.
       'use_minikin_hyphenation%': 0,
 
-      # Webrtc compilation is enabled by default. Set to 0 to disable.
-      'enable_webrtc%': 1,
-
       # Media router support is enabled by default. Set to 0 to disable.
       'enable_media_router%': 1,
 
@@ -852,10 +849,6 @@
           'enable_hotwording%': 1,
         }],
 
-        ['OS=="android"', {
-          'enable_webrtc%': 1,
-        }],
-
         ['OS=="ios"', {
           'configuration_policy': 0,
           'enable_extensions%': 0,
@@ -864,7 +857,6 @@
           'enable_session_service%': 0,
           'enable_spellcheck%': 0,
           'enable_themes%': 0,
-          'enable_webrtc%': 0,
           'notifications%': 0,
           'remoting%': 0,
           'safe_browsing%': 2,
@@ -1169,7 +1161,6 @@
     'remoting%': '<(remoting)',
     'enable_one_click_signin%': '<(enable_one_click_signin)',
     'enable_media_router%': '<(enable_media_router)',
-    'enable_webrtc%': '<(enable_webrtc)',
     'chromium_win_pch%': '<(chromium_win_pch)',
     'configuration_policy': '<(configuration_policy)',
     'safe_browsing%': '<(safe_browsing)',
@@ -2149,9 +2140,6 @@
       ['enable_media_router==1', {
         'grit_defines': ['-D', 'enable_media_router'],
       }],
-      ['enable_webrtc==1', {
-        'grit_defines': ['-D', 'enable_webrtc'],
-      }],
       ['enable_hangout_services_extension==1', {
         'grit_defines': ['-D', 'enable_hangout_services_extension'],
       }],
@@ -2681,9 +2669,6 @@
       }],
       ['image_loader_extension==1', {
         'defines': ['IMAGE_LOADER_EXTENSION=1'],
-      }],
-      ['enable_webrtc==1', {
-        'defines': ['ENABLE_WEBRTC=1'],
       }],
       ['enable_media_router==1', {
         'defines': ['ENABLE_MEDIA_ROUTER=1'],

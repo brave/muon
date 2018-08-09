@@ -30,10 +30,9 @@ class AtomExtensionWebRequestEventRouterDelegate :
  public:
   AtomExtensionWebRequestEventRouterDelegate() {}
   ~AtomExtensionWebRequestEventRouterDelegate() override {}
-  void NotifyWebRequestWithheld(
-      int render_process_id,
-      int render_frame_id,
-      const std::string& extension_id) {
+  void NotifyWebRequestWithheld(int render_process_id,
+                                int render_frame_id,
+                                const std::string& extension_id) override {
     // TODO(bridiver) - will this ever be called?
   }
  private:
@@ -82,6 +81,7 @@ class AtomManagementAPIDelegate : public ManagementAPIDelegate {
   // Disables the extension identified by |extension_id|.
   void DisableExtension(
       content::BrowserContext* context,
+      const Extension* source_extension,
       const std::string& extension_id,
       disable_reason::DisableReason disable_reason) const override {
     NOTIMPLEMENTED();

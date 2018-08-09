@@ -112,6 +112,7 @@ void AtomContentClient::AddAdditionalSchemes(Schemes* schemes) {
   // TODO(kalman): See what happens with a service worker.
   schemes->cors_enabled_schemes.push_back(extensions::kExtensionScheme);
 #endif
+  schemes->local_schemes.push_back("brave");
 }
 
 bool AtomContentClient::AllowScriptExtensionForServiceWorker(
@@ -123,7 +124,7 @@ bool AtomContentClient::AllowScriptExtensionForServiceWorker(
 #endif
 }
 
-content::OriginTrialPolicy* AtomContentClient::GetOriginTrialPolicy() {
+blink::OriginTrialPolicy* AtomContentClient::GetOriginTrialPolicy() {
   if (!origin_trial_policy_) {
     origin_trial_policy_ = base::WrapUnique(new ChromeOriginTrialPolicy());
   }
@@ -181,10 +182,10 @@ void AtomContentClient::AddContentDecryptionModules(
   if (cdm_host_file_paths) {
 #if defined(OS_WIN)
   base::FilePath brave_exe_dir;
-  if (!PathService::Get(base::DIR_EXE, &brave_exe_dir))
+  if (!base::PathService::Get(base::DIR_EXE, &brave_exe_dir))
     NOTREACHED();
   base::FilePath file_path;
-  if (!PathService::Get(base::FILE_EXE, &file_path))
+  if (!base::PathService::Get(base::FILE_EXE, &file_path))
     NOTREACHED();
   cdm_host_file_paths->reserve(1);
 
