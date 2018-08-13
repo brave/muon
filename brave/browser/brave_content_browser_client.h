@@ -145,6 +145,7 @@ class BraveContentBrowserClient : public atom::AtomBrowserClient {
       std::string* partition_name,
       bool* in_memory) override;
   base::FilePath GetShaderDiskCacheDirectory() override;
+  bool ShouldEnableStrictSiteIsolation() override;
 
   std::unique_ptr<base::Value> GetServiceManifestOverlay(
       base::StringPiece name) override;
