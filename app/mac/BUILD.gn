@@ -113,7 +113,6 @@ mac_framework_bundle("electron_framework") {
     "//chrome:chrome_framework_helpers",
     ":external_binaries_resources",
     "//electron:electron_framework_resources",
-    "//build/config:exe_and_shlib_deps",
     ":electron_xibs",
     "//chrome/app/nibs:localizer_table",
   ]
@@ -198,7 +197,6 @@ mac_app_bundle("electron_helper_app") {
   ]
 
   deps = [
-    "//build/config:exe_and_shlib_deps",
     "//chrome/common:version_header",
   ]
 
