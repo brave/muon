@@ -212,14 +212,6 @@ void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
                                schemes_list.end());
 }
 
-void AtomBrowserClient::GetGeolocationRequestContext(
-      base::OnceCallback<void(scoped_refptr<net::URLRequestContextGetter>)>
-          callback) {
-  content::BrowserThread::PostTaskAndReplyWithResult(
-      content::BrowserThread::UI, FROM_HERE,
-      base::BindOnce(&GetSystemRequestContextOnUIThread), std::move(callback));
-}
-
 std::string AtomBrowserClient::GetGeolocationApiKey() {
   return GOOGLEAPIS_API_KEY;
 }
