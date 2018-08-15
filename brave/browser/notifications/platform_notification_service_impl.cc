@@ -116,4 +116,8 @@ void PlatformNotificationServiceImpl::GetDisplayedNotifications(
     const DisplayedNotificationsCallback& callback) {
 }
 
+int64_t PlatformNotificationServiceImpl::ReadNextPersistentNotificationId(
+    content::BrowserContext* browser_context) {
+}
+
 }  // namespace brave

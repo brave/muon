@@ -94,4 +94,8 @@ void PlatformNotificationService::GetDisplayedNotifications(
     const DisplayedNotificationsCallback& callback) {
 }
 
+int64_t PlatformNotificationService::ReadNextPersistentNotificationId(
+    content::BrowserContext* browser_context) {
+}
+
 }  // namespace brightray
