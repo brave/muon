@@ -513,7 +513,7 @@ void Session::SetPermissionRequestHandler(v8::Local<v8::Value> val,
     return;
   }
   auto permission_manager = static_cast<brave::BravePermissionManager*>(
-      profile_->GetPermissionManager());
+      profile_->GetPermissionControllerDelegate());
   permission_manager->SetPermissionRequestHandler(handler);
 }
 

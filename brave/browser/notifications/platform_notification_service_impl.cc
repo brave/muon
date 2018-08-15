@@ -77,7 +77,7 @@ void PlatformNotificationServiceImpl::DisplayNotification(
              notification_data,
              base::Passed(&delegate));
 
-  auto permission_manager = browser_context->GetPermissionManager();
+  auto permission_manager = browser_context->GetPermissionControllerDelegate();
   // TODO(bridiver) user gesture
   permission_manager->RequestPermission(
       content::PermissionType::NOTIFICATIONS, NULL, origin, false,

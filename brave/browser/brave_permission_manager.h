@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "base/callback.h"
-#include "content/public/browser/permission_manager.h"
+#include "content/public/browser/permission_controller_delegate.h"
 #include "services/device/public/mojom/geolocation_control.mojom.h"
 
 namespace content {
@@ -17,7 +17,7 @@ class WebContents;
 }
 
 namespace brave {
-class BravePermissionManager : public content::PermissionManager {
+class BravePermissionManager : public content::PermissionControllerDelegate {
  public:
   BravePermissionManager();
   ~BravePermissionManager() override;
