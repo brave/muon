@@ -1559,18 +1559,19 @@ index 08d8639f6fd230eaf5fae1e0a94de504b5c76f2f..c1986c9647249d97f3c5dccf48fe90f6
  
  @end
 diff --git a/content/browser/renderer_host/plugin_registry_impl.cc b/content/browser/renderer_host/plugin_registry_impl.cc
-index ec071f3b89c16febad73f77a1b17fe864874e371..c3aba24cbf72bfe7fb90ea34d4d484a5ff57469a 100644
+index ec071f3b89c16febad73f77a1b17fe864874e371..6c1c79a6d4276d7cf9af7dbc5285dfe1435f313c 100644
 --- a/content/browser/renderer_host/plugin_registry_impl.cc
 +++ b/content/browser/renderer_host/plugin_registry_impl.cc
-@@ -55,7 +55,7 @@ void PluginRegistryImpl::GetPluginsComplete(
+@@ -55,6 +55,9 @@ void PluginRegistryImpl::GetPluginsComplete(
    PluginServiceFilter* filter = PluginServiceImpl::GetInstance()->GetFilter();
    std::vector<blink::mojom::PluginInfoPtr> plugins;
  
--  const int child_process_id = -1;
-+  const int child_process_id = render_process_id_;
++
++//  const int child_process_id = render_process_id_;
++// crrev.com/b702474f0f48
+   const int child_process_id = -1;
    const int routing_id = MSG_ROUTING_NONE;
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
-   // the filter might mutate it.
 diff --git a/content/browser/renderer_host/render_process_host_impl.cc b/content/browser/renderer_host/render_process_host_impl.cc
 index 3887d68c6d22448e137c4df90b2114ff1e017675..c6c48380b990ce33ae9392dc75e692ef9bfa0b09 100644
 --- a/content/browser/renderer_host/render_process_host_impl.cc
@@ -2035,6 +2036,23 @@ index 4d8251069ae9a45e1be22fa03f23b3196116b612..970eb343c09d03065310c1ad1c11dcb8
  
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
+diff --git a/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm b/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm
+index 065c4e0ec2008cead575c9e0cafc22f952bac883..24e7f083fbf2447b3215da0b58612ebbe1d40f55 100644
+--- a/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm
++++ b/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm
+@@ -23,10 +23,11 @@ void BluetoothLowEnergyAdvertisementManagerMac::TryStartAdvertisement() {
+     return;
+   }
+ 
++/* TMP: patched upstream at 330ab842b6a50e3b3c824b31d4535f16cdf39c82
+   if ([peripheral_manager_ state] < CBPeripheralManagerStatePoweredOn) {
+     return;
+   }
+-
++*/
+   NSMutableArray* service_uuid_array = [[NSMutableArray alloc] init];
+   for (const std::string& service_uuid :
+        active_advertisement_->service_uuids()) {
 diff --git a/extensions/browser/BUILD.gn b/extensions/browser/BUILD.gn
 index bde743375f7aa09e3f8c295e5fe5ba0ece42a485..fa5ab4dd75840bfddc0147f14955f063e73f64ed 100644
 --- a/extensions/browser/BUILD.gn
