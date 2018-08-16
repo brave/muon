@@ -176,14 +176,12 @@ Role kRolesMap[] = {
     ui::Accelerator accelerator;
     if (model->GetAcceleratorAtWithParams(
             index, useDefaultAccelerator_, &accelerator)) {
-      const ui::PlatformAcceleratorCocoa* platformAccelerator =
-          static_cast<const ui::PlatformAcceleratorCocoa*>(
-              accelerator.platform_accelerator());
-      if (platformAccelerator) {
-        [item setKeyEquivalent:platformAccelerator->characters()];
-        [item setKeyEquivalentModifierMask:
-            platformAccelerator->modifier_mask()];
-      }
+      NSString* key_equivalent;
+      NSUInteger modifier_mask;
+      GetKeyEquivalentAndModifierMaskFromAccelerator(
+          accelerator, &key_equivalent, &modifier_mask);
+      [item setKeyEquivalent:key_equivalent];
+      [item setKeyEquivalentModifierMask:modifier_mask];
     }
 
     // Set menu item's role.

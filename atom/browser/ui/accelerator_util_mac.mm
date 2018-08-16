@@ -36,9 +36,6 @@ void SetPlatformAccelerator(ui::Accelerator* accelerator) {
   NSString* characters =
       [[[NSString alloc] initWithCharacters:&character length:1] autorelease];
 
-  std::unique_ptr<ui::PlatformAccelerator> platform_accelerator(
-      new ui::PlatformAcceleratorCocoa(characters, modifiers));
-  accelerator->set_platform_accelerator(std::move(platform_accelerator));
 }
 
 }  // namespace accelerator_util
