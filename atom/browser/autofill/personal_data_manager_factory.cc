@@ -42,7 +42,7 @@ KeyedService* PersonalDataManagerFactory::BuildServiceInstanceFor(
   PersonalDataManager* service =
       new PersonalDataManager(
           brave::BraveContentBrowserClient::Get()->GetApplicationLocale());
-  service->Init(static_cast<Profile*>(context)
+  service->Init(nullptr,static_cast<Profile*>(context)
                 ->GetAutofillWebdataService(),
                 user_prefs::UserPrefs::Get(context),
                 nullptr,
