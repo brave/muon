@@ -270,12 +270,6 @@ void BravePasswordManagerClient::OnCredentialsChosen(
     PromptUserToEnableAutosigninIfNecessary();
 }
 
-void BravePasswordManagerClient::ForceSavePassword() {
-  password_manager::ContentPasswordManagerDriver* driver =
-      driver_factory_->GetDriverForFrame(web_contents()->GetFocusedFrame());
-  driver->ForceSavePassword();
-}
-
 void BravePasswordManagerClient::GeneratePassword() {
   password_manager::ContentPasswordManagerDriver* driver =
       driver_factory_->GetDriverForFrame(web_contents()->GetFocusedFrame());

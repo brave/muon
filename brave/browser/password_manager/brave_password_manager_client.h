@@ -86,7 +86,6 @@ class BravePasswordManagerClient
       std::vector<std::unique_ptr<autofill::PasswordForm>> local_forms,
       const GURL& origin,
       const CredentialsCallback& callback) override;
-  void ForceSavePassword() override;
   void GeneratePassword() override;
   void NotifyUserAutoSignin(
       std::vector<std::unique_ptr<autofill::PasswordForm>> local_forms,

@@ -985,9 +985,6 @@ void BraveContentBrowserClient::InitFrameInterfaces() {
   frame_interfaces_parameterized_->AddInterface(
       base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver));
   frame_interfaces_parameterized_->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindPasswordManagerDriver));
-  frame_interfaces_parameterized_->AddInterface(
       base::BindRepeating(&BravePasswordManagerClient::BindCredentialManager));
 }
 
