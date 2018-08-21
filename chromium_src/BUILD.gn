@@ -286,6 +286,8 @@ source_set("browser") {
     "//chrome/browser/ui/pdf/adobe_reader_info_win.h",
     "//chrome/browser/usb/usb_tab_helper.h",
     "//chrome/browser/usb/usb_tab_helper.cc",
+    "//chrome/browser/usb/web_usb_permission_provider.h",
+    "//chrome/browser/usb/web_usb_permission_provider.cc",
 
     "chrome/browser/ui/profile_error_dialog.cc",
     "//chrome/browser/ui/recently_audible_helper.cc",
