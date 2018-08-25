@@ -490,6 +490,22 @@ index b499b91419b56c5b0b026aca28c10f82a16e8bf0..2203c8428a1a45cee4533a3f5c839f27
  
    SetState(LifecycleUnitState::DISCARDED,
             DiscardReasonToStateChangeReason(discard_reason));
+diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc b/chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc
+index e936f25145075e6882537d6557f5dd3199d225fa..5196f97e858a191e87f1bdf66eb1c6a48a18fefe 100644
+--- a/chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc
++++ b/chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc
+@@ -296,8 +296,9 @@ void TabLifecylesEnterprisePreferenceMonitor::GetPref() {
+   // lifecycles feature.
+   const PrefService::Preference* pref =
+       pref_service_->FindPreference(prefs::kTabLifecyclesEnabled);
+-  if (pref->IsManaged() && !pref->GetValue()->GetBool())
+-    enabled = false;
++/*  if (pref->IsManaged() && !pref->GetValue()->GetBool())
++    enabled = false; */
++  enabled = false;
+ 
+   callback_.Run(enabled);
+ }
 diff --git a/chrome/browser/resource_coordinator/tab_manager.cc b/chrome/browser/resource_coordinator/tab_manager.cc
 index e1566332f1df8898fe33a9f38270b6129e81fca0..f1abbf2283103392913006051ad63985ae7ae4de 100644
 --- a/chrome/browser/resource_coordinator/tab_manager.cc
@@ -2125,7 +2141,7 @@ index d8d9299b229f48a21897fe2c8b3f5db3711aacf6..c0a86aea18e5ea2ecb528acc992581f1
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..a4da9e48a596f7645601c6d7e05617b1dfba1813 100644
+index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..52a945f92cd8ed834de54475c2d5608dc386a5c5 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -193,7 +193,10 @@
@@ -2148,7 +2164,15 @@ index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..a4da9e48a596f7645601c6d7e05617b1
        "chrome://chrome-signin/*",
        "chrome://home/*",
        "chrome://media-router/*",
-@@ -589,6 +593,14 @@
+@@ -582,6 +586,7 @@
+     "channel": "stable",
+     "contexts": ["webui"],
+     "matches": [
++      "chrome://brave/*",
+       "chrome://chrome-signin/*",
+       "chrome://home/*",
+       "chrome://media-router/*",
+@@ -589,6 +594,14 @@
        "chrome://oobe/*",
        "chrome://assistant-optin/*"
      ]
@@ -2163,7 +2187,7 @@ index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..a4da9e48a596f7645601c6d7e05617b1
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -597,6 +609,7 @@
+@@ -597,6 +610,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
