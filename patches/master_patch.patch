@@ -451,7 +451,7 @@ index 9f0003bc2d80d7c76ab9dd17393d0188fe1ac6fd..88d75d4091fb3dc282998a5d44e63cbf
    // content::NotificationObserver implementation.
    void Observe(int type,
 diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
-index b499b91419b56c5b0b026aca28c10f82a16e8bf0..2203c8428a1a45cee4533a3f5c839f27d7de50aa 100644
+index d36e89e2ba3b5b7fa7f7f05b6ab583c8bd859db9..4fa2c0a126b17ad705a4b28609a500508df9a371 100644
 --- a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
 +++ b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
 @@ -12,6 +12,7 @@
@@ -470,7 +470,7 @@ index b499b91419b56c5b0b026aca28c10f82a16e8bf0..2203c8428a1a45cee4533a3f5c839f27
  #include "chrome/browser/resource_coordinator/tab_manager_features.h"
  #include "chrome/browser/resource_coordinator/time.h"
  #include "chrome/browser/resource_coordinator/utils.h"
-@@ -679,7 +681,7 @@ void TabLifecycleUnitSource::TabLifecycleUnit::FinishDiscard(
+@@ -699,7 +701,7 @@ void TabLifecycleUnitSource::TabLifecycleUnit::FinishDiscard(
        content::WebContents::CreateParams::kNoRendererProcess;
    create_params.last_active_time = old_contents->GetLastActiveTime();
    std::unique_ptr<content::WebContents> null_contents =
@@ -479,7 +479,7 @@ index b499b91419b56c5b0b026aca28c10f82a16e8bf0..2203c8428a1a45cee4533a3f5c839f27
    content::WebContents* raw_null_contents = null_contents.get();
  
    // Attach the ResourceCoordinatorTabHelper. In production code this has
-@@ -736,7 +738,9 @@ void TabLifecycleUnitSource::TabLifecycleUnit::FinishDiscard(
+@@ -756,7 +758,9 @@ void TabLifecycleUnitSource::TabLifecycleUnit::FinishDiscard(
    // TODO(jamescook): This breaks script connections with other tabs. Find a
    // different approach that doesn't do that, perhaps based on
    // RenderFrameProxyHosts.
@@ -584,7 +584,7 @@ index de9e4280f1984afd3198b5c8132774cc26ff7e95..54be9a23739ddb16322c0067c7e4da51
        rev_checking_required_local_anchors_.GetValue();
    config->sha1_local_anchors_enabled = sha1_local_anchors_enabled_.GetValue();
 diff --git a/chrome/browser/ui/libgtkui/BUILD.gn b/chrome/browser/ui/libgtkui/BUILD.gn
-index 8af376e16e327f97577b0f2bc0487e30751201d2..fc7a2d23ea2ae3db8709036dff062bc5aa31cd10 100644
+index de40baffe510aa84b342daa3b6c1b62dc4ae9328..7c25bc1ba20baa24cc6c39ba400241c2531469bc 100644
 --- a/chrome/browser/ui/libgtkui/BUILD.gn
 +++ b/chrome/browser/ui/libgtkui/BUILD.gn
 @@ -65,6 +65,9 @@ template("libgtkui") {
@@ -1145,7 +1145,7 @@ index c4c5f83886574956b3abdfa77a07500a2ee6de9e..edbfde3c41a1e38bcdedd09aaa41d8a1
    std::unique_ptr<service_manager::ServiceContextRefFactory> ref_factory_;
    service_manager::BinderRegistry registry_;
 diff --git a/components/autofill/core/browser/credit_card_save_manager.cc b/components/autofill/core/browser/credit_card_save_manager.cc
-index 6c0d86a536f333c34177786d21464255e6461507..9f323f008f38c6fff2124c76e843620e63d58962 100644
+index d0aba9954e574f147b48142b497f67879619c06f..951f438f95de992443f21cd084e3e81f42197d8f 100644
 --- a/components/autofill/core/browser/credit_card_save_manager.cc
 +++ b/components/autofill/core/browser/credit_card_save_manager.cc
 @@ -187,12 +187,17 @@ void CreditCardSaveManager::AttemptToOfferCardUploadSave(
@@ -1165,7 +1165,7 @@ index 6c0d86a536f333c34177786d21464255e6461507..9f323f008f38c6fff2124c76e843620e
 +#endif
  }
  
- void CreditCardSaveManager::OnDidUploadCard(
+ bool CreditCardSaveManager::IsUploadEnabledForNetwork(
 diff --git a/components/crash/content/app/breakpad_linux.cc b/components/crash/content/app/breakpad_linux.cc
 index a7378204ffaa5586be9789a552de0f2a951ad208..25d0ed3e2b2a13e4c8c939e1dfe14586920f2273 100644
 --- a/components/crash/content/app/breakpad_linux.cc
@@ -1374,7 +1374,7 @@ index 7c110c7b14e559cd73dfb0ca6f72c14b671d52b8..dc3e79afa4f9b80f27b1a6026c06543f
        strlen(service_name), service_name, strlen(account_name), account_name,
        &password_length, &password_data, NULL);
 diff --git a/components/password_manager/core/browser/new_password_form_manager.cc b/components/password_manager/core/browser/new_password_form_manager.cc
-index 585933fd5c5d932caf16a93664b45531a79feeb7..48f00be9cb19c70dbc2863b9a79d81f278fcf690 100644
+index 36703f51cf95bb7cdc8e1d39e0d6f2da6637d3b2..3664a10c9ff122e907cd528c7d2e971d35536f47 100644
 --- a/components/password_manager/core/browser/new_password_form_manager.cc
 +++ b/components/password_manager/core/browser/new_password_form_manager.cc
 @@ -162,6 +162,12 @@ void NewPasswordFormManager::OnNeverClicked() {}
@@ -1391,10 +1391,10 @@ index 585933fd5c5d932caf16a93664b45531a79feeb7..48f00be9cb19c70dbc2863b9a79d81f2
  void NewPasswordFormManager::ProcessMatches(
      const std::vector<const PasswordForm*>& non_federated,
 diff --git a/components/password_manager/core/browser/new_password_form_manager.h b/components/password_manager/core/browser/new_password_form_manager.h
-index b3dfdf8ff787ae402666972840397a7b0fa5b11c..86af627a20583deebf2fbdb625771ee85333ddcb 100644
+index 0459cc5e11923d9b815d4bc203b4f03c8bfe7bb2..1b8d73792fb868b9b3e44c6bd2d68d74cb117ec4 100644
 --- a/components/password_manager/core/browser/new_password_form_manager.h
 +++ b/components/password_manager/core/browser/new_password_form_manager.h
-@@ -96,6 +96,10 @@ class NewPasswordFormManager : public PasswordFormManagerForUI,
+@@ -103,6 +103,10 @@ class NewPasswordFormManager : public PasswordFormManagerForUI,
    void PermanentlyBlacklist() override;
    void OnPasswordsRevealed() override;
  
@@ -1524,10 +1524,10 @@ index 34c5307b0fa70deea728cf36c4dfbf93dc32fc66..8b0ab6f2632e6ef8e8cca6d4eaa8f95d
    FrameTreeNode* node =
        static_cast<RenderFrameHostImpl*>(from_rfh)->frame_tree_node();
 diff --git a/content/browser/frame_host/render_frame_host_impl.cc b/content/browser/frame_host/render_frame_host_impl.cc
-index 36b5e3bf68538ca500d4018150c483812d375ee5..94338818a13919cee9068ab361ee471de283035f 100644
+index 8e5af3e3b9c5b9e5c7a2462600fb2c9582df0c7c..875ea27a1f44a982067aa15f39dd7304a21775e8 100644
 --- a/content/browser/frame_host/render_frame_host_impl.cc
 +++ b/content/browser/frame_host/render_frame_host_impl.cc
-@@ -3173,9 +3173,13 @@ void RenderFrameHostImpl::CreateNewWindow(
+@@ -3192,9 +3192,13 @@ void RenderFrameHostImpl::CreateNewWindow(
      return;
    }
  
@@ -1589,7 +1589,7 @@ index ec071f3b89c16febad73f77a1b17fe864874e371..6c1c79a6d4276d7cf9af7dbc5285dfe1
    const int routing_id = MSG_ROUTING_NONE;
    // In this loop, copy the WebPluginInfo (and do not use a reference) because
 diff --git a/content/browser/renderer_host/render_process_host_impl.cc b/content/browser/renderer_host/render_process_host_impl.cc
-index 3887d68c6d22448e137c4df90b2114ff1e017675..c6c48380b990ce33ae9392dc75e692ef9bfa0b09 100644
+index 184482f37c9d8395e359d58502e9eb8daf21d5cd..902e4affa7412cc97dae3f1d68a9ce8846583912 100644
 --- a/content/browser/renderer_host/render_process_host_impl.cc
 +++ b/content/browser/renderer_host/render_process_host_impl.cc
 @@ -267,6 +267,10 @@
@@ -1603,7 +1603,7 @@ index 3887d68c6d22448e137c4df90b2114ff1e017675..c6c48380b990ce33ae9392dc75e692ef
  namespace content {
  
  using CheckOriginLockResult =
-@@ -1360,7 +1364,12 @@ RenderProcessHost* RenderProcessHostImpl::CreateRenderProcessHost(
+@@ -1354,7 +1358,12 @@ RenderProcessHost* RenderProcessHostImpl::CreateRenderProcessHost(
    // "https://example.com/sw.js" but need to use the site URL
    // "chrome-guest://blahblah" to get a process in the guest's
    // StoragePartition.)
@@ -1779,10 +1779,10 @@ index 052bcb2791c9090df5aa15ee475c2651b7b88259..bb662a3e7ae328630ef4e86f4ccbd6bc
    void SetNeedsBeginFrames(bool needs_begin_frames) override;
    void GetScreenInfo(ScreenInfo* screen_info) const override;
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 714955d9fb9eb61d2c4c90c15db0e2ca8dea8b3c..d9ecbbe01456d5bec7834fe37a275de498a26069 100644
+index 0703dd02c90106a541acf173ec770e18e01c8841..5c16d52e1fafbfb2dbabcc07c4b144cdbb90a7b5 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
-@@ -1261,6 +1261,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
+@@ -1262,6 +1262,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
    if (host()) {
      host()->SetActive(active);
      if (active) {
@@ -1793,7 +1793,7 @@ index 714955d9fb9eb61d2c4c90c15db0e2ca8dea8b3c..d9ecbbe01456d5bec7834fe37a275de4
        if (HasFocus())
          host()->Focus();
      } else {
-@@ -1278,6 +1282,14 @@ void RenderWidgetHostViewMac::ShowDefinitionForSelection() {
+@@ -1279,6 +1283,14 @@ void RenderWidgetHostViewMac::ShowDefinitionForSelection() {
    ns_view_bridge_->ShowDictionaryOverlayForSelection();
  }
  
@@ -1909,10 +1909,10 @@ index 26384f823b511ca720ae474e950d75fd19b65111..8307b6b098182e3ed6ef9693ae736843
            : source_site_instance;
  
 diff --git a/content/browser/web_contents/web_contents_view_mac.mm b/content/browser/web_contents/web_contents_view_mac.mm
-index 03d7c9c7dcce5f51705632652ee837a73c08ccf5..a5f9565edab4828fafd853e2a0bcca32d90f46cb 100644
+index 94848b568363216ae0954b8b6c42cdafdb2a2a72..65431242004122bb54c6fc6b34cac8ce27397121 100644
 --- a/content/browser/web_contents/web_contents_view_mac.mm
 +++ b/content/browser/web_contents/web_contents_view_mac.mm
-@@ -595,6 +595,7 @@ void WebContentsViewMac::SetParentUiLayer(ui::Layer* parent_ui_layer) {
+@@ -600,6 +600,7 @@ void WebContentsViewMac::SetParentUiLayer(ui::Layer* parent_ui_layer) {
               endedAt:(NSPoint)screenPoint
             operation:(NSDragOperation)operation {
    [dragSource_ endDragAt:screenPoint operation:operation];
@@ -2052,23 +2052,6 @@ index 4d8251069ae9a45e1be22fa03f23b3196116b612..970eb343c09d03065310c1ad1c11dcb8
  
      // We shouldn't be forwarding GestureEvents to the Guest anymore. Indicate
      // we handled this only if it's a non-resent event.
-diff --git a/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm b/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm
-index 065c4e0ec2008cead575c9e0cafc22f952bac883..24e7f083fbf2447b3215da0b58612ebbe1d40f55 100644
---- a/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm
-+++ b/device/bluetooth/bluetooth_low_energy_advertisement_manager_mac.mm
-@@ -23,10 +23,11 @@ void BluetoothLowEnergyAdvertisementManagerMac::TryStartAdvertisement() {
-     return;
-   }
- 
-+/* TMP: patched upstream at 330ab842b6a50e3b3c824b31d4535f16cdf39c82
-   if ([peripheral_manager_ state] < CBPeripheralManagerStatePoweredOn) {
-     return;
-   }
--
-+*/
-   NSMutableArray* service_uuid_array = [[NSMutableArray alloc] init];
-   for (const std::string& service_uuid :
-        active_advertisement_->service_uuids()) {
 diff --git a/extensions/browser/BUILD.gn b/extensions/browser/BUILD.gn
 index bde743375f7aa09e3f8c295e5fe5ba0ece42a485..fa5ab4dd75840bfddc0147f14955f063e73f64ed 100644
 --- a/extensions/browser/BUILD.gn
@@ -2141,7 +2124,7 @@ index d8d9299b229f48a21897fe2c8b3f5db3711aacf6..c0a86aea18e5ea2ecb528acc992581f1
        "//device/bluetooth",
        "//device/usb",
 diff --git a/extensions/common/api/_api_features.json b/extensions/common/api/_api_features.json
-index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..52a945f92cd8ed834de54475c2d5608dc386a5c5 100644
+index c0eb07872f0c837cdbaf350e4f81bc473bf60c5e..9fe594db0c5494bc0e7de2fdf4b6dfb032950aae 100644
 --- a/extensions/common/api/_api_features.json
 +++ b/extensions/common/api/_api_features.json
 @@ -193,7 +193,10 @@
@@ -2156,7 +2139,7 @@ index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..52a945f92cd8ed834de54475c2d5608d
      }, {
        "internal": true,
        "channel": "stable",
-@@ -565,6 +568,7 @@
+@@ -566,6 +569,7 @@
      "internal": true,
      "contexts": ["webui"],
      "matches": [
@@ -2164,7 +2147,7 @@ index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..52a945f92cd8ed834de54475c2d5608d
        "chrome://chrome-signin/*",
        "chrome://home/*",
        "chrome://media-router/*",
-@@ -582,6 +586,7 @@
+@@ -583,6 +587,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
@@ -2172,7 +2155,7 @@ index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..52a945f92cd8ed834de54475c2d5608d
        "chrome://chrome-signin/*",
        "chrome://home/*",
        "chrome://media-router/*",
-@@ -589,6 +594,14 @@
+@@ -590,6 +595,14 @@
        "chrome://oobe/*",
        "chrome://assistant-optin/*"
      ]
@@ -2187,7 +2170,7 @@ index 245e68cca9cf1434aa732fef10bf6b1e3b9f79a3..52a945f92cd8ed834de54475c2d5608d
    }],
    "webViewRequest": [{
      "dependencies": ["permission:webview"],
-@@ -597,6 +610,7 @@
+@@ -598,6 +611,7 @@
      "channel": "stable",
      "contexts": ["webui"],
      "matches": [
@@ -2239,7 +2222,7 @@ index d985c0df7a9cb9543003ac32751f3fc80633248a..02bd6daf7e48de8345ce3be506e02110
  
    proto.attachedCallback = function() {
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index f3fbc82a555386f4665586e009353b6904f1aa0c..db8813e71a8dcab35c5223d0d75edd6068e69ee9 100644
+index 5fb8f3c203599358e3cc2e99666844852dfd111a..42ca1a9e39230a383b6209297835b2874973373d 100644
 --- a/media/base/media_switches.cc
 +++ b/media/base/media_switches.cc
 @@ -416,7 +416,7 @@ std::string GetEffectiveAutoplayPolicy(const base::CommandLine& command_line) {
@@ -2653,10 +2636,10 @@ index 70d1323967869929988baea80ead2fb997244ee6..80f262e1bd2711243c6f2d5e6a9a5e66
    return true;
  }
 diff --git a/third_party/blink/renderer/core/loader/frame_fetch_context.cc b/third_party/blink/renderer/core/loader/frame_fetch_context.cc
-index 82479aaab368ae0ec1d61952ae1fe7c487bb0e62..a536689442960710386a81d4db7a8eba95c42272 100644
+index ccfe57146112d3e781ac050db551e6aba26bf3a1..fd7b81b2cf4d91732341fa2bf55ee658b5d0b453 100644
 --- a/third_party/blink/renderer/core/loader/frame_fetch_context.cc
 +++ b/third_party/blink/renderer/core/loader/frame_fetch_context.cc
-@@ -902,7 +902,9 @@ void FrameFetchContext::ModifyRequestForCSP(ResourceRequest& resource_request) {
+@@ -913,7 +913,9 @@ void FrameFetchContext::ModifyRequestForCSP(ResourceRequest& resource_request) {
  void FrameFetchContext::AddClientHintsIfNecessary(
      const ClientHintsPreferences& hints_preferences,
      const FetchParameters::ResourceWidth& resource_width,
@@ -2667,7 +2650,7 @@ index 82479aaab368ae0ec1d61952ae1fe7c487bb0e62..a536689442960710386a81d4db7a8eba
    WebEnabledClientHints enabled_hints;
  
    // If the feature is enabled, then client hints are allowed only on secure
-@@ -912,6 +914,7 @@ void FrameFetchContext::AddClientHintsIfNecessary(
+@@ -923,6 +925,7 @@ void FrameFetchContext::AddClientHintsIfNecessary(
  
    // Check if |url| is allowed to run JavaScript. If not, client hints are not
    // attached to the requests that initiate on the render side.
@@ -2675,7 +2658,7 @@ index 82479aaab368ae0ec1d61952ae1fe7c487bb0e62..a536689442960710386a81d4db7a8eba
    if (!AllowScriptFromSourceWithoutNotifying(request.Url()))
      return;
  
-@@ -1003,7 +1006,7 @@ void FrameFetchContext::PopulateResourceRequest(
+@@ -1014,7 +1017,7 @@ void FrameFetchContext::PopulateResourceRequest(
      const FetchParameters::ResourceWidth& resource_width,
      ResourceRequest& request) {
    ModifyRequestForCSP(request);
@@ -2685,7 +2668,7 @@ index 82479aaab368ae0ec1d61952ae1fe7c487bb0e62..a536689442960710386a81d4db7a8eba
    const ContentSecurityPolicy* csp = GetContentSecurityPolicy();
    if (csp && csp->ShouldSendCSPHeader(type))
 diff --git a/third_party/blink/renderer/core/loader/frame_fetch_context.h b/third_party/blink/renderer/core/loader/frame_fetch_context.h
-index 2c3c233632394f61216ebcb4a1df5590cc20a18d..6c42a7b0f60c6682fd37e1260906446cc530dbc9 100644
+index d2a808077e76151e66c9fc9dcb858a2e296c2808..de8ba1653e235af7628553f49114f4f08f25f8b9 100644
 --- a/third_party/blink/renderer/core/loader/frame_fetch_context.h
 +++ b/third_party/blink/renderer/core/loader/frame_fetch_context.h
 @@ -160,7 +160,8 @@ class CORE_EXPORT FrameFetchContext final : public BaseFetchContext {
