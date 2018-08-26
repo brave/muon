@@ -451,7 +451,7 @@ index 9f0003bc2d80d7c76ab9dd17393d0188fe1ac6fd..88d75d4091fb3dc282998a5d44e63cbf
    // content::NotificationObserver implementation.
    void Observe(int type,
 diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
-index d36e89e2ba3b5b7fa7f7f05b6ab583c8bd859db9..4fa2c0a126b17ad705a4b28609a500508df9a371 100644
+index d36e89e2ba3b5b7fa7f7f05b6ab583c8bd859db9..68dc47f1da5df0e5db5be244567291ce89a420a0 100644
 --- a/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
 +++ b/chrome/browser/resource_coordinator/tab_lifecycle_unit.cc
 @@ -12,6 +12,7 @@
@@ -490,6 +490,22 @@ index d36e89e2ba3b5b7fa7f7f05b6ab583c8bd859db9..4fa2c0a126b17ad705a4b28609a50050
  
    SetState(LifecycleUnitState::DISCARDED,
             DiscardReasonToStateChangeReason(discard_reason));
+@@ -932,6 +936,7 @@ void TabLifecycleUnitSource::TabLifecycleUnit::CheckIfTabIsUsedInBackground(
+                                                       decision_details);
+   }
+ 
++/*
+   // Do not freeze/discard a tab that has active WebUSB connections.
+   if (auto* usb_tab_helper = UsbTabHelper::FromWebContents(web_contents)) {
+     if (usb_tab_helper->IsDeviceConnected()) {
+@@ -939,6 +944,7 @@ void TabLifecycleUnitSource::TabLifecycleUnit::CheckIfTabIsUsedInBackground(
+           DecisionFailureReason::LIVE_STATE_USING_WEB_USB);
+     }
+   }
++*/
+ 
+   // Do not freeze tabs that are currently using DevTools.
+   if (DevToolsWindow::GetInstanceForInspectedWebContents(web_contents)) {
 diff --git a/chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc b/chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc
 index e936f25145075e6882537d6557f5dd3199d225fa..5196f97e858a191e87f1bdf66eb1c6a48a18fefe 100644
 --- a/chrome/browser/resource_coordinator/tab_lifecycle_unit_source.cc
@@ -597,6 +613,23 @@ index de40baffe510aa84b342daa3b6c1b62dc4ae9328..7c25bc1ba20baa24cc6c39ba400241c2
      configs += [
        "//build/config/linux/pangocairo",
        "//build/config/linux:x11",
+diff --git a/chrome/browser/usb/usb_tab_helper.cc b/chrome/browser/usb/usb_tab_helper.cc
+index cca1c6322d296c93d7d1f09ede5209f5a57031d0..9bebadf8c1de522531dc703407c3d74aa17fcc62 100644
+--- a/chrome/browser/usb/usb_tab_helper.cc
++++ b/chrome/browser/usb/usb_tab_helper.cc
+@@ -138,10 +138,12 @@ FrameUsbServices* UsbTabHelper::GetFrameUsbService(
+ base::WeakPtr<device::usb::PermissionProvider>
+ UsbTabHelper::GetPermissionProvider(RenderFrameHost* render_frame_host) {
+   FrameUsbServices* frame_usb_services = GetFrameUsbService(render_frame_host);
++#if defined(OS_WIN) && !defined(MUON_CHROMIUM_BUILD)
+   if (!frame_usb_services->permission_provider) {
+     frame_usb_services->permission_provider.reset(
+         new WebUSBPermissionProvider(render_frame_host));
+   }
++#endif
+   return frame_usb_services->permission_provider->GetWeakPtr();
+ }
+ 
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
 index 9a21e268447a0ea984101132329073dca486f6ad..32c5ec793cd44d5f45b3d5ff7bb769aadc62a576 100644
 --- a/chrome/common/BUILD.gn

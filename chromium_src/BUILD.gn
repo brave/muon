@@ -284,8 +284,6 @@ source_set("browser") {
     "//chrome/browser/ui/cocoa/ui_localizer.mm",
     "//chrome/browser/ui/pdf/adobe_reader_info_win.cc",
     "//chrome/browser/ui/pdf/adobe_reader_info_win.h",
-    "//chrome/browser/usb/usb_tab_helper.h",
-    "//chrome/browser/usb/usb_tab_helper.cc",
 
     "chrome/browser/ui/profile_error_dialog.cc",
     "//chrome/browser/ui/recently_audible_helper.cc",
