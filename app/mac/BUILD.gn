@@ -54,7 +54,7 @@ mac_app_bundle("electron_app") {
   ]
 
   sources = [
-    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.c",
+    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.cc",
   ]
 
   deps = [
@@ -193,11 +193,12 @@ mac_app_bundle("electron_helper_app") {
   defines = [ "HELPER_EXECUTABLE" ]
 
   sources = [
-    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.c",
+    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.cc",
   ]
 
   deps = [
     "//chrome/common:version_header",
+    "//sandbox/mac:seatbelt",
   ]
 
   ldflags = []
