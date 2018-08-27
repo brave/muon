@@ -59,6 +59,7 @@
 #endif
 
 #if defined(OS_MACOSX)
+#include "atom/browser/mac/atom_application.h"
 #include "chrome/app/chrome_main_mac.h"
 #include "chrome/browser/mac/relauncher.h"
 #include "chrome/common/mac/cfbundle_blocker.h"
@@ -397,6 +398,12 @@ void AtomMainDelegate::ProcessExiting(const std::string& process_type) {
 std::unique_ptr<brightray::ContentClient>
 AtomMainDelegate::CreateContentClient() {
   return std::unique_ptr<brightray::ContentClient>(new AtomContentClient);
+}
+
+void AtomMainDelegate::PreContentInitialization() {
+#if defined(OS_MACOSX)
+  atom_application_mac::RegisterBrowserCrApp();
+#endif
 }
 
 }  // namespace atom

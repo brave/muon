@@ -11,10 +11,24 @@
 #include "base/strings/sys_string_conversions.h"
 #include "content/public/browser/browser_accessibility_state.h"
 
+namespace atom_application_mac {
+
+void RegisterBrowserCrApp() {
+  [AtomApplication sharedApplication];
+};
+
+}  // namespace atom_application_mac
+
 @implementation AtomApplication
 
 + (AtomApplication*)sharedApplication {
-  return (AtomApplication*)[super sharedApplication];
+  AtomApplication* app = (AtomApplication*)[super sharedApplication];
+
+  CHECK(base::MessagePumpMac::UsingCrApp())
+      << "MessagePumpMac::Create() is using the wrong pump implementation"
+      << " for " << [[self className] UTF8String];
+
+  return app;
 }
 
 - (BOOL)isHandlingSendEvent {

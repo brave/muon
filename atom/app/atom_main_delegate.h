@@ -47,6 +47,7 @@ class AtomMainDelegate : public brightray::MainDelegate {
 #if defined(OS_POSIX) && !defined(OS_MACOSX)
   void ZygoteForked() override;
 #endif
+  void PreContentInitialization() override;
 
 #if defined(OS_MACOSX)
   bool ShouldSendMachPort(const std::string& process_type) override;
