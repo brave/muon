@@ -124,7 +124,7 @@ int AtomExtensionsNetworkDelegate::OnBeforeStartTransaction(
                                 request->identifier());
 
   int result = extensions_delegate_->NotifyBeforeStartTransaction(
-      request, std::move(callback), headers);
+      request, std::move(wrapped_cb), headers);
 
   if (result == net::ERR_IO_PENDING)
     return result;
