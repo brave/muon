@@ -222,6 +222,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
         cb(tab)
       }
     })
+    createProperties.extension = extensionId;
     ipc.send('chrome-tabs-create', responseId, createProperties)
   })
 

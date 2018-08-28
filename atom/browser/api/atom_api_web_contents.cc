@@ -2996,6 +2996,10 @@ void WebContents::CreateTab(mate::Arguments* args) {
   if (options.Get("src", &src) || options.Get("url", &src)) {
     create_params.SetString("src", src);
   }
+  std::string extension_id;
+  if (options.Get("extension", &extension_id)) {
+    create_params.SetString("extension", extension_id);
+  }
 
   extensions::TabHelper::CreateTab(owner->web_contents(),
       browser_context,
