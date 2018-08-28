@@ -547,7 +547,8 @@ bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
   for (auto* b : *BrowserList::GetInstance()) {
     if (b->session_id().id() == window_id) {
       if (get_index() != TabStripModel::kNoTab)
-        browser()->tab_strip_model()->DetachWebContentsAt(get_index()).release();
+        browser()->tab_strip_model()->
+          DetachWebContentsAt(get_index()).release();
 
       UpdateBrowser(b);
 

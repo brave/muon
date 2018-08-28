@@ -463,7 +463,8 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
       ->OnDefaultZoomLevelChanged();
 }
 
-content::PermissionControllerDelegate* BraveBrowserContext::GetPermissionControllerDelegate() {
+content::PermissionControllerDelegate*
+BraveBrowserContext::GetPermissionControllerDelegate() {
   if (!permission_manager_.get())
     permission_manager_.reset(new BravePermissionManager);
   return permission_manager_.get();

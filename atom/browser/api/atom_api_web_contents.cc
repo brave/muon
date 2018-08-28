@@ -771,7 +771,8 @@ void WebContents::AddNewContents(
     const gfx::Rect& initial_rect,
     bool user_gesture,
     bool* was_blocked) {
-  // continue to manage the lifetime of the webcontents without uniqueptr for now
+  // continue to manage the lifetime of the webcontents without uniqueptr for
+  // now
   auto new_contents = new_contents_unique.release();
   if (brave::api::Extension::IsBackgroundPageWebContents(source)) {
     user_gesture = true;
