@@ -667,9 +667,9 @@ void WebContents::RegisterProtocolHandler(
   if (!permission_helper)
       return;
 
-  auto callback = base::Bind(&WebContents::OnRegisterProtocol,
+  auto callback = base::BindOnce(&WebContents::OnRegisterProtocol,
       base::Unretained(this), context, handler);
-  permission_helper->RequestProtocolRegistrationPermission(callback,
+  permission_helper->RequestProtocolRegistrationPermission(std::move(callback),
       user_gesture);
 }
 

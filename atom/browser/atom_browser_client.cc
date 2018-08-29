@@ -237,7 +237,7 @@ void AtomBrowserClient::WebNotificationAllowed(
     return;
   }
   permission_helper->RequestWebNotificationPermission(
-      base::Bind(callback, web_contents->IsAudioMuted()));
+      base::BindOnce(callback, web_contents->IsAudioMuted()));
 }
 
 void AtomBrowserClient::RenderProcessHostDestroyed(

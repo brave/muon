@@ -37,12 +37,13 @@ void OnPointerLockResponse(content::WebContents* web_contents, bool allowed) {
     web_contents->GotResponseToLockMouseRequest(allowed);
 }
 
-void OnPermissionResponse(const base::Callback<void(bool)>& callback,
-                          blink::mojom::PermissionStatus status) {
+void OnPermissionResponse(
+    WebContentsPermissionHelper::PermissionStatusCB callback,
+    blink::mojom::PermissionStatus status) {
   if (status == blink::mojom::PermissionStatus::GRANTED)
-    callback.Run(true);
+    std::move(callback).Run(true);
   else
-    callback.Run(false);
+    std::move(callback).Run(false);
 }
 
 }  // namespace
@@ -57,7 +58,7 @@ WebContentsPermissionHelper::~WebContentsPermissionHelper() {
 
 void WebContentsPermissionHelper::RequestPermission(
     content::PermissionType permission,
-    const base::Callback<void(bool)>& callback,
+    PermissionStatusCB callback,
     content::RenderFrameHost* rfh,
     const GURL& frame_url, bool user_gesture) {
   GURL url;
@@ -72,13 +73,13 @@ void WebContentsPermissionHelper::RequestPermission(
 
   permission_manager->RequestPermission(
       permission, rfh, url, user_gesture,
-      base::Bind(&OnPermissionResponse, callback));
+      base::Bind(&OnPermissionResponse, base::Passed(&callback)));
 }
 
 void WebContentsPermissionHelper::RequestFullscreenPermission(
-    const base::Callback<void(bool)>& callback) {
+    PermissionStatusCB callback) {
   RequestPermission((content::PermissionType)(PermissionType::FULLSCREEN),
-                    callback, web_contents_->GetMainFrame());
+                    std::move(callback), web_contents_->GetMainFrame());
 }
 
 void WebContentsPermissionHelper::RequestMediaAccessPermission(
@@ -92,15 +93,14 @@ void WebContentsPermissionHelper::RequestMediaAccessPermission(
       request.render_frame_id);
   if (!rfh)
     std::move(callback).Run(false);
-
-  // TODO(hferreiro)
-  // RequestPermission(content::PermissionType::AUDIO_CAPTURE,
-  //                   std::move(callback), rfh, request.security_origin);
+  else
+    RequestPermission(content::PermissionType::AUDIO_CAPTURE,
+                      std::move(callback), rfh, request.security_origin);
 }
 
 void WebContentsPermissionHelper::RequestWebNotificationPermission(
-    const base::Callback<void(bool)>& callback) {
-  RequestPermission(content::PermissionType::NOTIFICATIONS, callback,
+    PermissionStatusCB callback) {
+  RequestPermission(content::PermissionType::NOTIFICATIONS, std::move(callback),
                     web_contents_->GetMainFrame());
 }
 
@@ -114,23 +114,23 @@ void WebContentsPermissionHelper::RequestPointerLockPermission(
 }
 
 void WebContentsPermissionHelper::RequestOpenExternalPermission(
-    const base::Callback<void(bool)>& callback,
+    PermissionStatusCB callback,
     content::RenderFrameHost* rfh,
     const GURL& frame_url,
     bool user_gesture) {
   RequestPermission((content::PermissionType)(PermissionType::OPEN_EXTERNAL),
-                    callback,
+                    std::move(callback),
                     rfh,
                     frame_url,
                     user_gesture);
 }
 
 void WebContentsPermissionHelper::RequestProtocolRegistrationPermission(
-    const base::Callback<void(bool)>& callback,
+    PermissionStatusCB callback,
     bool user_gesture) {
   RequestPermission((content::PermissionType)
       (PermissionType::PROTOCOL_REGISTRATION),
-                    callback,
+                    std::move(callback),
                     web_contents_->GetMainFrame(),
                     GURL(),
                     user_gesture);
