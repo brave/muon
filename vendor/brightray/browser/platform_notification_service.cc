@@ -82,11 +82,14 @@ void PlatformNotificationService::DisplayPersistentNotification(
     const GURL& service_worker_origin,
     const content::PlatformNotificationData& notification_data,
     const content::NotificationResources& notification_resources) {
+  DisplayNotification(browser_context, notification_id, origin,
+                      notification_data, notification_resources);
 }
 
 void PlatformNotificationService::ClosePersistentNotification(
     content::BrowserContext* browser_context,
     const std::string& notification_id) {
+  CloseNotification(browser_context, notification_id);
 }
 
 void PlatformNotificationService::GetDisplayedNotifications(
@@ -96,6 +99,7 @@ void PlatformNotificationService::GetDisplayedNotifications(
 
 int64_t PlatformNotificationService::ReadNextPersistentNotificationId(
     content::BrowserContext* browser_context) {
+  return -1;
 }
 
 }  // namespace brightray

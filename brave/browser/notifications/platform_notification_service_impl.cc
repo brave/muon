@@ -91,6 +91,8 @@ void PlatformNotificationServiceImpl::DisplayPersistentNotification(
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
     const content::NotificationResources& notification_resources) {
+  DisplayNotification(browser_context, notification_id, origin,
+                      notification_data, notification_resources);
 }
 
 void PlatformNotificationServiceImpl::CloseNotification(
@@ -109,6 +111,7 @@ void PlatformNotificationServiceImpl::CloseNotification(
 void PlatformNotificationServiceImpl::ClosePersistentNotification(
     content::BrowserContext* browser_context,
     const std::string& notification_id) {
+  CloseNotification(browser_context, notification_id);
 }
 
 void PlatformNotificationServiceImpl::GetDisplayedNotifications(
@@ -118,6 +121,7 @@ void PlatformNotificationServiceImpl::GetDisplayedNotifications(
 
 int64_t PlatformNotificationServiceImpl::ReadNextPersistentNotificationId(
     content::BrowserContext* browser_context) {
+  return -1;
 }
 
 }  // namespace brave
