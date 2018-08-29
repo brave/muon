@@ -1449,6 +1449,21 @@ index ac7a6eb8c3298bbf6a25bf3eb623a8875383bc1e..e5383acaae9965d602ce3a46671026ea
  };
  
  }  // namespace  password_manager
+diff --git a/components/viz/client/client_layer_tree_frame_sink.cc b/components/viz/client/client_layer_tree_frame_sink.cc
+index c779823dc6427a56577ed1627f816058da808f72..26d285dad796bd55cee9bf1a87712556ce112f21 100644
+--- a/components/viz/client/client_layer_tree_frame_sink.cc
++++ b/components/viz/client/client_layer_tree_frame_sink.cc
+@@ -129,10 +129,6 @@ void ClientLayerTreeFrameSink::SubmitCompositorFrame(CompositorFrame frame) {
+     if (local_surface_id_ == last_submitted_local_surface_id_) {
+       CHECK_EQ(last_submitted_device_scale_factor_,
+                frame.device_scale_factor());
+-      CHECK_EQ(last_submitted_size_in_pixels_.height(),
+-               frame.size_in_pixels().height());
+-      CHECK_EQ(last_submitted_size_in_pixels_.width(),
+-               frame.size_in_pixels().width());
+     }
+   }
+ 
 diff --git a/content/app/content_main_runner_impl.cc b/content/app/content_main_runner_impl.cc
 index 83e8990edf17e2cd26687eeec13ef99e25dd4f44..5b3d06b71bab28c001e82828c91ab8ae16909cf0 100644
 --- a/content/app/content_main_runner_impl.cc
