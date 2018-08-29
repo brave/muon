@@ -1650,7 +1650,7 @@ index 184482f37c9d8395e359d58502e9eb8daf21d5cd..902e4affa7412cc97dae3f1d68a9ce88
      storage_partition_impl->set_site_for_service_worker(
          site_instance->GetSiteURL());
 diff --git a/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h b/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h
-index a7678f05d794a4ea0498fa698d3b051b8e7e908b..7d4352d4f77c032263f4390d5492f718ee420e77 100644
+index a7678f05d794a4ea0498fa698d3b051b8e7e908b..2e9205dd494219b25216f7ec6edffef16938f484 100644
 --- a/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h
 +++ b/content/browser/renderer_host/render_widget_host_ns_view_bridge_local.h
 @@ -10,6 +10,9 @@
@@ -1669,9 +1669,9 @@ index a7678f05d794a4ea0498fa698d3b051b8e7e908b..7d4352d4f77c032263f4390d5492f718
    void ShowDictionaryOverlayForSelection() override;
 +#if !defined(MUON_CHROMIUM_BUILD)
 +  void ShowDictionaryOverlayForSelection(RenderWidgetHostView* target_view);
-+/*  void SetTargetView(RenderWidgetHostView* target_view) override {
++  void SetTargetView(RenderWidgetHostView* target_view) {
 +    target_view_ = static_cast<RenderWidgetHostViewMac*>(target_view);
-+  }; */
++  };
 +#endif
    void ShowDictionaryOverlay(
        const mac::AttributedStringCoder::EncodedString& encoded_string,
@@ -1812,7 +1812,7 @@ index 052bcb2791c9090df5aa15ee475c2651b7b88259..bb662a3e7ae328630ef4e86f4ccbd6bc
    void SetNeedsBeginFrames(bool needs_begin_frames) override;
    void GetScreenInfo(ScreenInfo* screen_info) const override;
 diff --git a/content/browser/renderer_host/render_widget_host_view_mac.mm b/content/browser/renderer_host/render_widget_host_view_mac.mm
-index 0703dd02c90106a541acf173ec770e18e01c8841..5c16d52e1fafbfb2dbabcc07c4b144cdbb90a7b5 100644
+index 0703dd02c90106a541acf173ec770e18e01c8841..59991e4e5c766a03cea83433d974f659520b9987 100644
 --- a/content/browser/renderer_host/render_widget_host_view_mac.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_mac.mm
 @@ -1262,6 +1262,10 @@ void RenderWidgetHostViewMac::SetActive(bool active) {
@@ -1833,7 +1833,7 @@ index 0703dd02c90106a541acf173ec770e18e01c8841..5c16d52e1fafbfb2dbabcc07c4b144cd
 +#if !defined(MUON_CHROMIUM_BUILD)
 +void RenderWidgetHostViewMac::ShowDefinitionForSelection(
 +    RenderWidgetHostView* target_view) {
-+/*  ns_view_bridge_->SetTargetView(target_view); */
++  ns_view_bridge_local_->SetTargetView(target_view);
 +  ShowDefinitionForSelection();
 +}
 +#endif
