@@ -33,6 +33,12 @@
 #include "chrome/common/extensions/chrome_extensions_client.h"
 #endif
 
+#if BUILDFLAG(ENABLE_PRINTING)
+#include "chrome/common/chrome_content_client.h"
+#include "components/services/pdf_compositor/public/cpp/pdf_compositor_service_factory.h"  // nogncheck
+#include "components/services/pdf_compositor/public/interfaces/pdf_compositor.mojom.h"  // nogncheck
+#endif
+
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "chrome/services/printing/printing_service.h"
 #include "chrome/services/printing/public/mojom/constants.mojom.h"
@@ -116,6 +122,12 @@ void AtomContentUtilityClient::RegisterServices(
     base::Bind(&BraveProfileImportService::CreateService);
   services->emplace(chrome::mojom::kProfileImportServiceName,
                     profile_import_info);
+#if BUILDFLAG(ENABLE_PRINTING)
+  service_manager::EmbeddedServiceInfo pdf_compositor_info;
+  pdf_compositor_info.factory = base::BindRepeating(
+      &printing::CreatePdfCompositorService, GetUserAgent());
+  services->emplace(printing::mojom::kServiceName, pdf_compositor_info);
+#endif
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
   {
     service_manager::EmbeddedServiceInfo printing_info;

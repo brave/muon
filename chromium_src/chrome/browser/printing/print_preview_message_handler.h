@@ -52,14 +52,18 @@ class PrintPreviewMessageHandler
       content::RenderFrameHost* render_frame_host,
       const PrintHostMsg_RequestPrintPreview_Params& params);
   void OnMetafileReadyForPrinting(
+      content::RenderFrameHost* rfh,
       const PrintHostMsg_DidPreviewDocument_Params& params,
       const PrintHostMsg_PreviewIds& ids);
-  void OnPrintPreviewFailed(int document_cookie,
+  void OnPrintPreviewFailed(content::RenderFrameHost* rfh,
+                            int document_cookie,
                             const PrintHostMsg_PreviewIds& ids);
   void OnPrintPreviewCancelled(
+    content::RenderFrameHost* rfh,
       int document_cookie,
       const PrintHostMsg_PreviewIds& ids);
   void OnPrintPreviewInvalidPrinterSettings(
+    content::RenderFrameHost* rfh,
       int document_cookie,
       const PrintHostMsg_PreviewIds& ids);
 
