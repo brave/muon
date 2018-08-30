@@ -25,6 +25,7 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/net/system_network_context_manager.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h"
 #include "chrome/browser/speech/tts_message_filter.h"
@@ -210,6 +211,16 @@ void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
     additional_schemes->insert(additional_schemes->end(),
                                schemes_list.begin(),
                                schemes_list.end());
+}
+
+scoped_refptr<network::SharedURLLoaderFactory>
+AtomBrowserClient::GetSystemSharedURLLoaderFactory() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (!g_browser_process->system_network_context_manager())
+    return nullptr;
+
+  return g_browser_process->system_network_context_manager()
+    ->GetSharedURLLoaderFactory();
 }
 
 std::string AtomBrowserClient::GetGeolocationApiKey() {

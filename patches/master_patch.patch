@@ -2599,6 +2599,35 @@ index 7a223958751012b2042a91edf85578b00702d565..08a3940915c61746c7bf80d244008750
    // Called to read raw (pre-filtered) data from this Job. Reads at most
    // |buf_size| bytes into |buf|.
    // Possible return values:
+diff --git a/services/device/geolocation/BUILD.gn b/services/device/geolocation/BUILD.gn
+index 0a139b7b01cb163001db856b32e29e35e450bb1a..48e8580280823008c1f89165a3a9dcbfa6a2458f 100644
+--- a/services/device/geolocation/BUILD.gn
++++ b/services/device/geolocation/BUILD.gn
+@@ -14,6 +14,7 @@ source_set("geolocation") {
+     "//services/device:*",
+     ":*",
+   ]
++  configs += [ "//electron/build/geolocation" ]
+ 
+   sources = [
+     "empty_wifi_data_provider.cc",
+diff --git a/services/device/geolocation/network_location_request.cc b/services/device/geolocation/network_location_request.cc
+index c5cd5bd74f1228cce0449b0a20a6a30132c7851d..f3c601b17e9c0232481c604ca96aeda38047a0e0 100644
+--- a/services/device/geolocation/network_location_request.cc
++++ b/services/device/geolocation/network_location_request.cc
+@@ -31,8 +31,12 @@
+ namespace device {
+ namespace {
+ 
++#if defined(GOOGLEAPIS_ENDPOINT)
++const char kNetworkLocationBaseUrl[] = GOOGLEAPIS_ENDPOINT;
++#else
+ const char kNetworkLocationBaseUrl[] =
+     "https://www.googleapis.com/geolocation/v1/geolocate";
++#endif
+ 
+ const char kLocationString[] = "location";
+ const char kLatitudeString[] = "lat";
 diff --git a/services/service_manager/sandbox/win/sandbox_win.cc b/services/service_manager/sandbox/win/sandbox_win.cc
 index 7beb41460e7d1a7340cca8ebc98a114ec41b3e44..3b3e1aa30f342971b96b4213ed85718d36fb3aa6 100644
 --- a/services/service_manager/sandbox/win/sandbox_win.cc
