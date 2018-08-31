@@ -68,6 +68,10 @@
 #include "base/strings/utf_string_conversions.h"
 #endif
 
+#if defined(OS_MACOSX)
+#import <CoreFoundation/CoreFoundation.h>
+#endif
+
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/api/brave_api_extension.h"
 #include "chrome/browser/chrome_notification_types.h"
@@ -730,6 +734,23 @@ std::string App::GetCountryName() {
   base::WideToUTF8(localized_country_name,
     country_name_length,
     &country);
+
+  #elif defined(OS_MACOSX)
+  // for more info, see:
+  // https://developer.apple.com/documentation/corefoundation/1543547-cflocalegetvalue?language=objc
+  // https://developer.apple.com/documentation/corefoundation/cflocalekey?language=objc
+  CFLocaleRef cflocale = CFLocaleCopyCurrent();
+  CFStringRef country_code = (CFStringRef)CFLocaleGetValue(
+    cflocale, kCFLocaleCountryCode);
+  CFIndex kCountryNameLength = CFStringGetLength(country_code) + 1;
+  char localized_country_name[kCountryNameLength];
+  if (CFStringGetCString(country_code, localized_country_name,
+    kCountryNameLength, kCFStringEncodingUTF8)) {
+    country = std::string(localized_country_name);
+  }
+
+  #elif defined(OS_LINUX)
+  // ..TODO..
   #endif
 
   return country;
