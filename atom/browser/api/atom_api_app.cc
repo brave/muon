@@ -72,6 +72,10 @@
 #import <CoreFoundation/CoreFoundation.h>
 #endif
 
+#if defined(OS_LINUX)
+#include <locale.h>
+#endif
+
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/api/brave_api_extension.h"
 #include "chrome/browser/chrome_notification_types.h"
@@ -750,7 +754,11 @@ std::string App::GetCountryName() {
   }
 
   #elif defined(OS_LINUX)
-  // ..TODO..
+  // for more info, see:
+  // https://en.cppreference.com/w/cpp/locale/setlocale
+  setlocale(LC_ALL, "");
+  country = std::string(setlocale(LC_ALL, NULL));
+
   #endif
 
   return country;
