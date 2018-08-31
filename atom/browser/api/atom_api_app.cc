@@ -735,9 +735,11 @@ std::string App::GetCountryName() {
     LOCALE_SLOCALIZEDCOUNTRYNAME,
     (LPWSTR)&localized_country_name,
     sizeof(localized_country_name) / sizeof(WCHAR));
-  base::WideToUTF8(localized_country_name,
-    country_name_length,
-    &country);
+  if (country_name_length > 0) {
+    base::WideToUTF8(localized_country_name,
+      country_name_length,
+      &country);
+  }
 
   #elif defined(OS_MACOSX)
   // for more info, see:
@@ -746,18 +748,35 @@ std::string App::GetCountryName() {
   CFLocaleRef cflocale = CFLocaleCopyCurrent();
   CFStringRef country_code = (CFStringRef)CFLocaleGetValue(
     cflocale, kCFLocaleCountryCode);
-  CFIndex kCountryNameLength = CFStringGetLength(country_code) + 1;
-  char localized_country_name[kCountryNameLength];
-  if (CFStringGetCString(country_code, localized_country_name,
-    kCountryNameLength, kCFStringEncodingUTF8)) {
-    country = std::string(localized_country_name);
+  if (country_code) {
+    CFIndex kCountryNameLength = CFStringGetLength(country_code) + 1;
+    char localized_country_name[kCountryNameLength];
+    if (CFStringGetCString(country_code, localized_country_name,
+      kCountryNameLength, kCFStringEncodingUTF8)) {
+      country = std::string(localized_country_name);
+    }
   }
 
   #elif defined(OS_LINUX)
   // for more info, see:
   // https://en.cppreference.com/w/cpp/locale/setlocale
-  setlocale(LC_ALL, "");
-  country = std::string(setlocale(LC_ALL, NULL));
+  // https://www.gnu.org/software/libc/manual/html_node/Setting-the-Locale.html
+
+  // capture currently set locale (strdup since value gets clobbered)
+  const char* old_locale = setlocale(LC_ALL, NULL);
+  char* saved_locale = old_locale ? strdup(old_locale) : NULL;
+  if (saved_locale) {
+    // set C locale to user-preferred locale
+    setlocale(LC_ALL, "");
+    // get the name of this locale
+    const char* locale = setlocale(LC_ALL, NULL);
+    if (locale) {
+      country = std::string(locale);
+    }
+    // restore original locale
+    setlocale(LC_ALL, saved_locale);
+    free(saved_locale);
+  }
 
   #endif
 
