@@ -714,6 +714,27 @@ void App::SetLocale(std::string locale) {
   g_browser_process->SetApplicationLocale(locale);
 }
 
+std::string App::GetCountryName() {
+  std::string country = "";
+
+  #if defined(OS_WIN)
+  // for more info, see:
+  // https://docs.microsoft.com/en-us/windows/desktop/api/winnls/nf-winnls-getlocaleinfoex
+  // https://docs.microsoft.com/en-us/windows/desktop/Intl/locale-slocalized-constants
+  WCHAR localized_country_name[80];
+  int country_name_length = GetLocaleInfoEx(
+    LOCALE_NAME_USER_DEFAULT,
+    LOCALE_SLOCALIZEDCOUNTRYNAME,
+    (LPWSTR)&localized_country_name,
+    sizeof(localized_country_name) / sizeof(WCHAR));
+  base::WideToUTF8(localized_country_name,
+    country_name_length,
+    &country);
+  #endif
+
+  return country;
+}
+
 bool App::GetBooleanPref(const std::string& path) {
   return g_browser_process->local_state()->GetBoolean(path);
 }
@@ -954,6 +975,7 @@ void App::BuildPrototype(
       .SetMethod("setDesktopName", &App::SetDesktopName)
       .SetMethod("getLocale", &App::GetLocale)
       .SetMethod("setLocale", &App::SetLocale)
+      .SetMethod("getCountryName", &App::GetCountryName)
       .SetMethod("getBooleanPref", &App::GetBooleanPref)
       .SetMethod("setBooleanPref", &App::SetBooleanPref)
       .SetMethod("makeSingleInstance", &App::MakeSingleInstance)
