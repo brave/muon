@@ -266,11 +266,6 @@ BraveBrowserContext::~BraveBrowserContext() {
     }
   }
 
-  // Clears any data the network stack contains that may be related to the
-  // OTR session. Must be done before DestroyBrowserContextServices, since
-  // the NetworkContext is managed by one such service.
-  GetDefaultStoragePartition(this)->GetNetworkContext()->ClearHostCache(
-      nullptr, network::mojom::NetworkContext::ClearHostCacheCallback());
 
   BrowserContextDependencyManager::GetInstance()->
       DestroyBrowserContextServices(this);
@@ -282,6 +277,11 @@ BraveBrowserContext::~BraveBrowserContext() {
         base::Bind(&NotifyOTRProfileDestroyedOnIOThread,
             base::Unretained(original_context_), base::Unretained(this)));
 #endif
+    // Clears any data the network stack contains that may be related to the
+    // OTR session. Must be done before DestroyBrowserContextServices, since
+    // the NetworkContext is managed by one such service.
+    GetDefaultStoragePartition(this)->GetNetworkContext()->ClearHostCache(
+        nullptr, network::mojom::NetworkContext::ClearHostCacheCallback());
   }
 
   ShutdownStoragePartitions();
