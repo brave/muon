@@ -34,7 +34,7 @@ bool BraveCredentialsFilter::ShouldSaveEnterprisePasswordHash(
 
 bool BraveCredentialsFilter::IsSyncAccountEmail(
     const std::string& username) const {
-  return true;
+  return false;
 }
 
 void BraveCredentialsFilter::ReportFormLoginSuccess(
