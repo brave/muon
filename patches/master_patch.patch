@@ -1753,7 +1753,7 @@ index 09168578786f9ecfa3e1c44b134d7fe76af9504c..b5e50b693ef29a6afd9e16c8a8a1a94b
  }
  
 diff --git a/content/browser/renderer_host/render_widget_host_view_cocoa.mm b/content/browser/renderer_host/render_widget_host_view_cocoa.mm
-index 8b84322baa808f66044361d1033ec63805856227..956e4851aa8a9371e972d7f4307b72d356737172 100644
+index 8b84322baa808f66044361d1033ec63805856227..e2502a7ec875b2c40f2c8399ed51a9db553a9201 100644
 --- a/content/browser/renderer_host/render_widget_host_view_cocoa.mm
 +++ b/content/browser/renderer_host/render_widget_host_view_cocoa.mm
 @@ -174,6 +174,12 @@ void ExtractUnderlines(NSAttributedString* string,
@@ -1784,7 +1784,20 @@ index 8b84322baa808f66044361d1033ec63805856227..956e4851aa8a9371e972d7f4307b72d3
  }
  
  - (void)setCloseOnDeactivate:(BOOL)b {
-@@ -687,6 +700,12 @@ void ExtractUnderlines(NSAttributedString* string,
+@@ -592,6 +605,12 @@ void ExtractUnderlines(NSAttributedString* string,
+   // If the event is reserved by the system, then do not pass it to web content.
+   if (EventIsReservedBySystem(theEvent))
+     return NO;
++#ifndef MUON_CHROMIUM_BUILD
++  NSUInteger modifierFlags = [theEvent modifierFlags];
++  if ((modifierFlags & NSCommandKeyMask) == 0) {
++    return NO;
++  }
++#endif
+ 
+   // Command key combinations are sent via performKeyEquivalent rather than
+   // keyDown:. We just forward this on and if WebCore doesn't want to handle
+@@ -687,6 +706,12 @@ void ExtractUnderlines(NSAttributedString* string,
    bool shouldAutohideCursor = textInputType_ != ui::TEXT_INPUT_TYPE_NONE &&
                                eventType == NSKeyDown &&
                                !(modifierFlags & NSCommandKeyMask);
