@@ -1205,11 +1205,13 @@ bool NativeWindowMac::IsVisibleOnAllWorkspaces() {
 
 void NativeWindowMac::OnInputEvent(const blink::WebInputEvent& event) {
   switch (event.GetType()) {
-    case blink::WebInputEvent::kGestureScrollBegin:
     case blink::WebInputEvent::kGestureScrollUpdate:
-    case blink::WebInputEvent::kGestureScrollEnd:
-        this->NotifyWindowScrollTouchEdge();
-      break;
+      {
+        const blink::WebGestureEvent& gesture_event =
+          static_cast<const blink::WebGestureEvent&>(event);
+        this->NotifyWindowScrollTouchEdge(gesture_event);
+        break;
+      }
     default:
       break;
   }

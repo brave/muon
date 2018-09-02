@@ -16,6 +16,7 @@
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
+#include "base/values.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
@@ -274,8 +275,13 @@ void Window::OnWindowScrollTouchEnd() {
   Emit("scroll-touch-end");
 }
 
-void Window::OnWindowScrollTouchEdge() {
-  Emit("scroll-touch-edge");
+void Window::OnWindowScrollTouchEdge(const blink::WebGestureEvent& event) {
+  base::DictionaryValue dict;
+  dict.SetDouble("deltaX", event.data.scroll_update.delta_x);
+  dict.SetDouble("deltaY", event.data.scroll_update.delta_y);
+  dict.SetDouble("velocityX", event.data.scroll_update.velocity_x);
+  dict.SetDouble("velocityY", event.data.scroll_update.velocity_y);
+  Emit("scroll-touch-edge", dict);
 }
 
 void Window::OnWindowSwipe(const std::string& direction) {

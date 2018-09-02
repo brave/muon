@@ -15,6 +15,10 @@
 #include <windows.h>
 #endif
 
+namespace blink {
+class WebGestureEvent;
+}
+
 namespace atom {
 
 class NativeWindowObserver {
@@ -64,7 +68,7 @@ class NativeWindowObserver {
   virtual void OnWindowMoved() {}
   virtual void OnWindowScrollTouchBegin() {}
   virtual void OnWindowScrollTouchEnd() {}
-  virtual void OnWindowScrollTouchEdge() {}
+  virtual void OnWindowScrollTouchEdge(const blink::WebGestureEvent&) {}
   virtual void OnWindowSwipe(const std::string& direction) {}
   virtual void OnWindowEnterFullScreen() {}
   virtual void OnWindowLeaveFullScreen() {}
