@@ -68,6 +68,14 @@
 #include "base/strings/utf_string_conversions.h"
 #endif
 
+#if defined(OS_MACOSX)
+#import <CoreFoundation/CoreFoundation.h>
+#endif
+
+#if defined(OS_LINUX)
+#include <locale.h>
+#endif
+
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/browser/api/brave_api_extension.h"
 #include "chrome/browser/chrome_notification_types.h"
@@ -714,6 +722,67 @@ void App::SetLocale(std::string locale) {
   g_browser_process->SetApplicationLocale(locale);
 }
 
+std::string App::GetCountryName() {
+  std::string country = "";
+
+  #if defined(OS_WIN)
+  // for more info, see:
+  // https://docs.microsoft.com/en-us/windows/desktop/api/winnls/nf-winnls-getlocaleinfoex
+  // https://docs.microsoft.com/en-us/windows/desktop/Intl/locale-slocalized-constants
+  WCHAR localized_country_name[80];
+  int country_name_length = GetLocaleInfoEx(
+    LOCALE_NAME_USER_DEFAULT,
+    LOCALE_SLOCALIZEDCOUNTRYNAME,
+    (LPWSTR)&localized_country_name,
+    sizeof(localized_country_name) / sizeof(WCHAR));
+  if (country_name_length > 0) {
+    base::WideToUTF8(localized_country_name,
+      country_name_length,
+      &country);
+  }
+
+  #elif defined(OS_MACOSX)
+  // for more info, see:
+  // https://developer.apple.com/documentation/corefoundation/1543547-cflocalegetvalue?language=objc
+  // https://developer.apple.com/documentation/corefoundation/cflocalekey?language=objc
+  CFLocaleRef cflocale = CFLocaleCopyCurrent();
+  CFStringRef country_code = (CFStringRef)CFLocaleGetValue(
+    cflocale, kCFLocaleCountryCode);
+  if (country_code) {
+    CFIndex kCountryNameLength = CFStringGetLength(country_code) + 1;
+    char localized_country_name[kCountryNameLength];
+    if (CFStringGetCString(country_code, localized_country_name,
+      kCountryNameLength, kCFStringEncodingUTF8)) {
+      country = std::string(localized_country_name);
+    }
+  }
+
+  #elif defined(OS_LINUX)
+  // for more info, see:
+  // https://en.cppreference.com/w/cpp/locale/setlocale
+  // https://www.gnu.org/software/libc/manual/html_node/Setting-the-Locale.html
+
+  // capture currently set locale (strdup since value gets clobbered)
+  const char* old_locale = setlocale(LC_ALL, NULL);
+  char* saved_locale = old_locale ? strdup(old_locale) : NULL;
+  if (saved_locale) {
+    // set C locale to user-preferred locale
+    setlocale(LC_ALL, "");
+    // get the name of this locale
+    const char* locale = setlocale(LC_ALL, NULL);
+    if (locale) {
+      country = std::string(locale);
+    }
+    // restore original locale
+    setlocale(LC_ALL, saved_locale);
+    free(saved_locale);
+  }
+
+  #endif
+
+  return country;
+}
+
 bool App::GetBooleanPref(const std::string& path) {
   return g_browser_process->local_state()->GetBoolean(path);
 }
@@ -954,6 +1023,7 @@ void App::BuildPrototype(
       .SetMethod("setDesktopName", &App::SetDesktopName)
       .SetMethod("getLocale", &App::GetLocale)
       .SetMethod("setLocale", &App::SetLocale)
+      .SetMethod("getCountryName", &App::GetCountryName)
       .SetMethod("getBooleanPref", &App::GetBooleanPref)
       .SetMethod("setBooleanPref", &App::SetBooleanPref)
       .SetMethod("makeSingleInstance", &App::MakeSingleInstance)
