@@ -112,15 +112,13 @@ NetworkDelegate::AuthRequiredResponse NetworkDelegate::OnAuthRequired(
 }
 
 bool NetworkDelegate::OnCanGetCookies(const net::URLRequest& request,
-                                      const net::CookieList& cookie_list,
-                                      bool allow_from_caller) {
+                                      const net::CookieList& cookie_list) {
   return true;
 }
 
 bool NetworkDelegate::OnCanSetCookie(const net::URLRequest& request,
                                      const net::CanonicalCookie& cookie,
-                                     net::CookieOptions* options,
-                                     bool allow_from_caller) {
+                                     net::CookieOptions* options) {
   return true;
 }
 

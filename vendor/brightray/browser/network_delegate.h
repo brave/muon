@@ -56,12 +56,10 @@ class NetworkDelegate : public net::NetworkDelegate {
       AuthCallback callback,
       net::AuthCredentials* credentials) override;
   bool OnCanGetCookies(const net::URLRequest& request,
-                       const net::CookieList& cookie_list,
-                       bool allow_from_caller) override;
+                       const net::CookieList& cookie_list) override;
   bool OnCanSetCookie(const net::URLRequest& request,
                       const net::CanonicalCookie& cookie,
-                      net::CookieOptions* options,
-                      bool allow_from_caller) override;
+                      net::CookieOptions* options) override;
   bool OnCanAccessFile(const net::URLRequest& request,
                        const base::FilePath& original_path,
                        const base::FilePath& path) const override;
