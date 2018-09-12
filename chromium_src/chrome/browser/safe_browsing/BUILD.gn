@@ -32,6 +32,7 @@ source_set("extensions") {
   ]
 
   deps = [
+    "//content/public/browser",
     "//services/network/public/mojom",
     "//third_party/boringssl",
     "//third_party/protobuf:protobuf_lite",
