@@ -60,51 +60,51 @@ Profile* UserPrefs::profile() {
 }
 
 void UserPrefs::RegisterStringPref(const std::string& path,
-    const std::string& default_value, bool overlay) {
+    const std::string& default_value, bool persist) {
   profile()->pref_registry()->RegisterStringPref(path, default_value);
-  if (overlay)
-    profile()->AddOverlayPref(path);
+  if (persist)
+    profile()->RegisterPersistentPref(path);
 }
 
 void UserPrefs::RegisterDictionaryPref(const std::string& path,
-    const base::DictionaryValue& default_value, bool overlay) {
+    const base::DictionaryValue& default_value, bool persist) {
   std::unique_ptr<base::DictionaryValue> copied(
       default_value.CreateDeepCopy());
   profile()->pref_registry()->
       RegisterDictionaryPref(path, std::move(copied));
-  if (overlay)
-    profile()->AddOverlayPref(path);
+  if (persist)
+    profile()->RegisterPersistentPref(path);
 }
 
 void UserPrefs::RegisterListPref(const std::string& path,
-    const base::ListValue& default_value, bool overlay) {
+    const base::ListValue& default_value, bool persist) {
   std::unique_ptr<base::ListValue> copied(
       default_value.CreateDeepCopy());
   profile()->pref_registry()->
       RegisterListPref(path, std::move(copied));
-  if (overlay)
-    profile()->AddOverlayPref(path);
+  if (persist)
+    profile()->RegisterPersistentPref(path);
 }
 
 void UserPrefs::RegisterBooleanPref(const std::string& path,
-    bool default_value, bool overlay) {
+    bool default_value, bool persist) {
   profile()->pref_registry()->RegisterBooleanPref(path, default_value);
-  if (overlay)
-    profile()->AddOverlayPref(path);
+  if (persist)
+    profile()->RegisterPersistentPref(path);
 }
 
 void UserPrefs::RegisterIntegerPref(const std::string& path,
-    int default_value, bool overlay) {
+    int default_value, bool persist) {
   profile()->pref_registry()->RegisterIntegerPref(path, default_value);
-  if (overlay)
-    profile()->AddOverlayPref(path);
+  if (persist)
+    profile()->RegisterPersistentPref(path);
 }
 
 void UserPrefs::RegisterDoublePref(const std::string& path,
-    double default_value, bool overlay) {
+    double default_value, bool persist) {
   profile()->pref_registry()->RegisterDoublePref(path, default_value);
-  if (overlay)
-    profile()->AddOverlayPref(path);
+  if (persist)
+    profile()->RegisterPersistentPref(path);
 }
 
 std::string UserPrefs::GetStringPref(const std::string& path) {
