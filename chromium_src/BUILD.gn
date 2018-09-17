@@ -1263,6 +1263,7 @@ source_set("tab_manager") {
     "//chrome/browser/ui/tab_contents/tab_contents_iterator.h",
     "//chrome/browser/ui/tab_ui_helper.cc",
     "//chrome/browser/ui/tab_ui_helper.h",
+    "ui/base/ui_base_features_mac_views_browser.cc",
   ]
 
   deps = [

@@ -55,7 +55,6 @@
 
 #if defined(OS_MACOSX)
 #include <Security/Security.h>
-#include "ui/base/ui_base_features.h"
 #endif  // defined(OS_MACOSX)
 
 #if defined(OS_LINUX)
@@ -244,14 +243,6 @@ int AtomBrowserMainParts::PreCreateThreads() {
   feature_list->RegisterFieldTrialOverride(
       media::kUnifiedAutoplay.name,
       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
-#if defined(OS_MACOSX)
-  field_trial = feature_list->GetFieldTrial(
-      features::kViewsBrowserWindows);
-  feature_list->RegisterFieldTrialOverride(
-      features::kViewsBrowserWindows.name,
-      base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
-#endif
 
   fake_browser_process_->PreCreateThreads(
       *base::CommandLine::ForCurrentProcess());
