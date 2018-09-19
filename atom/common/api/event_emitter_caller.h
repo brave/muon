@@ -30,8 +30,9 @@ namespace internal {
 
 using ValueVector = std::vector<v8::Local<v8::Value>>;
 
-v8::Local<v8::Value> CallEmitWithArgs(v8::Isolate* isolate,
+v8::Local<v8::Value> CallMethodWithArgs(v8::Isolate* isolate,
                                       v8::Local<v8::Object> obj,
+                                      const char* method,
                                       ValueVector* args);
 
 }  // namespace internal
@@ -46,7 +47,7 @@ v8::Local<v8::Value> EmitEvent(v8::Isolate* isolate,
   internal::ValueVector concatenated_args = { gin::StringToV8(isolate, name) };
   concatenated_args.reserve(1 + args.size());
   concatenated_args.insert(concatenated_args.end(), args.begin(), args.end());
-  return internal::CallEmitWithArgs(isolate, obj, &concatenated_args);
+  return internal::CallMethodWithArgs(isolate, obj, "emit", &concatenated_args);
 }
 
 // obj.emit(name, args...);
@@ -60,7 +61,7 @@ v8::Local<v8::Value> EmitEvent(v8::Isolate* isolate,
       gin::StringToV8(isolate, name),
       mate::ConvertToV8(isolate, args)...,
   };
-  return internal::CallEmitWithArgs(isolate, obj, &converted_args);
+  return internal::CallMethodWithArgs(isolate, obj, "emit", &converted_args);
 }
 
 }  // namespace mate

@@ -11,8 +11,9 @@ namespace mate {
 
 namespace internal {
 
-v8::Local<v8::Value> CallEmitWithArgs(v8::Isolate* isolate,
+v8::Local<v8::Value> CallMethodWithArgs(v8::Isolate* isolate,
                                       v8::Local<v8::Object> obj,
+                                      const char* method,
                                       ValueVector* args) {
   // Perform microtask checkpoint after running JavaScript.
   v8::MicrotasksScope script_scope(
@@ -20,7 +21,7 @@ v8::Local<v8::Value> CallEmitWithArgs(v8::Isolate* isolate,
   // Use node::MakeCallback to call the callback, and it will also run pending
   // tasks in Node.js.
   return node::MakeCallback(
-      isolate, obj, "emit", args->size(), &args->front());
+      isolate, obj, method, args->size(), &args->front());
 }
 
 }  // namespace internal

@@ -9,6 +9,40 @@ var protocol = {
       handler(request, cb)
     })
     ipc.send('register-protocol-string-handler', scheme)
+  },
+
+  registerStreamProtocol: function (scheme, handler) {
+    ipc.on('chrome-protocol-stream-handler-' + scheme, function (evt, request, requestId) {
+      const cb = (res) => {
+        if (res == null || typeof res.pipe === 'function') {
+          res = { data: res }
+        }
+
+        res.headers = res.headers || {}
+        res.statusCode = res.statusCode || 200
+
+        ipc.send(`chrome-protocol-stream-handled-${requestId}-headers`, { headers: res.headers, statusCode: res.statusCode })
+
+        if (res.data == null) {
+          return ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-end`)
+        }
+
+        res.data
+          .on('data', (chunk) => {
+            const data = JSON.stringify(chunk)
+            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-data`, data)
+          })
+          .on('error', (err) => {
+            const data = { message: err.message, stack: err.stack }
+            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-error`, data)
+          })
+          .on('end', () => {
+            ipc.send(`chrome-protocol-stream-handled-${requestId}-stream-end`)
+          })
+      }
+      handler(request, cb)
+    })
+    ipc.send('register-protocol-stream-handler', scheme)
   }
 }
 
