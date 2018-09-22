@@ -5,6 +5,7 @@
 #include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
 
 #include "base/files/file_util.h"
+#include "base/memory/ptr_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/webui/crashes_ui.h"
 #include "chrome/common/url_constants.h"
@@ -179,16 +180,16 @@ bool ChromeWebUIControllerFactory::UseWebUIBindingsForURL(
   return UseWebUIForURL(browser_context, url);
 }
 
-WebUIController*
+std::unique_ptr<WebUIController>
 ChromeWebUIControllerFactory::CreateWebUIControllerForURL(
     WebUI* web_ui,
     const GURL& url) const {
   Profile* profile = Profile::FromWebUI(web_ui);
   WebUIFactoryFunction function = GetWebUIFactoryFunction(web_ui, profile, url);
   if (!function)
-    return NULL;
+    return nullptr;
 
-  return (*function)(web_ui, url);
+  return base::WrapUnique((*function)(web_ui, url));
 }
 
 // static

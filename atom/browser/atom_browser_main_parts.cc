@@ -45,11 +45,11 @@
 #include "content/public/browser/web_ui_controller_factory.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
-#include "device/geolocation/geolocation_provider.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
 #include "media/base/media_switches.h"
 #include "muon/app/muon_crash_reporter_client.h"
 #include "muon/browser/muon_browser_process_impl.h"
+#include "services/device/geolocation/geolocation_provider.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
 #include "v8/include/v8.h"
 
@@ -126,7 +126,7 @@ AtomBrowserMainParts::AtomBrowserMainParts(
       browser_(new Browser),
       node_bindings_(NodeBindings::Create()),
       atom_bindings_(new AtomBindings),
-      gc_timer_(true, true) {
+      gc_timer_() {
   DCHECK(!self_) << "Cannot have two AtomBrowserMainParts";
   self_ = this;
 }
@@ -237,20 +237,12 @@ int AtomBrowserMainParts::PreCreateThreads() {
       password_manager::features::kFillOnAccountSelect.name,
       base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
 
-  // disable touchpad and wheel scroll latching.
-  field_trial = feature_list->GetFieldTrial(
-      features::kTouchpadAndWheelScrollLatching);
-  feature_list->RegisterFieldTrialOverride(
-      features::kTouchpadAndWheelScrollLatching.name,
-      base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
   // Disable Unified Autoplay to prevents it from overriding our default value
   field_trial = feature_list->GetFieldTrial(
       media::kUnifiedAutoplay);
   feature_list->RegisterFieldTrialOverride(
       media::kUnifiedAutoplay.name,
       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
-
 
   fake_browser_process_->PreCreateThreads(
       *base::CommandLine::ForCurrentProcess());
@@ -373,7 +365,6 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
       base::Bind(&AtomBrowserMainParts::IdleHandler,
                  base::Unretained(this)));
 
-  js_env_->OnMessageLoopCreated();
   node_bindings_->PrepareMessageLoop();
   node_bindings_->RunMessageLoop();
 
@@ -415,8 +406,6 @@ void AtomBrowserMainParts::ServiceManagerConnectionStarted(
 void AtomBrowserMainParts::PostMainMessageLoopRun() {
   browser_context_ = nullptr;
   brightray::BrowserMainParts::PostMainMessageLoopRun();
-
-  js_env_->OnMessageLoopDestroying();
 
   js_env_->isolate()->Exit();
 #if defined(OS_MACOSX)

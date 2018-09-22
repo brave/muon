@@ -307,18 +307,19 @@ void AtomNetworkDelegate::SetDevToolsNetworkEmulationClientId(
 
 int AtomNetworkDelegate::OnBeforeURLRequest(
     net::URLRequest* request,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     GURL* new_url) {
   if (!base::ContainsKey(response_listeners_, kOnBeforeRequest))
     return brightray::NetworkDelegate::OnBeforeURLRequest(
-        request, callback, new_url);
+        request, std::move(callback), new_url);
 
-  return HandleResponseEvent(kOnBeforeRequest, request, callback, new_url);
+  return HandleResponseEvent(kOnBeforeRequest, request, std::move(callback),
+                             new_url);
 }
 
 int AtomNetworkDelegate::OnBeforeStartTransaction(
     net::URLRequest* request,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     net::HttpRequestHeaders* headers) {
   std::string client_id;
   {
@@ -326,16 +327,12 @@ int AtomNetworkDelegate::OnBeforeStartTransaction(
     client_id = client_id_;
   }
 
-  if (!client_id.empty())
-    headers->SetHeader(network::ThrottlingNetworkTransaction::
-                           kDevToolsEmulateNetworkConditionsClientId,
-                       client_id);
   if (!base::ContainsKey(response_listeners_, kOnBeforeSendHeaders))
     return brightray::NetworkDelegate::OnBeforeStartTransaction(
-        request, callback, headers);
+        request, std::move(callback), headers);
 
-  return HandleResponseEvent(
-      kOnBeforeSendHeaders, request, callback, headers, *headers);
+  return HandleResponseEvent(kOnBeforeSendHeaders, request, std::move(callback),
+                             headers, *headers);
 }
 
 void AtomNetworkDelegate::OnStartTransaction(
@@ -351,16 +348,16 @@ void AtomNetworkDelegate::OnStartTransaction(
 
 int AtomNetworkDelegate::OnHeadersReceived(
     net::URLRequest* request,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     const net::HttpResponseHeaders* original,
     scoped_refptr<net::HttpResponseHeaders>* override,
     GURL* new_url) {
   if (!base::ContainsKey(response_listeners_, kOnHeadersReceived))
     return brightray::NetworkDelegate::OnHeadersReceived(
-        request, callback, original, override, new_url);
+        request, std::move(callback), original, override, new_url);
 
   return HandleResponseEvent(
-      kOnHeadersReceived, request, callback,
+      kOnHeadersReceived, request, std::move(callback),
       ResponseHeadersContainer(override, original->GetStatusLine(), new_url),
       original);
 }
@@ -436,7 +433,7 @@ template<typename Out, typename... Args>
 int AtomNetworkDelegate::HandleResponseEvent(
     ResponseEvent type,
     net::URLRequest* request,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     Out out,
     Args... args) {
   const auto& info = response_listeners_[type];
@@ -447,7 +444,7 @@ int AtomNetworkDelegate::HandleResponseEvent(
   FillDetailsObject(details.get(), request, args...);
 
   // The |request| could be destroyed before the |callback| is called.
-  callbacks_[request->identifier()] = callback;
+  callbacks_[request->identifier()] = std::move(callback);
 
   int frame_tree_node_id = -1;
   GetFrameTreeNodeId(request, &frame_tree_node_id);
@@ -501,7 +498,7 @@ void AtomNetworkDelegate::OnListenerResultInIO(
 
   bool cancel = false;
   response->GetBoolean("cancel", &cancel);
-  callbacks_[id].Run(cancel ? net::ERR_ABORTED : net::OK);
+  std::move(callbacks_[id]).Run(cancel ? net::ERR_ABORTED : net::OK);
 }
 
 template<typename T>

@@ -267,7 +267,7 @@ void TabViewGuest::DidInitialize(const base::DictionaryValue& create_params) {
 
 void TabViewGuest::CreateWebContents(
     const base::DictionaryValue& params,
-    const WebContentsCreatedCallback& callback) {
+    WebContentsCreatedCallback callback) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
@@ -276,7 +276,16 @@ void TabViewGuest::CreateWebContents(
 
   std::string src;
   if (params.GetString("src", &src)) {
-    src_ = GURL(src);
+    // Gets the extension ID.
+    std::string extension_id;
+    params.GetString("extension", &extension_id);
+    GURL extension_url =
+      extensions::Extension::GetBaseURLFromExtensionId(extension_id);
+    if (extension_url.is_valid()) {
+      src_ = extension_url.Resolve(src);
+    } else {
+      src_ = GURL(src);
+    }
   }
   std::string name;
   if (params.GetString("name", &name))
@@ -303,7 +312,6 @@ void TabViewGuest::CreateWebContents(
   }
   atom::AtomBrowserContext* browser_context =
       brave::BraveBrowserContext::FromPartition(partition, partition_options);
-
   content::WebContents::CreateParams create_params(browser_context);
   create_params.guest_delegate = this;
 
@@ -311,7 +319,7 @@ void TabViewGuest::CreateWebContents(
       atom::api::WebContents::CreateWithParams(isolate, options, create_params);
 
   content::WebContents* web_contents = new_api_web_contents->web_contents();
-  callback.Run(web_contents);
+  std::move(callback).Run(web_contents);
 }
 
 void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
@@ -360,7 +368,16 @@ void TabViewGuest::ApplyAttributes(const base::DictionaryValue& params) {
   if (!is_pending_new_window) {
     std::string src;
     if (params.GetString("src", &src)) {
-      src_ = GURL(src);
+      // Gets the extension ID.
+      std::string extension_id;
+      params.GetString("extension", &extension_id);
+      GURL extension_url =
+        extensions::Extension::GetBaseURLFromExtensionId(extension_id);
+      if (extension_url.is_valid()) {
+        src_ = extension_url.Resolve(src);
+      } else {
+        src_ = GURL(src);
+      }
     }
 
     if (web_contents()->GetController().IsInitialNavigation()) {

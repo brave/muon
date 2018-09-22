@@ -5,8 +5,7 @@
 #include "chrome/browser/ui/webui/print_preview/print_preview_ui.h"
 
 // static
-void PrintPreviewUI::GetCurrentPrintPreviewStatus(int32_t preview_ui_id,
-                                                  int request_id,
+void PrintPreviewUI::GetCurrentPrintPreviewStatus(const PrintHostMsg_PreviewIds& ids,
                                                   bool* cancel) {
   // TODO(bridiver) - need a real implementation of this
   return;

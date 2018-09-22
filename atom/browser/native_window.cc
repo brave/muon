@@ -521,9 +521,10 @@ void NativeWindow::NotifyWindowScrollTouchEnd() {
     observer.OnWindowScrollTouchEnd();
 }
 
-void NativeWindow::NotifyWindowScrollTouchEdge() {
+void NativeWindow::NotifyWindowScrollTouchEdge(
+    const blink::WebGestureEvent& event) {
   for (NativeWindowObserver& observer : observers_)
-    observer.OnWindowScrollTouchEdge();
+    observer.OnWindowScrollTouchEdge(event);
 }
 
 void NativeWindow::NotifyWindowSwipe(const std::string& direction) {

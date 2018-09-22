@@ -55,7 +55,6 @@
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/common/service_manager_connection.h"
-#include "services/service_manager/public/cpp/connector.h"
 #include "extensions/browser/pref_names.h"
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/escape.h"
@@ -64,6 +63,8 @@
 #include "net/url_request/url_request_context.h"
 #include "net/url_request/url_request_context_getter.h"
 #include "net/url_request/url_request_job_factory_impl.h"
+#include "services/network/public/mojom/network_context.mojom.h"
+#include "services/service_manager/public/cpp/connector.h"
 #include "vendor/brightray/browser/browser_client.h"
 #include "vendor/brightray/browser/net_log.h"
 
@@ -265,6 +266,7 @@ BraveBrowserContext::~BraveBrowserContext() {
     }
   }
 
+
   BrowserContextDependencyManager::GetInstance()->
       DestroyBrowserContextServices(this);
 
@@ -275,9 +277,12 @@ BraveBrowserContext::~BraveBrowserContext() {
         base::Bind(&NotifyOTRProfileDestroyedOnIOThread,
             base::Unretained(original_context_), base::Unretained(this)));
 #endif
+    // Clears any data the network stack contains that may be related to the
+    // OTR session. Must be done before DestroyBrowserContextServices, since
+    // the NetworkContext is managed by one such service.
+    GetDefaultStoragePartition(this)->GetNetworkContext()->ClearHostCache(
+        nullptr, network::mojom::NetworkContext::ClearHostCacheCallback());
   }
-
-  g_browser_process->io_thread()->ChangedToOnTheRecord();
 
   ShutdownStoragePartitions();
 }
@@ -458,7 +463,8 @@ void BraveBrowserContext::UpdateDefaultZoomLevel() {
       ->OnDefaultZoomLevelChanged();
 }
 
-content::PermissionManager* BraveBrowserContext::GetPermissionManager() {
+content::PermissionControllerDelegate*
+BraveBrowserContext::GetPermissionControllerDelegate() {
   if (!permission_manager_.get())
     permission_manager_.reset(new BravePermissionManager);
   return permission_manager_.get();
@@ -526,21 +532,18 @@ void BraveBrowserContext::CreateProfilePrefs(
   bool async = false;
 
   if (IsOffTheRecord()) {
-    overlay_pref_names_.push_back("app_state");
-    overlay_pref_names_.push_back(extensions::pref_names::kPrefContentSettings);
-    overlay_pref_names_.push_back(prefs::kPartitionPerHostZoomLevels);
     std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
     user_prefs_ =
         original_context()->user_prefs()->CreateIncognitoPrefService(
-            extension_prefs, overlay_pref_names_, std::move(delegate));
+            extension_prefs, persistent_pref_names_, std::move(delegate));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else if (HasParentContext()) {
-    // overlay pref names only apply to incognito
+    // persistent pref names only apply to incognito
     std::unique_ptr<PrefValueStore::Delegate> delegate = nullptr;
-    std::vector<const char*> overlay_pref_names;
+    std::vector<const char*> persistent_pref_names;
     user_prefs_ =
         original_context()->user_prefs()->CreateIncognitoPrefService(
-            extension_prefs, overlay_pref_names, std::move(delegate));
+            extension_prefs, persistent_pref_names, std::move(delegate));
     user_prefs::UserPrefs::Set(this, user_prefs_.get());
   } else {
     pref_registry_->RegisterDictionaryPref("app_state");
@@ -670,7 +673,7 @@ BraveBrowserContext::CreateZoomLevelDelegate(
 
 scoped_refptr<autofill::AutofillWebDataService>
 BraveBrowserContext::GetAutofillWebdataService() {
-  return original_context()->web_database_wrapper_->GetAutofillWebData();
+  return original_context()->web_database_wrapper_->GetProfileAutofillWebData();
 }
 
 #if defined(OS_WIN)

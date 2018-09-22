@@ -613,9 +613,8 @@ void WebContents::CompleteInit(v8::Isolate* isolate,
         this);
     }
 
-    if (resource_coordinator::ResourceCoordinatorTabHelper::IsEnabled())
-      resource_coordinator::ResourceCoordinatorTabHelper::CreateForWebContents(
-          web_contents);
+    resource_coordinator::ResourceCoordinatorTabHelper::CreateForWebContents(
+        web_contents);
   }
 
   Init(isolate);
@@ -668,9 +667,9 @@ void WebContents::RegisterProtocolHandler(
   if (!permission_helper)
       return;
 
-  auto callback = base::Bind(&WebContents::OnRegisterProtocol,
+  auto callback = base::BindOnce(&WebContents::OnRegisterProtocol,
       base::Unretained(this), context, handler);
-  permission_helper->RequestProtocolRegistrationPermission(callback,
+  permission_helper->RequestProtocolRegistrationPermission(std::move(callback),
       user_gesture);
 }
 
@@ -772,7 +771,8 @@ void WebContents::AddNewContents(
     const gfx::Rect& initial_rect,
     bool user_gesture,
     bool* was_blocked) {
-  // continue to manage the lifetime of the webcontents without uniqueptr for now
+  // continue to manage the lifetime of the webcontents without uniqueptr for
+  // now
   auto new_contents = new_contents_unique.release();
   if (brave::api::Extension::IsBackgroundPageWebContents(source)) {
     user_gesture = true;
@@ -997,8 +997,8 @@ void WebContents::BeforeUnloadFired(content::WebContents* tab,
     *proceed_to_fire_unload = true;
 }
 
-void WebContents::MoveContents(content::WebContents* source,
-                               const gfx::Rect& pos) {
+void WebContents::SetContentsBounds(content::WebContents* source,
+                                    const gfx::Rect& pos) {
   Emit("move", pos);
 }
 
@@ -1026,10 +1026,6 @@ void WebContents::UpdateTargetURL(content::WebContents* source,
 void WebContents::LoadProgressChanged(content::WebContents* source,
                                    double progress) {
   Emit("load-progress-changed", progress);
-}
-
-bool WebContents::IsPopupOrPanel(const content::WebContents* source) const {
-  return type_ == BROWSER_WINDOW;
 }
 
 void WebContents::HandleKeyboardEvent(
@@ -1086,7 +1082,8 @@ void WebContents::ExitFullscreenModeForTab(content::WebContents* source) {
 
 void WebContents::RendererUnresponsive(
     content::WebContents* source,
-    content::RenderWidgetHost* render_widget_host) {
+    content::RenderWidgetHost* render_widget_host,
+    base::RepeatingClosure hang_monitor_restarter) {
   Emit("unresponsive");
   if ((type_ == BROWSER_WINDOW) && owner_window())
     owner_window()->RendererUnresponsive(source);
@@ -1310,10 +1307,10 @@ bool WebContents::CheckMediaAccessPermission(
 void WebContents::RequestMediaAccessPermission(
     content::WebContents* web_contents,
     const content::MediaStreamRequest& request,
-    const content::MediaResponseCallback& callback) {
+    content::MediaResponseCallback callback) {
   auto permission_helper =
       WebContentsPermissionHelper::FromWebContents(web_contents);
-  permission_helper->RequestMediaAccessPermission(request, callback);
+  permission_helper->RequestMediaAccessPermission(request, std::move(callback));
 }
 
 void WebContents::RequestToLockMouse(
@@ -2254,14 +2251,14 @@ void WebContents::Clone(mate::Arguments* args) {
     options = mate::Dictionary::CreateEmpty(isolate());
   }
 
-  base::Callback<void(content::WebContents*)> callback;
+  base::OnceCallback<void(content::WebContents*)> callback;
   if (!args->GetNext(&callback)) {
     args->ThrowError("`callback` is a required field");
     return;
   }
 
   if (!IsGuest()) {
-    callback.Run(nullptr);
+    std::move(callback).Run(nullptr);
     return;
   }
 
@@ -2281,8 +2278,8 @@ void WebContents::Clone(mate::Arguments* args) {
   extensions::TabHelper::CreateTab(owner,
       web_contents()->GetBrowserContext(),
       create_params,
-      base::Bind(&WebContents::OnTabCreated, base::Unretained(this),
-          options, callback));
+      base::BindOnce(&WebContents::OnTabCreated, base::Unretained(this),
+          options, std::move(callback)));
 }
 
 void WebContents::SetActive(bool active) {
@@ -2846,7 +2843,7 @@ mate::Handle<WebContents> WebContents::FromTabID(v8::Isolate* isolate,
 }
 
 void WebContents::OnTabCreated(const mate::Dictionary& options,
-    base::Callback<void(content::WebContents*)> callback,
+    base::OnceCallback<void(content::WebContents*)> callback,
     content::WebContents* tab) {
   node::Environment* env = node::Environment::GetCurrent(isolate());
   if (!env) {
@@ -2952,9 +2949,9 @@ void WebContents::OnTabCreated(const mate::Dictionary& options,
                  gfx::Rect(), user_gesture, &was_blocked);
 
   if (was_blocked)
-    callback.Run(nullptr);
+    std::move(callback).Run(nullptr);
   else
-    callback.Run(tab);
+    std::move(callback).Run(tab);
 }
 
 // static
@@ -2982,7 +2979,7 @@ void WebContents::CreateTab(mate::Arguments* args) {
     return;
   }
 
-  base::Callback<void(content::WebContents*)> callback;
+  base::OnceCallback<void(content::WebContents*)> callback;
   if (!args->GetNext(&callback)) {
     args->ThrowError("`callback` is a required field");
     return;
@@ -2996,12 +2993,16 @@ void WebContents::CreateTab(mate::Arguments* args) {
   if (options.Get("src", &src) || options.Get("url", &src)) {
     create_params.SetString("src", src);
   }
+  std::string extension_id;
+  if (options.Get("extension", &extension_id)) {
+    create_params.SetString("extension", extension_id);
+  }
 
   extensions::TabHelper::CreateTab(owner->web_contents(),
       browser_context,
       create_params,
-      base::Bind(&WebContents::OnTabCreated, base::Unretained(owner),
-          options, callback));
+      base::BindOnce(&WebContents::OnTabCreated, base::Unretained(owner),
+          options, std::move(callback)));
 }
 
 // static

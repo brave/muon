@@ -309,10 +309,10 @@ void DoCacheActionInIO(
 
 void SetCertVerifyProcInIO(
     const scoped_refptr<net::URLRequestContextGetter>& context_getter,
-    const AtomCertVerifier::VerifyProc& proc) {
+    AtomCertVerifier::VerifyProc proc) {
   auto request_context = context_getter->GetURLRequestContext();
   static_cast<AtomCertVerifier*>(request_context->cert_verifier())->
-      SetVerifyProc(proc);
+      SetVerifyProc(std::move(proc));
 }
 
 void ClearHostResolverCacheInIO(
@@ -492,15 +492,17 @@ void Session::SetDownloadPath(const base::FilePath& path) {
 void Session::SetCertVerifyProc(v8::Local<v8::Value> val,
                                 mate::Arguments* args) {
   AtomCertVerifier::VerifyProc proc;
-  if (!(val->IsNull() || mate::ConvertFromV8(args->isolate(), val, &proc))) {
-    args->ThrowError("Must pass null or function");
-    return;
-  }
+  // TODO(hferreiro)
+  // if (!(val->IsNull() ||
+  //      mate::ConvertFromV8(args->isolate(), val, std::move(proc)))) {
+  //  args->ThrowError("Must pass null or function");
+  //  return;
+  //}
 
-  BrowserThread::PostTask(BrowserThread::IO, FROM_HERE,
-      base::Bind(&SetCertVerifyProcInIO,
-                 request_context_getter_,
-                 proc));
+  BrowserThread::PostTask(
+      BrowserThread::IO, FROM_HERE,
+      base::BindOnce(&SetCertVerifyProcInIO, request_context_getter_,
+                     std::move(proc)));
 }
 
 void Session::SetPermissionRequestHandler(v8::Local<v8::Value> val,
@@ -511,7 +513,7 @@ void Session::SetPermissionRequestHandler(v8::Local<v8::Value> val,
     return;
   }
   auto permission_manager = static_cast<brave::BravePermissionManager*>(
-      profile_->GetPermissionManager());
+      profile_->GetPermissionControllerDelegate());
   permission_manager->SetPermissionRequestHandler(handler);
 }
 

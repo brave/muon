@@ -47,9 +47,10 @@
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/common/content_switches.h"
-#include "content/public/common/network_connection_tracker.h"
+#include "content/public/browser/network_connection_tracker.h"
 #include "content/public/common/service_manager_connection.h"
 #include "ppapi/buildflags/buildflags.h"
+#include "services/network/public/cpp/network_quality_tracker.h"
 #include "ui/base/idle/idle.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/message_center/message_center.h"
@@ -316,6 +317,7 @@ void BrowserProcessImpl::CreateLocalState() {
   SSLConfigServiceManager::RegisterPrefs(pref_registry.get());
   GpuModeManager::RegisterPrefs(pref_registry.get());
   safe_browsing::RegisterLocalStatePrefs(pref_registry.get());
+  SystemNetworkContextManager::RegisterPrefs(pref_registry.get());
 
   pref_change_registrar_.Init(local_state_.get());
   pref_change_registrar_.Add(
@@ -394,7 +396,9 @@ resource_coordinator::TabManager* BrowserProcessImpl::GetTabManager() {
   if (!tab_manager_) {
     tab_manager_ = std::make_unique<resource_coordinator::GuestTabManager>();
     tab_lifecycle_unit_source_ =
-        std::make_unique<resource_coordinator::TabLifecycleUnitSource>();
+        std::make_unique<resource_coordinator::TabLifecycleUnitSource>(
+            tab_manager_->intervention_policy_database(),
+            tab_manager_->usage_clock());
     tab_lifecycle_unit_source_->AddObserver(tab_manager_.get());
   }
   return tab_manager_.get();
@@ -588,8 +592,18 @@ BrowserProcessImpl::system_network_context_manager() {
   return system_network_context_manager_.get();
 }
 
+scoped_refptr<network::SharedURLLoaderFactory>
+BrowserProcessImpl::shared_url_loader_factory() {
+  return system_network_context_manager()->GetSharedURLLoaderFactory();
+}
+
 content::NetworkConnectionTracker*
 BrowserProcessImpl::network_connection_tracker() {
+  NOTIMPLEMENTED();
+  return nullptr;
+}
+
+network::NetworkQualityTracker* BrowserProcessImpl::network_quality_tracker() {
   NOTIMPLEMENTED();
   return nullptr;
 }

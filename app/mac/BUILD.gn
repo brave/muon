@@ -54,13 +54,12 @@ mac_app_bundle("electron_app") {
   ]
 
   sources = [
-    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.c",
+    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.cc",
   ]
 
   deps = [
     ":electron_versioned_bundle_data",
     "//electron:electron_app_resources",
-    "//build/config:exe_and_shlib_deps",
     "//chrome/common:version_header",
   ]
 
@@ -114,7 +113,6 @@ mac_framework_bundle("electron_framework") {
     "//chrome:chrome_framework_helpers",
     ":external_binaries_resources",
     "//electron:electron_framework_resources",
-    "//build/config:exe_and_shlib_deps",
     ":electron_xibs",
     "//chrome/app/nibs:localizer_table",
   ]
@@ -195,12 +193,12 @@ mac_app_bundle("electron_helper_app") {
   defines = [ "HELPER_EXECUTABLE" ]
 
   sources = [
-    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.c",
+    "//electron/chromium_src/chrome/app/chrome_exe_main_mac.cc",
   ]
 
   deps = [
-    "//build/config:exe_and_shlib_deps",
     "//chrome/common:version_header",
+    "//sandbox/mac:seatbelt",
   ]
 
   ldflags = []

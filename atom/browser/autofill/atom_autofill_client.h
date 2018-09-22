@@ -54,18 +54,24 @@ class AtomAutofillClient
   syncer::SyncService* GetSyncService() override;
   identity::IdentityManager* GetIdentityManager() override;
   ukm::UkmRecorder* GetUkmRecorder() override;
+  ukm::SourceId GetUkmSourceId() override;
   autofill::AddressNormalizer* GetAddressNormalizer() override;
+  security_state::SecurityLevel GetSecurityLevelForUmaHistograms() override;
   void ShowAutofillSettings() override;
+  void ConfirmSaveAutofillProfile(const AutofillProfile& profile,
+                                  base::OnceClosure callback) override;
   void ShowUnmaskPrompt(const CreditCard& card,
                         UnmaskCardReason reason,
                         base::WeakPtr<CardUnmaskDelegate> delegate) override;
   void OnUnmaskVerificationResult(PaymentsRpcResult result) override;
+  void ShowLocalCardMigrationPrompt(base::OnceClosure closure) override;
   void ConfirmSaveCreditCardLocally(const CreditCard& card,
                                     const base::Closure& callback) override;
   void ConfirmSaveCreditCardToCloud(
       const CreditCard& card,
       std::unique_ptr<base::DictionaryValue> legal_message,
-      const base::Closure& callback) override;
+      bool should_request_name_from_user,
+      base::OnceCallback<void(const base::string16&)> callback) override;
   void LoadRiskData(
       const base::Callback<void(const std::string&)>& callback) override;
   bool HasCreditCardScanFeature() override;
@@ -74,6 +80,7 @@ class AtomAutofillClient
       const gfx::RectF& element_bounds,
       base::i18n::TextDirection text_direction,
       const std::vector<autofill::Suggestion>& suggestions,
+      bool autoselect_first_suggestion,
       base::WeakPtr<AutofillPopupDelegate> delegate) override;
   void PopupHidden();
   void UpdateAutofillPopupDataListValues(

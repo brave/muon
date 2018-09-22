@@ -93,7 +93,8 @@ PrintPreviewMessageHandler::~PrintPreviewMessageHandler() {}
 
 void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
     content::RenderFrameHost* rfh,
-    const PrintHostMsg_DidPreviewDocument_Params& params) {
+    const PrintHostMsg_DidPreviewDocument_Params& params,
+    const PrintHostMsg_PreviewIds& ids) {
   // Always try to stop the worker.
   StopWorker(params.document_cookie);
 
@@ -113,7 +114,7 @@ void PrintPreviewMessageHandler::OnMetafileReadyForPrinting(
       base::Bind(&CopyPDFDataOnIOThread, content),
       base::Bind(&PrintPreviewMessageHandler::RunPrintToPDFCallback,
                  weak_ptr_factory_.GetWeakPtr(),
-                 params.preview_request_id,
+                 ids.request_id,
                  content.data_size));
 }
 
@@ -133,7 +134,8 @@ void PrintPreviewMessageHandler::OnError(content::RenderFrameHost* rfh,
 
 void PrintPreviewMessageHandler::OnPrintPreviewFailed(
     content::RenderFrameHost* rfh,
-    int document_cookie) {
+    int document_cookie,
+    const PrintHostMsg_PreviewIds& ids) {
   StopWorker(document_cookie);
 
   OnError(rfh, document_cookie, "Failed");
@@ -141,7 +143,8 @@ void PrintPreviewMessageHandler::OnPrintPreviewFailed(
 
 void PrintPreviewMessageHandler::OnPrintPreviewCancelled(
     content::RenderFrameHost* rfh,
-    int document_cookie) {
+    int document_cookie,
+    const PrintHostMsg_PreviewIds& ids) {
   StopWorker(document_cookie);
 
   OnError(rfh, document_cookie, "Cancelled");
@@ -149,7 +152,8 @@ void PrintPreviewMessageHandler::OnPrintPreviewCancelled(
 
 void PrintPreviewMessageHandler::OnPrintPreviewInvalidPrinterSettings(
     content::RenderFrameHost* rfh,
-    int document_cookie) {
+    int document_cookie,
+    const PrintHostMsg_PreviewIds& ids) {
   StopWorker(document_cookie);
 
   OnError(rfh, document_cookie, "Invalid Settings");

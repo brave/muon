@@ -5,6 +5,8 @@
 #ifndef BRIGHTRAY_BROWSER_URL_REQUEST_CONTEXT_GETTER_H_
 #define BRIGHTRAY_BROWSER_URL_REQUEST_CONTEXT_GETTER_H_
 
+#include <memory>
+
 #include "base/files/file_path.h"
 #include "content/public/browser/browser_context.h"
 #include "net/http/http_cache.h"
@@ -40,7 +42,7 @@ class URLRequestContextGetter : public net::URLRequestContextGetter {
     virtual net::HttpCache::BackendFactory* CreateHttpCacheBackendFactory(
         const base::FilePath& base_path);
     virtual std::unique_ptr<net::CertVerifier> CreateCertVerifier();
-    virtual net::SSLConfigService* CreateSSLConfigService();
+    virtual std::unique_ptr<net::SSLConfigService> CreateSSLConfigService();
     virtual std::vector<std::string> GetCookieableSchemes();
   };
 

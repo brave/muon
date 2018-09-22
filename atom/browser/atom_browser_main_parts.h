@@ -111,7 +111,7 @@ class AtomBrowserMainParts : public brightray::BrowserMainParts {
   std::unique_ptr<NodeBindings> node_bindings_;
   std::unique_ptr<AtomBindings> atom_bindings_;
 
-  base::Timer gc_timer_;
+  base::RepeatingTimer gc_timer_;
   std::unique_ptr<base::MemoryPressureListener> memory_pressure_listener_;
 
   // Members needed across shutdown methods.

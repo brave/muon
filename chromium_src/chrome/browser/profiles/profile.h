@@ -157,7 +157,7 @@ class Profile : public atom::AtomBrowserContext {
 
   virtual user_prefs::PrefRegistrySyncable* pref_registry() const = 0;
 
-  virtual void AddOverlayPref(const std::string name) = 0;
+  virtual void RegisterPersistentPref(const std::string name) = 0;
 
   virtual scoped_refptr<autofill::AutofillWebDataService>
     GetAutofillWebdataService() = 0;

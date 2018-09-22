@@ -17,6 +17,7 @@
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
 #include "components/autofill/core/common/autofill_pref_names.h"
 #include "components/password_manager/content/browser/content_password_manager_driver.h"
+#include "components/ukm/content/source_url_recorder.h"
 #include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/render_frame_host.h"
@@ -93,8 +94,17 @@ ukm::UkmRecorder* AtomAutofillClient::GetUkmRecorder() {
   return ukm::UkmRecorder::Get();
 }
 
+ukm::SourceId AtomAutofillClient::GetUkmSourceId() {
+  return ukm::GetSourceIdForWebContentsDocument(web_contents());
+}
+
 AddressNormalizer* AtomAutofillClient::GetAddressNormalizer() {
   return nullptr;
+}
+
+security_state::SecurityLevel
+AtomAutofillClient::GetSecurityLevelForUmaHistograms() {
+  return security_state::SecurityLevel::SECURITY_LEVEL_COUNT;
 }
 
 void AtomAutofillClient::ShowAutofillSettings() {
@@ -102,6 +112,10 @@ void AtomAutofillClient::ShowAutofillSettings() {
     api_web_contents_->Emit("show-autofill-settings");
   }
 }
+
+void AtomAutofillClient::ConfirmSaveAutofillProfile(
+    const AutofillProfile& profile,
+    base::OnceClosure callback) {}
 
 void AtomAutofillClient::ShowUnmaskPrompt(
     const CreditCard& card,
@@ -113,6 +127,9 @@ void AtomAutofillClient::OnUnmaskVerificationResult(
     PaymentsRpcResult result) {
 }
 
+void AtomAutofillClient::ShowLocalCardMigrationPrompt(
+    base::OnceClosure closure) {}
+
 void AtomAutofillClient::ConfirmSaveCreditCardLocally(
     const CreditCard& card,
     const base::Closure& callback) {
@@ -121,7 +138,8 @@ void AtomAutofillClient::ConfirmSaveCreditCardLocally(
 void AtomAutofillClient::ConfirmSaveCreditCardToCloud(
     const CreditCard& card,
     std::unique_ptr<base::DictionaryValue> legal_message,
-    const base::Closure& callback) {
+    bool should_request_name_from_user,
+    base::OnceCallback<void(const base::string16&)> callback) {
 }
 
 void AtomAutofillClient::LoadRiskData(
@@ -140,6 +158,7 @@ void AtomAutofillClient::ShowAutofillPopup(
     const gfx::RectF& element_bounds,
     base::i18n::TextDirection text_direction,
     const std::vector<autofill::Suggestion>& suggestions,
+    bool autoselect_first_suggestion,
     base::WeakPtr<AutofillPopupDelegate> delegate) {
   delegate_ = delegate;
   if (api_web_contents_) {

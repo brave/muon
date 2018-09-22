@@ -25,6 +25,7 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/net/system_network_context_manager.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h"
 #include "chrome/browser/speech/tts_message_filter.h"
@@ -212,12 +213,14 @@ void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
                                schemes_list.end());
 }
 
-void AtomBrowserClient::GetGeolocationRequestContext(
-      base::OnceCallback<void(scoped_refptr<net::URLRequestContextGetter>)>
-          callback) {
-  content::BrowserThread::PostTaskAndReplyWithResult(
-      content::BrowserThread::UI, FROM_HERE,
-      base::BindOnce(&GetSystemRequestContextOnUIThread), std::move(callback));
+scoped_refptr<network::SharedURLLoaderFactory>
+AtomBrowserClient::GetSystemSharedURLLoaderFactory() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (!g_browser_process->system_network_context_manager())
+    return nullptr;
+
+  return g_browser_process->system_network_context_manager()
+    ->GetSharedURLLoaderFactory();
 }
 
 std::string AtomBrowserClient::GetGeolocationApiKey() {
@@ -245,7 +248,7 @@ void AtomBrowserClient::WebNotificationAllowed(
     return;
   }
   permission_helper->RequestWebNotificationPermission(
-      base::Bind(callback, web_contents->IsAudioMuted()));
+      base::BindOnce(callback, web_contents->IsAudioMuted()));
 }
 
 void AtomBrowserClient::RenderProcessHostDestroyed(

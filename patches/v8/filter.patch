@@ -1,24 +1,26 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 456a318c1c60527ae264cc3b8326cbd860dc5d2f..27291944c55c2b8ac343344419f759f8dbe2e55f 100644
+index 8931e4fc620693676e5f290c261cf9d0f89f282d..4d97ddb5bacaf277fe0bfe27a66f31ba0c5cfc4f 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -195,7 +195,13 @@ config("internal_config") {
+@@ -208,9 +208,15 @@ config("internal_config") {
      "$target_gen_dir",
    ]
  
--  if (is_component_build) {
 +  if (is_win) {
 +    cflags = [
 +      "/wd4275",  # dll export
 +    ]
 +  }
 +
+   defines = []
+ 
+-  if (is_component_build) {
 +  if (true) {
-     defines = [ "BUILDING_V8_SHARED" ]
+     defines += [ "BUILDING_V8_SHARED" ]
    }
  }
 diff --git a/src/profiler/profiler-listener.cc b/src/profiler/profiler-listener.cc
-index 70d907b21659702e2543c6a18f7b855d112d786f..8a1d417e1eaa7a7d831a86403ceb37792a10dde6 100644
+index 51327685059037f2b0614feaafc75aef81512bca..67f6f30275ee8bfd7ca463830b0c13b5c75bb2d7 100644
 --- a/src/profiler/profiler-listener.cc
 +++ b/src/profiler/profiler-listener.cc
 @@ -98,7 +98,7 @@ void ProfilerListener::CodeCreateEvent(CodeEventListener::LogEventsAndTags tag,

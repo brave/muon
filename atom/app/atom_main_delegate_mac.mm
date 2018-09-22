@@ -39,7 +39,6 @@ base::FilePath GetHelperAppPath(const base::FilePath& frameworks_path,
 
 void AtomMainDelegate::OverrideFrameworkBundlePath() {
   base::FilePath* version_path = new base::FilePath(GetFrameworksPath());
-  chrome::SetOverrideVersionedDirectory(version_path);
   base::mac::SetOverrideFrameworkBundlePath(
       GetFrameworksPath().Append(PRODUCT_SHORTNAME_STRING " Framework.framework"));
 }

@@ -1,3 +1,4 @@
+import("//build/config/ui.gni")
 import("//extensions/buildflags/buildflags.gni")
 
 source_set("install_verification") {
@@ -31,6 +32,7 @@ source_set("extensions") {
   ]
 
   deps = [
+    "//content/public/browser",
     "//services/network/public/mojom",
     "//third_party/boringssl",
     "//third_party/protobuf:protobuf_lite",
@@ -66,10 +68,6 @@ source_set("safe_browsing") {
   configs += [ "//electron/build:electron_config" ]
   configs += [ "//electron/chromium_src:chromium_src_config" ]
 
-  sources = [
-    "password_reuse_modal_warning_dialog.cc",
-  ]
-
   public_deps = [
     "//chrome/browser/safe_browsing",
   ]
@@ -87,6 +85,12 @@ source_set("safe_browsing") {
   if (enable_extensions) {
     deps += [
       ":extensions",
+    ]
+  }
+
+  if (toolkit_views) {
+    sources = [
+      "password_reuse_modal_warning_dialog.cc",
     ]
   }
 }

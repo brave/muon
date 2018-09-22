@@ -137,6 +137,18 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
     })
   })
 
+  apiFunctions.setHandleRequest('getAllInWindow', function (windowId, cb) {
+    var responseId = ipc.guid()
+    var queryInfo = {windowId: windowId}
+    query(queryInfo, function (evt, tab, error) {
+      if (error) {
+        lastError.run('tabs.getAllInWindow', error, '', () => { cb(null) })
+      } else {
+        cb(tab)
+      }
+    })
+  })
+
   apiFunctions.setHandleRequest('captureVisibleTab', function (windowId, options, cb) {
     // return an empty image url
     cb('data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==')
@@ -210,6 +222,7 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
         cb(tab)
       }
     })
+    createProperties.extension = extensionId;
     ipc.send('chrome-tabs-create', responseId, createProperties)
   })
 

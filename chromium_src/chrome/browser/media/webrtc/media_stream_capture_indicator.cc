@@ -19,3 +19,9 @@ bool MediaStreamCaptureIndicator::IsBeingMirrored(
     content::WebContents* web_contents) const {
   return false;
 }
+
+
+bool MediaStreamCaptureIndicator::IsCapturingDesktop(
+    content::WebContents* web_contents) const {
+  return false;
+}

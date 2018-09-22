@@ -25,9 +25,6 @@ class JavascriptEnvironment {
   JavascriptEnvironment();
   ~JavascriptEnvironment();
 
-  void OnMessageLoopCreated();
-  void OnMessageLoopDestroying();
-
   v8::Isolate* isolate() const { return isolate_; }
   extensions::ScriptContext* script_context() const {
     return script_context_.get();

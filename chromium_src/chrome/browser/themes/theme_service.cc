@@ -120,6 +120,10 @@ bool ThemeService::BrowserThemeProvider::HasCustomImage(int id) const {
   return false;
 }
 
+bool ThemeService::BrowserThemeProvider::HasCustomColor(int id) const {
+  return false;
+}
+
 base::RefCountedMemory* ThemeService::BrowserThemeProvider::GetRawData(
     int id,
     ui::ScaleFactor scale_factor) const {

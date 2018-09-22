@@ -63,22 +63,6 @@ PlatformNotificationServiceImpl::PlatformNotificationServiceImpl() {}
 
 PlatformNotificationServiceImpl::~PlatformNotificationServiceImpl() {}
 
-blink::mojom::PermissionStatus
-  PlatformNotificationServiceImpl::CheckPermissionOnUIThread(
-    content::BrowserContext* browser_context,
-    const GURL& origin,
-    int render_process_id) {
-  return blink::mojom::PermissionStatus::GRANTED;
-}
-
-blink::mojom::PermissionStatus
-  PlatformNotificationServiceImpl::CheckPermissionOnIOThread(
-    content::ResourceContext* resource_context,
-    const GURL& origin,
-    int render_process_id) {
-  return blink::mojom::PermissionStatus::GRANTED;
-}
-
 void PlatformNotificationServiceImpl::DisplayNotification(
     content::BrowserContext* browser_context,
     const std::string& notification_id,
@@ -93,7 +77,7 @@ void PlatformNotificationServiceImpl::DisplayNotification(
              notification_data,
              base::Passed(&delegate));
 
-  auto permission_manager = browser_context->GetPermissionManager();
+  auto permission_manager = browser_context->GetPermissionControllerDelegate();
   // TODO(bridiver) user gesture
   permission_manager->RequestPermission(
       content::PermissionType::NOTIFICATIONS, NULL, origin, false,
@@ -107,6 +91,8 @@ void PlatformNotificationServiceImpl::DisplayPersistentNotification(
     const GURL& origin,
     const content::PlatformNotificationData& notification_data,
     const content::NotificationResources& notification_resources) {
+  DisplayNotification(browser_context, notification_id, origin,
+                      notification_data, notification_resources);
 }
 
 void PlatformNotificationServiceImpl::CloseNotification(
@@ -125,11 +111,17 @@ void PlatformNotificationServiceImpl::CloseNotification(
 void PlatformNotificationServiceImpl::ClosePersistentNotification(
     content::BrowserContext* browser_context,
     const std::string& notification_id) {
+  CloseNotification(browser_context, notification_id);
 }
 
 void PlatformNotificationServiceImpl::GetDisplayedNotifications(
     content::BrowserContext* browser_context,
     const DisplayedNotificationsCallback& callback) {
+}
+
+int64_t PlatformNotificationServiceImpl::ReadNextPersistentNotificationId(
+    content::BrowserContext* browser_context) {
+  return -1;
 }
 
 }  // namespace brave

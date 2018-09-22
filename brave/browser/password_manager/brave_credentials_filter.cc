@@ -22,9 +22,19 @@ bool BraveCredentialsFilter::ShouldSave(
   return true;
 }
 
-bool BraveCredentialsFilter::ShouldSavePasswordHash(
+bool BraveCredentialsFilter::ShouldSaveGaiaPasswordHash(
     const autofill::PasswordForm& form) const {
   return true;
+}
+
+bool BraveCredentialsFilter::ShouldSaveEnterprisePasswordHash(
+    const autofill::PasswordForm& form) const {
+  return true;
+}
+
+bool BraveCredentialsFilter::IsSyncAccountEmail(
+    const std::string& username) const {
+  return false;
 }
 
 void BraveCredentialsFilter::ReportFormLoginSuccess(

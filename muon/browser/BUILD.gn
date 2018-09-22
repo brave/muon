@@ -10,6 +10,10 @@ source_set("browser") {
     "muon_browser_process_impl.h",
   ]
 
+  deps = [
+    "//components/component_updater",
+  ]
+
   public_deps = [
     "//electron/chromium_src:browser",
   ]

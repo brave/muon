@@ -21,6 +21,7 @@
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "extensions/browser/app_window/size_constraints.h"
+#include "third_party/blink/public/platform/web_gesture_event.h"
 #include "ui/base/ui_base_types.h"
 #include "ui/gfx/image/image.h"
 #include "ui/gfx/image/image_skia.h"
@@ -219,7 +220,7 @@ class NativeWindow : public base::SupportsUserData,
   void NotifyWindowMoved();
   void NotifyWindowScrollTouchBegin();
   void NotifyWindowScrollTouchEnd();
-  void NotifyWindowScrollTouchEdge();
+  void NotifyWindowScrollTouchEdge(const blink::WebGestureEvent&);
   void NotifyWindowSwipe(const std::string& direction);
   void NotifyWindowEnterFullScreen();
   void NotifyWindowLeaveFullScreen();
@@ -342,7 +343,7 @@ class NativeWindowRelay :
   explicit NativeWindowRelay(base::WeakPtr<NativeWindow> window)
     : key(UserDataKey()), window(window) {}
 
-  void* key;
+  const void* key;
   base::WeakPtr<NativeWindow> window;
 
  private:

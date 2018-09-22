@@ -30,8 +30,10 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/url_constants.h"
+#include "net/base/completion_once_callback.h"
 #include "net/ftp/ftp_network_layer.h"
 #include "net/net_buildflags.h"
+#include "net/ssl/ssl_config_service_defaults.h"
 #include "net/url_request/data_protocol_handler.h"
 #include "net/url_request/file_protocol_handler.h"
 #include "net/url_request/ftp_protocol_handler.h"
@@ -50,7 +52,7 @@ namespace {
 class NoCacheBackend : public net::HttpCache::BackendFactory {
   int CreateBackend(net::NetLog* net_log,
                     std::unique_ptr<disk_cache::Backend>* backend,
-                    const net::CompletionCallback& callback) override {
+                    net::CompletionOnceCallback callback) override {
     return net::ERR_FAILED;
   }
 };
@@ -149,8 +151,9 @@ std::unique_ptr<net::CertVerifier> AtomBrowserContext::CreateCertVerifier() {
   return base::WrapUnique(new AtomCertVerifier);
 }
 
-net::SSLConfigService* AtomBrowserContext::CreateSSLConfigService() {
-  return new AtomSSLConfigService;
+std::unique_ptr<net::SSLConfigService>
+AtomBrowserContext::CreateSSLConfigService() {
+  return std::make_unique<net::SSLConfigServiceDefaults>();
 }
 
 std::vector<std::string> AtomBrowserContext::GetCookieableSchemes() {

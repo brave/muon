@@ -15,8 +15,10 @@
 #include "base/version.h"
 #if defined(OS_WIN)
 #include "base/win/win_util.h"
+#include "chrome/install_static/install_util.h"
 #endif
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/net/system_network_context_manager.h"
 #include "components/component_updater/component_updater_command_line_config_policy.h"
 #include "components/component_updater/configurator_impl.h"
 #include "components/prefs/pref_service.h"
@@ -52,6 +54,8 @@ class BraveConfigurator : public update_client::Configurator {
   std::string ExtraRequestParams() const override;
   std::string GetDownloadPreference() const override;
   scoped_refptr<net::URLRequestContextGetter> RequestContext() const override;
+  scoped_refptr<network::SharedURLLoaderFactory> URLLoaderFactory()
+      const override;
   std::unique_ptr<service_manager::Connector> CreateServiceManagerConnector()
       const override;
   bool EnabledDeltas() const override;
@@ -62,6 +66,7 @@ class BraveConfigurator : public update_client::Configurator {
   update_client::ActivityDataService* GetActivityDataService() const override;
   bool IsPerUserInstall() const override;
   std::vector<uint8_t> GetRunActionKeyHash() const override;
+  std::string GetAppGuid() const override;
 
  private:
   friend class base::RefCountedThreadSafe<BraveConfigurator>;
@@ -152,6 +157,16 @@ scoped_refptr<net::URLRequestContextGetter>
     return g_browser_process->system_request_context();
 }
 
+scoped_refptr<network::SharedURLLoaderFactory>
+BraveConfigurator::URLLoaderFactory() const {
+  SystemNetworkContextManager* system_network_context_manager =
+      g_browser_process->system_network_context_manager();
+  // Manager will be null if called from InitializeForTesting.
+  if (!system_network_context_manager)
+    return nullptr;
+  return system_network_context_manager->GetSharedURLLoaderFactory();
+}
+
 std::unique_ptr<service_manager::Connector>
     BraveConfigurator::CreateServiceManagerConnector() const {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -197,6 +212,15 @@ bool BraveConfigurator::IsPerUserInstall() const {
 std::vector<uint8_t> BraveConfigurator::GetRunActionKeyHash() const {
   return configurator_impl_.GetRunActionKeyHash();
 }
+
+std::string BraveConfigurator::GetAppGuid() const {
+#if defined(OS_WIN)
+  return install_static::UTF16ToUTF8(install_static::GetAppGuid());
+#else
+  return configurator_impl_.GetAppGuid();
+#endif
+}
+
 
 }  // namespace
 

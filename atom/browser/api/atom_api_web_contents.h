@@ -5,6 +5,7 @@
 #ifndef ATOM_BROWSER_API_ATOM_API_WEB_CONTENTS_H_
 #define ATOM_BROWSER_API_ATOM_API_WEB_CONTENTS_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -334,8 +335,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
       const mate::Dictionary& options);
 
   void OnTabCreated(const mate::Dictionary& options,
-      base::Callback<void(content::WebContents*)> callback,
-      content::WebContents* tab);
+                    base::OnceCallback<void(content::WebContents*)> callback,
+                    content::WebContents* tab);
 
   void AuthorizePlugin(mate::Arguments* args);
 
@@ -421,14 +422,13 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void BeforeUnloadFired(content::WebContents* tab,
                          bool proceed,
                          bool* proceed_to_fire_unload) override;
-  void MoveContents(content::WebContents* source,
-                    const gfx::Rect& pos) override;
+  void SetContentsBounds(content::WebContents* source,
+                         const gfx::Rect& pos) override;
   void CloseContents(content::WebContents* source) override;
   void ActivateContents(content::WebContents* contents) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
   void LoadProgressChanged(content::WebContents* source,
                                    double progress) override;
-  bool IsPopupOrPanel(const content::WebContents* source) const override;
   void HandleKeyboardEvent(
       content::WebContents* source,
       const content::NativeWebKeyboardEvent& event) override;
@@ -440,7 +440,8 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void ContentsZoomChange(bool zoom_in) override;
   void RendererUnresponsive(
       content::WebContents* source,
-      content::RenderWidgetHost* render_widget_host) override;
+      content::RenderWidgetHost* render_widget_host,
+      base::RepeatingClosure hang_monitor_restarter) override;
   void RendererResponsive(
       content::WebContents* source,
       content::RenderWidgetHost* render_widget_host) override;
@@ -461,7 +462,7 @@ class WebContents : public mate::TrackableObject<WebContents>,
   void RequestMediaAccessPermission(
       content::WebContents* web_contents,
       const content::MediaStreamRequest& request,
-      const content::MediaResponseCallback& callback) override;
+      content::MediaResponseCallback callback) override;
   void RequestToLockMouse(
       content::WebContents* web_contents,
       bool user_gesture,

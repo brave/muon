@@ -8,6 +8,7 @@ namespace safe_browsing {
 void ShowPasswordReuseModalWarningDialog(
     content::WebContents* web_contents,
     ChromePasswordProtectionService* service,
+    ReusedPasswordType password_type,
     OnWarningDone done_callback) {
   std::move(done_callback).Run(PasswordProtectionService::IGNORE_WARNING);
 }

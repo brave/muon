@@ -62,7 +62,7 @@ class TabViewGuest : public guest_view::GuestView<TabViewGuest> {
   void GuestDestroyed() final;
   void CreateWebContents(
     const base::DictionaryValue& create_params,
-    const WebContentsCreatedCallback& callback) final;
+    WebContentsCreatedCallback callback) final;
   bool ShouldDestroyOnDetach() const final;
   void DidAttachToEmbedder() final;
   void DidDetachFromEmbedder() final;

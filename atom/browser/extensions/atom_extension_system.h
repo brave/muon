@@ -17,6 +17,8 @@
 
 class HostContentSettingsMap;
 
+namespace extensions {
+
 class ExtensionService {
  public:
   virtual bool IsExtensionEnabled(const std::string& extension_id) const = 0;
@@ -41,8 +43,6 @@ class ExtensionService {
 
   virtual bool is_ready() = 0;
 };
-
-namespace extensions {
 
 class AtomExtensionSystemSharedFactory;
 class AppSorting;
@@ -87,6 +87,7 @@ class AtomExtensionSystem : public ExtensionSystem {
   void InstallUpdate(const std::string& extension_id,
                      const std::string& public_key,
                      const base::FilePath& unpacked_dir,
+                     bool install_immediately,
                      InstallUpdateCallback install_update_callback) override;
   bool FinishDelayedInstallationIfReady(const std::string& extension_id,
                                         bool install_immediately) override;

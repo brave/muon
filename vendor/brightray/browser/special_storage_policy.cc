@@ -38,9 +38,9 @@ bool SpecialStoragePolicy::HasIsolatedStorage(const GURL& origin) {
   return false;
 }
 
-storage::SpecialStoragePolicy::DeleteCookiePredicate
+network::SessionCleanupCookieStore::DeleteCookiePredicate
 SpecialStoragePolicy::CreateDeleteCookieOnExitPredicate() {
-  return DeleteCookiePredicate();
+  return network::SessionCleanupCookieStore::DeleteCookiePredicate();
 }
 
 }  // namespace brightray

@@ -29,7 +29,6 @@
 #include "chrome/browser/chrome_service.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/plugins/plugin_info_host_impl.h"
-#include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
 #include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
@@ -94,6 +93,11 @@
 #include "services/ui/public/cpp/gpu/gpu.h"
 #include "ui/aura/mus/window_tree_client.h"
 #include "ui/views/mus/mus_client.h"
+#endif
+
+#if BUILDFLAG(ENABLE_PRINTING)
+#include "chrome/browser/printing/printing_message_filter.h"
+#include "components/services/pdf_compositor/public/interfaces/pdf_compositor.mojom.h"
 #endif
 
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
@@ -415,21 +419,28 @@ void BraveContentBrowserClient::RegisterInProcessServices(
 
 void BraveContentBrowserClient::RegisterOutOfProcessServices(
     OutOfProcessServiceMap* services) {
-  (*services)[chrome::mojom::kProfileImportServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME);
+  (*services)[chrome::mojom::kProfileImportServiceName] = base::BindRepeating(
+      &l10n_util::GetStringUTF16, IDS_UTILITY_PROCESS_PROFILE_IMPORTER_NAME);
 
   (*services)[proxy_resolver::mojom::kProxyResolverServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PROXY_RESOLVER_NAME);
+      base::BindRepeating(&l10n_util::GetStringUTF16,
+                          IDS_UTILITY_PROCESS_PROXY_RESOLVER_NAME);
+#if BUILDFLAG(ENABLE_PRINTING)
+  (*services)[printing::mojom::kServiceName] =
+      base::BindRepeating(&l10n_util::GetStringUTF16,
+                          IDS_UTILITY_PROCESS_PDF_COMPOSITOR_SERVICE_NAME);
+#endif
 
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
   (*services)[printing::mojom::kChromePrintingServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_PRINTING_SERVICE_NAME);
+      base::BindRepeating(&l10n_util::GetStringUTF16,
+                          IDS_UTILITY_PROCESS_PRINTING_SERVICE_NAME);
 #endif
-  (*services)[unzip::mojom::kServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_UNZIP_NAME);
+  (*services)[unzip::mojom::kServiceName] = base::BindRepeating(
+      &l10n_util::GetStringUTF16, IDS_UTILITY_PROCESS_UNZIP_NAME);
 
-  (*services)[tor::mojom::kTorServiceName] =
-      l10n_util::GetStringUTF16(IDS_UTILITY_PROCESS_TOR_LAUNCHER_NAME);
+  (*services)[tor::mojom::kTorServiceName] = base::BindRepeating(
+      &l10n_util::GetStringUTF16, IDS_UTILITY_PROCESS_TOR_LAUNCHER_NAME);
 }
 
 void BraveContentBrowserClient::BindInterfaceRequest(
@@ -652,8 +663,6 @@ void BraveContentBrowserClient::AppendExtraCommandLineSwitches(
     }
 
     static const char* const kSwitchNames[] = {
-      autofill::switches::kDisablePasswordGeneration,
-      autofill::switches::kEnablePasswordGeneration,
       autofill::switches::kEnableSuggestionsWithSubstringMatch,
       autofill::switches::kIgnoreAutocompleteOffForAutofill,
       autofill::switches::kLocalHeuristicsOnlyForPasswordGeneration,
@@ -824,6 +833,21 @@ bool BraveContentBrowserClient::ShouldUseSpareRenderProcessHost(
 #endif
 }
 
+const char*
+BraveContentBrowserClient::GetInitatorSchemeBypassingDocumentBlocking() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // Don't block responses for extension processes or for content scripts.
+  // TODO(creis): When every extension fetch (including content scripts) has
+  // been made to go through an extension-specific URLLoaderFactory, this
+  // mechanism ought to work by enumerating the host permissions from the
+  // extension manifest, and forwarding them on to the network service while
+  // brokering the URLLoaderFactory.
+  return extensions::kExtensionScheme;
+#else
+  return nullptr;
+#endif
+}
+
 void BraveContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
         std::vector<std::string>* additional_allowed_schemes) {
   AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
@@ -901,8 +925,10 @@ scoped_refptr<content::LoginDelegate>
 BraveContentBrowserClient::CreateLoginDelegate(
     net::AuthChallengeInfo* auth_info,
     content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+    const content::GlobalRequestID& request_id,
     bool is_request_for_main_frame,
     const GURL& url,
+    scoped_refptr<net::HttpResponseHeaders> response_headers,
     bool first_auth_attempt,
     LoginAuthRequiredCallback auth_required_callback) {
   return base::MakeRefCounted<atom::LoginHandler>(
@@ -982,9 +1008,6 @@ void BraveContentBrowserClient::InitFrameInterfaces() {
 
   frame_interfaces_parameterized_->AddInterface(
       base::Bind(&autofill::ContentAutofillDriverFactory::BindAutofillDriver));
-  frame_interfaces_parameterized_->AddInterface(
-      base::Bind(&password_manager::ContentPasswordManagerDriverFactory::
-                     BindPasswordManagerDriver));
   frame_interfaces_parameterized_->AddInterface(
       base::BindRepeating(&BravePasswordManagerClient::BindCredentialManager));
 }

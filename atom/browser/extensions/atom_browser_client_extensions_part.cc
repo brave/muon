@@ -16,6 +16,7 @@
 #include "chrome/browser/renderer_host/chrome_extension_message_filter.h"
 #include "chrome/common/chrome_constants.h"
 #include "chrome/common/pref_names.h"
+#include "components/language/core/browser/pref_names.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
@@ -362,8 +363,8 @@ void AtomBrowserClientExtensionsPart::SetApplicationLocale(std::string locale) {
 // static
 void AtomBrowserClientExtensionsPart::RegisterProfilePrefs(
     PrefRegistrySimple* registry) {
-  registry->RegisterStringPref(prefs::kApplicationLocale,
-      extension_l10n_util::CurrentLocaleOrDefault());
+  registry->RegisterStringPref(language::prefs::kApplicationLocale,
+                               extension_l10n_util::CurrentLocaleOrDefault());
 }
 
 void AtomBrowserClientExtensionsPart::OverrideWebkitPrefs(

@@ -20,6 +20,7 @@
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_finder.h"
 #include "chrome/browser/ui/browser_window.h"
+#include "chrome/browser/ui/recently_audible_helper.h"
 #include "chrome/browser/ui/tab_contents/tab_contents_iterator.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/common/extensions/api/tabs.h"
@@ -145,7 +146,20 @@ std::unique_ptr<api::tabs::Tab> ExtensionTabUtil::CreateTabObject(
   tab_object->selected = tab_object->active;
   tab_object->highlighted = tab_strip && tab_strip->IsTabSelected(tab_index);
   tab_object->pinned = tab_helper->is_pinned();
-  tab_object->audible = std::make_unique<bool>(contents->WasRecentlyAudible());
+
+  auto* audible_helper = RecentlyAudibleHelper::FromWebContents(contents);
+  bool audible = false;
+  if (audible_helper) {
+    // WebContents in a tab strip have RecentlyAudible helpers. They endow the
+    // tab with a notion of audibility that has a timeout for quiet periods. Use
+    // that if available.
+    audible = audible_helper->WasRecentlyAudible();
+  } else {
+    // Otherwise use the instantaneous notion of audibility.
+    audible = contents->IsCurrentlyAudible();
+  }
+  tab_object->audible = std::make_unique<bool>(audible);
+
   auto* tab_lifeycle_unit_external =
       resource_coordinator::TabLifecycleUnitExternal::FromWebContents(contents);
   tab_object->discarded = tab_helper->IsDiscarded();

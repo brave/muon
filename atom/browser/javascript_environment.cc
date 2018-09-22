@@ -185,14 +185,6 @@ JavascriptEnvironment::~JavascriptEnvironment() {
   }
 }
 
-void JavascriptEnvironment::OnMessageLoopCreated() {
-  isolate_holder_->AddRunMicrotasksObserver();
-}
-
-void JavascriptEnvironment::OnMessageLoopDestroying() {
-  isolate_holder_->RemoveRunMicrotasksObserver();
-}
-
 bool JavascriptEnvironment::Initialize() {
   auto cmd = base::CommandLine::ForCurrentProcess();
 

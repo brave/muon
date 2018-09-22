@@ -4,6 +4,8 @@
 
 #include "atom/browser/net/atom_cert_verifier.h"
 
+#include <utility>
+
 #include "atom/browser/browser.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "content/public/browser/browser_thread.h"
@@ -19,11 +21,11 @@ namespace {
 
 void OnResult(
     net::CertVerifyResult* verify_result,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     bool result) {
   BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
-      base::Bind(callback, result ? net::OK : net::ERR_FAILED));
+      base::BindOnce(std::move(callback), result ? net::OK : net::ERR_FAILED));
 }
 
 }  // namespace
@@ -35,32 +37,29 @@ AtomCertVerifier::AtomCertVerifier()
 AtomCertVerifier::~AtomCertVerifier() {
 }
 
-void AtomCertVerifier::SetVerifyProc(const VerifyProc& proc) {
-  verify_proc_ = proc;
+void AtomCertVerifier::SetVerifyProc(VerifyProc proc) {
+  verify_proc_ = std::move(proc);
 }
 
 int AtomCertVerifier::Verify(
     const RequestParams& params,
     net::CRLSet* crl_set,
     net::CertVerifyResult* verify_result,
-    const net::CompletionCallback& callback,
+    net::CompletionOnceCallback callback,
     std::unique_ptr<Request>* out_req,
     const net::NetLogWithSource& net_log) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
 
-  if (verify_proc_.is_null())
+  if (!verify_proc_)
     return default_cert_verifier_->Verify(
-        params, crl_set, verify_result, callback, out_req, net_log);
+        params, crl_set, verify_result, std::move(callback), out_req, net_log);
 
   BrowserThread::PostTask(
       BrowserThread::UI, FROM_HERE,
-      base::Bind(verify_proc_, params.hostname(), params.certificate(),
-                 base::Bind(OnResult, verify_result, callback)));
+      base::BindOnce(
+          std::move(verify_proc_), params.hostname(), params.certificate(),
+          base::BindOnce(OnResult, verify_result, std::move(callback))));
   return net::ERR_IO_PENDING;
-}
-
-bool AtomCertVerifier::SupportsOCSPStapling() {
-  return true;
 }
 
 }  // namespace atom

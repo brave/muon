@@ -47,10 +47,6 @@ class BrowserContext::ResourceContext : public content::ResourceContext {
   }
 
  private:
-  net::HostResolver* GetHostResolver() override {
-    return getter_->host_resolver();
-  }
-
   net::URLRequestContext* GetRequestContext() override {
     return getter_->GetURLRequestContext();
   }

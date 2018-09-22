@@ -111,10 +111,11 @@ TabHelper::~TabHelper() {
 }
 
 // static
-void TabHelper::CreateTab(content::WebContents* owner,
-                content::BrowserContext* browser_context,
-                const base::DictionaryValue& create_params,
-                const GuestViewManager::WebContentsCreatedCallback& callback) {
+void TabHelper::CreateTab(
+    content::WebContents* owner,
+    content::BrowserContext* browser_context,
+    const base::DictionaryValue& create_params,
+    GuestViewManager::WebContentsCreatedCallback callback) {
   BraveBrowserContext* profile =
       BraveBrowserContext::FromBrowserContext(browser_context);
   auto guest_view_manager = static_cast<GuestViewManager*>(
@@ -135,7 +136,7 @@ void TabHelper::CreateTab(content::WebContents* owner,
   guest_view_manager->CreateGuest(brave::TabViewGuest::Type,
                                   owner,
                                   *params.get(),
-                                  callback);
+                                  std::move(callback));
 }
 
 // static
@@ -546,7 +547,8 @@ bool TabHelper::MoveTo(int index, int window_id, bool foreground) {
   for (auto* b : *BrowserList::GetInstance()) {
     if (b->session_id().id() == window_id) {
       if (get_index() != TabStripModel::kNoTab)
-        browser()->tab_strip_model()->DetachWebContentsAt(get_index()).release();
+        browser()->tab_strip_model()->
+          DetachWebContentsAt(get_index()).release();
 
       UpdateBrowser(b);
 

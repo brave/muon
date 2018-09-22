@@ -180,11 +180,13 @@ bool IsCompatibleWithBrave(const base::DictionaryValue& manifest) {
                                    media::IsSupportedCdmHostVersion);
 }
 
-// Returns true and updates |supported_video_codecs| (if provided) if the
-// appropriate manifest entry is valid. Returns false and does not modify
-// |supported_video_codecs| if the manifest entry is incorrectly formatted.
+// Returns true and updates |video_codecs| if the appropriate manifest entry is
+// valid. Returns false and does not modify |video_codecs| if the manifest entry
+// is incorrectly formatted.
 bool GetCodecs(const base::DictionaryValue& manifest,
-               std::vector<media::VideoCodec>* supported_video_codecs) {
+               std::vector<media::VideoCodec>* video_codecs) {
+  DCHECK(video_codecs);
+
   const base::Value* value = manifest.FindKey(kCdmCodecsListName);
   if (!value) {
     DLOG(WARNING) << "Widevine CDM component manifest is missing codecs.";
@@ -219,47 +221,50 @@ bool GetCodecs(const base::DictionaryValue& manifest,
 #endif  // BUILDFLAG(USE_PROPRIETARY_CODECS)
   }
 
-  if (supported_video_codecs)
-    supported_video_codecs->swap(result);
+  video_codecs->swap(result);
   return true;
 }
 
-// Returns true and updates |supports_persistent_license| (if provided) if
-// the appropriate manifest entry is valid. Returns false if the manifest
-// entry is incorrectly formatted.
-bool GetPersistentLicenseSupport(const base::DictionaryValue& manifest,
-                                 bool* supports_persistent_license) {
-  bool result = false;
+// Returns true and updates |session_types| if the appropriate manifest entry is
+// valid. Returns false if the manifest entry is incorrectly formatted.
+bool GetSessionTypes(const base::DictionaryValue& manifest,
+                     base::flat_set<media::CdmSessionType>* session_types) {
+  DCHECK(session_types);
+
+  bool is_persistent_license_supported = false;
+
   const base::Value* value = manifest.FindKey(kCdmPersistentLicenseSupportName);
   if (value) {
-    if (value->is_bool())
-      result = value->GetBool();
-    else
-      return false;
+    if (!value->is_bool())
+       return false;
+    is_persistent_license_supported = value->GetBool();
   }
 
-  if (supports_persistent_license)
-    *supports_persistent_license = result;
+  // Temporary session is always supported.
+  session_types->insert(media::CdmSessionType::kTemporary);
+  if (is_persistent_license_supported)
+    session_types->insert(media::CdmSessionType::kPersistentLicense);
+
   return true;
 }
 
-// Returns true and updates |supported_encryption_schemes| (if provided) if
-// the appropriate manifest entry is valid. Returns false and does not modify
-// |supported_encryption_schemes| if the manifest entry is incorrectly
-// formatted. It is assumed that all CDMs support 'cenc', so if the manifest
-// entry is missing, the result will indicate support for 'cenc' only.
-// Incorrect types in the manifest entry will log the error and fail.
-// Unrecognized values will be reported but otherwise ignored.
+// Returns true and updates |encryption_schemes| if the appropriate manifest
+// entry is valid. Returns false and does not modify |encryption_schemes| if the
+// manifest entry is incorrectly formatted. It is assumed that all CDMs support
+// 'cenc', so if the manifest entry is missing, the result will indicate support
+// for 'cenc' only. Incorrect types in the manifest entry will log the error and
+// fail. Unrecognized values will be reported but otherwise ignored.
 bool GetEncryptionSchemes(
     const base::DictionaryValue& manifest,
-    base::flat_set<media::EncryptionMode>* supported_encryption_schemes) {
+    base::flat_set<media::EncryptionMode>* encryption_schemes) {
+  DCHECK(encryption_schemes);
+
   const base::Value* value =
       manifest.FindKey(kCdmSupportedEncryptionSchemesName);
   if (!value) {
     // No manifest entry found, so assume only 'cenc' supported for backwards
     // compatibility.
-    if (supported_encryption_schemes)
-      supported_encryption_schemes->insert(media::EncryptionMode::kCenc);
+    encryption_schemes->insert(media::EncryptionMode::kCenc);
     return true;
   }
 
@@ -294,24 +299,19 @@ bool GetEncryptionSchemes(
   if (result.empty())
     return false;
 
-  if (supported_encryption_schemes)
-    supported_encryption_schemes->swap(result);
+  encryption_schemes->swap(result);
   return true;
 }
 
 // Returns true if the entries in the manifest can be parsed correctly,
-// false otherwise. Updates |supported_video_codecs|,
-// |supports_persistent_license|, and |supported_encryption_schemes|,
-// with the values obtained from the manifest, if they are provided.
-// If this method returns false, the values may or may not be updated.
-bool ParseManifest(
-    const base::DictionaryValue& manifest,
-    std::vector<media::VideoCodec>* supported_video_codecs,
-    bool* supports_persistent_license,
-    base::flat_set<media::EncryptionMode>* supported_encryption_schemes) {
-  return GetEncryptionSchemes(manifest, supported_encryption_schemes) &&
-         GetPersistentLicenseSupport(manifest, supports_persistent_license) &&
-         GetCodecs(manifest, supported_video_codecs);
+// false otherwise. Updates |capability|, with the values obtained from the
+// manifest, if they are provided. If this method returns false, |capability|
+// may or may not be updated.
+bool ParseManifest(const base::DictionaryValue& manifest,
+                   content::CdmCapability* capability) {
+  return GetCodecs(manifest, &capability->video_codecs) &&
+         GetEncryptionSchemes(manifest, &capability->encryption_schemes) &&
+         GetSessionTypes(manifest, &capability->session_types);
 }
 
 }  // namespace
@@ -398,11 +398,12 @@ void WidevineCdmComponentInstallerPolicy::ComponentReady(
 bool WidevineCdmComponentInstallerPolicy::VerifyInstallation(
     const base::DictionaryValue& manifest,
     const base::FilePath& install_dir) const {
+  content::CdmCapability capability;
   return IsCompatibleWithBrave(manifest) &&
          base::PathExists(GetPlatformDirectory(install_dir)
                               .AppendASCII(base::GetNativeLibraryName(
                                   kWidevineCdmLibraryName))) &&
-         ParseManifest(manifest, nullptr, nullptr, nullptr);
+         ParseManifest(manifest, &capability);
 }
 
 // The base directory on Windows looks like:
@@ -460,16 +461,12 @@ void WidevineCdmComponentInstallerPolicy::RegisterWidevineCdmWithBrave(
     const base::FilePath& cdm_install_dir,
     std::unique_ptr<base::DictionaryValue> manifest) {
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  std::vector<media::VideoCodec> supported_video_codecs;
-  bool supports_persistent_license;
-  base::flat_set<media::EncryptionMode> supported_encryption_schemes;
 
   // This check must be a subset of the check in VerifyInstallation() to
   // avoid the case where the CDM is accepted by the component updater
   // but not registered.
-  if (!ParseManifest(*manifest, &supported_video_codecs,
-                     &supports_persistent_license,
-                     &supported_encryption_schemes)) {
+  content::CdmCapability capability;
+  if (!ParseManifest(*manifest, &capability)) {
     VLOG(1) << "Not registering Widevine CDM due to malformed manifest.";
     return;
   }
@@ -479,11 +476,10 @@ void WidevineCdmComponentInstallerPolicy::RegisterWidevineCdmWithBrave(
   const base::FilePath cdm_path =
       GetPlatformDirectory(cdm_install_dir)
           .AppendASCII(base::GetNativeLibraryName(kWidevineCdmLibraryName));
-  CdmRegistry::GetInstance()->RegisterCdm(content::CdmInfo(
-      kWidevineCdmDisplayName, kWidevineCdmGuid, cdm_version, cdm_path,
-      kWidevineCdmFileSystemId, supported_video_codecs,
-      supports_persistent_license, supported_encryption_schemes,
-      kWidevineKeySystem, false));
+  CdmRegistry::GetInstance()->RegisterCdm(
+      content::CdmInfo(kWidevineCdmDisplayName, kWidevineCdmGuid, cdm_version,
+                       cdm_path, kWidevineCdmFileSystemId,
+                       std::move(capability), kWidevineKeySystem, false));
 
   ready_callback_.Run(cdm_install_dir);
 }

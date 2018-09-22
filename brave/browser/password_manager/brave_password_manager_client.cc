@@ -23,7 +23,6 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/signin/signin_manager_factory.h"
 #include "chrome/browser/sync/profile_sync_service_factory.h"
-#include "chrome/browser/ui/autofill/password_generation_popup_controller_impl.h"
 #include "chrome/browser/ui/passwords/passwords_client_ui_delegate.h"
 #include "chrome/common/channel_info.h"
 #include "chrome/common/chrome_switches.h"
@@ -33,6 +32,7 @@
 #include "components/autofill/core/browser/password_generator.h"
 #include "components/autofill/core/common/password_form.h"
 #include "components/browser_sync/profile_sync_service.h"
+#include "components/password_manager/content/browser/bad_message.h"
 #include "components/password_manager/content/browser/content_password_manager_driver.h"
 #include "components/password_manager/content/browser/password_manager_internals_service_factory.h"
 #include "components/password_manager/core/browser/browser_save_password_progress_logger.h"
@@ -58,6 +58,7 @@
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_view_host.h"
+#include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/origin_util.h"
@@ -72,6 +73,7 @@
 #include "extensions/common/constants.h"
 #endif
 
+using password_manager::BadMessageReason;
 using password_manager::ContentPasswordManagerDriverFactory;
 using password_manager::PasswordManagerInternalsService;
 using password_manager::PasswordManagerMetricsRecorder;
@@ -105,6 +107,7 @@ BravePasswordManagerClient::BravePasswordManagerClient(
       driver_factory_(nullptr),
       credential_manager_(this),
       password_manager_client_bindings_(web_contents, this),
+      password_manager_driver_bindings_(web_contents, this),
       observer_(nullptr),
       credentials_filter_() {
   ContentPasswordManagerDriverFactory::CreateForWebContents(web_contents, this,
@@ -320,13 +323,38 @@ void BravePasswordManagerClient::AutomaticPasswordSave(
     std::unique_ptr<password_manager::PasswordFormManagerForUI> saved_form) {
 }
 
+void BravePasswordManagerClient::CheckSafeBrowsingReputation(
+    const GURL& form_action,
+    const GURL& frame_url) {
+// #if defined(SAFE_BROWSING_DB_LOCAL)
+// #endif
+}
+
+void BravePasswordManagerClient::FocusedInputChanged(bool is_fillable,
+                                                     bool is_password_field) {
+}
+
+
 void BravePasswordManagerClient::PasswordWasAutofilled(
     const std::map<base::string16, const autofill::PasswordForm*>& best_matches,
     const GURL& origin,
     const std::vector<const autofill::PasswordForm*>* federated_matches) const {
 }
 
-void BravePasswordManagerClient::HidePasswordGenerationPopup() {
+void BravePasswordManagerClient::PasswordGenerationRejectedByTyping() {
+  HidePasswordGenerationPopup();
+}
+
+void BravePasswordManagerClient::HidePasswordGenerationPopup() {}
+
+void BravePasswordManagerClient::PresaveGeneratedPassword(
+    const autofill::PasswordForm& password_form) {
+  password_manager_.OnPresaveGeneratedPassword(password_form);
+}
+
+void BravePasswordManagerClient::PasswordNoLongerGenerated(
+    const autofill::PasswordForm& password_form) {
+  password_manager_.OnPasswordNoLongerGenerated(password_form);
 }
 
 PasswordManagerMetricsRecorder&
@@ -392,14 +420,10 @@ BravePasswordManagerClient::GetPasswordProtectionService() const {
   return nullptr;
 }
 
-void BravePasswordManagerClient::CheckSafeBrowsingReputation(
-    const GURL& form_action,
-    const GURL& frame_url) {}
-
 void BravePasswordManagerClient::LogPasswordReuseDetectedEvent() {}
 
 void BravePasswordManagerClient::CheckProtectedPasswordEntry(
-    bool matches_sync_password,
+    password_manager::metrics_util::PasswordType reused_password_type,
     const std::vector<std::string>& matching_domains,
     bool password_field_exists) {}
 #endif
@@ -408,7 +432,7 @@ ukm::SourceId BravePasswordManagerClient::GetUkmSourceId() {
   return ukm::GetSourceIdForWebContentsDocument(web_contents());
 }
 
-password_manager::PasswordSyncState
+password_manager::SyncState
 BravePasswordManagerClient::GetPasswordSyncState() const {
   return password_manager_util::GetPasswordSyncState(nullptr);
 }
@@ -482,23 +506,35 @@ gfx::RectF BravePasswordManagerClient::GetBoundsInScreenSpace(
   return bounds + client_area.OffsetFromOrigin();
 }
 
-void BravePasswordManagerClient::ShowPasswordGenerationPopup(
-    const gfx::RectF& bounds,
-    int max_length,
-    const base::string16& generation_element,
-    bool is_manually_triggered,
-    const autofill::PasswordForm& form) {
-  // TODO(gcasto): Validate data in PasswordForm.
+void BravePasswordManagerClient::AutomaticGenerationStatusChanged(
+    bool available,
+    const base::Optional<
+        autofill::password_generation::PasswordGenerationUIData>& ui_data) {
+  if (available) {
+    ShowPasswordGenerationPopup(ui_data.value(),
+                                false /* is_manually_triggered */);
+  }
+}
 
-  auto* driver = driver_factory_->GetDriverForFrame(
-      password_manager_client_bindings_.GetCurrentTargetFrame());
-  password_manager_.SetGenerationElementAndReasonForForm(
-      driver, form, generation_element, is_manually_triggered);
+void BravePasswordManagerClient::ShowManualPasswordGenerationPopup(
+    const autofill::password_generation::PasswordGenerationUIData& ui_data) {
+  ShowPasswordGenerationPopup(ui_data, true /* is_manually_triggered */);
 }
 
 void BravePasswordManagerClient::ShowPasswordEditingPopup(
     const gfx::RectF& bounds,
     const autofill::PasswordForm& form) {
+}
+
+void BravePasswordManagerClient::ShowPasswordGenerationPopup(
+    const autofill::password_generation::PasswordGenerationUIData& ui_data,
+    bool is_manually_triggered) {
+  auto* driver = driver_factory_->GetDriverForFrame(
+      password_manager_client_bindings_.GetCurrentTargetFrame());
+  DCHECK(driver);
+  password_manager_.SetGenerationElementAndReasonForForm(
+      driver, ui_data.password_form, ui_data.generation_element,
+      is_manually_triggered);
 }
 
 void BravePasswordManagerClient::PromptUserToEnableAutosigninIfNecessary() {
@@ -571,9 +607,110 @@ const password_manager::LogManager* BravePasswordManagerClient::GetLogManager()
   return log_manager_.get();
 }
 
+void BravePasswordManagerClient::PasswordFormsParsed(
+    const std::vector<autofill::PasswordForm>& forms) {
+  if (!password_manager::bad_message::CheckChildProcessSecurityPolicy(
+          password_manager_driver_bindings_.GetCurrentTargetFrame(), forms,
+          BadMessageReason::CPMD_BAD_ORIGIN_FORMS_PARSED))
+    return;
+  password_manager::PasswordManagerDriver* driver =
+      driver_factory_->GetDriverForFrame(
+          password_manager_driver_bindings_.GetCurrentTargetFrame());
+  GetPasswordManager()->OnPasswordFormsParsed(driver, forms);
+  driver->GetPasswordGenerationManager()->CheckIfFormClassifierShouldRun();
+}
+
+void BravePasswordManagerClient::PasswordFormsRendered(
+    const std::vector<autofill::PasswordForm>& visible_forms,
+    bool did_stop_loading) {
+  if (!password_manager::bad_message::CheckChildProcessSecurityPolicy(
+          password_manager_driver_bindings_.GetCurrentTargetFrame(),
+          visible_forms, BadMessageReason::CPMD_BAD_ORIGIN_FORMS_RENDERED))
+    return;
+  password_manager::PasswordManagerDriver* driver =
+      driver_factory_->GetDriverForFrame(
+          password_manager_driver_bindings_.GetCurrentTargetFrame());
+  GetPasswordManager()->OnPasswordFormsRendered(driver, visible_forms,
+                                                did_stop_loading);
+}
+
+void BravePasswordManagerClient::PasswordFormSubmitted(
+    const autofill::PasswordForm& password_form) {
+  if (!password_manager::bad_message::CheckChildProcessSecurityPolicy(
+          password_manager_driver_bindings_.GetCurrentTargetFrame(),
+          password_form, BadMessageReason::CPMD_BAD_ORIGIN_FORM_SUBMITTED))
+    return;
+  password_manager::PasswordManagerDriver* driver =
+      driver_factory_->GetDriverForFrame(
+          password_manager_driver_bindings_.GetCurrentTargetFrame());
+  GetPasswordManager()->OnPasswordFormSubmitted(driver, password_form);
+}
+
+void BravePasswordManagerClient::ShowManualFallbackForSaving(
+    const autofill::PasswordForm& password_form) {
+  if (!password_manager::bad_message::CheckChildProcessSecurityPolicy(
+          password_manager_driver_bindings_.GetCurrentTargetFrame(),
+          password_form,
+          BadMessageReason::CPMD_BAD_ORIGIN_SHOW_FALLBACK_FOR_SAVING))
+    return;
+  password_manager::PasswordManagerDriver* driver =
+      driver_factory_->GetDriverForFrame(
+          password_manager_driver_bindings_.GetCurrentTargetFrame());
+  GetPasswordManager()->ShowManualFallbackForSaving(driver, password_form);
+}
+
+void BravePasswordManagerClient::SameDocumentNavigation(
+    const autofill::PasswordForm& password_form) {
+  if (!password_manager::bad_message::CheckChildProcessSecurityPolicy(
+          password_manager_driver_bindings_.GetCurrentTargetFrame(),
+          password_form, BadMessageReason::CPMD_BAD_ORIGIN_IN_PAGE_NAVIGATION))
+    return;
+  password_manager::PasswordManagerDriver* driver =
+      driver_factory_->GetDriverForFrame(
+          password_manager_driver_bindings_.GetCurrentTargetFrame());
+  GetPasswordManager()->OnPasswordFormSubmittedNoChecks(driver, password_form);
+}
+
+void BravePasswordManagerClient::ShowPasswordSuggestions(
+    int key,
+    base::i18n::TextDirection text_direction,
+    const base::string16& typed_username,
+    int options,
+    const gfx::RectF& bounds) {
+  password_manager::PasswordManagerDriver* driver =
+      driver_factory_->GetDriverForFrame(
+          password_manager_driver_bindings_.GetCurrentTargetFrame());
+  driver->GetPasswordAutofillManager()->OnShowPasswordSuggestions(
+      key, text_direction, typed_username, options,
+      TransformToRootCoordinates(
+          password_manager_driver_bindings_.GetCurrentTargetFrame(), bounds));
+}
+
+void BravePasswordManagerClient::RecordSavePasswordProgress(
+    const std::string& log) {
+  GetLogManager()->LogSavePasswordProgress(log);
+}
+
+void BravePasswordManagerClient::UserModifiedPasswordField() {
+  GetMetricsRecorder().RecordUserModifiedPasswordField();
+}
+
+void BravePasswordManagerClient::SaveGenerationFieldDetectedByClassifier(
+    const autofill::PasswordForm& password_form,
+    const base::string16& generation_field) {
+  if (!password_manager::bad_message::CheckChildProcessSecurityPolicy(
+          password_manager_driver_bindings_.GetCurrentTargetFrame(),
+          password_form,
+          BadMessageReason::
+              CPMD_BAD_ORIGIN_SAVE_GENERATION_FIELD_DETECTED_BY_CLASSIFIER))
+    return;
+  GetPasswordManager()->SaveGenerationFieldDetectedByClassifier(
+      password_form, generation_field);
+}
+
 // static
 void BravePasswordManagerClient::BindCredentialManager(
-    password_manager::mojom::CredentialManagerRequest request,
+    blink::mojom::CredentialManagerRequest request,
     content::RenderFrameHost* render_frame_host) {
   // Only valid for the main frame.
   if (render_frame_host->GetParent())
@@ -609,4 +746,23 @@ bool BravePasswordManagerClient::CanShowBubbleOnURL(const GURL& url) {
           scheme != extensions::kExtensionScheme &&
 #endif
           scheme != content::kChromeDevToolsScheme);
+}
+
+void BravePasswordManagerClient::PromptUserToEnableAutosignin() {
+}
+
+password_manager::PasswordManager*
+BravePasswordManagerClient::GetPasswordManager() {
+  return &password_manager_;
+}
+
+gfx::RectF BravePasswordManagerClient::TransformToRootCoordinates(
+    content::RenderFrameHost* frame_host,
+    const gfx::RectF& bounds_in_frame_coordinates) {
+  content::RenderWidgetHostView* rwhv = frame_host->GetView();
+  if (!rwhv)
+    return bounds_in_frame_coordinates;
+  return gfx::RectF(rwhv->TransformPointToRootCoordSpaceF(
+                        bounds_in_frame_coordinates.origin()),
+                    bounds_in_frame_coordinates.size());
 }

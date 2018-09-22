@@ -72,7 +72,8 @@ class BraveBrowserContext : public Profile {
   bool HasParentContext();
 
   // content::BrowserContext:
-  content::PermissionManager* GetPermissionManager() override;
+  content::PermissionControllerDelegate*
+    GetPermissionControllerDelegate() override;
   content::BackgroundFetchDelegate* GetBackgroundFetchDelegate() override;
   content::ResourceContext* GetResourceContext() override;
   net::NetworkDelegate* CreateNetworkDelegate() override;
@@ -128,8 +129,8 @@ class BraveBrowserContext : public Profile {
   std::string partition_with_prefix();
   base::WaitableEvent* ready() { return ready_.get(); }
 
-  void AddOverlayPref(const std::string name) override {
-    overlay_pref_names_.push_back(name.c_str()); }
+  void RegisterPersistentPref(const std::string name) override {
+    persistent_pref_names_.push_back(name.c_str()); }
 
   scoped_refptr<autofill::AutofillWebDataService>
     GetAutofillWebdataService() override;
@@ -177,7 +178,7 @@ class BraveBrowserContext : public Profile {
   scoped_refptr<user_prefs::PrefRegistrySyncable> pref_registry_;
   std::unique_ptr<sync_preferences::PrefServiceSyncable> user_prefs_;
   std::unique_ptr<PrefChangeRegistrar> user_prefs_registrar_;
-  std::vector<const char*> overlay_pref_names_;
+  std::vector<const char*> persistent_pref_names_;
 
   std::unique_ptr<content::HostZoomMap::Subscription> track_zoom_subscription_;
     std::unique_ptr<ChromeZoomLevelPrefs::DefaultZoomLevelSubscription>
