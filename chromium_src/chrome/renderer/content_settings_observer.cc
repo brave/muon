@@ -432,11 +432,13 @@ bool ContentSettingsObserver::AllowScript(bool enabled_per_settings) {
   // IsWhitelistedForContentSettings(); if there is only the default rule
   // allowing all scripts, it's quicker this way.
   bool allow = true;
-  if (content_setting_rules_) {
-    ContentSetting setting = GetContentSettingFromRules(
-        content_setting_rules_->script_rules, frame,
-        url::Origin(frame->GetDocument().GetSecurityOrigin()).GetURL());
-    allow = setting != CONTENT_SETTING_BLOCK;
+  if (content_settings_manager_->content_settings()) {
+    allow =
+        content_settings_manager_->GetSetting(
+          ContentSettingsManager::GetOriginOrURL(render_frame()->GetWebFrame()),
+          url::Origin(frame->GetDocument().GetSecurityOrigin()).GetURL(),
+          "javascript",
+          allow) != CONTENT_SETTING_BLOCK;
   }
   allow = allow || IsWhitelistedForContentSettings();
 
