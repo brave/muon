@@ -213,6 +213,18 @@ binding.registerCustomHook(function(bindingsAPI, extensionId) {
     ipc.send('chrome-tabs-create', responseId, createProperties)
   })
 
+  apiFunctions.setHandleRequest('duplicate', function (tabId, cb) {
+    var responseId = ipc.guid()
+    cb && ipc.once('chrome-tabs-duplicate-response-' + responseId, function (evt, dtab, error) {
+      if (error) {
+        lastError.run('tabs.duplicate', error, '', () => { cb(null) })
+      } else {
+        cb(dtab)
+      }
+    })
+    ipc.send('chrome-tabs-duplicate', responseId, tabId)
+  })
+
   apiFunctions.setHandleRequest('executeScript', function (tabId, details, cb) {
     var responseId = ipc.guid()
     tabId = tabId || -2
