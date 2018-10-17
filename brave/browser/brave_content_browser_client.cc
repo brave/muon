@@ -15,8 +15,10 @@
 #include "base/base_switches.h"
 #include "base/json/json_reader.h"
 #include "base/lazy_instance.h"
+#include "base/metrics/field_trial_params.h"
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
+#include "base/sys_info.h"
 #include "brave/browser/brave_browser_context.h"
 #include "brave/browser/notifications/platform_notification_service_impl.h"
 #include "brave/browser/password_manager/brave_password_manager_client.h"
@@ -34,6 +36,7 @@
 #include "chrome/browser/renderer_host/chrome_render_message_filter.h"
 #include "chrome/browser/renderer_host/chrome_navigation_ui_data.h"
 #include "chrome/browser/speech/tts_message_filter.h"
+#include "chrome/common/chrome_features.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/constants.mojom.h"
@@ -882,6 +885,21 @@ base::FilePath BraveContentBrowserClient::GetShaderDiskCacheDirectory() {
   base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
   DCHECK(!user_data_dir.empty());
   return user_data_dir.Append(FILE_PATH_LITERAL("ShaderCache"));
+}
+
+bool BraveContentBrowserClient::ShouldEnableStrictSiteIsolation() {
+  if (base::FeatureList::IsEnabled(
+          features::kSitePerProcessOnlyForHighMemoryClients)) {
+    constexpr int kDefaultMemoryThresholdMb = 1024;
+    int memory_threshold_mb = base::GetFieldTrialParamByFeatureAsInt(
+        features::kSitePerProcessOnlyForHighMemoryClients,
+        features::kSitePerProcessOnlyForHighMemoryClientsParamName,
+        kDefaultMemoryThresholdMb);
+    if (base::SysInfo::AmountOfPhysicalMemoryMB() <= memory_threshold_mb)
+      return false;
+  }
+
+  return base::FeatureList::IsEnabled(features::kSitePerProcess);
 }
 
 bool BraveContentBrowserClient::ShouldSwapBrowsingInstancesForNavigation(

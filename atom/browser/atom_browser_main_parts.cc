@@ -251,6 +251,11 @@ int AtomBrowserMainParts::PreCreateThreads() {
       media::kUnifiedAutoplay.name,
       base::FeatureList::OVERRIDE_DISABLE_FEATURE, field_trial);
 
+  field_trial = feature_list->GetFieldTrial(
+      features::kSitePerProcess);
+  feature_list->RegisterFieldTrialOverride(
+      features::kSitePerProcess.name,
+      base::FeatureList::OVERRIDE_ENABLE_FEATURE, field_trial);
 
   fake_browser_process_->PreCreateThreads(
       *base::CommandLine::ForCurrentProcess());
