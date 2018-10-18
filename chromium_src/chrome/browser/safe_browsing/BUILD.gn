@@ -17,6 +17,10 @@ source_set("install_verification") {
     "//chrome/browser/install_verification/win/module_verification_common.h",
     "//electron/chromium_src/chrome/browser/install_verification/win/module_ids.cc",
   ]
+
+  public_deps = [
+    "//base",
+  ]
 }
 
 source_set("extensions") {
