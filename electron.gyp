@@ -1,16 +1,23 @@
 {
   'variables': {
-    'project_name%': 'electron',
-    'product_name%': 'Electron',
-    'company_name%': 'GitHub, Inc',
-    'company_abbr%': 'github',
-    'version%': '1.2.3',
+    'project_name%': 'brave',
+    'product_name%': 'Brave',
+    'company_name%': 'Brave Software',
+    'company_abbr%': 'brave',
+    'version%': '1.4.10',
   },
   'includes': [
     'filenames.gypi',
     'vendor/native_mate/native_mate_files.gypi',
+    'extensions.gypi',
+    'autofill.gypi',
+    'importer.gypi',
+    'component_updater.gypi',
   ],
   'target_defaults': {
+    'msvs_disabled_warnings': [
+      4456,
+    ],
     'defines': [
       'ATOM_PRODUCT_NAME="<(product_name)"',
       'ATOM_PROJECT_NAME="<(project_name)"',
@@ -150,9 +157,11 @@
                 '<(libchromiumcontent_dir)/libEGL.dll',
                 '<(libchromiumcontent_dir)/libGLESv2.dll',
                 '<(libchromiumcontent_dir)/icudtl.dat',
+                '<(libchromiumcontent_dir)/blink_image_resources_200_percent.pak',
                 '<(libchromiumcontent_dir)/content_resources_200_percent.pak',
                 '<(libchromiumcontent_dir)/content_shell.pak',
                 '<(libchromiumcontent_dir)/ui_resources_200_percent.pak',
+                '<(libchromiumcontent_dir)/views_resources_200_percent.pak',
                 '<(libchromiumcontent_dir)/natives_blob.bin',
                 '<(libchromiumcontent_dir)/snapshot_blob.bin',
                 'external_binaries/d3dcompiler_47.dll',
@@ -189,7 +198,11 @@
                 '<@(copied_libraries)',
                 '<(libchromiumcontent_dir)/locales',
                 '<(libchromiumcontent_dir)/icudtl.dat',
+                '<(libchromiumcontent_dir)/blink_image_resources_200_percent.pak',
+                '<(libchromiumcontent_dir)/content_resources_200_percent.pak',
                 '<(libchromiumcontent_dir)/content_shell.pak',
+                '<(libchromiumcontent_dir)/ui_resources_200_percent.pak',
+                '<(libchromiumcontent_dir)/views_resources_200_percent.pak',
                 '<(libchromiumcontent_dir)/natives_blob.bin',
                 '<(libchromiumcontent_dir)/snapshot_blob.bin',
               ],
@@ -207,6 +220,9 @@
         'vendor/node/node.gyp:node',
       ],
       'defines': [
+        # We need to access internal implementations of Node.
+        'NODE_WANT_INTERNALS=1',
+        'NODE_SHARED_MODE',
         # This is defined in skia/skia_common.gypi.
         'SK_SUPPORT_LEGACY_GETTOPDEVICE',
         # Disable warnings for g_settings_list_schemas.
@@ -216,13 +232,22 @@
         'ENABLE_PLUGINS',
         'ENABLE_PEPPER_CDMS',
         'USE_PROPRIETARY_CODECS',
+        '__STDC_FORMAT_MACROS',
       ],
       'sources': [
         '<@(lib_sources)',
+        '<@(autofill_sources)',
+        '<@(importer_sources)',
+        '<@(component_updater_sources)',
       ],
       'include_dirs': [
         '.',
         'chromium_src',
+        # autofill - TODO(bridiver) - move to autofill.gypi
+        '<(libchromiumcontent_dir)/gen/protoc_out',
+        '<(libchromiumcontent_src_dir)/third_party/protobuf/src',
+        # end autofill
+        '<@(importer_include_dir)',
         'vendor/brightray',
         'vendor/native_mate',
         # Include atom_natives.h.
@@ -253,6 +278,57 @@
         'vendor/brightray/brightray.gyp:brightray',
       ],
       'conditions': [
+        ['enable_extensions==1', {
+          'dependencies': [ 'extensions.gyp:atom_resources' ],
+          'sources': [ '<@(extension_sources)' ],
+          'include_dirs': [
+            '<(libchromiumcontent_dir)/gen/extensions',
+          ],
+          'conditions': [
+            ['OS=="linux"', {
+              'dependencies': [
+                'extensions.gyp:xscrnsaver',
+              ],
+            }],
+          ]
+        }],
+        ['OS!="linux" and libchromiumcontent_component', {
+          'link_settings': {
+            # Following libraries are always linked statically.
+            'libraries': [ '<@(autofill_libraries)',
+                           '<@(importer_libraries)',
+                           '<@(component_updater_libraries)',
+            ],
+          },
+        }],
+        ['OS=="linux" and libchromiumcontent_component', {
+          'link_settings': {
+            'libraries': [
+              # hack to handle cyclic dependencies
+              '-Wl,--start-group',
+              '<@(autofill_libraries)',
+              '<@(importer_libraries)',
+              '<@(component_updater_libraries)',
+              '-Wl,--end-group',
+            ],
+          }
+        }],
+        ['OS!="linux" and enable_extensions==1 and libchromiumcontent_component', {
+          'link_settings': {
+            # Following libraries are always linked statically.
+            'libraries': [ '<@(extension_libraries)' ],
+          },
+        }],
+        ['OS=="linux" and enable_extensions==1 and libchromiumcontent_component', {
+          'link_settings': {
+            'libraries': [
+              # hack to handle cyclic dependencies
+              '-Wl,--start-group',
+              '<@(extension_libraries)',
+              '-Wl,--end-group',
+            ],
+          }
+        }],
         ['libchromiumcontent_component', {
           'link_settings': {
             'libraries': [ '<@(libchromiumcontent_v8_libraries)' ],
@@ -270,6 +346,8 @@
               '-lcomdlg32.lib',
               '-lwininet.lib',
               '-lwinmm.lib',
+              # TODO(Anthony): doesn't work in importer.gypi for release build
+              '-lesent.lib',
             ],
           },
           'dependencies': [
@@ -355,6 +433,9 @@
           },
           'inputs': [
             '<@(js_sources)',
+            '<@(extension_js_sources)',
+            '<@(importer_js_sources)',
+            '<@(component_updater_js_sources)',
           ],
           'outputs': [
             '<(resources_path)/electron.asar',
@@ -431,6 +512,7 @@
           'type': 'shared_library',
           'dependencies': [
             '<(project_name)_lib',
+            'extensions.gyp:atom_resources',
           ],
           'sources': [
             '<@(framework_sources)',

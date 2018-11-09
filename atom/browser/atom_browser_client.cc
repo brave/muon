@@ -9,6 +9,7 @@
 #endif
 
 #include "atom/browser/api/atom_api_app.h"
+#include "atom/browser/api/atom_api_protocol.h"
 #include "atom/browser/atom_access_token_store.h"
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
@@ -23,14 +24,15 @@
 #include "base/command_line.h"
 #include "base/files/file_util.h"
 #include "base/stl_util.h"
-#include "base/strings/string_util.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/strings/string_util.h"
 #include "chrome/browser/printing/printing_message_filter.h"
 #include "chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h"
 #include "chrome/browser/renderer_host/pepper/widevine_cdm_message_filter.h"
 #include "chrome/browser/speech/tts_message_filter.h"
 #include "content/public/browser/browser_ppapi_host.h"
 #include "content/public/browser/client_certificate_delegate.h"
+#include "content/public/browser/geolocation_delegate.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/resource_dispatcher_host.h"
@@ -42,6 +44,10 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "v8/include/v8.h"
 
+#if defined(ENABLE_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
+
 namespace atom {
 
 namespace {
@@ -51,6 +57,19 @@ bool g_suppress_renderer_process_restart = false;
 
 // Custom schemes to be registered to handle service worker.
 std::string g_custom_service_worker_schemes = "";
+
+// A provider of Geolocation services to override AccessTokenStore.
+class AtomGeolocationDelegate : public content::GeolocationDelegate {
+ public:
+  AtomGeolocationDelegate() = default;
+
+  content::AccessTokenStore* CreateAccessTokenStore() final {
+    return new AtomAccessTokenStore();
+  }
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(AtomGeolocationDelegate);
+};
 
 void Noop(scoped_refptr<content::SiteInstance>) {
 }
@@ -98,8 +117,9 @@ content::SpeechRecognitionManagerDelegate*
   return new AtomSpeechRecognitionManagerDelegate;
 }
 
-content::AccessTokenStore* AtomBrowserClient::CreateAccessTokenStore() {
-  return new AtomAccessTokenStore;
+content::GeolocationDelegate*
+AtomBrowserClient::CreateGeolocationDelegate() {
+  return new AtomGeolocationDelegate();
 }
 
 void AtomBrowserClient::OverrideWebkitPrefs(
@@ -134,6 +154,34 @@ void AtomBrowserClient::OverrideSiteInstanceForNavigation(
     content::SiteInstance* current_instance,
     const GURL& url,
     content::SiteInstance** new_instance) {
+
+  // TODO(bridiver) this seems to cause some a timing issue when loading
+  // non component extensions for some reason
+  // content::WebContents* web_contents =
+  //     GetWebContentsFromProcessID(current_instance->GetProcess()->GetID());
+  // // processes with no disabled may not have a web_contents with the
+  // // id that GetWebContentsFromProcessID looks for
+  // if (!web_contents)
+  //   return;
+  // WebContentsPreferences* web_contents_prefs =
+  //     WebContentsPreferences::FromWebContents(web_contents);
+
+  // if (web_contents_prefs) {
+  //   auto web_preferences = web_contents_prefs->web_preferences();
+  //   bool node_integration = true;
+  //   web_preferences->GetBoolean(options::kNodeIntegration,
+  //       &node_integration);
+  //   if (!node_integration) {
+  //     // only renderers with node integration need to be restarted
+  //     return;
+  //   }
+  // }
+#if defined(ENABLE_EXTENSIONS)
+  if (url.SchemeIs(extensions::kExtensionScheme)) {
+    g_suppress_renderer_process_restart = false;
+  }
+#endif
+
   if (g_suppress_renderer_process_restart) {
     g_suppress_renderer_process_restart = false;
     return;
@@ -172,6 +220,9 @@ void AtomBrowserClient::AppendExtraCommandLineSwitches(
   // Copy following switches to child process.
   static const char* const kCommonSwitchNames[] = {
     switches::kStandardSchemes,
+    switches::kEnablePlugins,
+    switches::kPpapiFlashPath,
+    switches::kPpapiFlashVersion,
   };
   command_line->CopySwitchesFrom(
       *base::CommandLine::ForCurrentProcess(),
@@ -202,7 +253,7 @@ void AtomBrowserClient::AppendExtraCommandLineSwitches(
 void AtomBrowserClient::DidCreatePpapiPlugin(
     content::BrowserPpapiHost* host) {
   host->GetPpapiHost()->AddHostFactoryFilter(
-      make_scoped_ptr(new chrome::ChromeBrowserPepperHostFactory(host)));
+      base::WrapUnique(new chrome::ChromeBrowserPepperHostFactory(host)));
 }
 
 content::QuotaPermissionContext*
@@ -279,6 +330,15 @@ bool AtomBrowserClient::CanCreateWindow(
   return false;
 }
 
+void AtomBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
+    std::vector<std::string>* additional_schemes) {
+  auto schemes_list = api::GetStandardSchemes();
+  if (!schemes_list.empty())
+    additional_schemes->insert(additional_schemes->end(),
+                               schemes_list.begin(),
+                               schemes_list.end());
+}
+
 brightray::BrowserMainParts* AtomBrowserClient::OverrideCreateBrowserMainParts(
     const content::MainFunctionParams&) {
   v8::V8::Initialize();  // Init V8 before creating main parts.
@@ -287,20 +347,21 @@ brightray::BrowserMainParts* AtomBrowserClient::OverrideCreateBrowserMainParts(
 
 void AtomBrowserClient::WebNotificationAllowed(
     int render_process_id,
-    const base::Callback<void(bool)>& callback) {
+    const base::Callback<void(bool, bool)>& callback) {
   content::WebContents* web_contents =
       WebContentsPreferences::GetWebContentsFromProcessID(render_process_id);
   if (!web_contents) {
-    callback.Run(false);
+    callback.Run(false, false);
     return;
   }
   auto permission_helper =
       WebContentsPermissionHelper::FromWebContents(web_contents);
   if (!permission_helper) {
-    callback.Run(false);
+    callback.Run(false, false);
     return;
   }
-  permission_helper->RequestWebNotificationPermission(callback);
+  permission_helper->RequestWebNotificationPermission(
+      base::Bind(callback, web_contents->IsAudioMuted()));
 }
 
 void AtomBrowserClient::RenderProcessHostDestroyed(

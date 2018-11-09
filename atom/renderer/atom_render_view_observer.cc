@@ -10,6 +10,7 @@
 // Put this before event_emitter_caller.h to have string16 support.
 #include "atom/common/native_mate_converters/string16_converter.h"
 
+#include "atom/browser/web_contents_preferences.h"
 #include "atom/common/api/api_messages.h"
 #include "atom/common/api/event_emitter_caller.h"
 #include "atom/common/native_mate_converters/value_converter.h"
@@ -20,16 +21,16 @@
 #include "base/strings/string_number_conversions.h"
 #include "content/public/renderer/render_view.h"
 #include "ipc/ipc_message_macros.h"
+#include "native_mate/dictionary.h"
 #include "net/base/net_module.h"
 #include "net/grit/net_resources.h"
-#include "third_party/WebKit/public/web/WebDraggableRegion.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
+#include "third_party/WebKit/public/web/WebDraggableRegion.h"
 #include "third_party/WebKit/public/web/WebFrame.h"
-#include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebKit.h"
+#include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebView.h"
 #include "ui/base/resource/resource_bundle.h"
-#include "native_mate/dictionary.h"
 
 namespace atom {
 
@@ -103,7 +104,6 @@ AtomRenderViewObserver::AtomRenderViewObserver(
     content::RenderView* render_view,
     AtomRendererClient* renderer_client)
     : content::RenderViewObserver(render_view),
-      renderer_client_(renderer_client),
       document_created_(false) {
   // Initialise resource for directory listing.
   net::NetModule::SetResourceProvider(NetResourceProvider);
@@ -132,16 +132,21 @@ void AtomRenderViewObserver::DraggableRegionsChanged(blink::WebFrame* frame) {
   blink::WebVector<blink::WebDraggableRegion> webregions =
       frame->document().draggableRegions();
   std::vector<DraggableRegion> regions;
-  for (size_t i = 0; i < webregions.size(); ++i) {
+  for (auto& webregion : webregions) {
     DraggableRegion region;
-    region.bounds = webregions[i].bounds;
-    region.draggable = webregions[i].draggable;
+    render_view()->ConvertViewportToWindowViaWidget(&webregion.bounds);
+    region.bounds = webregion.bounds;
+    region.draggable = webregion.draggable;
     regions.push_back(region);
   }
   Send(new AtomViewHostMsg_UpdateDraggableRegions(routing_id(), regions));
 }
 
 bool AtomRenderViewObserver::OnMessageReceived(const IPC::Message& message) {
+  // only handle messages for node renderers and non-extension processes
+  if (!WebContentsPreferences::run_node())
+    return false;
+
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(AtomRenderViewObserver, message)
     IPC_MESSAGE_HANDLER(AtomViewMsg_Message, OnBrowserMessage)
@@ -149,6 +154,10 @@ bool AtomRenderViewObserver::OnMessageReceived(const IPC::Message& message) {
   IPC_END_MESSAGE_MAP()
 
   return handled;
+}
+
+void AtomRenderViewObserver::OnDestruct() {
+  delete this;
 }
 
 void AtomRenderViewObserver::OnBrowserMessage(bool send_to_all,

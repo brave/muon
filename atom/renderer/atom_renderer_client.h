@@ -10,6 +10,10 @@
 
 #include "content/public/renderer/content_renderer_client.h"
 
+namespace brave {
+class BraveContentRendererClient;
+}
+
 namespace atom {
 
 class AtomBindings;
@@ -57,16 +61,15 @@ class AtomRendererClient : public content::ContentRendererClient {
       content::RenderFrame* render_frame,
       const std::string& mime_type,
       const GURL& original_url) override;
-  void AddKeySystems(std::vector<media::KeySystemInfo>* key_systems) override;
-  void GetNavigationErrorStrings(content::RenderFrame* render_frame,
-                                 const blink::WebURLRequest& failed_request,
-                                 const blink::WebURLError& error,
-                                 std::string* error_html,
-                                 base::string16* error_description) override;
+  void AddSupportedKeySystems(
+      std::vector<std::unique_ptr<::media::KeySystemProperties>>* key_systems)
+      override;
 
   std::unique_ptr<NodeBindings> node_bindings_;
   std::unique_ptr<AtomBindings> atom_bindings_;
   std::unique_ptr<PreferencesManager> preferences_manager_;
+
+  friend class brave::BraveContentRendererClient;
 
   DISALLOW_COPY_AND_ASSIGN(AtomRendererClient);
 };

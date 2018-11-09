@@ -458,6 +458,11 @@ Service worker에 대한 개발자 도구를 엽니다.
 `webview` 페이지를 PDF 형식으로 인쇄합니다.
 `webContents.printToPDF(options, callback)` 메서드와 같습니다.
 
+### `<webview>.capturePage([rect, ]callback)`
+
+`webview`의 페이지의 스냅샷을 캡쳐합니다.
+`webContents.printToPDF(options, callback)` 메서드와 같습니다.
+
 ### `<webview>.send(channel[, arg1][, arg2][, ...])`
 
 * `channel` String
@@ -475,10 +480,10 @@ Service worker에 대한 개발자 도구를 엽니다.
 
 페이지에 입력 `event`를 보냅니다.
 
-`event` 객체에 대해 자세히 알아보려면 [webContents.sendInputEvent](web-contents.md##webcontentssendinputeventevent)를
+`event` 객체에 대해 자세히 알아보려면 [webContents.sendInputEvent](web-contents.md#webcontentssendinputeventevent)를
 참고하세요.
 
-### `<webview>.showDefinitionForSelection()` _OS X_
+### `<webview>.showDefinitionForSelection()` _macOS_
 
 페이지에서 선택된 단어에 대한 사전 검색 결과 팝업을 표시합니다.
 

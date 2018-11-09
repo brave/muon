@@ -5,8 +5,8 @@
 #ifndef ATOM_BROWSER_API_ATOM_API_PROTOCOL_H_
 #define ATOM_BROWSER_API_ATOM_API_PROTOCOL_H_
 
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "atom/browser/api/trackable_object.h"
@@ -14,6 +14,7 @@
 #include "atom/browser/net/atom_url_request_job_factory.h"
 #include "base/callback.h"
 #include "base/memory/weak_ptr.h"
+#include "chrome/common/custom_handlers/protocol_handler.h"
 #include "content/public/browser/browser_thread.h"
 #include "native_mate/arguments.h"
 #include "native_mate/dictionary.h"
@@ -28,6 +29,9 @@ namespace atom {
 
 namespace api {
 
+std::vector<std::string> GetStandardSchemes();
+void RegisterStandardSchemes(const std::vector<std::string>& schemes);
+
 class Protocol : public mate::TrackableObject<Protocol> {
  public:
   using Handler =
@@ -39,10 +43,11 @@ class Protocol : public mate::TrackableObject<Protocol> {
       v8::Isolate* isolate, AtomBrowserContext* browser_context);
 
   static void BuildPrototype(v8::Isolate* isolate,
-                             v8::Local<v8::ObjectTemplate> prototype);
+                             v8::Local<v8::FunctionTemplate> prototype);
 
  protected:
   Protocol(v8::Isolate* isolate, AtomBrowserContext* browser_context);
+  ~Protocol();
 
  private:
   // Possible errors.
@@ -99,7 +104,8 @@ class Protocol : public mate::TrackableObject<Protocol> {
     content::BrowserThread::PostTaskAndReplyWithResult(
         content::BrowserThread::IO, FROM_HERE,
         base::Bind(&Protocol::RegisterProtocolInIO<RequestJob>,
-                   request_context_getter_, isolate(), scheme, handler),
+            make_scoped_refptr(browser_context_->GetRequestContext()),
+            isolate(), scheme, handler),
         base::Bind(&Protocol::OnIOCompleted,
                    GetWeakPtr(), callback));
   }
@@ -145,7 +151,8 @@ class Protocol : public mate::TrackableObject<Protocol> {
     content::BrowserThread::PostTaskAndReplyWithResult(
         content::BrowserThread::IO, FROM_HERE,
         base::Bind(&Protocol::InterceptProtocolInIO<RequestJob>,
-                   request_context_getter_, isolate(), scheme, handler),
+            make_scoped_refptr(browser_context_->GetRequestContext()),
+            isolate(), scheme, handler),
         base::Bind(&Protocol::OnIOCompleted,
                    GetWeakPtr(), callback));
   }
@@ -176,6 +183,11 @@ class Protocol : public mate::TrackableObject<Protocol> {
       scoped_refptr<brightray::URLRequestContextGetter> request_context_getter,
       const std::string& scheme);
 
+  const base::ListValue* GetNavigatorHandlers();
+  void UnregisterNavigatorHandler(const std::string& scheme,
+      const std::string& spec);
+  bool IsNavigatorProtocolHandled(const std::string &scheme);
+
   // Convert error code to JS exception and call the callback.
   void OnIOCompleted(const CompletionCallback& callback, ProtocolError error);
 
@@ -188,7 +200,7 @@ class Protocol : public mate::TrackableObject<Protocol> {
     return weak_factory_.GetWeakPtr();
   }
 
-  scoped_refptr<brightray::URLRequestContextGetter> request_context_getter_;
+  AtomBrowserContext* browser_context_;  // not owned
   base::WeakPtrFactory<Protocol> weak_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(Protocol);

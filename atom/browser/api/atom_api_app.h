@@ -13,8 +13,11 @@
 #include "atom/common/native_mate_converters/callback.h"
 #include "chrome/browser/process_singleton.h"
 #include "content/public/browser/gpu_data_manager_observer.h"
+#include "content/public/browser/notification_observer.h"
+#include "content/public/browser/notification_registrar.h"
 #include "native_mate/handle.h"
 #include "net/base/completion_callback.h"
+#include "net/base/network_change_notifier.h"
 
 #if defined(USE_NSS_CERTS)
 #include "chrome/browser/certificate_manager_model.h"
@@ -26,21 +29,27 @@ class FilePath;
 
 namespace mate {
 class Arguments;
-}
+}  // namespace mate
 
 namespace atom {
+
+#if defined(OS_WIN)
+enum class JumpListResult : int;
+#endif
 
 namespace api {
 
 class App : public AtomBrowserClient::Delegate,
             public mate::EventEmitter<App>,
             public BrowserObserver,
-            public content::GpuDataManagerObserver {
+            public net::NetworkChangeNotifier::MaxBandwidthObserver,
+            public content::GpuDataManagerObserver,
+            public content::NotificationObserver {
  public:
   static mate::Handle<App> Create(v8::Isolate* isolate);
 
   static void BuildPrototype(v8::Isolate* isolate,
-                             v8::Local<v8::ObjectTemplate> prototype);
+                             v8::Local<v8::FunctionTemplate> prototype);
 
   // Called when window with disposition needs to be created.
   void OnCreateWindow(const GURL& target_url,
@@ -69,9 +78,10 @@ class App : public AtomBrowserClient::Delegate,
   void OnOpenURL(const std::string& url) override;
   void OnActivate(bool has_visible_windows) override;
   void OnWillFinishLaunching() override;
-  void OnFinishLaunching() override;
+  void OnFinishLaunching(const base::DictionaryValue& launch_info) override;
   void OnLogin(LoginHandler* login_handler,
                const base::DictionaryValue& request_details) override;
+  void OnAccessibilitySupportChanged() override;
 #if defined(OS_MACOSX)
   void OnContinueUserActivity(
       bool* prevent_default,
@@ -80,6 +90,22 @@ class App : public AtomBrowserClient::Delegate,
 #endif
 
   // content::ContentBrowserClient:
+  bool CanCreateWindow(const GURL& opener_url,
+                       const GURL& opener_top_level_frame_url,
+                       const GURL& source_origin,
+                       WindowContainerType container_type,
+                       const std::string& frame_name,
+                       const GURL& target_url,
+                       const content::Referrer& referrer,
+                       WindowOpenDisposition disposition,
+                       const blink::WebWindowFeatures& features,
+                       bool user_gesture,
+                       bool opener_suppressed,
+                       content::ResourceContext* context,
+                       int render_process_id,
+                       int opener_render_view_id,
+                       int opener_render_frame_id,
+                       bool* no_javascript_access) override;
   void AllowCertificateError(
       content::WebContents* web_contents,
       int cert_error,
@@ -96,8 +122,17 @@ class App : public AtomBrowserClient::Delegate,
       net::SSLCertRequestInfo* cert_request_info,
       std::unique_ptr<content::ClientCertificateDelegate> delegate) override;
 
+  // net::NetworkChangeNotifier::MaxBandwidthObserver:
+  void OnMaxBandwidthChanged(
+      double max_bandwidth_mbps,
+      net::NetworkChangeNotifier::ConnectionType type) override;
+
   // content::GpuDataManagerObserver:
   void OnGpuProcessCrashed(base::TerminationStatus exit_code) override;
+
+  void Observe(
+    int type, const content::NotificationSource& source,
+    const content::NotificationDetails& details) override;
 
  private:
   // Get/Set the pre-defined path in PathService.
@@ -107,16 +142,28 @@ class App : public AtomBrowserClient::Delegate,
                const base::FilePath& path);
 
   void SetDesktopName(const std::string& desktop_name);
+  void SetLocale(std::string);
   std::string GetLocale();
   bool MakeSingleInstance(
       const ProcessSingleton::NotificationCallback& callback);
   void ReleaseSingleInstance();
   bool Relaunch(mate::Arguments* args);
   void DisableHardwareAcceleration(mate::Arguments* args);
+  bool IsAccessibilitySupportEnabled();
 #if defined(USE_NSS_CERTS)
   void ImportCertificate(const base::DictionaryValue& options,
                          const net::CompletionCallback& callback);
 #endif
+
+#if defined(OS_WIN)
+  // Get the current Jump List settings.
+  v8::Local<v8::Value> GetJumpListSettings();
+
+  // Set or remove a custom Jump List for the application.
+  JumpListResult SetJumpList(v8::Local<v8::Value> val, mate::Arguments* args);
+#endif  // defined(OS_WIN)
+
+  content::NotificationRegistrar registrar_;
 
   std::unique_ptr<ProcessSingleton> process_singleton_;
 

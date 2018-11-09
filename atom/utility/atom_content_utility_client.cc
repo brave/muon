@@ -9,6 +9,7 @@
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
 #include "chrome/common/chrome_utility_messages.h"
+#include "chrome/utility/profile_import_handler.h"
 #include "chrome/utility/utility_message_handler.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/utility/utility_thread.h"
@@ -20,6 +21,9 @@
 #include "chrome/utility/printing_handler_win.h"
 #endif
 
+#if defined(ENABLE_EXTENSIONS)
+#include "atom/common/extensions/atom_extensions_client.h"
+#endif
 
 namespace {
 
@@ -36,8 +40,13 @@ int64_t AtomContentUtilityClient::max_ipc_message_size_ =
 
 AtomContentUtilityClient::AtomContentUtilityClient()
     : filter_messages_(false) {
+  handlers_.push_back(new ProfileImportHandler());
 #if defined(OS_WIN)
   handlers_.push_back(new printing::PrintingHandlerWin());
+#endif
+#if defined(ENABLE_EXTENSIONS)
+  extensions::ExtensionsClient::Set(
+      extensions::AtomExtensionsClient::GetInstance());
 #endif
 }
 
@@ -58,8 +67,7 @@ bool AtomContentUtilityClient::OnMessageReceived(
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
 
-  for (Handlers::iterator it = handlers_.begin();
-       !handled && it != handlers_.end(); ++it) {
+  for (auto it = handlers_.begin(); !handled && it != handlers_.end(); ++it) {
     handled = (*it)->OnMessageReceived(message);
   }
 

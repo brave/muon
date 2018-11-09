@@ -5,14 +5,15 @@
 #include "atom/common/native_mate_converters/v8_value_converter.h"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 
 #include "base/logging.h"
-#include "base/memory/scoped_ptr.h"
 #include "base/values.h"
 #include "native_mate/dictionary.h"
-#include "vendor/node/src/node_buffer.h"
+
+#include "atom/common/node_includes.h"
 
 namespace atom {
 
@@ -48,19 +49,22 @@ class V8ValueConverter::FromV8ValueState {
   // other handle B in the map points to the same object as A. Note that A can
   // be unique even if there already is another handle with the same identity
   // hash (key) in the map, because two objects can have the same hash.
-  bool UpdateAndCheckUniqueness(v8::Local<v8::Object> handle) {
-    typedef HashToHandleMap::const_iterator Iterator;
-    int hash = handle->GetIdentityHash();
-    // We only compare using == with handles to objects with the same identity
-    // hash. Different hash obviously means different objects, but two objects
-    // in a couple of thousands could have the same identity hash.
-    std::pair<Iterator, Iterator> range = unique_map_.equal_range(hash);
-    for (Iterator it = range.first; it != range.second; ++it) {
-      // Operator == for handles actually compares the underlying objects.
-      if (it->second == handle)
-        return false;
-    }
+  bool AddToUniquenessCheck(v8::Local<v8::Object> handle) {
+    int hash;
+    auto iter = GetIteratorInMap(handle, &hash);
+    if (iter != unique_map_.end())
+      return false;
+
     unique_map_.insert(std::make_pair(hash, handle));
+    return true;
+  }
+
+  bool RemoveFromUniquenessCheck(v8::Local<v8::Object> handle) {
+    int unused_hash;
+    auto iter = GetIteratorInMap(handle, &unused_hash);
+    if (iter == unique_map_.end())
+      return false;
+    unique_map_.erase(iter);
     return true;
   }
 
@@ -69,10 +73,57 @@ class V8ValueConverter::FromV8ValueState {
   }
 
  private:
-  typedef std::multimap<int, v8::Local<v8::Object> > HashToHandleMap;
+  using HashToHandleMap = std::multimap<int, v8::Local<v8::Object>>;
+  using Iterator = HashToHandleMap::const_iterator;
+
+  Iterator GetIteratorInMap(v8::Local<v8::Object> handle, int* hash) {
+    *hash = handle->GetIdentityHash();
+    // We only compare using == with handles to objects with the same identity
+    // hash. Different hash obviously means different objects, but two objects
+    // in a couple of thousands could have the same identity hash.
+    std::pair<Iterator, Iterator> range = unique_map_.equal_range(*hash);
+    for (auto it = range.first; it != range.second; ++it) {
+      // Operator == for handles actually compares the underlying objects.
+      if (it->second == handle)
+        return it;
+    }
+    // Not found.
+    return unique_map_.end();
+  }
+
   HashToHandleMap unique_map_;
 
   int max_recursion_depth_;
+};
+
+// A class to ensure that objects/arrays that are being converted by
+// this V8ValueConverterImpl do not have cycles.
+//
+// An example of cycle: var v = {}; v = {key: v};
+// Not an example of cycle: var v = {}; a = [v, v]; or w = {a: v, b: v};
+class V8ValueConverter::ScopedUniquenessGuard {
+ public:
+  ScopedUniquenessGuard(V8ValueConverter::FromV8ValueState* state,
+                        v8::Local<v8::Object> value)
+      : state_(state),
+        value_(value),
+        is_valid_(state_->AddToUniquenessCheck(value_)) {}
+  ~ScopedUniquenessGuard() {
+    if (is_valid_) {
+      bool removed = state_->RemoveFromUniquenessCheck(value_);
+      DCHECK(removed);
+    }
+  }
+
+  bool is_valid() const { return is_valid_; }
+
+ private:
+  typedef std::multimap<int, v8::Local<v8::Object> > HashToHandleMap;
+  V8ValueConverter::FromV8ValueState* state_;
+  v8::Local<v8::Object> value_;
+  bool is_valid_;
+
+  DISALLOW_COPY_AND_ASSIGN(ScopedUniquenessGuard);
 };
 
 V8ValueConverter::V8ValueConverter()
@@ -110,32 +161,31 @@ base::Value* V8ValueConverter::FromV8Value(
 
 v8::Local<v8::Value> V8ValueConverter::ToV8ValueImpl(
      v8::Isolate* isolate, const base::Value* value) const {
-  CHECK(value);
   switch (value->GetType()) {
     case base::Value::TYPE_NULL:
       return v8::Null(isolate);
 
     case base::Value::TYPE_BOOLEAN: {
       bool val = false;
-      CHECK(value->GetAsBoolean(&val));
+      value->GetAsBoolean(&val);
       return v8::Boolean::New(isolate, val);
     }
 
     case base::Value::TYPE_INTEGER: {
       int val = 0;
-      CHECK(value->GetAsInteger(&val));
+      value->GetAsInteger(&val);
       return v8::Integer::New(isolate, val);
     }
 
     case base::Value::TYPE_DOUBLE: {
       double val = 0.0;
-      CHECK(value->GetAsDouble(&val));
+      value->GetAsDouble(&val);
       return v8::Number::New(isolate, val);
     }
 
     case base::Value::TYPE_STRING: {
       std::string val;
-      CHECK(value->GetAsString(&val));
+      value->GetAsString(&val);
       return v8::String::NewFromUtf8(
           isolate, val.c_str(), v8::String::kNormalString, val.length());
     }
@@ -162,11 +212,10 @@ v8::Local<v8::Value> V8ValueConverter::ToV8Array(
   v8::Local<v8::Array> result(v8::Array::New(isolate, val->GetSize()));
 
   for (size_t i = 0; i < val->GetSize(); ++i) {
-    const base::Value* child = NULL;
-    CHECK(val->Get(i, &child));
+    const base::Value* child = nullptr;
+    val->Get(i, &child);
 
     v8::Local<v8::Value> child_v8 = ToV8ValueImpl(isolate, child);
-    CHECK(!child_v8.IsEmpty());
 
     v8::TryCatch try_catch;
     result->Set(static_cast<uint32_t>(i), child_v8);
@@ -186,7 +235,6 @@ v8::Local<v8::Value> V8ValueConverter::ToV8Object(
        !iter.IsAtEnd(); iter.Advance()) {
     const std::string& key = iter.key();
     v8::Local<v8::Value> child_v8 = ToV8ValueImpl(isolate, &iter.value());
-    CHECK(!child_v8.IsEmpty());
 
     v8::TryCatch try_catch;
     result.Set(key, child_v8);
@@ -210,11 +258,12 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
     FromV8ValueState* state,
     v8::Local<v8::Value> val,
     v8::Isolate* isolate) const {
-  CHECK(!val.IsEmpty());
-
   FromV8ValueState::Level state_level(state);
   if (state->HasReachedMaxRecursionDepth())
-    return NULL;
+    return nullptr;
+
+  if (val->IsExternal())
+    return base::Value::CreateNullValue().release();
 
   if (val->IsNull())
     return base::Value::CreateNullValue().release();
@@ -235,7 +284,7 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
 
   if (val->IsUndefined())
     // JSON.stringify ignores undefined.
-    return NULL;
+    return nullptr;
 
   if (val->IsDate()) {
     v8::Date* date = v8::Date::Cast(*val);
@@ -265,7 +314,7 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
   if (val->IsFunction()) {
     if (!function_allowed_)
       // JSON.stringify refuses to convert function(){}.
-      return NULL;
+      return nullptr;
     return FromV8Object(val->ToObject(), state, isolate);
   }
 
@@ -278,14 +327,15 @@ base::Value* V8ValueConverter::FromV8ValueImpl(
   }
 
   LOG(ERROR) << "Unexpected v8 value type encountered.";
-  return NULL;
+  return nullptr;
 }
 
 base::Value* V8ValueConverter::FromV8Array(
     v8::Local<v8::Array> val,
     FromV8ValueState* state,
     v8::Isolate* isolate) const {
-  if (!state->UpdateAndCheckUniqueness(val))
+  ScopedUniquenessGuard uniqueness_guard(state, val);
+  if (!uniqueness_guard.is_valid())
     return base::Value::CreateNullValue().release();
 
   std::unique_ptr<v8::Context::Scope> scope;
@@ -295,7 +345,7 @@ base::Value* V8ValueConverter::FromV8Array(
       val->CreationContext() != isolate->GetCurrentContext())
     scope.reset(new v8::Context::Scope(val->CreationContext()));
 
-  base::ListValue* result = new base::ListValue();
+  auto* result = new base::ListValue();
 
   // Only fields with integer keys are carried over to the ListValue.
   for (uint32_t i = 0; i < val->Length(); ++i) {
@@ -325,14 +375,15 @@ base::Value* V8ValueConverter::FromNodeBuffer(
     FromV8ValueState* state,
     v8::Isolate* isolate) const {
   return base::BinaryValue::CreateWithCopiedBuffer(
-      node::Buffer::Data(value), node::Buffer::Length(value));
+      node::Buffer::Data(value), node::Buffer::Length(value)).release();
 }
 
 base::Value* V8ValueConverter::FromV8Object(
     v8::Local<v8::Object> val,
     FromV8ValueState* state,
     v8::Isolate* isolate) const {
-  if (!state->UpdateAndCheckUniqueness(val))
+  ScopedUniquenessGuard uniqueness_guard(state, val);
+  if (!uniqueness_guard.is_valid())
     return base::Value::CreateNullValue().release();
 
   std::unique_ptr<v8::Context::Scope> scope;
@@ -355,10 +406,6 @@ base::Value* V8ValueConverter::FromV8Object(
                       "is neither a string nor a number";
       continue;
     }
-
-    // Skip all callbacks: crbug.com/139933
-    if (val->HasRealNamedCallbackProperty(key->ToString()))
-      continue;
 
     v8::String::Utf8Value name_utf8(key->ToString());
 

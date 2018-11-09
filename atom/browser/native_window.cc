@@ -11,17 +11,18 @@
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/browser/browser.h"
+#include "atom/browser/unresponsive_suppressor.h"
 #include "atom/browser/window_list.h"
 #include "atom/common/api/api_messages.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/options_switches.h"
 #include "base/files/file_util.h"
 #include "base/json/json_writer.h"
-#include "components/prefs/pref_service.h"
 #include "base/message_loop/message_loop.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brightray/browser/inspectable_web_contents.h"
 #include "brightray/browser/inspectable_web_contents_view.h"
+#include "components/prefs/pref_service.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/plugin_service.h"
@@ -32,13 +33,18 @@
 #include "content/public/common/content_switches.h"
 #include "ipc/ipc_message_macros.h"
 #include "native_mate/dictionary.h"
+#include "third_party/skia/include/core/SkRegion.h"
 #include "ui/gfx/codec/png_codec.h"
 #include "ui/gfx/geometry/point.h"
 #include "ui/gfx/geometry/rect.h"
 #include "ui/gfx/geometry/size.h"
 #include "ui/gfx/geometry/size_conversions.h"
-#include "ui/gfx/screen.h"
 #include "ui/gl/gpu_switching_manager.h"
+
+#if defined(OS_LINUX) || defined(OS_WIN)
+#include "content/public/common/renderer_preferences.h"
+#include "ui/gfx/font_render_params.h"
+#endif
 
 DEFINE_WEB_CONTENTS_USER_DATA_KEY(atom::NativeWindowRelay);
 
@@ -46,27 +52,58 @@ namespace atom {
 
 NativeWindow::NativeWindow(
     brightray::InspectableWebContents* inspectable_web_contents,
-    const mate::Dictionary& options)
+    const mate::Dictionary& options,
+    NativeWindow* parent)
     : content::WebContentsObserver(inspectable_web_contents->GetWebContents()),
       has_frame_(true),
       transparent_(false),
       enable_larger_than_screen_(false),
       is_closed_(false),
-      has_dialog_attached_(false),
       sheet_offset_x_(0.0),
       sheet_offset_y_(0.0),
       aspect_ratio_(0.0),
+      parent_(parent),
+      is_modal_(false),
       inspectable_web_contents_(inspectable_web_contents),
       weak_factory_(this) {
   options.Get(options::kFrame, &has_frame_);
   options.Get(options::kTransparent, &transparent_);
   options.Get(options::kEnableLargerThanScreen, &enable_larger_than_screen_);
 
+  if (parent)
+    options.Get("modal", &is_modal_);
+
+#if defined(OS_LINUX) || defined(OS_WIN)
+  auto* prefs = web_contents()->GetMutableRendererPrefs();
+
+  // Update font settings.
+  CR_DEFINE_STATIC_LOCAL(const gfx::FontRenderParams, params,
+      (gfx::GetFontRenderParams(gfx::FontRenderParamsQuery(), nullptr)));
+  prefs->should_antialias_text = params.antialiasing;
+  prefs->use_subpixel_positioning = params.subpixel_positioning;
+  prefs->hinting = params.hinting;
+  prefs->use_autohinter = params.autohinter;
+  prefs->use_bitmaps = params.use_bitmaps;
+  prefs->subpixel_rendering = params.subpixel_rendering;
+#endif
+
   // Tell the content module to initialize renderer widget with transparent
   // mode.
   ui::GpuSwitchingManager::SetTransparent(transparent_);
 
+  auto host = web_contents()->GetRenderViewHost();
+  if (host)
+    host->GetWidget()->AddInputEventObserver(this);
+
   WindowList::AddWindow(this);
+}
+
+void NativeWindow::RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) {
+  if (old_host)
+    old_host->GetWidget()->RemoveInputEventObserver(this);
+  if (new_host)
+    new_host->GetWidget()->AddInputEventObserver(this);
 }
 
 NativeWindow::~NativeWindow() {
@@ -195,35 +232,68 @@ gfx::Point NativeWindow::GetPosition() {
 }
 
 void NativeWindow::SetContentSize(const gfx::Size& size, bool animate) {
-  SetSize(ContentSizeToWindowSize(size), animate);
+  SetSize(ContentBoundsToWindowBounds(gfx::Rect(size)).size(), animate);
 }
 
 gfx::Size NativeWindow::GetContentSize() {
-  return WindowSizeToContentSize(GetSize());
+  return GetContentBounds().size();
+}
+
+void NativeWindow::SetContentBounds(const gfx::Rect& bounds, bool animate) {
+  SetBounds(ContentBoundsToWindowBounds(bounds), animate);
+}
+
+gfx::Rect NativeWindow::GetContentBounds() {
+  return WindowBoundsToContentBounds(GetBounds());
 }
 
 void NativeWindow::SetSizeConstraints(
     const extensions::SizeConstraints& window_constraints) {
-  extensions::SizeConstraints content_constraints;
-  if (window_constraints.HasMaximumSize())
-    content_constraints.set_maximum_size(
-        WindowSizeToContentSize(window_constraints.GetMaximumSize()));
-  if (window_constraints.HasMinimumSize())
-    content_constraints.set_minimum_size(
-        WindowSizeToContentSize(window_constraints.GetMinimumSize()));
+  extensions::SizeConstraints content_constraints(GetContentSizeConstraints());
+  if (window_constraints.HasMaximumSize()) {
+    gfx::Rect max_bounds = WindowBoundsToContentBounds(
+        gfx::Rect(window_constraints.GetMaximumSize()));
+    content_constraints.set_maximum_size(max_bounds.size());
+  }
+  if (window_constraints.HasMinimumSize()) {
+    gfx::Rect min_bounds = WindowBoundsToContentBounds(
+        gfx::Rect(window_constraints.GetMinimumSize()));
+    content_constraints.set_minimum_size(min_bounds.size());
+  }
   SetContentSizeConstraints(content_constraints);
 }
 
 extensions::SizeConstraints NativeWindow::GetSizeConstraints() {
   extensions::SizeConstraints content_constraints = GetContentSizeConstraints();
   extensions::SizeConstraints window_constraints;
-  if (content_constraints.HasMaximumSize())
-    window_constraints.set_maximum_size(
-        ContentSizeToWindowSize(content_constraints.GetMaximumSize()));
-  if (content_constraints.HasMinimumSize())
-    window_constraints.set_minimum_size(
-        ContentSizeToWindowSize(content_constraints.GetMinimumSize()));
+  if (content_constraints.HasMaximumSize()) {
+    gfx::Rect max_bounds = ContentBoundsToWindowBounds(
+        gfx::Rect(content_constraints.GetMaximumSize()));
+    window_constraints.set_maximum_size(max_bounds.size());
+  }
+  if (content_constraints.HasMinimumSize()) {
+    gfx::Rect min_bounds = ContentBoundsToWindowBounds(
+        gfx::Rect(content_constraints.GetMinimumSize()));
+    window_constraints.set_minimum_size(min_bounds.size());
+  }
   return window_constraints;
+}
+
+void NativeWindow::OnInputEvent(const blink::WebInputEvent& event) {
+  switch (event.type) {
+    case blink::WebInputEvent::GestureScrollBegin:
+      LOG(ERROR) << "scroll begin";
+      break;
+    case blink::WebInputEvent::GestureScrollUpdate:
+      LOG(ERROR) << "scroll update";
+      break;
+    case blink::WebInputEvent::GestureScrollEnd:
+      LOG(ERROR) << "scroll end";
+      break;
+    default:
+      LOG(ERROR) << event.type;
+      break;
+  }
 }
 
 void NativeWindow::SetContentSizeConstraints(
@@ -285,11 +355,11 @@ bool NativeWindow::IsDocumentEdited() {
 void NativeWindow::SetFocusable(bool focusable) {
 }
 
-void NativeWindow::SetMenu(ui::MenuModel* menu) {
+void NativeWindow::SetMenu(AtomMenuModel* menu) {
 }
 
-bool NativeWindow::HasModalDialog() {
-  return has_dialog_attached_;
+void NativeWindow::SetParentWindow(NativeWindow* parent) {
+  parent_ = parent;
 }
 
 void NativeWindow::FocusOnWebView() {
@@ -303,39 +373,6 @@ void NativeWindow::BlurWebView() {
 bool NativeWindow::IsWebViewFocused() {
   auto host_view = web_contents()->GetRenderViewHost()->GetWidget()->GetView();
   return host_view && host_view->HasFocus();
-}
-
-void NativeWindow::CapturePage(const gfx::Rect& rect,
-                               const CapturePageCallback& callback) {
-  const auto view = web_contents()->GetRenderWidgetHostView();
-  const auto host = view ? view->GetRenderWidgetHost() : nullptr;
-  if (!view || !host) {
-    callback.Run(SkBitmap());
-    return;
-  }
-
-  // Capture full page if user doesn't specify a |rect|.
-  const gfx::Size view_size = rect.IsEmpty() ? view->GetViewBounds().size() :
-                                               rect.size();
-
-  // By default, the requested bitmap size is the view size in screen
-  // coordinates.  However, if there's more pixel detail available on the
-  // current system, increase the requested bitmap size to capture it all.
-  gfx::Size bitmap_size = view_size;
-  const gfx::NativeView native_view = view->GetNativeView();
-  const float scale =
-      gfx::Screen::GetScreen()->GetDisplayNearestWindow(native_view)
-      .device_scale_factor();
-  if (scale > 1.0f)
-    bitmap_size = gfx::ScaleToCeiledSize(view_size, scale);
-
-  host->CopyFromBackingStore(
-      gfx::Rect(rect.origin(), view_size),
-      bitmap_size,
-      base::Bind(&NativeWindow::OnCapturePageDone,
-                 weak_factory_.GetWeakPtr(),
-                 callback),
-      kBGRA_8888_SkColorType);
 }
 
 void NativeWindow::SetAutoHideMenuBar(bool auto_hide) {
@@ -384,7 +421,7 @@ void NativeWindow::RequestToClosePage() {
     ScheduleUnresponsiveEvent(5000);
 
   if (web_contents()->NeedToFireBeforeUnload())
-    web_contents()->DispatchBeforeUnload(false);
+    web_contents()->DispatchBeforeUnload();
   else
     web_contents()->Close();
 }
@@ -396,6 +433,9 @@ void NativeWindow::CloseContents(content::WebContents* source) {
   inspectable_web_contents_->GetView()->SetDelegate(nullptr);
   inspectable_web_contents_ = nullptr;
   Observe(nullptr);
+
+  FOR_EACH_OBSERVER(NativeWindowObserver, observers_,
+                    WillDestroyNativeObject());
 
   // When the web contents is gone, close the window immediately, but the
   // memory will not be freed until you call delete.
@@ -491,6 +531,11 @@ void NativeWindow::NotifyWindowScrollTouchBegin() {
 void NativeWindow::NotifyWindowScrollTouchEnd() {
   FOR_EACH_OBSERVER(NativeWindowObserver, observers_,
                     OnWindowScrollTouchEnd());
+}
+
+void NativeWindow::NotifyWindowScrollTouchEdge() {
+  FOR_EACH_OBSERVER(NativeWindowObserver, observers_,
+                    OnWindowScrollTouchEdge());
 }
 
 void NativeWindow::NotifyWindowSwipe(const std::string& direction) {
@@ -611,7 +656,7 @@ void NativeWindow::ScheduleUnresponsiveEvent(int ms) {
 void NativeWindow::NotifyWindowUnresponsive() {
   window_unresposive_closure_.Cancel();
 
-  if (!is_closed_ && !HasModalDialog())
+  if (!is_closed_ && !IsUnresponsiveEventSuppressed() && IsEnabled())
     FOR_EACH_OBSERVER(NativeWindowObserver,
                       observers_,
                       OnRendererUnresponsive());
@@ -619,12 +664,6 @@ void NativeWindow::NotifyWindowUnresponsive() {
 
 void NativeWindow::NotifyReadyToShow() {
   FOR_EACH_OBSERVER(NativeWindowObserver, observers_, OnReadyToShow());
-}
-
-void NativeWindow::OnCapturePageDone(const CapturePageCallback& callback,
-                                     const SkBitmap& bitmap,
-                                     content::ReadbackResponse response) {
-  callback.Run(bitmap);
 }
 
 }  // namespace atom

@@ -104,13 +104,11 @@ class PdfToEmfUtilityProcessHostClient
 
   // UtilityProcessHostClient implementation.
   virtual void OnProcessCrashed(int exit_code) override;
-  virtual void OnProcessLaunchFailed() override;
+  virtual void OnProcessLaunchFailed(int exit_code) override;
   virtual bool OnMessageReceived(const IPC::Message& message) override;
 
  private:
   class GetPageCallbackData {
-    MOVE_ONLY_TYPE_FOR_CPP_03(GetPageCallbackData);
-
    public:
     GetPageCallbackData(int page_number,
                         PdfToEmfConverter::GetPageCallback callback)
@@ -423,7 +421,7 @@ void PdfToEmfUtilityProcessHostClient::OnProcessCrashed(int exit_code) {
   OnFailed();
 }
 
-void PdfToEmfUtilityProcessHostClient::OnProcessLaunchFailed() {
+void PdfToEmfUtilityProcessHostClient::OnProcessLaunchFailed(int exit_code) {
   OnFailed();
 }
 

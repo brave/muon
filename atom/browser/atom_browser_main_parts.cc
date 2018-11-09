@@ -9,14 +9,21 @@
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/bridge_task_runner.h"
 #include "atom/browser/browser.h"
+#include "atom/browser/browser_context_keyed_service_factories.h"
 #include "atom/browser/javascript_environment.h"
 #include "atom/browser/node_debugger.h"
 #include "atom/common/api/atom_bindings.h"
 #include "atom/common/node_bindings.h"
 #include "atom/common/node_includes.h"
+#include "base/allocator/allocator_extension.h"
 #include "base/command_line.h"
-#include "base/thread_task_runner_handle.h"
+#include "base/files/file_util.h"
+#include "base/memory/memory_pressure_monitor.h"
+#include "base/path_service.h"
+#include "base/threading/thread_task_runner_handle.h"
+#include "brightray/browser/brightray_paths.h"
 #include "chrome/browser/browser_process.h"
+#include "content/public/browser/child_process_security_policy.h"
 #include "v8/include/v8-debug.h"
 
 #if defined(USE_X11)
@@ -32,7 +39,7 @@ void Erase(T* container, typename T::iterator iter) {
 }
 
 // static
-AtomBrowserMainParts* AtomBrowserMainParts::self_ = NULL;
+AtomBrowserMainParts* AtomBrowserMainParts::self_ = nullptr;
 
 AtomBrowserMainParts::AtomBrowserMainParts()
     : fake_browser_process_(new BrowserProcess),
@@ -43,6 +50,9 @@ AtomBrowserMainParts::AtomBrowserMainParts()
       gc_timer_(true, true) {
   DCHECK(!self_) << "Cannot have two AtomBrowserMainParts";
   self_ = this;
+  // Register extension scheme as web safe scheme.
+  content::ChildProcessSecurityPolicy::GetInstance()->
+      RegisterWebSafeScheme("chrome-extension");
 }
 
 AtomBrowserMainParts::~AtomBrowserMainParts() {
@@ -123,7 +133,25 @@ void AtomBrowserMainParts::PostEarlyInitialization() {
   node_bindings_->set_uv_env(env);
 }
 
+void AtomBrowserMainParts::OnMemoryPressure(
+    base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level) {
+  if (atom::Browser::Get()->is_shutting_down())
+    return;
+
+  base::allocator::ReleaseFreeMemory();
+
+  if (js_env_.get() && js_env_->isolate()) {
+    js_env_->isolate()->LowMemoryNotification();
+  }
+}
+
+void AtomBrowserMainParts::IdleHandler() {
+  base::allocator::ReleaseFreeMemory();
+}
+
 void AtomBrowserMainParts::PreMainMessageLoopRun() {
+  js_env_->OnMessageLoopCreated();
+
   // Run user's main script before most things get initialized, so we can have
   // a chance to setup everything.
   node_bindings_->PrepareMessageLoop();
@@ -136,9 +164,22 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   // Start idle gc.
   gc_timer_.Start(
       FROM_HERE, base::TimeDelta::FromMinutes(1),
-      base::Bind(&v8::Isolate::LowMemoryNotification,
-                 base::Unretained(js_env_->isolate())));
+      base::Bind(&AtomBrowserMainParts::IdleHandler,
+                 base::Unretained(this)));
 
+  memory_pressure_listener_.reset(new base::MemoryPressureListener(
+      base::Bind(&AtomBrowserMainParts::OnMemoryPressure,
+        base::Unretained(this))));
+
+  // Make sure the userData directory is created.
+  base::FilePath user_data;
+  if (PathService::Get(brightray::DIR_USER_DATA, &user_data))
+    base::CreateDirectoryAndGetError(user_data, nullptr);
+
+  // PreProfileInit
+  EnsureBrowserContextKeyedServiceFactoriesBuilt();
+
+  browser_context_ = AtomBrowserContext::From("", false);
   brightray::BrowserMainParts::PreMainMessageLoopRun();
   bridge_task_runner_->MessageLoopIsReady();
   bridge_task_runner_ = nullptr;
@@ -148,9 +189,10 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
 #endif
 
 #if !defined(OS_MACOSX)
-  // The corresponding call in OS X is in AtomApplicationDelegate.
+  // The corresponding call in macOS is in AtomApplicationDelegate.
   Browser::Get()->WillFinishLaunching();
-  Browser::Get()->DidFinishLaunching();
+  std::unique_ptr<base::DictionaryValue> empty_info(new base::DictionaryValue);
+  Browser::Get()->DidFinishLaunching(*empty_info);
 #endif
 }
 
@@ -167,7 +209,10 @@ void AtomBrowserMainParts::PostMainMessageLoopStart() {
 }
 
 void AtomBrowserMainParts::PostMainMessageLoopRun() {
+  browser_context_ = nullptr;
   brightray::BrowserMainParts::PostMainMessageLoopRun();
+
+  js_env_->OnMessageLoopDestroying();
 
 #if defined(OS_MACOSX)
   FreeAppDelegate();
@@ -183,6 +228,8 @@ void AtomBrowserMainParts::PostMainMessageLoopRun() {
     ++iter;
     callback.Run();
   }
+
+  fake_browser_process_->StartTearDown();
 }
 
 }  // namespace atom

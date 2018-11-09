@@ -6,8 +6,13 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "brightray/browser/mac/event_dispatching_window.h"
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "ui/events/keycodes/keyboard_codes.h"
+
+@interface NSWindow (EventDispatchingWindow)
+- (void)redispatchKeyEvent:(NSEvent*)event;
+@end
 
 namespace atom {
 
@@ -22,18 +27,14 @@ void CommonWebContentsDelegate::HandleKeyboardEvent(
   if (event.windowsKeyCode == ui::VKEY_ESCAPE && is_html_fullscreen())
     ExitFullscreenModeForTab(source);
 
-  BOOL handled = [[NSApp mainMenu] performKeyEquivalent:event.os_event];
-  if (!handled && event.os_event.window) {
-    // Handle the cmd+~ shortcut.
-    if ((event.os_event.modifierFlags & NSCommandKeyMask) /* cmd */ &&
-        (event.os_event.keyCode == 50  /* ~ */)) {
-      if (event.os_event.modifierFlags & NSShiftKeyMask) {
-        [NSApp sendAction:@selector(_cycleWindowsReversed:) to:nil from:nil];
-      } else {
-        [NSApp sendAction:@selector(_cycleWindows:) to:nil from:nil];
-      }
-    }
-  }
+  // Send the event to the menu before sending it to the window
+  if (event.os_event.type == NSKeyDown &&
+      [[NSApp mainMenu] performKeyEquivalent:event.os_event])
+    return;
+
+  if (event.os_event.window &&
+      [event.os_event.window isKindOfClass:[EventDispatchingWindow class]])
+    [event.os_event.window redispatchKeyEvent:event.os_event];
 }
 
 }  // namespace atom

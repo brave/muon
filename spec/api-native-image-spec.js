@@ -9,6 +9,7 @@ describe('nativeImage module', () => {
     it('returns an empty image for invalid paths', () => {
       assert(nativeImage.createFromPath('').isEmpty())
       assert(nativeImage.createFromPath('does-not-exist.png').isEmpty())
+      assert(nativeImage.createFromPath('does-not-exist.ico').isEmpty())
     })
 
     it('loads images from paths relative to the current working directory', () => {
@@ -35,7 +36,7 @@ describe('nativeImage module', () => {
       assert.equal(image.getSize().width, 538)
     })
 
-    it('Gets an NSImage pointer on OS X', () => {
+    it('Gets an NSImage pointer on macOS', () => {
       if (process.platform !== 'darwin') return
 
       const imagePath = `${path.join(__dirname, 'fixtures', 'api')}${path.sep}..${path.sep}${path.join('assets', 'logo.png')}`
@@ -46,6 +47,16 @@ describe('nativeImage module', () => {
 
       // If all bytes are null, that's Bad
       assert.equal(nsimage.reduce((acc, x) => acc || (x !== 0), false), true)
+    })
+
+    it('loads images from .ico files on Windows', () => {
+      if (process.platform !== 'win32') return
+
+      const imagePath = path.join(__dirname, 'fixtures', 'assets', 'icon.ico')
+      const image = nativeImage.createFromPath(imagePath)
+      assert(!image.isEmpty())
+      assert.equal(image.getSize().height, 256)
+      assert.equal(image.getSize().width, 256)
     })
   })
 })

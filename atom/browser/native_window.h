@@ -6,13 +6,14 @@
 #define ATOM_BROWSER_NATIVE_WINDOW_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "atom/browser/native_window_observer.h"
 #include "atom/browser/ui/accelerator_util.h"
+#include "atom/browser/ui/atom_menu_model.h"
 #include "base/cancelable_callback.h"
-#include "base/memory/scoped_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
 #include "base/supports_user_data.h"
@@ -22,6 +23,7 @@
 #include "extensions/browser/app_window/size_constraints.h"
 #include "ui/gfx/image/image.h"
 #include "ui/gfx/image/image_skia.h"
+#include "content/public/browser/render_widget_host.h"
 
 class SkRegion;
 
@@ -43,51 +45,32 @@ namespace mate {
 class Dictionary;
 }
 
-namespace ui {
-class MenuModel;
-}
-
 namespace atom {
 
 struct DraggableRegion;
 
 class NativeWindow : public base::SupportsUserData,
-                     public content::WebContentsObserver {
+                     public content::WebContentsObserver,
+                     public content::RenderWidgetHost::InputEventObserver {
  public:
-  using CapturePageCallback = base::Callback<void(const SkBitmap& bitmap)>;
-
-  class DialogScope {
-   public:
-    explicit DialogScope(NativeWindow* window)
-        : window_(window) {
-      if (window_ != NULL)
-        window_->set_has_dialog_attached(true);
-    }
-
-    ~DialogScope() {
-      if (window_ != NULL)
-        window_->set_has_dialog_attached(false);
-    }
-
-   private:
-    NativeWindow* window_;
-
-    DISALLOW_COPY_AND_ASSIGN(DialogScope);
-  };
-
-  virtual ~NativeWindow();
+  ~NativeWindow() override;
 
   // Create window with existing WebContents, the caller is responsible for
   // managing the window's live.
   static NativeWindow* Create(
       brightray::InspectableWebContents* inspectable_web_contents,
-      const mate::Dictionary& options);
+      const mate::Dictionary& options,
+      NativeWindow* parent = nullptr);
 
   // Find a window from its WebContents
   static NativeWindow* FromWebContents(content::WebContents* web_contents);
 
+  void RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) override;
+
   void InitFromOptions(const mate::Dictionary& options);
 
+  void OnInputEvent(const blink::WebInputEvent& event) override;
   virtual void Close() = 0;
   virtual void CloseImmediately() = 0;
   virtual bool IsClosed() const { return is_closed_; }
@@ -97,6 +80,7 @@ class NativeWindow : public base::SupportsUserData,
   virtual void ShowInactive() = 0;
   virtual void Hide() = 0;
   virtual bool IsVisible() = 0;
+  virtual bool IsEnabled() = 0;
   virtual void Maximize() = 0;
   virtual void Unmaximize() = 0;
   virtual bool IsMaximized() = 0;
@@ -113,6 +97,8 @@ class NativeWindow : public base::SupportsUserData,
   virtual gfx::Point GetPosition();
   virtual void SetContentSize(const gfx::Size& size, bool animate = false);
   virtual gfx::Size GetContentSize();
+  virtual void SetContentBounds(const gfx::Rect& bounds, bool animate = false);
+  virtual gfx::Rect GetContentBounds();
   virtual void SetSizeConstraints(
       const extensions::SizeConstraints& size_constraints);
   virtual extensions::SizeConstraints GetSizeConstraints();
@@ -155,14 +141,24 @@ class NativeWindow : public base::SupportsUserData,
   virtual void SetDocumentEdited(bool edited);
   virtual bool IsDocumentEdited();
   virtual void SetIgnoreMouseEvents(bool ignore) = 0;
+  virtual void SetContentProtection(bool enable) = 0;
   virtual void SetFocusable(bool focusable);
-  virtual void SetMenu(ui::MenuModel* menu);
-  virtual bool HasModalDialog();
+  virtual void SetMenu(AtomMenuModel* menu);
+  virtual void SetParentWindow(NativeWindow* parent);
   virtual gfx::NativeWindow GetNativeWindow() = 0;
   virtual gfx::AcceleratedWidget GetAcceleratedWidget() = 0;
 
   // Taskbar/Dock APIs.
-  virtual void SetProgressBar(double progress) = 0;
+  enum ProgressState {
+    PROGRESS_NONE,               // no progress, no marking
+    PROGRESS_INDETERMINATE,      // progress, indeterminate
+    PROGRESS_ERROR,              // progress, errored (red)
+    PROGRESS_PAUSED,             // progress, paused (yellow)
+    PROGRESS_NORMAL,             // progress, not marked (green)
+  };
+
+  virtual void SetProgressBar(double progress,
+                              const ProgressState state) = 0;
   virtual void SetOverlayIcon(const gfx::Image& overlay,
                               const std::string& description) = 0;
 
@@ -174,11 +170,6 @@ class NativeWindow : public base::SupportsUserData,
   virtual void FocusOnWebView();
   virtual void BlurWebView();
   virtual bool IsWebViewFocused();
-
-  // Captures the page with |rect|, |callback| would be called when capturing is
-  // done.
-  virtual void CapturePage(const gfx::Rect& rect,
-                           const CapturePageCallback& callback);
 
   // Toggle the menu bar.
   virtual void SetAutoHideMenuBar(bool auto_hide);
@@ -222,6 +213,7 @@ class NativeWindow : public base::SupportsUserData,
   void NotifyWindowMoved();
   void NotifyWindowScrollTouchBegin();
   void NotifyWindowScrollTouchEnd();
+  void NotifyWindowScrollTouchEdge();
   void NotifyWindowSwipe(const std::string& direction);
   void NotifyWindowEnterFullScreen();
   void NotifyWindowLeaveFullScreen();
@@ -251,22 +243,22 @@ class NativeWindow : public base::SupportsUserData,
   SkRegion* draggable_region() const { return draggable_region_.get(); }
   bool enable_larger_than_screen() const { return enable_larger_than_screen_; }
 
-  void set_has_dialog_attached(bool has_dialog_attached) {
-    has_dialog_attached_ = has_dialog_attached;
-  }
+  NativeWindow* parent() const { return parent_; }
+  bool is_modal() const { return is_modal_; }
 
  protected:
   NativeWindow(brightray::InspectableWebContents* inspectable_web_contents,
-               const mate::Dictionary& options);
+               const mate::Dictionary& options,
+               NativeWindow* parent);
 
   // Convert draggable regions in raw format to SkRegion format. Caller is
   // responsible for deleting the returned SkRegion instance.
   std::unique_ptr<SkRegion> DraggableRegionsToSkRegion(
       const std::vector<DraggableRegion>& regions);
 
-  // Converts between content size to window size.
-  virtual gfx::Size ContentSizeToWindowSize(const gfx::Size& size) = 0;
-  virtual gfx::Size WindowSizeToContentSize(const gfx::Size& size) = 0;
+  // Converts between content bounds and window bounds.
+  virtual gfx::Rect ContentBoundsToWindowBounds(const gfx::Rect& bounds) = 0;
+  virtual gfx::Rect WindowBoundsToContentBounds(const gfx::Rect& bounds) = 0;
 
   // Called when the window needs to update its draggable region.
   virtual void UpdateDraggableRegions(
@@ -288,11 +280,6 @@ class NativeWindow : public base::SupportsUserData,
   // Dispatch ReadyToShow event to observers.
   void NotifyReadyToShow();
 
-  // Called when CapturePage has done.
-  void OnCapturePageDone(const CapturePageCallback& callback,
-                         const SkBitmap& bitmap,
-                         content::ReadbackResponse response);
-
   // Whether window has standard frame.
   bool has_frame_;
 
@@ -312,15 +299,12 @@ class NativeWindow : public base::SupportsUserData,
   // The windows has been closed.
   bool is_closed_;
 
-  // There is a dialog that has been attached to window.
-  bool has_dialog_attached_;
-
   // Closure that would be called when window is unresponsive when closing,
   // it should be cancelled when we can prove that the window is responsive.
   base::CancelableClosure window_unresposive_closure_;
 
   // Used to display sheets at the appropriate horizontal and vertical offsets
-  // on OS X.
+  // on macOS.
   double sheet_offset_x_;
   double sheet_offset_y_;
 
@@ -328,6 +312,12 @@ class NativeWindow : public base::SupportsUserData,
   // content view.
   double aspect_ratio_;
   gfx::Size aspect_ratio_extraSize_;
+
+  // The parent window, it is guaranteed to be valid during this window's life.
+  NativeWindow* parent_;
+
+  // Is this a modal window.
+  bool is_modal_;
 
   // The page this window is viewing.
   brightray::InspectableWebContents* inspectable_web_contents_;

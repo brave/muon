@@ -11,10 +11,10 @@
 #include "atom/browser/native_window.h"
 #include "atom/browser/web_view_manager.h"
 #include "atom/common/native_mate_converters/value_converter.h"
-#include "atom/common/options_switches.h"
-#include "base/command_line.h"
 #include "base/strings/string_number_conversions.h"
+#include "cc/base/switches.h"
 #include "content/public/browser/render_process_host.h"
+#include "content/public/browser/render_view_host.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/common/web_preferences.h"
 #include "native_mate/dictionary.h"
@@ -66,7 +66,16 @@ content::WebContents* WebContentsPreferences::GetWebContentsFromProcessID(
     if (web_contents->GetRenderProcessHost()->GetID() == process_id)
       return web_contents;
   }
-  return nullptr;
+  // Also try to get the webview from RenderViewHost::FromID because
+  // not all web contents have preferences created (devtools).
+  content::WebContents* web_contents = nullptr;
+  // The default routing id of WebContents.
+  int kDefaultRoutingID = 1;
+  auto rvh = content::RenderViewHost::FromID(process_id, kDefaultRoutingID);
+  if (rvh) {
+    web_contents = content::WebContents::FromRenderViewHost(rvh);
+  }
+  return web_contents;
 }
 
 // static
@@ -79,12 +88,6 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
   base::DictionaryValue& web_preferences = self->web_preferences_;
 
   bool b;
-#if defined(OS_WIN)
-  // Check if DirectWrite is disabled.
-  if (web_preferences.GetBoolean(options::kDirectWrite, &b) && !b)
-    command_line->AppendSwitch(::switches::kDisableDirectWrite);
-#endif
-
   // Check if plugins are enabled.
   if (web_preferences.GetBoolean("plugins", &b) && b)
     command_line->AppendSwitch(switches::kEnablePlugins);
@@ -191,6 +194,12 @@ void WebContentsPreferences::AppendExtraCommandLineSwitches(
     if (!visible)  // Default state is visible.
       command_line->AppendSwitch("hidden-page");
   }
+
+  // Use frame scheduling for offscreen renderers.
+  // TODO(zcbenz): Remove this after Chrome 54, on which it becomes default.
+  bool offscreen;
+  if (web_preferences.GetBoolean("offscreen", &offscreen) && offscreen)
+    command_line->AppendSwitch(cc::switches::kEnableBeginFrameScheduling);
 }
 
 // static
@@ -205,19 +214,28 @@ void WebContentsPreferences::OverrideWebkitPrefs(
     prefs->javascript_enabled = b;
   if (self->web_preferences_.GetBoolean("images", &b))
     prefs->images_enabled = b;
+  if (self->web_preferences_.GetBoolean("domPasteEnabled", &b))
+    prefs->dom_paste_enabled = b;
+  if (self->web_preferences_.GetBoolean("javascriptCanAccessClipboard", &b))
+    prefs->javascript_can_access_clipboard = b;
   if (self->web_preferences_.GetBoolean("textAreasAreResizable", &b))
     prefs->text_areas_are_resizable = b;
   if (self->web_preferences_.GetBoolean("webgl", &b))
     prefs->experimental_webgl_enabled = b;
-  if (self->web_preferences_.GetBoolean("webSecurity", &b)) {
+  if (self->web_preferences_.GetBoolean("webSecurity", &b))
     prefs->web_security_enabled = b;
-    prefs->allow_displaying_insecure_content = !b;
-    prefs->allow_running_insecure_content = !b;
-  }
+  if (self->web_preferences_.GetBoolean("allowFileAccessFromFileUrls", &b))
+    prefs->allow_file_access_from_file_urls = b;
+  if (self->web_preferences_.GetBoolean("allowUniversalAccessFromFileUrls", &b))
+    prefs->allow_universal_access_from_file_urls = b;
   if (self->web_preferences_.GetBoolean("allowDisplayingInsecureContent", &b))
     prefs->allow_displaying_insecure_content = b;
   if (self->web_preferences_.GetBoolean("allowRunningInsecureContent", &b))
     prefs->allow_running_insecure_content = b;
+  if (self->web_preferences_.GetBoolean("hyperlinkAuditingEnabled", &b))
+    prefs->hyperlink_auditing_enabled = b;
+  if (self->web_preferences_.GetBoolean("touchEnabled", &b))
+    prefs->touch_enabled = b;
   const base::DictionaryValue* fonts = nullptr;
   if (self->web_preferences_.GetDictionary("defaultFontFamily", &fonts)) {
     base::string16 font;

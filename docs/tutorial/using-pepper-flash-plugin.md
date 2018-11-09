@@ -6,7 +6,7 @@ and then enable it in your application.
 
 ## Prepare a Copy of Flash Plugin
 
-On OS X and Linux, the details of the Pepper Flash plugin can be found by
+On macOS and Linux, the details of the Pepper Flash plugin can be found by
 navigating to `chrome://plugins` in the Chrome browser. Its location and version
 are useful for Electron's Pepper Flash support. You can also copy it to another
 location.
@@ -20,6 +20,9 @@ before the app ready event. Also, turn on `plugins` option of `BrowserWindow`.
 For example:
 
 ```javascript
+const {app, BrowserWindow} = require('electron')
+const path = require('path')
+
 // Specify flash path, supposing it is placed in the same directory with main.js.
 let pluginName
 switch (process.platform) {
@@ -39,7 +42,7 @@ app.commandLine.appendSwitch('ppapi-flash-path', path.join(__dirname, pluginName
 app.commandLine.appendSwitch('ppapi-flash-version', '17.0.0.169')
 
 app.on('ready', () => {
-  win = new BrowserWindow({
+  let win = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -48,7 +51,7 @@ app.on('ready', () => {
   })
   win.loadURL(`file://${__dirname}/index.html`)
   // Something else
-});
+})
 ```
 
 You can also try loading the system wide Pepper Flash plugin instead of shipping

@@ -12,7 +12,7 @@ select the tag that matches your version.
 There are questions that are asked quite often, check this out before creating
 an issue:
 
-* [Electron FAQ](faq/electron-faq.md)
+* [Electron FAQ](faq.md)
 
 ## Guides
 
@@ -30,6 +30,7 @@ an issue:
 * [Using Pepper Flash Plugin](tutorial/using-pepper-flash-plugin.md)
 * [Using Widevine CDM Plugin](tutorial/using-widevine-cdm-plugin.md)
 * [Testing on Headless CI Systems (Travis, Jenkins)](tutorial/testing-on-headless-ci.md)
+* [Offscreen Rendering](tutorial/offscreen-rendering.md)
 
 ## Tutorials
 
@@ -66,8 +67,8 @@ an issue:
 * [protocol](api/protocol.md)
 * [session](api/session.md)
 * [systemPreferences](api/system-preferences.md)
-* [webContents](api/web-contents.md)
 * [Tray](api/tray.md)
+* [webContents](api/web-contents.md)
 
 ### Modules for the Renderer Process (Web Page):
 
@@ -90,8 +91,9 @@ an issue:
 * [Source Code Directory Structure](development/source-code-directory-structure.md)
 * [Technical Differences to NW.js (formerly node-webkit)](development/atom-shell-vs-node-webkit.md)
 * [Build System Overview](development/build-system-overview.md)
-* [Build Instructions (OS X)](development/build-instructions-osx.md)
+* [Build Instructions (macOS)](development/build-instructions-osx.md)
 * [Build Instructions (Windows)](development/build-instructions-windows.md)
 * [Build Instructions (Linux)](development/build-instructions-linux.md)
+* [Debug Instructions (macOS)](development/debug-instructions-macos.md)
 * [Debug Instructions (Windows)](development/debug-instructions-windows.md)
 * [Setting Up Symbol Server in debugger](development/setting-up-symbol-server.md)

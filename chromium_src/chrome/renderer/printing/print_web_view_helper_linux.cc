@@ -4,8 +4,9 @@
 
 #include "chrome/renderer/printing/print_web_view_helper.h"
 
+#include <memory>
+
 #include "base/logging.h"
-#include "base/memory/scoped_ptr.h"
 #include "chrome/common/print_messages.h"
 #include "content/public/renderer/render_thread.h"
 #include "printing/metafile_skia_wrapper.h"
@@ -32,7 +33,7 @@ bool PrintWebViewHelper::RenderPreviewPage(
   std::unique_ptr<PdfMetafileSkia> draft_metafile;
   PdfMetafileSkia* initial_render_metafile = print_preview_context_.metafile();
   if (print_preview_context_.IsModifiable() && is_print_ready_metafile_sent_) {
-    draft_metafile.reset(new PdfMetafileSkia);
+    draft_metafile.reset(new PdfMetafileSkia(PDF_SKIA_DOCUMENT_TYPE));
     initial_render_metafile = draft_metafile.get();
   }
 
@@ -48,14 +49,16 @@ bool PrintWebViewHelper::RenderPreviewPage(
              print_preview_context_.generate_draft_pages()) {
     DCHECK(!draft_metafile.get());
     draft_metafile =
-        print_preview_context_.metafile()->GetMetafileForCurrentPage();
+        print_preview_context_.metafile()->GetMetafileForCurrentPage(
+            PDF_SKIA_DOCUMENT_TYPE);
+
   }
   return PreviewPageRendered(page_number, draft_metafile.get());
 }
 
 bool PrintWebViewHelper::PrintPagesNative(blink::WebFrame* frame,
                                           int page_count) {
-  PdfMetafileSkia metafile;
+  PdfMetafileSkia metafile(PDF_SKIA_DOCUMENT_TYPE);
   if (!metafile.Init())
     return false;
 

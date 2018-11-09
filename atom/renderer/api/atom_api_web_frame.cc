@@ -12,12 +12,15 @@
 #include "atom/renderer/api/atom_api_spell_check_client.h"
 #include "base/memory/memory_pressure_listener.h"
 #include "content/public/renderer/render_frame.h"
-#include "content/public/renderer/render_view.h"
+#include "content/renderer/browser_plugin/browser_plugin.h"
+#include "content/renderer/browser_plugin/browser_plugin_manager.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "third_party/WebKit/public/web/WebCache.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
+#include "third_party/WebKit/public/web/WebKit.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
+#include "third_party/WebKit/public/web/WebRemoteFrame.h"
 #include "third_party/WebKit/public/web/WebScriptExecutionCallback.h"
 #include "third_party/WebKit/public/web/WebScriptSource.h"
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
@@ -39,7 +42,7 @@ class ScriptExecutionCallback : public blink::WebScriptExecutionCallback {
 
   explicit ScriptExecutionCallback(const CompletionCallback& callback)
       : callback_(callback) {}
-  ~ScriptExecutionCallback() {}
+  ~ScriptExecutionCallback() override {}
 
   void completed(
       const blink::WebVector<v8::Local<v8::Value>>& result) override {
@@ -71,7 +74,6 @@ void WebFrame::SetName(const std::string& name) {
 
 double WebFrame::SetZoomLevel(double level) {
   double ret = web_frame_->view()->setZoomLevel(level);
-  mate::EmitEvent(isolate(), GetWrapper(), "zoom-level-changed", ret);
   return ret;
 }
 
@@ -89,7 +91,43 @@ double WebFrame::GetZoomFactor() const {
 }
 
 void WebFrame::SetZoomLevelLimits(double min_level, double max_level) {
-  web_frame_->view()->setDefaultPageScaleLimits(min_level, max_level);
+  web_frame_->view()->zoomLimitsChanged(min_level, max_level);
+}
+
+float WebFrame::GetPageScaleFactor() {
+  return web_frame_->view()->pageScaleFactor();
+}
+
+void WebFrame::SetPageScaleFactor(float factor) {
+  web_frame_->view()->setPageScaleFactor(factor);
+}
+
+void WebFrame::SetPageScaleLimits(float min_scale, float max_scale) {
+  web_frame_->view()->setDefaultPageScaleLimits(min_scale, max_scale);
+  web_frame_->view()->setIgnoreViewportTagScaleLimits(true);
+}
+
+float WebFrame::GetTextZoomFactor() {
+  return web_frame_->view()->textZoomFactor();
+}
+
+void WebFrame::SetTextZoomFactor(float factor) {
+  web_frame_->view()->setTextZoomFactor(factor);
+}
+
+v8::Local<v8::Value> WebFrame::GetContentWindow(int content_window_id) {
+  content::RenderView* view =
+    content::RenderView::FromRoutingID(content_window_id);
+  blink::WebFrame* frame = view->GetWebView()->mainFrame();
+
+  v8::Local<v8::Value> window;
+  if (frame->isWebLocalFrame()) {
+    window = frame->mainWorldScriptContext()->Global();
+  } else {
+    window =
+        frame->toWebRemoteFrame()->deprecatedMainWorldScriptContext()->Global();
+  }
+  return window;
 }
 
 v8::Local<v8::Value> WebFrame::RegisterEmbedderCustomElement(
@@ -107,7 +145,23 @@ void WebFrame::RegisterElementResizeCallback(
 }
 
 void WebFrame::AttachGuest(int id) {
+  // This is a workaround for a strange issue on windows with background tabs
+  // libchromiumcontent doesn't appear to be making the check for
+  // params.disposition == NEW_BACKGROUND_TAB in WebContentsImpl
+  // This results in the BrowserPluginGuest trying to access the native
+  // window before it's actually ready.
+  //
+  // It's also possible that the guest is being treated as
+  // visible because the "embedder", which is the same for all tabs
+  // in the window, is always visible.
+  //
+  // This hack works around the issue by always
+  // marking it as hidden while attaching
+  content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
+    updateVisibility(false);
   content::RenderFrame::FromWebFrame(web_frame_)->AttachGuest(id);
+  content::BrowserPluginManager::Get()->GetBrowserPlugin(id)->
+    updateVisibility(true);
 }
 
 void WebFrame::SetSpellCheckProvider(mate::Arguments* args,
@@ -146,6 +200,7 @@ void WebFrame::RegisterURLSchemeAsPrivileged(const std::string& scheme) {
       privileged_scheme);
   blink::WebSecurityPolicy::registerURLSchemeAsSupportingFetchAPI(
       privileged_scheme);
+  blink::WebSecurityPolicy::registerURLSchemeAsCORSEnabled(privileged_scheme);
 }
 
 void WebFrame::InsertText(const std::string& text) {
@@ -154,6 +209,11 @@ void WebFrame::InsertText(const std::string& text) {
 
 void WebFrame::ExecuteJavaScript(const base::string16& code,
                                  mate::Arguments* args) {
+  v8::Isolate* isolate = blink::mainThreadIsolate();
+  v8::Isolate::Scope isolate_scope(isolate);
+  v8::Local<v8::Context> context = web_frame_->mainWorldScriptContext();
+  v8::Context::Scope context_scope(context);
+
   bool has_user_gesture = false;
   args->GetNext(&has_user_gesture);
   ScriptExecutionCallback::CompletionCallback completion_callback;
@@ -187,14 +247,20 @@ void WebFrame::ClearCache(v8::Isolate* isolate) {
 
 // static
 void WebFrame::BuildPrototype(
-    v8::Isolate* isolate, v8::Local<v8::ObjectTemplate> prototype) {
-  mate::ObjectTemplateBuilder(isolate, prototype)
+    v8::Isolate* isolate, v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(mate::StringToV8(isolate, "WebFrame"));
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
       .SetMethod("setName", &WebFrame::SetName)
       .SetMethod("setZoomLevel", &WebFrame::SetZoomLevel)
       .SetMethod("getZoomLevel", &WebFrame::GetZoomLevel)
       .SetMethod("setZoomFactor", &WebFrame::SetZoomFactor)
       .SetMethod("getZoomFactor", &WebFrame::GetZoomFactor)
       .SetMethod("setZoomLevelLimits", &WebFrame::SetZoomLevelLimits)
+      .SetMethod("getPageScaleFactor", &WebFrame::GetPageScaleFactor)
+      .SetMethod("setPageScaleFactor", &WebFrame::SetPageScaleFactor)
+      .SetMethod("setPageScaleLimits", &WebFrame::SetPageScaleLimits)
+      .SetMethod("getTextZoomFactor", &WebFrame::GetTextZoomFactor)
+      .SetMethod("setTextZoomFactor", &WebFrame::SetTextZoomFactor)
       .SetMethod("registerEmbedderCustomElement",
                  &WebFrame::RegisterEmbedderCustomElement)
       .SetMethod("registerElementResizeCallback",
@@ -210,7 +276,8 @@ void WebFrame::BuildPrototype(
       .SetMethod("insertText", &WebFrame::InsertText)
       .SetMethod("executeJavaScript", &WebFrame::ExecuteJavaScript)
       .SetMethod("getResourceUsage", &WebFrame::GetResourceUsage)
-      .SetMethod("clearCache", &WebFrame::ClearCache);
+      .SetMethod("clearCache", &WebFrame::ClearCache)
+      .SetMethod("getContentWindow", &WebFrame::GetContentWindow);
 }
 
 }  // namespace api
@@ -219,11 +286,14 @@ void WebFrame::BuildPrototype(
 
 namespace {
 
+using atom::api::WebFrame;
+
 void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
                 v8::Local<v8::Context> context, void* priv) {
   v8::Isolate* isolate = context->GetIsolate();
   mate::Dictionary dict(isolate, exports);
-  dict.Set("webFrame", atom::api::WebFrame::Create(isolate));
+  dict.Set("webFrame", WebFrame::Create(isolate));
+  dict.Set("WebFrame", WebFrame::GetConstructor(isolate)->GetFunction());
 }
 
 }  // namespace

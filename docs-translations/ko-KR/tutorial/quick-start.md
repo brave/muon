@@ -112,7 +112,7 @@ app.on('ready', createWindow);
 
 // 모든 창이 닫히면 애플리케이션 종료.
 app.on('window-all-closed', () => {
-  // OS X의 대부분의 애플리케이션은 유저가 Cmd + Q 커맨드로 확실하게
+  // macOS의 대부분의 애플리케이션은 유저가 Cmd + Q 커맨드로 확실하게
   // 종료하기 전까지 메뉴바에 남아 계속 실행됩니다.
   if (process.platform !== 'darwin') {
     app.quit();
@@ -120,7 +120,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  // OS X에선 보통 독 아이콘이 클릭되고 나서도
+  // macOS에선 보통 독 아이콘이 클릭되고 나서도
   // 열린 윈도우가 없으면, 새로운 윈도우를 다시 만듭니다.
   if (win === null) {
     createWindow();
@@ -196,7 +196,7 @@ $ .\electron\electron.exe your-app\
 $ ./electron/electron your-app/
 ```
 
-#### OS X
+#### macOS
 
 ```bash
 $ ./Electron.app/Contents/MacOS/Electron your-app/
@@ -212,7 +212,7 @@ $ ./Electron.app/Contents/MacOS/Electron your-app/
 
 ### 미리 작성된 앱 실행하기
 
-[`atom/electron-quick-start`](https://github.com/electron/electron-quick-start)
+[`electron/electron-quick-start`](https://github.com/electron/electron-quick-start)
 저장소를 클론하면 이 문서에서 작성한 예시 앱을 바로 실행해 볼 수 있습니다.
 
 **참고**: 이 예시를 실행시키려면 [Git](https://git-scm.com)과
@@ -230,4 +230,4 @@ $ cd electron-quick-start
 $ npm install && npm start
 ```
 
-[share-data]: ../faq/electron-faq.md#어떻게-웹-페이지-간에-데이터를-공유할-수-있나요
+[share-data]: ../faq.md#어떻게-웹-페이지-간에-데이터를-공유할-수-있나요

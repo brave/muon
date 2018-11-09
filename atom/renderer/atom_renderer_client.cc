@@ -13,14 +13,12 @@
 #include "atom/common/color_util.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/node_bindings.h"
-#include "atom/common/node_includes.h"
 #include "atom/common/options_switches.h"
 #include "atom/renderer/atom_render_view_observer.h"
 #include "atom/renderer/guest_view_container.h"
 #include "atom/renderer/node_array_buffer_bridge.h"
 #include "atom/renderer/preferences_manager.h"
 #include "base/command_line.h"
-#include "base/strings/utf_string_conversions.h"
 #include "chrome/renderer/media/chrome_key_systems.h"
 #include "chrome/renderer/pepper/pepper_helper.h"
 #include "chrome/renderer/printing/print_web_view_helper.h"
@@ -32,16 +30,15 @@
 #include "content/public/renderer/render_view.h"
 #include "ipc/ipc_message_macros.h"
 #include "native_mate/dictionary.h"
-#include "net/base/net_errors.h"
 #include "third_party/WebKit/public/web/WebCustomElement.h"
 #include "third_party/WebKit/public/web/WebDocument.h"
 #include "third_party/WebKit/public/web/WebFrameWidget.h"
+#include "third_party/WebKit/public/web/WebKit.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
 #include "third_party/WebKit/public/web/WebPluginParams.h"
-#include "third_party/WebKit/public/web/WebKit.h"
+#include "third_party/WebKit/public/web/WebRuntimeFeatures.h"
 #include "third_party/WebKit/public/web/WebScriptSource.h"
 #include "third_party/WebKit/public/web/WebSecurityPolicy.h"
-#include "third_party/WebKit/public/web/WebRuntimeFeatures.h"
 #include "third_party/WebKit/public/web/WebView.h"
 
 #if defined(OS_MACOSX)
@@ -52,6 +49,8 @@
 #if defined(OS_WIN)
 #include <shlobj.h>
 #endif
+
+#include "atom/common/node_includes.h"
 
 namespace atom {
 
@@ -85,6 +84,10 @@ class AtomRenderFrameObserver : public content::RenderFrameObserver {
     if (world_id_ != world_id)
       return;
     renderer_client_->WillReleaseScriptContext(context, render_frame_);
+  }
+
+  void OnDestruct() override {
+    delete this;
   }
 
  private:
@@ -282,6 +285,11 @@ void AtomRendererClient::DidCreateScriptContext(
 
 void AtomRendererClient::WillReleaseScriptContext(
     v8::Handle<v8::Context> context, content::RenderFrame* render_frame) {
+  // Only allow node integration for the main frame, unless it is a devtools
+  // extension page.
+  if (!render_frame->IsMainFrame() && !IsDevToolsExtension(render_frame))
+    return;
+
   node::Environment* env = node::Environment::GetCurrent(context);
   if (env)
     mate::EmitEvent(env->isolate(), env->process_object(), "exit");
@@ -312,21 +320,9 @@ content::BrowserPluginDelegate* AtomRendererClient::CreateBrowserPluginDelegate(
   }
 }
 
-void AtomRendererClient::AddKeySystems(
-    std::vector<media::KeySystemInfo>* key_systems) {
+void AtomRendererClient::AddSupportedKeySystems(
+    std::vector<std::unique_ptr<::media::KeySystemProperties>>* key_systems) {
   AddChromeKeySystems(key_systems);
-}
-
-void AtomRendererClient::GetNavigationErrorStrings(
-    content::RenderFrame* render_frame,
-    const blink::WebURLRequest& failed_request,
-    const blink::WebURLError& error,
-    std::string* error_html,
-    base::string16* error_description) {
-  if (!error_description)
-    return;
-
-  *error_description = base::UTF8ToUTF16(net::ErrorToShortString(error.reason));
 }
 
 }  // namespace atom

@@ -66,7 +66,7 @@ const char kType[] = "type";
 // Disable auto-hiding cursor.
 const char kDisableAutoHideCursor[] = "disableAutoHideCursor";
 
-// Use the OS X's standard window instead of the textured window.
+// Use the macOS' standard window instead of the textured window.
 const char kStandardWindow[] = "standardWindow";
 
 // Default browser window background color.
@@ -95,9 +95,6 @@ const char kNodeIntegration[] = "nodeIntegration";
 
 // Instancd ID of guest WebContents.
 const char kGuestInstanceID[] = "guestInstanceId";
-
-// Enable DirectWrite on Windows.
-const char kDirectWrite[] = "directWrite";
 
 // Web runtime features.
 const char kExperimentalFeatures[]       = "experimentalFeatures";

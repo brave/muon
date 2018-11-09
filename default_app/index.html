@@ -1,9 +1,9 @@
-<html>
+<html lang="en">
 <head>
   <title>Electron</title>
   <style>
     body {
-      color: #205161;
+      color: #3a585f;
       font-family: Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", sans-serif;
       margin: 0;
       display: flex;
@@ -67,7 +67,7 @@
 
     a,
     a:hover {
-      color: #2ab0cb;
+      color: #5667bd;
       text-decoration: none;
     }
 
@@ -116,8 +116,8 @@
   <script>
     const {remote, shell} = require('electron');
 
-    var execPath = remote.process.execPath;
-    var command = execPath + ' path-to-your-app';
+    const execPath = remote.process.execPath;
+    const command = execPath + ' path-to-your-app';
 
     document.onclick = function(e) {
       e.preventDefault();
@@ -195,7 +195,7 @@
   </div>
 
   <script>
-    var holder = document.getElementById('holder');
+    const holder = document.getElementById('holder');
     holder.ondragover = function () {
       this.className = 'hover';
       return false;
@@ -208,7 +208,7 @@
       this.className = '';
       e.preventDefault();
 
-      var file = e.dataTransfer.files[0];
+      const file = e.dataTransfer.files[0];
       require('child_process').execFile(execPath, [file.path], {
         detached: true, stdio: 'ignore'
       }).unref();

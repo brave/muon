@@ -4,7 +4,7 @@ El plugin Pepper Flash es soportado ahora. Para utilizar pepper flash en Electro
 
 ## Preparar una copia del plugin Flash
 
-En OSX y Linux, el detalle del plugin puede encontrarse accediendo a `chrome://plugins` en el navegador. Su ubicación y versión son útiles para el soporte. También puedes copiarlo a otro lugar.
+En macOS y Linux, el detalle del plugin puede encontrarse accediendo a `chrome://plugins` en el navegador. Su ubicación y versión son útiles para el soporte. También puedes copiarlo a otro lugar.
 
 ## Agrega la opción a Electron
 
@@ -28,7 +28,7 @@ app.on('window-all-closed', function() {
 
 // Specify flash path.
 // On Windows, it might be /path/to/pepflashplayer.dll
-// On OS X, /path/to/PepperFlashPlayer.plugin
+// On macOS, /path/to/PepperFlashPlayer.plugin
 // On Linux, /path/to/libpepflashplayer.so
 app.commandLine.appendSwitch('ppapi-flash-path', '/path/to/libpepflashplayer.so');
 

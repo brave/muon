@@ -5,11 +5,11 @@
 #ifndef CHROME_RENDERER_PRINTING_PRINT_WEB_VIEW_HELPER_H_
 #define CHROME_RENDERER_PRINTING_PRINT_WEB_VIEW_HELPER_H_
 
+#include <memory>
 #include <vector>
 
 #include "base/callback.h"
 #include "base/gtest_prod_util.h"
-#include "base/memory/scoped_ptr.h"
 #include "base/memory/shared_memory.h"
 #include "base/memory/weak_ptr.h"
 #include "base/time/time.h"
@@ -92,9 +92,9 @@ class PrintWebViewHelper
   };
 
   // RenderViewObserver implementation.
-  virtual bool OnMessageReceived(const IPC::Message& message) override;
-  virtual void PrintPage(blink::WebLocalFrame* frame,
-                         bool user_initiated) override;
+  bool OnMessageReceived(const IPC::Message& message) override;
+  void PrintPage(blink::WebLocalFrame* frame, bool user_initiated) override;
+  void OnDestruct() override;
 
   // Message handlers ---------------------------------------------------------
 #if !defined(DISABLE_BASIC_PRINTING)

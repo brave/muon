@@ -7,10 +7,11 @@
 #include "atom/browser/api/atom_api_web_contents.h"
 #include "atom/browser/atom_browser_client.h"
 #include "atom/common/native_mate_converters/value_converter.h"
-#include "atom/common/node_includes.h"
 #include "content/public/browser/render_process_host.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
+
+#include "atom/common/node_includes.h"
 
 namespace atom {
 
@@ -53,8 +54,10 @@ void RenderProcessPreferences::RemoveEntry(int id) {
 
 // static
 void RenderProcessPreferences::BuildPrototype(
-    v8::Isolate* isolate, v8::Local<v8::ObjectTemplate> prototype) {
-  mate::ObjectTemplateBuilder(isolate, prototype)
+    v8::Isolate* isolate, v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(
+      mate::StringToV8(isolate, "RenderProcessPreferences"));
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
       .SetMethod("addEntry", &RenderProcessPreferences::AddEntry)
       .SetMethod("removeEntry", &RenderProcessPreferences::RemoveEntry);
 }

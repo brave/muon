@@ -35,8 +35,8 @@ porque la gestión de los recursos GUI nativos es peligrosa, y tiende a que ocur
 Si deseas realizar operaciones GUI en una página web, el proceso renderer de la página web debe comunicarse
 con el proceso principal, y solicitar a este que realice esas operaciones.
 
-En Electron, hemos proveído el módulo [ipc](../api/ipc-renderer.md) para la comunicación
-entre el proceso principal y el proceso renderer. Y también hay un módulo [remote](../api/remote.md)
+En Electron, hemos proveído el módulo [ipc](../../../docs/api/ipc-renderer.md) para la comunicación
+entre el proceso principal y el proceso renderer. Y también hay un módulo [remote](../../../docs/api/remote.md)
 para comunicación al estilo RPC.
 
 ## Escribe tu primera aplicación Electron
@@ -74,7 +74,7 @@ var mainWindow = null;
 
 // Salir de todas las ventanas cuando se cierren.
 app.on('window-all-closed', function() {
-  // En OS X es común que las aplicaciones y su barra de menú
+  // En macOS es común que las aplicaciones y su barra de menú
   // se mantengan activas hasta que el usuario cierre la aplicación
   // explícitamente utilizando Cmd + Q
   if (process.platform != 'darwin') {
@@ -139,7 +139,7 @@ En Linux:
 $ ./electron/electron your-app/
 ```
 
-En OS X:
+En macOS:
 
 ```bash
 $ ./Electron.app/Contents/MacOS/Electron your-app/

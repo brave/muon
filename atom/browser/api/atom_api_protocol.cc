@@ -6,19 +6,38 @@
 
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/atom_browser_main_parts.h"
+#include "atom/browser/browser.h"
 #include "atom/browser/net/url_request_async_asar_job.h"
 #include "atom/browser/net/url_request_buffer_job.h"
 #include "atom/browser/net/url_request_fetch_job.h"
 #include "atom/browser/net/url_request_string_job.h"
 #include "atom/common/native_mate_converters/callback.h"
+#include "atom/common/native_mate_converters/v8_value_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
 #include "atom/common/node_includes.h"
 #include "atom/common/options_switches.h"
 #include "base/command_line.h"
 #include "base/strings/string_util.h"
+#include "chrome/browser/custom_handlers/protocol_handler_registry.h"
+#include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "native_mate/dictionary.h"
 #include "url/url_util.h"
+
+namespace mate {
+
+template<>
+struct Converter<const base::ListValue*> {
+  static v8::Local<v8::Value> ToV8(
+      v8::Isolate* isolate,
+      const base::ListValue* val) {
+    std::unique_ptr<atom::V8ValueConverter>
+        converter(new atom::V8ValueConverter);
+    return converter->ToV8Value(val, isolate->GetCurrentContext());
+  }
+};
+
+}  // namespace mate
 
 using content::BrowserThread;
 
@@ -26,11 +45,51 @@ namespace atom {
 
 namespace api {
 
+// TODO(bridiver)
+// https://github.com/electron/electron/commit/1beba5bdc086671bed9205faa694817f5a07c6ad
+// causes a hang on shutdown
+namespace {
+
+// List of registered custom standard schemes.
+std::vector<std::string> g_standard_schemes;
+
+// // Clear protocol handlers in IO thread.
+// void ClearJobFactoryInIO(
+//   scoped_refptr<brightray::URLRequestContextGetter> request_context_getter) {
+//   auto job_factory = static_cast<AtomURLRequestJobFactory*>(
+//       request_context_getter->job_factory());
+//   job_factory->Clear();
+// }
+
+}  // namespace
+
+std::vector<std::string> GetStandardSchemes() {
+  return g_standard_schemes;
+}
+
+void RegisterStandardSchemes(const std::vector<std::string>& schemes) {
+  g_standard_schemes = schemes;
+
+  auto* policy = content::ChildProcessSecurityPolicy::GetInstance();
+  for (const std::string& scheme : schemes) {
+    url::AddStandardScheme(scheme.c_str(), url::SCHEME_WITHOUT_PORT);
+    policy->RegisterWebSafeScheme(scheme);
+  }
+
+  base::CommandLine::ForCurrentProcess()->AppendSwitchASCII(
+      atom::switches::kStandardSchemes, base::JoinString(schemes, ","));
+}
+
 Protocol::Protocol(v8::Isolate* isolate, AtomBrowserContext* browser_context)
-    : request_context_getter_(static_cast<brightray::URLRequestContextGetter*>(
-          browser_context->GetRequestContext())),
+    : browser_context_(browser_context),
       weak_factory_(this) {
   Init(isolate);
+}
+
+Protocol::~Protocol() {
+  // content::BrowserThread::PostTask(
+  //   content::BrowserThread::IO, FROM_HERE,
+  //   base::Bind(ClearJobFactoryInIO, browser_context_->GetRequestContext()));
 }
 
 void Protocol::RegisterServiceWorkerSchemes(
@@ -45,7 +104,7 @@ void Protocol::UnregisterProtocol(
   content::BrowserThread::PostTaskAndReplyWithResult(
       content::BrowserThread::IO, FROM_HERE,
       base::Bind(&Protocol::UnregisterProtocolInIO,
-                 request_context_getter_, scheme),
+          make_scoped_refptr(browser_context_->GetRequestContext()), scheme),
       base::Bind(&Protocol::OnIOCompleted,
                  GetWeakPtr(), callback));
 }
@@ -67,7 +126,7 @@ void Protocol::IsProtocolHandled(const std::string& scheme,
   content::BrowserThread::PostTaskAndReplyWithResult(
       content::BrowserThread::IO, FROM_HERE,
       base::Bind(&Protocol::IsProtocolHandledInIO,
-                 request_context_getter_, scheme),
+          make_scoped_refptr(browser_context_->GetRequestContext()), scheme),
       callback);
 }
 
@@ -85,7 +144,7 @@ void Protocol::UninterceptProtocol(
   content::BrowserThread::PostTaskAndReplyWithResult(
       content::BrowserThread::IO, FROM_HERE,
       base::Bind(&Protocol::UninterceptProtocolInIO,
-                 request_context_getter_, scheme),
+          make_scoped_refptr(browser_context_->GetRequestContext()), scheme),
       base::Bind(&Protocol::OnIOCompleted,
                  GetWeakPtr(), callback));
 }
@@ -97,6 +156,46 @@ Protocol::ProtocolError Protocol::UninterceptProtocolInIO(
   return static_cast<AtomURLRequestJobFactory*>(
       request_context_getter->job_factory())->UninterceptProtocol(scheme) ?
           PROTOCOL_OK : PROTOCOL_NOT_INTERCEPTED;
+}
+
+const base::ListValue*
+Protocol::GetNavigatorHandlers() {
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          browser_context_);
+  std::vector<std::string> protocols;
+  registry->GetRegisteredProtocols(&protocols);
+
+  auto* result = new base::ListValue();
+  std::for_each(protocols.begin(),
+                protocols.end(),
+                [&registry, &result] (const std::string &protocol) {
+                  ProtocolHandler handler = registry->GetHandlerFor(protocol);
+                  auto* dict = new base::DictionaryValue();
+                  dict->SetString("protocol", handler.protocol());
+                  dict->SetString("location", handler.url().spec());
+                  result->Append(dict);
+                });
+
+
+  return result;
+}
+
+void Protocol::UnregisterNavigatorHandler(const std::string& scheme,
+                                          const std::string& spec) {
+  ProtocolHandler handler =
+      ProtocolHandler::CreateProtocolHandler(scheme, GURL(spec));
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          browser_context_);
+  registry->RemoveHandler(handler);
+}
+
+bool Protocol::IsNavigatorProtocolHandled(const std::string& scheme) {
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          browser_context_);
+  return registry->IsHandledProtocol(scheme);
 }
 
 void Protocol::OnIOCompleted(
@@ -119,8 +218,8 @@ void Protocol::OnIOCompleted(
 std::string Protocol::ErrorCodeToString(ProtocolError error) {
   switch (error) {
     case PROTOCOL_FAIL: return "Failed to manipulate protocol factory";
-    case PROTOCOL_REGISTERED: return "The scheme has been registred";
-    case PROTOCOL_NOT_REGISTERED: return "The scheme has not been registred";
+    case PROTOCOL_REGISTERED: return "The scheme has been registered";
+    case PROTOCOL_NOT_REGISTERED: return "The scheme has not been registered";
     case PROTOCOL_INTERCEPTED: return "The scheme has been intercepted";
     case PROTOCOL_NOT_INTERCEPTED: return "The scheme has not been intercepted";
     default: return "Unexpected error";
@@ -128,10 +227,10 @@ std::string Protocol::ErrorCodeToString(ProtocolError error) {
 }
 
 AtomURLRequestJobFactory* Protocol::GetJobFactoryInIO() const {
-  request_context_getter_->GetURLRequestContext();  // Force init.
+  browser_context_->GetRequestContext()->GetURLRequestContext();  // Force init.
   return static_cast<AtomURLRequestJobFactory*>(
       static_cast<brightray::URLRequestContextGetter*>(
-          request_context_getter_.get())->job_factory());
+          browser_context_->GetRequestContext())->job_factory());
 }
 
 // static
@@ -142,8 +241,9 @@ mate::Handle<Protocol> Protocol::Create(
 
 // static
 void Protocol::BuildPrototype(
-    v8::Isolate* isolate, v8::Local<v8::ObjectTemplate> prototype) {
-  mate::ObjectTemplateBuilder(isolate, prototype)
+    v8::Isolate* isolate, v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(mate::StringToV8(isolate, "Protocol"));
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
       .SetMethod("registerServiceWorkerSchemes",
                  &Protocol::RegisterServiceWorkerSchemes)
       .SetMethod("registerStringProtocol",
@@ -164,7 +264,13 @@ void Protocol::BuildPrototype(
                  &Protocol::InterceptProtocol<URLRequestAsyncAsarJob>)
       .SetMethod("interceptHttpProtocol",
                  &Protocol::InterceptProtocol<URLRequestFetchJob>)
-      .SetMethod("uninterceptProtocol", &Protocol::UninterceptProtocol);
+      .SetMethod("uninterceptProtocol", &Protocol::UninterceptProtocol)
+      .SetMethod("isNavigatorProtocolHandled",
+                 &Protocol::IsNavigatorProtocolHandled)
+      .SetMethod("getNavigatorHandlers",
+                 &Protocol::GetNavigatorHandlers)
+      .SetMethod("unregisterNavigatorHandler",
+                 &Protocol::UnregisterNavigatorHandler);
 }
 
 }  // namespace api
@@ -174,16 +280,14 @@ void Protocol::BuildPrototype(
 namespace {
 
 void RegisterStandardSchemes(
-    const std::vector<std::string>& schemes) {
-  auto policy = content::ChildProcessSecurityPolicy::GetInstance();
-  for (const auto& scheme : schemes) {
-    url::AddStandardScheme(scheme.c_str(), url::SCHEME_WITHOUT_PORT);
-    policy->RegisterWebSafeScheme(scheme);
+    const std::vector<std::string>& schemes, mate::Arguments* args) {
+  if (atom::Browser::Get()->is_ready()) {
+    args->ThrowError("protocol.registerStandardSchemes should be called before "
+                     "app is ready");
+    return;
   }
 
-  auto command_line = base::CommandLine::ForCurrentProcess();
-  command_line->AppendSwitchASCII(atom::switches::kStandardSchemes,
-                                  base::JoinString(schemes, ","));
+  atom::api::RegisterStandardSchemes(schemes);
 }
 
 void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
@@ -191,6 +295,7 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   v8::Isolate* isolate = context->GetIsolate();
   mate::Dictionary dict(isolate, exports);
   dict.SetMethod("registerStandardSchemes", &RegisterStandardSchemes);
+  dict.SetMethod("getStandardSchemes", &atom::api::GetStandardSchemes);
 }
 
 }  // namespace

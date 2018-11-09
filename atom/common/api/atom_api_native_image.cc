@@ -11,14 +11,14 @@
 #include "atom/common/native_mate_converters/file_path_converter.h"
 #include "atom/common/native_mate_converters/gfx_converter.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
-#include "atom/common/node_includes.h"
 #include "base/base64.h"
 #include "base/files/file_util.h"
-#include "base/strings/string_util.h"
 #include "base/strings/pattern.h"
+#include "base/strings/string_util.h"
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 #include "net/base/data_url.h"
+#include "third_party/skia/include/core/SkPixelRef.h"
 #include "ui/base/layout.h"
 #include "ui/gfx/codec/jpeg_codec.h"
 #include "ui/gfx/codec/png_codec.h"
@@ -31,6 +31,8 @@
 #include "base/win/scoped_gdi_object.h"
 #include "ui/gfx/icon_util.h"
 #endif
+
+#include "atom/common/node_includes.h"
 
 namespace atom {
 
@@ -63,10 +65,10 @@ float GetScaleFactorFromPath(const base::FilePath& path) {
 
   // We don't try to convert string to float here because it is very very
   // expensive.
-  for (unsigned i = 0; i < node::arraysize(kScaleFactorPairs); ++i) {
-    if (base::EndsWith(filename, kScaleFactorPairs[i].name,
+  for (const auto& kScaleFactorPair : kScaleFactorPairs) {
+    if (base::EndsWith(filename, kScaleFactorPair.name,
                        base::CompareCase::INSENSITIVE_ASCII))
-      return kScaleFactorPairs[i].scale;
+      return kScaleFactorPair.scale;
   }
 
   return 1.0f;
@@ -81,7 +83,7 @@ bool AddImageSkiaRep(gfx::ImageSkia* image,
   // Try PNG first.
   if (!gfx::PNGCodec::Decode(data, size, decoded.get()))
     // Try JPEG.
-    decoded.reset(gfx::JPEGCodec::Decode(data, size));
+    decoded = gfx::JPEGCodec::Decode(data, size);
 
   if (!decoded)
     return false;
@@ -160,12 +162,19 @@ base::win::ScopedHICON ReadICOFromPath(int size, const base::FilePath& path) {
                 LR_LOADFROMFILE)));
 }
 
-void ReadImageSkiaFromICO(gfx::ImageSkia* image, HICON icon) {
+bool ReadImageSkiaFromICO(gfx::ImageSkia* image, HICON icon) {
   // Convert the icon from the Windows specific HICON to gfx::ImageSkia.
   std::unique_ptr<SkBitmap> bitmap(IconUtil::CreateSkBitmapFromHICON(icon));
+  if (!bitmap)
+    return false;
+
   image->AddRepresentation(gfx::ImageSkiaRep(*bitmap, 1.0f));
+  return true;
 }
 #endif
+
+void Noop(char*, void*) {
+}
 
 }  // namespace
 
@@ -215,6 +224,14 @@ v8::Local<v8::Value> NativeImage::ToPNG(v8::Isolate* isolate) {
                             static_cast<size_t>(png->size())).ToLocalChecked();
 }
 
+v8::Local<v8::Value> NativeImage::ToBitmap(v8::Isolate* isolate) {
+  const SkBitmap* bitmap = image_.ToSkBitmap();
+  SkPixelRef* ref = bitmap->pixelRef();
+  return node::Buffer::Copy(isolate,
+                            reinterpret_cast<const char*>(ref->pixels()),
+                            bitmap->getSafeSize()).ToLocalChecked();
+}
+
 v8::Local<v8::Value> NativeImage::ToJPEG(v8::Isolate* isolate, int quality) {
   std::vector<unsigned char> output;
   gfx::JPEG1xEncodedDataFromImage(image_, quality, &output);
@@ -231,6 +248,16 @@ std::string NativeImage::ToDataURL() {
   base::Base64Encode(data_url, &data_url);
   data_url.insert(0, "data:image/png;base64,");
   return data_url;
+}
+
+v8::Local<v8::Value> NativeImage::GetBitmap(v8::Isolate* isolate) {
+  const SkBitmap* bitmap = image_.ToSkBitmap();
+  SkPixelRef* ref = bitmap->pixelRef();
+  return node::Buffer::New(isolate,
+                           reinterpret_cast<char*>(ref->pixels()),
+                           bitmap->getSafeSize(),
+                           &Noop,
+                           nullptr).ToLocalChecked();
 }
 
 v8::Local<v8::Value> NativeImage::GetNativeHandle(v8::Isolate* isolate,
@@ -342,16 +369,22 @@ mate::Handle<NativeImage> NativeImage::CreateFromDataURL(
 
 // static
 void NativeImage::BuildPrototype(
-    v8::Isolate* isolate, v8::Local<v8::ObjectTemplate> prototype) {
-  mate::ObjectTemplateBuilder(isolate, prototype)
-      .SetMethod("toPng", &NativeImage::ToPNG)
-      .SetMethod("toJpeg", &NativeImage::ToJPEG)
+    v8::Isolate* isolate, v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(mate::StringToV8(isolate, "NativeImage"));
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
+      .SetMethod("toPNG", &NativeImage::ToPNG)
+      .SetMethod("toJPEG", &NativeImage::ToJPEG)
+      .SetMethod("toBitmap", &NativeImage::ToBitmap)
+      .SetMethod("getBitmap", &NativeImage::GetBitmap)
       .SetMethod("getNativeHandle", &NativeImage::GetNativeHandle)
       .SetMethod("toDataURL", &NativeImage::ToDataURL)
       .SetMethod("isEmpty", &NativeImage::IsEmpty)
       .SetMethod("getSize", &NativeImage::GetSize)
       .SetMethod("setTemplateImage", &NativeImage::SetTemplateImage)
-      .SetMethod("isTemplateImage", &NativeImage::IsTemplateImage);
+      .SetMethod("isTemplateImage", &NativeImage::IsTemplateImage)
+      // TODO(kevinsawicki): Remove in 2.0, deprecate before then with warnings
+      .SetMethod("toPng", &NativeImage::ToPNG)
+      .SetMethod("toJpeg", &NativeImage::ToJPEG);
 }
 
 }  // namespace api

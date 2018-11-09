@@ -11,17 +11,24 @@
 #include "atom/browser/atom_browser_context.h"
 #include "atom/browser/atom_javascript_dialog_manager.h"
 #include "atom/browser/atom_security_state_model_client.h"
+#include "atom/browser/browser.h"
 #include "atom/browser/native_window.h"
 #include "atom/browser/ui/file_dialog.h"
+#include "atom/browser/web_contents_permission_helper.h"
 #include "atom/browser/web_dialog_helper.h"
 #include "atom/common/atom_constants.h"
 #include "base/files/file_util.h"
-#include "components/prefs/pref_service.h"
-#include "components/prefs/scoped_user_pref_update.h"
+#include "chrome/browser/custom_handlers/protocol_handler_registry.h"
+#include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
 #include "chrome/browser/printing/print_preview_message_handler.h"
 #include "chrome/browser/printing/print_view_manager_basic.h"
 #include "chrome/browser/ui/browser_dialogs.h"
+#include "chrome/common/custom_handlers/protocol_handler.h"
 #include "chrome/common/pref_names.h"
+#include "components/pref_registry/pref_registry_syncable.h"
+#include "components/prefs/pref_service.h"
+#include "components/prefs/scoped_user_pref_update.h"
+#include "components/user_prefs/user_prefs.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/render_process_host.h"
@@ -30,6 +37,15 @@
 #include "content/public/browser/security_style_explanation.h"
 #include "content/public/browser/security_style_explanations.h"
 #include "storage/browser/fileapi/isolated_context.h"
+
+#if defined(ENABLE_EXTENSIONS)
+#include "atom/browser/api/atom_api_window.h"
+#include "atom/browser/extensions/tab_helper.h"
+#include "chrome/browser/chrome_notification_types.h"
+#include "content/public/browser/notification_service.h"
+#include "content/public/browser/notification_source.h"
+#include "extensions/browser/api/extensions_api_client.h"
+#endif
 
 using content::BrowserThread;
 using security_state::SecurityStateModel;
@@ -94,7 +110,7 @@ FileSystem CreateFileSystemStruct(
 }
 
 base::DictionaryValue* CreateFileSystemValue(const FileSystem& file_system) {
-  base::DictionaryValue* file_system_value = new base::DictionaryValue();
+  auto* file_system_value = new base::DictionaryValue();
   file_system_value->SetString("fileSystemName", file_system.file_system_name);
   file_system_value->SetString("rootURL", file_system.root_url);
   file_system_value->SetString("fileSystemPath", file_system.file_system_path);
@@ -185,6 +201,81 @@ void CommonWebContentsDelegate::InitWithWebContents(
   // Create InspectableWebContents.
   web_contents_.reset(brightray::InspectableWebContents::Create(web_contents));
   web_contents_->SetDelegate(this);
+
+#if defined(ENABLE_EXTENSIONS)
+  extensions::ExtensionsAPIClient::Get()->
+      AttachWebContentsHelpers(web_contents);
+#endif
+}
+
+void OnRegisterProtocol(AtomBrowserContext* browser_context,
+    const ProtocolHandler &handler,
+    bool allowed) {
+  ProtocolHandlerRegistry* registry =
+    ProtocolHandlerRegistryFactory::GetForBrowserContext(browser_context);
+  if (allowed) {
+    // Ensure the app is invoked in the first place
+    if (!Browser::Get()->
+        IsDefaultProtocolClient(handler.protocol(), nullptr)) {
+      Browser::Get()->SetAsDefaultProtocolClient(
+          handler.protocol(), nullptr);
+    }
+    registry->OnAcceptRegisterProtocolHandler(handler);
+  } else {
+    registry->OnDenyRegisterProtocolHandler(handler);
+  }
+}
+
+// Register a new handler for URL requests with the given scheme.
+// |user_gesture| is true if the registration is made in the context of a user
+// gesture.
+void CommonWebContentsDelegate::RegisterProtocolHandler(
+    content::WebContents* web_contents,
+  const std::string& protocol,
+  const GURL& url,
+  bool user_gesture) {
+  content::BrowserContext* context = web_contents->GetBrowserContext();
+  if (context->IsOffTheRecord())
+      return;
+
+  ProtocolHandler handler =
+      ProtocolHandler::CreateProtocolHandler(protocol, url);
+
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          browser_context_.get());
+  if (registry->IsRegistered(handler))
+      return;
+
+  auto permission_helper =
+      WebContentsPermissionHelper::FromWebContents(web_contents);
+  if (!permission_helper)
+      return;
+
+  AtomBrowserContext* browser_context =
+      static_cast<AtomBrowserContext*>(browser_context_.get());
+  auto callback = base::Bind(&OnRegisterProtocol, browser_context, handler);
+  permission_helper->RequestProtocolRegistrationPermission(callback,
+      user_gesture);
+}
+
+// Unregister the registered handler for URL requests with the given scheme.
+// |user_gesture| is true if the registration is made in the context of a user
+// gesture.
+void CommonWebContentsDelegate::UnregisterProtocolHandler(
+    content::WebContents* web_contents,
+    const std::string& protocol,
+    const GURL& url,
+    bool user_gesture) {
+  if (Browser::Get()->IsDefaultProtocolClient(protocol, nullptr)) {
+    Browser::Get()->RemoveAsDefaultProtocolClient(protocol, nullptr);
+  }
+  ProtocolHandler handler =
+      ProtocolHandler::CreateProtocolHandler(protocol, url);
+  ProtocolHandlerRegistry* registry =
+      ProtocolHandlerRegistryFactory::GetForBrowserContext(
+          browser_context_.get());
+  registry->RemoveHandler(handler);
 }
 
 void CommonWebContentsDelegate::SetOwnerWindow(NativeWindow* owner_window) {
@@ -196,6 +287,22 @@ void CommonWebContentsDelegate::SetOwnerWindow(
   owner_window_ = owner_window->GetWeakPtr();
   NativeWindowRelay* relay = new NativeWindowRelay(owner_window_);
   web_contents->SetUserData(relay->key, relay);
+#if defined(ENABLE_EXTENSIONS)
+  auto tab_helper = extensions::TabHelper::FromWebContents(web_contents);
+  if (!tab_helper)
+    return;
+
+  int32_t id =
+      api::Window::TrackableObject::GetIDFromWrappedClass(owner_window);
+  if (id > 0) {
+    tab_helper->SetWindowId(id);
+
+    content::NotificationService::current()->Notify(
+      chrome::NOTIFICATION_TAB_PARENTED,
+      content::Source<content::WebContents>(web_contents),
+      content::NotificationService::NoDetails());
+  }
+#endif
 }
 
 void CommonWebContentsDelegate::DestroyWebContents() {
@@ -219,13 +326,22 @@ content::WebContents* CommonWebContentsDelegate::OpenURLFromTab(
     content::WebContents* source,
     const content::OpenURLParams& params) {
   content::NavigationController::LoadURLParams load_url_params(params.url);
+  load_url_params.source_site_instance = params.source_site_instance;
   load_url_params.referrer = params.referrer;
+  load_url_params.frame_tree_node_id = params.frame_tree_node_id;
+  load_url_params.redirect_chain = params.redirect_chain;
   load_url_params.transition_type = params.transition;
   load_url_params.extra_headers = params.extra_headers;
   load_url_params.should_replace_current_entry =
-      params.should_replace_current_entry;
+    params.should_replace_current_entry;
   load_url_params.is_renderer_initiated = params.is_renderer_initiated;
-  load_url_params.should_clear_history_list = true;
+
+  if (params.uses_post) {
+    load_url_params.load_type =
+      content::NavigationController::LOAD_TYPE_HTTP_POST;
+    load_url_params.post_data =
+      params.post_data;
+  }
 
   source->GetController().LoadURLWithParams(load_url_params);
   return source;
@@ -252,11 +368,11 @@ content::ColorChooser* CommonWebContentsDelegate::OpenColorChooser(
 }
 
 void CommonWebContentsDelegate::RunFileChooser(
-    content::WebContents* guest,
+    content::RenderFrameHost* render_frame_host,
     const content::FileChooserParams& params) {
   if (!web_dialog_helper_)
     web_dialog_helper_.reset(new WebDialogHelper(owner_window()));
-  web_dialog_helper_->RunFileChooser(guest, params);
+  web_dialog_helper_->RunFileChooser(render_frame_host, params);
 }
 
 void CommonWebContentsDelegate::EnumerateDirectory(content::WebContents* guest,
@@ -377,7 +493,7 @@ content::SecurityStyle CommonWebContentsDelegate::GetSecurityStyle(
 void CommonWebContentsDelegate::DevToolsSaveToFile(
     const std::string& url, const std::string& content, bool save_as) {
   base::FilePath path;
-  PathsMap::iterator it = saved_files_.find(url);
+  auto it = saved_files_.find(url);
   if (it != saved_files_.end() && !save_as) {
     path = it->second;
   } else {
@@ -402,7 +518,7 @@ void CommonWebContentsDelegate::DevToolsSaveToFile(
 
 void CommonWebContentsDelegate::DevToolsAppendToFile(
     const std::string& url, const std::string& content) {
-  PathsMap::iterator it = saved_files_.find(url);
+  auto it = saved_files_.find(url);
   if (it == saved_files_.end())
     return;
 
@@ -435,8 +551,8 @@ void CommonWebContentsDelegate::DevToolsRequestFileSystems() {
   }
 
   base::ListValue file_system_value;
-  for (size_t i = 0; i < file_systems.size(); ++i)
-    file_system_value.Append(CreateFileSystemValue(file_systems[i]));
+  for (const auto& file_system : file_systems)
+    file_system_value.Append(CreateFileSystemValue(file_system));
   web_contents_->CallClientFunction("DevToolsAPI.fileSystemsLoaded",
                                     &file_system_value, nullptr, nullptr);
 }
@@ -610,9 +726,8 @@ void CommonWebContentsDelegate::OnDevToolsSearchCompleted(
     const std::string& file_system_path,
     const std::vector<std::string>& file_paths) {
   base::ListValue file_paths_value;
-  for (std::vector<std::string>::const_iterator it(file_paths.begin());
-       it != file_paths.end(); ++it) {
-    file_paths_value.AppendString(*it);
+  for (const auto& file_path : file_paths) {
+    file_paths_value.AppendString(file_path);
   }
   base::FundamentalValue request_id_value(request_id);
   base::StringValue file_system_path_value(file_system_path);
@@ -623,20 +738,22 @@ void CommonWebContentsDelegate::OnDevToolsSearchCompleted(
 }
 
 void CommonWebContentsDelegate::SetHtmlApiFullscreen(bool enter_fullscreen) {
-  // Window is already in fullscreen mode, save the state.
-  if (enter_fullscreen && owner_window_->IsFullscreen()) {
-    native_fullscreen_ = true;
-    html_fullscreen_ = true;
-    return;
-  }
+  if (owner_window_) {
+    // Window is already in fullscreen mode, save the state.
+    if (enter_fullscreen && owner_window_->IsFullscreen()) {
+      native_fullscreen_ = true;
+      html_fullscreen_ = true;
+      return;
+    }
 
-  // Exit html fullscreen state but not window's fullscreen mode.
-  if (!enter_fullscreen && native_fullscreen_) {
-    html_fullscreen_ = false;
-    return;
-  }
+    // Exit html fullscreen state but not window's fullscreen mode.
+    if (!enter_fullscreen && native_fullscreen_) {
+      html_fullscreen_ = false;
+      return;
+    }
 
-  owner_window_->SetFullScreen(enter_fullscreen);
+    owner_window_->SetFullScreen(enter_fullscreen);
+  }
   html_fullscreen_ = enter_fullscreen;
   native_fullscreen_ = false;
 }

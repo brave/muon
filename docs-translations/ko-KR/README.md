@@ -15,7 +15,7 @@ URL에 포함되어 있습니다. 만약 그렇지 않다면, 아마 현재 보�
 Electron에 대해 자주 묻는 질문이 있습니다. 이슈를 생성하기 전에 다음 문서를 먼저
 확인해 보세요:
 
-* [Electron FAQ](faq/electron-faq.md)
+* [Electron FAQ](faq.md)
 
 ## 개발 가이드
 
@@ -69,8 +69,8 @@ Electron에 대해 자주 묻는 질문이 있습니다. 이슈를 생성하기 
 * [protocol](api/protocol.md)
 * [session](api/session.md)
 * [systemPreferences](api/system-preferences.md)
-* [webContents](api/web-contents.md)
 * [Tray](api/tray.md)
+* [webContents](api/web-contents.md)
 
 ### 렌더러 프로세스에서 사용할 수 있는 모듈 (웹 페이지):
 
@@ -93,7 +93,7 @@ Electron에 대해 자주 묻는 질문이 있습니다. 이슈를 생성하기 
 * [소스 코드 디렉터리 구조](development/source-code-directory-structure.md)
 * [NW.js(node-webkit)와 기술적으로 다른점](development/atom-shell-vs-node-webkit.md)
 * [빌드 시스템 개요](development/build-system-overview.md)
-* [빌드 설명서 (OS X)](development/build-instructions-osx.md)
+* [빌드 설명서 (macOS)](development/build-instructions-osx.md)
 * [빌드 설명서 (Windows)](development/build-instructions-windows.md)
 * [빌드 설명서 (Linux)](development/build-instructions-linux.md)
 * [디버그 설명서 (Windows)](development/debug-instructions-windows.md)

@@ -10,10 +10,19 @@
 #ifndef CHROME_BROWSER_BROWSER_PROCESS_H_
 #define CHROME_BROWSER_BROWSER_PROCESS_H_
 
+#include <memory>
 #include <string>
 
 #include "base/macros.h"
-#include "base/memory/scoped_ptr.h"
+
+#if defined(ENABLE_EXTENSIONS)
+namespace extensions {
+class ExtensionsBrowserClient;
+}
+namespace component_updater {
+class ComponentUpdateService;
+}
+#endif
 
 namespace printing {
 class PrintJobManager;
@@ -30,9 +39,17 @@ class BrowserProcess {
 
   printing::PrintJobManager* print_job_manager();
 
+  bool IsShuttingDown();
+  void StartTearDown();
+  component_updater::ComponentUpdateService* component_updater();
+
  private:
   std::unique_ptr<printing::PrintJobManager> print_job_manager_;
-
+#if defined(ENABLE_EXTENSIONS)
+  std::unique_ptr<extensions::ExtensionsBrowserClient> extensions_browser_client_;
+#endif
+  bool tearing_down_;
+  std::unique_ptr<component_updater::ComponentUpdateService> component_updater_;
   DISALLOW_COPY_AND_ASSIGN(BrowserProcess);
 };
 

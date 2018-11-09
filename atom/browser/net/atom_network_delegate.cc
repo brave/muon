@@ -13,6 +13,10 @@
 #include "content/public/browser/browser_thread.h"
 #include "net/url_request/url_request.h"
 
+#if defined(ENABLE_EXTENSIONS)
+#include "extensions/browser/extension_api_frame_id_map.h"
+#endif
+
 using brightray::DevToolsNetworkTransaction;
 using content::BrowserThread;
 
@@ -69,15 +73,36 @@ bool MatchesFilterCondition(net::URLRequest* request,
   return false;
 }
 
+int GetTabId(net::URLRequest* request) {
+#if defined(ENABLE_EXTENSIONS)
+  int render_frame_id = -1;
+  int render_process_id = -1;
+  int tab_id = -1;
+  extensions::ExtensionApiFrameIdMap::FrameData frame_data;
+  if (content::ResourceRequestInfo::GetRenderFrameForRequest(
+          request, &render_process_id, &render_frame_id) &&
+      extensions::ExtensionApiFrameIdMap::Get()->GetCachedFrameDataOnIO(
+          render_process_id, render_frame_id, &frame_data)) {
+    tab_id = frame_data.tab_id;
+  }
+  return tab_id;
+#else
+  return -1;
+#endif
+}
+
 // Overloaded by multiple types to fill the |details| object.
 void ToDictionary(base::DictionaryValue* details, net::URLRequest* request) {
   FillRequestDetails(details, request);
   details->SetInteger("id", request->identifier());
   details->SetDouble("timestamp", base::Time::Now().ToDoubleT() * 1000);
+  details->SetString("firstPartyUrl",
+    request->first_party_for_cookies().spec());
   auto info = content::ResourceRequestInfo::ForRequest(request);
   details->SetString("resourceType",
                      info ? ResourceTypeToString(info->GetResourceType())
                           : "other");
+  details->SetInteger("tabId", GetTabId(request));
 }
 
 void ToDictionary(base::DictionaryValue* details,
@@ -85,7 +110,7 @@ void ToDictionary(base::DictionaryValue* details,
   std::unique_ptr<base::DictionaryValue> dict(new base::DictionaryValue);
   net::HttpRequestHeaders::Iterator it(headers);
   while (it.GetNext())
-    dict->SetString(it.name(), it.value());
+    dict->SetStringWithoutPathExpansion(it.name(), it.value());
   details->Set("requestHeaders", std::move(dict));
 }
 
@@ -239,7 +264,7 @@ int AtomNetworkDelegate::OnBeforeURLRequest(
   return HandleResponseEvent(kOnBeforeRequest, request, callback, new_url);
 }
 
-int AtomNetworkDelegate::OnBeforeSendHeaders(
+int AtomNetworkDelegate::OnBeforeStartTransaction(
     net::URLRequest* request,
     const net::CompletionCallback& callback,
     net::HttpRequestHeaders* headers) {
@@ -254,18 +279,18 @@ int AtomNetworkDelegate::OnBeforeSendHeaders(
         DevToolsNetworkTransaction::kDevToolsEmulateNetworkConditionsClientId,
         client_id);
   if (!ContainsKey(response_listeners_, kOnBeforeSendHeaders))
-    return brightray::NetworkDelegate::OnBeforeSendHeaders(
+    return brightray::NetworkDelegate::OnBeforeStartTransaction(
         request, callback, headers);
 
   return HandleResponseEvent(
       kOnBeforeSendHeaders, request, callback, headers, *headers);
 }
 
-void AtomNetworkDelegate::OnSendHeaders(
+void AtomNetworkDelegate::OnStartTransaction(
     net::URLRequest* request,
     const net::HttpRequestHeaders& headers) {
   if (!ContainsKey(simple_listeners_, kOnSendHeaders)) {
-    brightray::NetworkDelegate::OnSendHeaders(request, headers);
+    brightray::NetworkDelegate::OnStartTransaction(request, headers);
     return;
   }
 

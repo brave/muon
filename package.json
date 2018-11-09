@@ -1,10 +1,13 @@
 {
   "name": "electron",
-  "version": "1.2.3",
+  "version": "1.4.10",
   "devDependencies": {
     "asar": "^0.11.0",
+    "electabul": "~0.0.4",
+    "pre-push": "^0.1.1",
     "request": "*",
-    "standard": "^7.1.0"
+    "standard": "^7.1.2",
+    "standard-markdown": "^1.2.1"
   },
   "optionalDependencies": {
     "runas": "^3.0.0"
@@ -19,16 +22,31 @@
       "browser": true
     }
   },
+  "pre-push": [
+    "lint"
+  ],
   "private": true,
   "scripts": {
     "bootstrap": "python ./script/bootstrap.py",
     "build": "python ./script/build.py -c D",
-    "lint": "npm run lint-js && npm run lint-cpp",
-    "lint-js": "standard && standard spec",
+    "clean": "python ./script/clean.py",
+    "coverage": "npm run instrument-code-coverage && npm test -- --use-instrumented-asar",
+    "instrument-code-coverage": "electabul instrument --input-path ./lib --output-path ./out/coverage/electron.asar",
+    "lint": "npm run lint-cpp && npm run lint-docs",
+    "lint-js": "standard && cd spec && standard",
     "lint-cpp": "python ./script/cpplint.py",
+    "lint-py": "python ./script/pylint.py",
+    "lint-docs": "standard-markdown docs",
     "preinstall": "node -e 'process.exit(0)'",
     "repl": "python ./script/start.py --interactive",
     "start": "python ./script/start.py",
-    "test": "python ./script/test.py"
+    "cibuild-windows": "rm -Rf node_mdules && python ./script/cibuild --target_arch=x64",
+    "cibuild-windows-ia32": "rm -Rf node_mdules && python ./script/cibuild --target_arch=ia32",
+    "test": "python ./script/test.py",
+    "browser-build": "npm run build && rsync -avz --delete out/D/Brave.app ../browser-laptop/node_modules/electron-prebuilt/dist/",
+    "browser-build-linux": "python ./script/build.py -c R && rsync -avz --delete out/R/ ../browser-laptop/node_modules/electron-prebuilt/dist/",
+    "browser-build-windows": "python ./script/build.py -c R && xcopy .\\out\\R\\* ..\\browser-laptop\\node_modules\\electron-prebuilt\\dist\\ /Y /S /I /F /R",
+    "libchromium-build": "python ../libchromiumcontent/script/bootstrap && python ../libchromiumcontent/script/update && python ../libchromiumcontent/script/build && python ../libchromiumcontent/script/create-dist --no_zip",
+    "libchromium-bootstrap": "python ./script/bootstrap.py -v --libcc_source_path ../libchromiumcontent/dist/main/src --libcc_shared_library_path ../libchromiumcontent/dist/main/shared_library --libcc_static_library_path ../libchromiumcontent/dist/main/static_library"
   }
 }

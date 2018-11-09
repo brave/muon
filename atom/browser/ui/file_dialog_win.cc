@@ -4,16 +4,18 @@
 
 #include "atom/browser/ui/file_dialog.h"
 
+#include <windows.h>  // windows.h must be included first
+
 #include <atlbase.h>
-#include <windows.h>
 #include <commdlg.h>
 #include <shlobj.h>
 
 #include "atom/browser/native_window_views.h"
+#include "atom/browser/unresponsive_suppressor.h"
 #include "base/files/file_util.h"
 #include "base/i18n/case_conversion.h"
-#include "base/strings/string_util.h"
 #include "base/strings/string_split.h"
+#include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread.h"
 #include "base/win/registry.h"
@@ -108,7 +110,7 @@ class FileDialog {
   }
 
   bool Show(atom::NativeWindow* parent_window) {
-    atom::NativeWindow::DialogScope dialog_scope(parent_window);
+    atom::UnresponsiveSuppressor suppressor;
     HWND window = parent_window ? static_cast<atom::NativeWindowViews*>(
         parent_window)->GetAcceleratedWidget() :
         NULL;
@@ -201,6 +203,8 @@ bool ShowOpenDialog(atom::NativeWindow* parent_window,
     options |= FOS_PICKFOLDERS;
   if (properties & FILE_DIALOG_MULTI_SELECTIONS)
     options |= FOS_ALLOWMULTISELECT;
+  if (properties & FILE_DIALOG_SHOW_HIDDEN_FILES)
+    options |= FOS_FORCESHOWHIDDEN;
 
   FileDialog<CShellFileOpenDialog> open_dialog(
       default_path, title, button_label, filters, options);

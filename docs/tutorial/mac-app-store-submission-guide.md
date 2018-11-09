@@ -116,7 +116,7 @@ codesign -s "$APP_KEY" -f --entitlements "$PARENT_PLIST" "$APP_PATH"
 productbuild --component "$APP_PATH" /Applications --sign "$INSTALLER_KEY" "$RESULT_PATH"
 ```
 
-If you are new to app sandboxing under OS X, you should also read through
+If you are new to app sandboxing under macOS, you should also read through
 Apple's [Enabling App Sandbox][enable-app-sandbox] to have a basic idea, then
 add keys for the permissions needed by your app to the entitlements files.
 
@@ -171,6 +171,26 @@ more information.
 Depending on which Electron APIs your app uses, you may need to add additional
 entitlements to your `parent.plist` file to be able to use these APIs from your
 app's Mac App Store build.
+
+#### Network Access
+
+Enable outgoing network connections to allow your app to connect to a server:
+
+```xml
+<key>com.apple.security.network.client</key>
+<true/>
+```
+
+Enable incoming network connections to allow your app to open a network
+listening socket:
+
+```xml
+<key>com.apple.security.network.server</key>
+<true/>
+```
+
+See the [Enabling Network Access documentation][network-access] for more
+details.
 
 #### dialog.showOpenDialog
 
@@ -240,3 +260,4 @@ ERN)][ern-tutorial].
 [ern-tutorial]: https://carouselapps.com/2015/12/15/legally-submit-app-apples-app-store-uses-encryption-obtain-ern/
 [temporary-exception]: https://developer.apple.com/library/mac/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/AppSandboxTemporaryExceptionEntitlements.html
 [user-selected]: https://developer.apple.com/library/mac/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/EnablingAppSandbox.html#//apple_ref/doc/uid/TP40011195-CH4-SW6
+[network-access]: https://developer.apple.com/library/ios/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/EnablingAppSandbox.html#//apple_ref/doc/uid/TP40011195-CH4-SW9

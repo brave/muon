@@ -3,11 +3,13 @@ process.throwDeprecation = true
 
 const electron = require('electron')
 const app = electron.app
+const crashReporter = electron.crashReporter
 const ipcMain = electron.ipcMain
 const dialog = electron.dialog
 const BrowserWindow = electron.BrowserWindow
 const protocol = electron.protocol
 
+const Coverage = require('electabul').Coverage
 const fs = require('fs')
 const path = require('path')
 const url = require('url')
@@ -34,9 +36,14 @@ process.stdout
 // Access console to reproduce #3482.
 console
 
-ipcMain.on('message', function (event, arg) {
-  event.sender.send('message', arg)
+ipcMain.on('message', function (event, ...args) {
+  event.sender.send('message', ...args)
 })
+
+// Set productName so getUploadedReports() uses the right directory in specs
+if (process.platform === 'win32') {
+  crashReporter.productName = 'Zombies'
+}
 
 // Write output to file if OUTPUT_TO_FILE is defined.
 const outputToFile = process.env.OUTPUT_TO_FILE
@@ -61,6 +68,15 @@ ipcMain.on('eval', function (event, script) {
 
 ipcMain.on('echo', function (event, msg) {
   event.returnValue = msg
+})
+
+const coverage = new Coverage({
+  outputPath: path.join(__dirname, '..', '..', 'out', 'coverage')
+})
+coverage.setup()
+
+ipcMain.on('get-main-process-coverage', function (event) {
+  event.returnValue = global.__coverage__ || null
 })
 
 global.isCi = !!argv.ci
@@ -91,11 +107,11 @@ app.on('ready', function () {
 
   window = new BrowserWindow({
     title: 'Electron Tests',
-    show: false,
+    show: !global.isCi,
     width: 800,
     height: 600,
     webPreferences: {
-      backgroundThrottling: false,
+      backgroundThrottling: false
     }
   })
   window.loadURL(url.format({
@@ -119,9 +135,9 @@ app.on('ready', function () {
   // For session's download test, listen 'will-download' event in browser, and
   // reply the result to renderer for verifying
   var downloadFilePath = path.join(__dirname, '..', 'fixtures', 'mock.pdf')
-  ipcMain.on('set-download-option', function (event, need_cancel, prevent_default) {
+  ipcMain.on('set-download-option', function (event, needCancel, preventDefault) {
     window.webContents.session.once('will-download', function (e, item) {
-      if (prevent_default) {
+      if (preventDefault) {
         e.preventDefault()
         const url = item.getURL()
         const filename = item.getFilename()
@@ -142,9 +158,10 @@ app.on('ready', function () {
             item.getReceivedBytes(),
             item.getTotalBytes(),
             item.getContentDisposition(),
-            item.getFilename())
+            item.getFilename(),
+            item.getSavePath())
         })
-        if (need_cancel) item.cancel()
+        if (needCancel) item.cancel()
       }
     })
     event.returnValue = 'done'

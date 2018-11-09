@@ -9,7 +9,6 @@
 #include "atom/browser/atom_browser_main_parts.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/value_converter.h"
-#include "atom/common/node_includes.h"
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "content/public/browser/devtools_agent_host.h"
@@ -17,19 +16,13 @@
 #include "native_mate/dictionary.h"
 #include "native_mate/object_template_builder.h"
 
+#include "atom/common/node_includes.h"
+
 using content::DevToolsAgentHost;
 
 namespace atom {
 
 namespace api {
-
-namespace {
-
-// The wrapDebugger funtion which is implemented in JavaScript.
-using WrapDebuggerCallback = base::Callback<void(v8::Local<v8::Value>)>;
-WrapDebuggerCallback g_wrap_debugger;
-
-}  // namespace
 
 Debugger::Debugger(v8::Isolate* isolate, content::WebContents* web_contents)
     : web_contents_(web_contents),
@@ -115,7 +108,7 @@ bool Debugger::IsAttached() {
 void Debugger::Detach() {
   if (!agent_host_.get())
     return;
-  agent_host_->DetachClient();
+  agent_host_->DetachClient(this);
   AgentHostClosed(agent_host_.get(), false);
   agent_host_ = nullptr;
 }
@@ -144,31 +137,25 @@ void Debugger::SendCommand(mate::Arguments* args) {
 
   std::string json_args;
   base::JSONWriter::Write(request, &json_args);
-  agent_host_->DispatchProtocolMessage(json_args);
+  agent_host_->DispatchProtocolMessage(this, json_args);
 }
 
 // static
 mate::Handle<Debugger> Debugger::Create(
     v8::Isolate* isolate,
     content::WebContents* web_contents) {
-  auto handle = mate::CreateHandle(
-      isolate, new Debugger(isolate, web_contents));
-  g_wrap_debugger.Run(handle.ToV8());
-  return handle;
+  return mate::CreateHandle(isolate, new Debugger(isolate, web_contents));
 }
 
 // static
 void Debugger::BuildPrototype(v8::Isolate* isolate,
-                              v8::Local<v8::ObjectTemplate> prototype) {
-  mate::ObjectTemplateBuilder(isolate, prototype)
+                              v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(mate::StringToV8(isolate, "Debugger"));
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
       .SetMethod("attach", &Debugger::Attach)
       .SetMethod("isAttached", &Debugger::IsAttached)
       .SetMethod("detach", &Debugger::Detach)
       .SetMethod("sendCommand", &Debugger::SendCommand);
-}
-
-void SetWrapDebugger(const WrapDebuggerCallback& callback) {
-  g_wrap_debugger = callback;
 }
 
 }  // namespace api
@@ -177,11 +164,13 @@ void SetWrapDebugger(const WrapDebuggerCallback& callback) {
 
 namespace {
 
+using atom::api::Debugger;
+
 void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
                 v8::Local<v8::Context> context, void* priv) {
   v8::Isolate* isolate = context->GetIsolate();
-  mate::Dictionary dict(isolate, exports);
-  dict.SetMethod("_setWrapDebugger", &atom::api::SetWrapDebugger);
+  mate::Dictionary(isolate, exports)
+      .Set("Debugger", Debugger::GetConstructor(isolate)->GetFunction());
 }
 
 }  // namespace

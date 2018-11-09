@@ -10,8 +10,9 @@
 #include <string>
 #include <vector>
 
-#include "base/mac/scoped_nsobject.h"
 #include "atom/browser/native_window.h"
+#include "base/mac/scoped_nsobject.h"
+#include "content/public/browser/render_widget_host.h"
 
 @class AtomNSWindow;
 @class AtomNSWindowDelegate;
@@ -22,7 +23,8 @@ namespace atom {
 class NativeWindowMac : public NativeWindow {
  public:
   NativeWindowMac(brightray::InspectableWebContents* inspectable_web_contents,
-                  const mate::Dictionary& options);
+                  const mate::Dictionary& options,
+                  NativeWindow* parent);
   ~NativeWindowMac() override;
 
   // NativeWindow:
@@ -34,6 +36,7 @@ class NativeWindowMac : public NativeWindow {
   void ShowInactive() override;
   void Hide() override;
   bool IsVisible() override;
+  bool IsEnabled() override;
   void Maximize() override;
   void Unmaximize() override;
   bool IsMaximized() override;
@@ -77,15 +80,22 @@ class NativeWindowMac : public NativeWindow {
   void SetDocumentEdited(bool edited) override;
   bool IsDocumentEdited() override;
   void SetIgnoreMouseEvents(bool ignore) override;
-  bool HasModalDialog() override;
+  void SetContentProtection(bool enable) override;
+  void SetParentWindow(NativeWindow* parent) override;
   gfx::NativeWindow GetNativeWindow() override;
   gfx::AcceleratedWidget GetAcceleratedWidget() override;
-  void SetProgressBar(double progress) override;
+  void SetProgressBar(double progress, const ProgressState state) override;
   void SetOverlayIcon(const gfx::Image& overlay,
                       const std::string& description) override;
-
   void SetVisibleOnAllWorkspaces(bool visible) override;
   bool IsVisibleOnAllWorkspaces() override;
+
+  // content::RenderWidgetHost::InputEventObserver:
+  void OnInputEvent(const blink::WebInputEvent& event) override;
+
+  // content::WebContentsObserver:
+  void RenderViewHostChanged(content::RenderViewHost* old_host,
+                             content::RenderViewHost* new_host) override;
 
   // Refresh the DraggableRegion views.
   void UpdateDraggableRegionViews() {
@@ -96,9 +106,12 @@ class NativeWindowMac : public NativeWindow {
   void SetStyleMask(bool on, NSUInteger flag);
   void SetCollectionBehavior(bool on, NSUInteger flag);
 
-  bool should_hide_native_toolbar_in_fullscreen() const {
-    return should_hide_native_toolbar_in_fullscreen_;
-  }
+  enum TitleBarStyle {
+    NORMAL,
+    HIDDEN,
+    HIDDEN_INSET,
+  };
+  TitleBarStyle title_bar_style() const { return title_bar_style_; }
 
  protected:
   // Return a vector of non-draggable regions that fill a window of size
@@ -108,10 +121,12 @@ class NativeWindowMac : public NativeWindow {
 
  private:
   // NativeWindow:
-  gfx::Size ContentSizeToWindowSize(const gfx::Size& size) override;
-  gfx::Size WindowSizeToContentSize(const gfx::Size& size) override;
+  gfx::Rect ContentBoundsToWindowBounds(const gfx::Rect& bounds);
+  gfx::Rect WindowBoundsToContentBounds(const gfx::Rect& bounds);
   void UpdateDraggableRegions(
       const std::vector<DraggableRegion>& regions) override;
+
+  void ShowWindowButton(NSWindowButton button);
 
   void InstallView();
   void UninstallView();
@@ -119,6 +134,9 @@ class NativeWindowMac : public NativeWindow {
   // Install the drag view, which will cover the whole window and decides
   // whehter we can drag.
   void UpdateDraggableRegionViews(const std::vector<DraggableRegion>& regions);
+
+  void RegisterInputEventObserver(content::RenderViewHost* host);
+  void UnregisterInputEventObserver(content::RenderViewHost* host);
 
   base::scoped_nsobject<AtomNSWindow> window_;
   base::scoped_nsobject<AtomNSWindowDelegate> window_delegate_;
@@ -138,14 +156,8 @@ class NativeWindowMac : public NativeWindow {
   // The presentation options before entering kiosk mode.
   NSApplicationPresentationOptions kiosk_options_;
 
-  // The window title, for frameless windows we only set title when fullscreen.
-  std::string title_;
-
-  // Force showing the buttons for frameless window.
-  bool force_show_buttons_;
-
-  // Whether to hide the native toolbar under fullscreen mode.
-  bool should_hide_native_toolbar_in_fullscreen_;
+  // The "titleBarStyle" option.
+  TitleBarStyle title_bar_style_;
 
   DISALLOW_COPY_AND_ASSIGN(NativeWindowMac);
 };

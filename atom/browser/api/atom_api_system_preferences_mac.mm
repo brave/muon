@@ -28,36 +28,83 @@ std::map<int, id> g_id_map;
 
 }  // namespace
 
+void SystemPreferences::PostNotification(const std::string& name, 
+    const base::DictionaryValue& user_info) {
+  DoPostNotification(name, user_info, false);
+}
+
+void SystemPreferences::PostLocalNotification(const std::string& name, 
+    const base::DictionaryValue& user_info) {
+  DoPostNotification(name, user_info, true);
+}
+
+void SystemPreferences::DoPostNotification(const std::string& name, 
+    const base::DictionaryValue& user_info, bool is_local) {
+  NSNotificationCenter* center = is_local ?
+    [NSNotificationCenter defaultCenter] :
+    [NSDistributedNotificationCenter defaultCenter];
+  [center
+     postNotificationName:base::SysUTF8ToNSString(name)
+                   object:nil
+                 userInfo:DictionaryValueToNSDictionary(user_info)
+  ];
+}
+
 int SystemPreferences::SubscribeNotification(
     const std::string& name, const NotificationCallback& callback) {
+  return DoSubscribeNotification(name, callback, false);
+}
+
+void SystemPreferences::UnsubscribeNotification(int request_id) {
+  DoUnsubscribeNotification(request_id, false);
+}
+
+int SystemPreferences::SubscribeLocalNotification(
+    const std::string& name, const NotificationCallback& callback) {
+  return DoSubscribeNotification(name, callback, true);
+}
+
+void SystemPreferences::UnsubscribeLocalNotification(int request_id) {
+  DoUnsubscribeNotification(request_id, true);
+}
+
+int SystemPreferences::DoSubscribeNotification(const std::string& name,
+  const NotificationCallback& callback, bool is_local) {
   int request_id = g_next_id++;
   __block NotificationCallback copied_callback = callback;
-  g_id_map[request_id] = [[NSDistributedNotificationCenter defaultCenter]
-      addObserverForName:base::SysUTF8ToNSString(name)
-      object:nil
-      queue:nil
-      usingBlock:^(NSNotification* notification) {
-        std::unique_ptr<base::DictionaryValue> user_info =
-            NSDictionaryToDictionaryValue(notification.userInfo);
-        if (user_info) {
-          copied_callback.Run(
-              base::SysNSStringToUTF8(notification.name),
-              *user_info);
-        } else {
-          copied_callback.Run(
-              base::SysNSStringToUTF8(notification.name),
-              base::DictionaryValue());
-        }
+  NSNotificationCenter* center = is_local ?
+    [NSNotificationCenter defaultCenter] :
+    [NSDistributedNotificationCenter defaultCenter];
+
+  g_id_map[request_id] = [center
+    addObserverForName:base::SysUTF8ToNSString(name)
+    object:nil
+    queue:nil
+    usingBlock:^(NSNotification* notification) {
+      std::unique_ptr<base::DictionaryValue> user_info =
+        NSDictionaryToDictionaryValue(notification.userInfo);
+      if (user_info) {
+        copied_callback.Run(
+          base::SysNSStringToUTF8(notification.name),
+          *user_info);
+      } else {
+        copied_callback.Run(
+          base::SysNSStringToUTF8(notification.name),
+          base::DictionaryValue());
       }
+    }
   ];
   return request_id;
 }
 
-void SystemPreferences::UnsubscribeNotification(int request_id) {
+void SystemPreferences::DoUnsubscribeNotification(int request_id, bool is_local) {
   auto iter = g_id_map.find(request_id);
   if (iter != g_id_map.end()) {
     id observer = iter->second;
-    [[NSDistributedNotificationCenter defaultCenter] removeObserver:observer];
+    NSNotificationCenter* center = is_local ?
+      [NSNotificationCenter defaultCenter] :
+      [NSDistributedNotificationCenter defaultCenter];
+    [center removeObserver:observer];
     g_id_map.erase(iter);
   }
 }
@@ -95,6 +142,10 @@ bool SystemPreferences::IsDarkMode() {
   NSString* mode = [[NSUserDefaults standardUserDefaults]
       stringForKey:@"AppleInterfaceStyle"];
   return [mode isEqualToString:@"Dark"];
+}
+
+bool SystemPreferences::IsSwipeTrackingFromScrollEventsEnabled() {
+  return [NSEvent isSwipeTrackingFromScrollEventsEnabled];
 }
 
 }  // namespace api

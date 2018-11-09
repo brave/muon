@@ -4,6 +4,7 @@
 
 #include "atom/browser/api/atom_api_cookies.h"
 
+#include "atom/browser/atom_browser_context.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/gurl_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
@@ -30,7 +31,7 @@ struct Converter<atom::api::Cookies::Error> {
     if (val == atom::api::Cookies::SUCCESS)
       return v8::Null(isolate);
     else
-      return v8::Exception::Error(StringToV8(isolate, "failed"));
+      return v8::Exception::Error(StringToV8(isolate, "Setting cookie failed"));
   }
 };
 
@@ -204,8 +205,8 @@ void SetCookieOnIO(scoped_refptr<net::URLRequestContextGetter> getter,
 }  // namespace
 
 Cookies::Cookies(v8::Isolate* isolate,
-                 content::BrowserContext* browser_context)
-      : request_context_getter_(browser_context->GetRequestContext()) {
+                 AtomBrowserContext* browser_context)
+      : request_context_getter_(browser_context->url_request_context_getter()) {
   Init(isolate);
 }
 
@@ -215,7 +216,7 @@ Cookies::~Cookies() {
 void Cookies::Get(const base::DictionaryValue& filter,
                   const GetCallback& callback) {
   std::unique_ptr<base::DictionaryValue> copied(filter.CreateDeepCopy());
-  auto getter = make_scoped_refptr(request_context_getter_);
+  auto getter = base::RetainedRef(request_context_getter_);
   content::BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(GetCookiesOnIO, getter, Passed(&copied), callback));
@@ -223,7 +224,7 @@ void Cookies::Get(const base::DictionaryValue& filter,
 
 void Cookies::Remove(const GURL& url, const std::string& name,
                      const base::Closure& callback) {
-  auto getter = make_scoped_refptr(request_context_getter_);
+  auto getter = base::RetainedRef(request_context_getter_);
   content::BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(RemoveCookieOnIOThread, getter, url, name, callback));
@@ -232,7 +233,7 @@ void Cookies::Remove(const GURL& url, const std::string& name,
 void Cookies::Set(const base::DictionaryValue& details,
                   const SetCallback& callback) {
   std::unique_ptr<base::DictionaryValue> copied(details.CreateDeepCopy());
-  auto getter = make_scoped_refptr(request_context_getter_);
+  auto getter = base::RetainedRef(request_context_getter_);
   content::BrowserThread::PostTask(
       BrowserThread::IO, FROM_HERE,
       base::Bind(SetCookieOnIO, getter, Passed(&copied), callback));
@@ -241,14 +242,15 @@ void Cookies::Set(const base::DictionaryValue& details,
 // static
 mate::Handle<Cookies> Cookies::Create(
     v8::Isolate* isolate,
-    content::BrowserContext* browser_context) {
+    AtomBrowserContext* browser_context) {
   return mate::CreateHandle(isolate, new Cookies(isolate, browser_context));
 }
 
 // static
 void Cookies::BuildPrototype(v8::Isolate* isolate,
-                             v8::Local<v8::ObjectTemplate> prototype) {
-  mate::ObjectTemplateBuilder(isolate, prototype)
+                             v8::Local<v8::FunctionTemplate> prototype) {
+  prototype->SetClassName(mate::StringToV8(isolate, "Cookies"));
+  mate::ObjectTemplateBuilder(isolate, prototype->PrototypeTemplate())
       .SetMethod("get", &Cookies::Get)
       .SetMethod("remove", &Cookies::Remove)
       .SetMethod("set", &Cookies::Set);

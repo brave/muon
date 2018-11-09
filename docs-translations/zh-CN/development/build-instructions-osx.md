@@ -1,14 +1,14 @@
-# Build Instructions (OS X)
+# Build Instructions (macOS)
 
-遵循下面的引导，在 OS X 上构建 Electron .
+遵循下面的引导，在 macOS 上构建 Electron .
 
 ## 前提
 
-* OS X >= 10.8
+* macOS >= 10.8
 * [Xcode](https://developer.apple.com/technologies/tools/) >= 5.1
 * [node.js](http://nodejs.org) (外部)
 
-如果你通过 Homebrew 使用 Python 下载，需要安装下面的 Python 模块:
+如果你目前使用的Python是通过 Homebrew 安装的，则你还需要安装如下Python模块:
 
 * pyobjc
 
@@ -45,7 +45,7 @@ $ ./script/build.py -c D
 
 ## 32位支持
 
-在 OS X 上，构建 Electron 只支持 64位的，不支持 32位的 .
+在 macOS 上，构建 Electron 只支持 64位的，不支持 32位的 .
 
 ## 测试
 

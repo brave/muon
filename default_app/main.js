@@ -3,7 +3,6 @@ const {app, dialog, shell, Menu} = require('electron')
 const fs = require('fs')
 const Module = require('module')
 const path = require('path')
-const repl = require('repl')
 const url = require('url')
 
 // Parse command line options.
@@ -53,45 +52,30 @@ app.once('ready', () => {
       label: 'Edit',
       submenu: [
         {
-          label: 'Undo',
-          accelerator: 'CmdOrCtrl+Z',
           role: 'undo'
         },
         {
-          label: 'Redo',
-          accelerator: 'Shift+CmdOrCtrl+Z',
           role: 'redo'
         },
         {
           type: 'separator'
         },
         {
-          label: 'Cut',
-          accelerator: 'CmdOrCtrl+X',
           role: 'cut'
         },
         {
-          label: 'Copy',
-          accelerator: 'CmdOrCtrl+C',
           role: 'copy'
         },
         {
-          label: 'Paste',
-          accelerator: 'CmdOrCtrl+V',
           role: 'paste'
         },
         {
-          label: 'Paste and Match Style',
-          accelerator: 'Shift+Command+V',
           role: 'pasteandmatchstyle'
         },
         {
-          label: 'Delete',
           role: 'delete'
         },
         {
-          label: 'Select All',
-          accelerator: 'CmdOrCtrl+A',
           role: 'selectall'
         }
       ]
@@ -107,43 +91,44 @@ app.once('ready', () => {
           }
         },
         {
-          label: 'Toggle Full Screen',
-          accelerator: (() => {
-            return (process.platform === 'darwin') ? 'Ctrl+Command+F' : 'F11'
-          })(),
-          click (item, focusedWindow) {
-            if (focusedWindow) focusedWindow.setFullScreen(!focusedWindow.isFullScreen())
-          }
-        },
-        {
           label: 'Toggle Developer Tools',
-          accelerator: (() => {
-            return (process.platform === 'darwin') ? 'Alt+Command+I' : 'Ctrl+Shift+I'
-          })(),
+          accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
           click (item, focusedWindow) {
             if (focusedWindow) focusedWindow.toggleDevTools()
           }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          role: 'resetzoom'
+        },
+        {
+          role: 'zoomin'
+        },
+        {
+          role: 'zoomout'
+        },
+        {
+          type: 'separator'
+        },
+        {
+          role: 'togglefullscreen'
         }
       ]
     },
     {
-      label: 'Window',
       role: 'window',
       submenu: [
         {
-          label: 'Minimize',
-          accelerator: 'CmdOrCtrl+M',
           role: 'minimize'
         },
         {
-          label: 'Close',
-          accelerator: 'CmdOrCtrl+W',
           role: 'close'
         }
       ]
     },
     {
-      label: 'Help',
       role: 'help',
       submenu: [
         {
@@ -181,14 +166,12 @@ app.once('ready', () => {
       label: 'Electron',
       submenu: [
         {
-          label: 'About Electron',
           role: 'about'
         },
         {
           type: 'separator'
         },
         {
-          label: 'Services',
           role: 'services',
           submenu: []
         },
@@ -196,52 +179,64 @@ app.once('ready', () => {
           type: 'separator'
         },
         {
-          label: 'Hide Electron',
-          accelerator: 'Command+H',
           role: 'hide'
         },
         {
-          label: 'Hide Others',
-          accelerator: 'Command+Alt+H',
           role: 'hideothers'
         },
         {
-          label: 'Show All',
           role: 'unhide'
         },
         {
           type: 'separator'
         },
         {
-          label: 'Quit ' + app.getName(),
-          accelerator: 'Command+Q',
-          click () { app.quit() }
+          role: 'quit'
         }
       ]
     })
+    template[1].submenu.push(
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Speech',
+        submenu: [
+          {
+            role: 'startspeaking'
+          },
+          {
+            role: 'stopspeaking'
+          }
+        ]
+      }
+    )
     template[3].submenu = [
       {
-        label: 'Close',
-        accelerator: 'CmdOrCtrl+W',
         role: 'close'
       },
       {
-        label: 'Minimize',
-        accelerator: 'CmdOrCtrl+M',
         role: 'minimize'
       },
       {
-        label: 'Zoom',
         role: 'zoom'
       },
       {
         type: 'separator'
       },
       {
-        label: 'Bring All to Front',
         role: 'front'
       }
     ]
+  } else {
+    template.unshift({
+      label: 'File',
+      submenu: [
+        {
+          role: 'quit'
+        }
+      ]
+    })
   }
 
   const menu = Menu.buildFromTemplate(template)
@@ -263,7 +258,7 @@ function loadApplicationPackage (packagePath) {
     if (fs.existsSync(packageJsonPath)) {
       let packageJson
       try {
-        packageJson = JSON.parse(fs.readFileSync(packageJsonPath))
+        packageJson = require(packageJsonPath)
       } catch (e) {
         showErrorMessage(`Unable to parse ${packageJsonPath}\n\n${e.message}`)
         return
@@ -315,6 +310,7 @@ function startRepl () {
     return
   }
 
+  const repl = require('repl')
   repl.start('> ').on('exit', () => {
     process.exit(0)
   })

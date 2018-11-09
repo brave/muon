@@ -6,10 +6,10 @@
 #define ATOM_BROWSER_API_ATOM_API_POWER_SAVE_BLOCKER_H_
 
 #include <map>
+#include <memory>
 
 #include "atom/browser/api/trackable_object.h"
-#include "base/memory/scoped_ptr.h"
-#include "content/public/browser/power_save_blocker.h"
+#include "device/power_save_blocker/power_save_blocker.h"
 #include "native_mate/handle.h"
 
 namespace mate {
@@ -25,7 +25,7 @@ class PowerSaveBlocker : public mate::TrackableObject<PowerSaveBlocker> {
   static mate::Handle<PowerSaveBlocker> Create(v8::Isolate* isolate);
 
   static void BuildPrototype(v8::Isolate* isolate,
-                             v8::Local<v8::ObjectTemplate> prototype);
+                             v8::Local<v8::FunctionTemplate> prototype);
 
  protected:
   explicit PowerSaveBlocker(v8::Isolate* isolate);
@@ -33,18 +33,18 @@ class PowerSaveBlocker : public mate::TrackableObject<PowerSaveBlocker> {
 
  private:
   void UpdatePowerSaveBlocker();
-  int Start(content::PowerSaveBlocker::PowerSaveBlockerType type);
+  int Start(device::PowerSaveBlocker::PowerSaveBlockerType type);
   bool Stop(int id);
   bool IsStarted(int id);
 
-  std::unique_ptr<content::PowerSaveBlocker> power_save_blocker_;
+  std::unique_ptr<device::PowerSaveBlocker> power_save_blocker_;
 
   // Currnet blocker type used by |power_save_blocker_|
-  content::PowerSaveBlocker::PowerSaveBlockerType current_blocker_type_;
+  device::PowerSaveBlocker::PowerSaveBlockerType current_blocker_type_;
 
   // Map from id to the corresponding blocker type for each request.
   using PowerSaveBlockerTypeMap =
-      std::map<int, content::PowerSaveBlocker::PowerSaveBlockerType>;
+      std::map<int, device::PowerSaveBlocker::PowerSaveBlockerType>;
   PowerSaveBlockerTypeMap power_save_blocker_types_;
 
   DISALLOW_COPY_AND_ASSIGN(PowerSaveBlocker);

@@ -14,11 +14,14 @@
     'python': 'python',
     'openssl_fips': '',
     'openssl_no_asm': 1,
+    'use_openssl_def': 0,
+    'OPENSSL_PRODUCT': 'libopenssl.a',
     'node_release_urlbase': 'https://atom.io/download/atom-shell',
     'node_byteorder': '<!(node <(DEPTH)/tools/get-endianness.js)',
     'node_target_type': 'shared_library',
     'node_install_npm': 'false',
     'node_prefix': '',
+    'node_shared': 'true',
     'node_shared_cares': 'false',
     'node_shared_http_parser': 'false',
     'node_shared_libuv': 'false',
@@ -31,17 +34,23 @@
     'node_use_mdb': 'false',
     'node_use_openssl': 'true',
     'node_use_perfctr': 'false',
+    'node_use_v8_platform': 'false',
+    'node_use_bundled_v8': 'false',
+    'node_enable_d8': 'false',
     'uv_library': 'static_library',
     'uv_parent_path': 'vendor/node/deps/uv',
     'uv_use_dtrace': 'false',
     'V8_BASE': '',
     'v8_postmortem_support': 'false',
     'v8_enable_i18n_support': 'false',
+    'v8_inspector': 'false',
+    'electron_google_api_key%': '',
+    'electron_google_api_endpoint%': '',
   },
   # Settings to compile node under Windows.
   'target_defaults': {
     'target_conditions': [
-      ['_target_name in ["libuv", "http_parser", "openssl", "cares", "node", "zlib"]', {
+      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib"]', {
         'msvs_disabled_warnings': [
           4003,  # not enough actual parameters for macro 'V'
           4013,  # 'free' undefined; assuming extern returning int
@@ -96,6 +105,7 @@
             '-Wno-return-type',
             '-Wno-gnu-folding-constant',
             '-Wno-shift-negative-value',
+            '-Wno-varargs', # https://git.io/v6Olj
           ],
         },
         'conditions': [
@@ -111,6 +121,7 @@
               '-Wno-deprecated-declarations',
               '-Wno-return-type',
               '-Wno-shift-negative-value',
+              '-Wno-varargs', # https://git.io/v6Olj
               # Required when building as shared library.
               '-fPIC',
             ],
@@ -124,7 +135,7 @@
         ],
         'conditions': [
           ['OS=="mac" and libchromiumcontent_component==0', {
-            # -all_load is the "whole-archive" on OS X.
+            # -all_load is the "whole-archive" on macOS.
             'xcode_settings': {
               'OTHER_LDFLAGS': [ '-Wl,-all_load' ],
             },
@@ -158,6 +169,7 @@
                         '_uspoof_open_56',
                         '_usearch_setPattern_56',
                         '?createInstance@Transliterator@icu_56@@SAPAV12@ABVUnicodeString@2@W4UTransDirection@@AAW4UErrorCode@@@Z',
+                        '??0MeasureFormat@icu_56@@QAE@ABVLocale@1@W4UMeasureFormatWidth@@AAW4UErrorCode@@@Z',
                       ],
                     }, {
                       'reference_symbols': [
@@ -171,6 +183,7 @@
                         'uspoof_open_56',
                         'usearch_setPattern_56',
                         '?createInstance@Transliterator@icu_56@@SAPEAV12@AEBVUnicodeString@2@W4UTransDirection@@AEAW4UErrorCode@@@Z',
+                        '??0MeasureFormat@icu_56@@QEAA@AEBVLocale@1@W4UMeasureFormatWidth@@AEAW4UErrorCode@@@Z',
                       ],
                     }],
                   ],
@@ -218,6 +231,17 @@
           }],  # OS=="win"
         ],
       }],
+      ['_target_name.startswith("crashpad")', {
+        'conditions': [
+          ['OS=="mac"', {
+            'xcode_settings': {
+              'WARNING_CFLAGS': [
+                '-Wno-unused-private-field',
+              ],
+            },
+          }],  # OS=="mac"
+        ],
+      }],
       ['_target_name.startswith("breakpad") or _target_name in ["crash_report_sender", "dump_syms"]', {
         'conditions': [
           ['OS=="mac"', {
@@ -239,6 +263,7 @@
             'msvs_disabled_warnings': [
               # unreferenced local function has been removed.
               4505,
+              4456,
             ],
           }],  # OS=="win"
         ],
@@ -251,7 +276,10 @@
       4189,  # local variable is initialized but not referenced
       4201,  # (uv.h) nameless struct/union
       4267,  # conversion from 'size_t' to 'int', possible loss of data
+      4273,  # http://crbug.com/154421
       4302,  # (atldlgs.h) 'type cast': truncation from 'LPCTSTR' to 'WORD'
+      4456,
+      4457,  # http://crbug.com/154421
       4458,  # (atldlgs.h) declaration of 'dwCommonButtons' hides class member
       4503,  # decorated name length exceeded, name was truncated
       4800,  # (v8.h) forcing value to bool 'true' or 'false'
@@ -261,6 +289,20 @@
     ],
   },
   'conditions': [
+    ['electron_google_api_key!=""', {
+      'target_defaults': {
+        'defines': [
+          'GOOGLEAPIS_API_KEY="<(electron_google_api_key)"',
+        ],
+      }
+    }],
+    ['electron_google_api_endpoint!=""', {
+      'target_defaults': {
+        'defines': [
+          'GOOGLEAPIS_ENDPOINT="<(electron_google_api_endpoint)"',
+        ],
+      }
+    }],
     # The breakdpad on Windows assumes Debug_x64 and Release_x64 configurations.
     ['OS=="win"', {
       'target_defaults': {

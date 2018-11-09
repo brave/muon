@@ -66,7 +66,7 @@ var appIcon = new Tray('/Users/somebody/images/icon.png');
 もっとも一般的なケースは、ライトとダークなメニュバー両方に切り替え可能なメニュバーアイコン用にテンプレート画像を使います。
 
 
-**Note:** テンプレート画像は、OS Xでのみサポートしています。
+**Note:** テンプレート画像は、macOSでのみサポートしています。
 
 テンプレート画像として画像をマークするために、ファイル名の最後に`Template`をつけます。
 
@@ -112,11 +112,11 @@ const nativeImage = require('electron').nativeImage;
 var image = nativeImage.createFromPath('/Users/somebody/images/icon.png');
 ```
 
-### `image.toPng()`
+### `image.toPNG()`
 
 `PNG`エンコードされた画像を含む[Buffer][buffer]を返します。
 
-### `image.toJpeg(quality)`
+### `image.toJPEG(quality)`
 
 * `quality` Integer (**required**) - Between 0 - 100.
 
