@@ -124,6 +124,10 @@ class App : public AtomBrowserClient::Delegate,
       const ProcessSingleton::NotificationCallback& callback);
   void ReleaseSingleInstance();
   bool Relaunch(mate::Arguments* args);
+  void SetLocalStatePref(const std::string& key,
+                         v8::Local<v8::Value> v8_value,
+                         mate::Arguments* args);
+  void GetLocalStatePref(mate::Arguments* args);
   void DisableHardwareAcceleration(mate::Arguments* args);
   bool IsAccessibilitySupportEnabled();
   void SendMemoryPressureAlert();

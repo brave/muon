@@ -25,6 +25,7 @@
 #include "atom/common/native_mate_converters/image_converter.h"
 #include "atom/common/native_mate_converters/net_converter.h"
 #include "atom/common/native_mate_converters/value_converter.h"
+#include "atom/common/native_mate_converters/v8_value_converter.h"
 #include "atom/common/node_includes.h"
 #include "atom/common/options_switches.h"
 #include "atom/common/pepper_flash_util.h"
@@ -854,6 +855,41 @@ bool App::Relaunch(mate::Arguments* js_args) {
   return relauncher::RelaunchApp(argv);
 }
 
+void App::SetLocalStatePref(const std::string& key,
+                            v8::Local<v8::Value> v8_value,
+                            mate::Arguments* args) {
+  PrefService* service = g_browser_process->local_state();
+  if (!service) {
+    args->ThrowError("localstate is not initialized yet");
+    return;
+  }
+
+  std::unique_ptr<atom::V8ValueConverter> converter(new atom::V8ValueConverter);
+  std::unique_ptr<base::Value> value(converter->FromV8Value(
+      v8_value, isolate()->GetCurrentContext()));
+
+  service->Set(key, *value);
+}
+
+void App::GetLocalStatePref(mate::Arguments* args) {
+  PrefService* service = g_browser_process->local_state();
+  if (!service) {
+    args->ThrowError("localstate is not initialized yet");
+    return;
+  }
+
+  std::string key;
+  if (!args->GetNext(&key)) {
+    args->ThrowError("`key` is a required field");
+    return;
+  }
+
+  const base::Value* value = service->GetUserPrefValue(key);
+  std::unique_ptr<atom::V8ValueConverter> converter(new atom::V8ValueConverter);
+
+  args->Return(converter->ToV8Value(value, isolate()->GetCurrentContext()));
+}
+
 void App::DisableHardwareAcceleration(mate::Arguments* args) {
   content::GpuDataManager::GetInstance()->DisableHardwareAcceleration();
 }
@@ -1035,6 +1071,10 @@ void App::BuildPrototype(
       .SetMethod("_postMessage", &App::PostMessage)
       .SetMethod("_startWorker", &App::StartWorker)
       .SetMethod("stopWorker", &App::StopWorker)
+      .SetMethod("setLocalStatePref",
+                 &App::SetLocalStatePref)
+      .SetMethod("getLocalStatePref",
+                 &App::GetLocalStatePref)
       .SetMethod("disableHardwareAcceleration",
                  &App::DisableHardwareAcceleration);
 }
